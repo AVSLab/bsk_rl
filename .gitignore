@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.pyc
 *.cfg
+!.isort.cfg
 *.pkl
 
 # C extensions
