@@ -62,6 +62,9 @@ Utilities and tools utilized throughout the repository may be found in the `util
 ### Results
 The `results/` folder can be used to store trained agents and results from benchmarking and validation. All files placed in this folder are ignored by .git. 
 
+## Contribution Guidelines
+The repository enforces that code is formatted by `black` and `isort`, and that commit messages take the form `Issue #XXX: Commit message`, not exceeding 72 characters.
+
 ## Authors
 Maintainers: 
 Mr. Adam Herrmann (adam.herrmann@colorado.edu)
