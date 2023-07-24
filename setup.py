@@ -1,3 +1,6 @@
+import subprocess
+import sys
+
 from setuptools import setup
 
 setup(
@@ -7,11 +10,36 @@ setup(
         "gymnasium",
         "matplotlib",
         "numpy",
+        "scipy",
         "pandas",
         "stable-baselines3",
         "torch",
         "tensorflow",
         "deap==1.3.3",
         "scikit-learn",
+        "requests",
     ],
+)
+
+subprocess.check_call(
+    [sys.executable, "-m", "pip", "install", "git+https://github.com/chebpy/chebpy.git"]
+)
+
+import io
+import zipfile
+from pathlib import Path
+
+import requests
+
+r = requests.get(
+    "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.76.zip"
+)
+z = zipfile.ZipFile(io.BytesIO(r.content))
+z.extractall(
+    Path(__file__).parent.resolve()
+    / "bsk_rl"
+    / "envs"
+    / "GeneralSatelliteTasking"
+    / "scenario"
+    / "simplemaps_worldcities"
 )

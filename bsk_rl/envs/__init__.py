@@ -1,4 +1,8 @@
 from bsk_rl.envs.AgileEOS.gym_env import AgileEOS
+from bsk_rl.envs.GeneralSatelliteTasking.gym_env import (
+    GeneralSatelliteTasking,
+    SingleSatelliteTasking,
+)
 from bsk_rl.envs.MultiSatAgileEOS.gym_env import MultiSatAgileEOS
 from bsk_rl.envs.MultiSensorEOS.gym_env import MultiSensorEOS
 from bsk_rl.envs.SimpleEOS.gym_env import SimpleEOS

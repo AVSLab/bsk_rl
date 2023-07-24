@@ -23,3 +23,13 @@ register(
     id="SmallBodySciencePOMDP-v0",
     entry_point="bsk_rl.envs.SmallBodySciencePOMDP.gym_env:SmallBodySciencePOMDP",
 )
+
+register(
+    id="GeneralSatelliteTasking-v1",
+    entry_point="bsk_rl.envs.GeneralSatelliteTasking.gym_env:GeneralSatelliteTasking",
+)
+
+register(
+    id="SingleSatelliteTasking-v1",
+    entry_point="bsk_rl.envs.GeneralSatelliteTasking.gym_env:SingleSatelliteTasking",
+)

@@ -123,3 +123,6 @@ bsk_rl/results/
 
 # .DS_Store
 .DS_Store
+
+# data files
+bsk_rl/envs/GeneralSatelliteTasking/scenario/simplemaps_worldcities/
