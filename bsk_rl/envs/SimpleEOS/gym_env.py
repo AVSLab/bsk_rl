@@ -1,10 +1,9 @@
-# 3rd party modules
 import gymnasium as gym
 import numpy as np
+from Basilisk.utilities import macros as mc
 from gymnasium import spaces
 
 from bsk_rl.envs.SimpleEOS import bsk_sim
-from Basilisk.utilities import macros as mc
 
 
 class SimpleEOS(gym.Env):

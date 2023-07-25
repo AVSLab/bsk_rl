@@ -2,20 +2,14 @@ from copy import copy, deepcopy
 
 import numpy as np
 from Basilisk.simulation import vizInterface
-from Basilisk.utilities import (
-    SimulationBaseClass,
-    macros as mc,
-    orbitalMotion,
-    vizSupport,
-)
+from Basilisk.utilities import SimulationBaseClass
+from Basilisk.utilities import macros as mc
+from Basilisk.utilities import orbitalMotion, vizSupport
 from scipy.sparse.csgraph import connected_components
 
-from bsk_rl.envs.MultiSatAgileEOS.bsk_models import (
-    environment,
-    dynamics,
-    fsw as fsw_feedback,
-    fsw_steering,
-)
+from bsk_rl.envs.MultiSatAgileEOS.bsk_models import dynamics, environment
+from bsk_rl.envs.MultiSatAgileEOS.bsk_models import fsw as fsw_feedback
+from bsk_rl.envs.MultiSatAgileEOS.bsk_models import fsw_steering
 from bsk_rl.utilities.initial_conditions import leo_initial_conditions
 
 

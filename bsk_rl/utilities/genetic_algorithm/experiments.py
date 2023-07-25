@@ -1,5 +1,7 @@
 import os
+
 import numpy as np
+
 from bsk_rl.agents.genetic_algorithm import ga_env_solver
 
 SEP = os.path.sep

@@ -1,13 +1,11 @@
+import numpy as np
+from Basilisk.architecture import messaging
 from Basilisk.fswAlgorithms import smallBodyNavEKF
 from Basilisk.simulation import simpleNav
-from Basilisk.utilities import (
-    unitTestSupport,
-    orbitalMotion,
-    macros as mc,
-)
-from Basilisk.architecture import messaging
+from Basilisk.utilities import macros as mc
+from Basilisk.utilities import orbitalMotion, unitTestSupport
+
 from bsk_rl.envs.SmallBodyScience.bsk_sim import SmallBodyScienceSimulator
-import numpy as np
 
 
 class SmallBodySciencePOMDPSimulator(SmallBodyScienceSimulator):

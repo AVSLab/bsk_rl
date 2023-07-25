@@ -1,8 +1,9 @@
-import numpy as np
 import os
-from matplotlib import pyplot as plt
-import matplotlib as mpl
 from pathlib import Path
+
+import matplotlib as mpl
+import numpy as np
+from matplotlib import pyplot as plt
 
 SEP = os.path.sep
 

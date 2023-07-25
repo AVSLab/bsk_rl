@@ -1,25 +1,20 @@
 from Basilisk.simulation import (
-    spacecraft,
-    simpleNav,
+    ReactionWheelPower,
     facetDragDynamicEffector,
-    simpleInstrument,
     partitionedStorageUnit,
-    spaceToGroundTransmitter,
-    spacecraftLocation,
     simpleBattery,
+    simpleInstrument,
+    simpleNav,
     simplePowerSink,
     simpleSolarPanel,
-    ReactionWheelPower,
+    spacecraft,
+    spacecraftLocation,
+    spaceToGroundTransmitter,
 )
+from Basilisk.utilities import macros as mc
+from Basilisk.utilities import unitTestSupport
 
-from Basilisk.utilities import (
-    macros as mc,
-    unitTestSupport,
-)
-
-from bsk_rl.utilities.effector_primitives import (
-    actuator_primitives as ap,
-)
+from bsk_rl.utilities.effector_primitives import actuator_primitives as ap
 
 
 class DynamicModel:

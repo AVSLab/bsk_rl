@@ -1,7 +1,8 @@
-import os
-from matplotlib import pyplot as plt
 import csv
+import os
 from pathlib import Path
+
+from matplotlib import pyplot as plt
 
 SEP = os.path.sep
 

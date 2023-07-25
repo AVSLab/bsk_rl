@@ -1,21 +1,17 @@
-from Basilisk.architecture import (
-    cMsgCInterfacePy as cMsgPy,
-    messaging,
-)
-
+from Basilisk.architecture import cMsgCInterfacePy as cMsgPy
+from Basilisk.architecture import messaging
 from Basilisk.fswAlgorithms import (
+    attTrackingError,
     hillPoint,
     locationPointing,
-    attTrackingError,
-    rwMotorTorque,
     mrpSteering,
     rateServoFullNonlinear,
-    thrMomentumManagement,
-    thrMomentumDumping,
-    thrForceMapping,
+    rwMotorTorque,
     simpleInstrumentController,
+    thrForceMapping,
+    thrMomentumDumping,
+    thrMomentumManagement,
 )
-
 from Basilisk.utilities import macros as mc
 
 

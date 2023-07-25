@@ -1,12 +1,11 @@
 import os
 import sys
 from multiprocessing import cpu_count
-import torch.nn as nn
-from bsk_rl.training.sb3.experiments import (
-    run_ppo_experiments,
-    create_ppo_kwargs_list,
-)
 from pathlib import Path
+
+import torch.nn as nn
+
+from bsk_rl.training.sb3.experiments import create_ppo_kwargs_list, run_ppo_experiments
 
 SEP = os.path.sep
 

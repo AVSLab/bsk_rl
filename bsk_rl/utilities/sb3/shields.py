@@ -1,6 +1,8 @@
-from bsk_rl.agents.state_machine import StateMachine
-import torch as th
 import os
+
+import torch as th
+
+from bsk_rl.agents.state_machine import StateMachine
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
 

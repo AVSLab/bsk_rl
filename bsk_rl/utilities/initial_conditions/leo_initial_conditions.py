@@ -2,8 +2,9 @@ import numpy as np
 from Basilisk.utilities import astroFunctions
 from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion
-from bsk_rl.utilities.initial_conditions import leo_orbit, sc_attitudes
 from numpy.random import uniform
+
+from bsk_rl.utilities.initial_conditions import leo_orbit, sc_attitudes
 
 
 def sampled_400km_leo_smallsat_tumble():

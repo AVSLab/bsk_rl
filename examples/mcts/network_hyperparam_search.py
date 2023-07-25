@@ -1,6 +1,7 @@
 import os
-from bsk_rl.training.mcts.mcts_train import run_experiment
 from pathlib import Path
+
+from bsk_rl.training.mcts.mcts_train import run_experiment
 
 SEP = os.path.sep
 

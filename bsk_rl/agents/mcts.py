@@ -1,6 +1,8 @@
-import numpy as np
-import gymnasium as gym
 import math
+
+import gymnasium as gym
+import numpy as np
+
 from bsk_rl.utilities.mcts.rollout_policies import SmallBodyRolloutPolicy
 
 

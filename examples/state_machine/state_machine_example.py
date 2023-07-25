@@ -1,7 +1,9 @@
 import os
-import gymnasium as gym
-from bsk_rl.agents.state_machine import StateMachine
 from pathlib import Path
+
+import gymnasium as gym
+
+from bsk_rl.agents.state_machine import StateMachine
 
 SEP = os.path.sep
 

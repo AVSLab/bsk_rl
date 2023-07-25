@@ -1,7 +1,8 @@
-import sys
-from bsk_rl.utilities.genetic_algorithm import experiments
 import multiprocessing
+import sys
 from pathlib import Path
+
+from bsk_rl.utilities.genetic_algorithm import experiments
 
 # Check if any args were passed to the script
 if len(sys.argv) > 1:

@@ -1,9 +1,11 @@
 from typing import Callable, Dict, Tuple, Type
+
 import gymnasium as gym
 import torch as th
-from torch import nn
 from stable_baselines3.common.policies import ActorCriticPolicy
-from bsk_rl.utilities.sb3 import shields, custom_sb3_policies
+from torch import nn
+
+from bsk_rl.utilities.sb3 import custom_sb3_policies, shields
 
 
 class CustomActorCriticShieldedPolicy(ActorCriticPolicy):

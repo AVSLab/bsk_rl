@@ -1,11 +1,9 @@
 import os
 import sys
 from multiprocessing import cpu_count
-from bsk_rl.training.sb3.experiments import (
-    run_dqn_experiments,
-    create_dqn_kwargs_list,
-)
 from pathlib import Path
+
+from bsk_rl.training.sb3.experiments import create_dqn_kwargs_list, run_dqn_experiments
 
 SEP = os.path.sep
 

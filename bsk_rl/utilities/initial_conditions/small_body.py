@@ -1,5 +1,6 @@
-import numpy as np
 import math as m
+
+import numpy as np
 
 
 def generate_waypoints(num_spheres, num_lat, num_lon, radius):

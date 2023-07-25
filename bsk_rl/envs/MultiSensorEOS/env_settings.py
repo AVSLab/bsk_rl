@@ -1,8 +1,9 @@
-import numpy as np
 import random
 
-from Basilisk.utilities import orbitalMotion
+import numpy as np
 from Basilisk.utilities import macros as mc
+from Basilisk.utilities import orbitalMotion
+
 from bsk_rl.utilities.initial_conditions import leo_orbit
 
 

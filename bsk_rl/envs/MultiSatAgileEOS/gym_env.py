@@ -1,13 +1,12 @@
 import inspect
 
 import gymnasium as gym
-from gymnasium import spaces
-
 import numpy as np
 from Basilisk.utilities import macros as mc
+from gymnasium import spaces
 
-from bsk_rl.envs.MultiSatAgileEOS.bsk_sim import MultiSatAgileEOSSimulator
 from bsk_rl.envs.MultiSatAgileEOS import env_settings
+from bsk_rl.envs.MultiSatAgileEOS.bsk_sim import MultiSatAgileEOSSimulator
 
 gym.utils.passive_env_checker.logger.setLevel(
     40

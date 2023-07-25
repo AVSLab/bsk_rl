@@ -1,17 +1,13 @@
-from Basilisk.simulation import spacecraft
-from Basilisk.utilities import (
-    SimulationBaseClass,
-    macros as mc,
-    orbitalMotion,
-    simIncludeGravBody,
-)
-
-import numpy as np
 import math as m
-from numpy.random import uniform
 import random
 
+import numpy as np
 from Basilisk import __path__
+from Basilisk.simulation import spacecraft
+from Basilisk.utilities import SimulationBaseClass
+from Basilisk.utilities import macros as mc
+from Basilisk.utilities import orbitalMotion, simIncludeGravBody
+from numpy.random import uniform
 
 bskPath = __path__[0]
 

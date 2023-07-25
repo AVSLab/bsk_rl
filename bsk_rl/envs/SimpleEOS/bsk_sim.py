@@ -1,58 +1,49 @@
-# 3rd party modules
-import numpy as np
 from time import sleep
 
-from bsk_rl.utilities.effector_primitives import (
-    actuator_primitives as ap,
-)
-from bsk_rl.utilities.initial_conditions import leo_orbit, sc_attitudes
-from numpy.random import uniform
-
-#   Basilisk modules
-from Basilisk.utilities import (
-    SimulationBaseClass,
-    macros as mc,
-    unitTestSupport,
-    vizSupport,
-    orbitalMotion,
-    astroFunctions,
-    simIncludeGravBody,
-)
-
-from Basilisk.simulation import (
-    spacecraft,
-    extForceTorque,
-    simpleNav,
-    eclipse,
-    exponentialAtmosphere,
-    facetDragDynamicEffector,
-    simpleInstrument,
-    simpleStorageUnit,
-    spaceToGroundTransmitter,
-    groundLocation,
-    ephemerisConverter,
-    simpleBattery,
-    simplePowerSink,
-    simpleSolarPanel,
-    ReactionWheelPower,
-)
-
+import numpy as np
+from Basilisk import __path__
+from Basilisk.architecture import cMsgCInterfacePy as cMsgPy
+from Basilisk.architecture import messaging
 from Basilisk.fswAlgorithms import (
-    hillPoint,
     attTrackingError,
+    hillPoint,
     mrpFeedback,
     rwMotorTorque,
-    thrMomentumManagement,
-    thrMomentumDumping,
     thrForceMapping,
+    thrMomentumDumping,
+    thrMomentumManagement,
+)
+from Basilisk.simulation import (
+    ReactionWheelPower,
+    eclipse,
+    ephemerisConverter,
+    exponentialAtmosphere,
+    extForceTorque,
+    facetDragDynamicEffector,
+    groundLocation,
+    simpleBattery,
+    simpleInstrument,
+    simpleNav,
+    simplePowerSink,
+    simpleSolarPanel,
+    simpleStorageUnit,
+    spacecraft,
+    spaceToGroundTransmitter,
 )
 
-from Basilisk.architecture import (
-    messaging,
-    cMsgCInterfacePy as cMsgPy,
+#   Basilisk modules
+from Basilisk.utilities import SimulationBaseClass, astroFunctions
+from Basilisk.utilities import macros as mc
+from Basilisk.utilities import (
+    orbitalMotion,
+    simIncludeGravBody,
+    unitTestSupport,
+    vizSupport,
 )
+from numpy.random import uniform
 
-from Basilisk import __path__
+from bsk_rl.utilities.effector_primitives import actuator_primitives as ap
+from bsk_rl.utilities.initial_conditions import leo_orbit, sc_attitudes
 
 bskPath = __path__[0]
 

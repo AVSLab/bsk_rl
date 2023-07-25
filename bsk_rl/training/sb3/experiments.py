@@ -1,17 +1,17 @@
 import os
 
-import numpy as np
 import gymnasium as gym
-from stable_baselines3 import PPO, A2C, DQN
-from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
-from stable_baselines3.common.logger import configure
+import numpy as np
 import torch.nn as nn
+from stable_baselines3 import A2C, DQN, PPO
+from stable_baselines3.common.logger import configure
+from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
 
-from bsk_rl.utilities.sb3.shielded_policies import (
-    CustomActorCriticShieldedMultiSensorEOSPolicy,
-    CustomActorCriticShieldedAgileEOSPolicy,
-)
 from bsk_rl.utilities.sb3.custom_sb3_policies import CustomActorCriticPolicy
+from bsk_rl.utilities.sb3.shielded_policies import (
+    CustomActorCriticShieldedAgileEOSPolicy,
+    CustomActorCriticShieldedMultiSensorEOSPolicy,
+)
 
 SEP = os.path.sep
 

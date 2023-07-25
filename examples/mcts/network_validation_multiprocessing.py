@@ -1,10 +1,12 @@
 import os
-import numpy as np
-import gymnasium as gym
-from bsk_rl.envs.AgileEOS.gym_env import AgileEOS
 import time
-from multiprocessing import Process, Manager
+from multiprocessing import Manager, Process
 from pathlib import Path
+
+import gymnasium as gym
+import numpy as np
+
+from bsk_rl.envs.AgileEOS.gym_env import AgileEOS
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
