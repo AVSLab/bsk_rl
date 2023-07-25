@@ -2,9 +2,8 @@ from typing import Callable, Dict, Tuple, Type
 
 import gymnasium as gym
 import torch as th
-from torch import nn
-
 from stable_baselines3.common.policies import ActorCriticPolicy
+from torch import nn
 
 
 class CustomNetwork(nn.Module):

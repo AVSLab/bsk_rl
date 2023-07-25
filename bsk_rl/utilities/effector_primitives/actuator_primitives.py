@@ -1,6 +1,5 @@
-from Basilisk.simulation import thrusterDynamicEffector, reactionWheelStateEffector
-from Basilisk.utilities import simIncludeThruster, simIncludeRW
-
+from Basilisk.simulation import reactionWheelStateEffector, thrusterDynamicEffector
+from Basilisk.utilities import simIncludeRW, simIncludeThruster
 from numpy.random import uniform
 
 

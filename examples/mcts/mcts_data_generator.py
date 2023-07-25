@@ -1,9 +1,11 @@
-from multiprocessing import Process, Manager
-from bsk_rl.training.mcts.mcts_train import mcts_batch
-import numpy as np
-from os import cpu_count
 import os
+from multiprocessing import Manager, Process
+from os import cpu_count
 from pathlib import Path
+
+import numpy as np
+
+from bsk_rl.training.mcts.mcts_train import mcts_batch
 
 SEP = os.path.sep
 

@@ -1,50 +1,10 @@
-# 3rd party modules
-import numpy as np
-import random
 import math as m
-from numpy.random import uniform
+import random
 
-from bsk_rl.utilities.effector_primitives import (
-    actuator_primitives as ap,
-)
-from bsk_rl.utilities.initial_conditions import small_body, sc_attitudes
-
-#   Basilisk modules
-from Basilisk.utilities import (
-    SimulationBaseClass,
-    macros as mc,
-    unitTestSupport,
-    vizSupport,
-    orbitalMotion,
-    simIncludeGravBody,
-)
-
-from Basilisk.architecture import (
-    messaging,
-    cMsgCInterfacePy as cMsgPy,
-)
-
-from Basilisk.simulation import (
-    spacecraft,
-    extForceTorque,
-    simpleNav,
-    eclipse,
-    planetEphemeris,
-    simpleInstrument,
-    partitionedStorageUnit,
-    spaceToGroundTransmitter,
-    groundLocation,
-    ephemerisConverter,
-    radiationPressure,
-    groundMapping,
-    mappingInstrument,
-    simpleBattery,
-    simplePowerSink,
-    simpleSolarPanel,
-    ReactionWheelPower,
-    planetNav,
-)
-
+import numpy as np
+from Basilisk import __path__
+from Basilisk.architecture import cMsgCInterfacePy as cMsgPy
+from Basilisk.architecture import messaging
 from Basilisk.fswAlgorithms import (
     locationPointing,
     mrpFeedback,
@@ -52,8 +12,40 @@ from Basilisk.fswAlgorithms import (
     simpleInstrumentController,
     smallBodyWaypointFeedback,
 )
+from Basilisk.simulation import (
+    ReactionWheelPower,
+    eclipse,
+    ephemerisConverter,
+    extForceTorque,
+    groundLocation,
+    groundMapping,
+    mappingInstrument,
+    partitionedStorageUnit,
+    planetEphemeris,
+    planetNav,
+    radiationPressure,
+    simpleBattery,
+    simpleInstrument,
+    simpleNav,
+    simplePowerSink,
+    simpleSolarPanel,
+    spacecraft,
+    spaceToGroundTransmitter,
+)
 
-from Basilisk import __path__
+#   Basilisk modules
+from Basilisk.utilities import SimulationBaseClass
+from Basilisk.utilities import macros as mc
+from Basilisk.utilities import (
+    orbitalMotion,
+    simIncludeGravBody,
+    unitTestSupport,
+    vizSupport,
+)
+from numpy.random import uniform
+
+from bsk_rl.utilities.effector_primitives import actuator_primitives as ap
+from bsk_rl.utilities.initial_conditions import sc_attitudes, small_body
 
 bskPath = __path__[0]
 

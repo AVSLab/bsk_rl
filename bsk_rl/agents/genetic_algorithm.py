@@ -1,16 +1,14 @@
-#   Standard lib imports
-import random
 import multiprocessing
-from datetime import datetime
-import pickle
-
-#   3rd party imports
-import numpy as np
-from matplotlib import pyplot as plt
-import gymnasium as gym
-from deap import base, creator, tools, algorithms
 import os
+import pickle
+import random
+from datetime import datetime
 from os import sep as SEP
+
+import gymnasium as gym
+import numpy as np
+from deap import algorithms, base, creator, tools
+from matplotlib import pyplot as plt
 
 """
 This file is designed to provide generitc interfaces to a DEAP-based genetic algorithm 

@@ -1,8 +1,8 @@
-# 3rd party modules
+from copy import deepcopy
+
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
-from copy import deepcopy
 
 from bsk_rl.envs.MultiSensorEOS.bsk_sim import MultiSensorEOSSimulator
 from bsk_rl.envs.MultiSensorEOS.env_settings import Settings

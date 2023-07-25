@@ -1,21 +1,23 @@
+import os
 import time
 from pathlib import Path
+
+import gymnasium as gym
+import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.layers import Dense, Dropout, LeakyReLU
+from tensorflow.keras.models import Sequential
+
 from bsk_rl.agents.mcts import MCTS
 from bsk_rl.agents.state_machine import StateMachine
 from bsk_rl.utilities.mcts.rollout_policies import (
-    SimpleEOSRolloutPolicy,
     AgileEOSRolloutPolicy,
     MultiSensorEOSRolloutPolicy,
+    SimpleEOSRolloutPolicy,
     SmallBodyRolloutPolicy,
 )
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, LeakyReLU, Dropout
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-from sklearn.model_selection import train_test_split
-import gymnasium as gym
-import matplotlib.pyplot as plt
-import os
 
 plt.style.use("tableau-colorblind10")
 plt.style.use("seaborn-colorblind")

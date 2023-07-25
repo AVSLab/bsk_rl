@@ -1,9 +1,10 @@
+import os
+from pathlib import Path
+
 import matplotlib
-from matplotlib import pyplot as plt
 import numpy as np
 import scipy.stats as st
-from pathlib import Path
-import os
+from matplotlib import pyplot as plt
 
 SEP = os.path.sep
 

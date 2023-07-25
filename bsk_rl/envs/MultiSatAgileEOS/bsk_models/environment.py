@@ -1,19 +1,14 @@
 import numpy as np
-
-from Basilisk.utilities import (
-    macros as mc,
-    simIncludeGravBody,
-)
-
+from Basilisk import __path__
 from Basilisk.simulation import (
-    ephemerisConverter,
-    groundLocation,
     eclipse,
+    ephemerisConverter,
     exponentialAtmosphere,
     extForceTorque,
+    groundLocation,
 )
-
-from Basilisk import __path__
+from Basilisk.utilities import macros as mc
+from Basilisk.utilities import simIncludeGravBody
 
 bskPath = __path__[0]
 

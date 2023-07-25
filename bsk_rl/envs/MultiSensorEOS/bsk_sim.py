@@ -1,47 +1,34 @@
-# 3rd party modules
+import Basilisk.architecture.cMsgCInterfacePy as cMsgPy
 import numpy as np
-
-#   Basilisk modules
-from Basilisk.utilities import (
-    SimulationBaseClass,
-    macros as mc,
-    unitTestSupport,
-    vizSupport,
-    simIncludeGravBody,
-)
-
-from Basilisk.simulation import (
-    spacecraft,
-    groundLocation,
-    extForceTorque,
-    simpleNav,
-    eclipse,
-    ephemerisConverter,
-    simpleBattery,
-    simplePowerSink,
-    simpleSolarPanel,
-    ReactionWheelPower,
-)
-
+from Basilisk import __path__
+from Basilisk.architecture import messaging
 from Basilisk.fswAlgorithms import (
-    locationPointing,
     attTrackingError,
+    locationPointing,
     mrpFeedback,
     rwMotorTorque,
-    thrMomentumManagement,
-    thrMomentumDumping,
     thrForceMapping,
+    thrMomentumDumping,
+    thrMomentumManagement,
 )
-
-from bsk_rl.utilities.effector_primitives import (
-    actuator_primitives as ap,
+from Basilisk.simulation import (
+    ReactionWheelPower,
+    eclipse,
+    ephemerisConverter,
+    extForceTorque,
+    groundLocation,
+    simpleBattery,
+    simpleNav,
+    simplePowerSink,
+    simpleSolarPanel,
+    spacecraft,
 )
-
-from Basilisk.architecture import messaging
-import Basilisk.architecture.cMsgCInterfacePy as cMsgPy
 from Basilisk.utilities import RigidBodyKinematics as rbk
+from Basilisk.utilities import SimulationBaseClass
+from Basilisk.utilities import macros as mc
+from Basilisk.utilities import simIncludeGravBody, unitTestSupport, vizSupport
 
-from Basilisk import __path__
+from bsk_rl.utilities.effector_primitives import actuator_primitives as ap
 
 bskPath = __path__[0]
 
