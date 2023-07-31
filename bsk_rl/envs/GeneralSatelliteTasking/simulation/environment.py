@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 if TYPE_CHECKING:
     from bsk_rl.envs.GeneralSatelliteTasking.types import Simulator
@@ -221,7 +221,7 @@ class GroundStationEnvModel(BasicEnvironmentModel):
     )
     def _set_ground_locations(
         self,
-        groundStationsData: list[dict[str, str | float]],
+        groundStationsData: list[dict[str, Union[str, float]]],
         groundLocationPlanetRadius: float,
         gsMinimumElevation: float,
         gsMaximumRange: float,
@@ -251,7 +251,7 @@ class GroundStationEnvModel(BasicEnvironmentModel):
         lat: float,
         long: float,
         elev: float = 0,
-        name: str | None = None,
+        name: Optional[str] = None,
         priority: int = 1399,
     ) -> None:
         """Add a ground station with given parameters.

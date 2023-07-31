@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import TYPE_CHECKING, Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional
 
 if TYPE_CHECKING:
     from bsk_rl.envs.GeneralSatelliteTasking.types import (
@@ -150,7 +150,7 @@ class DataManager(ABC):
 
 class UniqueImageData(DataType):
     def __init__(
-        self, imaged: list["Target"] | None = None, duplicates: int = 0
+        self, imaged: Optional[list["Target"]] = None, duplicates: int = 0
     ) -> None:
         """DataType to log unique imaging
 

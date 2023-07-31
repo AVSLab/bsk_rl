@@ -1,4 +1,4 @@
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Optional, Union
 
 import numpy as np
 from Basilisk import __path__
@@ -11,13 +11,13 @@ bskPath = __path__[0]
 
 
 def random_orbit(
-    i: float | None = 45.0,
+    i: Optional[float] = 45.0,
     alt: float = 500,
     r_body: float = 6371,
     e: float = 0,
-    Omega: float | None = None,
-    omega: float | None = 0,
-    f: float | None = None,
+    Omega: Optional[float] = None,
+    omega: Optional[float] = 0,
+    f: Optional[float] = None,
 ) -> ClassicElements:
     """Create a set of orbit elements. Parameters are fixed if specified and randomized if None.
 
@@ -177,8 +177,8 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         return self.total_interpolator
 
     def __call__(
-        self, t: float | np.ndarray
-    ) -> Iterable[float] | Iterable[Iterable[float]]:
+        self, t: Union[float, np.ndarray]
+    ) -> Union[Iterable[float], Iterable[Iterable[float]]]:
         """Get position at time(s)
 
         Args:

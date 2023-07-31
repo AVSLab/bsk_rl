@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional, Union
 
 import numpy as np
 from gymnasium import Env, spaces
@@ -23,12 +23,12 @@ MultiSatAct = Iterable[SatAct]
 class GeneralSatelliteTasking(Env):
     def __init__(
         self,
-        satellites: Satellite | list[Satellite],
+        satellites: Union[Satellite, list[Satellite]],
         env_type: type[EnvironmentModel],
         env_features: EnvironmentFeatures,
         data_manager: DataManager,
-        env_args: dict[str, Any] | None = None,
-        communicator: CommunicationMethod | None = None,
+        env_args: Optional[dict[str, Any]] = None,
+        communicator: Optional[CommunicationMethod] = None,
         sim_rate: float = 1.0,
         max_step_duration: float = 600.0,
         failure_penalty: float = -100,
@@ -98,7 +98,7 @@ class GeneralSatelliteTasking(Env):
 
     def reset(
         self,
-        seed: int | None = None,
+        seed: Optional[int] = None,
         options=None,
     ) -> tuple[MultiSatObs, dict[str, Any]]:
         """Reconstruct the simulator and wipe data records.
