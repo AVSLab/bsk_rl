@@ -1,6 +1,6 @@
 import inspect
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
 
 if TYPE_CHECKING:
     from bsk_rl.envs.GeneralSatelliteTasking.types import (
@@ -57,7 +57,7 @@ class Satellite(ABC):
             defaults[k] = v
         return defaults
 
-    def __init__(self, name: str, sat_args: dict[str, Any] | None) -> None:
+    def __init__(self, name: str, sat_args: Optional[dict[str, Any]]) -> None:
         """Base satellite constructor
 
         Args:
@@ -593,7 +593,7 @@ class ImagingSatellite(BasicSatellite):
         else:
             self.simulator.eventMap[self._image_event_name].eventActive = True
 
-    def set_action(self, action: int | Target | str) -> None:
+    def set_action(self, action: Union[int, Target, str]) -> None:
         """Select the satellite action; does not reassign action if the same target is selected twice
 
         Args:

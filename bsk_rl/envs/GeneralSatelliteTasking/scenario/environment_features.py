@@ -1,7 +1,7 @@
 import os
 import sys
 from abc import ABC
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -45,8 +45,8 @@ class Target:
 class StaticTargets(EnvironmentFeatures):
     def __init__(
         self,
-        n_targets: int | tuple[int, int],
-        priority_distribution: Callable | None = None,
+        n_targets: Union[int, tuple[int, int]],
+        priority_distribution: Optional[Callable] = None,
         radius: float = orbitalMotion.REQ_EARTH * 1e3,
     ) -> None:
         """Environment with a set number of evenly-distributed static targets.
@@ -85,10 +85,10 @@ class StaticTargets(EnvironmentFeatures):
 class CityTargets(StaticTargets):
     def __init__(
         self,
-        n_targets: int | tuple[int, int],
+        n_targets: Union[int, tuple[int, int]],
         n_select_from: int = sys.maxsize,
         location_offset: float = 0,
-        priority_distribution: Callable | None = None,
+        priority_distribution: Optional[Callable] = None,
         radius: float = orbitalMotion.REQ_EARTH * 1e3,
     ) -> None:
         """Environment with a set number of static targets around population centers.

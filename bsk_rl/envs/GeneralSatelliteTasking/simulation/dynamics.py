@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, Optional
 
 if TYPE_CHECKING:
     from bsk_rl.envs.GeneralSatelliteTasking.types import (
@@ -197,7 +197,7 @@ class BasicDynamicsModel(DynamicsModel):
 
     @default_args(disturbance_vector=None)
     def _set_disturbance_torque(
-        self, disturbance_vector: Iterable[float] | None = None, **kwargs
+        self, disturbance_vector: Optional[Iterable[float]] = None, **kwargs
     ) -> None:
         """Attach the disturbance torque to the satellite.
 
@@ -603,7 +603,7 @@ class ImagingDynModel(BasicDynamicsModel):
         self,
         dataStorageCapacity: int,
         transmitterNumBuffers: int,
-        bufferNames: Iterable[str] | None,
+        bufferNames: Optional[Iterable[str]],
         priority: int = 699,
         **kwargs,
     ) -> None:
