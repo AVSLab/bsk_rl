@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Callable, Iterable
+from weakref import proxy
 
 if TYPE_CHECKING:
     from bsk_rl.envs.GeneralSatelliteTasking.types import (
         DynamicsModel,
         Satellite,
+        Simulator,
+        EnvironmentModel,
     )
 
 import Basilisk.architecture.cMsgCInterfacePy as cMsgPy
@@ -26,6 +29,7 @@ from Basilisk.fswAlgorithms import (
 from Basilisk.utilities import macros as mc
 
 from bsk_rl.envs.GeneralSatelliteTasking.simulation import dynamics
+from bsk_rl.envs.GeneralSatelliteTasking.utils.debug import MEMORY_LEAK_CHECKING
 from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import (
     check_aliveness_checkers,
     default_args,
@@ -67,11 +71,9 @@ class FSWModel(ABC):
         """
 
         self.satellite = satellite
-        self.simulator = satellite.simulator
         assert all(
             [issubclass(satellite.dyn_type, required) for required in self.requires_dyn]
         )
-        self.dynamics = satellite.dynamics
 
         fsw_proc_name = "FSWProcess" + self.satellite.id
         self.fsw_proc = self.simulator.CreateNewProcess(fsw_proc_name, priority)
@@ -92,6 +94,18 @@ class FSWModel(ABC):
 
         self.fsw_proc.disableAllTasks()
 
+    @property
+    def simulator(self) -> "Simulator":
+        return self.satellite.simulator
+
+    @property
+    def environment(self) -> "EnvironmentModel":
+        return self.simulator.environment
+
+    @property
+    def dynamics(self) -> "DynamicsModel":
+        return self.satellite.dynamics
+
     @abstractmethod
     def _make_task_list(self) -> list["Task"]:
         pass
@@ -109,6 +123,10 @@ class FSWModel(ABC):
         """
         return check_aliveness_checkers(self)
 
+    def __del__(self):
+        if MEMORY_LEAK_CHECKING:
+            print("~~~ BSK FSW DELETED ~~~")
+
 
 class Task(ABC):
     @property
@@ -123,7 +141,7 @@ class Task(ABC):
             fsw: FSW model task contributes to
             priority: Task priority
         """
-        self.fsw = fsw
+        self.fsw: FSWModel = proxy(fsw)
         self.priority = priority
 
     def create_task(self) -> None:
@@ -263,8 +281,8 @@ class BasicFSWModel(FSWModel):
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
             self.sunPointData.celBodyInMsg.subscribeTo(
-                self.fsw.simulator.environment.ephemConverter.ephemOutMsgs[
-                    self.fsw.simulator.environment.sun_index
+                self.fsw.environment.ephemConverter.ephemOutMsgs[
+                    self.fsw.environment.sun_index
                 ]
             )
             self.sunPointData.useBoresightRateDamping = 1
@@ -301,8 +319,8 @@ class BasicFSWModel(FSWModel):
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
             self.hillPointData.celBodyInMsg.subscribeTo(
-                self.fsw.simulator.environment.ephemConverter.ephemOutMsgs[
-                    self.fsw.simulator.environment.body_index
+                self.fsw.environment.ephemConverter.ephemOutMsgs[
+                    self.fsw.environment.body_index
                 ]
             )
             cMsgPy.AttRefMsg_C_addAuthor(

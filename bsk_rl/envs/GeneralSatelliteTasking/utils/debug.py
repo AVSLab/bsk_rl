@@ -1,0 +1,1 @@
+MEMORY_LEAK_CHECKING = False
