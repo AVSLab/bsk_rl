@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 if TYPE_CHECKING:
     from bsk_rl.envs.GeneralSatelliteTasking.types import Simulator
 
+import numpy as np
 from Basilisk import __path__
 from Basilisk.simulation import (
     eclipse,
@@ -68,6 +69,24 @@ class EnvironmentModel(ABC):
 
 class BasicEnvironmentModel(EnvironmentModel):
     """Minimal set of Basilisk environment objects"""
+
+    @property
+    def PN(self):
+        return np.array(
+            self.gravFactory.spiceObject.planetStateOutMsgs[self.body_index]
+            .read()
+            .J20002Pfix
+        ).reshape((3, 3))
+
+    @property
+    def omega_PN_N(self):
+        PNdot = np.array(
+            self.gravFactory.spiceObject.planetStateOutMsgs[self.body_index]
+            .read()
+            .J20002Pfix_dot
+        ).reshape((3, 3))
+        skew_PN_N = -np.matmul(np.transpose(self.PN), PNdot)
+        return np.array([skew_PN_N[2, 1], skew_PN_N[0, 2], skew_PN_N[1, 0]])
 
     def _init_environment_objects(self, **kwargs) -> None:
         self._set_gravity_bodies(**kwargs)

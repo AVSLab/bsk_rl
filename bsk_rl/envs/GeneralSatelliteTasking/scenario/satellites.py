@@ -11,7 +11,8 @@ if TYPE_CHECKING:
 
 import chebpy
 import numpy as np
-from Basilisk.utilities import RigidBodyKinematics, macros
+from Basilisk.utilities import macros
+from deprecated import deprecated
 from gymnasium import spaces
 
 from bsk_rl.envs.GeneralSatelliteTasking.scenario.data import (
@@ -239,66 +240,59 @@ class BasicSatellite(Satellite):
             raise ValueError("Invalid action")
 
     @property
+    @deprecated(version="0.0.0")
     def PN(self):
-        return np.array(
-            self.simulator.environment.gravFactory.spiceObject.planetStateOutMsgs[
-                self.simulator.environment.body_index
-            ]
-            .read()
-            .J20002Pfix
-        ).reshape((3, 3))
+        return self.simulator.environment.PN
 
     @property
+    @deprecated(version="0.0.0")
     def omega_PN_N(self):
-        PNdot = np.array(
-            self.simulator.environment.gravFactory.spiceObject.planetStateOutMsgs[
-                self.simulator.environment.body_index
-            ]
-            .read()
-            .J20002Pfix_dot
-        ).reshape((3, 3))
-        skew_PN_N = -np.matmul(np.transpose(self.PN), PNdot)
-        return np.array([skew_PN_N[2, 1], skew_PN_N[0, 2], skew_PN_N[1, 0]])
+        return self.simulator.environment.omega_PN_N
 
     @property
+    @deprecated(version="0.0.0")
     def sigma_BN(self):
-        return self.dynamics.scObject.scStateOutMsg.read().sigma_BN
+        return self.dynamics.sigma_BN
 
     @property
+    @deprecated(version="0.0.0")
     def BN(self):
-        return RigidBodyKinematics.MRP2C(self.sigma_BN)
+        return self.dynamics.BN
 
     @property
+    @deprecated(version="0.0.0")
     def omega_BN_B(self):
-        return self.dynamics.scObject.scStateOutMsg.read().omega_BN_B
+        return self.dynamics.omega_BN_B
 
     @property
+    @deprecated(version="0.0.0")
     def BP(self):
-        return np.matmul(self.BN, self.PN.T)
+        return self.dynamics.BP
 
     @property
+    @deprecated(version="0.0.0")
     def r_BN_N(self):
-        return self.dynamics.scObject.scStateOutMsg.read().r_BN_N
+        return self.dynamics.r_BN_N
 
     @property
+    @deprecated(version="0.0.0")
     def r_BN_P(self):
-        return np.matmul(self.PN, self.r_BN_N)
+        return self.dynamics.r_BN_P
 
     @property
+    @deprecated(version="0.0.0")
     def v_BN_N(self):
-        return self.dynamics.scObject.scStateOutMsg.read().v_BN_N
+        return self.dynamics.v_BN_N
 
     @property
+    @deprecated(version="0.0.0")
     def v_BN_P(self):
-        """P-frame derivative of r_BN"""
-        omega_NP_P = np.matmul(self.PN, -self.omega_PN_N)
-        return np.matmul(self.PN, self.v_BN_N) + np.cross(omega_NP_P, self.r_BN_P)
+        return self.dynamics.v_BN_P
 
     @property
+    @deprecated(version="0.0.0")
     def omega_BP_P(self):
-        omega_BN_N = np.matmul(self.BN.T, self.omega_BN_B)
-        omega_BP_N = omega_BN_N - self.omega_PN_N
-        return np.matmul(self.PN, omega_BP_N)
+        return self.dynamics.omega_BP_P
 
 
 class ImagingSatellite(BasicSatellite):
@@ -495,9 +489,9 @@ class ImagingSatellite(BasicSatellite):
         return targets
 
     @property
+    @deprecated(version="0.0.0")
     def c_hat_P(self):
-        c_hat_B = self.fsw.locPointConfig.pHat_B
-        return np.matmul(self.BP.T, c_hat_B)
+        return self.fsw.c_hat_P
 
     def get_obs(self) -> Iterable[float]:
         dynamic_state = np.concatenate(

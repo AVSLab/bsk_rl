@@ -46,10 +46,10 @@ class CustomSat(sats.ImagingSatellite):
     def get_obs(self):
         dynamic_state = np.concatenate(
             [
-                self.omega_BP_P / 0.03,
-                self.c_hat_P,
-                self.r_BN_P / (orbitalMotion.REQ_EARTH * 1e3),
-                self.v_BN_P / 7616.5,
+                self.dynamics.omega_BP_P / 0.03,
+                self.fsw.c_hat_P,
+                self.dynamics.r_BN_P / (orbitalMotion.REQ_EARTH * 1e3),
+                self.dynamics.v_BN_P / 7616.5,
             ]
         )
         images_state = np.array(
