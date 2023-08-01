@@ -118,9 +118,7 @@ class GeneralSatelliteTasking(Env):
         self.env_features.reset()
         self.data_manager.reset()
 
-        # Destroy cross references to actually delete the simulator.
-        for satellite in self.satellites:
-            satellite.delete_simulator()
+        # Explicitly delete the Basilisk simulation before creating a new one.
         self.delete_simulator()
 
         for satellite in self.satellites:
@@ -147,17 +145,14 @@ class GeneralSatelliteTasking(Env):
         return observation, info
 
     def delete_simulator(self):
-        """Delete cross-references to simulator objects"""
-
-        for attr in [
-            "simulator.environment.simulator",
-            "simulator.environment",
-            "simulator",
-        ]:
-            try:
-                delattr(self, attr)
-            except AttributeError:
-                pass
+        """Delete Basilisk objects. Only self.simulator contains strong references to BSK models, so deleting it will
+        delete all Basilisk objects. Enable MEMORY_LEAK_CHECKING in bsk_rl/envs/GeneralSatelliteTasking/utils/debug.py
+        to verify that the simulator, FSW, dynamics, and environment models are all deleted on reset.
+        """
+        try:
+            del self.simulator
+        except AttributeError:
+            pass
 
     def _get_obs(self) -> MultiSatObs:
         """Compose satellite observations into a single observation.

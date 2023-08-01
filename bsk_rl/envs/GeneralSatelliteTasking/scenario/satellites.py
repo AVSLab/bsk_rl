@@ -1,6 +1,7 @@
 import inspect
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
+from weakref import proxy
 
 if TYPE_CHECKING:
     from bsk_rl.envs.GeneralSatelliteTasking.types import (
@@ -85,21 +86,6 @@ class Satellite(ABC):
             k: v if not callable(v) else v() for k, v in self.sat_args_generator.items()
         }
 
-    def delete_simulator(self):
-        """Delete cross-references to other BSK simulation objects"""
-        for attr in [
-            "fsw.dynamics",
-            "fsw.simulator",
-            "fsw",
-            "dynamics.simulator",
-            "dynamics",
-            "simulator",
-        ]:
-            try:
-                delattr(self, attr)
-            except AttributeError:
-                pass
-
     def reset(self) -> None:
         """Called in environment reset, before simulator initialization"""
         self.info = []
@@ -107,32 +93,39 @@ class Satellite(ABC):
         assert self.data_store.is_fresh
         self.data_store.is_fresh = False
 
-    def set_dynamics(self, simulator: "Simulator", dyn_rate: float) -> "DynamicsModel":
-        """Create dynamics model; called during simulator initialization
+    def set_simulator(self, simulator: "Simulator"):
+        """Sets the simulator for models; called during simulator initialization
 
         Args:
             simulator: Basilisk simulator
+        """
+        self.simulator = proxy(simulator)
+
+    def set_dynamics(self, dyn_rate: float) -> "DynamicsModel":
+        """Create dynamics model; called during simulator initialization
+
+        Args:
             dyn_rate: rate for dynamics simulation [s]
 
         Returns:
             Satellite's dynamics model
         """
-        self.simulator = simulator
-        self.dynamics = self.dyn_type(self, dyn_rate, **self.sat_args)
-        return self.dynamics
+        dynamics = self.dyn_type(self, dyn_rate, **self.sat_args)
+        self.dynamics = proxy(dynamics)
+        return dynamics
 
-    def set_fsw(self, simulator, fsw_rate) -> "FSWModel":
+    def set_fsw(self, fsw_rate: float) -> "FSWModel":
         """Create flight software model; called during simulator initialization
 
         Args:
-            simulator: Basilisk simulator
             fsw_rate: rate for FSW simulation [s]
 
         Returns:
             Satellite's FSW model
         """
-        self.fsw = self.fsw_type(self, fsw_rate, **self.sat_args)
-        return self.fsw
+        fsw = self.fsw_type(self, fsw_rate, **self.sat_args)
+        self.fsw = proxy(fsw)
+        return fsw
 
     @property
     def observation_space(self) -> spaces.Box:
@@ -517,7 +510,6 @@ class ImagingSatellite(BasicSatellite):
                 self._image_event_name,
                 macros.sec2nano(self.fsw.fsw_rate),
                 True,
-                # [f"self.dynamics_list['{self.id}'].instrument.nodeDataOutMsg.read().baudRate > 0"],
                 [
                     f"self.dynamics_list['{self.id}'].storageUnit.storageUnitDataOutMsg.read()"
                     + f".storedData[{data_index}] > {current_data_level}"

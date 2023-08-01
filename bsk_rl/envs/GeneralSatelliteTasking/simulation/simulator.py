@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 from Basilisk.utilities import SimulationBaseClass
 from Basilisk.utilities import macros as mc
 
+from bsk_rl.envs.GeneralSatelliteTasking.utils.debug import MEMORY_LEAK_CHECKING
+
 
 class Simulator(SimulationBaseClass.SimBaseClass):
     def __init__(
@@ -44,10 +46,9 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self.dynamics_list = {}
 
         for satellite in self.satellites:
-            self.dynamics_list[satellite.id] = satellite.set_dynamics(
-                self, self.sim_rate
-            )
-            self.fsw_list[satellite.id] = satellite.set_fsw(self, self.sim_rate)
+            satellite.set_simulator(self)
+            self.dynamics_list[satellite.id] = satellite.set_dynamics(self.sim_rate)
+            self.fsw_list[satellite.id] = satellite.set_fsw(self.sim_rate)
 
         self.InitializeSimulation()
         self.ConfigureStopTime(0)
@@ -81,3 +82,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         )
         self.ConfigureStopTime(simulation_time)
         self.ExecuteSimulation()
+
+    def __del__(self):
+        if MEMORY_LEAK_CHECKING:
+            print("~~~ BSK SIMULATOR DELETED ~~~")

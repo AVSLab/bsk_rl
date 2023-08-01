@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Optional, Union
+from weakref import proxy
 
 if TYPE_CHECKING:
     from bsk_rl.envs.GeneralSatelliteTasking.types import Simulator
@@ -16,6 +17,7 @@ from Basilisk.topLevelModules import pyswice
 from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion, simIncludeGravBody
 
+from bsk_rl.envs.GeneralSatelliteTasking.utils.debug import MEMORY_LEAK_CHECKING
 from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import (
     collect_default_args,
     default_args,
@@ -48,7 +50,7 @@ class EnvironmentModel(ABC):
             env_rate: Rate of environment simulation [s]
             priority: Model priority.
         """
-        self.simulator = simulator
+        self.simulator: Simulator = proxy(simulator)
 
         env_proc_name = "EnvironmentProcess"
         env_proc = self.simulator.CreateNewProcess(env_proc_name, priority)
@@ -60,6 +62,10 @@ class EnvironmentModel(ABC):
         )
 
         self._init_environment_objects(**kwargs)
+
+    def __del__(self):
+        if MEMORY_LEAK_CHECKING:
+            print("~~~ BSK ENVIRONMENT DELETED ~~~")
 
     @abstractmethod
     def _init_environment_objects(self, **kwargs) -> None:
@@ -214,6 +220,7 @@ class BasicEnvironmentModel(EnvironmentModel):
         )
 
     def __del__(self) -> None:
+        super().__del__()
         self.gravFactory.unloadSpiceKernels()
 
 

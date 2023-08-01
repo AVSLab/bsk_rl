@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from bsk_rl.envs.GeneralSatelliteTasking.types import (
         EnvironmentModel,
         Satellite,
+        Simulator,
     )
 
 import numpy as np
@@ -28,6 +29,7 @@ from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion, unitTestSupport
 
 from bsk_rl.envs.GeneralSatelliteTasking.simulation import environment
+from bsk_rl.envs.GeneralSatelliteTasking.utils.debug import MEMORY_LEAK_CHECKING
 from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import (
     aliveness_checker,
     check_aliveness_checkers,
@@ -59,7 +61,6 @@ class DynamicsModel(ABC):
             priority: Model priority.
         """
         self.satellite = satellite
-        self.simulator = satellite.simulator
         assert all(
             [
                 issubclass(type(self.simulator.environment), required)
@@ -79,6 +80,14 @@ class DynamicsModel(ABC):
         self.scObject: spacecraft.Spacecraft
         self._init_dynamics_objects(**kwargs)
 
+    @property
+    def simulator(self) -> "Simulator":
+        return self.satellite.simulator
+
+    @property
+    def environment(self) -> "EnvironmentModel":
+        return self.simulator.environment
+
     @abstractmethod
     def _init_dynamics_objects(self, **kwargs) -> None:
         """Caller for all dynamics object initialization"""
@@ -95,6 +104,10 @@ class DynamicsModel(ABC):
     def reset_for_action(self) -> None:
         """Called whenever a FSW @action is called"""
         pass
+
+    def __del__(self):
+        if MEMORY_LEAK_CHECKING:
+            print("~~~ BSK DYNAMICS DELETED ~~~")
 
 
 class BasicDynamicsModel(DynamicsModel):
@@ -119,7 +132,7 @@ class BasicDynamicsModel(DynamicsModel):
 
     @property
     def BP(self):
-        return np.matmul(self.BN, self.simulator.environment.PN.T)
+        return np.matmul(self.BN, self.environment.PN.T)
 
     @property
     def r_BN_N(self):
@@ -127,7 +140,7 @@ class BasicDynamicsModel(DynamicsModel):
 
     @property
     def r_BN_P(self):
-        return np.matmul(self.simulator.environment.PN, self.r_BN_N)
+        return np.matmul(self.environment.PN, self.r_BN_N)
 
     @property
     def v_BN_N(self):
@@ -136,18 +149,16 @@ class BasicDynamicsModel(DynamicsModel):
     @property
     def v_BN_P(self):
         """P-frame derivative of r_BN"""
-        omega_NP_P = np.matmul(
-            self.simulator.environment.PN, -self.simulator.environment.omega_PN_N
-        )
-        return np.matmul(self.simulator.environment.PN, self.v_BN_N) + np.cross(
+        omega_NP_P = np.matmul(self.environment.PN, -self.environment.omega_PN_N)
+        return np.matmul(self.environment.PN, self.v_BN_N) + np.cross(
             omega_NP_P, self.r_BN_P
         )
 
     @property
     def omega_BP_P(self):
         omega_BN_N = np.matmul(self.BN.T, self.omega_BN_B)
-        omega_BP_N = omega_BN_N - self.simulator.environment.omega_PN_N
-        return np.matmul(self.simulator.environment.PN, omega_BP_N)
+        omega_BP_N = omega_BN_N - self.environment.omega_PN_N
+        return np.matmul(self.environment.PN, omega_BP_N)
 
     @property
     def battery_charge(self):
@@ -253,7 +264,7 @@ class BasicDynamicsModel(DynamicsModel):
     def _set_gravity_bodies(self) -> None:
         """Specify what gravitational bodies to include in the simulation."""
         self.scObject.gravField.gravBodies = spacecraft.GravBodyVector(
-            list(self.simulator.environment.gravFactory.gravBodies.values())
+            list(self.environment.gravFactory.gravBodies.values())
         )
 
     @default_args(disturbance_vector=None)
@@ -274,9 +285,7 @@ class BasicDynamicsModel(DynamicsModel):
 
     def _set_density_model(self) -> None:
         """Attaches the density model effector to the satellite."""
-        self.simulator.environment.densityModel.addSpacecraftToModel(
-            self.scObject.scStateOutMsg
-        )
+        self.environment.densityModel.addSpacecraftToModel(self.scObject.scStateOutMsg)
 
     def _set_drag_effector(
         self,
@@ -319,7 +328,7 @@ class BasicDynamicsModel(DynamicsModel):
             [0, height, 0],
         )
         self.dragEffector.atmoDensInMsg.subscribeTo(
-            self.simulator.environment.densityModel.envOutMsgs[-1]
+            self.environment.densityModel.envOutMsgs[-1]
         )
         self.scObject.addDynamicEffector(self.dragEffector)
 
@@ -403,12 +412,8 @@ class BasicDynamicsModel(DynamicsModel):
 
     def _set_eclipse_object(self) -> None:
         """Adds the spacecraft to the eclipse module"""
-        self.simulator.environment.eclipseObject.addSpacecraftToModel(
-            self.scObject.scStateOutMsg
-        )
-        self.eclipse_index = (
-            len(self.simulator.environment.eclipseObject.eclipseOutMsgs) - 1
-        )
+        self.environment.eclipseObject.addSpacecraftToModel(self.scObject.scStateOutMsg)
+        self.eclipse_index = len(self.environment.eclipseObject.eclipseOutMsgs) - 1
 
     @default_args(
         panelArea=2 * 1.0 * 0.5,
@@ -435,11 +440,11 @@ class BasicDynamicsModel(DynamicsModel):
         self.solarPanel.ModelTag = "solarPanel" + self.satellite.id
         self.solarPanel.stateInMsg.subscribeTo(self.scObject.scStateOutMsg)
         self.solarPanel.sunEclipseInMsg.subscribeTo(
-            self.simulator.environment.eclipseObject.eclipseOutMsgs[self.eclipse_index]
+            self.environment.eclipseObject.eclipseOutMsgs[self.eclipse_index]
         )
         self.solarPanel.sunInMsg.subscribeTo(
-            self.simulator.environment.gravFactory.spiceObject.planetStateOutMsgs[
-                self.simulator.environment.sun_index
+            self.environment.gravFactory.spiceObject.planetStateOutMsgs[
+                self.environment.sun_index
             ]
         )
         self.solarPanel.setPanelParameters(
@@ -534,8 +539,8 @@ class LOSCommDynModel(BasicDynamicsModel):
         self.losComms.ModelTag = "losComms"
         self.losComms.primaryScStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
         self.losComms.planetInMsg.subscribeTo(
-            self.simulator.environment.gravFactory.spiceObject.planetStateOutMsgs[
-                self.simulator.environment.body_index
+            self.environment.gravFactory.spiceObject.planetStateOutMsgs[
+                self.environment.body_index
             ]
         )
         self.losComms.rEquator = self.simulator.environment.planet.radEquator
@@ -734,15 +739,15 @@ class ImagingDynModel(BasicDynamicsModel):
         self.imagingTarget.planetRadius = groundLocationPlanetRadius
         self.imagingTarget.specifyLocation(0.0, 0.0, 1000.0)
         self.imagingTarget.planetInMsg.subscribeTo(
-            self.simulator.environment.gravFactory.spiceObject.planetStateOutMsgs[
-                self.simulator.environment.body_index
+            self.environment.gravFactory.spiceObject.planetStateOutMsgs[
+                self.environment.body_index
             ]
         )
         self.imagingTarget.minimumElevation = imageTargetMinimumElevation
         self.imagingTarget.maximumRange = imageTargetMaximumRange
 
         self.simulator.AddModelToTask(
-            self.simulator.environment.env_task_name,
+            self.environment.env_task_name,
             self.imagingTarget,
             ModelPriority=priority,
         )
@@ -770,7 +775,7 @@ class GroundStationDynModel(ImagingDynModel):
 
     def _set_ground_station_locations(self) -> None:
         """Connect the transmitter to ground stations."""
-        for groundStation in self.simulator.environment.groundStations:
+        for groundStation in self.environment.groundStations:
             groundStation.addSpacecraftToModel(self.scObject.scStateOutMsg)
             self.transmitter.addAccessMsgToTransmitter(groundStation.accessOutMsgs[-1])
 
