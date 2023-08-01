@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 import chebpy
 import numpy as np
 from Basilisk.utilities import macros
-from deprecated import deprecated
 from gymnasium import spaces
 
 from bsk_rl.envs.GeneralSatelliteTasking.scenario.data import (
@@ -239,61 +238,6 @@ class BasicSatellite(Satellite):
         else:
             raise ValueError("Invalid action")
 
-    @property
-    @deprecated(version="0.0.0")
-    def PN(self):
-        return self.simulator.environment.PN
-
-    @property
-    @deprecated(version="0.0.0")
-    def omega_PN_N(self):
-        return self.simulator.environment.omega_PN_N
-
-    @property
-    @deprecated(version="0.0.0")
-    def sigma_BN(self):
-        return self.dynamics.sigma_BN
-
-    @property
-    @deprecated(version="0.0.0")
-    def BN(self):
-        return self.dynamics.BN
-
-    @property
-    @deprecated(version="0.0.0")
-    def omega_BN_B(self):
-        return self.dynamics.omega_BN_B
-
-    @property
-    @deprecated(version="0.0.0")
-    def BP(self):
-        return self.dynamics.BP
-
-    @property
-    @deprecated(version="0.0.0")
-    def r_BN_N(self):
-        return self.dynamics.r_BN_N
-
-    @property
-    @deprecated(version="0.0.0")
-    def r_BN_P(self):
-        return self.dynamics.r_BN_P
-
-    @property
-    @deprecated(version="0.0.0")
-    def v_BN_N(self):
-        return self.dynamics.v_BN_N
-
-    @property
-    @deprecated(version="0.0.0")
-    def v_BN_P(self):
-        return self.dynamics.v_BN_P
-
-    @property
-    @deprecated(version="0.0.0")
-    def omega_BP_P(self):
-        return self.dynamics.omega_BP_P
-
 
 class ImagingSatellite(BasicSatellite):
     dyn_type = dynamics.ImagingDynModel
@@ -488,14 +432,14 @@ class ImagingSatellite(BasicSatellite):
             targets += [targets[-1]] * (n - len(targets))
         return targets
 
-    @property
-    @deprecated(version="0.0.0")
-    def c_hat_P(self):
-        return self.fsw.c_hat_P
-
     def get_obs(self) -> Iterable[float]:
         dynamic_state = np.concatenate(
-            [self.omega_BP_P, self.c_hat_P, self.r_BN_P, self.v_BN_P]
+            [
+                self.dynamics.omega_BP_P,
+                self.fsw.c_hat_P,
+                self.dynamics.r_BN_P,
+                self.dynamics.v_BN_P,
+            ]
         )
         images_state = np.array(
             [
