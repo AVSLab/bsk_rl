@@ -23,6 +23,7 @@ from Basilisk.simulation import (
     spacecraftLocation,
     spaceToGroundTransmitter,
 )
+from Basilisk.utilities import RigidBodyKinematics
 from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion, unitTestSupport
 
@@ -103,6 +104,66 @@ class BasicDynamicsModel(DynamicsModel):
     @property
     def requires_env(cls) -> list[type["EnvironmentModel"]]:
         return [environment.BasicEnvironmentModel]
+
+    @property
+    def sigma_BN(self):
+        return self.scObject.scStateOutMsg.read().sigma_BN
+
+    @property
+    def BN(self):
+        return RigidBodyKinematics.MRP2C(self.sigma_BN)
+
+    @property
+    def omega_BN_B(self):
+        return self.scObject.scStateOutMsg.read().omega_BN_B
+
+    @property
+    def BP(self):
+        return np.matmul(self.BN, self.simulator.environment.PN.T)
+
+    @property
+    def r_BN_N(self):
+        return self.scObject.scStateOutMsg.read().r_BN_N
+
+    @property
+    def r_BN_P(self):
+        return np.matmul(self.simulator.environment.PN, self.r_BN_N)
+
+    @property
+    def v_BN_N(self):
+        return self.scObject.scStateOutMsg.read().v_BN_N
+
+    @property
+    def v_BN_P(self):
+        """P-frame derivative of r_BN"""
+        omega_NP_P = np.matmul(
+            self.simulator.environment.PN, -self.simulator.environment.omega_PN_N
+        )
+        return np.matmul(self.simulator.environment.PN, self.v_BN_N) + np.cross(
+            omega_NP_P, self.r_BN_P
+        )
+
+    @property
+    def omega_BP_P(self):
+        omega_BN_N = np.matmul(self.BN.T, self.omega_BN_B)
+        omega_BP_N = omega_BN_N - self.simulator.environment.omega_PN_N
+        return np.matmul(self.simulator.environment.PN, omega_BP_N)
+
+    @property
+    def battery_charge(self):
+        return self.powerMonitor.batPowerOutMsg.read().storageLevel
+
+    @property
+    def battery_charge_fraction(self):
+        return self.battery_charge / self.powerMonitor.storageCapacity
+
+    @property
+    def wheel_speeds(self):
+        return np.array(self.rwStateEffector.rwSpeedOutMsg.read().wheelSpeeds)
+
+    @property
+    def wheel_speeds_fraction(self):
+        return self.wheel_speeds / (self.maxWheelSpeed * mc.rpm2radsec)
 
     def _init_dynamics_objects(self, **kwargs) -> None:
         self._set_spacecraft_hub(**kwargs)
@@ -282,10 +343,7 @@ class BasicDynamicsModel(DynamicsModel):
     @aliveness_checker
     def altitude_valid(self) -> bool:
         """Check for deorbit by checking if altitude is greater than 200km above Earth's surface."""
-        return (
-            np.linalg.norm(self.scObject.scStateOutMsg.read().r_BN_N)
-            > (orbitalMotion.REQ_EARTH + 200) * 1e3
-        )
+        return np.linalg.norm(self.r_BN_N) > (orbitalMotion.REQ_EARTH + 200) * 1e3
 
     @default_args(
         wheelSpeeds=lambda: np.random.uniform(-1500, 1500, 3),
@@ -326,7 +384,7 @@ class BasicDynamicsModel(DynamicsModel):
         """Check if any wheel speed exceeds the maximum."""
         valid = all(
             abs(speed) < self.maxWheelSpeed * mc.rpm2radsec
-            for speed in self.rwStateEffector.rwSpeedOutMsg.read().wheelSpeeds
+            for speed in self.wheel_speeds
         )
         return valid
 
@@ -423,7 +481,7 @@ class BasicDynamicsModel(DynamicsModel):
     @aliveness_checker
     def battery_valid(self) -> bool:
         """Check if the battery has charge remaining."""
-        return self.powerMonitor.batPowerOutMsg.read().storageLevel > 0
+        return self.battery_charge > 0
 
     @default_args(
         rwBasePower=0.4, rwMechToElecEfficiency=0.0, rwElecToMechEfficiency=0.5
@@ -505,6 +563,14 @@ class LOSCommDynModel(BasicDynamicsModel):
 
 class ImagingDynModel(BasicDynamicsModel):
     """Equips the satellite with an instrument, storage unit, and transmitter."""
+
+    @property
+    def storage_level(self):
+        return self.storageUnit.storageUnitDataOutMsg.read().storageLevel
+
+    @property
+    def storage_level_fraction(self):
+        return self.storage_level / self.storageUnit.storageCapacity
 
     def _init_dynamics_objects(self, **kwargs) -> None:
         super()._init_dynamics_objects(**kwargs)
@@ -640,10 +706,7 @@ class ImagingDynModel(BasicDynamicsModel):
     @aliveness_checker
     def data_storage_valid(self) -> bool:
         """Check that the buffer has not run out of space."""
-        return (
-            self.storageUnit.storageUnitDataOutMsg.read().storageLevel
-            < self.storageUnit.storageCapacity
-        )
+        return self.storage_level <= self.storageUnit.storageCapacity
 
     @default_args(
         groundLocationPlanetRadius=orbitalMotion.REQ_EARTH * 1e3,

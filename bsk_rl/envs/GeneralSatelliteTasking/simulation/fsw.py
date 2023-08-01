@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     )
 
 import Basilisk.architecture.cMsgCInterfacePy as cMsgPy
+import numpy as np
 from Basilisk.architecture import messaging
 from Basilisk.fswAlgorithms import (
     attTrackingError,
@@ -537,6 +538,11 @@ class ImagingFSWModel(BasicFSWModel):
     @property
     def requires_dyn(cls) -> list[type["DynamicsModel"]]:
         return super().requires_dyn + [dynamics.ImagingDynModel]
+
+    @property
+    def c_hat_P(self):
+        c_hat_B = self.locPointConfig.pHat_B
+        return np.matmul(self.dynamics.BP.T, c_hat_B)
 
     def _make_task_list(self) -> list[Task]:
         return super()._make_task_list() + [self.LocPointTask(self)]
