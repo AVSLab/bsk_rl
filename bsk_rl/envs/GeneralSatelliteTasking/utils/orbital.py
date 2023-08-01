@@ -1,8 +1,8 @@
-from typing import Callable, Iterable, Optional, Union
+from typing import Iterable, Optional
 
 import numpy as np
 from Basilisk import __path__
-from Basilisk.simulation import spacecraft
+from Basilisk.simulation import eclipse, spacecraft
 from Basilisk.utilities import SimulationBaseClass, macros, simIncludeGravBody
 from Basilisk.utilities.orbitalMotion import ClassicElements, elem2rv
 from scipy.interpolate import interp1d
@@ -34,7 +34,7 @@ def random_orbit(
         ClassicElements: orbital elements
     """
     oe = ClassicElements()
-    oe.a = (6371 + alt) * 1e3
+    oe.a = (r_body + alt) * 1e3
     oe.e = e
     oe.i = np.radians(i) if i is not None else np.random.uniform(-np.pi, np.pi)
     oe.Omega = (
@@ -47,18 +47,40 @@ def random_orbit(
     return oe
 
 
+def elevation(r_sat: np.ndarray, r_target: np.ndarray) -> np.ndarray:
+    """Find the elevation angle from a target to a satellite
+
+    Args:
+        r_sat: Satellite position(s)
+        r_target: Target position
+
+    Returns:
+        Elevation angle(s)
+    """
+    if r_sat.ndim == 2:
+        return np.pi / 2 - np.arccos(
+            np.sum(r_target * (r_sat - r_target), 1)
+            / (np.linalg.norm(r_target) * np.linalg.norm(r_sat - r_target, axis=1))
+        )
+    else:
+        return np.pi / 2 - np.arccos(
+            np.sum(r_target * (r_sat - r_target))
+            / (np.linalg.norm(r_target) * np.linalg.norm(r_sat - r_target))
+        )
+
+
 class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
     def __init__(
         self,
         utc_init: str,
-        rN: Iterable[float] = None,
-        vN: Iterable[float] = None,
-        oe: ClassicElements = None,
-        mu: float = None,
-        dt: float = 60.0,
+        rN: Optional[Iterable[float]] = None,
+        vN: Optional[Iterable[float]] = None,
+        oe: Optional[ClassicElements] = None,
+        mu: Optional[float] = None,
+        dt: float = 30.0,
     ) -> None:
-        """Interpolator for trajectory using a point mass simulation under the
-        effect of Earth's gravity, in the PCPF frame. Specify either (rN, vN) or (oe, mu).
+        """Class for propagating trajectory using a point mass simulation under the effect of Earth's gravity. Returns
+        interpolators for position as well as upcoming eclipse predictions. Specify either (rN, vN) or (oe, mu).
 
         Args:
             utc_init: Simulation start time.
@@ -84,19 +106,19 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         self.init_simulator()
 
     def init_simulator(self) -> None:
-        # Set up spacecraft simulator
         simTaskName = "simTask"
         simProcessName = "simProcess"
-
         dynProcess = self.CreateNewProcess(simProcessName)
         simulationTimeStep = macros.sec2nano(self.dt)
         dynProcess.addTask(self.CreateNewTask(simTaskName, simulationTimeStep))
-
         scObject = spacecraft.Spacecraft()
         scObject.ModelTag = "traj-sat"
         self.AddModelToTask(simTaskName, scObject)
 
-        # Setup Gravity Body
+        scObject.hub.r_CN_NInit = self.rN_init  # m
+        scObject.hub.v_CN_NInit = self.vN_init  # m/s
+
+        # Set up gravity body
         self.gravFactory = simIncludeGravBody.gravBodyFactory()
         planet = self.gravFactory.createEarth()
         self.gravFactory.createSun()
@@ -105,33 +127,37 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         simIncludeGravBody.loadGravFromFile(
             bskPath + "/supportData/LocalGravData/GGM03S.txt", planet.spherHarm, 10
         )
-
-        # Set up spice with spice time
         UTCInit = self.utc_init
         self.gravFactory.createSpiceInterface(
             bskPath + "/supportData/EphemerisData/", UTCInit, epochInMsg=True
         )
-        self.gravFactory.spiceObject.zeroBase = (
-            "earth"  # Make sure that the Earth is the zero base
-        )
+        self.gravFactory.spiceObject.zeroBase = "earth"
         self.AddModelToTask(simTaskName, self.gravFactory.spiceObject)
-
-        # Finally, the gravitational body must be connected to the spacecraft object.  This is done with
         scObject.gravField.gravBodies = spacecraft.GravBodyVector(
             list(self.gravFactory.gravBodies.values())
         )
 
-        # To set the spacecraft initial conditions, the following initial position and velocity variables are set:
-        scObject.hub.r_CN_NInit = self.rN_init  # m   - r_BN_N
-        scObject.hub.v_CN_NInit = self.vN_init  # m/s - v_BN_N
+        # # Set up eclipse
+        self.eclipseObject = eclipse.Eclipse()
+        self.eclipseObject.addPlanetToModel(
+            self.gravFactory.spiceObject.planetStateOutMsgs[0]
+        )
+        self.eclipseObject.sunInMsg.subscribeTo(
+            self.gravFactory.spiceObject.planetStateOutMsgs[1]
+        )
+        self.AddModelToTask(simTaskName, self.eclipseObject, ModelPriority=988)
+        self.eclipseObject.addSpacecraftToModel(scObject.scStateOutMsg)
 
-        # create a logging task object of the spacecraft output message
+        # Log outputs
         self.sc_state_log = scObject.scStateOutMsg.recorder()
         self.planet_state_log = self.gravFactory.spiceObject.planetStateOutMsgs[
             0
         ].recorder()
+        self.eclipse_log = self.eclipseObject.eclipseOutMsgs[0].recorder()
+
         self.AddModelToTask(simTaskName, self.sc_state_log)
         self.AddModelToTask(simTaskName, self.planet_state_log)
+        self.AddModelToTask(simTaskName, self.eclipse_log)
 
         self.InitializeSimulation()
 
@@ -140,88 +166,77 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         """Current simulator end time"""
         return macros.NANO2SEC * self.TotalSim.CurrentNanos
 
-    def extend_interpolator(self, end_time) -> Callable:
-        if end_time < self.sim_time:
-            return self.total_interpolator
-        self.ConfigureStopTime(macros.sec2nano(end_time))
-        self.ExecuteSimulation()
+    @property
+    def times(self) -> np.ndarray:
+        """Recorder times in seconds"""
+        return np.array([macros.NANO2SEC * t for t in self.sc_state_log.times()])
 
-        times = [macros.NANO2SEC * t for t in self.sc_state_log.times()]
-        posData = self.sc_state_log.r_BN_N
-        dcm_PN = self.planet_state_log.J20002Pfix
-
-        # Compute the position in the planet-centered, planet-fixed frame
-        pcpf_positions = []
-        for dcm, pos in zip(dcm_PN, posData):
-            pcpf_positions.append(np.matmul(dcm, pos))
-
-        if not hasattr(self, "total_interpolator"):
-            self.total_interpolator = self.current_interpolator = interp1d(
-                np.array(times),
-                np.array(pcpf_positions),
-                kind="cubic",
-                axis=0,
-                fill_value="extrapolate",
-            )
-        else:
-            self.total_interpolator = interp1d(
-                np.concatenate((self.total_interpolator.x, np.array(times))),
-                np.concatenate((self.total_interpolator.y, np.array(pcpf_positions))),
-                kind="cubic",
-                axis=0,
-                fill_value="extrapolate",
-            )
-
-        self.sc_state_log.clear()
-        self.planet_state_log.clear()
-        return self.total_interpolator
-
-    def __call__(
-        self, t: Union[float, np.ndarray]
-    ) -> Union[Iterable[float], Iterable[Iterable[float]]]:
-        """Get position at time(s)
+    def extend_to(self, t: float) -> None:
+        """Compute the trajectory of the satellite up to t
 
         Args:
-            t : Query time(s)
+            t: Computation end [s]
+        """
+        if t < self.sim_time:
+            return
+        self.ConfigureStopTime(macros.sec2nano(t))
+        self.ExecuteSimulation()
+
+    def next_eclipse(self, t: float) -> tuple[float, float]:
+        """Find the soonest eclipse transitions. The returned values are not necessarily from the same eclipse event,
+        such as when the search start time is in eclipse.
+
+        Args:
+            t: Time to start searching [s]
 
         Returns:
-            position(s)
+            eclipse_start: Nearest upcoming eclipse beginning
+            eclipse_end:  Nearest upcoming eclipse end
         """
-        if np.any(t > self.sim_time):
-            self.extend_interpolator(np.max(t))
-        return self.total_interpolator(t)
+        self.extend_to(t + self.dt)
+        for _ in range(100):
+            upcoming_times = self.times[self.times > t]
+            upcoming_eclipse = self.eclipse_log.shadowFactor[self.times > t] > 0
+            if sum(np.diff(upcoming_eclipse)) >= 2:
+                break
+            self.extend_to(self.sim_time + self.dt * 10)
 
-    def interpolation_points(
-        self, t_start: float = 0, t_end: float = float("inf")
-    ) -> tuple[np.ndarray, np.ndarray]:
-        in_range = np.logical_and(
-            self.total_interpolator.x >= t_start, self.total_interpolator.x <= t_end
+        current_state = upcoming_eclipse[0]
+        transition_times = upcoming_times[np.where(np.diff(upcoming_eclipse))[0][0:2]]
+
+        if current_state:
+            eclipse_end, eclipse_start = transition_times
+        else:
+            eclipse_start, eclipse_end = transition_times
+
+        return eclipse_start, eclipse_end
+
+    @property
+    def r_BN_N(self) -> interp1d:
+        """Interpolator for r_BN_N"""
+        return interp1d(
+            self.times,
+            self.sc_state_log.r_BN_N,
+            kind="cubic",
+            axis=0,
+            fill_value="extrapolate",
         )
-        times = self.total_interpolator.x[in_range]
-        positions = self.total_interpolator.y[in_range]
-        return times, positions
+
+    @property
+    def r_BP_P(self) -> interp1d:
+        """Interpolator for r_BP_P"""
+        return interp1d(
+            self.times,
+            [
+                np.matmul(dcm, pos)
+                for dcm, pos in zip(
+                    self.planet_state_log.J20002Pfix, self.sc_state_log.r_BN_N
+                )
+            ],
+            kind="cubic",
+            axis=0,
+            fill_value="extrapolate",
+        )
 
     def __del__(self) -> None:
         self.gravFactory.unloadSpiceKernels()
-
-
-def elevation(r_sat: np.ndarray, r_target: np.ndarray) -> np.ndarray:
-    """Find the elevation angle from a target to a satellite
-
-    Args:
-        r_sat: Satellite position(s)
-        r_target: Target position
-
-    Returns:
-        Elevation angle(s)
-    """
-    if r_sat.ndim == 2:
-        return np.pi / 2 - np.arccos(
-            np.sum(r_target * (r_sat - r_target), 1)
-            / (np.linalg.norm(r_target) * np.linalg.norm(r_sat - r_target, axis=1))
-        )
-    else:
-        return np.pi / 2 - np.arccos(
-            np.sum(r_target * (r_sat - r_target))
-            / (np.linalg.norm(r_target) * np.linalg.norm(r_sat - r_target))
-        )

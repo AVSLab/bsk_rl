@@ -93,6 +93,14 @@ class Satellite(ABC):
         assert self.data_store.is_fresh
         self.data_store.is_fresh = False
 
+        self.trajectory = TrajectorySimulator(
+            utc_init=self.sat_args["utc_init"],
+            rN=self.sat_args["rN"],
+            vN=self.sat_args["vN"],
+            oe=self.sat_args["oe"],
+            mu=self.sat_args["mu"],
+        )
+
     def set_simulator(self, simulator: "Simulator"):
         """Sets the simulator for models; called during simulator initialization
 
@@ -282,14 +290,6 @@ class ImagingSatellite(BasicSatellite):
             target.id for target in self.data_store.env_knowledge.targets
         ]
         self.windows = {}
-        self.trajectory_sim = TrajectorySimulator(
-            utc_init=self.sat_args["utc_init"],
-            rN=self.sat_args["rN"],
-            vN=self.sat_args["vN"],
-            oe=self.sat_args["oe"],
-            mu=self.sat_args["mu"],
-            dt=30.0,
-        )
         self.window_calculation_time = 0
         self.calculate_additional_windows(self.initial_generation_duration)
         self.current_action = None
@@ -311,10 +311,14 @@ class ImagingSatellite(BasicSatellite):
         self.window_calculation_time += duration
 
         # simulate next trajectory segment
-        self.trajectory_sim(self.window_calculation_time)
-        times, positions = self.trajectory_sim.interpolation_points(
-            calculation_start, self.window_calculation_time
+        self.trajectory.extend_to(self.window_calculation_time)
+        r_BP_P_interp = self.trajectory.r_BP_P
+        window_calc_span = np.logical_and(
+            r_BP_P_interp.x >= calculation_start,
+            r_BP_P_interp.x <= self.window_calculation_time,
         )
+        times = r_BP_P_interp.x[window_calc_span]
+        positions = r_BP_P_interp.y[window_calc_span]
 
         for target in self.data_store.env_knowledge.targets:
             # Find times where a window is plausible
@@ -334,7 +338,7 @@ class ImagingSatellite(BasicSatellite):
                 i_end = min(len(times) - 1, group[-1] + 1)
 
                 root_fn = (
-                    lambda t: elevation(self.trajectory_sim(t), target.location)
+                    lambda t: elevation(r_BP_P_interp(t), target.location)
                     - self.min_elev
                 )  # noqa: E731
                 settings = chebpy.UserPreferences()
