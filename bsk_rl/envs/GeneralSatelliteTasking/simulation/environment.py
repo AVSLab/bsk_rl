@@ -22,6 +22,7 @@ from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import (
     collect_default_args,
     default_args,
 )
+from bsk_rl.envs.GeneralSatelliteTasking.utils.orbital import random_epoch
 
 bsk_path = __path__[0]
 
@@ -100,7 +101,7 @@ class BasicEnvironmentModel(EnvironmentModel):
         self._set_atmosphere_density_model(**kwargs)
         self._set_eclipse_object(**kwargs)
 
-    @default_args(utc_init="2021 MAY 04 07:47:48.965 (UTC)")
+    @default_args(utc_init=random_epoch)
     def _set_gravity_bodies(
         self, utc_init: str, priority: int = 1100, **kwargs
     ) -> None:

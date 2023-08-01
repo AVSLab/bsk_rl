@@ -47,6 +47,45 @@ def random_orbit(
     return oe
 
 
+def random_epoch(start: int = 2000, end: int = 2022):
+    """Generates a random epoch.
+
+    Args:
+        start: Initial year.
+        end: Final year.
+
+    Returns:
+        Epoch in `YYYY MMM DD HH:MM:SS.SSS (UTC)` format
+    """
+    year = np.random.randint(start, end)
+    month = np.random.choice(
+        [
+            "JAN",
+            "FEB",
+            "MAR",
+            "APR",
+            "MAY",
+            "JUN",
+            "JUL",
+            "AUG",
+            "SEP",
+            "OCT",
+            "NOV",
+            "DEC",
+        ]
+    )
+    day = np.random.randint(1, 28)  # Assume 28 days for simplicity
+    hours = np.random.randint(0, 23)
+    minutes = np.random.randint(0, 59)
+    seconds = np.random.randint(0, 59)
+    milliseconds = np.random.randint(0, 999)
+
+    # Combine the parts to form the datetime string
+    epoch = f"{year} {month} {day:02d} {hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d} (UTC)"
+
+    return epoch
+
+
 def elevation(r_sat: np.ndarray, r_target: np.ndarray) -> np.ndarray:
     """Find the elevation angle from a target to a satellite
 
