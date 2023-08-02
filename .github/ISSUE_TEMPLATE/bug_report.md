@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a report for unexpected or erroneous behavior.
 title: ''
-labels: bug
+labels: bug, triage
 assignees: ''
 
 ---
