@@ -43,12 +43,13 @@ The `agents/` folder provides a number of decision-making agents developed by th
 
 ### Environments
 The `envs/` folder provides a number of environments for spacecraft planning and scheduling problems. Environments include:
-- AgileEOS: An agile Earth-observing satellite scheduling environment
-- MultiSatAgileEOS: An agile multi-satellite Earth-observing scheduling environment
-- MultiSensorEOS: A non-agile EO scheduling environment where the spacecraft has multiple sensors for imaging
-- SimpleEOS: A non-agile EO scheduling environment. Similar to the AgileEOS environment in that it includes a simulated data system.
-- SmallBodyScience: A small body science operations environment
-- SmallBodySciencePOMDP: A small body science operations environment with an EKF
+- **AgileEOS**: An agile Earth-observing satellite scheduling environment
+- **GeneralSatelliteTasking** and **SingleSatelliteTasking**: A highly modular framework for satellite tasking problems with the ability to define custom satellite configurations, action spaces, and observation spaces. New environments should be developed using this framework. 
+- **MultiSatAgileEOS**: An agile multi-satellite Earth-observing scheduling environment
+- **MultiSensorEOS**: A non-agile EO scheduling environment where the spacecraft has multiple sensors for imaging
+- **SimpleEOS**: A non-agile EO scheduling environment. Similar to the AgileEOS environment in that it includes a simulated data system.
+- **SmallBodyScience**: A small body science operations environment
+- **SmallBodySciencePOMDP**: A small body science operations environment with an EKF
 
 ###	Training
 The `training/` folder provides training scripts for the MCTS-Train algorithm and several SB3 algorithms.
