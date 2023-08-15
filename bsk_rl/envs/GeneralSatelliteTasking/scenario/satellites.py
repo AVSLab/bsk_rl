@@ -151,13 +151,14 @@ class Satellite(ABC):
         )
 
     @property
-    def action_space(self) -> spaces.Discrete:
-        """Action space for single satellite, computed from n_actions property
+    @abstractmethod
+    def action_space(self) -> spaces.Space:
+        """Action space for single satellite
 
         Returns:
             gymanisium action space
         """
-        return spaces.Discrete(self.n_actions)
+        pass
 
     def is_alive(self) -> bool:
         """Check if the satellite is violating any requirements from dynamics or FSW models
@@ -200,16 +201,6 @@ class Satellite(ABC):
         """
         pass
 
-    @property
-    @abstractmethod
-    def n_actions(self) -> int:
-        """Number of actions the satellite can take
-
-        Returns:
-            int: number of actions
-        """
-        pass
-
     @abstractmethod
     def set_action(self, action: int) -> None:
         """Enables certain processes in the simulator to command the satellite task. Should
@@ -228,12 +219,16 @@ class BasicSatellite(Satellite):
     def __init__(self, name: str, sat_args: dict[str, Any]) -> None:
         super().__init__(name, sat_args)
 
-    @property
-    def n_actions(self) -> int:
-        return 2
+    ########################################
+    ### Default actions and observations ###
+    ########################################
 
     def get_obs(self) -> Iterable[float]:
         return np.array([0.0])
+
+    @property
+    def action_space(self):
+        return spaces.Discrete(2)
 
     def set_action(self, action: int) -> None:
         if action == 0:
@@ -444,35 +439,6 @@ class ImagingSatellite(BasicSatellite):
             targets += [targets[-1]] * (n - len(targets))
         return targets
 
-    def get_obs(self) -> Iterable[float]:
-        dynamic_state = np.concatenate(
-            [
-                self.dynamics.omega_BP_P,
-                self.fsw.c_hat_P,
-                self.dynamics.r_BN_P,
-                self.dynamics.v_BN_P,
-            ]
-        )
-        images_state = np.array(
-            [
-                np.concatenate([[target.priority], target.location])
-                for target in self.upcoming_targets(self.n_ahead_observe)
-            ]
-        )
-        images_state = images_state.flatten()
-
-        return np.concatenate((dynamic_state, images_state))
-
-    @property
-    def n_actions(self) -> int:
-        """Satellite can take n_ahead_act imaging actions"""
-        return self.n_ahead_act
-
-    def _disable_window_close_event(self) -> None:
-        """Turn off simulator termination due to this satellite's window close checker"""
-        if self._window_close_event_name is not None:
-            self.simulator.eventMap[self._window_close_event_name].eventActive = False
-
     def _update_window_close_event(self, t_close: float, info: str = "") -> None:
         """Create a simulator event that causes the simulation to stop at a certain time
 
@@ -498,11 +464,6 @@ class ImagingSatellite(BasicSatellite):
             terminal=self.variable_interval,
         )
         self.simulator.eventMap[self._window_close_event_name].eventActive = True
-
-    def _disable_image_event(self) -> None:
-        """Turn off simulator termination due to this satellite's imaging checker"""
-        if self._image_event_name is not None:
-            self.simulator.eventMap[self._image_event_name].eventActive = False
 
     def _update_image_event(self, target: Target) -> None:
         """Create a simulator event that causes the simulation to stop when a target is imaged
@@ -542,6 +503,79 @@ class ImagingSatellite(BasicSatellite):
         else:
             self.simulator.eventMap[self._image_event_name].eventActive = True
 
+    def _disable_window_close_event(self) -> None:
+        """Turn off simulator termination due to this satellite's window close checker"""
+        if self._window_close_event_name is not None:
+            self.simulator.eventMap[self._window_close_event_name].eventActive = False
+
+    def _disable_image_event(self) -> None:
+        """Turn off simulator termination due to this satellite's imaging checker"""
+        if self._image_event_name is not None:
+            self.simulator.eventMap[self._image_event_name].eventActive = False
+
+    def parse_target_selection(self, target_query: Union[int, Target, str]):
+        """Identify a target based on upcoming target index, Target object, or target id.
+
+        Args:
+            target_query: Taret upcoming index, object, or id.
+        """
+        if np.issubdtype(type(target_query), np.integer):
+            target = self.upcoming_targets(target_query + 1)[-1]
+        elif isinstance(target_query, Target):
+            target = target_query
+        elif isinstance(target_query, str):
+            target = [
+                target
+                for target in self.data_store.env_knowledge.targets
+                if target.id == target_query
+            ][0]
+        else:
+            raise TypeError(f"Invalid target_query! Cannot be a {type(target_query)}!")
+
+        return target
+
+    def task_target_for_imaging(self, target: Target):
+        """Task the satellite to image a target
+
+        Args:
+            target: Selected target
+        """
+        msg = f"{target} tasked for imaging"
+        self.log_info(msg)
+        self.fsw.action_image(target.location, target.id)
+        self._update_image_event(target)
+        self._update_window_close_event(
+            self.next_windows[target][1], info=f"for {target}"
+        )
+
+    ########################################
+    ### Default actions and observations ###
+    ########################################
+
+    def get_obs(self) -> Iterable[float]:
+        dynamic_state = np.concatenate(
+            [
+                self.dynamics.omega_BP_P,
+                self.fsw.c_hat_P,
+                self.dynamics.r_BN_P,
+                self.dynamics.v_BN_P,
+            ]
+        )
+        images_state = np.array(
+            [
+                np.concatenate([[target.priority], target.location])
+                for target in self.upcoming_targets(self.n_ahead_observe)
+            ]
+        )
+        images_state = images_state.flatten()
+
+        return np.concatenate((dynamic_state, images_state))
+
+    @property
+    def action_space(self):
+        """Satellite can take n_ahead_act imaging actions"""
+        return spaces.Discrete(self.n_ahead_act)
+
     def set_action(self, action: Union[int, Target, str]) -> None:
         """Select the satellite action; does not reassign action if the same target is selected twice
 
@@ -555,31 +589,12 @@ class ImagingSatellite(BasicSatellite):
             self.current_action = -1
             return
 
-        if np.issubdtype(type(action), np.integer):
-            target = self.upcoming_targets(action + 1)[-1]
-        elif isinstance(action, Target):
-            target = action
-        elif isinstance(action, str):
-            target = [
-                target
-                for target in self.data_store.env_knowledge.targets
-                if target.id == action
-            ][0]
-        else:
-            raise TypeError(
-                f"Invalid action specification! Cannot be a {type(action)}!"
-            )
+        target = self.parse_target_selection(action)
 
         if self.current_action != target:
-            msg = f"{target} tasked for imaging"
+            self.task_target_for_imaging(target)
             if np.issubdtype(type(action), np.integer):
-                msg = msg + f" (index {action})"
-            self.log_info(msg)
-            self.fsw.action_image(target.location, target.id)
-            self._update_image_event(target)
-            self._update_window_close_event(
-                self.next_windows[target][1], info=f"for {target}"
-            )
+                self.log_info(f"Target index {action}")
 
         self.current_action = target
 
@@ -594,16 +609,17 @@ class FBImagerSatellite(ImagingSatellite):
     fsw_type = fsw.ImagingFSWModel
 
 
-class FullFeaturedSatellite(ImagingSatellite):
-    """Imaging satellite that uses MRP steering and can communicate to downlink ground stations"""
+class FullFeaturedSatellite(SteeringImagerSatellite):
+    """SteeringImagerSatellite with specific actions"""
 
-    dyn_type = dynamics.FullFeaturedDynModel
-    fsw_type = fsw.SteeringImagerFSWModel
+    ########################################
+    ### Default actions and observations ###
+    ########################################
 
     @property
-    def n_actions(self) -> int:
+    def action_space(self):
         """Satellite can take three non-imaging actions in addition to imaging actions"""
-        return super().n_actions + 3
+        return spaces.Discrete(self.n_ahead_act + 3)
 
     def set_action(self, action: int) -> None:
         """Select the satellite action; does not reassign action if the same action/target is selected twice
