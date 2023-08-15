@@ -86,7 +86,7 @@ class Satellite(ABC):
             k: v if not callable(v) else v() for k, v in self.sat_args_generator.items()
         }
 
-    def reset(self) -> None:
+    def reset_pre_sim(self) -> None:
         """Called in environment reset, before simulator initialization"""
         self.info = []
         self._generate_sat_args()
@@ -134,6 +134,10 @@ class Satellite(ABC):
         fsw = self.fsw_type(self, fsw_rate, **self.sat_args)
         self.fsw = proxy(fsw)
         return fsw
+
+    def reset_post_sim(self) -> None:
+        """Called in environment reset, after simulator initialization"""
+        pass
 
     @property
     def observation_space(self) -> spaces.Box:
@@ -251,7 +255,7 @@ class ImagingSatellite(BasicSatellite):
         n_ahead_observe: int = 20,
         n_ahead_act: int = 10,
         generation_duration: float = 60 * 95 / 10,
-        initial_generation_duration: float = 0,
+        initial_generation_duration: Optional[float] = None,
         target_dist_threshold: float = 1e6,
         variable_interval: bool = True,
     ) -> None:
@@ -262,8 +266,8 @@ class ImagingSatellite(BasicSatellite):
             sat_args: Satellite.sat_args
             n_ahead_observe: Number of upcoming targets to include in observations.
             n_ahead_act: Number of upcoming targets to include in actions.
-            generation_duration: Duration to calculate additional imaging windows for when windows
-                are exhausted. [s]
+            generation_duration: Duration to calculate additional imaging windows for when windows are exhausted. If
+                `None`, generate for the simulation `time_limit` unless the simulation is infinite. [s]
             initial_generation_duration: Duration to initially calculate imaging windows [s]
             target_dist_threshold: Distance bound [m] for evaluating imaging windows more exactly.
             variable_interval: Stop simulation when a target is imaged or a imaging window closes
@@ -280,9 +284,9 @@ class ImagingSatellite(BasicSatellite):
         self.data_store: UniqueImageStore
         self.variable_interval = variable_interval
 
-    def reset(self) -> None:
+    def reset_pre_sim(self) -> None:
         """Set the buffer parameters based on computed windows"""
-        super().reset()
+        super().reset_pre_sim()
         self.sat_args["transmitterNumBuffers"] = len(
             self.data_store.env_knowledge.targets
         )
@@ -291,12 +295,21 @@ class ImagingSatellite(BasicSatellite):
         ]
         self.windows = {}
         self.window_calculation_time = 0
-        self.calculate_additional_windows(self.initial_generation_duration)
         self.current_action = None
         self._image_event_name = None
         self._window_close_event_name = None
         self.imaged = 0
         self.missed = 0
+
+    def reset_post_sim(self) -> None:
+        """Handle initial_generation_duration setting and calculate windows"""
+        super().reset_post_sim()
+        if self.initial_generation_duration is None:
+            if self.simulator.time_limit == float("inf"):
+                self.initial_generation_duration = 0
+            else:
+                self.initial_generation_duration = self.simulator.time_limit
+        self.calculate_additional_windows(self.initial_generation_duration)
 
     def calculate_additional_windows(self, duration: float) -> None:
         """Use a multiroot finding method to evaluate imaging windows for each target;

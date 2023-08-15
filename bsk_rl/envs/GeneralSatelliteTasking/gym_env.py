@@ -124,7 +124,7 @@ class GeneralSatelliteTasking(Env):
         for satellite in self.satellites:
             self.data_manager.create_data_store(satellite)
             satellite.sat_args_generator["utc_init"] = self.env_args["utc_init"]
-            satellite.reset()
+            satellite.reset_pre_sim()
 
         self.simulator = Simulator(
             self.satellites,
@@ -138,6 +138,7 @@ class GeneralSatelliteTasking(Env):
         self.communicator.reset()
 
         for satellite in self.satellites:
+            satellite.reset_post_sim()
             satellite.data_store.internal_update()
 
         observation = self._get_obs()
