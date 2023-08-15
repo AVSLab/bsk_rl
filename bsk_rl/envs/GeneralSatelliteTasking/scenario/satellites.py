@@ -31,6 +31,9 @@ from bsk_rl.envs.GeneralSatelliteTasking.utils.orbital import (
     elevation,
 )
 
+SatObs = Any
+SatAct = Any
+
 
 class Satellite(ABC):
     dyn_type: type["DynamicsModel"]  # Type of dynamics model used by this satellite
@@ -193,7 +196,7 @@ class Satellite(ABC):
         self.info.append((self.simulator.sim_time, info))
 
     @abstractmethod
-    def get_obs(self) -> np.ndarray:
+    def get_obs(self) -> SatObs:
         """Construct the satellite's observation
 
         Returns:
@@ -247,6 +250,7 @@ class ImagingSatellite(BasicSatellite):
         self,
         name: str,
         sat_args: dict[str, Any],
+        *,
         n_ahead_observe: int = 20,
         n_ahead_act: int = 10,
         generation_duration: float = 60 * 95 / 10,
@@ -428,6 +432,8 @@ class ImagingSatellite(BasicSatellite):
         Returns:
             list: n nearest targets, ordered
         """
+        if n == 0:
+            return []
         for _ in range(max_lookahead):
             soonest = sorted(self.next_windows.items(), key=lambda x: x[1][1])
             if len(soonest) < n:

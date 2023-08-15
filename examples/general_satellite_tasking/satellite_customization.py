@@ -4,6 +4,7 @@ from Basilisk.architecture import bskLogging
 from Basilisk.utilities import orbitalMotion
 
 from bsk_rl.envs.GeneralSatelliteTasking.scenario import data
+from bsk_rl.envs.GeneralSatelliteTasking.scenario import sat_observations as so
 from bsk_rl.envs.GeneralSatelliteTasking.scenario import satellites as sats
 from bsk_rl.envs.GeneralSatelliteTasking.scenario.environment_features import (
     CityTargets,
@@ -15,13 +16,33 @@ bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 """
 This script demonstrates customization options for a satellite, including:
 - Model selection
-- State space configuration
+- Observation space configuration
 - Action space configuration
+
+There are two primary methods of customization. The preferred option (1) is to use the built-in observation space and 
+actions space satellite subclasses. Alternatively, option (2) is to manually override methods for observations and actions
+in a satellite subclass
 """
 
 
-# Define a new satellite class, selecting a similar class as a starting point
-class CustomSat(sats.ImagingSatellite):
+# OPTION 1: Define a new satellite class by composing existing types.
+class CustomSatComposed(
+    # Observation classes. In the vectorized observation, these will be composed in reverse order.
+    # Default arguments for __init__ can be overriden with configure() to bake them into the class definition prior to instantiation.
+    so.TimeState,
+    so.TargetState.configure(n_ahead_observe=3),
+    so.NormdPropertyState.configure(
+        obs_properties=[
+            dict(prop="omega_BP_P", norm=0.03),
+            dict(prop="c_hat_P"),
+            dict(prop="r_BN_P", norm=orbitalMotion.REQ_EARTH * 1e3),
+            dict(prop="v_BN_P", norm=7616.5),
+            dict(prop="battery_charge_fraction"),
+        ]
+    ),
+    # Base class for this satellite
+    sats.ImagingSatellite,
+):
     # Change the attitude controller by redefining fsw_type. In this case, we are using a MRP Feedback based controller
     # instead of a the default PD feedback-based controller.
     fsw_type = fsw.SteeringImagerFSWModel
@@ -35,6 +56,17 @@ class CustomSat(sats.ImagingSatellite):
     dyn_type = CustomDynModel
 
     # Model compatibility between FSW, dynamics, and the environment should be automatically checked in most cases.
+
+
+# OPTION 2: Define a new satellite class manually, selecting a similar class as a starting point
+class CustomSatManual(sats.ImagingSatellite):
+    # Select FSW and dynamics as in option 1
+    fsw_type = fsw.SteeringImagerFSWModel
+
+    class CustomDynModel(dynamics.ImagingDynModel, dynamics.LOSCommDynModel):
+        pass
+
+    dyn_type = CustomDynModel
 
     # A more common customization requirement is designing the observation and action spaces. Three functions are most
     # commonly overridden to achieve this: get_obs, set_action, and n_actions
@@ -95,15 +127,15 @@ class CustomSat(sats.ImagingSatellite):
 
     # The action space cannot be inferred; explicitly tell gymnasium how many actions the satellite can take
     @property
-    def n_actions(self) -> int:
-        return super().n_actions + 2
+    def action_space(self):
+        return gym.spaces.Discrete(self.n_ahead_act + 2)
 
 
 # Configure the environent
 env_features = CityTargets(n_targets=5000)
 data_manager = data.UniqueImagingManager(env_features)
 # Use the CustomSat type
-sat_type = CustomSat
+sat_type = CustomSatComposed
 sat_args = sat_type.default_sat_args(
     imageAttErrorRequirement=0.01,
     imageRateErrorRequirement=0.01,
@@ -144,6 +176,10 @@ while True:
 
     # Show the custom normalized observation vector
     print("\tObservation:", observation)
+
+    # Using the composed satellite features also provides a human-readable state:
+    for k, v in env.satellite.obs_dict.items():
+        print(f"\t\t{k}:  {v}")
 
     # Print info dict messages from each sat
     msg_list = []

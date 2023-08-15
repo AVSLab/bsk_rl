@@ -1,7 +1,10 @@
+import inspect
 import re
 import warnings
 from copy import deepcopy
 from typing import Any, Callable
+
+import numpy as np
 
 
 def valid_func_name(name: str) -> str:
@@ -72,6 +75,20 @@ def collect_default_args(object: object) -> dict[str, Any]:
     return defaults
 
 
+def vectorize_nested_dict(dictionary: dict) -> np.ndarray:
+    """Flattens a dictionary of dictionaries, arrays, and scalars into a single vector."""
+    values = list(dictionary.values())
+    for i, value in enumerate(values):
+        if isinstance(value, np.ndarray):
+            values[i] = value.flatten()
+        elif isinstance(value, (float, int)):
+            values[i] = [value]
+        elif isinstance(value, dict):
+            values[i] = vectorize_nested_dict(value)
+
+    return np.concatenate(values)
+
+
 def aliveness_checker(func: Callable[..., bool]) -> Callable[..., bool]:
     """Decorator to evaluate func -> bool when checking for satellite aliveness"""
 
@@ -117,3 +134,30 @@ def check_aliveness_checkers(model: Any) -> bool:
         ):
             is_alive = is_alive and getattr(model, name)()
     return is_alive
+
+
+def configurable(cls):
+    """Class decorator to create new instance of a class with different defaults to __init__"""
+
+    @classmethod
+    def configure(cls, **config_kwargs):
+        class Configurable(cls):
+            def __init__(self, *args, **kwargs):
+                init_kwargs = deepcopy(config_kwargs)
+                for key in init_kwargs.keys():
+                    if not (
+                        key in inspect.getfullargspec(super().__init__).args
+                        or key in inspect.getfullargspec(super().__init__).kwonlyargs
+                    ):
+                        raise KeyError(
+                            f"{key} not a keyword argument for {cls.__name__}"
+                        )
+                for k, v in kwargs.items():
+                    init_kwargs[k] = v
+                super().__init__(*args, **init_kwargs)
+
+        configcls = Configurable
+        return configcls
+
+    cls.configure = configure
+    return cls
