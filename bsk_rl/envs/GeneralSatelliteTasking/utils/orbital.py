@@ -243,10 +243,13 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         current_state = upcoming_eclipse[0]
         transition_times = upcoming_times[np.where(np.diff(upcoming_eclipse))[0][0:2]]
 
+        if len(transition_times) != 2:
+            return 1.0, 1.0
+
         if current_state:
-            eclipse_end, eclipse_start = transition_times
-        else:
             eclipse_start, eclipse_end = transition_times
+        else:
+            eclipse_end, eclipse_start = transition_times
 
         return eclipse_start, eclipse_end
 

@@ -308,7 +308,9 @@ class ImagingSatellite(BasicSatellite):
         if duration <= 0:
             return
         calculation_start = self.window_calculation_time
-        self.window_calculation_time += duration
+        self.window_calculation_time += max(
+            duration, self.trajectory.dt * 2, self.generation_duration
+        )
 
         # simulate next trajectory segment
         self.trajectory.extend_to(self.window_calculation_time)
