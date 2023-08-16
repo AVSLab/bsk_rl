@@ -160,7 +160,7 @@ class TargetState(SatObservation, ImagingSatellite):
             n_ahead_observe: Number of upcoming targets to consider.
         """
         super().__init__(*args, n_ahead_observe=n_ahead_observe, **kwargs)
-        self.n_ahead_observe = n_ahead_observe
+        self.n_ahead_observe = int(n_ahead_observe)
         self.location_norm = location_norm
         self.add_to_observation(self.target_obs)
 

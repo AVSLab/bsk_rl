@@ -61,13 +61,19 @@ class Satellite(ABC):
             defaults[k] = v
         return defaults
 
-    def __init__(self, name: str, sat_args: Optional[dict[str, Any]]) -> None:
+    def __init__(
+        self,
+        name: str,
+        sat_args: Optional[dict[str, Any]],
+        variable_interval: bool = True,
+    ) -> None:
         """Base satellite constructor
 
         Args:
             name: identifier for satellite; does not need to be unique
             sat_args: arguments for FSW and dynamic model construction. {key: value or key: function},
                 where function is called at reset to set the value (used for randomization).
+            variable_interval: Stop simulation at terminal events
         """
         self.name = name
         if sat_args is None:
@@ -77,6 +83,8 @@ class Satellite(ABC):
         self.fsw: "FSWModel"
         self.dynamics: "DynamicsModel"
         self.data_store: DataStore
+        self.variable_interval = variable_interval
+        self._timed_terminal_event_name = None
 
     @property
     def id(self) -> str:
@@ -195,6 +203,37 @@ class Satellite(ABC):
         """
         self.info.append((self.simulator.sim_time, info))
 
+    def _update_timed_terminal_event(self, t_close: float, info: str = "") -> None:
+        """Create a simulator event that causes the simulation to stop at a certain time
+
+        Args:
+            t_close: Termination time [s]
+            info: Additional identifying info to log at terminal time
+        """
+        self._disable_timed_terminal_event()
+
+        # Create new timed terminal event
+        self._timed_terminal_event_name = valid_func_name(
+            f"timed_terminal_{t_close}_{self.id}"
+        )
+        self.simulator.createNewEvent(
+            self._timed_terminal_event_name,
+            macros.sec2nano(self.simulator.sim_rate),
+            True,
+            [f"self.TotalSim.CurrentNanos * {macros.NANO2SEC} >= {t_close}"],
+            [
+                self._info_command(f"timed termination at {t_close:.1f} " + info),
+                self._satellite_command + ".missed += 1",
+            ],
+            terminal=self.variable_interval,
+        )
+        self.simulator.eventMap[self._timed_terminal_event_name].eventActive = True
+
+    def _disable_timed_terminal_event(self) -> None:
+        """Turn off simulator termination due to this satellite's window close checker"""
+        if self._timed_terminal_event_name is not None:
+            self.simulator.eventMap[self._timed_terminal_event_name].eventActive = False
+
     @abstractmethod
     def get_obs(self) -> SatObs:
         """Construct the satellite's observation
@@ -218,9 +257,6 @@ class Satellite(ABC):
 class BasicSatellite(Satellite):
     dyn_type = dynamics.BasicDynamicsModel
     fsw_type = fsw.BasicFSWModel
-
-    def __init__(self, name: str, sat_args: dict[str, Any]) -> None:
-        super().__init__(name, sat_args)
 
     ########################################
     ### Default actions and observations ###
@@ -250,13 +286,13 @@ class ImagingSatellite(BasicSatellite):
         self,
         name: str,
         sat_args: dict[str, Any],
-        *,
+        *args,
         n_ahead_observe: int = 20,
         n_ahead_act: int = 10,
         generation_duration: float = 60 * 95 / 10,
         initial_generation_duration: Optional[float] = None,
         target_dist_threshold: float = 1e6,
-        variable_interval: bool = True,
+        **kwargs,
     ) -> None:
         """Satellite with agile imaging capabilities. Ends the simulation when a target is imaged or missed
 
@@ -269,9 +305,8 @@ class ImagingSatellite(BasicSatellite):
                 `None`, generate for the simulation `time_limit` unless the simulation is infinite. [s]
             initial_generation_duration: Duration to initially calculate imaging windows [s]
             target_dist_threshold: Distance bound [m] for evaluating imaging windows more exactly.
-            variable_interval: Stop simulation when a target is imaged or a imaging window closes
         """
-        super().__init__(name, sat_args)
+        super().__init__(name, sat_args, *args, **kwargs)
         self.n_ahead_observe = int(n_ahead_observe)
         self.n_ahead_act = int(n_ahead_act)
         self.generation_duration = generation_duration
@@ -281,7 +316,6 @@ class ImagingSatellite(BasicSatellite):
         self.fsw: ImagingSatellite.fsw_type
         self.dynamics: ImagingSatellite.dyn_type
         self.data_store: UniqueImageStore
-        self.variable_interval = variable_interval
 
     def reset_pre_sim(self) -> None:
         """Set the buffer parameters based on computed windows"""
@@ -296,7 +330,6 @@ class ImagingSatellite(BasicSatellite):
         self.window_calculation_time = 0
         self.current_action = None
         self._image_event_name = None
-        self._window_close_event_name = None
         self.imaged = 0
         self.missed = 0
 
@@ -445,32 +478,6 @@ class ImagingSatellite(BasicSatellite):
             targets += [targets[-1]] * (n - len(targets))
         return targets
 
-    def _update_window_close_event(self, t_close: float, info: str = "") -> None:
-        """Create a simulator event that causes the simulation to stop at a certain time
-
-        Args:
-            t_close: Termination time [s]
-            info: Additional identifying info to log at window close
-        """
-        self._disable_window_close_event()
-
-        # Create new window close event
-        self._window_close_event_name = valid_func_name(
-            f"window_close_{t_close}_{self.id}"
-        )
-        self.simulator.createNewEvent(
-            self._window_close_event_name,
-            macros.sec2nano(self.simulator.sim_rate),
-            True,
-            [f"self.TotalSim.CurrentNanos * {macros.NANO2SEC} >= {t_close}"],
-            [
-                self._info_command(f"window closed at {t_close:.1f} " + info),
-                self._satellite_command + ".missed += 1",
-            ],
-            terminal=self.variable_interval,
-        )
-        self.simulator.eventMap[self._window_close_event_name].eventActive = True
-
     def _update_image_event(self, target: Target) -> None:
         """Create a simulator event that causes the simulation to stop when a target is imaged
 
@@ -509,11 +516,6 @@ class ImagingSatellite(BasicSatellite):
         else:
             self.simulator.eventMap[self._image_event_name].eventActive = True
 
-    def _disable_window_close_event(self) -> None:
-        """Turn off simulator termination due to this satellite's window close checker"""
-        if self._window_close_event_name is not None:
-            self.simulator.eventMap[self._window_close_event_name].eventActive = False
-
     def _disable_image_event(self) -> None:
         """Turn off simulator termination due to this satellite's imaging checker"""
         if self._image_event_name is not None:
@@ -550,8 +552,8 @@ class ImagingSatellite(BasicSatellite):
         self.log_info(msg)
         self.fsw.action_image(target.location, target.id)
         self._update_image_event(target)
-        self._update_window_close_event(
-            self.next_windows[target][1], info=f"for {target}"
+        self._update_timed_terminal_event(
+            self.next_windows[target][1], info=f"for {target} window"
         )
 
     ########################################
@@ -589,7 +591,7 @@ class ImagingSatellite(BasicSatellite):
             action: image the nth upcoming target (or image by target id or object)
         """
         if action == -1:
-            self._disable_window_close_event()
+            self._disable_timed_terminal_event()
             self._disable_image_event()
             self.fsw.action_drift
             self.current_action = -1
@@ -638,7 +640,7 @@ class FullFeaturedSatellite(SteeringImagerSatellite):
                 - 3+: image the (n-3)th upcoming target
         """
         if action < 2:
-            self._disable_window_close_event()
+            self._disable_timed_terminal_event()
             self._disable_image_event()
 
         if action == 0 and self.current_action != 0:
