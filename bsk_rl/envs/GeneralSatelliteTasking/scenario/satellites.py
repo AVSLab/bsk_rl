@@ -111,6 +111,7 @@ class Satellite(ABC):
             oe=self.sat_args["oe"],
             mu=self.sat_args["mu"],
         )
+        self._timed_terminal_event_name = None
 
     def set_simulator(self, simulator: "Simulator"):
         """Sets the simulator for models; called during simulator initialization
@@ -355,6 +356,9 @@ class ImagingSatellite(BasicSatellite):
         calculation_start = self.window_calculation_time
         self.window_calculation_time += max(
             duration, self.trajectory.dt * 2, self.generation_duration
+        )
+        self.window_calculation_time = self.generation_duration * np.ceil(
+            self.window_calculation_time / self.generation_duration
         )
 
         # simulate next trajectory segment

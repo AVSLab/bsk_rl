@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 from gymnasium import spaces
@@ -8,7 +8,7 @@ from bsk_rl.envs.GeneralSatelliteTasking.scenario.satellites import (
     ImagingSatellite,
     Satellite,
 )
-from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import configurable
+from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import bind, configurable
 
 
 class SatAction(Satellite):
@@ -48,11 +48,15 @@ class DiscreteSatAction(SatAction):
                 f"{len(self.action_list)}-{len(self.action_list)+n_actions-1}"
             ] = act_name
             for i in reversed(range(n_actions)):
-                self.action_list.append(
-                    lambda prev_action_key=None: act_fn(
+
+                def act_i(self, prev_action_key=None) -> Any:
+                    return getattr(self, act_fn.__name__)(
                         i, prev_action_key=prev_action_key
                     )
-                )
+
+                act_i.__name__ = f"act_{act_fn.__name__}_{i}"
+
+                self.action_list.append(bind(self, act_i))
 
     def set_action(self, action: int):
         """Function called by the environment when setting action"""
@@ -78,30 +82,29 @@ def fsw_action_gen(fsw_action: str) -> DiscreteSatAction:
             """
             super().__init__(*args, **kwargs)
             setattr(self, fsw_action + "_duration", action_duration)
+
+            def act(self, prev_action_key=None) -> str:
+                """Activate action.
+
+                Returns:
+                    action key
+                """
+                duration = getattr(self, fsw_action + "_duration")
+                self.log_info(f"{fsw_action} tasked for {duration} seconds")
+                self._disable_timed_terminal_event()
+                self._update_timed_terminal_event(
+                    self.simulator.sim_time + duration, info=f"for {fsw_action}"
+                )
+                if prev_action_key != fsw_action:
+                    getattr(self.fsw, fsw_action)()
+                return fsw_action
+
+            act.__name__ = f"act_{fsw_action}"
+
             self.add_action(
-                lambda prev_action_key=None: self.act(
-                    fsw_action, prev_action_key=prev_action_key
-                ),
+                bind(self, act),
                 act_name=fsw_action,
             )
-
-        def act(self, fsw_action, prev_action_key=None) -> str:
-            """Activate action.
-
-            Returns:
-                action key
-            """
-            duration = getattr(self, fsw_action + "_duration")
-            self.log_info(f"{fsw_action} tasked for {duration} seconds")
-            self._disable_timed_terminal_event()
-            self._update_timed_terminal_event(
-                self.simulator.sim_time + duration, info=f"for {fsw_action}"
-            )
-            if prev_action_key != fsw_action:
-                getattr(self.fsw, fsw_action)()
-            return fsw_action
-
-    # FSWAction.__name__ = f"{FSWAction.__name__}_{fsw_action}"
 
     return FSWAction
 
