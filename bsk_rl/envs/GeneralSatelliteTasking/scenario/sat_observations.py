@@ -10,6 +10,7 @@ from bsk_rl.envs.GeneralSatelliteTasking.scenario.satellites import (
     Satellite,
 )
 from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import (
+    bind,
     configurable,
     vectorize_nested_dict,
 )
@@ -105,12 +106,12 @@ class NormdPropertyState(SatObservation):
         """
         if module is not None:
 
-            def prop_fn():
+            def prop_fn(self):
                 return getattr(getattr(self, module), prop) / norm
 
         else:
 
-            def prop_fn():
+            def prop_fn(self):
                 for module in ["dynamics", "fsw"]:
                     if hasattr(getattr(self, module), prop):
                         return getattr(getattr(self, module), prop) / norm
@@ -118,7 +119,8 @@ class NormdPropertyState(SatObservation):
         prop_fn.__name__ = prop
         if norm != 1:
             prop_fn.__name__ += "_normd"
-        self.add_to_observation(prop_fn)
+
+        self.add_to_observation(bind(self, prop_fn, prop_fn.__name__ + "_bound"))
 
 
 @configurable
