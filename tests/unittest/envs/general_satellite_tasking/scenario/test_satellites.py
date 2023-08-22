@@ -148,22 +148,20 @@ class TestSatellite:
 
 
 @patch("bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.__init__")
+@patch.multiple(sats.ImagingSatellite, __abstractmethods__=set())
 def test_init(mock_init):
     sat = sats.ImagingSatellite(
         "TestSat",
         sat_args={"imageTargetMinimumElevation": 1},
-        n_ahead_observe=20.0,
-        n_ahead_act=10.0,
     )
     mock_init.assert_called_once()
-    assert isinstance(sat.n_ahead_act, int)
-    assert isinstance(sat.n_ahead_observe, int)
 
 
 @patch(
     "bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.__init__",
     MagicMock(),
 )
+@patch.multiple(sats.ImagingSatellite, __abstractmethods__=set())
 class TestImagingSatellite:
     def make_sat(self):
         return sats.ImagingSatellite(
@@ -346,6 +344,7 @@ class TestImagingSatellite:
 @patch(
     "bsk_rl.envs.general_satellite_tasking.utils.orbital.elevation", lambda x, y: y - x
 )
+@patch.multiple(sats.ImagingSatellite, __abstractmethods__=set())
 class TestCalculateWindows:
     def make_sat(self):
         return sats.ImagingSatellite(

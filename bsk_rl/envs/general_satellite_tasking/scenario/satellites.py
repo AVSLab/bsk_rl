@@ -66,6 +66,7 @@ class Satellite(ABC):
         name: str,
         sat_args: Optional[dict[str, Any]],
         variable_interval: bool = True,
+        **kwargs,
     ) -> None:
         """Base satellite constructor
 
@@ -263,31 +264,7 @@ class Satellite(ABC):
         pass
 
 
-class BasicSatellite(Satellite):
-    dyn_type = dynamics.BasicDynamicsModel
-    fsw_type = fsw.BasicFSWModel
-
-    ####################################
-    # Default actions and observations #
-    ####################################
-
-    def get_obs(self) -> Iterable[float]:  # pragma: no cover; deprecating
-        return np.array([0.0])
-
-    @property
-    def action_space(self):  # pragma: no cover; deprecating
-        return spaces.Discrete(2)
-
-    def set_action(self, action: int) -> None:  # pragma: no cover; deprecating
-        if action == 0:
-            self.fsw.action_charge()
-        elif action == 1:
-            self.fsw.action_desat()
-        else:
-            raise ValueError("Invalid action")
-
-
-class ImagingSatellite(BasicSatellite):
+class ImagingSatellite(Satellite):
     dyn_type = dynamics.ImagingDynModel
     fsw_type = fsw.ImagingFSWModel
 
@@ -296,8 +273,6 @@ class ImagingSatellite(BasicSatellite):
         name: str,
         sat_args: dict[str, Any],
         *args,
-        n_ahead_observe: int = 20,
-        n_ahead_act: int = 10,
         generation_duration: float = 60 * 95 / 10,
         initial_generation_duration: Optional[float] = None,
         target_dist_threshold: float = 1e6,
@@ -320,8 +295,6 @@ class ImagingSatellite(BasicSatellite):
                 more exactly.
         """
         super().__init__(name, sat_args, *args, **kwargs)
-        self.n_ahead_observe = int(n_ahead_observe)
-        self.n_ahead_act = int(n_ahead_act)
         self.generation_duration = generation_duration
         self.initial_generation_duration = initial_generation_duration
         self.min_elev = sat_args["imageTargetMinimumElevation"]  # Used for window calcs
@@ -627,58 +600,10 @@ class ImagingSatellite(BasicSatellite):
             extra_actions=[self._satellite_command + ".missed += 1"],
         )
 
-    ####################################
-    # Default actions and observations #
-    ####################################
 
-    def get_obs(self) -> Iterable[float]:  # pragma: no cover; deprecating
-        dynamic_state = np.concatenate(
-            [
-                self.dynamics.omega_BP_P,
-                self.fsw.c_hat_P,
-                self.dynamics.r_BN_P,
-                self.dynamics.v_BN_P,
-            ]
-        )
-        images_state = np.array(
-            [
-                np.concatenate([[target.priority], target.location])
-                for target in self.upcoming_targets(self.n_ahead_observe)
-            ]
-        )
-        images_state = images_state.flatten()
-
-        return np.concatenate((dynamic_state, images_state))
-
-    @property
-    def action_space(self):  # pragma: no cover; deprecating
-        """Satellite can take n_ahead_act imaging actions"""
-        return spaces.Discrete(self.n_ahead_act)
-
-    def set_action(self, action: Union[int, Target, str]) -> None:  # pragma: no cover
-        """Select the satellite action; does not reassign action if the same target is
-        selected twice
-
-        Args:
-            action: image the nth upcoming target (or image by target id or object)
-        """
-        if action == -1:
-            self._disable_timed_terminal_event()
-            self._disable_image_event()
-            self.fsw.action_drift
-            self.current_action = -1
-            return
-
-        target = self.parse_target_selection(action)
-
-        if self.current_action != target:
-            self.task_target_for_imaging(target)
-            if np.issubdtype(type(action), np.integer):
-                self.log_info(f"Target index {action}")
-
-        self.current_action = target
-
-
+#########################
+### Convenience Types ###
+#########################
 class SteeringImagerSatellite(ImagingSatellite):
     dyn_type = dynamics.FullFeaturedDynModel
     fsw_type = fsw.SteeringImagerFSWModel
@@ -689,48 +614,53 @@ class FBImagerSatellite(ImagingSatellite):
     fsw_type = fsw.ImagingFSWModel
 
 
-class FullFeaturedSatellite(SteeringImagerSatellite):  # pragma: no cover; deprecating
-    """SteeringImagerSatellite with specific actions"""
+##########################
+### Ready-to-use Types ###
+##########################
+from Basilisk.utilities import orbitalMotion
 
-    ####################################
-    # Default actions and observations #
-    ####################################
+from bsk_rl.envs.general_satellite_tasking.scenario import sat_actions as sa
+from bsk_rl.envs.general_satellite_tasking.scenario import sat_observations as so
 
-    @property
-    def action_space(self):
-        """Satellite can take three non-imaging actions in addition to imaging
-        actions"""
-        return spaces.Discrete(self.n_ahead_act + 3)
 
-    def set_action(self, action: int) -> None:
-        """Select the satellite action; does not reassign action if the same
-        action/target is selected twice
+class DoNothingSatellite(sa.DriftAction, so.TimeState):
+    dyn_type = dynamics.BasicDynamicsModel
+    fsw_type = fsw.BasicFSWModel
 
-        Args:
-            action (int):
-                - 0: charge
-                - 1: desaturate
-                - 2: downlink
-                - 3+: image the (n-3)th upcoming target
-        """
-        if action < 2:
-            self._disable_timed_terminal_event()
-            self._disable_image_event()
 
-        if action == 0 and self.current_action != 0:
-            self.fsw.action_charge()
-            self.log_info("charging tasked")
-        elif action == 1 and self.current_action != 1:
-            self.fsw.action_desat()
-            self.log_info("desat tasked")
-        elif action == 2 and self.current_action != 2:
-            self.fsw.action_downlink()
-            self.log_info("downlink tasked")
-        else:
-            target_action = action
-            if isinstance(target_action, int):
-                target_action -= 3
-            super().set_action(target_action)
+class ImageAheadSatellite(
+    sa.ImagingActions,
+    so.TimeState,
+    so.TargetState.configure(n_ahead_observe=3),
+    so.NormdPropertyState.configure(
+        obs_properties=[
+            dict(prop="omega_BP_P", norm=0.03),
+            dict(prop="c_hat_P"),
+            dict(prop="r_BN_P", norm=orbitalMotion.REQ_EARTH * 1e3),
+            dict(prop="v_BN_P", norm=7616.5),
+            dict(prop="battery_charge_fraction"),
+        ]
+    ),
+    ImagingSatellite,
+):
+    pass
 
-        if action < 3:
-            self.current_action = action
+
+class FullFeaturedSatellite(
+    sa.ImagingActions,
+    sa.DesatAction,
+    sa.ChargingAction,
+    so.TimeState,
+    so.TargetState.configure(n_ahead_observe=3),
+    so.NormdPropertyState.configure(
+        obs_properties=[
+            dict(prop="omega_BP_P", norm=0.03),
+            dict(prop="c_hat_P"),
+            dict(prop="r_BN_P", norm=orbitalMotion.REQ_EARTH * 1e3),
+            dict(prop="v_BN_P", norm=7616.5),
+            dict(prop="battery_charge_fraction"),
+        ]
+    ),
+    ImagingSatellite,
+):
+    pass
