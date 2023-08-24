@@ -204,7 +204,9 @@ class Satellite(ABC):
         """
         self.info.append((self.simulator.sim_time, info))
 
-    def _update_timed_terminal_event(self, t_close: float, info: str = "") -> None:
+    def _update_timed_terminal_event(
+        self, t_close: float, info: str = "", extra_actions=[]
+    ) -> None:
         """Create a simulator event that causes the simulation to stop at a certain time
 
         Args:
@@ -224,8 +226,8 @@ class Satellite(ABC):
             [f"self.TotalSim.CurrentNanos * {macros.NANO2SEC} >= {t_close}"],
             [
                 self._info_command(f"timed termination at {t_close:.1f} " + info),
-                self._satellite_command + ".missed += 1",
-            ],
+            ]
+            + extra_actions,
             terminal=self.variable_interval,
         )
         self.simulator.eventMap[self._timed_terminal_event_name].eventActive = True
@@ -557,7 +559,9 @@ class ImagingSatellite(BasicSatellite):
         self.fsw.action_image(target.location, target.id)
         self._update_image_event(target)
         self._update_timed_terminal_event(
-            self.next_windows[target][1], info=f"for {target} window"
+            self.next_windows[target][1],
+            info=f"for {target} window",
+            extra_actions=[self._satellite_command + ".missed += 1"],
         )
 
     ########################################
