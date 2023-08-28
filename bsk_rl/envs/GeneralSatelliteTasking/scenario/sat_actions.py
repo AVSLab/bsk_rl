@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -40,6 +41,7 @@ class DiscreteSatAction(SatAction):
         """
         if act_name is None:
             act_name = act_fn.__name__
+
         if n_actions is None:
             self.action_map[f"{len(self.action_list)}"] = act_name
             self.action_list.append(act_fn)
@@ -47,16 +49,20 @@ class DiscreteSatAction(SatAction):
             self.action_map[
                 f"{len(self.action_list)}-{len(self.action_list)+n_actions-1}"
             ] = act_name
-            for i in reversed(range(n_actions)):
-
-                def act_i(self, prev_action_key=None) -> Any:
-                    return getattr(self, act_fn.__name__)(
-                        i, prev_action_key=prev_action_key
-                    )
-
+            for i in range(n_actions):
+                act_i = self.generate_indexed_action(act_fn, i)
                 act_i.__name__ = f"act_{act_fn.__name__}_{i}"
+                self.action_list.append(bind(self, deepcopy(act_i)))
 
-                self.action_list.append(bind(self, act_i))
+    def generate_indexed_action(self, act_fn, index: int):
+        """Create a indexed action function from an action function that takes an index as an argument"""
+
+        def act_i(self, prev_action_key=None) -> Any:
+            return getattr(self, act_fn.__name__)(
+                index, prev_action_key=prev_action_key
+            )
+
+        return act_i
 
     def set_action(self, action: int):
         """Function called by the environment when setting action"""
