@@ -137,15 +137,23 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         super().__init__()
         self.utc_init = utc_init
         self.dt = dt
-        if rN is not None and vN is not None and oe is None:
+        rv_specified = rN is not None and vN is not None
+        rv_specified_partial = rN is not None or vN is not None
+        oe_specified = oe is not None and mu is not None
+        oe_specified_partial = oe is not None or mu is not None
+
+        if rv_specified and not oe_specified_partial:
             self.rN_init = rN
             self.vN_init = vN
-        elif oe is not None and rN is None and vN is None:
+        elif oe_specified and not rv_specified_partial:
             self.rN_init, self.vN_init = elem2rv(mu, oe)
-        elif rN is None and vN is None and oe is None:
-            raise (ValueError("Orbit is underspecified. Provide either (rN, vN) or oe"))
         else:
-            raise (ValueError("Orbit is overspecified. Provide either (rN, vN) or oe"))
+            raise (
+                ValueError(
+                    "Orbit is over or underspecified. "
+                    + "Provide either (rN, vN) or (oe, mu)"
+                )
+            )
 
         self.init_simulator()
 
@@ -181,7 +189,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
             list(self.gravFactory.gravBodies.values())
         )
 
-        # # Set up eclipse
+        # Set up eclipse
         self.eclipseObject = eclipse.Eclipse()
         self.eclipseObject.addPlanetToModel(
             self.gravFactory.spiceObject.planetStateOutMsgs[0]
@@ -226,7 +234,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         self.ConfigureStopTime(macros.sec2nano(t))
         self.ExecuteSimulation()
 
-    def next_eclipse(self, t: float) -> tuple[float, float]:
+    def next_eclipse(self, t: float, max_tries: int = 100) -> tuple[float, float]:
         """Find the soonest eclipse transitions. The returned values are not necessarily
         from the same eclipse event, such as when the search start time is in eclipse.
 
@@ -238,7 +246,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
             eclipse_end:  Nearest upcoming eclipse end
         """
         self.extend_to(t + self.dt)
-        for _ in range(100):
+        for _ in range(max_tries):
             upcoming_times = self.times[self.times > t]
             upcoming_eclipse = self.eclipse_log.shadowFactor[self.times > t] > 0
             if sum(np.diff(upcoming_eclipse)) >= 2:
@@ -261,6 +269,8 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
     @property
     def r_BN_N(self) -> interp1d:
         """Interpolator for r_BN_N"""
+        if self.sim_time < self.dt * 3:
+            self.extend_to(self.dt * 3)
         return interp1d(
             self.times,
             self.sc_state_log.r_BN_N,
@@ -272,6 +282,8 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
     @property
     def r_BP_P(self) -> interp1d:
         """Interpolator for r_BP_P"""
+        if self.sim_time < self.dt * 3:
+            self.extend_to(self.dt * 3)
         return interp1d(
             self.times,
             [
@@ -286,4 +298,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         )
 
     def __del__(self) -> None:
-        self.gravFactory.unloadSpiceKernels()
+        try:
+            self.gravFactory.unloadSpiceKernels()
+        except AttributeError:
+            pass

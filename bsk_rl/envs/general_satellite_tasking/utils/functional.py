@@ -110,13 +110,6 @@ def aliveness_checker(func: Callable[..., bool]) -> Callable[..., bool]:
     return inner
 
 
-def is_property(obj: Any, attr_name: str) -> bool:
-    """Check if obj has an @property attr_name without calling it"""
-    cls = type(obj)
-    attribute = getattr(cls, attr_name, None)
-    return attribute is not None and isinstance(attribute, property)
-
-
 def check_aliveness_checkers(model: Any) -> bool:
     """Evaluate all functions with @aliveness_checker in a model
 
@@ -136,6 +129,13 @@ def check_aliveness_checkers(model: Any) -> bool:
         ):
             is_alive = is_alive and getattr(model, name)()
     return is_alive
+
+
+def is_property(obj: Any, attr_name: str) -> bool:
+    """Check if obj has an @property attr_name without calling it"""
+    cls = type(obj)
+    attribute = getattr(cls, attr_name, None)
+    return attribute is not None and isinstance(attribute, property)
 
 
 def configurable(cls):

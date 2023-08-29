@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.envs.general_satellite_tasking.types import (
         EnvironmentModel,
         Satellite,
@@ -84,5 +84,5 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self.ExecuteSimulation()
 
     def __del__(self):
-        if MEMORY_LEAK_CHECKING:
+        if MEMORY_LEAK_CHECKING:  # pragma: no cover
             print("~~~ BSK SIMULATOR DELETED ~~~")

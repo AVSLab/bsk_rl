@@ -91,7 +91,7 @@ while True:
         if isinstance(msgs, list):
             for time, message in msgs:
                 msg_str = (
-                    f"\t<{'_'.join(sat.split('_')[0:-1])} at {time:.1f}>\t{message}",
+                    f"\t<{'_'.join(sat.split('_')[0:-1])} at {time:.1f}>\t{message}"
                 )
                 msg_list.append((time, msg_str))
     for time, message in sorted(msg_list):

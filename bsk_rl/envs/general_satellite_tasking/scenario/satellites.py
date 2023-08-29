@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
 from weakref import proxy
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.envs.general_satellite_tasking.types import (
         DynamicsModel,
         FSWModel,
@@ -164,7 +164,7 @@ class Satellite(ABC):
         )
 
     @property
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def action_space(self) -> spaces.Space:
         """Action space for single satellite
 
@@ -243,7 +243,7 @@ class Satellite(ABC):
         if self._timed_terminal_event_name is not None:
             self.simulator.eventMap[self._timed_terminal_event_name].eventActive = False
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def get_obs(self) -> SatObs:
         """Construct the satellite's observation
 
@@ -252,7 +252,7 @@ class Satellite(ABC):
         """
         pass
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def set_action(self, action: int) -> None:
         """Enables certain processes in the simulator to command the satellite task.
             Should call an @action from FSW, among other things.
@@ -271,14 +271,14 @@ class BasicSatellite(Satellite):
     # Default actions and observations #
     ####################################
 
-    def get_obs(self) -> Iterable[float]:
+    def get_obs(self) -> Iterable[float]:  # pragma: no cover; deprecating
         return np.array([0.0])
 
     @property
-    def action_space(self):
+    def action_space(self):  # pragma: no cover; deprecating
         return spaces.Discrete(2)
 
-    def set_action(self, action: int) -> None:
+    def set_action(self, action: int) -> None:  # pragma: no cover; deprecating
         if action == 0:
             self.fsw.action_charge()
         elif action == 1:
@@ -366,71 +366,120 @@ class ImagingSatellite(BasicSatellite):
         if duration <= 0:
             return
         calculation_start = self.window_calculation_time
-        self.window_calculation_time += max(
+        calculation_end = self.window_calculation_time + max(
             duration, self.trajectory.dt * 2, self.generation_duration
         )
-        self.window_calculation_time = self.generation_duration * np.ceil(
-            self.window_calculation_time / self.generation_duration
+        calculation_end = self.generation_duration * np.ceil(
+            calculation_end / self.generation_duration
         )
 
-        # simulate next trajectory segment
-        self.trajectory.extend_to(self.window_calculation_time)
+        # Get discrete times and positions for next trajectory segment
+        self.trajectory.extend_to(calculation_end)
         r_BP_P_interp = self.trajectory.r_BP_P
         window_calc_span = np.logical_and(
             r_BP_P_interp.x >= calculation_start,
-            r_BP_P_interp.x <= self.window_calculation_time,
+            r_BP_P_interp.x <= calculation_end,
         )
         times = r_BP_P_interp.x[window_calc_span]
         positions = r_BP_P_interp.y[window_calc_span]
 
         for target in self.data_store.env_knowledge.targets:
-            # Find times where a window is plausible; i.e. where a interpolation point
-            # is within target_dist_threshold of the target
-            close_times = (
-                np.linalg.norm(positions - target.location, axis=1)
-                < self.target_dist_threshold
+            candidate_windows = self._find_candidate_windows(
+                target.location, times, positions, self.target_dist_threshold
             )
-            close_indices = np.where(close_times)[0]
-            groups = np.split(
-                close_indices, np.where(np.diff(close_indices) != 1)[0] + 1
-            )
-            groups = [group for group in groups if len(group) > 0]
 
-            for group in groups:
-                i_start = max(0, group[0] - 1)
-                i_end = min(len(times) - 1, group[-1] + 1)
+            for candidate_window in candidate_windows:
+                roots = self._find_elevation_roots(
+                    r_BP_P_interp, target.location, self.min_elev, candidate_window
+                )
+                new_windows = self._refine_window(
+                    roots, candidate_window, (times[0], times[-1])
+                )
+                for new_window in new_windows:
+                    self._add_window(target, new_window, merge_time=times[0])
 
-                def root_fn(t):
-                    return elevation(r_BP_P_interp(t), target.location) - self.min_elev
+        self.window_calculation_time = calculation_end
 
-                settings = chebpy.UserPreferences()
-                with settings:
-                    settings.eps = 1e-6
-                    settings.sortroots = True
-                    roots = chebpy.chebfun(
-                        root_fn, [times[i_start], times[i_end]]
-                    ).roots()
+    @staticmethod
+    def _find_elevation_roots(
+        position_interp,
+        location: np.ndarray,
+        min_elev: float,
+        window: tuple[float, float],
+    ):
+        def root_fn(t):
+            return elevation(position_interp(t), location) - min_elev
 
-                # Create windows from roots
-                if len(roots) == 2:
-                    new_window = (roots[0], roots[1])
-                elif len(roots) == 1 and times[i_start] == times[0]:
-                    new_window = (times[0], roots[0])
-                elif len(roots) == 1 and times[i_end] == times[-1]:
-                    new_window = (roots[0], times[-1])
-                else:
-                    break
+        settings = chebpy.UserPreferences()
+        with settings:
+            settings.eps = 1e-6
+            settings.sortroots = True
+            roots = chebpy.chebfun(root_fn, window).roots()
 
-                # Merge touching windows
-                if target in self.windows:
-                    if new_window[0] == times[0]:
-                        for window in self.windows[target]:
-                            if window[1] == new_window[0]:
-                                window[1] == new_window[1]
-                    else:
-                        self.windows[target].append(new_window)
-                else:
-                    self.windows[target] = [new_window]
+        return roots
+
+    @staticmethod
+    def _find_candidate_windows(
+        location: np.ndarray, times: np.ndarray, positions: np.ndarray, threshold: float
+    ) -> list[tuple[float, float]]:
+        """Find `times` where a window is plausible; i.e. where a `positions` point is
+        within `threshold` of `location`. Too big of a dt in times may miss windows or
+        produce bad results."""
+        close_times = np.linalg.norm(positions - location, axis=1) < threshold
+        close_indices = np.where(close_times)[0]
+        groups = np.split(close_indices, np.where(np.diff(close_indices) != 1)[0] + 1)
+        groups = [group for group in groups if len(group) > 0]
+        candidate_windows = []
+        for group in groups:
+            t_start = times[max(0, group[0] - 1)]
+            t_end = times[min(len(times) - 1, group[-1] + 1)]
+            candidate_windows.append((t_start, t_end))
+        return candidate_windows
+
+    @staticmethod
+    def _refine_window(
+        endpoints: Iterable,
+        candidate_window: tuple[float, float],
+        computation_window: tuple[float, float],
+    ) -> list[tuple[float, float]]:
+        endpoints = list(endpoints)
+        if len(endpoints) % 2 == 1:
+            if candidate_window[0] == computation_window[0]:
+                endpoints.insert(0, computation_window[0])
+            elif candidate_window[-1] == computation_window[-1]:
+                endpoints.append(computation_window[-1])
+            else:
+                raise ValueError()
+
+        new_windows = []
+        for t1, t2 in zip(endpoints[0::2], endpoints[1::2]):
+            new_windows.append((t1, t2))
+
+        return new_windows
+
+    def _add_window(
+        self,
+        target: Target,
+        new_window: tuple[float, float],
+        merge_time: Optional[float] = None,
+    ):
+        """
+        Args:
+            target: Target to add window for
+            new_window: New window for target
+            merge_time: Time at which merges with existing windows will occur. If None,
+                check all windows for merges
+        """
+        if target in self.windows:
+            # Merge touching windows
+            if new_window[0] == merge_time or merge_time is None:
+                for window in self.windows[target]:
+                    if window[1] == new_window[0]:
+                        window[1] == new_window[1]
+                        return
+            self.windows[target].append(new_window)
+        else:
+            self.windows[target] = [new_window]
 
     @property
     def upcoming_windows(self) -> dict[Target, list[tuple[float, float]]]:
@@ -582,7 +631,7 @@ class ImagingSatellite(BasicSatellite):
     # Default actions and observations #
     ####################################
 
-    def get_obs(self) -> Iterable[float]:
+    def get_obs(self) -> Iterable[float]:  # pragma: no cover; deprecating
         dynamic_state = np.concatenate(
             [
                 self.dynamics.omega_BP_P,
@@ -602,11 +651,11 @@ class ImagingSatellite(BasicSatellite):
         return np.concatenate((dynamic_state, images_state))
 
     @property
-    def action_space(self):
+    def action_space(self):  # pragma: no cover; deprecating
         """Satellite can take n_ahead_act imaging actions"""
         return spaces.Discrete(self.n_ahead_act)
 
-    def set_action(self, action: Union[int, Target, str]) -> None:
+    def set_action(self, action: Union[int, Target, str]) -> None:  # pragma: no cover
         """Select the satellite action; does not reassign action if the same target is
         selected twice
 
@@ -640,7 +689,7 @@ class FBImagerSatellite(ImagingSatellite):
     fsw_type = fsw.ImagingFSWModel
 
 
-class FullFeaturedSatellite(SteeringImagerSatellite):
+class FullFeaturedSatellite(SteeringImagerSatellite):  # pragma: no cover; deprecating
     """SteeringImagerSatellite with specific actions"""
 
     ####################################

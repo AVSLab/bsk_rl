@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Callable, Iterable
 from weakref import proxy
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.envs.general_satellite_tasking.types import (
         DynamicsModel,
         EnvironmentModel,
@@ -107,11 +107,10 @@ class FSWModel(ABC):
     def dynamics(self) -> "DynamicsModel":
         return self.satellite.dynamics
 
-    @abstractmethod
     def _make_task_list(self) -> list["Task"]:
-        pass
+        return []
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def _set_messages(self) -> None:
         """Message setup after task creation"""
         pass
@@ -125,13 +124,13 @@ class FSWModel(ABC):
         return check_aliveness_checkers(self)
 
     def __del__(self):
-        if MEMORY_LEAK_CHECKING:
+        if MEMORY_LEAK_CHECKING:  # pragma: no cover
             print("~~~ BSK FSW DELETED ~~~")
 
 
 class Task(ABC):
     @property
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def name(self) -> str:
         pass
 
@@ -154,12 +153,12 @@ class Task(ABC):
             taskPriority=self.priority,
         )
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def create_module_data(self) -> None:
         """Create module data wrappers."""
         pass
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def init_objects(self, **kwargs) -> None:
         """Initialize model parameters with satellite arguments/"""
         pass

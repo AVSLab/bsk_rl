@@ -9,9 +9,7 @@ from Basilisk.utilities import orbitalMotion
 
 
 class EnvironmentFeatures(ABC):
-    def __init__(self) -> None:
-        """Base environment feature class"""
-        pass
+    """Base environment feature class"""
 
     def reset(self) -> None:
         """Reset environment features"""
@@ -82,6 +80,20 @@ class StaticTargets(EnvironmentFeatures):
             )
 
 
+def lla2ecef(lat: float, long: float, radius: float):
+    """
+    Args:
+        lat: [deg]
+        long: [deg]
+        radius: [any]
+    """
+    lat = np.radians(lat)
+    long = np.radians(long)
+    return radius * np.array(
+        [np.cos(lat) * np.cos(long), np.cos(lat) * np.sin(long), np.sin(lat)]
+    )
+
+
 class CityTargets(StaticTargets):
     def __init__(
         self,
@@ -120,15 +132,13 @@ class CityTargets(StaticTargets):
 
         for i in np.random.choice(self.n_select_from, self.n_targets, replace=False):
             city = cities.iloc[i]
-            lat = np.radians(city["lat"])
-            lng = np.radians(city["lng"])
-            location = self.radius * np.array(
-                [np.cos(lat) * np.cos(lng), np.cos(lat) * np.sin(lng), np.sin(lat)]
-            )
+            location = lla2ecef(city["lat"], city["lng"], self.radius)
             offset = np.random.normal(size=3)
-            offset *= self.location_offset / np.linalg.norm(offset)
+            offset /= np.linalg.norm(offset)
+            offset *= self.location_offset
             location += offset
-            location *= self.radius / np.linalg.norm(location)
+            location /= np.linalg.norm(location)
+            location *= self.radius
             self.targets.append(
                 Target(
                     name=city["city"].replace("'", ""),

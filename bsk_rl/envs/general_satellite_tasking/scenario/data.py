@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from copy import copy
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
         Target,
     )
@@ -19,7 +18,7 @@ LogStateType = Any
 class DataType(ABC):
     """Base class for units of satellite data"""
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def __add__(self, other: "DataType") -> "DataType":
         """Define the combination of two units of data"""
         pass
@@ -55,7 +54,7 @@ class DataStore(ABC):
         """Pull information for current data contribution e.g. sensor readings"""
         pass
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def _compare_log_states(
         self, old_state: LogStateType, new_state: LogStateType
     ) -> "DataType":
@@ -128,7 +127,7 @@ class DataManager(ABC):
         """Create a data store for a satellite"""
         satellite.data_store = self.DataStore(self, satellite)
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def _calc_reward(self, new_data_dict: dict[str, DataType]) -> float:
         """Calculate step reward based on all satellite data from a step
 
@@ -147,7 +146,9 @@ class DataManager(ABC):
         return reward
 
 
-"""Unique Targets with Constant Values"""
+#######################################
+# Unique Targets with Constant Values #
+#######################################
 
 
 class UniqueImageData(DataType):
@@ -162,8 +163,9 @@ class UniqueImageData(DataType):
         """
         if imaged is None:
             imaged = []
-        self.imaged = imaged
-        self.duplicates = duplicates
+
+        self.imaged = list(set(imaged))
+        self.duplicates = duplicates + len(imaged) - len(self.imaged)
 
     def __add__(self, other: "UniqueImageData") -> "UniqueImageData":
         imaged = list(set(self.imaged + other.imaged))
@@ -254,94 +256,94 @@ class UniqueImagingManager(DataManager):
 """Targets with Time-Dependent Rewards"""
 
 
-class TimeDepImageData(DataType):
-    def __init__(self, rewards=None) -> None:
-        """DataType to log scalar imaging
+# class TimeDepImageData(DataType):
+#     def __init__(self, rewards=None) -> None:
+#         """DataType to log scalar imaging
 
-        Args:
-            imaged (dict, optional): Reward obtained from each target.
-        """
-        if rewards is None:
-            rewards = {}
-        self.rewards = rewards
+#         Args:
+#             imaged (dict, optional): Reward obtained from each target.
+#         """
+#         if rewards is None:
+#             rewards = {}
+#         self.rewards = rewards
 
-    def __add__(self, other) -> "TimeDepImageData":
-        rewards = copy(self.rewards)
-        for target, reward in other.rewards.items():
-            if target in rewards:
-                rewards[target] = max(rewards[target], reward)
-            else:
-                rewards[target] = reward
-        return self.__class__(rewards=rewards)
-
-
-class TimeDepImageStore(DataStore):
-    DataType = TimeDepImageData
-
-    def _get_log_state(self) -> Iterable[float]:
-        """Log the instaneous storage unit state at the end of each step
-
-        Returns:
-            array: storedData from satellite storage unit
-        """
-        return np.array(
-            self.satellite.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData
-        )
-
-    def _compare_log_states(self, old_state, new_state) -> TimeDepImageData:
-        """Checks two storage unit logs for an increase in logged data to identify new
-        images
-
-        Args:
-            old_state (array): older storedData from satellite storage unit
-            new_state (array): newer storedData from satellite storage unit
-
-        Returns:
-            list: Targets imaged at new_state that were unimaged at old_state
-        """
-        update_idx = np.where(new_state - old_state > 0)[0]
-        imaged = []
-        for idx in update_idx:
-            message = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg
-            target_id = message.read().storedDataName[int(idx)]
-            imaged.append(
-                [
-                    target
-                    for target in self.env_knowledge.targets
-                    if target.id == target_id
-                ][0]
-            )
-        return self.DataType(imaged=imaged)
+#     def __add__(self, other) -> "TimeDepImageData":
+#         rewards = copy(self.rewards)
+#         for target, reward in other.rewards.items():
+#             if target in rewards:
+#                 rewards[target] = max(rewards[target], reward)
+#             else:
+#                 rewards[target] = reward
+#         return self.__class__(rewards=rewards)
 
 
-class TimeDepImagingManager(DataManager):
-    DataStore = TimeDepImageStore
+# class TimeDepImageStore(DataStore):
+#     DataType = TimeDepImageData
 
-    # def __init__(self, env_features):
-    #     """DataManager for rewarding time-dependent images. Will only give marginal
-    #       reward for reimaging at higher value
+#     def _get_log_state(self) -> Iterable[float]:
+#         """Log the instaneous storage unit state at the end of each step
 
-    #     Args:
-    #         env_features (EnvironmentFeatures): DataManager.env_features
-    #         reward_fn (function, optional): Reward as function of priority.
-    #     """
-    #     super().__init__(env_features)
+#         Returns:
+#             array: storedData from satellite storage unit
+#         """
+#         return np.array(
+#           self.satellite.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData
+#         )
 
-    def _calc_reward(self, new_data_dict):
-        """Reward each image for additional reward from higher quality images
+#     def _compare_log_states(self, old_state, new_state) -> TimeDepImageData:
+#         """Checks two storage unit logs for an increase in logged data to identify new
+#         images
 
-        Args:
-            new_data_dict (dict): Record of new images for each satellite
+#         Args:
+#             old_state (array): older storedData from satellite storage unit
+#             new_state (array): newer storedData from satellite storage unit
 
-        Returns:
-            float: Cumulative new reward
-        """
-        reward = 0.0
-        for new_data in new_data_dict.values():
-            for target, reward in new_data.rewards.items():
-                if target not in self.data.rewards:
-                    reward += reward
-                elif reward > self.data.rewards[target]:
-                    reward += reward - self.data.rewards[target]
-            self.data += new_data
-        return reward
+#         Returns:
+#             list: Targets imaged at new_state that were unimaged at old_state
+#         """
+#         update_idx = np.where(new_state - old_state > 0)[0]
+#         imaged = []
+#         for idx in update_idx:
+#             message = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg
+#             target_id = message.read().storedDataName[int(idx)]
+#             imaged.append(
+#                 [
+#                     target
+#                     for target in self.env_knowledge.targets
+#                     if target.id == target_id
+#                 ][0]
+#             )
+#         return self.DataType(imaged=imaged)
+
+
+# class TimeDepImagingManager(DataManager):
+#     DataStore = TimeDepImageStore
+
+#     # def __init__(self, env_features):
+#     #     """DataManager for rewarding time-dependent images. Will only give marginal
+#     #       reward for reimaging at higher value
+
+#     #     Args:
+#     #         env_features (EnvironmentFeatures): DataManager.env_features
+#     #         reward_fn (function, optional): Reward as function of priority.
+#     #     """
+#     #     super().__init__(env_features)
+
+#     def _calc_reward(self, new_data_dict):
+#         """Reward each image for additional reward from higher quality images
+
+#         Args:
+#             new_data_dict (dict): Record of new images for each satellite
+
+#         Returns:
+#             float: Cumulative new reward
+#         """
+#         reward = 0.0
+#         for new_data in new_data_dict.values():
+#             for target, reward in new_data.rewards.items():
+#                 if target not in self.data.rewards:
+#                     reward += reward
+#                 elif reward > self.data.rewards[target]:
+#                     reward += reward - self.data.rewards[target]
+#             self.data += new_data
+#         return reward
