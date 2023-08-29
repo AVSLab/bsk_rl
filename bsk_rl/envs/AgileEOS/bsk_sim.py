@@ -254,7 +254,7 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
             "thrForceSign": 1,
             # Thruster momentum dumping FSW config
             "maxCounterValue": 4,
-            "thrMinFireTime": 0.02,  #   Seconds
+            "thrMinFireTime": 0.02,  # Seconds
             "groundLocationPlanetRadius": astroFunctions.E_radius * 1e3,
             # Ground station - Located in Boulder, CO
             "boulderGroundStationLat": np.radians(40.009971),  # 40.0150 N Latitude

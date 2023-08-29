@@ -66,7 +66,7 @@ def plot_hyperparam_reward(
             alpha=0.1,
         )
 
-    legend = plt.legend(
+    legend = plt.legend(  # noqa: F841
         title="Exploration Constant",
         loc="upper center",
         ncol=3,
@@ -176,7 +176,13 @@ def plot_hyperparam_downlink_utilization(num_sim_values, c_values, master_data_d
             alpha=0.1,
         )
 
-    # legend = plt.legend(title='Exploration Constant', loc='upper center', ncol=3, fontsize=14, bbox_to_anchor=(0.5, 1.3))
+    # legend = plt.legend(
+    #     title="Exploration Constant",
+    #     loc="upper center",
+    #     ncol=3,
+    #     fontsize=14,
+    #     bbox_to_anchor=(0.5, 1.3),
+    # )
     # plt.setp(legend.get_title(), fontsize=16)
     # return_fig.subplots_adjust(top=0.9)
     plt.xlabel("Simulations-Per-Step", fontsize=16)

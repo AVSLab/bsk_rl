@@ -382,7 +382,7 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
         """
         from datetime import datetime
 
-        fileName = f"multi_tgt_env-v1_{datetime.today()}"
+        fileName = f"multi_tgt_env-v1_{datetime.today()}"  # noqa: F841; unsure if used
 
         # Add the transceivers
         self.transceiverList = [[] for _ in range(self.n_spacecraft)]

@@ -6,7 +6,7 @@ from pathlib import Path
 import gymnasium as gym
 import numpy as np
 
-from bsk_rl.envs.AgileEOS.gym_env import AgileEOS
+from bsk_rl.envs.AgileEOS.gym_env import AgileEOS  # noqa: F401; needed for gym
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 

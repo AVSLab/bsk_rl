@@ -1482,7 +1482,7 @@ class SmallBodyScienceSimulator(SimulationBaseClass.SimBaseClass):
     def setup_viz(self):
         from datetime import datetime
 
-        fileName = f"small_body_science_env-v1_{datetime.today()}"
+        fileName = f"small_body_science_env-v1_{datetime.today()}"  # noqa: F841
 
         self.vizInterface = vizSupport.enableUnityVisualization(
             self,
@@ -1523,7 +1523,7 @@ class SmallBodyScienceSimulator(SimulationBaseClass.SimBaseClass):
         # Set the sim_over param to false
         self.sim_over = False
 
-        currentResetTime = mc.sec2nano(self.simTime)
+        currentResetTime = mc.sec2nano(self.simTime)  # noqa F841; Unsure if used
 
         self.turn_on_off_models()
 

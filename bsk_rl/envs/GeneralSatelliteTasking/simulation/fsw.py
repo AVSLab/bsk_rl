@@ -5,9 +5,9 @@ from weakref import proxy
 if TYPE_CHECKING:
     from bsk_rl.envs.GeneralSatelliteTasking.types import (
         DynamicsModel,
+        EnvironmentModel,
         Satellite,
         Simulator,
-        EnvironmentModel,
     )
 
 import Basilisk.architecture.cMsgCInterfacePy as cMsgPy
@@ -39,7 +39,8 @@ from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import (
 def action(
     func: Callable[..., None]
 ) -> Callable[Callable[..., None], Callable[..., None]]:
-    """Wrapper to do housekeeping for action functions that should be called by the satellite class."""
+    """Wrapper to do housekeeping for action functions that should be called by the
+    satellite class."""
 
     def inner(self, *args, **kwargs) -> Callable[..., None]:
         self.fsw_proc.disableAllTasks()
@@ -179,7 +180,8 @@ class Task(ABC):
         )
 
     def reset_for_action(self) -> None:
-        """Housekeeping for task when a new action is called; by default, disable task."""
+        """Housekeeping for task when a new action is called; by default, disable
+        task."""
         self.fsw.simulator.disableTask(self.name + self.fsw.satellite.id)
 
 
@@ -211,7 +213,7 @@ class BasicFSWModel(FSWModel):
         """Set the vehicle configuration message."""
         # Use the same inertia in the FSW algorithm as in the simulation
         vehicleConfigOut = messaging.VehicleConfigMsgPayload()
-        vehicleConfigOut.ISCPntB_B = self.dynamics.I
+        vehicleConfigOut.ISCPntB_B = self.dynamics.I_mat
         self.vcConfigMsg = messaging.VehicleConfigMsg().write(vehicleConfigOut)
 
     def _set_thrusters_config_msg(self) -> None:
@@ -219,12 +221,13 @@ class BasicFSWModel(FSWModel):
         self.thrusterConfigMsg = self.dynamics.thrFactory.getConfigMessage()
 
     def _set_rw_config_msg(self) -> None:
-        """Configure RW pyramid exactly as it is in the Dynamics (i.e. FSW with perfect knowledge)."""
+        """Configure RW pyramid exactly as it is in the Dynamics (i.e. FSW with perfect
+        knowledge)."""
         self.fswRwConfigMsg = self.dynamics.rwFactory.getConfigMessage()
 
     def _set_gateway_msgs(self) -> None:
-        """Create C-wrapped gateway messages such that different modules can write to this message
-        and provide a common input msg for down-stream modules."""
+        """Create C-wrapped gateway messages such that different modules can write to
+        this message and provide a common input msg for down-stream modules."""
         self.attRefMsg = cMsgPy.AttRefMsg_C()
         self.attGuidMsg = cMsgPy.AttGuidMsg_C()
 
@@ -379,7 +382,8 @@ class BasicFSWModel(FSWModel):
 
             Args:
                 controlAxes_B: Control unit axes
-                thrForceSign: Flag indicating if pos (+1) or negative (-1) thruster solutions are found
+                thrForceSign: Flag indicating if pos (+1) or negative (-1) thruster
+                    solutions are found
             """
             self.thrForceMappingConfig.cmdTorqueInMsg.subscribeTo(
                 self.thrDesatControlConfig.deltaHOutMsg
@@ -640,8 +644,10 @@ class ImagingFSWModel(BasicFSWModel):
             """Defines the instrument controller parameters.
 
             Args:
-                imageAttErrorRequirement: Pointing attitude error tolerance for imaging [MRP norm]
-                imageRateErrorRequirement: Rate tolerance for imaging. Disable with None. [rad/s]
+                imageAttErrorRequirement: Pointing attitude error tolerance for imaging
+                    [MRP norm]
+                imageRateErrorRequirement: Rate tolerance for imaging. Disable with
+                    None. [rad/s]
             """
             self.simpleInsControlConfig.attErrTolerance = imageAttErrorRequirement
             if imageRateErrorRequirement is not None:

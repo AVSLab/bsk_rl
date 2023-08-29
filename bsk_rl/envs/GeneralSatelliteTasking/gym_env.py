@@ -36,28 +36,32 @@ class GeneralSatelliteTasking(Env):
         terminate_on_time_limit: bool = False,
         render_mode=None,
     ) -> None:
-        """A Gymnasium environment adaptable to a wide range satellite tasking problems that involve satellite(s) being
-        tasked to complete tasks and maintain aliveness. These tasks often include rewards for data collection. The
-        environment can be configured for any collection of satellites, including heterogenous constellations. Other
-        configurable aspects are environment features (e.g. imaging targets), data collection and recording, and
-        intersatellite communication of data.
+        """A Gymnasium environment adaptable to a wide range satellite tasking problems
+        that involve satellite(s) being tasked to complete tasks and maintain aliveness.
+        These tasks often include rewards for data collection. The environment can be
+        configured for any collection of satellites, including heterogenous
+        constellations. Other configurable aspects are environment features (e.g.
+        imaging targets), data collection and recording, and intersatellite
+        communication of data.
 
-        The state space is a tuple containing the state of each satellite. Actions are assigned as a tuple of actions,
-        one per satellite.
+        The state space is a tuple containing the state of each satellite. Actions are
+        assigned as a tuple of actions, one per satellite.
 
-        The preferred method of instantiating this environment is to make the "GeneralSatelliteTasking-v1" environment
-        and pass a kwargs dict with the environment configuration. In some cases (e.g. the multiprocessed Gymnasium
-        vector environment), it is necessary for compatibility to instead register a new environment using the
-        GeneralSatelliteTasking class and a kwargs dict. See examples/general_satellite_tasking for examples of
-        environment configuration.
+        The preferred method of instantiating this environment is to make the
+        "GeneralSatelliteTasking-v1" environment and pass a kwargs dict with the
+        environment configuration. In some cases (e.g. the multiprocessed Gymnasium
+        vector environment), it is necessary for compatibility to instead register a new
+        environment using the GeneralSatelliteTasking class and a kwargs dict. See
+        examples/general_satellite_tasking for examples of environment configuration.
 
         New environments should be built using this framework.
 
         Args:
             satellites: Satellites(s) to be simulated.
             env_type: Type of environment model to be constructed.
-            env_args: Arguments for environment model construction. {key: value or key: function}, where
-                function is called at reset to set the value (used for randomization).
+            env_args: Arguments for environment model construction. {key: value or key:
+                function}, where function is called at reset to set the value (used for
+                randomization).
             env_features: Information about the environment.
             data_manager: Object to record and reward data collection.
             communicator: Object to manage communication between satellites
@@ -65,7 +69,8 @@ class GeneralSatelliteTasking(Env):
             max_step_duration: Maximum time to propagate sim at a step [s].
             failure_penalty: Reward for satellite failure.
             time_limit: Time at which to truncate the simulation [s].
-            terminate_on_time_limit: Send terminations signal time_limit instead of just truncation.
+            terminate_on_time_limit: Send terminations signal time_limit instead of just
+                truncation.
             render_mode: Unused.
         """
         self.seed = None
@@ -146,9 +151,11 @@ class GeneralSatelliteTasking(Env):
         return observation, info
 
     def delete_simulator(self):
-        """Delete Basilisk objects. Only self.simulator contains strong references to BSK models, so deleting it will
-        delete all Basilisk objects. Enable MEMORY_LEAK_CHECKING in bsk_rl/envs/GeneralSatelliteTasking/utils/debug.py
-        to verify that the simulator, FSW, dynamics, and environment models are all deleted on reset.
+        """Delete Basilisk objects. Only self.simulator contains strong references to
+        BSK models, so deleting it will delete all Basilisk objects. Enable
+        MEMORY_LEAK_CHECKING in bsk_rl/envs/GeneralSatelliteTasking/utils/debug.py to
+        verify that the simulator, FSW, dynamics, and environment models are all deleted
+        on reset.
         """
         try:
             del self.simulator
@@ -186,8 +193,8 @@ class GeneralSatelliteTasking(Env):
 
     @property
     def observation_space(self) -> spaces.Space[MultiSatObs]:
-        """Compose satellite observation spaces. Note: calls reset(), which can be expensive, to determine observation
-        size
+        """Compose satellite observation spaces. Note: calls reset(), which can be
+        expensive, to determine observation size.
 
         Returns:
             Joint observation space
@@ -255,9 +262,9 @@ class GeneralSatelliteTasking(Env):
 
 
 class SingleSatelliteTasking(GeneralSatelliteTasking):
-    """A special case of the GeneralSatelliteTasking for one satellite. For compatibility with standard training
-    APIs, actions and observations are directly exposed for the single satellite and are not wrapped
-    in a tuple.
+    """A special case of the GeneralSatelliteTasking for one satellite. For
+    compatibility with standard training APIs, actions and observations are directly
+    exposed for the single satellite and are not wrapped in a tuple.
     """
 
     def __init__(self, *args, **kwargs) -> None:

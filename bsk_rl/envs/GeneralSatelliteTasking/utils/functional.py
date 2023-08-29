@@ -43,7 +43,8 @@ def safe_dict_merge(updates: dict, base: dict) -> dict:
 
 
 def default_args(**defaults) -> Callable:
-    """Decorator to enumerate default arguments of certain functions so they can be collected"""
+    """Decorator to enumerate default arguments of certain functions so they can be
+    collected"""
 
     def inner_dec(func) -> Callable:
         def inner(*args, **kwargs) -> Callable:
@@ -76,7 +77,8 @@ def collect_default_args(object: object) -> dict[str, Any]:
 
 
 def vectorize_nested_dict(dictionary: dict) -> np.ndarray:
-    """Flattens a dictionary of dictionaries, arrays, and scalars into a single vector."""
+    """Flattens a dictionary of dictionaries, arrays, and scalars into a single
+    vector."""
     values = list(dictionary.values())
     for i, value in enumerate(values):
         if isinstance(value, np.ndarray):
@@ -137,7 +139,8 @@ def check_aliveness_checkers(model: Any) -> bool:
 
 
 def configurable(cls):
-    """Class decorator to create new instance of a class with different defaults to __init__"""
+    """Class decorator to create new instance of a class with different defaults to
+    __init__"""
 
     @classmethod
     def configure(cls, **config_kwargs):

@@ -20,8 +20,9 @@ class SatAction(Satellite):
 
 class DiscreteSatAction(SatAction):
     def __init__(self, *args, **kwargs) -> None:
-        """Base satellite subclass for composing discrete actions. Actions are added to the satellite for each
-        DiscreteSatAction subclass, and can be accessed by index in order added."""
+        """Base satellite subclass for composing discrete actions. Actions are added to
+        the satellite for each DiscreteSatAction subclass, and can be accessed by index
+        in order added."""
         super().__init__(*args, **kwargs)
         self.action_list = []
         self.action_map = {}
@@ -33,11 +34,12 @@ class DiscreteSatAction(SatAction):
         """Add an action to the action map.
 
         Args:
-            act_fn: Function to call when selecting action. Takes as a keyword prev_action_key, used to avoid
-                retasking of BSK models. Can accept an integer argument.
+            act_fn: Function to call when selecting action. Takes as a keyword
+                prev_action_key, used to avoid retasking of BSK models. Can accept an
+                integer argument.
             act_name: String to refer to action.
-            n_actions: If not none, add action n_actions times, calling it with an increasing integer argument for each
-                subsequent action.
+            n_actions: If not none, add action n_actions times, calling it with an
+                increasing integer argument for each subsequent action.
         """
         if act_name is None:
             act_name = act_fn.__name__
@@ -55,7 +57,8 @@ class DiscreteSatAction(SatAction):
                 self.action_list.append(bind(self, deepcopy(act_i)))
 
     def generate_indexed_action(self, act_fn, index: int):
-        """Create a indexed action function from an action function that takes an index as an argument"""
+        """Create a indexed action function from an action function that takes an index
+        as an argument"""
 
         def act_i(self, prev_action_key=None) -> Any:
             return getattr(self, act_fn.__name__)(
@@ -81,7 +84,8 @@ def fsw_action_gen(fsw_action: str) -> DiscreteSatAction:
     @configurable
     class FSWAction(DiscreteSatAction):
         def __init__(self, *args, action_duration: float = 60.0, **kwargs) -> None:
-            """Discrete action to perform a fsw action; typically this is a function decorated by @action
+            """Discrete action to perform a fsw action; typically this is a function
+            decorated by @action
 
             Args:
                 action_duration: Time to act when action selected. [s]
@@ -157,7 +161,8 @@ class ImagingActions(DiscreteSatAction, ImagingSatellite):
         return target.id
 
     def set_action(self, action: Union[int, Target, str]):
-        """Allow the satellite to be tasked by Target or target id, in addition to index"""
+        """Allow the satellite to be tasked by Target or target id, in addition to
+        index"""
         self._disable_image_event()
         if isinstance(action, (Target, str)):
             self.prev_action_key = self.image(action, self.prev_action_key)

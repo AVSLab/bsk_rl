@@ -19,7 +19,8 @@ def random_orbit(
     omega: Optional[float] = 0,
     f: Optional[float] = None,
 ) -> ClassicElements:
-    """Create a set of orbit elements. Parameters are fixed if specified and randomized if None.
+    """Create a set of orbit elements. Parameters are fixed if specified and randomized
+    if None.
 
     Args:
         i: inclination [deg], randomized in [-pi, pi]
@@ -81,7 +82,10 @@ def random_epoch(start: int = 2000, end: int = 2022):
     milliseconds = np.random.randint(0, 999)
 
     # Combine the parts to form the datetime string
-    epoch = f"{year} {month} {day:02d} {hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d} (UTC)"
+    epoch = (
+        f"{year} {month} {day:02d} "
+        + f"{hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d} (UTC)"
+    )
 
     return epoch
 
@@ -118,8 +122,9 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         mu: Optional[float] = None,
         dt: float = 30.0,
     ) -> None:
-        """Class for propagating trajectory using a point mass simulation under the effect of Earth's gravity. Returns
-        interpolators for position as well as upcoming eclipse predictions. Specify either (rN, vN) or (oe, mu).
+        """Class for propagating trajectory using a point mass simulation under the
+        effect of Earth's gravity. Returns interpolators for position as well as
+        upcoming eclipse predictions. Specify either (rN, vN) or (oe, mu).
 
         Args:
             utc_init: Simulation start time.
@@ -222,8 +227,8 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         self.ExecuteSimulation()
 
     def next_eclipse(self, t: float) -> tuple[float, float]:
-        """Find the soonest eclipse transitions. The returned values are not necessarily from the same eclipse event,
-        such as when the search start time is in eclipse.
+        """Find the soonest eclipse transitions. The returned values are not necessarily
+        from the same eclipse event, such as when the search start time is in eclipse.
 
         Args:
             t: Time to start searching [s]

@@ -13,8 +13,8 @@ from bsk_rl.envs.GeneralSatelliteTasking.simulation.dynamics import LOSCommDynMo
 
 class CommunicationMethod(ABC):
     def __init__(self, satellites: list["Satellite"]) -> None:
-        """Base class for defining data sharing between satellites. Subclasses implement a way of determining which
-        pairs of satellites share data."""
+        """Base class for defining data sharing between satellites. Subclasses implement
+        a way of determining which pairs of satellites share data."""
         self.satellites = satellites
 
     def reset(self) -> None:
@@ -52,7 +52,8 @@ class FreeCommunication(CommunicationMethod):
 class LOSCommunication(CommunicationMethod):
     # TODO only communicate data from before latest LOS time
     def __init__(self, satellites: list["Satellite"]) -> None:
-        """Implements communication between satellites that have a direct line of sight"""
+        """Implements communication between satellites that have a direct line of
+        sight"""
         super().__init__(satellites)
         for satellite in self.satellites:
             assert issubclass(satellite.dyn_type, LOSCommDynModel)
