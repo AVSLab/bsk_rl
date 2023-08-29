@@ -219,6 +219,8 @@ class GeneralSatelliteTasking(Env):
         Returns:
             observation, reward, terminated, truncated, info
         """
+        if len(actions) != len(self.satellites):
+            raise ValueError("There must be the same number of actions and satellites")
         for satellite, action in zip(self.satellites, actions):
             satellite.info = []  # reset satellite info log
             satellite.set_action(action)
@@ -251,7 +253,7 @@ class GeneralSatelliteTasking(Env):
         info = self._get_info()
         return observation, reward, terminated, truncated, info
 
-    def render(self) -> None:
+    def render(self) -> None:  # pragma: no cover
         """No rendering implemented"""
         return None
 

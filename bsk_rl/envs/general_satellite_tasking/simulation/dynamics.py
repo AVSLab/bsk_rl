@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Iterable, Optional
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.envs.general_satellite_tasking.types import (
         EnvironmentModel,
         Satellite,
@@ -24,9 +24,12 @@ from Basilisk.simulation import (
     spacecraftLocation,
     spaceToGroundTransmitter,
 )
-from Basilisk.utilities import RigidBodyKinematics
-from Basilisk.utilities import macros as mc
-from Basilisk.utilities import orbitalMotion, unitTestSupport
+from Basilisk.utilities import (
+    RigidBodyKinematics,
+    macros,
+    orbitalMotion,
+    unitTestSupport,
+)
 
 from bsk_rl.envs.general_satellite_tasking.simulation import environment
 from bsk_rl.envs.general_satellite_tasking.utils.debug import MEMORY_LEAK_CHECKING
@@ -73,7 +76,7 @@ class DynamicsModel(ABC):
         self.dyn_rate = dyn_rate
         self.task_name = "DynamicsTask" + self.satellite.id
         self.dyn_proc.addTask(
-            self.simulator.CreateNewTask(self.task_name, mc.sec2nano(self.dyn_rate))
+            self.simulator.CreateNewTask(self.task_name, macros.sec2nano(self.dyn_rate))
         )
 
         # Initialize all modules and write init one-time messages
@@ -88,7 +91,7 @@ class DynamicsModel(ABC):
     def environment(self) -> "EnvironmentModel":
         return self.simulator.environment
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def _init_dynamics_objects(self, **kwargs) -> None:
         """Caller for all dynamics object initialization"""
         pass
@@ -106,7 +109,7 @@ class DynamicsModel(ABC):
         pass
 
     def __del__(self):
-        if MEMORY_LEAK_CHECKING:
+        if MEMORY_LEAK_CHECKING:  # pragma: no cover
             print("~~~ BSK DYNAMICS DELETED ~~~")
 
 
@@ -174,7 +177,7 @@ class BasicDynamicsModel(DynamicsModel):
 
     @property
     def wheel_speeds_fraction(self):
-        return self.wheel_speeds / (self.maxWheelSpeed * mc.rpm2radsec)
+        return self.wheel_speeds / (self.maxWheelSpeed * macros.rpm2radsec)
 
     def _init_dynamics_objects(self, **kwargs) -> None:
         self._set_spacecraft_hub(**kwargs)
@@ -393,7 +396,7 @@ class BasicDynamicsModel(DynamicsModel):
     def rw_speeds_valid(self) -> bool:
         """Check if any wheel speed exceeds the maximum."""
         valid = all(
-            abs(speed) < self.maxWheelSpeed * mc.rpm2radsec
+            abs(speed) < self.maxWheelSpeed * macros.rpm2radsec
             for speed in self.wheel_speeds
         )
         return valid
@@ -677,8 +680,8 @@ class ImagingDynModel(BasicDynamicsModel):
     def _set_storage_unit(
         self,
         dataStorageCapacity: int,
-        transmitterNumBuffers: int,
-        bufferNames: Optional[Iterable[str]],
+        transmitterNumBuffers: Optional[int] = None,
+        bufferNames: Optional[Iterable[str]] = None,
         priority: int = 699,
         **kwargs,
     ) -> None:
@@ -686,7 +689,8 @@ class ImagingDynModel(BasicDynamicsModel):
 
         Args:
             dataStorageCapacity: Maximum data to be stored [bits]
-            transmitterNumBuffers: Number of unit buffers
+            transmitterNumBuffers: Number of unit buffers. Not necessary if bufferNames
+                given.
             bufferNames: List of buffer names to use. Named by number if None.
             priority: Model priority.
         """
@@ -700,6 +704,12 @@ class ImagingDynModel(BasicDynamicsModel):
             for buffer_idx in range(transmitterNumBuffers):
                 self.storageUnit.addPartition(str(buffer_idx))
         else:
+            if transmitterNumBuffers is not None and transmitterNumBuffers != len(
+                bufferNames
+            ):
+                raise ValueError(
+                    "transmitterNumBuffers cannot be different than len(bufferNames)."
+                )
             for buffer_name in bufferNames:
                 self.storageUnit.addPartition(buffer_name)
 

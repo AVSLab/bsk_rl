@@ -16,6 +16,7 @@ setup(
         "matplotlib",
         "numpy",
         "pandas",
+        "pytest",
         "requests",
         "scikit-learn",
         "scipy",

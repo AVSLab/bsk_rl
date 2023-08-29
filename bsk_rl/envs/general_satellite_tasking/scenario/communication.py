@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from itertools import combinations
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.envs.general_satellite_tasking.types import Satellite
 
 import numpy as np
@@ -21,7 +21,7 @@ class CommunicationMethod(ABC):
         """Called after simulator initialization"""
         pass
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def _communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
         """List pair of satellite that should share data"""
         pass

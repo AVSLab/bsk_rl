@@ -57,7 +57,7 @@ class SatObservation(Satellite):
             return self.obs_dict
         elif self.obs_type is np.ndarray:
             return self.obs_ndarray
-        elif self.obs_list is list:
+        elif self.obs_type is list:
             return self.obs_list
         else:
             raise ValueError(f"Invalid observation type: {self.obs_type}")
@@ -174,7 +174,7 @@ class TargetState(SatObservation, ImagingSatellite):
         for i, target in enumerate(self.upcoming_targets(self.n_ahead_observe)):
             obs[f"tgt_value_{i}"] = target.priority
             loc_name = f"tgt_loc_{i}"
-            if loc_name != 1.0:
+            if self.location_norm != 1.0:
                 loc_name += "_normd"
             obs[loc_name] = target.location / self.location_norm
         return obs

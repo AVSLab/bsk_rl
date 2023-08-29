@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Optional, Union
 from weakref import proxy
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.envs.general_satellite_tasking.types import Simulator
 
 import numpy as np
@@ -65,10 +65,10 @@ class EnvironmentModel(ABC):
         self._init_environment_objects(**kwargs)
 
     def __del__(self):
-        if MEMORY_LEAK_CHECKING:
+        if MEMORY_LEAK_CHECKING:  # pragma: no cover
             print("~~~ BSK ENVIRONMENT DELETED ~~~")
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     def _init_environment_objects(self, **kwargs) -> None:
         """Caller for all environment objects"""
         pass
@@ -222,7 +222,10 @@ class BasicEnvironmentModel(EnvironmentModel):
 
     def __del__(self) -> None:
         super().__del__()
-        self.gravFactory.unloadSpiceKernels()
+        try:
+            self.gravFactory.unloadSpiceKernels()
+        except AttributeError:
+            pass
 
 
 class GroundStationEnvModel(BasicEnvironmentModel):
@@ -272,10 +275,8 @@ class GroundStationEnvModel(BasicEnvironmentModel):
         self.groundLocationPlanetRadius = groundLocationPlanetRadius
         self.gsMinimumElevation = gsMinimumElevation
         self.gsMaximumRange = gsMaximumRange
-        for groundStationData in groundStationsData:
-            self._create_ground_station(
-                **groundStationData, priority=priority - len(self.groundStations)
-            )
+        for i, groundStationData in enumerate(groundStationsData):
+            self._create_ground_station(**groundStationData, priority=priority - i)
 
     def _create_ground_station(
         self,
@@ -290,7 +291,7 @@ class GroundStationEnvModel(BasicEnvironmentModel):
         Args:
             lat: Latitude [deg]
             long: Longitude [deg]
-            elev: Elemvation [m].
+            elev: Elevation [m].
             name: Ground station identifier.
             priority: Model priority.
         """
