@@ -61,7 +61,7 @@ def sampled_400km_leo_smallsat_tumble():
         "thrForceSign": 1,
         # Thruster momentum dumping FSW config
         "maxCounterValue": 4,
-        "thrMinFireTime": 0.002,  #   Seconds
+        "thrMinFireTime": 0.002,  # Seconds
     }
     # print('Orbital elements:')
     # print(f'a: {oe.a}')
@@ -102,7 +102,7 @@ def reasonable_400km_leo_smallsat_tumble():
         # Disturbance Torque
         "disturbance_magnitude": 2e-4,
         "disturbance_vector": [1, 1, 1]
-        / np.sqrt([3]),  #  unit vector in 1,1,1 direction
+        / np.sqrt([3]),  # unit vector in 1,1,1 direction
         # Reaction Wheel speeds
         "wheelSpeeds": [400, 400, 400],  # RPM
         # Solar Panel Parameters
@@ -128,7 +128,7 @@ def reasonable_400km_leo_smallsat_tumble():
         "thrForceSign": 1,
         # Thruster momentum dumping FSW config
         "maxCounterValue": 4,
-        "thrMinFireTime": 0.02,  #   Seconds
+        "thrMinFireTime": 0.02,  # Seconds
     }
 
     return initial_conditions

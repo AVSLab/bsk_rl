@@ -2,7 +2,7 @@ import os
 import pickle
 from pathlib import Path
 
-from deap import algorithms, base, creator, tools
+from deap import base, creator
 from matplotlib import pyplot as plt
 
 plt.style.use("seaborn-colorblind")

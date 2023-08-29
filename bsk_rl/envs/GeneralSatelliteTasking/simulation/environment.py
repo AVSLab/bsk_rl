@@ -258,10 +258,14 @@ class GroundStationEnvModel(BasicEnvironmentModel):
         """Specify the ground locations of interest.
 
         Args:
-            groundStationsData: Dicts with name (optional), lat, long, and elevation (optional).
-            groundLocationPlanetRadius: Radius of ground locations from center of planet [m]
-            gsMinimumElevation:  Minimum elevation angle from station to satellite when downlinking [rad]
-            gsMaximumRange: Maximum range from station to satellite when downlinking. -1 to disable. [m]
+            groundStationsData: Dicts with name (optional), lat (required), long
+                (required), and elevation (optional).
+            groundLocationPlanetRadius: Radius of ground locations from center of planet
+                [m]
+            gsMinimumElevation:  Minimum elevation angle from station to satellite when
+                downlinking [rad]
+            gsMaximumRange: Maximum range from station to satellite when downlinking. -1
+                to disable. [m]
             priority: Model priority.
         """
         self.groundStations = []

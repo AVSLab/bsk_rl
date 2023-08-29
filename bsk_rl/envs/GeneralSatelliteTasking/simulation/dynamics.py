@@ -242,10 +242,10 @@ class BasicDynamicsModel(DynamicsModel):
         Ixx = 1.0 / 12.0 * mass * (width**2.0 + depth**2.0)
         Iyy = 1.0 / 12.0 * mass * (depth**2.0 + height**2.0)
         Izz = 1.0 / 12.0 * mass * (width**2.0 + height**2.0)
-        self.I = [Ixx, 0.0, 0.0, 0.0, Iyy, 0.0, 0.0, 0.0, Izz]
+        self.I_mat = [Ixx, 0.0, 0.0, 0.0, Iyy, 0.0, 0.0, 0.0, Izz]
 
         self.scObject.hub.mHub = mass  # kg
-        self.scObject.hub.IHubPntBc_B = unitTestSupport.np2EigenMatrix3d(self.I)
+        self.scObject.hub.IHubPntBc_B = unitTestSupport.np2EigenMatrix3d(self.I_mat)
 
         # Set the initial attitude and position
         self.scObject.hub.sigma_BNInit = sigma_init
@@ -351,7 +351,8 @@ class BasicDynamicsModel(DynamicsModel):
 
     @aliveness_checker
     def altitude_valid(self) -> bool:
-        """Check for deorbit by checking if altitude is greater than 200km above Earth's surface."""
+        """Check for deorbit by checking if altitude is greater than 200km above Earth's
+        surface."""
         return np.linalg.norm(self.r_BN_N) > (orbitalMotion.REQ_EARTH + 200) * 1e3
 
     @default_args(
@@ -432,7 +433,8 @@ class BasicDynamicsModel(DynamicsModel):
 
         Args:
             panelArea: Solar panel surface area [m**2]
-            panelEfficiency: Efficiency coefficient of solar to electrical power conversion
+            panelEfficiency: Efficiency coefficient of solar to electrical power
+                conversion
             nHat_B: Body-fixed array normal vector
             priority: Model priority.
         """
@@ -503,8 +505,10 @@ class BasicDynamicsModel(DynamicsModel):
 
         Args:
             rwBasePower: Constant power draw when operational [W]
-            rwMechToElecEfficiency: Efficiency factor to convert mechanical power to electrical power
-            rwElecToMechEfficiency: Efficiency factor to convert electrical power to mechanical power
+            rwMechToElecEfficiency: Efficiency factor to convert mechanical power to
+                electrical power
+            rwElecToMechEfficiency: Efficiency factor to convert electrical power to
+                mechanical power
             priority: Model priority.
         """
         self.rwPowerList = []
@@ -726,12 +730,16 @@ class ImagingDynModel(BasicDynamicsModel):
         priority: int = 2000,
         **kwargs,
     ) -> None:
-        """Add a generic imaging target to dynamics. The target must be updated with a particular location when used.
+        """Add a generic imaging target to dynamics. The target must be updated with a
+        particular location when used.
 
         Args:
-            groundLocationPlanetRadius: Radius of ground locations from center of planet [m]
-            imageTargetMinimumElevation: Minimum elevation angle from target to satellite when imaging [rad]
-            imageTargetMaximumRange: Maximum range from target to satellite when imaging. -1 to disable. [m]
+            groundLocationPlanetRadius: Radius of ground locations from center of planet
+                [m]
+            imageTargetMinimumElevation: Minimum elevation angle from target to
+                satellite when imaging [rad]
+            imageTargetMaximumRange: Maximum range from target to satellite when
+                imaging. -1 to disable. [m]
             priority: Model priority.
         """
         self.imagingTarget = groundLocation.GroundLocation()

@@ -71,8 +71,9 @@ class Satellite(ABC):
 
         Args:
             name: identifier for satellite; does not need to be unique
-            sat_args: arguments for FSW and dynamic model construction. {key: value or key: function},
-                where function is called at reset to set the value (used for randomization).
+            sat_args: arguments for FSW and dynamic model construction. {key: value or
+                key: function}, where function is called at reset to set the value (used
+                for randomization).
             variable_interval: Stop simulation at terminal events
         """
         self.name = name
@@ -173,7 +174,8 @@ class Satellite(ABC):
         pass
 
     def is_alive(self) -> bool:
-        """Check if the satellite is violating any requirements from dynamics or FSW models
+        """Check if the satellite is violating any requirements from dynamics or FSW
+        models
 
         Returns:
             is alive
@@ -183,7 +185,10 @@ class Satellite(ABC):
     @property
     def _satellite_command(self) -> str:
         """Generate string that refers to self in simBase"""
-        return f"[satellite for satellite in self.satellites if satellite.id=='{self.id}'][0]"
+        return (
+            "[satellite for satellite in self.satellites "
+            + f"if satellite.id=='{self.id}'][0]"
+        )
 
     def _info_command(self, info: str) -> str:
         """Generate command to log to info from an event
@@ -233,7 +238,8 @@ class Satellite(ABC):
         self.simulator.eventMap[self._timed_terminal_event_name].eventActive = True
 
     def _disable_timed_terminal_event(self) -> None:
-        """Turn off simulator termination due to this satellite's window close checker"""
+        """Turn off simulator termination due to this satellite's window close
+        checker"""
         if self._timed_terminal_event_name is not None:
             self.simulator.eventMap[self._timed_terminal_event_name].eventActive = False
 
@@ -248,8 +254,8 @@ class Satellite(ABC):
 
     @abstractmethod
     def set_action(self, action: int) -> None:
-        """Enables certain processes in the simulator to command the satellite task. Should
-            call an @action from FSW.
+        """Enables certain processes in the simulator to command the satellite task.
+            Should call an @action from FSW, among other things.
 
         Args:
             action: action index
@@ -261,9 +267,9 @@ class BasicSatellite(Satellite):
     dyn_type = dynamics.BasicDynamicsModel
     fsw_type = fsw.BasicFSWModel
 
-    ########################################
-    ### Default actions and observations ###
-    ########################################
+    ####################################
+    # Default actions and observations #
+    ####################################
 
     def get_obs(self) -> Iterable[float]:
         return np.array([0.0])
@@ -297,17 +303,21 @@ class ImagingSatellite(BasicSatellite):
         target_dist_threshold: float = 1e6,
         **kwargs,
     ) -> None:
-        """Satellite with agile imaging capabilities. Ends the simulation when a target is imaged or missed
+        """Satellite with agile imaging capabilities. Ends the simulation when a target
+        is imaged or missed
 
         Args:
             name: Satellite.name
             sat_args: Satellite.sat_args
             n_ahead_observe: Number of upcoming targets to include in observations.
             n_ahead_act: Number of upcoming targets to include in actions.
-            generation_duration: Duration to calculate additional imaging windows for when windows are exhausted. If
-                `None`, generate for the simulation `time_limit` unless the simulation is infinite. [s]
-            initial_generation_duration: Duration to initially calculate imaging windows [s]
-            target_dist_threshold: Distance bound [m] for evaluating imaging windows more exactly.
+            generation_duration: Duration to calculate additional imaging windows for
+                when windows are exhausted. If `None`, generate for the simulation
+                `time_limit` unless the simulation is infinite. [s]
+            initial_generation_duration: Duration to initially calculate imaging windows
+                [s]
+            target_dist_threshold: Distance bound [m] for evaluating imaging windows
+                more exactly.
         """
         super().__init__(name, sat_args, *args, **kwargs)
         self.n_ahead_observe = int(n_ahead_observe)
@@ -374,8 +384,8 @@ class ImagingSatellite(BasicSatellite):
         positions = r_BP_P_interp.y[window_calc_span]
 
         for target in self.data_store.env_knowledge.targets:
-            # Find times where a window is plausible
-            # i.e. where a interpolation point is within target_dist_threshold of the target
+            # Find times where a window is plausible; i.e. where a interpolation point
+            # is within target_dist_threshold of the target
             close_times = (
                 np.linalg.norm(positions - target.location, axis=1)
                 < self.target_dist_threshold
@@ -390,10 +400,9 @@ class ImagingSatellite(BasicSatellite):
                 i_start = max(0, group[0] - 1)
                 i_end = min(len(times) - 1, group[-1] + 1)
 
-                root_fn = (
-                    lambda t: elevation(r_BP_P_interp(t), target.location)
-                    - self.min_elev
-                )  # noqa: E731
+                def root_fn(t):
+                    return elevation(r_BP_P_interp(t), target.location) - self.min_elev
+
                 settings = chebpy.UserPreferences()
                 with settings:
                     settings.eps = 1e-6
@@ -425,7 +434,8 @@ class ImagingSatellite(BasicSatellite):
 
     @property
     def upcoming_windows(self) -> dict[Target, list[tuple[float, float]]]:
-        """Subset of windows that have not yet closed. Attempts to filter out known imaged windows if data is accessible
+        """Subset of windows that have not yet closed. Attempts to filter out known
+        imaged windows if data is accessible
 
         Returns:
             filtered windows
@@ -460,12 +470,14 @@ class ImagingSatellite(BasicSatellite):
     def upcoming_targets(
         self, n: int, pad: bool = True, max_lookahead: int = 100
     ) -> list[Target]:
-        """Find the n nearest targets. Targets are sorted by window close time; currently open windows are included.
-        Only the first window for a target is accounted for.
+        """Find the n nearest targets. Targets are sorted by window close time;
+        currently open windows are included. Only the first window for a target is
+        accounted for.
 
         Args:
             n: number of windows to look ahead
-            pad: if true, duplicates the last target if the number of targets found is less than n
+            pad: if true, duplicates the last target if the number of targets found is
+                less than n
             max_lookahead: maximum times to call calculate_additional_windows
 
         Returns:
@@ -485,7 +497,8 @@ class ImagingSatellite(BasicSatellite):
         return targets
 
     def _update_image_event(self, target: Target) -> None:
-        """Create a simulator event that causes the simulation to stop when a target is imaged
+        """Create a simulator event that causes the simulation to stop when a target is
+        imaged
 
         Args:
             target: Target expected to be imaged
@@ -528,7 +541,8 @@ class ImagingSatellite(BasicSatellite):
             self.simulator.eventMap[self._image_event_name].eventActive = False
 
     def parse_target_selection(self, target_query: Union[int, Target, str]):
-        """Identify a target based on upcoming target index, Target object, or target id.
+        """Identify a target based on upcoming target index, Target object, or target
+        id.
 
         Args:
             target_query: Taret upcoming index, object, or id.
@@ -564,9 +578,9 @@ class ImagingSatellite(BasicSatellite):
             extra_actions=[self._satellite_command + ".missed += 1"],
         )
 
-    ########################################
-    ### Default actions and observations ###
-    ########################################
+    ####################################
+    # Default actions and observations #
+    ####################################
 
     def get_obs(self) -> Iterable[float]:
         dynamic_state = np.concatenate(
@@ -593,7 +607,8 @@ class ImagingSatellite(BasicSatellite):
         return spaces.Discrete(self.n_ahead_act)
 
     def set_action(self, action: Union[int, Target, str]) -> None:
-        """Select the satellite action; does not reassign action if the same target is selected twice
+        """Select the satellite action; does not reassign action if the same target is
+        selected twice
 
         Args:
             action: image the nth upcoming target (or image by target id or object)
@@ -628,17 +643,19 @@ class FBImagerSatellite(ImagingSatellite):
 class FullFeaturedSatellite(SteeringImagerSatellite):
     """SteeringImagerSatellite with specific actions"""
 
-    ########################################
-    ### Default actions and observations ###
-    ########################################
+    ####################################
+    # Default actions and observations #
+    ####################################
 
     @property
     def action_space(self):
-        """Satellite can take three non-imaging actions in addition to imaging actions"""
+        """Satellite can take three non-imaging actions in addition to imaging
+        actions"""
         return spaces.Discrete(self.n_ahead_act + 3)
 
     def set_action(self, action: int) -> None:
-        """Select the satellite action; does not reassign action if the same action/target is selected twice
+        """Select the satellite action; does not reassign action if the same
+        action/target is selected twice
 
         Args:
             action (int):

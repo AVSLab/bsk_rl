@@ -3,12 +3,12 @@ from copy import copy
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional
 
 if TYPE_CHECKING:
-    from bsk_rl.envs.GeneralSatelliteTasking.types import (
-        Satellite,
-        EnvironmentFeatures,
-    )
     from bsk_rl.envs.GeneralSatelliteTasking.scenario.environment_features import (
         Target,
+    )
+    from bsk_rl.envs.GeneralSatelliteTasking.types import (
+        EnvironmentFeatures,
+        Satellite,
     )
 
 import numpy as np
@@ -43,8 +43,8 @@ class DataStore(ABC):
         self.data = self.DataType()
 
     def _initialize_knowledge(self, env_features: "EnvironmentFeatures") -> None:
-        """Establish knowledge about the world known to the satellite. Defaults to knowing
-        everything about the environment."""
+        """Establish knowledge about the world known to the satellite. Defaults to
+        knowing everything about the environment."""
         self.env_knowledge = env_features
 
     def _clear_logs(self) -> None:
@@ -110,11 +110,13 @@ class DataManager(ABC):
     DataStore: type[DataStore]  # type of DataStore managed by the DataManager
 
     def __init__(self, env_features: "EnvironmentFeatures") -> None:
-        """Base class for simulation-wide data management; handles data recording and rewarding
+        """Base class for simulation-wide data management; handles data recording and
+        rewarding.
         TODO: allow for creation/composition of multiple managers
 
         Args:
-            env_features: Information about the environment that can be collected as data
+            env_features: Information about the environment that can be collected as
+                data
         """
         self.env_features = env_features
 
@@ -191,7 +193,8 @@ class UniqueImageStore(DataStore):
     def _compare_log_states(
         self, old_state: np.ndarray, new_state: np.ndarray
     ) -> UniqueImageData:
-        """Checks two storage unit logs for an increase in logged data to identify new images
+        """Checks two storage unit logs for an increase in logged data to identify new
+        images
 
         Args:
             old_state: older storedData from satellite storage unit
@@ -203,9 +206,8 @@ class UniqueImageStore(DataStore):
         update_idx = np.where(new_state - old_state > 0)[0]
         imaged = []
         for idx in update_idx:
-            target_id = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg.read().storedDataName[
-                int(idx)
-            ]
+            message = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg
+            target_id = message.read().storedDataName[int(idx)]
             imaged.append(
                 [
                     target
@@ -287,7 +289,8 @@ class TimeDepImageStore(DataStore):
         )
 
     def _compare_log_states(self, old_state, new_state) -> TimeDepImageData:
-        """Checks two storage unit logs for an increase in logged data to identify new images
+        """Checks two storage unit logs for an increase in logged data to identify new
+        images
 
         Args:
             old_state (array): older storedData from satellite storage unit
@@ -299,9 +302,8 @@ class TimeDepImageStore(DataStore):
         update_idx = np.where(new_state - old_state > 0)[0]
         imaged = []
         for idx in update_idx:
-            target_id = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg.read().storedDataName[
-                int(idx)
-            ]
+            message = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg
+            target_id = message.read().storedDataName[int(idx)]
             imaged.append(
                 [
                     target
@@ -316,8 +318,8 @@ class TimeDepImagingManager(DataManager):
     DataStore = TimeDepImageStore
 
     # def __init__(self, env_features):
-    #     """DataManager for rewarding time-dependent images. Will only give marginal reward
-    #        for reimaging at higher value
+    #     """DataManager for rewarding time-dependent images. Will only give marginal
+    #       reward for reimaging at higher value
 
     #     Args:
     #         env_features (EnvironmentFeatures): DataManager.env_features

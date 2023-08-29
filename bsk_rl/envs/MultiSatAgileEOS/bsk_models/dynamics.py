@@ -80,7 +80,7 @@ class DynamicModel:
             "height"
         )
 
-        self.I = [
+        self.I_mat = [
             1.0 / 12.0 * mass * (self.width**2.0 + self.depth**2.0),
             0.0,
             0.0,
@@ -93,7 +93,7 @@ class DynamicModel:
         ]
 
         self.scObject.hub.mHub = mass  # kg
-        self.scObject.hub.IHubPntBc_B = unitTestSupport.np2EigenMatrix3d(self.I)
+        self.scObject.hub.IHubPntBc_B = unitTestSupport.np2EigenMatrix3d(self.I_mat)
 
         # Set the initial attitude and position
         self.scObject.hub.sigma_BNInit = SimBase.initial_conditions[

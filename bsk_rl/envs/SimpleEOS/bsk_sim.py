@@ -216,7 +216,7 @@ class SimpleEOSSimulator(SimulationBaseClass.SimBaseClass):
             "thrForceSign": 1,
             # Thruster momentum dumping FSW config
             "maxCounterValue": 8,
-            "thrMinFireTime": 0.002,  #   Seconds
+            "thrMinFireTime": 0.002,  # Seconds
             # Ground station - Located in Boulder, CO
             "boulderGroundStationPlanetRadius": astroFunctions.E_radius * 1e3,
             "boulderGroundStationLat": np.radians(40.009971),  # 40.0150 N Latitude

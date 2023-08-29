@@ -1,5 +1,8 @@
+import io
 import subprocess
 import sys
+import zipfile
+from pathlib import Path
 
 from setuptools import setup
 
@@ -26,11 +29,7 @@ subprocess.check_call(
     [sys.executable, "-m", "pip", "install", "git+https://github.com/chebpy/chebpy.git"]
 )
 
-import io
-import zipfile
-from pathlib import Path
-
-import requests
+import requests  # noqa: E402
 
 r = requests.get(
     "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.76.zip"

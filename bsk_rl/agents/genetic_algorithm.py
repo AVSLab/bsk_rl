@@ -11,12 +11,12 @@ from deap import algorithms, base, creator, tools
 from matplotlib import pyplot as plt
 
 """
-This file is designed to provide generitc interfaces to a DEAP-based genetic algorithm 
+This file is designed to provide generitc interfaces to a DEAP-based genetic algorithm
 for solving arbitrary gymnasium environments. It does a few things:
-1. Includes the ability to cast arbitrary gymnasium environments with a max_length 
+1. Includes the ability to cast arbitrary gymnasium environments with a max_length
     parameter as many-input, single-output optimzation problems
-2. Allows a genetic algorithm to be called to optimize said environments in a parellel 
-    way 
+2. Allows a genetic algorithm to be called to optimize said environments in a parellel
+    way
 """
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -166,10 +166,10 @@ class ga_env_solver(object):
                 indpb=0.3,
             )
 
-        self.MU = gen_size  #   Number of individuals per generation
-        self.NGEN = n_gens  #    Number of generations
-        self.CXPB = cx_prob  #    Crossover probability.
-        self.MUTPB = mut_prob  #   Mutation probability.
+        self.MU = gen_size  # Number of individuals per generation
+        self.NGEN = n_gens  # Number of generations
+        self.CXPB = cx_prob  # Crossover probability.
+        self.MUTPB = mut_prob  # Mutation probability.
 
         # generation functions
         self.toolbox.register(

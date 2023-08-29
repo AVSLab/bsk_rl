@@ -96,7 +96,7 @@ class MultiSensorEOS(gym.Env):
 
         print("Observation space: ", self.observation_space.shape)
 
-        ##  Action Space description
+        # Action Space description
         #   0 - sun pointing (power objective)
         #   1 - desaturation (required for long-term pointing)
         #   >1 - imaging types
@@ -204,7 +204,7 @@ class MultiSensorEOS(gym.Env):
             )
             if last_action == (
                 self.prev_ins_spec + 1
-            ):  #  If the obs taken matches the correction insturment action type
+            ):  # If the obs taken matches the correction insturment action type
                 freq_mult = 1.0
             else:
                 freq_mult = 0.0
@@ -247,7 +247,7 @@ class MultiSensorEOS(gym.Env):
         self.reward_total = 0
         del (
             self.simulator
-        )  #   Force delete the sim to make sure nothing funky happens under the hood
+        )  # Force delete the sim to make sure nothing funky happens under the hood
         tFinal = self.max_steps * self.step_duration
 
         if options is None:

@@ -1,6 +1,5 @@
 from copy import deepcopy
 from typing import Any, Callable, Optional, Union
-from warnings import warn
 
 import numpy as np
 from Basilisk.utilities import orbitalMotion
@@ -32,7 +31,8 @@ class SatObservation(Satellite):
 
     @property
     def obs_dict(self):
-        """Human-readable observation format. Cached so only computed once per timestep."""
+        """Human-readable observation format. Cached so only computed once per
+        timestep."""
         if (
             self.obs_dict_cache is None
             or self.simulator.sim_time != self.obs_cache_time
@@ -79,11 +79,12 @@ class NormdPropertyState(SatObservation):
         """Add a list of properties to the satellite observation.
 
         Args:
-            obs_properties: List of properties that can be found in fsw or dynamics that are to be appended to the the
-                observation. Properties are optionally normalized by some factor. Specified in
+            obs_properties: List of properties that can be found in fsw or dynamics that
+                are to be appended to the the observation. Properties are optionally
+                normalized by some factor. Specified in
                     [dict(prop="prop_name", module="fsw"/"dynamics"/None, norm=1.0)]
-                If module is not specified or None, the source of the property is inferred. If norm is not specified, it
-                is set to 1.0 (no normalization).
+                If module is not specified or None, the source of the property is
+                inferred. If norm is not specified, it is set to 1.0 (no normalization).
         """
 
         super().__init__(*args, **kwargs)
@@ -126,10 +127,12 @@ class NormdPropertyState(SatObservation):
 @configurable
 class TimeState(SatObservation):
     def __init__(self, *args, normalization_time: Optional[float] = None, **kwargs):
-        """Adds the sim time to the observation state. Automatically normalizes to the sim duration.
+        """Adds the sim time to the observation state. Automatically normalizes to the
+        sim duration.
 
         Args:
-            normalization_time: Time to normalize by. If None, is set to simulation duration
+            normalization_time: Time to normalize by. If None, is set to simulation
+                duration
         """
 
         super().__init__(*args, **kwargs)
