@@ -1,16 +1,23 @@
-name: 'Commit Message Check'
-on:
-  pull_request:
-    types:
-      - opened
-      - edited
-      - reopened
-      - synchronize
-  push:
-    branches:
-      - main
+name: Commit Checks
+
+on: [push, pull_request]
 
 jobs:
+  Black:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: psf/black@stable
+  Ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: chartboost/ruff-action@v1
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: isort/isort-action@v1
   check-commit-message:
     name: Check Commit Message
     runs-on: ubuntu-latest
