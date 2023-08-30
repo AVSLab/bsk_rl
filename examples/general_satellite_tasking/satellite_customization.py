@@ -2,15 +2,15 @@ import gymnasium as gym
 from Basilisk.architecture import bskLogging
 from Basilisk.utilities import orbitalMotion
 
-from bsk_rl.envs.GeneralSatelliteTasking.scenario import data
-from bsk_rl.envs.GeneralSatelliteTasking.scenario import sat_actions as sa
-from bsk_rl.envs.GeneralSatelliteTasking.scenario import sat_observations as so
-from bsk_rl.envs.GeneralSatelliteTasking.scenario import satellites as sats
-from bsk_rl.envs.GeneralSatelliteTasking.scenario.environment_features import (
+from bsk_rl.envs.general_satellite_tasking.scenario import data
+from bsk_rl.envs.general_satellite_tasking.scenario import sat_actions as sa
+from bsk_rl.envs.general_satellite_tasking.scenario import sat_observations as so
+from bsk_rl.envs.general_satellite_tasking.scenario import satellites as sats
+from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
     CityTargets,
 )
-from bsk_rl.envs.GeneralSatelliteTasking.simulation import dynamics, environment, fsw
-from bsk_rl.envs.GeneralSatelliteTasking.utils.orbital import random_orbit
+from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, environment, fsw
+from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
 
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 

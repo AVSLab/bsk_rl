@@ -4,9 +4,9 @@ from typing import Any, Iterable, Optional, Union
 import numpy as np
 from gymnasium import Env, spaces
 
-from bsk_rl.envs.GeneralSatelliteTasking.scenario.communication import NoCommunication
-from bsk_rl.envs.GeneralSatelliteTasking.simulation.simulator import Simulator
-from bsk_rl.envs.GeneralSatelliteTasking.types import (
+from bsk_rl.envs.general_satellite_tasking.scenario.communication import NoCommunication
+from bsk_rl.envs.general_satellite_tasking.simulation.simulator import Simulator
+from bsk_rl.envs.general_satellite_tasking.types import (
     CommunicationMethod,
     DataManager,
     EnvironmentFeatures,

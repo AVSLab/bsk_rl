@@ -3,12 +3,12 @@ from itertools import combinations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from bsk_rl.envs.GeneralSatelliteTasking.types import Satellite
+    from bsk_rl.envs.general_satellite_tasking.types import Satellite
 
 import numpy as np
 from scipy.sparse.csgraph import connected_components
 
-from bsk_rl.envs.GeneralSatelliteTasking.simulation.dynamics import LOSCommDynModel
+from bsk_rl.envs.general_satellite_tasking.simulation.dynamics import LOSCommDynModel
 
 
 class CommunicationMethod(ABC):

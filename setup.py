@@ -39,7 +39,7 @@ z.extractall(
     Path(__file__).parent.resolve()
     / "bsk_rl"
     / "envs"
-    / "GeneralSatelliteTasking"
+    / "general_satellite_tasking"
     / "scenario"
     / "simplemaps_worldcities"
 )

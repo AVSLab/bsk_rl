@@ -7,9 +7,9 @@ from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion, vizSupport
 from scipy.sparse.csgraph import connected_components
 
-from bsk_rl.envs.MultiSatAgileEOS.bsk_models import dynamics, environment
-from bsk_rl.envs.MultiSatAgileEOS.bsk_models import fsw as fsw_feedback
-from bsk_rl.envs.MultiSatAgileEOS.bsk_models import fsw_steering
+from bsk_rl.envs.multisat_agile_eos.bsk_models import dynamics, environment
+from bsk_rl.envs.multisat_agile_eos.bsk_models import fsw as fsw_feedback
+from bsk_rl.envs.multisat_agile_eos.bsk_models import fsw_steering
 from bsk_rl.utilities.initial_conditions import leo_initial_conditions
 
 

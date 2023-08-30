@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
 from weakref import proxy
 
 if TYPE_CHECKING:
-    from bsk_rl.envs.GeneralSatelliteTasking.types import (
+    from bsk_rl.envs.general_satellite_tasking.types import (
         DynamicsModel,
         FSWModel,
         Simulator,
@@ -15,18 +15,18 @@ import numpy as np
 from Basilisk.utilities import macros
 from gymnasium import spaces
 
-from bsk_rl.envs.GeneralSatelliteTasking.scenario.data import (
+from bsk_rl.envs.general_satellite_tasking.scenario.data import (
     DataStore,
     UniqueImageStore,
 )
-from bsk_rl.envs.GeneralSatelliteTasking.scenario.environment_features import Target
-from bsk_rl.envs.GeneralSatelliteTasking.simulation import dynamics, fsw
-from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import (
+from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import Target
+from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, fsw
+from bsk_rl.envs.general_satellite_tasking.utils.functional import (
     collect_default_args,
     safe_dict_merge,
     valid_func_name,
 )
-from bsk_rl.envs.GeneralSatelliteTasking.utils.orbital import (
+from bsk_rl.envs.general_satellite_tasking.utils.orbital import (
     TrajectorySimulator,
     elevation,
 )

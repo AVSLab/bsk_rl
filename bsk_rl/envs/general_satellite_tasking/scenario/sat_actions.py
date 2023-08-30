@@ -4,12 +4,12 @@ from typing import Any, Optional, Union
 import numpy as np
 from gymnasium import spaces
 
-from bsk_rl.envs.GeneralSatelliteTasking.scenario.environment_features import Target
-from bsk_rl.envs.GeneralSatelliteTasking.scenario.satellites import (
+from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import Target
+from bsk_rl.envs.general_satellite_tasking.scenario.satellites import (
     ImagingSatellite,
     Satellite,
 )
-from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import bind, configurable
+from bsk_rl.envs.general_satellite_tasking.utils.functional import bind, configurable
 
 
 class SatAction(Satellite):

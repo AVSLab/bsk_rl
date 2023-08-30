@@ -1,12 +1,12 @@
 import gymnasium as gym
 
-from bsk_rl.envs.GeneralSatelliteTasking.scenario import data
-from bsk_rl.envs.GeneralSatelliteTasking.scenario import satellites as sats
-from bsk_rl.envs.GeneralSatelliteTasking.scenario.environment_features import (
+from bsk_rl.envs.general_satellite_tasking.scenario import data
+from bsk_rl.envs.general_satellite_tasking.scenario import satellites as sats
+from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
     StaticTargets,
 )
-from bsk_rl.envs.GeneralSatelliteTasking.simulation import environment
-from bsk_rl.envs.GeneralSatelliteTasking.utils.orbital import random_orbit
+from bsk_rl.envs.general_satellite_tasking.simulation import environment
+from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
 
 # This script demonstrates the configuration of an environment with a single imaging
 # satellite.
