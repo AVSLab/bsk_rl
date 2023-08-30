@@ -3,24 +3,34 @@ import numpy as np
 from Basilisk.utilities import macros as mc
 from gymnasium import spaces
 
-from bsk_rl.envs.SimpleEOS import bsk_sim
+from bsk_rl.envs.agile_eos.bsk_sim import AgileEOSSimulator
 
 
-class SimpleEOS(gym.Env):
+class AgileEOS(gym.Env):
     """
-    The spacecraft must decide between pointing at the ground to collect science data,
-    pointing at the sun to charge, desaturating reaction wheels, and downlinking data.
-    This is referred to as the "simple" simulator as science data is simply collected
-    by nadir pointing. Specific imaging targets are not considered.
+    This Gymnasium environment is designed to simulate an agile EOS scheduling problem
+    in which a satellite in low-Earth orbit attempts to maximize the number of targets
+    imaged and downlinked while avoiding resource constraint violations. Resource
+    constraint include:
 
-    Action Space (discrete, 0 or 1):
-    0 - Imaging mode
-    1 - Charging mode
+    1. Power: The spacecraft must keep its battery charge above zero
+    2. Reaction Wheel Saturation: The spacecraft must keep its reaction wheels within
+        their speed limits
+    3. Data Buffer: The spacecraft must keep its data buffer from overflowing (i.e.
+        exceeding or meeting the maximum buffer size)
+
+    The spacecraft must decide between pointing at any one of J number of ground targets
+    for imaging, pointing at the sun to charge, desaturating reaction wheels, or
+    downlinking data. This is referred to as the AgileEOS environment.
+
+    Action Space (Discrete):
+    0 - Charging mode
+    1 - Downlink mode
     2 - Desat mode
-    3 - Downlink mode
+    3:J+3 - Image target j
 
     Observation Space:
-    Inertial position and velocity - indices 0-5
+    ECEF position and velocity - indices 0-5
     Attitude error and attitude rate - indices 6-7
     Reaction wheel speeds - indices 8-11
     Battery charge - indices 12
@@ -28,21 +38,20 @@ class SimpleEOS(gym.Env):
     Stored data onboard spacecraft - indices 14
     Data transmitted over interval - indices 15
     Amount of time ground stations were accessible (s) - 16-22
-    Percent through planning interval - 23
+    Target Tuples (4 values each) - priority and Hill frame pos
 
     Reward Function:
-    r = +1 for each MB downlinked and no failure
-    r = +1 for each MB downlinked and no failure and +1 if t > t_max
-    r = - 1000 if failure
-        (battery drained, buffer overflow, reaction wheel speeds over max)
+    r = +A/priority for for each tgt downlinked for first time
+    r = +B/priority for for each tgt imaged for first time
+    r = -C if failure
     """
 
-    def __init__(self):
+    def __init__(self, failure_penalty=1, image_component=0.1, downlink_component=0.9):
         self.__version__ = "0.0.1"
-        print("SimpleEOS Environment - Version {}".format(self.__version__))
+        print("AgileEOS Environment - Version {}".format(self.__version__))
 
         # General variables defining the environment
-        self.max_length = int(270)  # Specify the maximum number of minutes
+        self.max_length = float(270.0)  # Specify the maximum number of minutes
         self.max_steps = 45
         self.render = False
 
@@ -58,17 +67,31 @@ class SimpleEOS(gym.Env):
         self.dynRate = 1.0
         self.fswRate = 1.0
 
-        #   Set up options, constants for this environment
+        # Set up options, constants for this environment
         self.step_duration = 6 * 60.0  # seconds, tune as desired
         self.reward_mult = 1.0
-        self.failure_penalty = 1000
+
+        # Set the reward components
+        self.failure_penalty = failure_penalty
+        self.image_component = image_component
+        self.downlink_component = downlink_component
+
+        # Set up targets and action, observation spaces
+        self.n_targets = (
+            3  # Assumes 100 targets, three other actions (charge, desat, downlink)
+        )
+        self.target_tuple_size = 4
+        self.action_space = spaces.Discrete(3 + self.n_targets)
         low = -1e16
         high = 1e16
-        self.observation_space = spaces.Box(low, high, shape=(23,), dtype=np.float64)
-        self.obs = np.zeros(23)
-        self.obs_full = np.zeros(23)
-
-        self.action_space = spaces.Discrete(4)
+        self.observation_space = spaces.Box(
+            low,
+            high,
+            shape=(22 + self.n_targets * self.target_tuple_size,),
+            dtype=np.float64,
+        )
+        self.obs = np.zeros(22 + self.n_targets * self.target_tuple_size)
+        self.obs_full = np.zeros(22 + self.n_targets * self.target_tuple_size)
 
         # Store what the agent tried
         self.curr_episode = -1
@@ -77,11 +100,10 @@ class SimpleEOS(gym.Env):
         self.episode_over = False
         self.failure = False
 
-        self.return_obs = True
+        self.dvc_cmd = 0
+        self.act_hold = None
 
-    def _seed(self):
-        np.random.seed()
-        return
+        self.return_obs = True
 
     def step(self, action):
         """
@@ -114,29 +136,33 @@ class SimpleEOS(gym.Env):
 
         # If the simTime in minutes is greater than the planning interval in minutes,
         # end the sim
-        if (self.simulator.simTime / 60) >= self.max_length:
+        if (self.simulator.simTime / 60.0) >= self.max_length:
             print("End of simulation reached", self.simulator.simTime / 60)
             self.episode_over = True
 
-        prev_ob = self.obs_full
-        self._take_action(action)
+        downlinked, imaged, info = self._take_action(action)
 
         # If we want to return observations, do the following
         if self.return_obs:
             reward = 0
             ob = self._get_state()
+            self.prev_dvc_cmd = self.dvc_cmd
+            self.dvc_cmd = (
+                self.simulator.simpleInsControlConfig.deviceCmdOutMsg.read().deviceCmd
+            )
 
             #   If the wheel speeds get too large, end the episode.
-            if any(speeds > 6000 * mc.RPM for speeds in self.obs_full[8:10]):
+            if any(
+                speeds > self.simulator.initial_conditions["maxSpeed"] * mc.RPM
+                for speeds in self.obs_full[8:11]
+            ):
                 self.episode_over = True
                 self.failure = True
-                reward -= self.failure_penalty
-                self.reward_total -= self.failure_penalty
                 print(
                     "Died from wheel explosion. RPMs were: "
-                    + self.obs_full[8:10]
+                    + str(self.obs_full[8:11] / mc.RPM)
                     + ", limit is "
-                    + str(6000 * mc.RPM)
+                    + str(self.simulator.initial_conditions["maxSpeed"])
                     + ", body rate was "
                     + str(self.obs_full[7])
                     + ", action taken was "
@@ -144,19 +170,10 @@ class SimpleEOS(gym.Env):
                     + ", env step "
                     + str(self.curr_step)
                 )
-                print(
-                    "Prior state was RPM:"
-                    + prev_ob[8:10]
-                    + " . body rate was:"
-                    + str(prev_ob[7])
-                )
-
             #   If we run out of power, end the episode.
             elif self.obs_full[11] == 0:
                 self.failure = True
                 self.episode_over = True
-                reward -= self.failure_penalty
-                self.reward_total -= self.failure_penalty
                 print(
                     "Ran out of power. Battery level at: "
                     + str(self.obs_full[11])
@@ -165,51 +182,45 @@ class SimpleEOS(gym.Env):
                     + ", action taken was "
                     + str(action)
                 )
-
             #   If we overflow the buffer, end the episode.
             elif self.obs_full[13] >= self.simulator.storageUnit.storageCapacity:
                 self.failure = True
                 self.episode_over = True
-                reward -= self.failure_penalty
-                self.reward_total -= self.failure_penalty
                 print(
-                    "Data buffer overflow. Data storage level at: "
+                    "Data buffer overflow. Data storage level at:"
                     + str(self.obs_full[13])
-                    + ", env step "
+                    + ", env step, "
                     + str(self.curr_step)
                     + ", action taken was "
                     + str(action)
                 )
-
             elif self.sim_over:
                 self.episode_over = True
                 print("Orbit decayed - no penalty, but this one is over.")
-
             else:
                 self.failure = False
 
-            if self.episode_over:
-                info = {
-                    "episode": {"r": self.reward_total, "l": self.curr_step},
-                    "obs": ob,
-                }
-            else:
-                info = {"obs": ob}
-            reward = self._get_reward()
+            reward = self._get_reward(downlinked, imaged)
             self.reward_total += reward
 
         # Otherwise, return nothing
         else:
             ob = []
             reward = 0
-            info = {}
 
+        num_imaged, num_downlinked = self._get_imaged_downlinked()
+
+        # Update the info with the metrics
         info["metrics"] = {
-            "downlinked": self.simulator.downlinked,
+            "downlinked": self.simulator.total_downlinked,
             "sim_length": self.simulator.simTime / 60,
             "total_access": self.simulator.total_access,
             "utilized_access": self.simulator.utilized_access,
+            "num_imaged": num_imaged,
+            "num_downlinked": num_downlinked,
         }
+
+        self.act_hold = action
 
         self.curr_step += 1
         return ob.flatten(), reward, self.episode_over, False, info
@@ -222,22 +233,42 @@ class SimpleEOS(gym.Env):
         """
 
         self.action_episode_memory[self.curr_episode].append(action)
-        self.obs, self.sim_over, self.obs_full = self.simulator.run_sim(
-            action, self.return_obs
-        )
+        (
+            self.obs,
+            self.sim_over,
+            self.obs_full,
+            downlinked,
+            imaged,
+            info,
+        ) = self.simulator.run_sim(action, self.return_obs)
 
-    def _get_reward(self):
-        """
-        Reward is based on time spent with the inertial attitude pointed towards the
-        ground within a given tolerance.
+        return downlinked, imaged, info
 
+    def _get_reward(self, downlinked, imaged):
         """
+        Reward is based on the total number of imaged and downlinked targets, failure i
+        f it occurs
+        """
+        reward = 0
         if self.failure:
             reward = -self.failure_penalty
-        elif self.episode_over:
-            reward = (-self.obs_full[14][0]) * (self.reward_mult**self.curr_step) + 1
         else:
-            reward = -self.obs_full[14][0] * (self.reward_mult**self.curr_step)
+            for idx in downlinked:
+                reward += (
+                    self.downlink_component
+                    / float(
+                        self.simulator.initial_conditions.get("targetPriorities")[idx]
+                    )
+                    / self.max_steps
+                )
+            for idx in imaged:
+                reward += (
+                    self.image_component
+                    / float(
+                        self.simulator.initial_conditions.get("targetPriorities")[idx]
+                    )
+                    / self.max_steps
+                )
 
         return reward
 
@@ -249,6 +280,11 @@ class SimpleEOS(gym.Env):
         observation (object): the initial observation of the space.
         """
         super().reset(seed=seed)
+        self.action_episode_memory.append([])
+        self.episode_over = False
+        self.failure = False
+        self.curr_step = 0
+        self.reward_total = 0
 
         if self.simulator is not None:
             del self.simulator
@@ -257,40 +293,59 @@ class SimpleEOS(gym.Env):
             if "initial_conditions" in options:
                 self.initial_conditions = options["initial_conditions"]
 
-        self.action_episode_memory.append([])
-        self.episode_over = False
-        self.failure = False
-        self.curr_step = 0
-        self.reward_total = 0
-
         # Create the simulator
-        self.simulator = bsk_sim.SimpleEOSSimulator(
+        self.simulator = AgileEOSSimulator(
             self.dynRate,
             self.fswRate,
             self.step_duration,
             initial_conditions=self.initial_conditions,
             render=self.render,
+            n_targets=self.n_targets,
+            max_length=self.max_length,
+            target_tuple_size=self.target_tuple_size,
         )
 
         # Extract initial conditions from instantiation of simulator
         self.initial_conditions = self.simulator.initial_conditions
         self.simulator.max_steps = self.max_steps
-        self.simulator.max_length = self.max_length
         self.simulator_init = 1
 
-        return self.simulator.obs.flatten(), {}
+        return self.simulator.obs.flatten(), self.simulator.info
 
     def _render(self, mode="human", close=False):
         return
 
     def _get_state(self):
-        """Return the non-normalized observation from the simulator"""
+        """Return the non-normalized observation to the environment"""
 
         return self.simulator.obs
 
+    def _get_imaged_downlinked(self):
+        num_imaged = 0
+        num_downlinked = 0
+        for idx in range(len(self.simulator.imaged_targets)):
+            if self.simulator.imaged_targets[idx] >= 1.0:
+                num_imaged += 1
+
+            if self.simulator.downlinked_targets[idx] >= 1.0:
+                num_downlinked += 1
+
+        return num_imaged, num_downlinked
+
+    def update_tgt_count(self, n_targets):
+        self.n_targets = n_targets
+        self.action_space = spaces.Discrete(3 + self.n_targets)
+        low = -1e16
+        high = 1e16
+        self.observation_space = spaces.Box(
+            low, high, shape=(22 + self.n_targets * self.target_tuple_size,)
+        )
+        self.obs = np.zeros(22 + self.n_targets * self.target_tuple_size)
+        self.obs_full = np.zeros(22 + self.n_targets * self.target_tuple_size)
+
 
 if __name__ == "__main__":
-    env = gym.make("SimpleEOS-v0")
+    env = gym.make("AgileEOS-v0")
 
     env.reset()
 

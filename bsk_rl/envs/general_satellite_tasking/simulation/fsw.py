@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Callable, Iterable
 from weakref import proxy
 
 if TYPE_CHECKING:
-    from bsk_rl.envs.GeneralSatelliteTasking.types import (
+    from bsk_rl.envs.general_satellite_tasking.types import (
         DynamicsModel,
         EnvironmentModel,
         Satellite,
@@ -28,9 +28,9 @@ from Basilisk.fswAlgorithms import (
 )
 from Basilisk.utilities import macros as mc
 
-from bsk_rl.envs.GeneralSatelliteTasking.simulation import dynamics
-from bsk_rl.envs.GeneralSatelliteTasking.utils.debug import MEMORY_LEAK_CHECKING
-from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import (
+from bsk_rl.envs.general_satellite_tasking.simulation import dynamics
+from bsk_rl.envs.general_satellite_tasking.utils.debug import MEMORY_LEAK_CHECKING
+from bsk_rl.envs.general_satellite_tasking.utils.functional import (
     check_aliveness_checkers,
     default_args,
 )

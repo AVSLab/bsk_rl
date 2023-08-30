@@ -3,10 +3,10 @@ from copy import copy
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional
 
 if TYPE_CHECKING:
-    from bsk_rl.envs.GeneralSatelliteTasking.scenario.environment_features import (
+    from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
         Target,
     )
-    from bsk_rl.envs.GeneralSatelliteTasking.types import (
+    from bsk_rl.envs.general_satellite_tasking.types import (
         EnvironmentFeatures,
         Satellite,
     )

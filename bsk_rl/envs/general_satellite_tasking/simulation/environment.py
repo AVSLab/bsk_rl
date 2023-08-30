@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 from weakref import proxy
 
 if TYPE_CHECKING:
-    from bsk_rl.envs.GeneralSatelliteTasking.types import Simulator
+    from bsk_rl.envs.general_satellite_tasking.types import Simulator
 
 import numpy as np
 from Basilisk import __path__
@@ -17,12 +17,12 @@ from Basilisk.topLevelModules import pyswice
 from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion, simIncludeGravBody
 
-from bsk_rl.envs.GeneralSatelliteTasking.utils.debug import MEMORY_LEAK_CHECKING
-from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import (
+from bsk_rl.envs.general_satellite_tasking.utils.debug import MEMORY_LEAK_CHECKING
+from bsk_rl.envs.general_satellite_tasking.utils.functional import (
     collect_default_args,
     default_args,
 )
-from bsk_rl.envs.GeneralSatelliteTasking.utils.orbital import random_epoch
+from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_epoch
 
 bsk_path = __path__[0]
 

@@ -4,11 +4,11 @@ from typing import Any, Callable, Optional, Union
 import numpy as np
 from Basilisk.utilities import orbitalMotion
 
-from bsk_rl.envs.GeneralSatelliteTasking.scenario.satellites import (
+from bsk_rl.envs.general_satellite_tasking.scenario.satellites import (
     ImagingSatellite,
     Satellite,
 )
-from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import (
+from bsk_rl.envs.general_satellite_tasking.utils.functional import (
     bind,
     configurable,
     vectorize_nested_dict,

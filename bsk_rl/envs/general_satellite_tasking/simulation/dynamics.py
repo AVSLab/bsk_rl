@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Iterable, Optional
 
 if TYPE_CHECKING:
-    from bsk_rl.envs.GeneralSatelliteTasking.types import (
+    from bsk_rl.envs.general_satellite_tasking.types import (
         EnvironmentModel,
         Satellite,
         Simulator,
@@ -28,9 +28,9 @@ from Basilisk.utilities import RigidBodyKinematics
 from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion, unitTestSupport
 
-from bsk_rl.envs.GeneralSatelliteTasking.simulation import environment
-from bsk_rl.envs.GeneralSatelliteTasking.utils.debug import MEMORY_LEAK_CHECKING
-from bsk_rl.envs.GeneralSatelliteTasking.utils.functional import (
+from bsk_rl.envs.general_satellite_tasking.simulation import environment
+from bsk_rl.envs.general_satellite_tasking.utils.debug import MEMORY_LEAK_CHECKING
+from bsk_rl.envs.general_satellite_tasking.utils.functional import (
     aliveness_checker,
     check_aliveness_checkers,
     default_args,

@@ -4,8 +4,8 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-from bsk_rl.envs.MultiSensorEOS.bsk_sim import MultiSensorEOSSimulator
-from bsk_rl.envs.MultiSensorEOS.env_settings import Settings
+from bsk_rl.envs.multisensor_eos.bsk_sim import MultiSensorEOSSimulator
+from bsk_rl.envs.multisensor_eos.env_settings import Settings
 
 
 class MultiSensorEOS(gym.Env):

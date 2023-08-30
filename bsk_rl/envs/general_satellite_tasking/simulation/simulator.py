@@ -1,15 +1,15 @@
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from bsk_rl.envs.GeneralSatelliteTasking.types import (
-        Satellite,
+    from bsk_rl.envs.general_satellite_tasking.types import (
         EnvironmentModel,
+        Satellite,
     )
 
 from Basilisk.utilities import SimulationBaseClass
 from Basilisk.utilities import macros as mc
 
-from bsk_rl.envs.GeneralSatelliteTasking.utils.debug import MEMORY_LEAK_CHECKING
+from bsk_rl.envs.general_satellite_tasking.utils.debug import MEMORY_LEAK_CHECKING
 
 
 class Simulator(SimulationBaseClass.SimBaseClass):
