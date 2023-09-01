@@ -108,7 +108,7 @@ class DataStore(ABC):
 class DataManager(ABC):
     DataStore: type[DataStore]  # type of DataStore managed by the DataManager
 
-    def __init__(self, env_features: "EnvironmentFeatures") -> None:
+    def __init__(self, env_features: Optional["EnvironmentFeatures"] = None) -> None:
         """Base class for simulation-wide data management; handles data recording and
         rewarding.
         TODO: allow for creation/composition of multiple managers
@@ -144,6 +144,28 @@ class DataManager(ABC):
         reward = self._calc_reward(new_data_dict)
         self.cum_reward += reward
         return reward
+
+
+###########
+# No Data #
+###########
+class NoData(DataType):
+    def __add__(self, other):
+        return self.__class__()
+
+
+class NoDataStore(DataStore):
+    DataType = NoData
+
+    def _compare_log_states(self, old_state, new_state):
+        return self.DataType()
+
+
+class NoDataManager(DataManager):
+    DataStore = NoDataStore
+
+    def _calc_reward(self, new_data_dict):
+        return 0
 
 
 #######################################
@@ -224,7 +246,9 @@ class UniqueImagingManager(DataManager):
     DataStore = UniqueImageStore
 
     def __init__(
-        self, env_features: "EnvironmentFeatures", reward_fn: Callable = lambda p: p
+        self,
+        env_features: Optional["EnvironmentFeatures"] = None,
+        reward_fn: Callable = lambda p: p,
     ) -> None:
         """DataManager for rewarding unique images
 

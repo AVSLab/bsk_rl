@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+from pytest import approx
 
 from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
     CityTargets,
@@ -56,7 +57,7 @@ class TestStaticTargets:
         st.regenerate_targets()
         assert len(st.targets) == 3
         for target in st.targets:
-            assert abs(np.linalg.norm(target.location) - 1.0) < 1e-9
+            assert np.linalg.norm(target.location) == approx(1.0)
             assert target.priority == 1
 
     def test_regenerate_targets_repeatable(self):
@@ -144,4 +145,4 @@ class TestCityTargets:
         ct.reset()
         for target in ct.targets:
             assert np.linalg.norm(target.location - nominal) <= 0.03
-            assert abs(np.linalg.norm(target.location) - 1.0) < 1e-9
+            assert np.linalg.norm(target.location) == approx(1.0)

@@ -645,7 +645,7 @@ class ImageAheadSatellite(
             dict(prop="battery_charge_fraction"),
         ]
     ),
-    ImagingSatellite,
+    SteeringImagerSatellite,
 ):
     pass
 
@@ -665,6 +665,6 @@ class FullFeaturedSatellite(
             dict(prop="battery_charge_fraction"),
         ]
     ),
-    ImagingSatellite,
+    SteeringImagerSatellite,
 ):
     pass

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from itertools import combinations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.envs.general_satellite_tasking.types import Satellite
@@ -12,7 +12,7 @@ from bsk_rl.envs.general_satellite_tasking.simulation.dynamics import LOSCommDyn
 
 
 class CommunicationMethod(ABC):
-    def __init__(self, satellites: list["Satellite"]) -> None:
+    def __init__(self, satellites: Optional[list["Satellite"]] = None) -> None:
         """Base class for defining data sharing between satellites. Subclasses implement
         a way of determining which pairs of satellites share data."""
         self.satellites = satellites

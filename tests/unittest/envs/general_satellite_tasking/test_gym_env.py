@@ -27,7 +27,7 @@ class TestGeneralSatelliteTasking:
     def test_reset(self, mock_sim):
         mock_sat = MagicMock()
         mock_sat.sat_args_generator = {}
-        mock_data = MagicMock()
+        mock_data = MagicMock(env_features=None)
         env = GeneralSatelliteTasking(
             satellites=[mock_sat],
             env_type=MagicMock(),

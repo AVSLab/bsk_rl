@@ -1,8 +1,11 @@
 from unittest.mock import MagicMock, patch
 
+import numpy as np
+
 from bsk_rl.envs.general_satellite_tasking.simulation.fsw import (
     BasicFSWModel,
     FSWModel,
+    ImagingFSWModel,
     Task,
     action,
 )
@@ -72,3 +75,17 @@ class TestBasicFSWModel:
             task.create_task.assert_called_once()
             task.create_module_data.assert_called_once()
             task.init_objects.assert_called_once()
+
+
+imagingfsw = module + "ImagingFSWModel."
+
+
+@patch(imagingfsw + "requires_dyn", MagicMock(return_value=[]))
+@patch(imagingfsw + "_make_task_list", MagicMock())
+@patch(imagingfsw + "_set_messages", MagicMock())
+class TestImagingFSWModel:
+    def test_fsw_properties(self):
+        fsw = ImagingFSWModel(MagicMock(), 1.0)
+        fsw.locPointConfig = MagicMock(pHat_B=np.array([1.0, 0.0, 0.0]))
+        fsw.satellite = MagicMock(dynamics=MagicMock(BP=np.identity(3)))
+        assert (fsw.c_hat_P == np.array([1.0, 0.0, 0.0])).all()

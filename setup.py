@@ -17,6 +17,8 @@ setup(
         "numpy",
         "pandas",
         "pytest",
+        "pytest-cov",
+        "pytest-repeat",
         "requests",
         "scikit-learn",
         "scipy",
