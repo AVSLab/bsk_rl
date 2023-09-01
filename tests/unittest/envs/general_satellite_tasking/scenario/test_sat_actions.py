@@ -73,7 +73,7 @@ class TestFSWAction:
         assert sat.cool_action_duration == 10.0
 
     def make_action_sat(self):
-        FSWAct = sa.fsw_action_gen("cool_action")
+        FSWAct = sa.fsw_action_gen("cool_action", 60.0)
         sat = FSWAct()
         sat.fsw = MagicMock(cool_action=MagicMock())
         sat.log_info = MagicMock()
@@ -84,6 +84,24 @@ class TestFSWAction:
 
     def test_act(self, sat_init):
         sat = self.make_action_sat()
+        assert sat.action_list[0].__name__ == "act_cool_action"
+        sat.set_action(0)
+        assert "cool_action" == sat.prev_action_key
+        sat.log_info.assert_called_once_with("cool_action tasked for 60.0 seconds")
+        sat.fsw.cool_action.assert_called_once()
+
+    def make_action_sat_configured(self):
+        FSWAct = sa.fsw_action_gen("cool_action", 59.0).configure(action_duration=60.0)
+        sat = FSWAct()
+        sat.fsw = MagicMock(cool_action=MagicMock())
+        sat.log_info = MagicMock()
+        sat._disable_timed_terminal_event = MagicMock()
+        sat._update_timed_terminal_event = MagicMock()
+        sat.simulator = MagicMock(sim_time=0.0)
+        return sat
+
+    def test_act_configured(self, sat_init):
+        sat = self.make_action_sat_configured()
         assert sat.action_list[0].__name__ == "act_cool_action"
         sat.set_action(0)
         assert "cool_action" == sat.prev_action_key

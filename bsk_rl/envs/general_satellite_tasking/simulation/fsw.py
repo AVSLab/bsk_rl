@@ -160,7 +160,7 @@ class Task(ABC):
 
     @abstractmethod  # pragma: no cover
     def init_objects(self, **kwargs) -> None:
-        """Initialize model parameters with satellite arguments/"""
+        """Initialize model parameters with satellite arguments."""
         pass
 
     def _add_model_to_task(self, wrap, data, priority: int) -> None:

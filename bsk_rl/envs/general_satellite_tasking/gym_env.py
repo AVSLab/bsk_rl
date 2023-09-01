@@ -84,9 +84,15 @@ class GeneralSatelliteTasking(Env):
         self.env_args_generator = self.env_type.default_env_args(**env_args)
         self.env_features = env_features
         self.data_manager = data_manager
+        if self.data_manager.env_features is None:
+            self.data_manager.env_features = self.env_features
+
         if communicator is None:
-            communicator = NoCommunication(self.satellites)
+            communicator = NoCommunication()
         self.communicator = communicator
+        if self.communicator.satellites is None:
+            self.communicator.satellites = self.satellites
+
         self.sim_rate = sim_rate
         self.max_step_duration = max_step_duration
         self.failure_penalty = failure_penalty

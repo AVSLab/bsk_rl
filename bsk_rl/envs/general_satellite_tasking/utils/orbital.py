@@ -139,10 +139,9 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         self.dt = dt
         rv_specified = rN is not None and vN is not None
         rv_specified_partial = rN is not None or vN is not None
-        oe_specified = oe is not None and mu is not None
-        oe_specified_partial = oe is not None or mu is not None
+        oe_specified = oe is not None
 
-        if rv_specified and not oe_specified_partial:
+        if rv_specified and not oe_specified:
             self.rN_init = rN
             self.vN_init = vN
         elif oe_specified and not rv_specified_partial:

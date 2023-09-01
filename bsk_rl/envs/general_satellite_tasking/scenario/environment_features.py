@@ -11,7 +11,7 @@ from Basilisk.utilities import orbitalMotion
 class EnvironmentFeatures(ABC):
     """Base environment feature class"""
 
-    def reset(self) -> None:
+    def reset(self) -> None:  # pragma: no cover
         """Reset environment features"""
         pass
 

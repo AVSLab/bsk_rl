@@ -80,10 +80,12 @@ class DiscreteSatAction(SatAction):
         return spaces.Discrete(len(self.action_list))
 
 
-def fsw_action_gen(fsw_action: str) -> type:
+def fsw_action_gen(fsw_action: str, action_duration: float = 1e9) -> type:
     @configurable
     class FSWAction(DiscreteSatAction):
-        def __init__(self, *args, action_duration: float = 60.0, **kwargs) -> None:
+        def __init__(
+            self, *args, action_duration: float = action_duration, **kwargs
+        ) -> None:
             """Discrete action to perform a fsw action; typically this is a function
             decorated by @action
 

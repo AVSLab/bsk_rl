@@ -108,14 +108,14 @@ class NormdPropertyState(SatObservation):
         if module is not None:
 
             def prop_fn(self):
-                return getattr(getattr(self, module), prop) / norm
+                return np.array(getattr(getattr(self, module), prop)) / norm
 
         else:
 
             def prop_fn(self):
                 for module in ["dynamics", "fsw"]:
                     if hasattr(getattr(self, module), prop):
-                        return getattr(getattr(self, module), prop) / norm
+                        return np.array(getattr(getattr(self, module), prop)) / norm
 
         prop_fn.__name__ = prop
         if norm != 1:

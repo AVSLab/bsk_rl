@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+from pytest import approx
 
 from bsk_rl.envs.general_satellite_tasking.scenario import data
 
@@ -52,6 +53,27 @@ class TestDataManager:
         dm.cum_reward = 0
         assert 10.0 == dm.reward({"new": "data"})
         assert dm.cum_reward == 10.0
+
+
+class TestNoData:
+    def test_add(self):
+        dat1 = data.NoData()
+        dat2 = data.NoData()
+        dat = dat1 + dat2
+        assert isinstance(dat, data.NoData)
+
+
+class TestNoDataStore:
+    def test_compare_log_states(self):
+        ds = data.NoDataStore(MagicMock(), MagicMock())
+        assert isinstance(ds._compare_log_states(0, 1), data.DataType)
+
+
+class TestNoDataManager:
+    def test_calc_reward(self):
+        dm = data.NoDataManager(MagicMock())
+        reward = dm._calc_reward({"sat1": 0, "sat2": 1})
+        assert reward == 0
 
 
 class TestUniqueImageData:
@@ -137,7 +159,7 @@ class TestUniqueImagingManager:
                 "sat2": data.UniqueImageData([MagicMock(priority=0.2)]),
             }
         )
-        assert abs(reward - 0.3) < 1e-9
+        assert reward == approx(0.3)
 
     def test_calc_reward_existing(self):
         tgt = MagicMock(priority=0.2)
@@ -149,7 +171,7 @@ class TestUniqueImagingManager:
                 "sat2": data.UniqueImageData([tgt]),
             }
         )
-        assert abs(reward - 0.1) < 1e-9
+        assert reward == approx(0.1)
 
     def test_calc_reward_custom_fn(self):
         dm = data.UniqueImagingManager(MagicMock(), reward_fn=lambda x: 1 / x)
@@ -160,4 +182,4 @@ class TestUniqueImagingManager:
                 "sat2": data.UniqueImageData([MagicMock(priority=2)]),
             }
         )
-        assert abs(reward - 1.5) < 1e-9
+        assert reward == approx(1.5)

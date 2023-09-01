@@ -4,10 +4,12 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 from gymnasium.spaces import Box
+from pytest import approx
 
 from bsk_rl.envs.general_satellite_tasking.scenario import satellites as sats
 from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import Target
 from bsk_rl.envs.general_satellite_tasking.simulation.fsw import Task
+from bsk_rl.envs.general_satellite_tasking.utils.functional import valid_func_name
 
 
 @patch.multiple(sats.Satellite, __abstractmethods__=set())
@@ -273,8 +275,20 @@ class TestImagingSatellite:
             self.tgt1,
         ]
 
-    def test_update_image_event(self):
-        pass  # Probably better with integration testing
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite._disable_image_event",
+        MagicMock(),
+    )
+    def test_update_image_event_existing(self):
+        sat = self.make_sat()
+        sat.name = "Sat"
+        tgt = MagicMock(name="tgt")
+        existing_event = valid_func_name(f"image_{sat.id}_{tgt.id}")
+        sat.simulator = MagicMock(
+            eventMap={existing_event: MagicMock(eventActive=False)}
+        )
+        sat._update_image_event(tgt)
+        assert sat.simulator.eventMap[existing_event].eventActive is True
 
     def test_disable_image_event(self):
         sat = self.make_sat()
@@ -399,8 +413,8 @@ class TestCalculateWindows:
         sat.data_store.env_knowledge.targets = [tgt]
         sat.calculate_additional_windows(100.0)
         assert tgt in sat.windows
-        assert abs(sat.windows[tgt][0][0] - (50 - 0.27762037530835193)) < 1e-2
-        assert abs(sat.windows[tgt][0][1] - (50 + 0.27762037530835193)) < 1e-2
+        assert sat.windows[tgt][0][0] == approx(50 - 0.27762037530835193, abs=1e-2)
+        assert sat.windows[tgt][0][1] == approx(50 + 0.27762037530835193, abs=1e-2)
 
     def test_find_elevation_roots(self):
         interp = (  # noqa: E731
@@ -412,11 +426,11 @@ class TestCalculateWindows:
         elev = 1.3
         times = sats.ImagingSatellite._find_elevation_roots(interp, loc, elev, (-1, 1))
         assert len(times) == 2
-        assert abs(times[0] - -times[1]) < 1e-5
-        assert abs(times[1] - 0.27762037530835193) < 1e-5
+        assert times[0] == approx(-times[1], abs=1e-5)
+        assert times[1] == approx(0.27762037530835193, abs=1e-5)
         times = sats.ImagingSatellite._find_elevation_roots(interp, loc, elev, (0, 1))
         assert len(times) == 1
-        assert abs(times[0] - 0.27762037530835193) < 1e-5
+        assert times[0] == approx(0.27762037530835193, abs=1e-5)
 
     @pytest.mark.parametrize(
         "location,times,positions,threshold,expected",
