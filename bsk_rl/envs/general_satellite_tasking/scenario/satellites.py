@@ -448,7 +448,9 @@ class ImagingSatellite(Satellite):
             if new_window[0] == merge_time or merge_time is None:
                 for window in self.windows[target]:
                     if window[1] == new_window[0]:
-                        window[1] == new_window[1]
+                        self.windows[target].remove(window)
+                        window = (window[0], new_window[1])
+                        self.windows[target].append(window)
                         return
             self.windows[target].append(new_window)
         else:
