@@ -613,7 +613,7 @@ class ImagingDynModel(BasicDynamicsModel):
             self.task_name, self.instrument, ModelPriority=priority
         )
 
-    @default_args(transmitterBaudRate=8e6, transmitterNumBuffers=100)
+    @default_args(transmitterBaudRate=-8e6, transmitterNumBuffers=100)
     def _set_transmitter(
         self,
         transmitterBaudRate: float,
@@ -625,11 +625,12 @@ class ImagingDynModel(BasicDynamicsModel):
         """Create the transmitter model.
 
         Args:
-            transmitterBaudRate: Rate of data downlink [baud]
+            transmitterBaudRate: Rate of data downlink. Should be negative. [baud]
             instrumentBaudRate: Image size, used to set packet size [bits]
             transmitterNumBuffers: Number of transmitter buffers
             priority: Model priority.
         """
+        assert transmitterBaudRate <= 0
         self.transmitter = spaceToGroundTransmitter.SpaceToGroundTransmitter()
         self.transmitter.ModelTag = "transmitter" + self.satellite.id
         self.transmitter.nodeBaudRate = transmitterBaudRate  # baud

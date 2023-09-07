@@ -36,7 +36,7 @@ class TestImagingAndDownlink:
                 imageRateErrorRequirement=0.05,
                 instrumentBaudRate=1.0,
                 dataStorageCapacity=3.0,
-                transmitterBaudRate=1000.0,
+                transmitterBaudRate=-1.0,
             ),
         ),
         env_type=environment.GroundStationEnvModel,
@@ -44,7 +44,7 @@ class TestImagingAndDownlink:
         env_features=StaticTargets(n_targets=1000),
         data_manager=data.NoDataManager(),
         sim_rate=1.0,
-        time_limit=5700.0,
+        time_limit=10000.0,
         max_step_duration=1e9,
         disable_env_checker=True,
     )
@@ -59,7 +59,8 @@ class TestImagingAndDownlink:
 
     def test_downlink(self):
         storage_init = self.env.satellite.dynamics.storage_level
-        self.env.step(0)
+        assert storage_init > 0.0  # Should be filled from previous test
+        self.env.step(0)  # Should encounter a downlink opportunity before timeout
         assert self.env.satellite.dynamics.storage_level < storage_init
 
     def test_image_by_name(self):
