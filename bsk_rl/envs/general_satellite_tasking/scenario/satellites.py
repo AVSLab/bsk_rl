@@ -220,6 +220,7 @@ class Satellite(ABC):
             info: Additional identifying info to log at terminal time
         """
         self._disable_timed_terminal_event()
+        self.log_info(f"setting timed terminal event at {t_close:.1f}")
 
         # Create new timed terminal event
         self._timed_terminal_event_name = valid_func_name(
@@ -350,9 +351,9 @@ class ImagingSatellite(Satellite):
         self.trajectory.extend_to(calculation_end)
         r_BP_P_interp = self.trajectory.r_BP_P
         window_calc_span = np.logical_and(
-            r_BP_P_interp.x >= calculation_start,
-            r_BP_P_interp.x <= calculation_end,
-        )
+            r_BP_P_interp.x >= calculation_start - 1e-9,
+            r_BP_P_interp.x <= calculation_end + 1e-9,
+        )  # Account for floating point error in window_calculation_time
         times = r_BP_P_interp.x[window_calc_span]
         positions = r_BP_P_interp.y[window_calc_span]
 
@@ -586,6 +587,19 @@ class ImagingSatellite(Satellite):
 
         return target
 
+    def enable_target_window(self, target: Target):
+        """Enable the next window close event for target"""
+        self._update_image_event(target)
+        next_window = self.next_windows[target]
+        self.log_info(
+            f"{target} window enabled: {next_window[0]:.1f} to {next_window[1]:.1f}"
+        )
+        self._update_timed_terminal_event(
+            next_window[1],
+            info=f"for {target} window",
+            extra_actions=[self._satellite_command + ".missed += 1"],
+        )
+
     def task_target_for_imaging(self, target: Target):
         """Task the satellite to image a target
 
@@ -595,12 +609,7 @@ class ImagingSatellite(Satellite):
         msg = f"{target} tasked for imaging"
         self.log_info(msg)
         self.fsw.action_image(target.location, target.id)
-        self._update_image_event(target)
-        self._update_timed_terminal_event(
-            self.next_windows[target][1],
-            info=f"for {target} window",
-            extra_actions=[self._satellite_command + ".missed += 1"],
-        )
+        self.enable_target_window(target)
 
 
 #########################

@@ -344,7 +344,7 @@ class TestImagingSatellite:
         sat.task_target_for_imaging(self.tgt0)
         sat.fsw.action_image.assert_called_once()
         assert sat.fsw.action_image.call_args[0][1].startswith("tgt_0")
-        sat.log_info.assert_called_once()
+        sat.log_info.assert_called()
         sat._update_image_event.assert_called_once()
         assert sat._update_image_event.call_args[0][0] == self.tgt0
         sat._update_timed_terminal_event.assert_called_once()

@@ -155,11 +155,14 @@ class ImagingActions(DiscreteSatAction, ImagingSatellite):
             Target ID
         """
         if np.issubdtype(type(target), np.integer):
-            self.log_info(f"Target index {target}")
+            self.log_info(f"target index {target} tasked")
 
         target = self.parse_target_selection(target)
         if target.id != prev_action_key:
             self.task_target_for_imaging(target)
+        else:
+            self.enable_target_window(target)
+
         return target.id
 
     def set_action(self, action: Union[int, Target, str]):
