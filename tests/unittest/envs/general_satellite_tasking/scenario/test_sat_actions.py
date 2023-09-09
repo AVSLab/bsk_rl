@@ -145,10 +145,12 @@ class TestImagingActions:
     def test_image_retask(self, sat_init, target):
         sat = sa.ImagingActions()
         sat.log_info = MagicMock()
+        sat.enable_target_window = MagicMock()
         sat.parse_target_selection = MagicMock(return_value=self.MockTarget())
         sat.task_target_for_imaging = MagicMock()
         sat.image(target, prev_action_key="target_1")
         sat.task_target_for_imaging.assert_not_called()
+        sat.enable_target_window.assert_called()
 
     @patch(
         "bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.DiscreteSatAction.set_action"
