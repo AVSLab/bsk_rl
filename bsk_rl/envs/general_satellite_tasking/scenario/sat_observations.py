@@ -1,5 +1,6 @@
 from copy import deepcopy
 from typing import Any, Callable, Optional, Union
+from warnings import warn
 
 import numpy as np
 from Basilisk.utilities import orbitalMotion
@@ -156,28 +157,70 @@ class TargetState(SatObservation, ImagingSatellite):
         self,
         *args,
         n_ahead_observe: int = 1,
-        location_norm: float = orbitalMotion.REQ_EARTH * 1e3,
+        target_properties: Optional[list[dict[str, Any]]] = None,
         **kwargs,
     ):
         """Adds information about upcoming targets to the observation state.
 
         Args:
             n_ahead_observe: Number of upcoming targets to consider.
+            target_properties: List of properties to include in the observation in the
+                format [dict(prop="prop_name", norm=norm)]. If norm is not specified, it
+                is set to 1.0 (no normalization). Properties to choose from:
+                    - priority
+                    - location
+                    - window_open
+                    - window_mid
+                    - window_close
         """
         super().__init__(*args, n_ahead_observe=n_ahead_observe, **kwargs)
+        if target_properties is None:
+            target_properties = [
+                dict(prop="priority"),
+                dict(prop="location", norm=orbitalMotion.REQ_EARTH * 1e3),
+            ]
+        if "location_norm" in kwargs:
+            warn(
+                "location_norm is ignored and should be specified in target_properties"
+            )
         self.n_ahead_observe = int(n_ahead_observe)
-        self.location_norm = location_norm
-        self.add_to_observation(self.target_obs)
+        self.target_obs_generator(target_properties)
 
-    def target_obs(self):
-        obs = {}
-        for i, target in enumerate(self.upcoming_targets(self.n_ahead_observe)):
-            obs[f"tgt_value_{i}"] = target.priority
-            loc_name = f"tgt_loc_{i}"
-            if self.location_norm != 1.0:
-                loc_name += "_normd"
-            obs[loc_name] = target.location / self.location_norm
-        return obs
+    def target_obs_generator(self, target_properties):
+        """Generate the target_obs function from the target_properties spec and add it
+        to the observation.
+        """
+
+        def target_obs(self):
+            obs = {}
+            for i, target in enumerate(self.upcoming_targets(self.n_ahead_observe)):
+                props = {}
+                for prop_spec in target_properties:
+                    name = prop_spec["prop"]
+                    norm = prop_spec.get("norm", 1.0)
+                    if name == "priority":
+                        value = target.priority / norm
+                    elif name == "location":
+                        value = target.location / norm
+                    elif name == "window_open":
+                        value = self.next_windows[target][0] - self.simulator.sim_time
+                    elif name == "window_mid":
+                        value = (
+                            sum(self.next_windows[target]) / 2 - self.simulator.sim_time
+                        )
+                    elif name == "window_close":
+                        value = self.next_windows[target][1] - self.simulator.sim_time
+                    else:
+                        raise ValueError(
+                            f"Invalid target property: {prop_spec['prop']}"
+                        )
+                    if norm != 1.0:
+                        name += "_normd"
+                    props[name] = value
+                obs[f"target_{i}"] = props
+            return obs
+
+        self.add_to_observation(bind(self, target_obs, "target_obs"))
 
 
 @configurable

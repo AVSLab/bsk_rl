@@ -116,39 +116,80 @@ class TestTargetState:
 
     def test_target_state(self, sat_init):
         n_ahead = 2
-        sat = so.TargetState(n_ahead_observe=n_ahead, location_norm=1.0)
+        sat = so.TargetState(n_ahead_observe=n_ahead)
         sat.upcoming_targets = MagicMock(
             return_value=[
-                MagicMock(priority=i, location=np.array([i, 1.0, 0.0]))
+                MagicMock(priority=i, location=np.array([0.0, 0.0, 0.0]))
                 for i in range(n_ahead)
             ]
         )
-        expected = {
-            "tgt_value_0": 0,
-            "tgt_loc_0": np.array([0.0, 1.0, 0.0]),
-            "tgt_value_1": 1,
-            "tgt_loc_1": np.array([1.0, 1.0, 0.0]),
-        }
-        for k, v in sat.target_obs().items():
-            assert np.all(v == expected[k])
+        expected = dict(
+            target_0=dict(priority=0.0, location_normd=np.array([0.0, 0.0, 0.0])),
+            target_1=dict(priority=1.0, location_normd=np.array([0.0, 0.0, 0.0])),
+        )
+        for k1, v1 in sat.target_obs().items():
+            for k2, v2 in v1.items():
+                assert np.all(v2 == expected[k1][k2])
 
     def test_target_state_normed(self, sat_init):
         n_ahead = 2
-        sat = so.TargetState(n_ahead_observe=n_ahead, location_norm=10.0)
+        sat = so.TargetState(
+            n_ahead_observe=n_ahead,
+            target_properties=[
+                dict(prop="priority"),
+                dict(prop="location", norm=10.0),
+                dict(prop="window_open"),
+                dict(prop="window_mid"),
+                dict(prop="window_close"),
+            ],
+        )
+
         sat.upcoming_targets = MagicMock(
             return_value=[
                 MagicMock(priority=i, location=np.array([i, 1.0, 0.0]))
                 for i in range(n_ahead)
             ]
         )
-        expected = {
-            "tgt_value_0": 0,
-            "tgt_loc_0_normd": np.array([0.0, 0.1, 0.0]),
-            "tgt_value_1": 1,
-            "tgt_loc_1_normd": np.array([0.1, 0.1, 0.0]),
-        }
-        for k, v in sat.target_obs().items():
-            assert np.all(v == expected[k])
+        sat.windows = {target: [(10.0, 20.0)] for target in sat.upcoming_targets()}
+        sat.simulator = MagicMock(sim_time=5.0)
+
+        expected = dict(
+            target_0=dict(
+                priority=0.0,
+                location_normd=np.array([0.0, 0.1, 0.0]),
+                window_open=5.0,
+                window_mid=10.0,
+                window_close=15.0,
+            ),
+            target_1=dict(
+                priority=1.0,
+                location_normd=np.array([0.1, 0.1, 0.0]),
+                window_open=5.0,
+                window_mid=10.0,
+                window_close=15.0,
+            ),
+        )
+        for k1, v1 in sat.target_obs().items():
+            for k2, v2 in v1.items():
+                print(v2, expected[k1][k2])
+                assert np.all(v2 == expected[k1][k2])
+
+    def test_bad_target_state(self, sat_init):
+        n_ahead = 2
+        sat = so.TargetState(
+            n_ahead_observe=n_ahead,
+            target_properties=[
+                dict(prop="not_a_prop"),
+            ],
+        )
+        sat.upcoming_targets = MagicMock(
+            return_value=[
+                MagicMock(priority=i, location=np.array([0.0, 0.0, 0.0]))
+                for i in range(n_ahead)
+            ]
+        )
+        with pytest.raises(ValueError):
+            sat.target_obs()
 
 
 @patch.multiple(so.EclipseState, __abstractmethods__=set())
