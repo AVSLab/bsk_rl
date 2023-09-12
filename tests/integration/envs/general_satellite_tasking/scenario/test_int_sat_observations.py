@@ -156,8 +156,9 @@ class TestTargetState:
 
     def test_target_state(self):
         observation, info = self.env.reset()
-        assert "tgt_loc_1_normd" in observation["target_obs"]
-        assert "tgt_value_1" in observation["target_obs"]
+        assert "target_1" in observation["target_obs"]
+        assert "priority" in observation["target_obs"]["target_1"]
+        assert "location_normd" in observation["target_obs"]["target_1"]
 
 
 class TestEclipseState:
