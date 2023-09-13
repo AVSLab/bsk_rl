@@ -154,6 +154,10 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
                 )
             )
 
+        self._eclipse_starts: list[float] = []
+        self._eclipse_ends: list[float] = []
+        self._eclipse_search_time = 0.0
+
         self.init_simulator()
 
     def init_simulator(self) -> None:
@@ -233,6 +237,19 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         self.ConfigureStopTime(macros.sec2nano(t))
         self.ExecuteSimulation()
 
+    def generate_eclipses(self, t: float) -> None:
+        self.extend_to(t + self.dt)
+        upcoming_times = self.times[self.times > self._eclipse_search_time]
+        upcoming_eclipse = (
+            self.eclipse_log.shadowFactor[self.times > self._eclipse_search_time] > 0
+        ).astype(float)
+        for i in np.where(np.diff(upcoming_eclipse) == -1)[0]:
+            self._eclipse_starts.append(upcoming_times[i])
+        for i in np.where(np.diff(upcoming_eclipse) == 1)[0]:
+            self._eclipse_ends.append(upcoming_times[i])
+
+        self._eclipse_search_time = t
+
     def next_eclipse(self, t: float, max_tries: int = 100) -> tuple[float, float]:
         """Find the soonest eclipse transitions. The returned values are not necessarily
         from the same eclipse event, such as when the search start time is in eclipse.
@@ -244,26 +261,19 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
             eclipse_start: Nearest upcoming eclipse beginning
             eclipse_end:  Nearest upcoming eclipse end
         """
-        self.extend_to(t + self.dt)
-        for _ in range(max_tries):
-            upcoming_times = self.times[self.times > t]
-            upcoming_eclipse = self.eclipse_log.shadowFactor[self.times > t] > 0
-            if sum(np.diff(upcoming_eclipse)) >= 2:
-                break
-            self.extend_to(self.sim_time + self.dt * 10)
+        for i in range(max_tries):
+            if any([t_start > t for t_start in self._eclipse_starts]) and any(
+                [t_end > t for t_end in self._eclipse_ends]
+            ):
+                eclipse_start = min(
+                    [t_start for t_start in self._eclipse_starts if t_start > t]
+                )
+                eclipse_end = min([t_end for t_end in self._eclipse_ends if t_end > t])
+                return eclipse_start, eclipse_end
 
-        current_state = upcoming_eclipse[0]
-        transition_times = upcoming_times[np.where(np.diff(upcoming_eclipse))[0][0:2]]
+            self.generate_eclipses(t + i * self.dt * 10)
 
-        if len(transition_times) != 2:
-            return 1.0, 1.0
-
-        if current_state:
-            eclipse_start, eclipse_end = transition_times
-        else:
-            eclipse_end, eclipse_start = transition_times
-
-        return eclipse_start, eclipse_end
+        return 1.0, 1.0
 
     @property
     def r_BN_N(self) -> interp1d:
