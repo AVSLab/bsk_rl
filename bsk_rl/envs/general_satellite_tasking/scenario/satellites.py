@@ -242,8 +242,11 @@ class Satellite(ABC):
     def _disable_timed_terminal_event(self) -> None:
         """Turn off simulator termination due to this satellite's window close
         checker"""
-        if self._timed_terminal_event_name is not None:
-            self.simulator.eventMap[self._timed_terminal_event_name].eventActive = False
+        if (
+            self._timed_terminal_event_name is not None
+            and self._timed_terminal_event_name in self.simulator.eventMap
+        ):
+            self.simulator.delete_event(self._timed_terminal_event_name)
 
     @abstractmethod  # pragma: no cover
     def get_obs(self) -> SatObs:
@@ -562,8 +565,12 @@ class ImagingSatellite(Satellite):
 
     def _disable_image_event(self) -> None:
         """Turn off simulator termination due to this satellite's imaging checker"""
-        if self._image_event_name is not None:
-            self.simulator.eventMap[self._image_event_name].eventActive = False
+        if (
+            self._image_event_name is not None
+            and self._image_event_name in self.simulator.eventMap
+        ):
+            self.simulator.delete_event(self._image_event_name)
+            # self.simulator.eventMap[self._image_event_name].eventActive = False
 
     def parse_target_selection(self, target_query: Union[int, Target, str]):
         """Identify a target based on upcoming target index, Target object, or target
