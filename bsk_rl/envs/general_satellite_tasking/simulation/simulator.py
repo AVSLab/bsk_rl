@@ -83,6 +83,12 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self.ConfigureStopTime(simulation_time)
         self.ExecuteSimulation()
 
+    def delete_event(self, event_name) -> None:
+        """Removes an event from the event map. Makes event checking faster"""
+        event = self.eventMap[event_name]
+        self.eventList.remove(event)
+        del self.eventMap[event_name]
+
     def __del__(self):
         if MEMORY_LEAK_CHECKING:  # pragma: no cover
             print("~~~ BSK SIMULATOR DELETED ~~~")

@@ -115,17 +115,17 @@ class TestSatellite:
 
     def test_disable_timed_event(self):
         sat = sats.Satellite(name="TestSat", sat_args={})
-        sat.simulator = MagicMock()
+        sat.simulator = MagicMock(eventMap={"some_event": 1})
         sat._timed_terminal_event_name = "some_event"
         sat._disable_timed_terminal_event()
-        assert sat.simulator.eventMap.__getitem__.called
+        sat.simulator.delete_event.assert_called_with("some_event")
 
     def test_disable_timed_event_no_event(self):
         sat = sats.Satellite(name="TestSat", sat_args={})
-        sat.simulator = MagicMock()
+        sat.simulator = MagicMock(eventMap={"some_event": 1})
         sat._timed_terminal_event_name = None
         sat._disable_timed_terminal_event()
-        assert not sat.simulator.eventMap.__getitem__.called
+        assert not sat.simulator.delete_event.called
 
     def test_proxy_setters(self):
         # Must be last test or others break
@@ -292,17 +292,17 @@ class TestImagingSatellite:
 
     def test_disable_image_event(self):
         sat = self.make_sat()
-        sat.simulator = MagicMock()
+        sat.simulator = MagicMock(eventMap={"some_image_event": 1})
         sat._image_event_name = "some_image_event"
         sat._disable_image_event()
-        assert sat.simulator.eventMap.__getitem__.called
+        sat.simulator.delete_event.assert_called_with("some_image_event")
 
     def test_disable_image_event_no_event(self):
         sat = self.make_sat()
-        sat.simulator = MagicMock()
+        sat.simulator = MagicMock(eventMap={"some_event": 1})
         sat._image_event_name = None
         sat._disable_image_event()
-        assert not sat.simulator.eventMap.__getitem__.called
+        assert not sat.simulator.delete_event.called
 
     upcoming_targets = [Target(f"tgt_{i}", [0, 0, 0], 1.0) for i in range(20)]
 
