@@ -7,6 +7,7 @@ from Basilisk.utilities import macros as mc
 from bsk_rl.envs.general_satellite_tasking.simulation import environment
 from bsk_rl.envs.general_satellite_tasking.simulation.dynamics import (
     BasicDynamicsModel,
+    ContinuousImagingDynModel,
     DynamicsModel,
     GroundStationDynModel,
     ImagingDynModel,
@@ -256,3 +257,15 @@ class TestGroundStationDynModel:
         GroundStationDynModel(MagicMock(simulator=MagicMock()), 1.0)
         for setter in args:
             setter.assert_called_once()
+
+
+@patch(imdyn + "requires_env", MagicMock(return_value=[]))
+@patch(imdyn + "_init_dynamics_objects", MagicMock())
+class TestContinuousImagingDynModel:
+    def test_storage_properties(self):
+        dyn = ContinuousImagingDynModel(MagicMock(simulator=MagicMock()), 1.0)
+        dyn.storageUnit = MagicMock()
+        dyn.storageUnit.storageUnitDataOutMsg.read.return_value.storageLevel = 50.0
+        dyn.storageUnit.storageCapacity = 100.0
+        assert dyn.storage_level == 50.0
+        assert dyn.storage_level_fraction == 0.5

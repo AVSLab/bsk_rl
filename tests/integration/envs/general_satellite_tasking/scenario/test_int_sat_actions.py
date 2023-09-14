@@ -7,6 +7,7 @@ from bsk_rl.envs.general_satellite_tasking.scenario import sat_actions as sa
 from bsk_rl.envs.general_satellite_tasking.scenario import sat_observations as so
 from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
     StaticTargets,
+    UniformNadirFeature,
 )
 from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, environment, fsw
 from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
@@ -148,3 +149,42 @@ class TestDesatAction:
         assert np.linalg.norm(
             self.env.satellite.dynamics.wheel_speeds
         ) < np.linalg.norm(init_speeds)
+
+
+class TestNadirImagingActions:
+    class ImageSat(
+        sa.NadirImagingAction,
+        so.TimeState,
+    ):
+        dyn_type = dynamics.ContinuousImagingDynModel
+        fsw_type = fsw.ContinuousImagingFSWModel
+
+    env = gym.make(
+        "SingleSatelliteTasking-v1",
+        satellites=ImageSat(
+            "EO-1",
+            n_ahead_act=10,
+            sat_args=ImageSat.default_sat_args(
+                oe=random_orbit,
+                imageAttErrorRequirement=0.05,
+                imageRateErrorRequirement=0.05,
+                instrumentBaudRate=1.0,
+                dataStorageCapacity=3.0,
+                transmitterBaudRate=-1.0,
+            ),
+        ),
+        env_type=environment.BasicEnvironmentModel,
+        env_args=environment.BasicEnvironmentModel.default_env_args(),
+        env_features=UniformNadirFeature(),
+        data_manager=data.NoDataManager(),
+        sim_rate=1.0,
+        time_limit=10000.0,
+        max_step_duration=1e9,
+        disable_env_checker=True,
+    )
+
+    def test_image(self):
+        self.env.reset()
+        storage_init = self.env.satellite.dynamics.storage_level
+        self.env.step(0)
+        assert self.env.satellite.dynamics.storage_level > storage_init

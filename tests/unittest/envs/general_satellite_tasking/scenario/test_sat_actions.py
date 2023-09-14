@@ -168,6 +168,15 @@ class TestImagingActions:
             sat.image.assert_called_once()
 
 
+@patch.multiple(sa.NadirImagingAction, __abstractmethods__=set())
+@patch("bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.__init__")
+class TestNadirImagingActions:
+    def test_init(self, sat_init):
+        sat = sa.NadirImagingAction()
+        sat_init.assert_called_once()
+        assert sat.action_map == {"0": "action_nadir_scan"}
+
+
 @patch.multiple(sa.ChargingAction, __abstractmethods__=set())
 @patch.multiple(sa.DriftAction, __abstractmethods__=set())
 @patch.multiple(sa.DesatAction, __abstractmethods__=set())
