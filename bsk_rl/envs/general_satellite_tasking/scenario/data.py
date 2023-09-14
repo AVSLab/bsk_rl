@@ -371,3 +371,98 @@ class UniqueImagingManager(DataManager):
 #                     reward += reward - self.data.rewards[target]
 #             self.data += new_data
 #         return reward
+
+#################
+# Nadir Pointing#
+#################
+
+
+class NadirScanningTimeData(DataType):
+    def __init__(self, scanning_time: float = 0.0) -> None:
+        """DataType to log data generated scanning nadir
+
+        Args:
+            scanning_time: Time spent scanning nadir
+        """
+        self.scanning_time = scanning_time
+
+    def __add__(self, other: "NadirScanningTimeData") -> "NadirScanningTimeData":
+        """Define the combination of two units of data"""
+        scanning_time = self.scanning_time + other.scanning_time
+
+        return self.__class__(scanning_time)
+
+
+class ScanningNadirTimeStore(DataStore):
+    DataType = NadirScanningTimeData
+
+    def _get_log_state(self) -> LogStateType:
+        """Returns the amount of data stored in the storage unit."""
+
+        storage_unit = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg.read()
+        stored_amount = storage_unit.storageLevel
+
+        # return amount of data stored
+        return stored_amount
+
+    def _compare_log_states(
+        self, old_state: float, new_state: float
+    ) -> "NadirScanningTimeData":
+        """Generate a unit of data based on previous step and current step stored
+        data amount.
+
+        Args:
+            old_state: Previous amount of data in the storage unit
+            new_state: Current amount of data in the storage unit
+
+        Returns:
+            DataType: Data generated
+        """
+        instrument_baudrate = self.satellite.dynamics.instrument.nodeBaudRate
+
+        if new_state > old_state:
+            data_generated = (new_state - old_state) / instrument_baudrate
+        else:
+            data_generated = 0.0
+
+        return NadirScanningTimeData(data_generated)
+
+
+class NadirScanningManager(DataManager):
+    DataStore = ScanningNadirTimeStore  # type of DataStore managed by the DataManager
+
+    def __init__(
+        self,
+        env_features: Optional["EnvironmentFeatures"] = None,
+        reward_fn: Callable = None,
+    ) -> None:
+        """
+        Args:
+            env_features: Information about the environment that can be collected as
+                data
+            reward_fn: Reward as function of time spend pointing nadir
+        """
+        super().__init__(env_features)
+        if reward_fn is None:
+
+            def reward_fn(p):
+                # Reward as a function of time send pointing nadir (p) and value
+                # per second
+                return p * self.env_features.value_per_second
+
+        self.reward_fn = reward_fn
+
+    def _calc_reward(self, new_data_dict: ["NadirScanningTimeData"]) -> float:
+        """Calculate step reward based on all satellite data from a step
+
+        Args:
+            new_data_dict (dict): Satellite-DataType of new data from a step
+
+        Returns:
+            Step reward
+        """
+        reward = 0.0
+        for scanning_time in new_data_dict.values():
+            reward += self.reward_fn(scanning_time.scanning_time)
+
+        return reward

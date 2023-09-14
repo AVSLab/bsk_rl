@@ -173,3 +173,6 @@ class ImagingActions(DiscreteSatAction, ImagingSatellite):
             self.prev_action_key = self.image(action, self.prev_action_key)
         else:
             super().set_action(action)
+
+
+NadirImagingAction = fsw_action_gen("action_nadir_scan")

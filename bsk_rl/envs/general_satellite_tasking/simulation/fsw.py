@@ -21,6 +21,7 @@ from Basilisk.fswAlgorithms import (
     mrpSteering,
     rateServoFullNonlinear,
     rwMotorTorque,
+    scanningInstrumentController,
     simpleInstrumentController,
     thrForceMapping,
     thrMomentumDumping,
@@ -575,7 +576,7 @@ class ImagingFSWModel(BasicFSWModel):
     def _set_gateway_msgs(self) -> None:
         super()._set_gateway_msgs()
         self.dynamics.instrument.nodeStatusInMsg.subscribeTo(
-            self.simpleInsControlConfig.deviceCmdOutMsg
+            self.insControlConfig.deviceCmdOutMsg
         )
 
     class LocPointTask(Task):
@@ -597,13 +598,13 @@ class ImagingFSWModel(BasicFSWModel):
             self.locPointWrap.ModelTag = "locPoint"
 
             # SimpleInstrumentController configuration
-            self.simpleInsControlConfig = (
-                self.fsw.simpleInsControlConfig
+            self.insControlConfig = (
+                self.fsw.insControlConfig
             ) = simpleInstrumentController.simpleInstrumentControllerConfig()
-            self.simpleInsControlWrap = (
-                self.fsw.simpleInsControlWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.simpleInsControlConfig)
-            self.simpleInsControlWrap.ModelTag = "instrumentController"
+            self.insControlWrap = (
+                self.fsw.insControlWrap
+            ) = self.fsw.simulator.setModelDataWrap(self.insControlConfig)
+            self.insControlWrap.ModelTag = "instrumentController"
 
         def init_objects(self, **kwargs) -> None:
             self._set_location_pointing(**kwargs)
@@ -652,23 +653,23 @@ class ImagingFSWModel(BasicFSWModel):
                 imageRateErrorRequirement: Rate tolerance for imaging. Disable with
                     None. [rad/s]
             """
-            self.simpleInsControlConfig.attErrTolerance = imageAttErrorRequirement
+            self.insControlConfig.attErrTolerance = imageAttErrorRequirement
             if imageRateErrorRequirement is not None:
-                self.simpleInsControlConfig.useRateTolerance = 1
-                self.simpleInsControlConfig.rateErrTolerance = imageRateErrorRequirement
-            self.simpleInsControlConfig.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
-            self.simpleInsControlConfig.locationAccessInMsg.subscribeTo(
+                self.insControlConfig.useRateTolerance = 1
+                self.insControlConfig.rateErrTolerance = imageRateErrorRequirement
+            self.insControlConfig.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
+            self.insControlConfig.locationAccessInMsg.subscribeTo(
                 self.fsw.dynamics.imagingTarget.accessOutMsgs[-1]
             )
 
             self._add_model_to_task(
-                self.simpleInsControlWrap, self.simpleInsControlConfig, priority=987
+                self.insControlWrap, self.insControlConfig, priority=987
             )
 
         def reset_for_action(self) -> None:
             self.fsw.dynamics.imagingTarget.Reset(self.fsw.simulator.sim_time_ns)
             self.locPointWrap.Reset(self.fsw.simulator.sim_time_ns)
-            self.simpleInsControlConfig.controllerStatus = 0
+            self.insControlConfig.controllerStatus = 0
             return super().reset_for_action()
 
     @action
@@ -679,11 +680,11 @@ class ImagingFSWModel(BasicFSWModel):
             location: PCPF target location [m]
             data_name: Data buffer to store image data to
         """
-        self.simpleInsControlConfig.controllerStatus = 1
+        self.insControlConfig.controllerStatus = 1
         self.dynamics.instrumentPowerSink.powerStatus = 1
         self.dynamics.imagingTarget.r_LP_P_Init = location
         self.dynamics.instrument.nodeDataName = data_name
-        self.simpleInsControlConfig.imaged = 0
+        self.insControlConfig.imaged = 0
         self.simulator.enableTask(self.LocPointTask.name + self.satellite.id)
 
     @action
@@ -697,6 +698,85 @@ class ImagingFSWModel(BasicFSWModel):
         self.simulator.enableTask(
             BasicFSWModel.TrackingErrorTask.name + self.satellite.id
         )
+
+
+class ContinuousImagingFSWModel(ImagingFSWModel):
+    class LocPointTask(ImagingFSWModel.LocPointTask):
+        """Task to point at targets and trigger the instrument"""
+
+        def create_module_data(self) -> None:
+            # Location pointing configuration
+            self.locPointConfig = (
+                self.fsw.locPointConfig
+            ) = locationPointing.locationPointingConfig()
+            self.locPointWrap = (
+                self.fsw.locPointWrap
+            ) = self.fsw.simulator.setModelDataWrap(self.locPointConfig)
+            self.locPointWrap.ModelTag = "locPoint"
+
+            # scanningInstrumentController configuration
+            self.insControlConfig = (
+                self.fsw.insControlConfig
+            ) = scanningInstrumentController.scanningInstrumentControllerConfig()
+            self.insControlWrap = (
+                self.fsw.simpleInsControlWrap
+            ) = self.fsw.simulator.setModelDataWrap(self.insControlConfig)
+            self.insControlWrap.ModelTag = "instrumentController"
+
+        @default_args(imageAttErrorRequirement=0.01, imageRateErrorRequirement=None)
+        def _set_instrument_controller(
+            self,
+            imageAttErrorRequirement: float,
+            imageRateErrorRequirement: float,
+            **kwargs,
+        ) -> None:
+            """Defines the instrument controller parameters.
+
+            Args:
+                imageAttErrorRequirement: Pointing attitude error tolerance for imaging
+                    [MRP norm]
+                imageRateErrorRequirement: Rate tolerance for imaging. Disable with
+                    None. [rad/s]
+            """
+            self.insControlConfig.attErrTolerance = imageAttErrorRequirement
+            if imageRateErrorRequirement is not None:
+                self.insControlConfig.useRateTolerance = 1
+                self.insControlConfig.rateErrTolerance = imageRateErrorRequirement
+            self.insControlConfig.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
+            self.insControlConfig.accessInMsg.subscribeTo(
+                self.fsw.dynamics.imagingTarget.accessOutMsgs[-1]
+            )
+
+            self._add_model_to_task(
+                self.insControlWrap, self.insControlConfig, priority=987
+            )
+
+        def reset_for_action(self) -> None:
+            self.instMsg = cMsgPy.DeviceCmdMsg_C()
+            self.instMsg.write(messaging.DeviceCmdMsgPayload())
+            self.fsw.dynamics.instrument.nodeStatusInMsg.subscribeTo(self.instMsg)
+            return super().reset_for_action()
+
+    @action
+    def action_nadir_scan(self) -> None:
+        """Action scan nadir.
+
+        Args:
+            location: PCPF target location [m]
+            data_name: Data buffer to store image data to
+        """
+        self.dynamics.instrument.nodeStatusInMsg.subscribeTo(
+            self.insControlConfig.deviceCmdOutMsg
+        )
+        self.insControlConfig.controllerStatus = 1
+        self.dynamics.instrumentPowerSink.powerStatus = 1
+        self.dynamics.imagingTarget.r_LP_P_Init = np.array([0, 0, 0.1])
+        self.dynamics.instrument.nodeDataName = "nadir"
+        self.simulator.enableTask(self.LocPointTask.name + self.satellite.id)
+
+    @action
+    def action_image(self, *args, **kwargs) -> None:
+        raise NotImplementedError("Use action_nadir_scan instead")
 
 
 class SteeringFSWModel(BasicFSWModel):

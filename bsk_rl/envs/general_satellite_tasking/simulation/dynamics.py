@@ -21,6 +21,7 @@ from Basilisk.simulation import (
     simpleNav,
     simplePowerSink,
     simpleSolarPanel,
+    simpleStorageUnit,
     spacecraft,
     spacecraftLocation,
     spaceToGroundTransmitter,
@@ -784,6 +785,93 @@ class ImagingDynModel(BasicDynamicsModel):
         self.transmitter.dataStatus = 0
         self.transmitterPowerSink.powerStatus = 0
         self.instrumentPowerSink.powerStatus = 0
+
+
+class ContinuousImagingDynModel(ImagingDynModel):
+    """Equips the satellite with an instrument, storage unit, and transmitter
+    for continuous nadir imaging."""
+
+    @default_args(instrumentBaudRate=8e6)
+    def _set_instrument(
+        self, instrumentBaudRate: float, priority: int = 895, **kwargs
+    ) -> None:
+        """Create the continuous instrument model.
+
+        Args:
+            instrumentBaudRate: Data generated in step by continuous imaging [bits]
+            priority: Model priority.
+        """
+        self.instrument = simpleInstrument.SimpleInstrument()
+        self.instrument.ModelTag = "instrument" + self.satellite.id
+        self.instrument.nodeBaudRate = instrumentBaudRate  # make imaging instantaneous
+        self.instrument.nodeDataName = "Instrument" + self.satellite.id
+        self.simulator.AddModelToTask(
+            self.task_name, self.instrument, ModelPriority=priority
+        )
+
+    @default_args(dataStorageCapacity=20 * 8e6)
+    def _set_storage_unit(
+        self,
+        dataStorageCapacity: int,
+        priority: int = 699,
+        **kwargs,
+    ) -> None:
+        """Configure the storage unit and its buffers.
+
+        Args:
+            dataStorageCapacity: Maximum data to be stored [bits]
+            priority: Model priority.
+        """
+        self.storageUnit = simpleStorageUnit.SimpleStorageUnit()
+        self.storageUnit.ModelTag = "storageUnit" + self.satellite.id
+        self.storageUnit.storageCapacity = dataStorageCapacity  # bits
+        self.storageUnit.addDataNodeToModel(self.instrument.nodeDataOutMsg)
+        self.storageUnit.addDataNodeToModel(self.transmitter.nodeDataOutMsg)
+
+        # Add the storage unit to the transmitter
+        self.transmitter.addStorageUnitToTransmitter(
+            self.storageUnit.storageUnitDataOutMsg
+        )
+
+        self.simulator.AddModelToTask(
+            self.task_name, self.storageUnit, ModelPriority=priority
+        )
+
+    @default_args(
+        imageTargetMaximumRange=-1,
+    )
+    def _set_imaging_target(
+        self,
+        imageTargetMaximumRange: float = -1,
+        priority: int = 2000,
+        **kwargs,
+    ) -> None:
+        """Add a generic imaging target to dynamics. The target must be updated with a
+        particular location when used.
+
+        Args:
+            imageTargetMaximumRange: Maximum range from target to satellite when
+                imaging. -1 to disable. [m]
+            priority: Model priority.
+        """
+        self.imagingTarget = groundLocation.GroundLocation()
+        self.imagingTarget.ModelTag = "scanningTarget"
+        self.imagingTarget.planetRadius = 1e-6
+        self.imagingTarget.specifyLocation(0, 0, 0)
+        self.imagingTarget.planetInMsg.subscribeTo(
+            self.environment.gravFactory.spiceObject.planetStateOutMsgs[
+                self.environment.body_index
+            ]
+        )
+        self.imagingTarget.minimumElevation = np.radians(-90)
+        self.imagingTarget.maximumRange = imageTargetMaximumRange
+
+        self.simulator.AddModelToTask(
+            self.environment.env_task_name,
+            self.imagingTarget,
+            ModelPriority=priority,
+        )
+        self.imagingTarget.addSpacecraftToModel(self.scObject.scStateOutMsg)
 
 
 class GroundStationDynModel(ImagingDynModel):

@@ -150,3 +150,17 @@ class CityTargets(StaticTargets):
                     priority=self.priority_distribution(),
                 )
             )
+
+
+class UniformNadirFeature(EnvironmentFeatures):
+    """
+    Defines a nadir target center at the center of the planet.
+    """
+
+    def __init__(self, value_per_second: float = 1.0) -> None:
+        """ "
+        Args:
+            value_per_second: Amount of reward per second imaging nadir.
+        """
+        self.name = "NadirFeature"
+        self.value_per_second = value_per_second
