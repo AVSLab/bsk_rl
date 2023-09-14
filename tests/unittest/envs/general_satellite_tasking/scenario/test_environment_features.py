@@ -8,6 +8,7 @@ from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import 
     CityTargets,
     StaticTargets,
     Target,
+    UniformNadirFeature,
     lla2ecef,
 )
 
@@ -146,3 +147,9 @@ class TestCityTargets:
         for target in ct.targets:
             assert np.linalg.norm(target.location - nominal) <= 0.03
             assert np.linalg.norm(target.location) == approx(1.0)
+
+
+class TestUniformNadirFeature:
+    def test_init(self):
+        st = UniformNadirFeature()
+        assert st.name == "NadirFeature"

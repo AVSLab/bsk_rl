@@ -183,3 +183,84 @@ class TestUniqueImagingManager:
             }
         )
         assert reward == approx(1.5)
+
+
+class TestNadirScanningTimeData:
+    def test_add_null(self):
+        dat1 = data.NadirScanningTimeData()
+        dat2 = data.NadirScanningTimeData()
+        dat = dat1 + dat2
+        assert dat.scanning_time == 0.0
+
+    def test_add_to_null(self):
+        dat1 = data.NadirScanningTimeData(1.0)
+        dat2 = data.NadirScanningTimeData()
+        dat = dat1 + dat2
+        assert dat.scanning_time == 1.0
+
+    def test_add(self):
+        dat1 = data.NadirScanningTimeData(1.0)
+        dat2 = data.NadirScanningTimeData(3.0)
+        dat = dat1 + dat2
+        assert dat.scanning_time == 4.0
+
+
+class TestScanningNadirTimeStore:
+    def test_get_log_state(self):
+        sat = MagicMock()
+        sat.dynamics.storageUnit.storageUnitDataOutMsg.read().storageLevel = 6
+        ds = data.ScanningNadirTimeStore(MagicMock(), sat)
+        assert ds._get_log_state() == 6.0
+
+    @pytest.mark.parametrize(
+        "before,after,new_time",
+        [
+            (0, 3, 1),
+            (3, 6, 1),
+            (1, 1, 0),
+            (0, 6, 2),
+        ],
+    )
+    def test_compare_log_states(self, before, after, new_time):
+        sat = MagicMock()
+        ds = data.ScanningNadirTimeStore(MagicMock(), sat)
+        sat.dynamics.instrument.nodeBaudRate = 3
+        dat = ds._compare_log_states(before, after)
+        assert dat.scanning_time == new_time
+
+
+class TestNadirScanningManager:
+    def test_calc_reward(self):
+        dm = data.NadirScanningManager(MagicMock())
+        dm.data = data.NadirScanningTimeData([])
+        dm.env_features.value_per_second = 1.0
+        reward = dm._calc_reward(
+            {
+                "sat1": data.NadirScanningTimeData(1),
+                "sat2": data.NadirScanningTimeData(2),
+            }
+        )
+        assert reward == approx(3)
+
+    def test_calc_reward_existing(self):
+        dm = data.NadirScanningManager(MagicMock())
+        dm.data = data.NadirScanningTimeData(1)
+        dm.env_features.value_per_second = 1.0
+        reward = dm._calc_reward(
+            {
+                "sat1": data.NadirScanningTimeData(2),
+                "sat2": data.NadirScanningTimeData(3),
+            }
+        )
+        assert reward == approx(5)
+
+    def test_calc_reward_custom_fn(self):
+        dm = data.NadirScanningManager(MagicMock(), reward_fn=lambda x: 1 / x)
+        dm.data = data.NadirScanningTimeData([])
+        reward = dm._calc_reward(
+            {
+                "sat1": data.NadirScanningTimeData(2),
+                "sat2": data.NadirScanningTimeData(2),
+            }
+        )
+        assert reward == approx(1.0)
