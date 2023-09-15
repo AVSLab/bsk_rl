@@ -1,3 +1,4 @@
+import bisect
 import inspect
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
@@ -316,7 +317,7 @@ class ImagingSatellite(Satellite):
         self.sat_args["bufferNames"] = [
             target.id for target in self.data_store.env_knowledge.targets
         ]
-        self.windows = {}
+        self.opportunities: list[dict] = []
         self.window_calculation_time = 0
         self.current_action = None
         self._image_event_name = None
@@ -447,60 +448,73 @@ class ImagingSatellite(Satellite):
             merge_time: Time at which merges with existing windows will occur. If None,
                 check all windows for merges
         """
-        if target in self.windows:
-            # Merge touching windows
-            if new_window[0] == merge_time or merge_time is None:
-                for window in self.windows[target]:
-                    if window[1] == new_window[0]:
-                        self.windows[target].remove(window)
-                        window = (window[0], new_window[1])
-                        self.windows[target].append(window)
-                        return
-            self.windows[target].append(new_window)
-        else:
-            self.windows[target] = [new_window]
+        if new_window[0] == merge_time or merge_time is None:
+            for window in self.opportunities:
+                if window["target"] == target and window["window"][1] == new_window[0]:
+                    window["window"] = (window["window"][0], new_window[1])
+                    return
+        bisect.insort(
+            self.opportunities,
+            {"target": target, "window": new_window},
+            key=lambda x: x["window"][1],
+        )
+
+    @property
+    def windows(self) -> dict[Target, list[tuple[float, float]]]:
+        """Access windows via dict of targets -> list of windows"""
+        windows = {}
+        for opportunity in self.opportunities:
+            if opportunity["target"] not in windows:
+                windows[opportunity["target"]] = []
+            windows[opportunity["target"]].append(opportunity["window"])
+        return windows
+
+    @property
+    def upcoming_opportunities(self) -> list[dict]:
+        """Subset of opportunities that have not yet closed. Attempts to filter out
+        known imaged windows if data on imaged windows is accessible."""
+        start = bisect.bisect_left(
+            self.opportunities, self.simulator.sim_time, key=lambda x: x["window"][1]
+        )
+        upcoming = self.opportunities[start:]
+        try:  # Attempt to filter already known imaged targets
+            upcoming = [
+                opportunity
+                for opportunity in upcoming
+                if opportunity["target"] not in self.data_store.data.imaged
+            ]
+        except AttributeError:
+            pass
+        return upcoming
 
     @property
     def upcoming_windows(self) -> dict[Target, list[tuple[float, float]]]:
-        """Subset of windows that have not yet closed. Attempts to filter out known
-        imaged windows if data is accessible
-
-        Returns:
-            filtered windows
-        """
-        try:  # Attempt to filter already known imaged targets
-            return {
-                tgt: [
-                    window for window in windows if window[1] > self.simulator.sim_time
-                ]
-                for tgt, windows in self.windows.items()
-                if any(window[1] > self.simulator.sim_time for window in windows)
-                and tgt not in self.data_store.data.imaged
-            }
-        except AttributeError:
-            return {
-                tgt: [
-                    window for window in windows if window[1] > self.simulator.sim_time
-                ]
-                for tgt, windows in self.windows.items()
-                if any(window[1] > self.simulator.sim_time for window in windows)
-            }
+        """Access upcoming windows in a dict of targets -> list of windows."""
+        windows = {}
+        for window in self.upcoming_opportunities:
+            if window["target"] not in windows:
+                windows[window["target"]] = []
+            windows[window["target"]].append(window["window"])
+        return windows
 
     @property
     def next_windows(self) -> dict[Target, tuple[float, float]]:
-        """Soonest window for each target
+        """Soonest window for each target.
 
         Returns:
             dict: first non-closed window for each target
         """
-        return {tgt: windows[0] for tgt, windows in self.upcoming_windows.items()}
+        next_windows = {}
+        for opportunity in self.upcoming_opportunities:
+            if opportunity["target"] not in next_windows:
+                next_windows[opportunity["target"]] = opportunity["window"]
+        return next_windows
 
     def upcoming_targets(
         self, n: int, pad: bool = True, max_lookahead: int = 100
     ) -> list[Target]:
         """Find the n nearest targets. Targets are sorted by window close time;
-        currently open windows are included. Only the first window for a target is
-        accounted for.
+        currently open windows are included.
 
         Args:
             n: number of windows to look ahead
@@ -514,12 +528,12 @@ class ImagingSatellite(Satellite):
         if n == 0:
             return []
         for _ in range(max_lookahead):
-            soonest = sorted(self.next_windows.items(), key=lambda x: x[1][1])
+            soonest = self.upcoming_opportunities
             if len(soonest) < n:
                 self.calculate_additional_windows(self.generation_duration)
             else:
                 break
-        targets = [target for target, _ in soonest[0:n]]
+        targets = [opportunity["target"] for opportunity in soonest[0:n]]
         if pad:
             targets += [targets[-1]] * (n - len(targets))
         return targets
