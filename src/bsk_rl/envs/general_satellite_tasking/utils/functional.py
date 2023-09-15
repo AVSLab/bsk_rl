@@ -77,18 +77,25 @@ def collect_default_args(object: object) -> dict[str, Any]:
     return defaults
 
 
-def vectorize_nested_dict(dictionary: dict) -> np.ndarray:
-    """Flattens a dictionary of dicts, arrays, and scalars into a single vector."""
+def vectorize_nested_dict(dictionary: dict) -> tuple[list[str], np.ndarray]:
+    """Flattens a dictionary of dictionaries, arrays, and scalars into a vector."""
+    keys = list(dictionary.keys())
     values = list(dictionary.values())
     for i, value in enumerate(values):
         if isinstance(value, np.ndarray):
             values[i] = value.flatten()
+            keys[i] = [keys[i] + f"[{j}]" for j in range(len(value.flatten()))]
+        elif isinstance(value, list):
+            keys[i] = [keys[i] + f"[{j}]" for j in range(len(value))]
         elif isinstance(value, (float, int)):
             values[i] = [value]
+            keys[i] = [keys[i]]
         elif isinstance(value, dict):
-            values[i] = vectorize_nested_dict(value)
+            prepend = keys[i]
+            keys[i], values[i] = vectorize_nested_dict(value)
+            keys[i] = [prepend + "." + key for key in keys[i]]
 
-    return np.concatenate(values)
+    return list(np.concatenate(keys)), np.concatenate(values)
 
 
 def aliveness_checker(func: Callable[..., bool]) -> Callable[..., bool]:
