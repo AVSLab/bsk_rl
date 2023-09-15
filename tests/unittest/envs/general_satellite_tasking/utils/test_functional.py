@@ -76,14 +76,24 @@ class TestDefaultArgs:
 
 
 @pytest.mark.parametrize(
-    "input,output",
+    "input,outkeys,outvec",
     [
-        ({"a": np.array([1]), "b": 2, "c": [3]}, np.array([1, 2, 3])),
-        ({"a": {"b": 1, "c": 2}, "d": 3}, np.array([1, 2, 3])),
+        (
+            {"alpha": np.array([1]), "b": 2, "c": [3]},
+            ["alpha[0]", "b", "c[0]"],
+            np.array([1, 2, 3]),
+        ),
+        (
+            {"a": {"b": 1, "charlie": 2}, "d": 3},
+            ["a.b", "a.charlie", "d"],
+            np.array([1, 2, 3]),
+        ),
     ],
 )
-def test_vectorize_nested_dict(input, output):
-    assert np.equal(output, functional.vectorize_nested_dict(input)).all()
+def test_vectorize_nested_dict(input, outkeys, outvec):
+    keys, vec = functional.vectorize_nested_dict(input)
+    assert np.equal(outvec, vec).all()
+    assert outkeys == keys
 
 
 class TestAlivenessChecker:

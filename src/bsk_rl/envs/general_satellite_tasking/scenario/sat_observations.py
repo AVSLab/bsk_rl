@@ -53,7 +53,14 @@ class SatObservation(Satellite):
     @property
     def obs_ndarray(self):
         """Numpy vector observation format."""
-        return vectorize_nested_dict(self.obs_dict)
+        _, obs = vectorize_nested_dict(self.obs_dict)
+        return obs
+
+    @property
+    def obs_array_keys(self):
+        """Utility to get the keys of the obs_ndarray."""
+        keys, _ = vectorize_nested_dict(self.obs_dict)
+        return keys
 
     @property
     def obs_list(self):
