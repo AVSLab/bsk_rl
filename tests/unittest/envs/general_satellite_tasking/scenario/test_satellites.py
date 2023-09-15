@@ -210,11 +210,18 @@ class TestImagingSatellite:
         tgt1: [(10.0, 20.0)],
         tgt2: [(30.0, 40.0)],
     }
+    _opportunities = [
+        dict(target=tgt0, window=(0.0, 10.0)),
+        dict(target=tgt1, window=(10.0, 20.0)),
+        dict(target=tgt0, window=(20.0, 30.0)),
+        dict(target=tgt2, window=(30.0, 40.0)),
+        dict(target=tgt0, window=(40.0, 50.0)),
+    ]
 
     def test_upcoming_windows_unfiltered(self):
         sat = self.make_sat()
         sat.simulator = MagicMock(sim_time=25.0)
-        sat.windows = self.windows
+        sat.opportunities = self._opportunities
         assert sat.upcoming_windows == {
             self.tgt0: [(20.0, 30.0), (40.0, 50.0)],
             self.tgt2: [(30.0, 40.0)],
@@ -223,7 +230,7 @@ class TestImagingSatellite:
     def test_upcoming_windows_filtered(self):
         sat = self.make_sat()
         sat.simulator = MagicMock(sim_time=25.0)
-        sat.windows = self.windows
+        sat.opportunities = self._opportunities
         sat.data_store = MagicMock(data=MagicMock(imaged=[self.tgt0]))
         assert sat.upcoming_windows == {
             self.tgt2: [(30.0, 40.0)],
@@ -232,7 +239,7 @@ class TestImagingSatellite:
     def test_next_windows(self):
         sat = self.make_sat()
         sat.simulator = MagicMock(sim_time=35.0)
-        sat.windows = self.windows
+        sat.opportunities = self._opportunities
         assert sat.next_windows == {
             self.tgt0: (40.0, 50.0),
             self.tgt2: (30.0, 40.0),
@@ -241,19 +248,19 @@ class TestImagingSatellite:
     def test_upcoming_targets(self):
         sat = self.make_sat()
         sat.simulator = MagicMock(sim_time=35.0)
-        sat.windows = self.windows
+        sat.opportunities = self._opportunities
         assert sat.upcoming_targets(2) == [self.tgt2, self.tgt0]
 
     def test_no_upcoming_targets(self):
         sat = self.make_sat()
         sat.simulator = MagicMock(sim_time=35.0)
-        sat.windows = self.windows
+        sat.opportunities = self._opportunities
         assert sat.upcoming_targets(0) == []
 
     def test_upcoming_targets_pad(self):
         sat = self.make_sat()
         sat.simulator = MagicMock(sim_time=35.0)
-        sat.windows = self.windows
+        sat.opportunities = self._opportunities
         sat.calculate_additional_windows = MagicMock()
         assert sat.upcoming_targets(4, pad=True) == [
             self.tgt2,
@@ -265,9 +272,11 @@ class TestImagingSatellite:
     def test_upcoming_targets_generate_more(self):
         sat = self.make_sat()
         sat.simulator = MagicMock(sim_time=35.0)
-        sat.windows = self.windows
+        sat.opportunities = self._opportunities
         sat.calculate_additional_windows = MagicMock(
-            side_effect=lambda t: self.windows[self.tgt1].append((60.0, 70.0))
+            side_effect=lambda t: self._opportunities.append(
+                dict(target=self.tgt1, window=(60.0, 70.0))
+            )
         )
         assert sat.upcoming_targets(3, pad=True) == [
             self.tgt2,
@@ -334,7 +343,7 @@ class TestImagingSatellite:
 
     def test_task_target_for_imaging(self):
         sat = self.make_sat()
-        sat.windows = self.windows
+        sat.opportunities = self._opportunities
         sat.name = "Sat"
         sat.fsw = MagicMock()
         sat.simulator = MagicMock(sim_time=35.0)
@@ -394,7 +403,7 @@ class TestCalculateWindows:
         tgt = Target("tgt_0", location=[0.0, 0.0, 1.0], priority=1.0)
         sat = self.make_sat()
         sat.window_calculation_time = 0.0
-        sat.windows = {}
+        sat.opportunities = []
         sat.min_elev = 1.3
         sat.target_dist_threshold = 5.0
         sat.trajectory = MagicMock(
@@ -413,8 +422,12 @@ class TestCalculateWindows:
         sat.data_store.env_knowledge.targets = [tgt]
         sat.calculate_additional_windows(100.0)
         assert tgt in sat.windows
-        assert sat.windows[tgt][0][0] == approx(50 - 0.27762037530835193, abs=1e-2)
-        assert sat.windows[tgt][0][1] == approx(50 + 0.27762037530835193, abs=1e-2)
+        assert sat.opportunities[0]["window"][0] == approx(
+            50 - 0.27762037530835193, abs=1e-2
+        )
+        assert sat.opportunities[0]["window"][1] == approx(
+            50 + 0.27762037530835193, abs=1e-2
+        )
 
     def test_find_elevation_roots(self):
         interp = (  # noqa: E731
@@ -522,7 +535,7 @@ class TestCalculateWindows:
 
     tgt0 = Target("tgt_0", location=[0.0, 0.0, 0.0], priority=1.0)
     tgt1 = Target("tgt_1", location=[0.0, 0.0, 0.0], priority=1.0)
-    tgt2 = Target("tgt_1", location=[0.0, 0.0, 0.0], priority=1.0)
+    tgt2 = Target("tgt_2", location=[0.0, 0.0, 0.0], priority=1.0)
 
     @pytest.mark.parametrize(
         "merge_time",
@@ -538,6 +551,9 @@ class TestCalculateWindows:
     )
     def test_add_window(self, merge_time, tgt, window, expected_window):
         sat = self.make_sat()
-        sat.windows = {self.tgt0: [(2.0, 10.0)], self.tgt1: [(3.0, 8.0)]}
+        sat.opportunities = [
+            dict(target=self.tgt1, window=(3.0, 8.0)),
+            dict(target=self.tgt0, window=(2.0, 10.0)),
+        ]
         sat._add_window(tgt, window, merge_time=merge_time)
         assert expected_window in sat.windows[tgt]

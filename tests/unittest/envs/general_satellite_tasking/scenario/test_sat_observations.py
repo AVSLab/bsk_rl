@@ -150,7 +150,10 @@ class TestTargetState:
                 for i in range(n_ahead)
             ]
         )
-        sat.windows = {target: [(10.0, 20.0)] for target in sat.upcoming_targets()}
+        sat.opportunities = [
+            dict(target=target, window=(10.0, 20.0))
+            for target in sat.upcoming_targets()
+        ]
         sat.simulator = MagicMock(sim_time=5.0)
 
         expected = dict(

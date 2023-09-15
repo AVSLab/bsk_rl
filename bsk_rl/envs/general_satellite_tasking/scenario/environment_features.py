@@ -31,7 +31,11 @@ class Target:
     @property
     def id(self) -> str:
         """str: Unique human-readable identifier"""
-        return f"{self.name}_{id(self)}"
+        try:
+            return self._id
+        except AttributeError:
+            self._id = f"{self.name}_{id(self)}"
+            return self._id
 
     def __hash__(self) -> int:
         return hash((self.id))
