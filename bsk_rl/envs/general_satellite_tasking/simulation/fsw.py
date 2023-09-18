@@ -72,9 +72,13 @@ class FSWModel(ABC):
         """
 
         self.satellite = satellite
-        assert all(
-            [issubclass(satellite.dyn_type, required) for required in self.requires_dyn]
-        )
+
+        for required in self.requires_dyn:
+            if not issubclass(satellite.dyn_type, required):
+                raise TypeError(
+                    f"{satellite.dyn_type} must be a subclass of {required} to "
+                    + f"use FSW model of type {self.__class__}"
+                )
 
         fsw_proc_name = "FSWProcess" + self.satellite.id
         self.fsw_proc = self.simulator.CreateNewProcess(fsw_proc_name, priority)
@@ -638,7 +642,7 @@ class ImagingFSWModel(BasicFSWModel):
             self,
             imageAttErrorRequirement: float,
             imageRateErrorRequirement: float,
-            **kwargs
+            **kwargs,
         ) -> None:
             """Defines the instrument controller parameters.
 
@@ -744,7 +748,7 @@ class SteeringFSWModel(BasicFSWModel):
             omega_max: float,
             servo_Ki: float,
             servo_P: float,
-            **kwargs
+            **kwargs,
         ) -> None:
             """Defines the control properties.
 

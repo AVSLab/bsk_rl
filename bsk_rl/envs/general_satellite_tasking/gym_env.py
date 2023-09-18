@@ -277,7 +277,10 @@ class SingleSatelliteTasking(GeneralSatelliteTasking):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        assert len(self.satellites) == 1
+        if not len(self.satellites) == 1:
+            raise ValueError(
+                "SingleSatelliteTasking must be initialized with a single satellite."
+            )
 
     @property
     def action_space(self) -> spaces.Discrete:

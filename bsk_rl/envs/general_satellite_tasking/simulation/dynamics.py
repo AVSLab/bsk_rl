@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Iterable, Optional
+from warnings import warn
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.envs.general_satellite_tasking.types import (
@@ -64,12 +65,13 @@ class DynamicsModel(ABC):
             priority: Model priority.
         """
         self.satellite = satellite
-        assert all(
-            [
-                issubclass(type(self.simulator.environment), required)
-                for required in self.requires_env
-            ]
-        )
+
+        for required in self.requires_env:
+            if not issubclass(type(self.simulator.environment), required):
+                raise TypeError(
+                    f"{self.simulator.environment} must be a subclass of {required} to "
+                    + f"use dynamics model of type {self.__class__}"
+                )
 
         dyn_proc_name = "DynamicsProcess" + self.satellite.id
         self.dyn_proc = self.simulator.CreateNewProcess(dyn_proc_name, priority)
@@ -630,7 +632,11 @@ class ImagingDynModel(BasicDynamicsModel):
             transmitterNumBuffers: Number of transmitter buffers
             priority: Model priority.
         """
-        assert transmitterBaudRate <= 0
+        if transmitterBaudRate > 0:
+            warn(
+                "Positive transmitterBaudRate will lead to increased data in buffer "
+                + "on downlink"
+            )
         self.transmitter = spaceToGroundTransmitter.SpaceToGroundTransmitter()
         self.transmitter.ModelTag = "transmitter" + self.satellite.id
         self.transmitter.nodeBaudRate = transmitterBaudRate  # baud
@@ -800,4 +806,5 @@ class GroundStationDynModel(ImagingDynModel):
 
 
 class FullFeaturedDynModel(GroundStationDynModel, LOSCommDynModel):
+    pass
     pass

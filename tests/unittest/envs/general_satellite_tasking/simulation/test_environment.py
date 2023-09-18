@@ -31,7 +31,7 @@ class TestEnvironmentModel:
                 "c": 4,
             }
         else:
-            with pytest.raises(AssertionError):
+            with pytest.raises(KeyError):
                 EnvironmentModel.default_env_args(**overwrite)
 
     @patch.multiple(EnvironmentModel, __abstractmethods__=set())
