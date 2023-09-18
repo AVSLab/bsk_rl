@@ -35,7 +35,7 @@ class TestSatellite:
                 "c": 4,
             }
         else:
-            with pytest.raises(AssertionError):
+            with pytest.raises(KeyError):
                 sats.Satellite.default_sat_args(**overwrite)
 
     def test_init_default(self):

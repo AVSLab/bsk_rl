@@ -56,7 +56,11 @@ class LOSCommunication(CommunicationMethod):
         sight"""
         super().__init__(satellites)
         for satellite in self.satellites:
-            assert issubclass(satellite.dyn_type, LOSCommDynModel)
+            if not issubclass(satellite.dyn_type, LOSCommDynModel):
+                raise TypeError(
+                    f"Satellite dynamics type {satellite.dyn_type} must be a subclass "
+                    + "of LOSCommDynModel to use LOSCommunication"
+                )
 
     def reset(self) -> None:
         super().reset()

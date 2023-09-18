@@ -58,7 +58,8 @@ class Satellite(ABC):
                 )
 
         for k, v in kwargs.items():
-            assert k in defaults, f"{k} not a parameter"
+            if k not in defaults:
+                raise KeyError(f"{k} not a valid key for sat_args")
             defaults[k] = v
         return defaults
 

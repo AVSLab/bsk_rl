@@ -33,7 +33,8 @@ class EnvironmentModel(ABC):
         """Compile default argments for the environment model"""
         defaults = collect_default_args(cls)
         for k, v in kwargs.items():
-            assert k in defaults, f"{k} not a parameter"
+            if k not in defaults:
+                raise KeyError(f"{k} not a valid key for env_args")
             defaults[k] = v
         return defaults
 

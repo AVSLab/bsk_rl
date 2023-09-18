@@ -198,7 +198,7 @@ class TestSingleSatelliteTasking:
         assert env.satellite == mock_sat
 
     def test_init_multisat(self):
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             SingleSatelliteTasking(
                 satellites=[MagicMock(), MagicMock()],
                 env_type=MagicMock(),
