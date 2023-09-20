@@ -146,7 +146,7 @@ class TestTargetState:
             target_properties=[
                 dict(prop="priority"),
                 dict(prop="location", norm=10.0),
-                dict(prop="window_open"),
+                dict(prop="window_open", norm=10.0),
                 dict(prop="window_mid"),
                 dict(prop="window_close"),
             ],
@@ -168,14 +168,14 @@ class TestTargetState:
             target_0=dict(
                 priority=0.0,
                 location_normd=np.array([0.0, 0.1, 0.0]),
-                window_open=5.0,
+                window_open_normd=5.0 / 10.0,
                 window_mid=10.0,
                 window_close=15.0,
             ),
             target_1=dict(
                 priority=1.0,
                 location_normd=np.array([0.1, 0.1, 0.0]),
-                window_open=5.0,
+                window_open_normd=5.0 / 10.0,
                 window_mid=10.0,
                 window_close=15.0,
             ),
@@ -217,6 +217,103 @@ class TestEclipseState:
         sat.trajectory = MagicMock(next_eclipse=MagicMock(return_value=(2.0, 3.0)))
         sat.simulator = MagicMock(sim_time=1.0)
         assert sat.eclipse_state() == [0.1, 0.2]
+
+
+@patch.multiple(so.GroundStationState, __abstractmethods__=set())
+@patch(
+    "bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.__init__"
+)
+class TestGroundStationState:
+    def test_init(self, sat_init):
+        sat = so.GroundStationState()
+        sat_init.assert_called_once()
+        assert len(sat.obs_fn_list) == 1
+        assert sat.obs_fn_list[0].__name__ == "ground_station_obs"
+
+    def test_ground_station_state(self, sat_init):
+        n_ahead = 2
+        sat = so.GroundStationState(n_ahead_observe_downlinks=n_ahead)
+        sat.simulator = MagicMock(sim_time=0.0)
+        sat.find_next_opportunities = MagicMock(
+            return_value=[
+                dict(
+                    ground_station=f"Boulder_{i}",
+                    location=np.array([0.0, 0.0, 0.0]),
+                    window=(i + 0.0, i + 1.0),
+                )
+                for i in range(n_ahead)
+            ]
+        )
+        expected = dict(
+            ground_station_0=dict(window_open_normd=0.0, window_close_normd=1.0 / 5700),
+            ground_station_1=dict(
+                window_open_normd=1.0 / 5700, window_close_normd=2.0 / 5700
+            ),
+        )
+        for k1, v1 in sat.ground_station_obs().items():
+            for k2, v2 in v1.items():
+                assert np.all(v2 == expected[k1][k2])
+
+    def test_target_state_normed(self, sat_init):
+        n_ahead = 2
+        sat = so.GroundStationState(
+            n_ahead_observe_downlinks=n_ahead,
+            downlink_window_properties=[
+                dict(prop="location", norm=10.0),
+                dict(prop="window_open", norm=10.0),
+                dict(prop="window_mid"),
+                dict(prop="window_close"),
+            ],
+        )
+
+        sat.opportunities = [
+            dict(
+                ground_station="Boulder",
+                window=(10.0, 20.0),
+                type="ground_station",
+                location=np.array([0.0, 0.0, 0.0]),
+            ),
+            dict(
+                ground_station="Pleasanton",
+                window=(20.0, 30.0),
+                type="ground_station",
+                location=np.array([1.0, 1.0, 1.0]),
+            ),
+        ]
+        sat.simulator = MagicMock(sim_time=5.0)
+
+        expected = dict(
+            ground_station_0=dict(
+                location_normd=np.array([0.0, 0.0, 0.0]),
+                window_open_normd=5.0 / 10.0,
+                window_mid=10.0,
+                window_close=15.0,
+            ),
+            ground_station_1=dict(
+                location_normd=np.array([0.1, 0.1, 0.1]),
+                window_open_normd=15.0 / 10.0,
+                window_mid=20.0,
+                window_close=25.0,
+            ),
+        )
+        for k1, v1 in sat.ground_station_obs().items():
+            for k2, v2 in v1.items():
+                print(v2, expected[k1][k2])
+                assert np.all(v2 == expected[k1][k2])
+
+    def test_bad_ground_station_state(self, sat_init):
+        n_ahead = 2
+        sat = so.GroundStationState(
+            n_ahead_observe_downlinks=n_ahead,
+            downlink_window_properties=[
+                dict(prop="not_a_prop"),
+            ],
+        )
+        sat.find_next_opportunities = MagicMock(
+            return_value=[dict(ground_station=MagicMock()) for i in range(n_ahead)]
+        )
+        with pytest.raises(ValueError):
+            sat.ground_station_obs()
 
 
 @patch.multiple(so.NormdPropertyState, __abstractmethods__=set())

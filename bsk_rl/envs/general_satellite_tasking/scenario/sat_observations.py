@@ -6,6 +6,7 @@ import numpy as np
 from Basilisk.utilities import orbitalMotion
 
 from bsk_rl.envs.general_satellite_tasking.scenario.satellites import (
+    AccessSatellite,
     ImagingSatellite,
     Satellite,
 )
@@ -250,3 +251,87 @@ class EclipseState(SatObservation):
             (eclipse_start - self.simulator.sim_time) / self.orbit_period_eclipse_norm,
             (eclipse_end - self.simulator.sim_time) / self.orbit_period_eclipse_norm,
         ]
+
+
+@configurable
+class GroundStationState(SatObservation, AccessSatellite):
+    def __init__(
+        self,
+        *args,
+        n_ahead_observe_downlinks: int = 1,
+        downlink_window_properties: Optional[list[dict[str, Any]]] = None,
+        **kwargs,
+    ):
+        """Adds information about upcoming downlink opportunities to the observation
+        state.
+
+        Args:
+            n_ahead_observe: Number of upcoming downlink opportunities to consider.
+            target_properties: List of properties to include in the observation in the
+                format [dict(prop="prop_name", norm=norm)]. If norm is not specified, it
+                is set to 1.0 (no normalization). Properties to choose from:
+                    - location
+                    - window_open
+                    - window_mid
+                    - window_close
+        """
+        super().__init__(*args, **kwargs)
+        if downlink_window_properties is None:
+            downlink_window_properties = [
+                dict(prop="window_open", norm=5700),
+                dict(prop="window_close", norm=5700),
+            ]
+        self.ground_station_obs_generator(
+            downlink_window_properties, n_ahead_observe_downlinks
+        )
+
+    def reset_post_sim(self) -> None:
+        """Add downlink ground stations to be considered by the access checker"""
+        for ground_station in self.simulator.environment.groundStations:
+            self.add_location_for_access_checking(
+                object=ground_station.ModelTag,
+                location=np.array(ground_station.r_LP_P_Init).flatten(),
+                min_elev=ground_station.minimumElevation,
+                type="ground_station",
+            )
+        super().reset_post_sim()
+
+    def ground_station_obs_generator(
+        self,
+        downlink_window_properties: list[dict[str, Any]],
+        n_ahead_observe_downlinks: int,
+    ):
+        """Generate the ground_station_obs function from the downlink_window_properties
+        spec and add it to the observation.
+        """
+
+        def ground_station_obs(self):
+            obs = {}
+            for i, opportunity in enumerate(
+                self.find_next_opportunities(
+                    n=n_ahead_observe_downlinks, types="ground_station"
+                )
+            ):
+                props = {}
+                for prop_spec in downlink_window_properties:
+                    name = prop_spec["prop"]
+                    norm = prop_spec.get("norm", 1.0)
+                    if name == "location":
+                        value = opportunity["location"]
+                    elif name == "window_open":
+                        value = opportunity["window"][0] - self.simulator.sim_time
+                    elif name == "window_mid":
+                        value = sum(opportunity["window"]) / 2 - self.simulator.sim_time
+                    elif name == "window_close":
+                        value = opportunity["window"][1] - self.simulator.sim_time
+                    else:
+                        raise ValueError(
+                            f"Invalid ground station property: {prop_spec['prop']}"
+                        )
+                    if norm != 1.0:
+                        name += "_normd"
+                    props[name] = value / norm
+                obs[f"ground_station_{i}"] = props
+            return obs
+
+        self.add_to_observation(bind(self, ground_station_obs, "ground_station_obs"))
