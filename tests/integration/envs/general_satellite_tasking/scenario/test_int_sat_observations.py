@@ -191,4 +191,32 @@ class TestEclipseState:
         observation2, reward, terminated, truncated, info = self.env.step(0)
         assert (observation2[0] - observation1[0]) < 0.05
         assert (observation2[1] - observation1[1]) < 0.05
-        assert (observation2[1] - observation1[1]) < 0.05
+
+
+class TestGroundStationState:
+    class GroundSat(
+        sa.DriftAction, so.GroundStationState.configure(n_ahead_observe_downlinks=2)
+    ):
+        dyn_type = dynamics.GroundStationDynModel
+        fsw_type = fsw.ImagingFSWModel
+
+    env = gym.make(
+        "SingleSatelliteTasking-v1",
+        satellites=GroundSat(
+            "Satellite",
+            obs_type=list,
+            sat_args=GroundSat.default_sat_args(oe=random_orbit()),
+        ),
+        env_type=environment.GroundStationEnvModel,
+        env_args=environment.GroundStationEnvModel.default_env_args(),
+        env_features=StaticTargets(n_targets=0),
+        data_manager=data.NoDataManager(),
+        sim_rate=1.0,
+        max_step_duration=5700.0,
+        time_limit=5700.0,
+        disable_env_checker=True,
+    )
+
+    def test_ground_station_state(self):
+        observation, info = self.env.reset()
+        assert sum(observation) > 0  # Check that there are downlink opportunities
