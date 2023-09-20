@@ -430,6 +430,14 @@ class AccessSatellite(Satellite):
         """Detect if an exact window has been truncated by the edge of the coarse
         window."""
         endpoints = list(endpoints)
+
+        # Filter endpoints that are too close
+        for i, endpoint in enumerate(endpoints[0:-1]):
+            if abs(endpoint - endpoints[i + 1]) < 1e-6:
+                endpoints[i] = None
+        endpoints = [endpoint for endpoint in endpoints if endpoint is not None]
+
+        # Find pairs
         if len(endpoints) % 2 == 1:
             if candidate_window[0] == computation_window[0]:
                 endpoints.insert(0, computation_window[0])
