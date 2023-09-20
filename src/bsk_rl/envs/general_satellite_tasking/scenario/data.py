@@ -151,6 +151,139 @@ class DataManager(ABC):
         return reward
 
 
+#################
+# Composed Data #
+#################
+
+
+class ComposedDataStore(DataStore):
+    DataType: type[DataType]  # Define the unit of data used by the DataStore
+
+    def __init__(self, data_manager: "DataManager", satellite: "Satellite") -> None:
+        """Base class for satellite data logging; one created per satellite
+
+        Args:
+            data_manager: Simulation data manager to report back to
+            satellite: Satellite's data being stored
+        """
+        self.satellite = satellite
+        self.is_fresh = True
+        self.staged_data = []
+
+        self._initialize_knowledge(data_manager.env_features)
+        self.data = self.DataType()
+
+    def _initialize_knowledge(self, env_features: "EnvironmentFeatures") -> None:
+        """Establish knowledge about the world known to the satellite. Defaults to
+        knowing everything about the environment."""
+        self.env_knowledge = env_features
+
+    def _clear_logs(self) -> None:
+        """If necessary, clear any loggers"""
+        pass
+
+    def _get_log_state(self) -> LogStateType:
+        """Pull information for current data contribution e.g. sensor readings"""
+        pass
+
+    def _compare_log_states(
+        self, old_state: LogStateType, new_state: LogStateType
+    ) -> "DataType":
+        """Generate a unit of data based on previous step and current step logs
+
+        Args:
+            old_state: A previous result of _get_log_state()
+            new_state: A newer result of _get_log_state()
+
+        Returns:
+            DataType: Data generated
+        """
+        pass
+
+    def internal_update(self) -> "DataType":
+        """Update the data store based on collected information
+
+        Returns:
+            New data from the previous step
+        """
+        if not hasattr(self, "log_state"):
+            self.log_state = self._get_log_state()
+            self._clear_logs()
+            return self.DataType()
+        old_log_state = self.log_state
+        self.log_state = self._get_log_state()
+        self._clear_logs()
+        new_data = self._compare_log_states(old_log_state, self.log_state)
+        self.data += new_data
+        return new_data
+
+    def stage_communicated_data(self, external_data: "DataType") -> None:
+        """Prepare data to be added from another source, but don't add it yet
+
+        Args:
+            external_data: Data from another satellite to be added
+        """
+        self.staged_data.append(external_data)
+
+    def communication_update(self) -> None:
+        """Update the data store from staged data
+
+        Args:
+            external_data (DataType): Data collected by another satellite
+        """
+        for staged in self.staged_data:
+            self.data += staged
+        self.staged_data = []
+
+
+class ComposedDataManager(DataManager):
+    # DataStore: type[DataStore]  # type of DataStore managed by the DataManager
+
+    def __init__(
+        self,
+        data_managers: list[DataManager] = [],
+        env_features: Optional["EnvironmentFeatures"] = None,
+    ) -> None:
+        """Base class for simulation-wide data management; handles data recording and
+        rewarding.
+        TODO: allow for creation/composition of multiple managers
+
+        Args:
+            data_managers:
+            env_features: Information about the environment that can be collected as
+                data
+        """
+        super().__init__(env_features)
+        self.data_managers = data_managers
+        for data_manager in self.data_managers:
+            data_manager.env_features = env_features
+
+    def reset(self) -> None:
+        for data_manager in self.data_managers:
+            data_manager.reset()
+
+    def create_data_store(self, satellite: "Satellite") -> None:
+        """Create a data store for a satellite"""
+        satellite.data_store = self.DataStore(self, satellite)
+
+    def _calc_reward(self, new_data_dict: dict[str, DataType]) -> float:
+        """Calculate step reward based on all satellite data from a step
+
+        Args:
+            new_data_dict: Satellite-DataType pairs of new data from a step
+
+        Returns:
+            Step reward
+        """
+        pass
+
+    def reward(self, new_data_dict: dict[str, DataType]) -> float:
+        """Calls _calc_reward and logs cumulative reward"""
+        reward = self._calc_reward(new_data_dict)
+        self.cum_reward += reward
+        return reward
+
+
 ###########
 # No Data #
 ###########
