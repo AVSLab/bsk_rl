@@ -276,7 +276,7 @@ class AccessSatellite(Satellite):
         *args,
         generation_duration: float = 60 * 95 / 10,
         initial_generation_duration: Optional[float] = None,
-        access_dist_threshold: float = 1e6,
+        access_dist_threshold: float = 4e6,
         **kwargs,
     ) -> None:
         """Satellite that can detect access opportunities for ground locations with
@@ -289,7 +289,7 @@ class AccessSatellite(Satellite):
             initial_generation_duration: Duration to initially calculate imaging windows
                 [s]
             access_dist_threshold: Distance bound [m] for evaluating imaging windows
-                more exactly.
+                more exactly. 4e6 will capture >10 elevation windows for a 500 km orbit.
         """
         super().__init__(*args, **kwargs)
         self.generation_duration = generation_duration
@@ -752,7 +752,6 @@ class ImagingSatellite(AccessSatellite):
             and self._image_event_name in self.simulator.eventMap
         ):
             self.simulator.delete_event(self._image_event_name)
-            # self.simulator.eventMap[self._image_event_name].eventActive = False
 
     def parse_target_selection(self, target_query: Union[int, Target, str]):
         """Identify a target based on upcoming target index, Target object, or target

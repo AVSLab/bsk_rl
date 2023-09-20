@@ -117,6 +117,8 @@ class NormdPropertyState(SatObservation):
                 for module in ["dynamics", "fsw"]:
                     if hasattr(getattr(self, module), prop):
                         return np.array(getattr(getattr(self, module), prop)) / norm
+                else:
+                    raise AttributeError(f"Property {prop} not found")
 
         prop_fn.__name__ = prop
         if norm != 1:
@@ -182,7 +184,7 @@ class TargetState(SatObservation, ImagingSatellite):
         if "location_norm" in kwargs:
             warn(
                 "location_norm is ignored and should be specified in target_properties"
-            )
+            )  # pragma: no cover
         self.n_ahead_observe = int(n_ahead_observe)
         self.target_obs_generator(target_properties)
 
@@ -193,30 +195,34 @@ class TargetState(SatObservation, ImagingSatellite):
 
         def target_obs(self):
             obs = {}
-            for i, target in enumerate(self.upcoming_targets(self.n_ahead_observe)):
+            for i, opportunity in enumerate(
+                self.find_next_opportunities(
+                    n=self.n_ahead_observe,
+                    filter=self._get_imaged_filter(),
+                    types="target",
+                )
+            ):
                 props = {}
                 for prop_spec in target_properties:
                     name = prop_spec["prop"]
                     norm = prop_spec.get("norm", 1.0)
                     if name == "priority":
-                        value = target.priority / norm
+                        value = opportunity["target"].priority
                     elif name == "location":
-                        value = target.location / norm
+                        value = opportunity["target"].location
                     elif name == "window_open":
-                        value = self.next_windows[target][0] - self.simulator.sim_time
+                        value = opportunity["window"][0] - self.simulator.sim_time
                     elif name == "window_mid":
-                        value = (
-                            sum(self.next_windows[target]) / 2 - self.simulator.sim_time
-                        )
+                        value = sum(opportunity["window"]) / 2 - self.simulator.sim_time
                     elif name == "window_close":
-                        value = self.next_windows[target][1] - self.simulator.sim_time
+                        value = opportunity["window"][1] - self.simulator.sim_time
                     else:
                         raise ValueError(
                             f"Invalid target property: {prop_spec['prop']}"
                         )
                     if norm != 1.0:
                         name += "_normd"
-                    props[name] = value
+                    props[name] = value / norm
                 obs[f"target_{i}"] = props
             return obs
 
