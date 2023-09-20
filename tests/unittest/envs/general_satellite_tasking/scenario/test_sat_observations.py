@@ -80,6 +80,14 @@ class TestNormdPropertyState:
         sat.add_prop_function("other_prop", norm=10.0)
         assert sat.obs_dict == {"other_prop_normd": 0.1}
 
+    def test_add_bad_prop(self, sat_init):
+        sat = self.make_mocked_sat()
+        del sat.dynamics.not_a_prop
+        del sat.fsw.not_a_prop
+        sat.add_prop_function("not_a_prop")
+        with pytest.raises(AttributeError):
+            sat.obs_dict
+
 
 @patch.multiple(so.TimeState, __abstractmethods__=set())
 @patch("bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.__init__")
@@ -117,9 +125,9 @@ class TestTargetState:
     def test_target_state(self, sat_init):
         n_ahead = 2
         sat = so.TargetState(n_ahead_observe=n_ahead)
-        sat.upcoming_targets = MagicMock(
+        sat.find_next_opportunities = MagicMock(
             return_value=[
-                MagicMock(priority=i, location=np.array([0.0, 0.0, 0.0]))
+                dict(target=MagicMock(priority=i, location=np.array([0.0, 0.0, 0.0])))
                 for i in range(n_ahead)
             ]
         )
@@ -185,9 +193,9 @@ class TestTargetState:
                 dict(prop="not_a_prop"),
             ],
         )
-        sat.upcoming_targets = MagicMock(
+        sat.find_next_opportunities = MagicMock(
             return_value=[
-                MagicMock(priority=i, location=np.array([0.0, 0.0, 0.0]))
+                dict(target=MagicMock(priority=i, location=np.array([0.0, 0.0, 0.0])))
                 for i in range(n_ahead)
             ]
         )
