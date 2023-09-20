@@ -270,63 +270,59 @@ class Satellite(ABC):
         pass
 
 
-class ImagingSatellite(Satellite):
-    dyn_type = dynamics.ImagingDynModel
-    fsw_type = fsw.ImagingFSWModel
-
+class AccessSatellite(Satellite):
     def __init__(
         self,
-        name: str,
-        sat_args: dict[str, Any],
         *args,
         generation_duration: float = 60 * 95 / 10,
         initial_generation_duration: Optional[float] = None,
-        target_dist_threshold: float = 1e6,
+        access_dist_threshold: float = 1e6,
         **kwargs,
     ) -> None:
-        """Satellite with agile imaging capabilities. Ends the simulation when a target
-        is imaged or missed
+        """Satellite that can detect access opportunities for ground locations with
+        elevation constraints.
 
         Args:
-            name: Satellite.name
-            sat_args: Satellite.sat_args
-            n_ahead_observe: Number of upcoming targets to include in observations.
-            n_ahead_act: Number of upcoming targets to include in actions.
             generation_duration: Duration to calculate additional imaging windows for
                 when windows are exhausted. If `None`, generate for the simulation
                 `time_limit` unless the simulation is infinite. [s]
             initial_generation_duration: Duration to initially calculate imaging windows
                 [s]
-            target_dist_threshold: Distance bound [m] for evaluating imaging windows
+            access_dist_threshold: Distance bound [m] for evaluating imaging windows
                 more exactly.
         """
-        super().__init__(name, sat_args, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.generation_duration = generation_duration
         self.initial_generation_duration = initial_generation_duration
-        self.min_elev = sat_args["imageTargetMinimumElevation"]  # Used for window calcs
-        self.target_dist_threshold = target_dist_threshold
-        self.fsw: ImagingSatellite.fsw_type
-        self.dynamics: ImagingSatellite.dyn_type
-        self.data_store: UniqueImageStore
+        self.access_dist_threshold = access_dist_threshold
 
     def reset_pre_sim(self) -> None:
-        """Set the buffer parameters based on computed windows"""
         super().reset_pre_sim()
-        self.sat_args["transmitterNumBuffers"] = len(
-            self.data_store.env_knowledge.targets
-        )
-        self.sat_args["bufferNames"] = [
-            target.id for target in self.data_store.env_knowledge.targets
-        ]
         self.opportunities: list[dict] = []
         self.window_calculation_time = 0
-        self.current_action = None
-        self._image_event_name = None
-        self.imaged = 0
-        self.missed = 0
+        self.locations_for_access_checking: list[dict[str, Any]] = []
+
+    def add_location_for_access_checking(
+        self,
+        object: Any,
+        location: np.ndarray,
+        min_elev: float,
+        type: str,
+    ) -> None:
+        """Adds a location to be included in window calculations. Note that this
+        location will only be included in future calls to calculate_additional_windows.
+
+        Args:
+            object: Object to add window for
+            location: Objects PCPF location [m]
+            min_elev: Minimum elevation angle for access [rad]
+            type: Category of windows to add location to
+        """
+        location_dict = dict(location=location, min_elev=min_elev, type=type)
+        location_dict[type] = object
+        self.locations_for_access_checking.append(location_dict)
 
     def reset_post_sim(self) -> None:
-        """Handle initial_generation_duration setting and calculate windows"""
         super().reset_post_sim()
         if self.initial_generation_duration is None:
             if self.simulator.time_limit == float("inf"):
@@ -336,8 +332,7 @@ class ImagingSatellite(Satellite):
         self.calculate_additional_windows(self.initial_generation_duration)
 
     def calculate_additional_windows(self, duration: float) -> None:
-        """Use a multiroot finding method to evaluate imaging windows for each target;
-            data is saved to self.windows.
+        """Use a multiroot finding method to evaluate imaging windows for each location.
 
         Args:
             duration: Time to calculate windows from end of previous window.
@@ -362,20 +357,28 @@ class ImagingSatellite(Satellite):
         times = r_BP_P_interp.x[window_calc_span]
         positions = r_BP_P_interp.y[window_calc_span]
 
-        for target in self.data_store.env_knowledge.targets:
+        for location in self.locations_for_access_checking:
             candidate_windows = self._find_candidate_windows(
-                target.location, times, positions, self.target_dist_threshold
+                location["location"], times, positions, self.access_dist_threshold
             )
 
             for candidate_window in candidate_windows:
                 roots = self._find_elevation_roots(
-                    r_BP_P_interp, target.location, self.min_elev, candidate_window
+                    r_BP_P_interp,
+                    location["location"],
+                    location["min_elev"],
+                    candidate_window,
                 )
                 new_windows = self._refine_window(
                     roots, candidate_window, (times[0], times[-1])
                 )
                 for new_window in new_windows:
-                    self._add_window(target, new_window, merge_time=times[0])
+                    self._add_window(
+                        location[location["type"]],
+                        new_window,
+                        type=location["type"],
+                        merge_time=times[0],
+                    )
 
         self.window_calculation_time = calculation_end
 
@@ -386,6 +389,9 @@ class ImagingSatellite(Satellite):
         min_elev: float,
         window: tuple[float, float],
     ):
+        """Find exact times where the satellite's elevation relative to a target is
+        equal to the minimum elevation."""
+
         def root_fn(t):
             return elevation(position_interp(t), location) - min_elev
 
@@ -421,6 +427,8 @@ class ImagingSatellite(Satellite):
         candidate_window: tuple[float, float],
         computation_window: tuple[float, float],
     ) -> list[tuple[float, float]]:
+        """Detect if an exact window has been truncated by the edge of the coarse
+        window."""
         endpoints = list(endpoints)
         if len(endpoints) % 2 == 1:
             if candidate_window[0] == computation_window[0]:
@@ -438,65 +446,228 @@ class ImagingSatellite(Satellite):
 
     def _add_window(
         self,
-        target: Target,
+        object: Any,
         new_window: tuple[float, float],
+        type: str,
         merge_time: Optional[float] = None,
     ):
         """
         Args:
-            target: Target to add window for
+            object: Object to add window for
             new_window: New window for target
+            type: Type of window being added
             merge_time: Time at which merges with existing windows will occur. If None,
                 check all windows for merges
         """
         if new_window[0] == merge_time or merge_time is None:
-            for window in self.opportunities:
-                if window["target"] == target and window["window"][1] == new_window[0]:
-                    window["window"] = (window["window"][0], new_window[1])
+            for opportunity in self.opportunities:
+                if (
+                    opportunity["type"] == type
+                    and opportunity[type] == object
+                    and opportunity["window"][1] == new_window[0]
+                ):
+                    opportunity["window"] = (opportunity["window"][0], new_window[1])
                     return
         bisect.insort(
             self.opportunities,
-            {"target": target, "window": new_window},
+            {type: object, "window": new_window, "type": type},
             key=lambda x: x["window"][1],
         )
 
     @property
-    def windows(self) -> dict[Target, list[tuple[float, float]]]:
-        """Access windows via dict of targets -> list of windows"""
-        windows = {}
-        for opportunity in self.opportunities:
-            if opportunity["target"] not in windows:
-                windows[opportunity["target"]] = []
-            windows[opportunity["target"]].append(opportunity["window"])
-        return windows
-
-    @property
     def upcoming_opportunities(self) -> list[dict]:
-        """Subset of opportunities that have not yet closed. Attempts to filter out
-        known imaged windows if data on imaged windows is accessible."""
+        """Ordered list of opportunities that have not yet closed.
+
+        Returns:
+            list: list of upcoming opportunities
+        """
         start = bisect.bisect_left(
             self.opportunities, self.simulator.sim_time, key=lambda x: x["window"][1]
         )
         upcoming = self.opportunities[start:]
-        try:  # Attempt to filter already known imaged targets
-            upcoming = [
-                opportunity
-                for opportunity in upcoming
-                if opportunity["target"] not in self.data_store.data.imaged
-            ]
-        except AttributeError:
-            pass
         return upcoming
+
+    def opportunities_dict(
+        self,
+        types: Optional[Union[str, list[str]]] = None,
+        filter: list = [],
+    ) -> dict[Any, list[tuple[float, float]]]:
+        """Dictionary of opportunities that maps objects to lists of windows.
+
+        Args:
+            types: Types of opportunities to include. If None, include all types.
+            filter: Objects to exclude from the dictionary.
+
+        Returns:
+            windows: objects -> windows list
+        """
+        if isinstance(types, str):
+            types = [types]
+
+        windows = {}
+        for opportunity in self.opportunities:
+            type = opportunity["type"]
+            if (types is None or type in types) and opportunity[type] not in filter:
+                if opportunity[type] not in windows:
+                    windows[opportunity[type]] = []
+                windows[opportunity[type]].append(opportunity["window"])
+        return windows
+
+    def upcoming_opportunities_dict(
+        self,
+        types: Optional[Union[str, list[str]]] = None,
+        filter: list = [],
+    ) -> dict[Any, list[tuple[float, float]]]:
+        """Dictionary of opportunities that maps objects to lists of windows that have
+        not yet closed.
+
+        Args:
+            types: Types of opportunities to include. If None, include all types.
+            filter: Objects to exclude from the dictionary.
+
+        Returns:
+            windows: objects -> windows list (upcoming only)
+        """
+        if isinstance(types, str):
+            types = [types]
+
+        windows = {}
+        for opportunity in self.upcoming_opportunities:
+            type = opportunity["type"]
+            if (types is None or type in types) and opportunity[type] not in filter:
+                if opportunity[type] not in windows:
+                    windows[opportunity[type]] = []
+                windows[opportunity[type]].append(opportunity["window"])
+        return windows
+
+    def next_opportunities_dict(
+        self,
+        types: Optional[Union[str, list[str]]] = None,
+        filter: list = [],
+    ) -> dict[Any, tuple[float, float]]:
+        """Dictionary of opportunities that maps objects to the next open window.
+
+        Args:
+            types: Types of opportunities to include. If None, include all types.
+            filter: Objects to exclude from the dictionary.
+
+        Returns:
+            windows: objects -> next window
+        """
+        if isinstance(types, str):
+            types = [types]
+
+        next_windows = {}
+        for opportunity in self.upcoming_opportunities:
+            type = opportunity["type"]
+            if (types is None or type in types) and opportunity[type] not in filter:
+                if opportunity[type] not in next_windows:
+                    next_windows[opportunity[type]] = opportunity["window"]
+        return next_windows
+
+    def find_next_opportunities(
+        self,
+        n: int,
+        pad: bool = True,
+        max_lookahead: int = 100,
+        types: Optional[Union[str, list[str]]] = None,
+        filter: list = [],
+    ) -> list[dict]:
+        """Find the n nearest opportunities, sorted by window close time.
+
+        Args:
+            n: Number of opportunities to attempt to include.
+            pad: If true, duplicates the last target if the number of opportunities
+                found is less than n.
+            max_lookahead: Maximum times to call calculate_additional_windows.
+            types: Types of opportunities to include. If None, include all types.
+            filter: Objects to exclude from the dictionary.
+
+        Returns:
+            list: n nearest opportunities, ordered
+        """
+        if isinstance(types, str):
+            types = [types]
+
+        if n == 0:
+            return []
+
+        for _ in range(max_lookahead):
+            upcoming_opportunities = self.upcoming_opportunities
+            next_opportunities = []
+            for opportunity in upcoming_opportunities:
+                type = opportunity["type"]
+                if (types is None or type in types) and opportunity[type] not in filter:
+                    next_opportunities.append(opportunity)
+
+                if len(next_opportunities) >= n:
+                    return next_opportunities
+            self.calculate_additional_windows(self.generation_duration)
+        if pad:
+            next_opportunities += [next_opportunities[-1]] * (
+                n - len(next_opportunities)
+            )
+        return next_opportunities
+
+
+class ImagingSatellite(AccessSatellite):
+    dyn_type = dynamics.ImagingDynModel
+    fsw_type = fsw.ImagingFSWModel
+
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Satellite with agile imaging capabilities. Can stop the simulation when a
+        target is imaged or missed.
+        """
+        super().__init__(*args, **kwargs)
+        self.fsw: ImagingSatellite.fsw_type
+        self.dynamics: ImagingSatellite.dyn_type
+        self.data_store: UniqueImageStore
+
+    def reset_pre_sim(self) -> None:
+        """Set the buffer parameters based on computed windows"""
+        super().reset_pre_sim()
+        self.sat_args["transmitterNumBuffers"] = len(
+            self.data_store.env_knowledge.targets
+        )
+        self.sat_args["bufferNames"] = [
+            target.id for target in self.data_store.env_knowledge.targets
+        ]
+        self._image_event_name = None
+        self.imaged = 0
+        self.missed = 0
+
+    def reset_post_sim(self) -> None:
+        """Handle initial_generation_duration setting and calculate windows"""
+        for target in self.data_store.env_knowledge.targets:
+            self.add_location_for_access_checking(
+                object=target,
+                location=target.location,
+                min_elev=self.sat_args["imageTargetMinimumElevation"],
+                type="target",
+            )
+        super().reset_post_sim()
+
+    def _get_imaged_filter(self):
+        try:
+            return self.data_store.data.imaged
+        except AttributeError:
+            return []
+
+    @property
+    def windows(self) -> dict[Target, list[tuple[float, float]]]:
+        """Access windows via dict of targets -> list of windows"""
+        return self.opportunities_dict(types="target", filter=self._get_imaged_filter())
 
     @property
     def upcoming_windows(self) -> dict[Target, list[tuple[float, float]]]:
         """Access upcoming windows in a dict of targets -> list of windows."""
-        windows = {}
-        for window in self.upcoming_opportunities:
-            if window["target"] not in windows:
-                windows[window["target"]] = []
-            windows[window["target"]].append(window["window"])
-        return windows
+        return self.upcoming_opportunities_dict(
+            types="target", filter=self._get_imaged_filter()
+        )
 
     @property
     def next_windows(self) -> dict[Target, tuple[float, float]]:
@@ -505,11 +676,9 @@ class ImagingSatellite(Satellite):
         Returns:
             dict: first non-closed window for each target
         """
-        next_windows = {}
-        for opportunity in self.upcoming_opportunities:
-            if opportunity["target"] not in next_windows:
-                next_windows[opportunity["target"]] = opportunity["window"]
-        return next_windows
+        return self.next_opportunities_dict(
+            types="target", filter=self._get_imaged_filter()
+        )
 
     def upcoming_targets(
         self, n: int, pad: bool = True, max_lookahead: int = 100
@@ -526,18 +695,16 @@ class ImagingSatellite(Satellite):
         Returns:
             list: n nearest targets, ordered
         """
-        if n == 0:
-            return []
-        for _ in range(max_lookahead):
-            soonest = self.upcoming_opportunities
-            if len(soonest) < n:
-                self.calculate_additional_windows(self.generation_duration)
-            else:
-                break
-        targets = [opportunity["target"] for opportunity in soonest[0:n]]
-        if pad:
-            targets += [targets[-1]] * (n - len(targets))
-        return targets
+        return [
+            opportunity["target"]
+            for opportunity in self.find_next_opportunities(
+                n=n,
+                pad=pad,
+                max_lookahead=max_lookahead,
+                filter=self._get_imaged_filter(),
+                types="target",
+            )
+        ]
 
     def _update_image_event(self, target: Target) -> None:
         """Create a simulator event that causes the simulation to stop when a target is

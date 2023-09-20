@@ -151,7 +151,7 @@ class TestTargetState:
             ]
         )
         sat.opportunities = [
-            dict(target=target, window=(10.0, 20.0))
+            dict(target=target, window=(10.0, 20.0), type="target")
             for target in sat.upcoming_targets()
         ]
         sat.simulator = MagicMock(sim_time=5.0)

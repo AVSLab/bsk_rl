@@ -38,6 +38,7 @@ def make_env(env_features):
         time_limit=5700.0,
         max_step_duration=1e9,
         disable_env_checker=True,
+        failure_penalty=0,
     )
     return env
 
