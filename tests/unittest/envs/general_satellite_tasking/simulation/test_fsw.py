@@ -86,6 +86,6 @@ imagingfsw = module + "ImagingFSWModel."
 class TestImagingFSWModel:
     def test_fsw_properties(self):
         fsw = ImagingFSWModel(MagicMock(), 1.0)
-        fsw.locPointConfig = MagicMock(pHat_B=np.array([1.0, 0.0, 0.0]))
+        fsw.locPoint = MagicMock(pHat_B=np.array([1.0, 0.0, 0.0]))
         fsw.satellite = MagicMock(dynamics=MagicMock(BP=np.identity(3)))
         assert (fsw.c_hat_P == np.array([1.0, 0.0, 0.0])).all()

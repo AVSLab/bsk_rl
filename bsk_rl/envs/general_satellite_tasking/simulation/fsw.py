@@ -168,18 +168,16 @@ class Task(ABC):
         """Initialize model parameters with satellite arguments."""
         pass
 
-    def _add_model_to_task(self, wrap, data, priority: int) -> None:
+    def _add_model_to_task(self, module, priority) -> None:
         """Add a model to this task.
 
         Args:
-            wrap: Basilisk module wrapper
-            data: Basilisk module data
+            module: Basilisk module
             priority: Model priority
         """
         self.fsw.simulator.AddModelToTask(
             self.name + self.fsw.satellite.id,
-            wrap,
-            data,
+            module,
             ModelPriority=priority,
         )
 
@@ -239,10 +237,10 @@ class BasicFSWModel(FSWModel):
 
         # connect gateway FSW effector command msgs with the dynamics
         self.dynamics.rwStateEffector.rwMotorCmdInMsg.subscribeTo(
-            self.rwMotorTorqueConfig.rwMotorTorqueOutMsg
+            self.rwMotorTorque.rwMotorTorqueOutMsg
         )
         self.dynamics.thrusterSet.cmdsInMsg.subscribeTo(
-            self.thrDumpConfig.thrusterOnTimeOutMsg
+            self.thrDump.thrusterOnTimeOutMsg
         )
 
     def _zero_gateway_msgs(self) -> None:
@@ -266,13 +264,8 @@ class BasicFSWModel(FSWModel):
             super().__init__(fsw, priority)
 
         def create_module_data(self) -> None:
-            self.sunPointData = (
-                self.fsw.sunPointData
-            ) = locationPointing.locationPointingConfig()
-            self.sunPointWrap = (
-                self.fsw.sunPointWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.sunPointData)
-            self.sunPointWrap.ModelTag = "sunPoint"
+            self.sunPoint = self.fsw.sunPoint = locationPointing.locationPointing()
+            self.sunPoint.ModelTag = "sunPoint"
 
         def init_objects(self, nHat_B: Iterable[float], **kwargs) -> None:
             """Configure the sun-pointing task.
@@ -280,29 +273,29 @@ class BasicFSWModel(FSWModel):
             Args:
                 nHat_B: Solar array normal vector
             """
-            self.sunPointData.pHat_B = nHat_B
-            self.sunPointData.scAttInMsg.subscribeTo(
+            self.sunPoint.pHat_B = nHat_B
+            self.sunPoint.scAttInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.attOutMsg
             )
-            self.sunPointData.scTransInMsg.subscribeTo(
+            self.sunPoint.scTransInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
-            self.sunPointData.celBodyInMsg.subscribeTo(
+            self.sunPoint.celBodyInMsg.subscribeTo(
                 self.fsw.environment.ephemConverter.ephemOutMsgs[
                     self.fsw.environment.sun_index
                 ]
             )
-            self.sunPointData.useBoresightRateDamping = 1
+            self.sunPoint.useBoresightRateDamping = 1
             cMsgPy.AttGuidMsg_C_addAuthor(
-                self.sunPointData.attGuidOutMsg, self.fsw.attGuidMsg
+                self.sunPoint.attGuidOutMsg, self.fsw.attGuidMsg
             )
 
-            self._add_model_to_task(self.sunPointWrap, self.sunPointData, priority=1200)
+            self._add_model_to_task(self.sunPoint, priority=1200)
 
     @action
     def action_charge(self) -> None:
         """Action to charge solar panels."""
-        self.sunPointWrap.Reset(self.simulator.sim_time_ns)
+        self.sunPoint.Reset(self.simulator.sim_time_ns)
         self.simulator.enableTask(self.SunPointTask.name + self.satellite.id)
 
     class NadirPointTask(Task):
@@ -314,29 +307,24 @@ class BasicFSWModel(FSWModel):
             super().__init__(fsw, priority)
 
         def create_module_data(self) -> None:
-            self.hillPointData = self.fsw.hillPointData = hillPoint.hillPointConfig()
-            self.hillPointWrap = (
-                self.fsw.hillPointWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.hillPointData)
-            self.hillPointWrap.ModelTag = "hillPoint"
+            self.hillPoint = self.fsw.hillPoint = hillPoint.hillPoint()
+            self.hillPoint.ModelTag = "hillPoint"
 
         def init_objects(self, **kwargs) -> None:
             """Configure the nadir-pointing task."""
-            self.hillPointData.transNavInMsg.subscribeTo(
+            self.hillPoint.transNavInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
-            self.hillPointData.celBodyInMsg.subscribeTo(
+            self.hillPoint.celBodyInMsg.subscribeTo(
                 self.fsw.environment.ephemConverter.ephemOutMsgs[
                     self.fsw.environment.body_index
                 ]
             )
             cMsgPy.AttRefMsg_C_addAuthor(
-                self.hillPointData.attRefOutMsg, self.fsw.attRefMsg
+                self.hillPoint.attRefOutMsg, self.fsw.attRefMsg
             )
 
-            self._add_model_to_task(
-                self.hillPointWrap, self.hillPointData, priority=1199
-            )
+            self._add_model_to_task(self.hillPoint, priority=1199)
 
     class RWDesatTask(Task):
         """Task to desaturate reaction wheels."""
@@ -349,30 +337,19 @@ class BasicFSWModel(FSWModel):
         def create_module_data(self) -> None:
             """Set up momentum dumping and thruster control."""
             # Momentum dumping configuration
-            self.thrDesatControlConfig = (
-                self.fsw.thrDesatControlConfig
-            ) = thrMomentumManagement.thrMomentumManagementConfig()
-            self.thrDesatControlWrap = (
-                self.fsw.thrDesatControlWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.thrDesatControlConfig)
-            self.thrDesatControlWrap.ModelTag = "thrMomentumManagement"
+            self.thrDesatControl = (
+                self.fsw.thrDesatControl
+            ) = thrMomentumManagement.thrMomentumManagement()
+            self.thrDesatControl.ModelTag = "thrMomentumManagement"
 
-            self.thrDumpConfig = (
-                self.fsw.thrDumpConfig
-            ) = thrMomentumDumping.thrMomentumDumpingConfig()
-            self.thrDumpWrap = (
-                self.fsw.thrDumpWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.thrDumpConfig)
-            self.thrDumpWrap.ModelTag = "thrDump"
+            self.thrDump = self.fsw.thrDump = thrMomentumDumping.thrMomentumDumping()
+            self.thrDump.ModelTag = "thrDump"
 
             # Thruster force mapping configuration
-            self.thrForceMappingConfig = (
-                self.fsw.thrForceMappingConfig
-            ) = thrForceMapping.thrForceMappingConfig()
-            self.thrForceMappingWrap = (
-                self.fsw.thrForceMappingWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.thrForceMappingConfig)
-            self.thrForceMappingWrap.ModelTag = "thrForceMapping"
+            self.thrForceMapping = (
+                self.fsw.thrForceMapping
+            ) = thrForceMapping.thrForceMapping()
+            self.thrForceMapping.ModelTag = "thrForceMapping"
 
         def init_objects(self, **kwargs) -> None:
             self._set_thruster_mapping(**kwargs)
@@ -389,20 +366,16 @@ class BasicFSWModel(FSWModel):
                 thrForceSign: Flag indicating if pos (+1) or negative (-1) thruster
                     solutions are found
             """
-            self.thrForceMappingConfig.cmdTorqueInMsg.subscribeTo(
-                self.thrDesatControlConfig.deltaHOutMsg
+            self.thrForceMapping.cmdTorqueInMsg.subscribeTo(
+                self.thrDesatControl.deltaHOutMsg
             )
-            self.thrForceMappingConfig.thrConfigInMsg.subscribeTo(
-                self.fsw.thrusterConfigMsg
-            )
-            self.thrForceMappingConfig.vehConfigInMsg.subscribeTo(self.fsw.vcConfigMsg)
-            self.thrForceMappingConfig.controlAxes_B = controlAxes_B
-            self.thrForceMappingConfig.thrForceSign = thrForceSign
-            self.thrForceMappingConfig.angErrThresh = 3.15
+            self.thrForceMapping.thrConfigInMsg.subscribeTo(self.fsw.thrusterConfigMsg)
+            self.thrForceMapping.vehConfigInMsg.subscribeTo(self.fsw.vcConfigMsg)
+            self.thrForceMapping.controlAxes_B = controlAxes_B
+            self.thrForceMapping.thrForceSign = thrForceSign
+            self.thrForceMapping.angErrThresh = 3.15
 
-            self._add_model_to_task(
-                self.thrForceMappingWrap, self.thrForceMappingConfig, priority=1192
-            )
+            self._add_model_to_task(self.thrForceMapping, priority=1192)
 
         @default_args(hs_min=0.0, maxCounterValue=4, thrMinFireTime=0.02)
         def _set_momentum_dumping(
@@ -415,36 +388,30 @@ class BasicFSWModel(FSWModel):
                 maxCounterValue: Control periods between firing thrusters
                 thrMinFireTime: Minimum thruster firing time [s]
             """
-            self.thrDesatControlConfig.hs_min = hs_min  # Nms
-            self.thrDesatControlConfig.rwSpeedsInMsg.subscribeTo(
+            self.thrDesatControl.hs_min = hs_min  # Nms
+            self.thrDesatControl.rwSpeedsInMsg.subscribeTo(
                 self.fsw.dynamics.rwStateEffector.rwSpeedOutMsg
             )
-            self.thrDesatControlConfig.rwConfigDataInMsg.subscribeTo(
-                self.fsw.fswRwConfigMsg
-            )
+            self.thrDesatControl.rwConfigDataInMsg.subscribeTo(self.fsw.fswRwConfigMsg)
 
-            self.thrDumpConfig.deltaHInMsg.subscribeTo(
-                self.thrDesatControlConfig.deltaHOutMsg
+            self.thrDump.deltaHInMsg.subscribeTo(self.thrDesatControl.deltaHOutMsg)
+            self.thrDump.thrusterImpulseInMsg.subscribeTo(
+                self.thrForceMapping.thrForceCmdOutMsg
             )
-            self.thrDumpConfig.thrusterImpulseInMsg.subscribeTo(
-                self.thrForceMappingConfig.thrForceCmdOutMsg
-            )
-            self.thrDumpConfig.thrusterConfInMsg.subscribeTo(self.fsw.thrusterConfigMsg)
-            self.thrDumpConfig.maxCounterValue = maxCounterValue
-            self.thrDumpConfig.thrMinFireTime = thrMinFireTime
+            self.thrDump.thrusterConfInMsg.subscribeTo(self.fsw.thrusterConfigMsg)
+            self.thrDump.maxCounterValue = maxCounterValue
+            self.thrDump.thrMinFireTime = thrMinFireTime
 
-            self._add_model_to_task(
-                self.thrDesatControlWrap, self.thrDesatControlConfig, priority=1193
-            )
-            self._add_model_to_task(self.thrDumpWrap, self.thrDumpConfig, priority=1191)
+            self._add_model_to_task(self.thrDesatControl, priority=1193)
+            self._add_model_to_task(self.thrDump, priority=1191)
 
     @action
     def action_desat(self) -> None:
         """Action to charge while desaturating reaction wheels."""
-        self.sunPointWrap.Reset(self.simulator.sim_time_ns)
-        self.trackingErrorWrap.Reset(self.simulator.sim_time_ns)
-        self.thrDesatControlWrap.Reset(self.simulator.sim_time_ns)
-        self.thrDumpWrap.Reset(self.simulator.sim_time_ns)
+        self.sunPoint.Reset(self.simulator.sim_time_ns)
+        self.trackingError.Reset(self.simulator.sim_time_ns)
+        self.thrDesatControl.Reset(self.simulator.sim_time_ns)
+        self.thrDump.Reset(self.simulator.sim_time_ns)
         self.simulator.enableTask(self.SunPointTask.name + self.satellite.id)
         self.simulator.enableTask(self.RWDesatTask.name + self.satellite.id)
         self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.id)
@@ -458,26 +425,21 @@ class BasicFSWModel(FSWModel):
             super().__init__(fsw, priority)
 
         def create_module_data(self) -> None:
-            self.trackingErrorData = (
-                self.fsw.trackingErrorData
-            ) = attTrackingError.attTrackingErrorConfig()
-            self.trackingErrorWrap = (
-                self.fsw.trackingErrorWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.trackingErrorData)
-            self.trackingErrorWrap.ModelTag = "trackingError"
+            self.trackingError = (
+                self.fsw.trackingError
+            ) = attTrackingError.attTrackingError()
+            self.trackingError.ModelTag = "trackingError"
 
         def init_objects(self, **kwargs) -> None:
-            self.trackingErrorData.attNavInMsg.subscribeTo(
+            self.trackingError.attNavInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.attOutMsg
             )
-            self.trackingErrorData.attRefInMsg.subscribeTo(self.fsw.attRefMsg)
+            self.trackingError.attRefInMsg.subscribeTo(self.fsw.attRefMsg)
             cMsgPy.AttGuidMsg_C_addAuthor(
-                self.trackingErrorData.attGuidOutMsg, self.fsw.attGuidMsg
+                self.trackingError.attGuidOutMsg, self.fsw.attGuidMsg
             )
 
-            self._add_model_to_task(
-                self.trackingErrorWrap, self.trackingErrorData, priority=1197
-            )
+            self._add_model_to_task(self.trackingError, priority=1197)
 
     class MRPControlTask(Task):
         """Task to control the satellite with reaction wheels."""
@@ -489,22 +451,14 @@ class BasicFSWModel(FSWModel):
 
         def create_module_data(self) -> None:
             # Attitude controller configuration
-            self.mrpFeedbackControlData = (
-                self.fsw.mrpFeedbackControlData
-            ) = mrpFeedback.mrpFeedbackConfig()
-            self.mrpFeedbackControlWrap = (
-                self.fsw.mrpFeedbackControlWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.mrpFeedbackControlData)
-            self.mrpFeedbackControlWrap.ModelTag = "mrpFeedbackControl"
+            self.mrpFeedbackControl = (
+                self.fsw.mrpFeedbackControl
+            ) = mrpFeedback.mrpFeedback()
+            self.mrpFeedbackControl.ModelTag = "mrpFeedbackControl"
 
             # add module that maps the Lr control torque into the RW motor torques
-            self.rwMotorTorqueConfig = (
-                self.fsw.rwMotorTorqueConfig
-            ) = rwMotorTorque.rwMotorTorqueConfig()
-            self.rwMotorTorqueWrap = (
-                self.fsw.rwMotorTorqueWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.rwMotorTorqueConfig)
-            self.rwMotorTorqueWrap.ModelTag = "rwMotorTorque"
+            self.rwMotorTorque = self.fsw.rwMotorTorque = rwMotorTorque.rwMotorTorque()
+            self.rwMotorTorque.ModelTag = "rwMotorTorque"
 
         def init_objects(self, **kwargs) -> None:
             self._set_mrp_feedback_rwa(**kwargs)
@@ -521,18 +475,16 @@ class BasicFSWModel(FSWModel):
                 Ki: Integral gain
                 P: Derivative gain
             """
-            self.mrpFeedbackControlData.guidInMsg.subscribeTo(self.fsw.attGuidMsg)
-            self.mrpFeedbackControlData.vehConfigInMsg.subscribeTo(self.fsw.vcConfigMsg)
-            self.mrpFeedbackControlData.K = K
-            self.mrpFeedbackControlData.Ki = Ki
-            self.mrpFeedbackControlData.P = P
-            self.mrpFeedbackControlData.integralLimit = (
-                2.0 / self.mrpFeedbackControlData.Ki * 0.1
+            self.mrpFeedbackControl.guidInMsg.subscribeTo(self.fsw.attGuidMsg)
+            self.mrpFeedbackControl.vehConfigInMsg.subscribeTo(self.fsw.vcConfigMsg)
+            self.mrpFeedbackControl.K = K
+            self.mrpFeedbackControl.Ki = Ki
+            self.mrpFeedbackControl.P = P
+            self.mrpFeedbackControl.integralLimit = (
+                2.0 / self.mrpFeedbackControl.Ki * 0.1
             )
 
-            self._add_model_to_task(
-                self.mrpFeedbackControlWrap, self.mrpFeedbackControlData, priority=1196
-            )
+            self._add_model_to_task(self.mrpFeedbackControl, priority=1196)
 
         def _set_rw_motor_torque(
             self, controlAxes_B: Iterable[float], **kwargs
@@ -542,15 +494,13 @@ class BasicFSWModel(FSWModel):
             Args:
                 controlAxes_B): Control unit axes
             """
-            self.rwMotorTorqueConfig.rwParamsInMsg.subscribeTo(self.fsw.fswRwConfigMsg)
-            self.rwMotorTorqueConfig.vehControlInMsg.subscribeTo(
-                self.mrpFeedbackControlData.cmdTorqueOutMsg
+            self.rwMotorTorque.rwParamsInMsg.subscribeTo(self.fsw.fswRwConfigMsg)
+            self.rwMotorTorque.vehControlInMsg.subscribeTo(
+                self.mrpFeedbackControl.cmdTorqueOutMsg
             )
-            self.rwMotorTorqueConfig.controlAxes_B = controlAxes_B
+            self.rwMotorTorque.controlAxes_B = controlAxes_B
 
-            self._add_model_to_task(
-                self.rwMotorTorqueWrap, self.rwMotorTorqueConfig, priority=1195
-            )
+            self._add_model_to_task(self.rwMotorTorque, priority=1195)
 
         def reset_for_action(self) -> None:
             """MRP control enabled by default for all tasks."""
@@ -567,7 +517,7 @@ class ImagingFSWModel(BasicFSWModel):
 
     @property
     def c_hat_P(self):
-        c_hat_B = self.locPointConfig.pHat_B
+        c_hat_B = self.locPoint.pHat_B
         return np.matmul(self.dynamics.BP.T, c_hat_B)
 
     def _make_task_list(self) -> list[Task]:
@@ -576,7 +526,7 @@ class ImagingFSWModel(BasicFSWModel):
     def _set_gateway_msgs(self) -> None:
         super()._set_gateway_msgs()
         self.dynamics.instrument.nodeStatusInMsg.subscribeTo(
-            self.insControlConfig.deviceCmdOutMsg
+            self.insControl.deviceCmdOutMsg
         )
 
     class LocPointTask(Task):
@@ -589,22 +539,15 @@ class ImagingFSWModel(BasicFSWModel):
 
         def create_module_data(self) -> None:
             # Location pointing configuration
-            self.locPointConfig = (
-                self.fsw.locPointConfig
-            ) = locationPointing.locationPointingConfig()
-            self.locPointWrap = (
-                self.fsw.locPointWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.locPointConfig)
-            self.locPointWrap.ModelTag = "locPoint"
+            self.locPoint = self.fsw.locPoint = locationPointing.locationPointing()
+            print("CREATED locPoint")
+            self.locPoint.ModelTag = "locPoint"
 
             # SimpleInstrumentController configuration
-            self.insControlConfig = (
-                self.fsw.insControlConfig
-            ) = simpleInstrumentController.simpleInstrumentControllerConfig()
-            self.insControlWrap = (
-                self.fsw.insControlWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.insControlConfig)
-            self.insControlWrap.ModelTag = "instrumentController"
+            self.insControl = (
+                self.fsw.insControl
+            ) = simpleInstrumentController.simpleInstrumentController()
+            self.insControl.ModelTag = "instrumentController"
 
         def init_objects(self, **kwargs) -> None:
             self._set_location_pointing(**kwargs)
@@ -619,24 +562,22 @@ class ImagingFSWModel(BasicFSWModel):
             Args:
                 inst_pHat_B: Instrument pointing direction
             """
-            self.locPointConfig.pHat_B = inst_pHat_B
-            self.locPointConfig.scAttInMsg.subscribeTo(
+            self.locPoint.pHat_B = inst_pHat_B
+            self.locPoint.scAttInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.attOutMsg
             )
-            self.locPointConfig.scTransInMsg.subscribeTo(
+            self.locPoint.scTransInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
-            self.locPointConfig.locationInMsg.subscribeTo(
+            self.locPoint.locationInMsg.subscribeTo(
                 self.fsw.dynamics.imagingTarget.currentGroundStateOutMsg
             )
-            self.locPointConfig.useBoresightRateDamping = 1
+            self.locPoint.useBoresightRateDamping = 1
             cMsgPy.AttGuidMsg_C_addAuthor(
-                self.locPointConfig.attGuidOutMsg, self.fsw.attGuidMsg
+                self.locPoint.attGuidOutMsg, self.fsw.attGuidMsg
             )
 
-            self._add_model_to_task(
-                self.locPointWrap, self.locPointConfig, priority=1198
-            )
+            self._add_model_to_task(self.locPoint, priority=1198)
 
         @default_args(imageAttErrorRequirement=0.01, imageRateErrorRequirement=None)
         def _set_instrument_controller(
@@ -653,23 +594,21 @@ class ImagingFSWModel(BasicFSWModel):
                 imageRateErrorRequirement: Rate tolerance for imaging. Disable with
                     None. [rad/s]
             """
-            self.insControlConfig.attErrTolerance = imageAttErrorRequirement
+            self.insControl.attErrTolerance = imageAttErrorRequirement
             if imageRateErrorRequirement is not None:
-                self.insControlConfig.useRateTolerance = 1
-                self.insControlConfig.rateErrTolerance = imageRateErrorRequirement
-            self.insControlConfig.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
-            self.insControlConfig.locationAccessInMsg.subscribeTo(
+                self.insControl.useRateTolerance = 1
+                self.insControl.rateErrTolerance = imageRateErrorRequirement
+            self.insControl.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
+            self.insControl.locationAccessInMsg.subscribeTo(
                 self.fsw.dynamics.imagingTarget.accessOutMsgs[-1]
             )
 
-            self._add_model_to_task(
-                self.insControlWrap, self.insControlConfig, priority=987
-            )
+            self._add_model_to_task(self.insControl, priority=987)
 
         def reset_for_action(self) -> None:
             self.fsw.dynamics.imagingTarget.Reset(self.fsw.simulator.sim_time_ns)
-            self.locPointWrap.Reset(self.fsw.simulator.sim_time_ns)
-            self.insControlConfig.controllerStatus = 0
+            self.locPoint.Reset(self.fsw.simulator.sim_time_ns)
+            self.insControl.controllerStatus = 0
             return super().reset_for_action()
 
     @action
@@ -680,18 +619,18 @@ class ImagingFSWModel(BasicFSWModel):
             location: PCPF target location [m]
             data_name: Data buffer to store image data to
         """
-        self.insControlConfig.controllerStatus = 1
+        self.insControl.controllerStatus = 1
         self.dynamics.instrumentPowerSink.powerStatus = 1
         self.dynamics.imagingTarget.r_LP_P_Init = location
         self.dynamics.instrument.nodeDataName = data_name
-        self.insControlConfig.imaged = 0
+        self.insControl.imaged = 0
         self.simulator.enableTask(self.LocPointTask.name + self.satellite.id)
 
     @action
     def action_downlink(self) -> None:
         """Action to attempt to downlink data."""
-        self.hillPointWrap.Reset(self.simulator.sim_time_ns)
-        self.trackingErrorWrap.Reset(self.simulator.sim_time_ns)
+        self.hillPoint.Reset(self.simulator.sim_time_ns)
+        self.trackingError.Reset(self.simulator.sim_time_ns)
         self.dynamics.transmitter.dataStatus = 1
         self.dynamics.transmitterPowerSink.powerStatus = 1
         self.simulator.enableTask(BasicFSWModel.NadirPointTask.name + self.satellite.id)
@@ -706,22 +645,14 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
 
         def create_module_data(self) -> None:
             # Location pointing configuration
-            self.locPointConfig = (
-                self.fsw.locPointConfig
-            ) = locationPointing.locationPointingConfig()
-            self.locPointWrap = (
-                self.fsw.locPointWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.locPointConfig)
-            self.locPointWrap.ModelTag = "locPoint"
+            self.locPoint = self.fsw.locPoint = locationPointing.locationPointing()
+            self.locPoint.ModelTag = "locPoint"
 
             # scanningInstrumentController configuration
-            self.insControlConfig = (
-                self.fsw.insControlConfig
-            ) = scanningInstrumentController.scanningInstrumentControllerConfig()
-            self.insControlWrap = (
-                self.fsw.simpleInsControlWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.insControlConfig)
-            self.insControlWrap.ModelTag = "instrumentController"
+            self.insControl = (
+                self.fsw.insControl
+            ) = scanningInstrumentController.scanningInstrumentController()
+            self.insControl.ModelTag = "instrumentController"
 
         @default_args(imageAttErrorRequirement=0.01, imageRateErrorRequirement=None)
         def _set_instrument_controller(
@@ -738,18 +669,16 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
                 imageRateErrorRequirement: Rate tolerance for imaging. Disable with
                     None. [rad/s]
             """
-            self.insControlConfig.attErrTolerance = imageAttErrorRequirement
+            self.insControl.attErrTolerance = imageAttErrorRequirement
             if imageRateErrorRequirement is not None:
-                self.insControlConfig.useRateTolerance = 1
-                self.insControlConfig.rateErrTolerance = imageRateErrorRequirement
-            self.insControlConfig.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
-            self.insControlConfig.accessInMsg.subscribeTo(
+                self.insControl.useRateTolerance = 1
+                self.insControl.rateErrTolerance = imageRateErrorRequirement
+            self.insControl.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
+            self.insControl.accessInMsg.subscribeTo(
                 self.fsw.dynamics.imagingTarget.accessOutMsgs[-1]
             )
 
-            self._add_model_to_task(
-                self.insControlWrap, self.insControlConfig, priority=987
-            )
+            self._add_model_to_task(self.insControl, priority=987)
 
         def reset_for_action(self) -> None:
             self.instMsg = cMsgPy.DeviceCmdMsg_C()
@@ -766,9 +695,9 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
             data_name: Data buffer to store image data to
         """
         self.dynamics.instrument.nodeStatusInMsg.subscribeTo(
-            self.insControlConfig.deviceCmdOutMsg
+            self.insControl.deviceCmdOutMsg
         )
-        self.insControlConfig.controllerStatus = 1
+        self.insControl.controllerStatus = 1
         self.dynamics.instrumentPowerSink.powerStatus = 1
         self.dynamics.imagingTarget.r_LP_P_Init = np.array([0, 0, 0.1])
         self.dynamics.instrument.nodeDataName = "nadir"
@@ -790,31 +719,20 @@ class SteeringFSWModel(BasicFSWModel):
 
         def create_module_data(self) -> None:
             # Attitude controller configuration
-            self.mrpSteeringControlData = (
-                self.fsw.mrpSteeringControlData
-            ) = mrpSteering.mrpSteeringConfig()
-            self.mrpSteeringControlWrap = (
-                self.fsw.mrpSteeringControlWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.mrpSteeringControlData)
-            self.mrpSteeringControlWrap.ModelTag = "mrpSteeringControl"
+            self.mrpSteeringControl = (
+                self.fsw.mrpSteeringControl
+            ) = mrpSteering.mrpSteering()
+            self.mrpSteeringControl.ModelTag = "mrpSteeringControl"
 
             # Rate servo
-            self.servoData = (
-                self.fsw.servoData
-            ) = rateServoFullNonlinear.rateServoFullNonlinearConfig()
-            self.servoWrap = self.fsw.servoWrap = self.fsw.simulator.setModelDataWrap(
-                self.servoData
-            )
-            self.servoWrap.ModelTag = "rateServo"
+            self.servo = (
+                self.fsw.servo
+            ) = rateServoFullNonlinear.rateServoFullNonlinear()
+            self.servo.ModelTag = "rateServo"
 
             # add module that maps the Lr control torque into the RW motor torques
-            self.rwMotorTorqueConfig = (
-                self.fsw.rwMotorTorqueConfig
-            ) = rwMotorTorque.rwMotorTorqueConfig()
-            self.rwMotorTorqueWrap = (
-                self.fsw.rwMotorTorqueWrap
-            ) = self.fsw.simulator.setModelDataWrap(self.rwMotorTorqueConfig)
-            self.rwMotorTorqueWrap.ModelTag = "rwMotorTorque"
+            self.rwMotorTorque = self.fsw.rwMotorTorque = rwMotorTorque.rwMotorTorque()
+            self.rwMotorTorque.ModelTag = "rwMotorTorque"
 
         def init_objects(self, **kwargs) -> None:
             self._set_mrp_steering_rwa(**kwargs)
@@ -839,30 +757,28 @@ class SteeringFSWModel(BasicFSWModel):
                 servo_Ki: Servo gain
                 servo_P: Servo gain
             """
-            self.mrpSteeringControlData.guidInMsg.subscribeTo(self.fsw.attGuidMsg)
-            self.mrpSteeringControlData.K1 = K1
-            self.mrpSteeringControlData.K3 = K3
-            self.mrpSteeringControlData.omega_max = omega_max
-            self.mrpSteeringControlData.ignoreOuterLoopFeedforward = False
+            self.mrpSteeringControl.guidInMsg.subscribeTo(self.fsw.attGuidMsg)
+            self.mrpSteeringControl.K1 = K1
+            self.mrpSteeringControl.K3 = K3
+            self.mrpSteeringControl.omega_max = omega_max
+            self.mrpSteeringControl.ignoreOuterLoopFeedforward = False
 
-            self.servoData.Ki = servo_Ki
-            self.servoData.P = servo_P
-            self.servoData.integralLimit = 2.0 / self.servoData.Ki * 0.1
-            self.servoData.knownTorquePntB_B = [0.0, 0.0, 0.0]
-            self.servoData.guidInMsg.subscribeTo(self.fsw.attGuidMsg)
-            self.servoData.vehConfigInMsg.subscribeTo(self.fsw.vcConfigMsg)
-            self.servoData.rwParamsInMsg.subscribeTo(self.fsw.fswRwConfigMsg)
-            self.servoData.rwSpeedsInMsg.subscribeTo(
+            self.servo.Ki = servo_Ki
+            self.servo.P = servo_P
+            self.servo.integralLimit = 2.0 / self.servo.Ki * 0.1
+            self.servo.knownTorquePntB_B = [0.0, 0.0, 0.0]
+            self.servo.guidInMsg.subscribeTo(self.fsw.attGuidMsg)
+            self.servo.vehConfigInMsg.subscribeTo(self.fsw.vcConfigMsg)
+            self.servo.rwParamsInMsg.subscribeTo(self.fsw.fswRwConfigMsg)
+            self.servo.rwSpeedsInMsg.subscribeTo(
                 self.fsw.dynamics.rwStateEffector.rwSpeedOutMsg
             )
-            self.servoData.rateSteeringInMsg.subscribeTo(
-                self.mrpSteeringControlData.rateCmdOutMsg
+            self.servo.rateSteeringInMsg.subscribeTo(
+                self.mrpSteeringControl.rateCmdOutMsg
             )
 
-            self._add_model_to_task(
-                self.mrpSteeringControlWrap, self.mrpSteeringControlData, priority=1196
-            )
-            self._add_model_to_task(self.servoWrap, self.servoData, priority=1195)
+            self._add_model_to_task(self.mrpSteeringControl, priority=1196)
+            self._add_model_to_task(self.servo, priority=1195)
 
         def _set_rw_motor_torque(
             self, controlAxes_B: Iterable[float], **kwargs
@@ -872,15 +788,11 @@ class SteeringFSWModel(BasicFSWModel):
             Args:
                 controlAxes_B: Control unit axes
             """
-            self.rwMotorTorqueConfig.rwParamsInMsg.subscribeTo(self.fsw.fswRwConfigMsg)
-            self.rwMotorTorqueConfig.vehControlInMsg.subscribeTo(
-                self.servoData.cmdTorqueOutMsg
-            )
-            self.rwMotorTorqueConfig.controlAxes_B = controlAxes_B
+            self.rwMotorTorque.rwParamsInMsg.subscribeTo(self.fsw.fswRwConfigMsg)
+            self.rwMotorTorque.vehControlInMsg.subscribeTo(self.servo.cmdTorqueOutMsg)
+            self.rwMotorTorque.controlAxes_B = controlAxes_B
 
-            self._add_model_to_task(
-                self.rwMotorTorqueWrap, self.rwMotorTorqueConfig, priority=1194
-            )
+            self._add_model_to_task(self.rwMotorTorque, priority=1194)
 
         def reset_for_action(self) -> None:
             # MRP control enabled by default
