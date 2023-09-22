@@ -540,7 +540,6 @@ class ImagingFSWModel(BasicFSWModel):
         def create_module_data(self) -> None:
             # Location pointing configuration
             self.locPoint = self.fsw.locPoint = locationPointing.locationPointing()
-            print("CREATED locPoint")
             self.locPoint.ModelTag = "locPoint"
 
             # SimpleInstrumentController configuration
