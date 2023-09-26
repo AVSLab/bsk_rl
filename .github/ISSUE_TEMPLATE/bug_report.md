@@ -21,7 +21,7 @@ A clear and concise description of what you expected to happen.
 **Version (please complete the following information):**
  - Python: [e.g. 3.10.1]
 -  Basilisk: [e.g. 2.2.0]
- - Plaform: [e.g. Ubuntu 22.08]
+ - Platform: [e.g. Ubuntu 22.08]
 
 **Additional context**
 Add any other context about the problem here.
