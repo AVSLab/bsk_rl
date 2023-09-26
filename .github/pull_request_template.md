@@ -23,7 +23,7 @@ Please describe the tests that you ran to verify your changes.
 ### Test Configuration
  - Python: [e.g. 3.10.1]
 -  Basilisk: [e.g. 2.2.0]
- - Plaform: [e.g. Ubuntu 22.08]
+ - Platform: [e.g. Ubuntu 22.08]
 
 # Checklist:
 
