@@ -444,7 +444,7 @@ class AccessSatellite(Satellite):
             elif candidate_window[-1] == computation_window[-1]:
                 endpoints.append(computation_window[-1])
             else:
-                raise ValueError()
+                return []  # Temporary fix for rare issue.
 
         new_windows = []
         for t1, t2 in zip(endpoints[0::2], endpoints[1::2]):
