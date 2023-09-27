@@ -210,12 +210,20 @@ class TestImagingDynModel:
         assert dyn.storage_level_fraction == 0.5
 
     @pytest.mark.parametrize(
-        "level,valid",
-        [(10, True), (0, True), (110, False)],
+        "level,valid_check,valid",
+        [
+            (10, True, True),
+            (0, True, True),
+            (110, True, False),
+            (100.001, True, True),
+            (10, False, True),
+            (110, False, True),
+        ],
     )
-    def test_data_storage_valid(self, level, valid):
+    def test_data_storage_valid(self, level, valid_check, valid):
         dyn = ImagingDynModel(MagicMock(simulator=MagicMock()), 1.0)
         dyn.storageUnit = MagicMock()
+        dyn.storageUnitValidCheck = valid_check
         dyn.storageUnit.storageUnitDataOutMsg.read.return_value.storageLevel = level
         dyn.storageUnit.storageCapacity = 100.0
         assert dyn.data_storage_valid() == valid

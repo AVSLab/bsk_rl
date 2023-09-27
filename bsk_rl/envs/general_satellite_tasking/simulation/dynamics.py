@@ -684,13 +684,16 @@ class ImagingDynModel(BasicDynamicsModel):
         )
         self.powerMonitor.addPowerNodeToModel(self.transmitterPowerSink.nodePowerOutMsg)
 
-    @default_args(dataStorageCapacity=20 * 8e6, bufferNames=None)
+    @default_args(
+        dataStorageCapacity=20 * 8e6, bufferNames=None, storageUnitValidCheck=True
+    )
     def _set_storage_unit(
         self,
         dataStorageCapacity: int,
         transmitterNumBuffers: Optional[int] = None,
         bufferNames: Optional[Iterable[str]] = None,
         priority: int = 699,
+        storageUnitValidCheck: bool = True,
         **kwargs,
     ) -> None:
         """Configure the storage unit and its buffers.
@@ -701,12 +704,15 @@ class ImagingDynModel(BasicDynamicsModel):
                 given.
             bufferNames: List of buffer names to use. Named by number if None.
             priority: Model priority.
+            storageUnitValidCheck: If True, check that the storage level is below the
+                storage capacity.
         """
         self.storageUnit = partitionedStorageUnit.PartitionedStorageUnit()
         self.storageUnit.ModelTag = "storageUnit" + self.satellite.id
         self.storageUnit.storageCapacity = dataStorageCapacity  # bits
         self.storageUnit.addDataNodeToModel(self.instrument.nodeDataOutMsg)
         self.storageUnit.addDataNodeToModel(self.transmitter.nodeDataOutMsg)
+        self.storageUnitValidCheck = storageUnitValidCheck
         # Add all of the targets to the data buffer
         if bufferNames is None:
             for buffer_idx in range(transmitterNumBuffers):
@@ -733,7 +739,13 @@ class ImagingDynModel(BasicDynamicsModel):
     @aliveness_checker
     def data_storage_valid(self) -> bool:
         """Check that the buffer has not run out of space."""
-        return self.storage_level <= self.storageUnit.storageCapacity
+        storage_check = self.storageUnitValidCheck
+        if storage_check:
+            return self.storage_level < self.storageUnit.storageCapacity or np.isclose(
+                self.storage_level, self.storageUnit.storageCapacity
+            )
+        else:
+            return True
 
     @default_args(
         groundLocationPlanetRadius=orbitalMotion.REQ_EARTH * 1e3,
@@ -809,11 +821,12 @@ class ContinuousImagingDynModel(ImagingDynModel):
             self.task_name, self.instrument, ModelPriority=priority
         )
 
-    @default_args(dataStorageCapacity=20 * 8e6)
+    @default_args(dataStorageCapacity=20 * 8e6, storageUnitValidCheck=True)
     def _set_storage_unit(
         self,
         dataStorageCapacity: int,
         priority: int = 699,
+        storageUnitValidCheck: bool = True,
         **kwargs,
     ) -> None:
         """Configure the storage unit and its buffers.
@@ -821,12 +834,15 @@ class ContinuousImagingDynModel(ImagingDynModel):
         Args:
             dataStorageCapacity: Maximum data to be stored [bits]
             priority: Model priority.
+            storageUnitValidCheck: If True, check that the storage level is below the
+                storage capacity.
         """
         self.storageUnit = simpleStorageUnit.SimpleStorageUnit()
         self.storageUnit.ModelTag = "storageUnit" + self.satellite.id
         self.storageUnit.storageCapacity = dataStorageCapacity  # bits
         self.storageUnit.addDataNodeToModel(self.instrument.nodeDataOutMsg)
         self.storageUnit.addDataNodeToModel(self.transmitter.nodeDataOutMsg)
+        self.storageUnitValidCheck = storageUnitValidCheck
 
         # Add the storage unit to the transmitter
         self.transmitter.addStorageUnitToTransmitter(
