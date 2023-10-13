@@ -841,12 +841,15 @@ class ContinuousImagingDynModel(ImagingDynModel):
             self.task_name, self.instrument, ModelPriority=priority
         )
 
-    @default_args(dataStorageCapacity=20 * 8e6, storageUnitValidCheck=True)
+    @default_args(
+        dataStorageCapacity=20 * 8e6, storageUnitValidCheck=True, storageInit=0
+    )
     def _set_storage_unit(
         self,
         dataStorageCapacity: int,
         priority: int = 699,
         storageUnitValidCheck: bool = True,
+        storageInit: int = 0,
         **kwargs,
     ) -> None:
         """Configure the storage unit and its buffers.
@@ -856,6 +859,7 @@ class ContinuousImagingDynModel(ImagingDynModel):
             priority: Model priority.
             storageUnitValidCheck: If True, check that the storage level is below the
                 storage capacity.
+            setStorageInit: Initial storage level [bits]
         """
         self.storageUnit = simpleStorageUnit.SimpleStorageUnit()
         self.storageUnit.ModelTag = "storageUnit" + self.satellite.id
@@ -863,6 +867,7 @@ class ContinuousImagingDynModel(ImagingDynModel):
         self.storageUnit.addDataNodeToModel(self.instrument.nodeDataOutMsg)
         self.storageUnit.addDataNodeToModel(self.transmitter.nodeDataOutMsg)
         self.storageUnitValidCheck = storageUnitValidCheck
+        self.storageUnit.setDataBuffer(storageInit)
 
         # Add the storage unit to the transmitter
         self.transmitter.addStorageUnitToTransmitter(
