@@ -405,6 +405,10 @@ class BasicFSWModel(FSWModel):
             self._add_model_to_task(self.thrDesatControl, priority=1193)
             self._add_model_to_task(self.thrDump, priority=1191)
 
+        def reset_for_action(self) -> None:
+            super().reset_for_action()
+            self.fsw.dynamics.thrusterPowerSink.powerStatus = 0
+
     @action
     def action_desat(self) -> None:
         """Action to charge while desaturating reaction wheels."""
@@ -412,6 +416,7 @@ class BasicFSWModel(FSWModel):
         self.trackingError.Reset(self.simulator.sim_time_ns)
         self.thrDesatControl.Reset(self.simulator.sim_time_ns)
         self.thrDump.Reset(self.simulator.sim_time_ns)
+        self.dynamics.thrusterPowerSink.powerStatus = 1
         self.simulator.enableTask(self.SunPointTask.name + self.satellite.id)
         self.simulator.enableTask(self.RWDesatTask.name + self.satellite.id)
         self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.id)

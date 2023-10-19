@@ -49,6 +49,7 @@ def test_basic_requires_env():
 @patch(basicdyn + "_set_solar_panel")
 @patch(basicdyn + "_set_battery")
 @patch(basicdyn + "_set_reaction_wheel_power")
+@patch(basicdyn + "_set_thruster_power")
 def test_basic_init_objects(self, *args):
     BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
     for setter in args:

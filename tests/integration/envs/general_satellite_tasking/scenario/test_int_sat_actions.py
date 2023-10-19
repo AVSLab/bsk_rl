@@ -150,6 +150,17 @@ class TestDesatAction:
             self.env.satellite.dynamics.wheel_speeds
         ) < np.linalg.norm(init_speeds)
 
+    def test_desat_action_power_draw(self):
+        self.env.satellite.sat_args_generator["thrusterPowerDraw"] = 0.0
+        self.env.reset()
+        self.env.step(0)  # Desat
+        assert self.env.satellite.dynamics.battery_valid()
+
+        self.env.satellite.sat_args_generator["thrusterPowerDraw"] = -10000.0
+        self.env.reset()
+        self.env.step(0)  # Desat
+        assert not self.env.satellite.dynamics.battery_valid()
+
 
 class TestNadirImagingActions:
     class ImageSat(

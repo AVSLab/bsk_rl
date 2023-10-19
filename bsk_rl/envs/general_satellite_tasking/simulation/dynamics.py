@@ -192,6 +192,7 @@ class BasicDynamicsModel(DynamicsModel):
         self._set_solar_panel(**kwargs)
         self._set_battery(**kwargs)
         self._set_reaction_wheel_power(**kwargs)
+        self._set_thruster_power(**kwargs)
 
     @default_args(
         mass=330,
@@ -416,6 +417,25 @@ class BasicDynamicsModel(DynamicsModel):
         self.simulator.AddModelToTask(
             self.task_name, self.thrusterSet, ModelPriority=priority
         )
+
+    @default_args(thrusterPowerDraw=0.0)
+    def _set_thruster_power(
+        self, thrusterPowerDraw, priority: int = 899, **kwargs
+    ) -> None:
+        """Defines the thruster power draw.
+
+        Args:
+            thrusterPowerDraw: Constant power draw desat mode is active. [W]
+            priority: Model priority.
+        """
+
+        self.thrusterPowerSink = simplePowerSink.SimplePowerSink()
+        self.thrusterPowerSink.ModelTag = "thrustPowerSink" + self.satellite.id
+        self.thrusterPowerSink.nodePowerOut = thrusterPowerDraw  # Watts
+        self.simulator.AddModelToTask(
+            self.task_name, self.thrusterPowerSink, ModelPriority=priority
+        )
+        self.powerMonitor.addPowerNodeToModel(self.thrusterPowerSink.nodePowerOutMsg)
 
     def _set_eclipse_object(self) -> None:
         """Adds the spacecraft to the eclipse module"""
