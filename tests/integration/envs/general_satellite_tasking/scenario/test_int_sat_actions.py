@@ -123,43 +123,59 @@ class TestDesatAction:
         dyn_type = dynamics.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
 
-    env = gym.make(
-        "SingleSatelliteTasking-v1",
-        satellites=DesatSat(
-            "Ellite",
-            sat_args=DesatSat.default_sat_args(
-                oe=random_orbit,
-                wheelSpeeds=[1000.0, -1000.0, 1000.0],
+    def make_env(self):
+        return gym.make(
+            "SingleSatelliteTasking-v1",
+            satellites=self.DesatSat(
+                "Ellite",
+                sat_args=self.DesatSat.default_sat_args(
+                    oe=random_orbit,
+                    wheelSpeeds=[1000.0, -1000.0, 1000.0],
+                ),
             ),
-        ),
-        env_type=environment.BasicEnvironmentModel,
-        env_args=environment.BasicEnvironmentModel.default_env_args(),
-        env_features=StaticTargets(n_targets=0),
-        data_manager=data.NoDataManager(),
-        sim_rate=1.0,
-        max_step_duration=300.0,
-        time_limit=300.0,
-        disable_env_checker=True,
-    )
+            env_type=environment.BasicEnvironmentModel,
+            env_args=environment.BasicEnvironmentModel.default_env_args(),
+            env_features=StaticTargets(n_targets=0),
+            data_manager=data.NoDataManager(),
+            sim_rate=1.0,
+            max_step_duration=300.0,
+            time_limit=300.0,
+            disable_env_checker=True,
+        )
 
     def test_desat_action(self):
-        self.env.reset()
-        init_speeds = self.env.satellite.dynamics.wheel_speeds
-        self.env.step(0)  # Desat
-        assert np.linalg.norm(
-            self.env.satellite.dynamics.wheel_speeds
-        ) < np.linalg.norm(init_speeds)
+        env = self.make_env()
+        env.reset()
+        init_speeds = env.satellite.dynamics.wheel_speeds
+        env.step(0)  # Desat
+        assert np.linalg.norm(env.satellite.dynamics.wheel_speeds) < np.linalg.norm(
+            init_speeds
+        )
 
     def test_desat_action_power_draw(self):
-        self.env.satellite.sat_args_generator["thrusterPowerDraw"] = 0.0
-        self.env.reset()
-        self.env.step(0)  # Desat
-        assert self.env.satellite.dynamics.battery_valid()
+        env = self.make_env()
+        env.satellite.sat_args_generator["thrusterPowerDraw"] = 0.0
+        env.reset()
+        env.step(0)  # Desat
+        assert env.satellite.dynamics.battery_valid()
 
-        self.env.satellite.sat_args_generator["thrusterPowerDraw"] = -10000.0
-        self.env.reset()
-        self.env.step(0)  # Desat
-        assert not self.env.satellite.dynamics.battery_valid()
+        env.satellite.sat_args_generator["thrusterPowerDraw"] = -10000.0
+        env.reset()
+        env.step(0)  # Desat
+        assert not env.satellite.dynamics.battery_valid()
+
+    def test_desat_action_pointing(self):
+        env = self.make_env()
+        env.satellite.sat_args_generator["desatAttitude"] = "nadir"
+        env.reset(seed=0)
+        env.step(0)  # Desat
+        battery_level_nadir = env.satellite.dynamics.battery_charge
+
+        env.satellite.sat_args_generator["desatAttitude"] = "sun"
+        env.reset(seed=0)
+        env.step(0)  # Desat
+        battery_level_sun = env.satellite.dynamics.battery_charge
+        assert battery_level_sun > battery_level_nadir
 
 
 class TestNadirImagingActions:

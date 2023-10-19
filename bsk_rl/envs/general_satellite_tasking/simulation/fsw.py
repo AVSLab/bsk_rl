@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Callable, Iterable
+from typing import TYPE_CHECKING, Callable, Iterable, Optional
 from weakref import proxy
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -377,9 +377,19 @@ class BasicFSWModel(FSWModel):
 
             self._add_model_to_task(self.thrForceMapping, priority=1192)
 
-        @default_args(hs_min=0.0, maxCounterValue=4, thrMinFireTime=0.02)
+        @default_args(
+            hs_min=0.0,
+            maxCounterValue=4,
+            thrMinFireTime=0.02,
+            desatAttitude="sun",
+        )
         def _set_momentum_dumping(
-            self, hs_min: float, maxCounterValue: int, thrMinFireTime: float, **kwargs
+            self,
+            hs_min: float,
+            maxCounterValue: int,
+            thrMinFireTime: float,
+            desatAttitude: Optional[str],
+            **kwargs,
         ) -> None:
             """Configure the momentum dumping algorithm.
 
@@ -387,7 +397,11 @@ class BasicFSWModel(FSWModel):
                 hs_min: minimum RW cluster momentum for dumping [N*m*s]
                 maxCounterValue: Control periods between firing thrusters
                 thrMinFireTime: Minimum thruster firing time [s]
+                desatAttitude: Direction to point while desaturating: "sun" points
+                    panels at sun, "nadir" points instrument nadir, None disables
+                    attitude control
             """
+            self.fsw.desatAttitude = desatAttitude
             self.thrDesatControl.hs_min = hs_min  # Nms
             self.thrDesatControl.rwSpeedsInMsg.subscribeTo(
                 self.fsw.dynamics.rwStateEffector.rwSpeedOutMsg
@@ -412,13 +426,23 @@ class BasicFSWModel(FSWModel):
     @action
     def action_desat(self) -> None:
         """Action to charge while desaturating reaction wheels."""
-        self.sunPoint.Reset(self.simulator.sim_time_ns)
         self.trackingError.Reset(self.simulator.sim_time_ns)
         self.thrDesatControl.Reset(self.simulator.sim_time_ns)
         self.thrDump.Reset(self.simulator.sim_time_ns)
         self.dynamics.thrusterPowerSink.powerStatus = 1
-        self.simulator.enableTask(self.SunPointTask.name + self.satellite.id)
         self.simulator.enableTask(self.RWDesatTask.name + self.satellite.id)
+        if self.desatAttitude == "sun":
+            self.sunPoint.Reset(self.simulator.sim_time_ns)
+            self.simulator.enableTask(self.SunPointTask.name + self.satellite.id)
+        elif self.desatAttitude == "nadir":
+            self.hillPoint.Reset(self.simulator.sim_time_ns)
+            self.simulator.enableTask(
+                BasicFSWModel.NadirPointTask.name + self.satellite.id
+            )
+        elif self.desatAttitude is None:
+            pass
+        else:
+            raise ValueError(f"{self.desatAttitude} not a valid desatAttitude")
         self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.id)
 
     class TrackingErrorTask(Task):
