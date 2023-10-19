@@ -931,4 +931,3 @@ class GroundStationDynModel(ImagingDynModel):
 
 class FullFeaturedDynModel(GroundStationDynModel, LOSCommDynModel):
     pass
-    pass
