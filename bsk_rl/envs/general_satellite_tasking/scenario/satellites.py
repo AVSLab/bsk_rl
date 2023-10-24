@@ -35,6 +35,8 @@ from bsk_rl.envs.general_satellite_tasking.utils.orbital import (
 SatObs = Any
 SatAct = Any
 
+REQUIRES_RETASKING = "REQUIRES_RETASKING"
+
 
 class Satellite(ABC):
     dyn_type: type["DynamicsModel"]  # Type of dynamics model used by this satellite
@@ -153,7 +155,7 @@ class Satellite(ABC):
 
     def reset_post_sim(self) -> None:
         """Called in environment reset, after simulator initialization"""
-        pass
+        self.info.append(REQUIRES_RETASKING)
 
     @property
     def observation_space(self) -> spaces.Box:
@@ -235,6 +237,7 @@ class Satellite(ABC):
             [f"self.TotalSim.CurrentNanos * {macros.NANO2SEC} >= {t_close}"],
             [
                 self._info_command(f"timed termination at {t_close:.1f} " + info),
+                self._satellite_command + f".info.append('{REQUIRES_RETASKING}')",
             ]
             + extra_actions,
             terminal=self.variable_interval,
@@ -747,6 +750,7 @@ class ImagingSatellite(AccessSatellite):
                 [
                     self._info_command(f"imaged {target}"),
                     self._satellite_command + ".imaged += 1",
+                    self._satellite_command + f".info.append('{REQUIRES_RETASKING}')",
                 ],
                 terminal=self.variable_interval,
             )
