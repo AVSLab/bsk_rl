@@ -9,6 +9,7 @@ from setuptools import setup
 setup(
     name="bsk_rl",
     version="0.0.0",
+    python_requires=">3.9.0",
     install_requires=[
         "deap==1.3.3",
         "Deprecated",
