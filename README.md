@@ -10,7 +10,7 @@
 To install the package, run:
 
 ```
-pip install -e .
+pip install -e . && finish_install
 ```
 
 while in the base directory. This will install `pip` dependencies and download data dependencies (see [#51](https://github.com/AVSLab/bsk_rl/issues/51) for issues with `chebpy` installation on Silicon Macs). Test the installation by running
