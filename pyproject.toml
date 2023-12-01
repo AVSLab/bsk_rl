@@ -28,10 +28,11 @@ dependencies = [
     "ruff>=0.1.9",
     "scikit-learn",
     "scipy",
+    "sphinx-rtd-theme",
     "stable-baselines3",
     "tensorflow",
     "torch",
 ]
 
 [project.scripts]
-finish_install = "bsk_rl.finish_install:pck_install"
+finish_install = "bsk_rl._finish_install:pck_install"

@@ -5,7 +5,7 @@ from warnings import warn
 from packaging.version import parse as parse_version
 
 
-def check_bsk_version():
+def _check_bsk_version():
     f = open(
         os.path.join(
             os.path.dirname(os.path.realpath(__file__)),

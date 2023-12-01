@@ -18,26 +18,29 @@ class MultiSensorEOS(gym.Env):
     results in full reward, other image types results in no reward.
 
     Action Space (discrete):
-    0 - Points solar panels at the sun.
-    1 - Desaturates the reaction wheels.
-    >1 - Orients the s/c towards the earth; takes image of type _.
+
+    * 0 - Points solar panels at the sun.
+    * 1 - Desaturates the reaction wheels.
+    * >1 - Orients the s/c towards the earth; takes image of type _.
 
     Observation Space:
-    r_sc_I - float[3,] - spacecraft position.
-    v_sc - float[3,] - spacecraft velocity in PCPF.
-    |sigma_RB| - float [0,1] - norm of the spacecraft error MRP with respect to the
-    last reference frame specified.
-    |omega_BN| - float - norm of the total spacecraft bus rotational velocity with
-    respect to the inertial frame.
-    |omega_RW| - float - norm of the reaction wheel rotational velocities.
-    storedCharge - float [0,batCapacity] - indicates the s/c battery charge level in
-        W-s.
-    sun_indicator - float [0, 1] - indicates the flux mitigator due to eclipse.
-    access indicator - access to the next target
-    img_mode norm - float [0,1] - indicates the required imaging mode.
+
+    * r_sc_I - float[3,] - spacecraft position.
+    * v_sc - float[3,] - spacecraft velocity in PCPF.
+    * sigma_RB - float [0,1] - norm of the spacecraft error MRP with respect to the
+      last reference frame specified.
+    * omega_BN - float - norm of the total spacecraft bus rotational velocity with
+      respect to the inertial frame.
+    * omega_RW - float - norm of the reaction wheel rotational velocities.
+    * storedCharge - float [0,batCapacity] - indicates the s/c battery charge level in
+      W-s.
+    * sun_indicator - float [0, 1] - indicates the flux mitigator due to eclipse.
+    * access indicator - access to the next target
+    * img_mode norm - float [0,1] - indicates the required imaging mode.
 
     Reward Function:
     r = 1/(1+ | sigma_RB|) if correct sensor
+
     Intended to provide a rich reward in action 1 when the spacecraft is pointed
     towards the earth, decaying as sigma^2 as the pointing error increases.
     """
@@ -114,31 +117,27 @@ class MultiSensorEOS(gym.Env):
         The agent takes a step in the environment. Note that the simulator must be
         initialized
 
-        Parameters
-        ----------
-        action : int
-        Returns
-        -------
-        ob, reward, episode_over, truncated, info : tuple
-            ob (object) :
-                an environment-specific object representing your observation of
-                the environment.
-            reward (float) :
-                amount of reward achieved by the previous action. The scale
-                varies between environments, but the goal is always to increase
-                your total reward.
-            episode_over (bool) :
-                whether it's time to reset the environment again. Most (but not
-                all) tasks are divided up into well-defined episodes, and done
-                being True indicates the episode has terminated. (For example,
-                perhaps the pole tipped too far, or you lost your last life.)
-            truncated (truncated) : set to false. Gymnasium requirement.
-            info (dict) :
-                 diagnostic information useful for debugging. It can sometimes
-                 be useful for learning (for example, it might contain the raw
-                 probabilities behind the environment's last state change).
-                 However, official evaluations of your agent are not allowed to
-                 use this for learning.
+        Args:
+            action: int
+
+        Returns:
+
+        * ob (object): an environment-specific object representing your observation of
+          the environment.
+        * reward (float): amount of reward achieved by the previous action. The scale
+          varies between environments, but the goal is always to increase
+          your total reward.
+        * episode_over (bool): whether it's time to reset the environment again. Most (but not
+          all) tasks are divided up into well-defined episodes, and done
+          being True indicates the episode has terminated. (For example,
+          perhaps the pole tipped too far, or you lost your last life.)
+        * truncated (truncated): set to false. Gymnasium requirement.
+        * info (dict): diagnostic information useful for debugging. It can sometimes
+          be useful for learning (for example, it might contain the raw
+          probabilities behind the environment's last state change).
+          However, official evaluations of your agent are not allowed to
+          use this for learning.
+
         """
 
         self.curr_step += 1

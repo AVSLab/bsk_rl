@@ -42,7 +42,6 @@ from Basilisk.utilities import (
     unitTestSupport,
     vizSupport,
 )
-from numpy.random import uniform
 
 from bsk_rl.utilities.effector_primitives import actuator_primitives as ap
 from bsk_rl.utilities.initial_conditions import sc_attitudes, small_body
@@ -298,10 +297,10 @@ class SmallBodyScienceSimulator(SimulationBaseClass.SimBaseClass):
         sigma_init, omega_init = sc_attitudes.random_tumble(maxSpinRate=0.00001)
 
         x_0_delta = np.zeros(12)
-        x_0_delta[0:3] = uniform(-50, 50.0, 3)  # Relative s/c position
-        x_0_delta[3:6] = uniform(-0.1, 0.1, 3)  # Relative s/c velocity
-        x_0_delta[6:9] = uniform(-0.1, 0.1, 3)  # Small body attitude
-        x_0_delta[9:12] = uniform(-0.1, 0.1, 3)  # Small body attitude rate
+        x_0_delta[0:3] = np.random.uniform(-50, 50.0, 3)  # Relative s/c position
+        x_0_delta[3:6] = np.random.uniform(-0.1, 0.1, 3)  # Relative s/c velocity
+        x_0_delta[6:9] = np.random.uniform(-0.1, 0.1, 3)  # Small body attitude
+        x_0_delta[9:12] = np.random.uniform(-0.1, 0.1, 3)  # Small body attitude rate
 
         mapping_points = small_body.generate_mapping_points(
             self.n_map_points, self.body_radius
@@ -375,7 +374,7 @@ class SmallBodyScienceSimulator(SimulationBaseClass.SimBaseClass):
             "sigma_init": sigma_init,
             "omega_init": omega_init,
             # Reaction Wheel speeds
-            "wheelSpeeds": uniform(-2000 * mc.RPM, 2000 * mc.RPM, 3),  # rad/s
+            "wheelSpeeds": np.random.uniform(-2000 * mc.RPM, 2000 * mc.RPM, 3),  # rad/s
             "max_dV": 40,  # m/s
             # RW motor torque and thruster force mapping FSW config
             "controlAxes_B": [1, 0, 0, 0, 1, 0, 0, 0, 1],

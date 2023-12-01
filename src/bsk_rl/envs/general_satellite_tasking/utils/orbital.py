@@ -61,7 +61,7 @@ def random_epoch(start: int = 2000, end: int = 2022):
         end: Final year.
 
     Returns:
-        Epoch in `YYYY MMM DD HH:MM:SS.SSS (UTC)` format
+        Epoch in ``YYYY MMM DD HH:MM:SS.SSS (UTC)`` format
     """
     year = np.random.randint(start, end)
     month = np.random.choice(

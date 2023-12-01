@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Stephenson"
+  given-names: "Mark"
+  orcid: "https://orcid.org/0009-0004-3438-8127"
+- family-names: "Mantovani"
+  given-names: "Lorenzzo"
+  orcid: "https://orcid.org/0000-0001-7244-7491"
+- family-names: "Herrmann"
+  given-names: "Adam"
+  orcid: "https://orcid.org/0000-0001-6179-7728"
+- family-names: "Schaub"
+  given-names: "Hanspeter"
+  orcid: "https://orcid.org/0000-0003-0002-6035"
+title: "BSK-RL"
+version: 0.0.0
+date-released: 2023
+url: "https://github.com/AVSLab/bsk_rl/"

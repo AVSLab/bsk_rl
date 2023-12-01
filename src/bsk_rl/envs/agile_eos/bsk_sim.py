@@ -38,7 +38,6 @@ from Basilisk.utilities import (
     unitTestSupport,
     vizSupport,
 )
-from numpy.random import uniform
 
 from bsk_rl.utilities.effector_primitives import actuator_primitives as ap
 from bsk_rl.utilities.initial_conditions import leo_orbit, sc_attitudes
@@ -51,18 +50,21 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     Simulates a spacecraft in LEO with atmospheric drag and J2.
 
     Dynamics Components
-    - Forces: J2, Atmospheric Drag
-    - Environment: Exponential density model; eclipse
-    - Actuators: ExternalForceTorque, reaction wheels
-    - Sensors: SimpleNav
-    - Power System: SimpleBattery, SimplePOwerSink, SimpleSolarPanel
-    - Data Management System: spaceToGroundTransmitter, simpleStorageUnit,
-    simpleInstrument
+
+    * Forces: J2, Atmospheric Drag
+    * Environment: Exponential density model; eclipse
+    * Actuators: ExternalForceTorque, reaction wheels
+    * Sensors: SimpleNav
+    * Power System: SimpleBattery, SimplePOwerSink, SimpleSolarPanel
+    * Data Management System: spaceToGroundTransmitter, simpleStorageUnit,
+      simpleInstrument
 
     FSW Components:
-    - MRP Feedback controller
-    - locationPoint - targets, sun-pointing
-    - Desat
+
+    * MRP Feedback controller
+    * locationPoint - targets, sun-pointing
+    * Desat
+
     """
 
     def __init__(
@@ -196,7 +198,7 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
         # Sample attitude and rates
         sigma_init, omega_init = sc_attitudes.random_tumble(maxSpinRate=0.00001)
 
-        wheel_speeds = uniform(-1500, 1500, 3)  # RPMs
+        wheel_speeds = np.random.uniform(-1500, 1500, 3)  # RPMs
 
         # Dict of initial conditions
         initial_conditions = {
@@ -224,7 +226,7 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
             "disturbance_magnitude": 4e-3,
             "disturbance_vector": np.random.standard_normal(3),
             # Reaction Wheel speeds
-            # "wheelSpeeds": uniform(-400,400,3), # RPM
+            # "wheelSpeeds": np.random.uniform(-400,400,3), # RPM
             "wheelSpeeds": wheel_speeds,  # RPM
             "maxSpeed": 3000,  # RPM
             # Solar Panel Parameters
@@ -1857,12 +1859,14 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def compute_image_tuples(self, r_BN_N, v_BN_N):
         """
         Computes the self.n_images image state tuples
-        0-2: S/c Hill-Frame Position
-        3: Priority
-        4: Imaged?
-        5: Downlinked?
-        :return: image state tuples (in a single np array) - normalized and
-                non-normalized
+
+        * 0-2: S/c Hill-Frame Position
+        * 3: Priority
+        * 4: Imaged?
+        * 5: Downlinked?
+
+        Returns:
+            image state tuples (in a single np array) - normalized and non-normalized
         """
         # Initialize the image tuple array
         image_tuples = np.zeros(self.target_tuple_size * self.n_target_buffer)

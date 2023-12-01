@@ -14,26 +14,31 @@ class MCTS:
     If a heuristic rollout type is used, create the policy using the following two
     lines of code:
 
-    stateMachineMCTS = state_machine.StateMachine()
-    stateMachineMCTS.loadTransferConditions("agile_eos_ops.adv")
-    rollout_policy = AgileEOSRolloutPolicy(env=env, state_machine=stateMachineMCTS)
+    .. code-block:: python
+
+        stateMachineMCTS = state_machine.StateMachine()
+        stateMachineMCTS.loadTransferConditions("agile_eos_ops.adv")
+        rollout_policy = AgileEOSRolloutPolicy(env=env, state_machine=stateMachineMCTS)
 
     Then, load the policy as the rollout_policy during initialization:
 
-    MCTS_Agent = MCTS(c=c, num_sims=num_sims, rollout_policy=rollout_policy)
+    .. code-block:: python
 
-    The parameter c controls the scaling of the exploration bonus
-
-    The parameter num_sims determines the number of simulations per call of
-    selectAction()
+        MCTS_Agent = MCTS(c=c, num_sims=num_sims, rollout_policy=rollout_policy)
 
     The env and initial conditions must be loaded in after initialization. The
     algorithm will automatically restart the sim and step it forward to the last
     state. This is due to limitations in copying Basilisk:
 
-    MCTS_Agent.setEnv(
-        env_name, env.initial_conditions, max_steps=num_steps, max_length=t_final
-    )
+    .. code-block:: python
+
+        MCTS_Agent.setEnv(
+            env_name, env.initial_conditions, max_steps=num_steps, max_length=t_final
+        )
+
+    Args:
+        c: scaling of the exploration bonus
+        num_sims: number of simulations per call of selectAction()
     """
 
     def __init__(

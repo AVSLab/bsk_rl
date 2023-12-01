@@ -7,7 +7,7 @@ from pathlib import Path
 
 import requests
 
-from bsk_rl.check_bsk_version import check_bsk_version
+from bsk_rl._check_bsk_version import _check_bsk_version
 
 
 def pck_install():
@@ -45,4 +45,4 @@ def pck_install():
         / "simplemaps_worldcities"
     )
 
-    check_bsk_version()
+    _check_bsk_version()

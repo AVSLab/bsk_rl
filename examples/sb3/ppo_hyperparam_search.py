@@ -9,13 +9,6 @@ from bsk_rl.training.sb3.experiments import create_ppo_kwargs_list, run_ppo_expe
 
 SEP = os.path.sep
 
-# Check if any args were passed to the script
-if len(sys.argv) > 1:
-    # Get the index of the job array
-    experiment_index = int(sys.argv[1])
-else:
-    experiment_index = None
-
 if __name__ == "__main__":
     """
     This script runs a hyperparameter search for the PPO algorithm on the
@@ -46,6 +39,13 @@ if __name__ == "__main__":
         - SimpleEOS-v0 (not yet tested)
         - AgileEOS-v0
     """
+    # Check if any args were passed to the script
+    if len(sys.argv) > 1:
+        # Get the index of the job array
+        experiment_index = int(sys.argv[1])
+    else:
+        experiment_index = None
+
     # Define the environment parameters
     max_steps = 90
     env_name = "MultiSensorEOS-v0"

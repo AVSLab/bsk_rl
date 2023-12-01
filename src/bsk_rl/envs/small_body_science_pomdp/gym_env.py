@@ -14,40 +14,41 @@ class SmallBodySciencePOMDP(SmallBodyScience):
     opposed to the SmallBodyScience environment, this environment is utilizes an EKF
     filter for the observation space to simulate a POMDP, which provides a belief state
     for the POMDP.
+
     Resource constraint violations include:
-        - Fuel
-        - Power
-        - Data storage
-        - Collision with the body (not necessarilly a resource, but considered a
-            failure condition)
+    * Fuel
+    * Power
+    * Data storage
+    * Collision with the body (not necessarily a resource, but considered a
+    failure condition)
 
     Action Space (Discrete):
-    0 - Charging Mode
-    1 - 8 - Transition to waypoint 1-8
-    9 - Map
-    10 - Downlink
-    11 - Image
-    12 - Navigation Mode
+    * 0 - Charging Mode
+    * 1 - 8 - Transition to waypoint 1-8
+    * 9 - Map
+    * 10 - Downlink
+    * 11 - Image
+    * 12 - Navigation Mode
 
     Observation Space (Box):
-    0-2: Hill-frame position
-    3-5: Hill-frame velocity
-    6: Eclipse
-    7: Data buffer storage
-    8: Battery level
-    9: dV consumed
-    10: Downlink availability
-    11-13: Current waypoint
-    14-16: Last waypoint
-    17-20: Location of the next target for imaging
-    20-26: Filter covariance diagonals
+    * 0-2: Hill-frame position
+    * 3-5: Hill-frame velocity
+    * 6: Eclipse
+    * 7: Data buffer storage
+    * 8: Battery level
+    * 9: dV consumed
+    * 10: Downlink availability
+    * 11-13: Current waypoint
+    * 14-16: Last waypoint
+    * 17-20: Location of the next target for imaging
+    * 20-26: Filter covariance diagonals
 
     Reward Function:
-    r = +A each tgt downlinked for first time
-    r = +B for each tgt imaged for first time
-    r = +C for each map region downlinked for first time
-    r = +D for each map region collected for first time
-    r = -E for failure
+    * r = +A each tgt downlinked for first time
+    * r = +B for each tgt imaged for first time
+    * r = +C for each map region downlinked for first time
+    * r = +D for each map region collected for first time
+    * r = -E for failure
     """
 
     def __init__(self):

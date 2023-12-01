@@ -92,8 +92,12 @@ class NormdPropertyState(SatObservation):
         Args:
             obs_properties: List of properties that can be found in fsw or dynamics that
                 are to be appended to the the observation. Properties are optionally
-                normalized by some factor. Specified in
+                normalized by some factor. Specified in the form
+
+                :code-block: python
+
                     [dict(prop="prop_name", module="fsw"/"dynamics"/None, norm=1.0)]
+
                 If module is not specified or None, the source of the property is
                 inferred. If norm is not specified, it is set to 1.0 (no normalization).
             args: Passed through to satellite
@@ -184,11 +188,11 @@ class TargetState(SatObservation, ImagingSatellite):
             target_properties: List of properties to include in the observation in the
                 format [dict(prop="prop_name", norm=norm)]. If norm is not specified, it
                 is set to 1.0 (no normalization). Properties to choose from:
-                    - priority
-                    - location
-                    - window_open
-                    - window_mid
-                    - window_close
+                * priority
+                * location
+                * window_open
+                * window_mid
+                * window_close
             args: Passed through to satellite
             kwargs: Passed through to satellite
         """
@@ -295,10 +299,10 @@ class GroundStationState(SatObservation, AccessSatellite):
                 in the format [dict(prop="prop_name", norm=norm)]. If norm is not
                 specified, it is set to 1.0 (no normalization). Properties to choose
                 from:
-                    - location
-                    - window_open
-                    - window_mid
-                    - window_close
+                * location
+                * window_open
+                * window_mid
+                * window_close
             args: Passed through to satellite
             kwargs: Passed through to satellite
         """

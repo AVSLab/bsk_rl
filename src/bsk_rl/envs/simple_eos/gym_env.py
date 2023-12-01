@@ -14,27 +14,26 @@ class SimpleEOS(gym.Env):
     by nadir pointing. Specific imaging targets are not considered.
 
     Action Space (discrete, 0 or 1):
-    0 - Imaging mode
-    1 - Charging mode
-    2 - Desat mode
-    3 - Downlink mode
+    * 0 - Imaging mode
+    * 1 - Charging mode
+    * 2 - Desat mode
+    * 3 - Downlink mode
 
     Observation Space:
-    Inertial position and velocity - indices 0-5
-    Attitude error and attitude rate - indices 6-7
-    Reaction wheel speeds - indices 8-11
-    Battery charge - indices 12
-    Eclipse indicator - indices 13
-    Stored data onboard spacecraft - indices 14
-    Data transmitted over interval - indices 15
-    Amount of time ground stations were accessible (s) - 16-22
-    Percent through planning interval - 23
+    * Inertial position and velocity - indices 0-5
+    * Attitude error and attitude rate - indices 6-7
+    * Reaction wheel speeds - indices 8-11
+    * Battery charge - indices 12
+    * Eclipse indicator - indices 13
+    * Stored data onboard spacecraft - indices 14
+    * Data transmitted over interval - indices 15
+    * Amount of time ground stations were accessible (s) - 16-22
+    * Percent through planning interval - 23
 
     Reward Function:
     r = +1 for each MB downlinked and no failure
     r = +1 for each MB downlinked and no failure and +1 if t > t_max
-    r = - 1000 if failure
-        (battery drained, buffer overflow, reaction wheel speeds over max)
+    r = - 1000 if failure (battery drained, buffer overflow, reaction wheel speeds over max)
     """
 
     def __init__(self):

@@ -40,7 +40,6 @@ from Basilisk.utilities import (
     unitTestSupport,
     vizSupport,
 )
-from numpy.random import uniform
 
 from bsk_rl.utilities.effector_primitives import actuator_primitives as ap
 from bsk_rl.utilities.initial_conditions import leo_orbit, sc_attitudes
@@ -54,18 +53,21 @@ class SimpleEOSSimulator(SimulationBaseClass.SimBaseClass):
     the Earth.
 
     Dynamics Components
-    - Forces: J2, Atmospheric Drag w/ COM offset
-    - Environment: Exponential density model; eclipse
-    - Actuators: ExternalForceTorque
-    - Sensors: SimpleNav
-    - Power System: SimpleBattery, SimpleSink, SimpleSolarPanel
-    - Data Management System: spaceToGroundTransmitter, simpleStorageUnit,
-        simpleInstrument
+
+    * Forces: J2, Atmospheric Drag w/ COM offset
+    * Environment: Exponential density model; eclipse
+    * Actuators: ExternalForceTorque
+    * Sensors: SimpleNav
+    * Power System: SimpleBattery, SimpleSink, SimpleSolarPanel
+    * Data Management System: spaceToGroundTransmitter, simpleStorageUnit,
+      simpleInstrument
 
     FSW Components:
-    - MRP Feedback controller
-    - inertial3d (sun pointing), hillPoint (nadir pointing)
-    - Desat
+
+    * MRP Feedback controller
+    * inertial3d (sun pointing), hillPoint (nadir pointing)
+    * Desat
+
     """
 
     def __init__(
@@ -188,7 +190,7 @@ class SimpleEOSSimulator(SimulationBaseClass.SimBaseClass):
             "disturbance_magnitude": 2e-3,
             "disturbance_vector": np.random.standard_normal(3),
             # Reaction Wheel speeds
-            "wheelSpeeds": uniform(-4000 * mc.RPM, 4000 * mc.RPM, 3),  # rad/s
+            "wheelSpeeds": np.random.uniform(-4000 * mc.RPM, 4000 * mc.RPM, 3),  # rad/s
             # Solar Panel Parameters
             "nHat_B": np.array([0, 1, 0]),
             "panelArea": 2 * 1.0 * 0.5,
@@ -846,14 +848,15 @@ class SimpleEOSSimulator(SimulationBaseClass.SimBaseClass):
     def set_fsw(self):
         """
         Sets up the attitude guidance stack for the simulation. This simulator runs:
-        inertial3Dpoint - Sets the attitude guidance objective to point the main panel
-            at the sun.
-        hillPointTask: Sets the attitude guidance objective to point a "camera" angle
-            towards nadir.
-        attitudeTrackingError: Computes the difference between estimated and guidance
-            attitudes
-        mrpFeedbackControl: Computes an appropriate control torque given an attitude
-            error
+
+        * inertial3Dpoint - Sets the attitude guidance objective to point the main panel
+          at the sun.
+        * hillPointTask: Sets the attitude guidance objective to point a "camera" angle
+          towards nadir.
+        * attitudeTrackingError: Computes the difference between estimated and guidance
+          attitudes
+        * mrpFeedbackControl: Computes an appropriate control torque given an attitude
+          error
         """
 
         self.processName = self.DynamicsProcessName

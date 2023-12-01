@@ -38,15 +38,17 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
     Simulates ground observations by a single spacecraft in LEO.
 
     Dynamics Components
-    - Forces: J2, Atmospheric Drag w/ COM offset
-    - Environment: Exponential density model; eclipse
-    - Actuators: ExternalForceTorque
-    - Sensors: SimpleNav
-    - Systems: SimpleBattery, SimpleSink, SimpleSolarPanel
+
+    * Forces: J2, Atmospheric Drag w/ COM offset
+    * Environment: Exponential density model; eclipse
+    * Actuators: ExternalForceTorque
+    * Sensors: SimpleNav
+    * Systems: SimpleBattery, SimpleSink, SimpleSolarPanel
 
     FSW Components:
-    - mrpFeedback controller
-    - inertial3d (sun pointing), hillPoint (nadir pointing)
+
+    * mrpFeedback controller
+    * inertial3d (sun pointing), hillPoint (nadir pointing)
 
     :return:
     """
@@ -134,11 +136,12 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
     def set_env_dynamics(self):
         """
         Sets up environmental dynamics for the sim, including:
-        - SPICE
-        - Eclipse
-        - Planetary atmosphere
-        - Gravity
-        - Spherical harmonics
+
+        * SPICE
+        * Eclipse
+        * Planetary atmosphere
+        * Gravity
+        * Spherical harmonics
         """
         # clear prior gravitational body and SPICE setup definitions
         self.gravFactory = simIncludeGravBody.gravBodyFactory()
@@ -401,16 +404,19 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
 
     def set_fsw(self):
         """
-        Sets up the attitude guidance stack for the simulation. This simulator runs:
-        inertial3Dpoint - Sets the attitude guidance objective to point the main panel
-            at the sun.
-        hillPointTask: Sets the attitude guidance objective to point a "camera"
-            boresight towards nadir.
-        attitudeTrackingError: Computes the difference between estimated and guidance
-            attitudes
-        mrpFeedbackControl: Computes an appropriate control torque given an attitude
-            error
-        :return:
+        Sets up the attitude guidance stack for the simulation.
+
+        This simulator runs:
+
+        * inertial3Dpoint - Sets the attitude guidance objective to point the main panel
+          at the sun.
+        * hillPointTask: Sets the attitude guidance objective to point a "camera"
+          boresight towards nadir.
+        * attitudeTrackingError: Computes the difference between estimated and guidance
+          attitudes
+        * mrpFeedbackControl: Computes an appropriate control torque given an attitude
+          error
+
         """
         self.dyn_proc.addTask(
             self.CreateNewTask("sunPointTask", mc.sec2nano(self.fsw_step)),
@@ -660,11 +666,14 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
     def run_sim(self, action):
         """
         Executes the sim for a specified duration given a mode command.
-        :param action:
-            0 - Point solar panels at the sun
-            1 - Desaturate reaction wheels
-            >1 - Image types
-        :return:
+
+        Args:
+            action:
+                * 0 - Point solar panels at the sun
+                * 1 - Desaturate reaction wheels
+                * >1 - Image types
+
+        Returns:
             sim_state - simulation states generated
             sim_over - episode over flag
         """

@@ -2,7 +2,6 @@ import numpy as np
 from Basilisk.utilities import astroFunctions
 from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion
-from numpy.random import uniform
 
 from bsk_rl.utilities.initial_conditions import leo_orbit, sc_attitudes
 
@@ -37,7 +36,7 @@ def sampled_400km_leo_smallsat_tumble():
         "disturbance_magnitude": 2e-4,
         "disturbance_vector": np.random.standard_normal(3),
         # Reaction Wheel speeds
-        "wheelSpeeds": uniform(-800, 800, 3),  # RPM
+        "wheelSpeeds": np.random.uniform(-800, 800, 3),  # RPM
         # Solar Panel Parameters
         "nHat_B": np.array([0, -1, 0]),
         "panelArea": 0.2 * 0.3,
@@ -148,7 +147,7 @@ def walker_delta_single_sc_500_km(oe, sim_length, global_tgts, priorities):
     # Sample attitude and rates
     sigma_init, omega_init = sc_attitudes.random_tumble(maxSpinRate=0.00001)
 
-    wheel_speeds = uniform(-1500, 1500, 3)  # RPMs
+    wheel_speeds = np.random.uniform(-1500, 1500, 3)  # RPMs
 
     # Dict of initial conditions
     initial_conditions = {
