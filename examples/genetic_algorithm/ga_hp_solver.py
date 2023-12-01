@@ -4,13 +4,6 @@ from pathlib import Path
 
 from bsk_rl.utilities.genetic_algorithm import experiments
 
-# Check if any args were passed to the script
-if len(sys.argv) > 1:
-    # Get the index of the job array
-    experiment_index = int(sys.argv[1])
-else:
-    experiment_index = None
-
 if __name__ == "__main__":
     """
     This script runs a hyperparameter search for the genetic algorithm on the
@@ -31,6 +24,12 @@ if __name__ == "__main__":
         - AgileEOS-v0
         - MultiSatAgileEOS-v0
     """
+    # Check if any args were passed to the script
+    if len(sys.argv) > 1:
+        # Get the index of the job array
+        experiment_index = int(sys.argv[1])
+    else:
+        experiment_index = None
 
     # Set the start method for multiprocessing (required for some Linux systems)
     multiprocessing.set_start_method("spawn")

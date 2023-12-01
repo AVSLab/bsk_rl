@@ -1,6 +1,6 @@
 from gymnasium.envs.registration import register
 
-from bsk_rl.check_bsk_version import check_bsk_version
+from bsk_rl._check_bsk_version import _check_bsk_version
 
 register(id="SimpleEOS-v0", entry_point="bsk_rl.envs.simple_eos.gym_env:SimpleEOS")
 
@@ -37,4 +37,4 @@ register(
 )
 
 
-check_bsk_version()
+_check_bsk_version()

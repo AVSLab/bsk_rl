@@ -4,7 +4,8 @@ from pathlib import Path
 import matplotlib as mpl
 import numpy as np
 from matplotlib import pyplot as plt
-from plot_dqn_hyperparams import concatenate_results
+
+from .plot_dqn_hyperparams import concatenate_results
 
 SEP = os.path.sep
 

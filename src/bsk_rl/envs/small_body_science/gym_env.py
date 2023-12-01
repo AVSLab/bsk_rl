@@ -11,40 +11,40 @@ class SmallBodyScience(gym.Env):
     waypoints defined in the sun anti-momentum frame to image candidate landing sites
     or collect spectroscopy map data while avoiding resource constraint violations.
     Resource constraint violations include:
-        - Fuel
-        - Power
-        - Data storage
-        - Collision with the body (not necessarilly a resource, but considered a
-            failure condition)
+    * Fuel
+    * Power
+    * Data storage
+    * Collision with the body (not necessarilly a resource, but considered a
+    failure condition)
 
     Action Space (Discrete):
-    0 - Charging Mode
-    1 - 8 - Transition to waypoint 1-8
-    9 - Map
-    10 - Downlink
-    11 - Image
+    * 0 - Charging Mode
+    * 1 - 8 - Transition to waypoint 1-8
+    * 9 - Map
+    * 10 - Downlink
+    * 11 - Image
 
     Observation Space (Box):
-    0-2: Hill-frame position
-    3-5: Hill-frame velocity
-    6: Eclipse
-    7: Data buffer storage
-    8: Battery level
-    9: dV consumed
-    10: Downlink availability
-    11-13: Current waypoint
-    14-16: Last waypoint
-    17: Imaged targets
-    18: Downlinked targets
-    19-21: Next closest unimaged target position in Hill frame
-    22-30: Map regions collected
+    * 0-2: Hill-frame position
+    * 3-5: Hill-frame velocity
+    * 6: Eclipse
+    * 7: Data buffer storage
+    * 8: Battery level
+    * 9: dV consumed
+    * 10: Downlink availability
+    * 11-13: Current waypoint
+    * 14-16: Last waypoint
+    * 17: Imaged targets
+    * 18: Downlinked targets
+    * 19-21: Next closest unimaged target position in Hill frame
+    * 22-30: Map regions collected
 
     Reward Function:
-    r = +A each tgt downlinked for first time
-    r = +B for each tgt imaged for first time
-    r = +C for each map region downlinked for first time
-    r = +D for each map region collected for first time
-    r = -E for failure
+    * r = +A each tgt downlinked for first time
+    * r = +B for each tgt imaged for first time
+    * r = +C for each map region downlinked for first time
+    * r = +D for each map region collected for first time
+    * r = -E for failure
     """
 
     def __init__(

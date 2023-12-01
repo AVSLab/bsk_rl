@@ -1,6 +1,6 @@
+import numpy as np
 from Basilisk.simulation import reactionWheelStateEffector, thrusterDynamicEffector
 from Basilisk.utilities import simIncludeRW, simIncludeThruster
-from numpy.random import uniform
 
 
 def balancedHR16Triad(
@@ -15,7 +15,7 @@ def balancedHR16Triad(
     """
     rwFactory = simIncludeRW.rwFactory()
     if useRandom:
-        wheelSpeeds = uniform(randomBounds[0], randomBounds[1], 3)
+        wheelSpeeds = np.random.uniform(randomBounds[0], randomBounds[1], 3)
 
     rwFactory.create(
         "Honeywell_HR16", [1, 0, 0], maxMomentum=50.0, Omega=wheelSpeeds[0]  # RPM
