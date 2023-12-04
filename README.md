@@ -54,11 +54,17 @@ Several papers utilizing these tools may be found at these links:
 - [Monte Carlo Tree Search Methods for the Earth-Observing Satellite Scheduling Problem](https://hanspeterschaub.info/PapersPrivate/Herrmann2022b.pdf)
 - [Reinforcement Learning for the Agile Earth-Observing Satellite Scheduling Problem](https://ieeexplore.ieee.org/document/10058020)
 
+##	License
+This project is licensed under the MIT license - see the [LICENSE.md](LICENSE.md) file for details.
 
-## Authors
+## Acknowledgements
+Developed in the [Autonomous Vehicle Systems Laboratory](http://hanspeterschaub.info/main.html) at the University of Colorado, Boulder.
+
+### Authors
 Maintainers: 
-- Mr. Adam Herrmann (adam.herrmann@colorado.edu)
+- Dr. Adam Herrmann (adam.herrmann@colorado.edu)
 - Mr. Mark Stephenson (mark.a.stephenson@colorado.edu)
+- Mr. Lorenzzo Mantovani
 
 Past Contributors:
 - Dr. Andrew T. Harris (andrew.t.harris@colorado.edu)
@@ -66,8 +72,8 @@ Past Contributors:
 - Mr. Islam Nazmy
 - Mr. Trace Valade
 
-##	License
-This project is licensed under the MIT license - see the [LICENSE.md](LICENSE.md) file for details.
+### Funding
+This work has been supported by NASA Space Technology Graduate Research Opportunity
+(NSTGRO) grants, 80NSSC20K1162 and 80NSSC23K1182.
 
-## Acknowledgements
-[The Autonomous Vehicle Systems Laboratory](http://hanspeterschaub.info/main.html)
+This work has also been supported by Air Force Research Lab grant FA9453-22-2-0050.
