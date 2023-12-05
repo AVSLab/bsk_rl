@@ -6,6 +6,8 @@ from pathlib import Path
 
 import requests
 
+from bsk_rl.check_bsk_version import check_bsk_version
+
 
 def pck_install():
     subprocess.check_call(
@@ -29,3 +31,5 @@ def pck_install():
         / "scenario"
         / "simplemaps_worldcities"
     )
+
+    check_bsk_version()
