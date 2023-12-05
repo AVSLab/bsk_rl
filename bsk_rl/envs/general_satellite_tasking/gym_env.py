@@ -5,7 +5,6 @@ import numpy as np
 from gymnasium import Env, spaces
 
 from bsk_rl.envs.general_satellite_tasking.scenario.communication import NoCommunication
-from bsk_rl.envs.general_satellite_tasking.scenario.satellites import REQUIRES_RETASKING
 from bsk_rl.envs.general_satellite_tasking.simulation.simulator import Simulator
 from bsk_rl.envs.general_satellite_tasking.types import (
     CommunicationMethod,
@@ -221,7 +220,7 @@ class GeneralSatelliteTasking(Env):
         """Propagate the simulation, update information, and get rewards
 
         Args:
-            Joint action for satellites. Can be none to maintain current task.
+            Joint action for satellites
 
         Returns:
             observation, reward, terminated, truncated, info
@@ -229,17 +228,8 @@ class GeneralSatelliteTasking(Env):
         if len(actions) != len(self.satellites):
             raise ValueError("There must be the same number of actions and satellites")
         for satellite, action in zip(self.satellites, actions):
-            old_info = satellite.info
             satellite.info = []  # reset satellite info log
-            if action is not None:
-                satellite.set_action(action)
-            else:
-                if REQUIRES_RETASKING in old_info:
-                    print(
-                        f"Satellite {satellite.id} requires retasking "
-                        "but received no task."
-                    )
-                    satellite.info.append(REQUIRES_RETASKING)
+            satellite.set_action(action)
 
         previous_time = self.simulator.sim_time  # should these be recorded in simulator
         self.simulator.run()

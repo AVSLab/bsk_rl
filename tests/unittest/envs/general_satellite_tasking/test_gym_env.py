@@ -7,10 +7,7 @@ from bsk_rl.envs.general_satellite_tasking.gym_env import (
     GeneralSatelliteTasking,
     SingleSatelliteTasking,
 )
-from bsk_rl.envs.general_satellite_tasking.scenario.satellites import (
-    REQUIRES_RETASKING,
-    Satellite,
-)
+from bsk_rl.envs.general_satellite_tasking.scenario.satellites import Satellite
 
 
 class TestGeneralSatelliteTasking:
@@ -146,23 +143,6 @@ class TestGeneralSatelliteTasking:
             env.step((0, 10, 20))
         with pytest.raises(ValueError):
             env.step((0,))
-
-    @patch.multiple(Satellite, __abstractmethods__=set())
-    def test_step_retask_needed(self, capfd):
-        mock_sat = MagicMock()
-        env = SingleSatelliteTasking(
-            satellites=[mock_sat],
-            env_type=MagicMock(),
-            env_features=MagicMock(),
-            data_manager=MagicMock(reward=MagicMock(return_value=25.0)),
-        )
-        env.simulator = MagicMock(sim_time=101.0)
-        env.step(None)
-        assert REQUIRES_RETASKING not in mock_sat.info
-        mock_sat.info = [REQUIRES_RETASKING]
-        env.step(None)
-        assert REQUIRES_RETASKING in mock_sat.info
-        assert "requires retasking but received no task" in capfd.readouterr().out
 
     @pytest.mark.parametrize("sat_death", [True, False])
     @pytest.mark.parametrize("timeout", [True, False])

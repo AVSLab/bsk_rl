@@ -100,14 +100,12 @@ class TestTimeState:
 
     def test_explicit_normalization(self, sat_init):
         sat = so.TimeState(normalization_time=10.0)
-        sat.info = MagicMock()
         sat.simulator = MagicMock(sim_time=1.0)
         sat.reset_post_sim()
         assert sat.normalized_time() == 0.1
 
     def test_implicit_normalization(self, sat_init):
         sat = so.TimeState(normalization_time=None)
-        sat.info = MagicMock()
         sat.simulator = MagicMock(sim_time=1.0, time_limit=10.0)
         sat.reset_post_sim()
         assert sat.normalized_time() == 0.1
