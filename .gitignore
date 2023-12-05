@@ -125,4 +125,4 @@ bsk_rl/results/
 .DS_Store
 
 # data files
-bsk_rl/envs/general_satellite_tasking/scenario/simplemaps_worldcities/
+src/bsk_rl/envs/general_satellite_tasking/scenario/simplemaps_worldcities/
