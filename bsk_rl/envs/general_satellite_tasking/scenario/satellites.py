@@ -87,6 +87,7 @@ class Satellite(ABC):
         self.fsw: "FSWModel"
         self.dynamics: "DynamicsModel"
         self.data_store: DataStore
+        self.requires_retasking: bool
         self.variable_interval = variable_interval
         self._timed_terminal_event_name = None
 
@@ -104,6 +105,7 @@ class Satellite(ABC):
     def reset_pre_sim(self) -> None:
         """Called in environment reset, before simulator initialization"""
         self.info = []
+        self.requires_retasking = True
         self._generate_sat_args()
         assert self.data_store.is_fresh
         self.data_store.is_fresh = False
@@ -235,6 +237,7 @@ class Satellite(ABC):
             [f"self.TotalSim.CurrentNanos * {macros.NANO2SEC} >= {t_close}"],
             [
                 self._info_command(f"timed termination at {t_close:.1f} " + info),
+                self._satellite_command + ".requires_retasking = True",
             ]
             + extra_actions,
             terminal=self.variable_interval,
@@ -747,6 +750,7 @@ class ImagingSatellite(AccessSatellite):
                 [
                     self._info_command(f"imaged {target}"),
                     self._satellite_command + ".imaged += 1",
+                    self._satellite_command + ".requires_retasking = True",
                 ],
                 terminal=self.variable_interval,
             )
