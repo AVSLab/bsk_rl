@@ -186,6 +186,11 @@ class GeneralSatelliteTasking(Env):
             satellite.id: deepcopy(satellite.info) for satellite in self.satellites
         }
         info["d_ts"] = self.latest_step_duration
+        info["requires_retasking"] = [
+            satellite.id
+            for satellite in self.satellites
+            if satellite.requires_retasking
+        ]
         return info
 
     @property
@@ -229,7 +234,15 @@ class GeneralSatelliteTasking(Env):
             raise ValueError("There must be the same number of actions and satellites")
         for satellite, action in zip(self.satellites, actions):
             satellite.info = []  # reset satellite info log
-            satellite.set_action(action)
+            if action is not None:
+                satellite.requires_retasking = False
+                satellite.set_action(action)
+            else:
+                if satellite.requires_retasking:
+                    print(
+                        f"Satellite {satellite.id} requires retasking "
+                        "but received no task."
+                    )
 
         previous_time = self.simulator.sim_time  # should these be recorded in simulator
         self.simulator.run()

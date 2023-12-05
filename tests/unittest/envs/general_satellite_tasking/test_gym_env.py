@@ -64,6 +64,7 @@ class TestGeneralSatelliteTasking:
         env.latest_step_duration = 10.0
         expected = {sat.id: {"sat_index": i} for i, sat in enumerate(mock_sats)}
         expected["d_ts"] = 10.0
+        expected["requires_retasking"] = [sat.id for sat in mock_sats]
         assert env._get_info() == expected
 
     def test_action_space(self):
@@ -169,6 +170,23 @@ class TestGeneralSatelliteTasking:
 
         assert terminated == (sat_death or (timeout and terminate_on_time_limit))
         assert truncated == timeout
+
+    @patch.multiple(Satellite, __abstractmethods__=set())
+    def test_step_retask_needed(self, capfd):
+        mock_sat = MagicMock()
+        env = SingleSatelliteTasking(
+            satellites=[mock_sat],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(reward=MagicMock(return_value=25.0)),
+        )
+        env.simulator = MagicMock(sim_time=101.0)
+        env.step(None)
+        assert mock_sat.requires_retasking
+        mock_sat.requires_retasking = True
+        env.step(None)
+        assert mock_sat.requires_retasking
+        assert "requires retasking but received no task" in capfd.readouterr().out
 
     def test_render(self):
         pass
