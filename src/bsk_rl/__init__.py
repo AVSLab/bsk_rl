@@ -1,5 +1,7 @@
 from gymnasium.envs.registration import register
 
+from bsk_rl.check_bsk_version import check_bsk_version
+
 register(id="SimpleEOS-v0", entry_point="bsk_rl.envs.simple_eos.gym_env:SimpleEOS")
 
 register(
@@ -33,3 +35,6 @@ register(
     id="SingleSatelliteTasking-v1",
     entry_point="bsk_rl.envs.general_satellite_tasking.gym_env:SingleSatelliteTasking",
 )
+
+
+check_bsk_version()
