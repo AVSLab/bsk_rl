@@ -201,7 +201,8 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def set_ICs(self):
         """
         Sets initial conditions
-        :return initial_conditions: dictionary of spacecraft ICs, key is spacecraft num
+
+        :return initial_conditions: dictionary of spacecraft ICs, key is spacecraft num.
         """
         initial_conditions = leo_initial_conditions.walker_delta_n_spacecraft_500_km(
             self.n_spacecraft,
@@ -220,6 +221,7 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def set_environment(self, envModel):
         """
         Sets up the environment modules for the sim.
+
         :return:
         """
         self.EnvProcessName = "EnvironmentProcess"
@@ -231,6 +233,7 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def set_dynamics(self, dynModel):
         """
         Sets up the dynamics modules for the sim.
+
         :return:
         """
         self.DynamicsProcessName = []
@@ -258,6 +261,7 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def set_fsw(self, fswModel):
         """
         Sets up the fsw modules for the sim.
+
         :return:
         """
         self.FSWProcessName = []
@@ -276,9 +280,7 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
             )
 
     def init_obs(self):
-        """
-        Initializes the observations for each spacecraft
-        """
+        """Initializes the observations for each spacecraft."""
         for sc_idx in range(self.n_spacecraft):
             # Initialize the observations (normed)
             # Inertial position
@@ -377,9 +379,7 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
             self.obs = np.around(self.obs, decimals=5)
 
     def setup_viz(self):
-        """
-        Initializes a vizSupport instance
-        """
+        """Initializes a vizSupport instance."""
         from datetime import datetime
 
         fileName = f"multi_tgt_env-v1_{datetime.today()}"  # noqa: F841; unsure if used
@@ -533,7 +533,7 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
         - simpleInstrumentControl access
         - sc Log
         - planetLog
-        - LOS comms
+        - LOS comms.
         """
 
         self.boulderGSLogs = []
@@ -658,6 +658,7 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def run_sim(self, action, return_obs=True):
         """
         Executes the sim for a specified duration given a mode command.
+
         :param action: list of actions, index by s/c num
         :return observations: n_spacecraft x obs_size nparray of observations
         """
@@ -838,8 +839,9 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
         """
         Update the imaging state of all satellites by adding to individual lists then
         communicating
+
         :return downlinked: n_spacecraft x n_targets np.array of downlinked targets
-        :return imaged: n_spacecraft x n_targets np.array of imaged targets
+        :return imaged: n_spacecraft x n_targets np.array of imaged targets.
         """
         # Initialize lists for each sc's imaging and downlink
         imaged_all = []
@@ -862,10 +864,11 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def get_obs(self):
         """
         Pulls all of the message logs or reads messages for each spacecraft
+
         :return self.obs: n_spacecraft x obs_size nparray of normalized observations
         :return self.sim_over: T/F if sim is over
         :return self.obs_full: n_spacecraft x obs_size nparray of normalized
-        observations
+        observations.
         """
         # Initialize the local obs_full variable
         obs_full = np.zeros(
@@ -1091,7 +1094,8 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
 
     def close_gracefully(self):
         """
-        makes sure spice gets shut down right when we close.
+        Makes sure spice gets shut down right when we close.
+
         :return:
         """
         self.EnvModel.gravFactory.unloadSpiceKernels()
@@ -1117,8 +1121,9 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
         3: Priority
         4: Imaged?
         5: Downlinked?
+
         :return image_tuples: image_tuple_size nparray
-        :return image_tuples_norm: image_tuple_size nparray
+        :return image_tuples_norm: image_tuple_size nparray.
         """
         # Initialize the image tuple array
         image_tuples = np.zeros(
@@ -1178,8 +1183,9 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def update_imaged_targets(self, sc_idx):
         """
         Updates which targets have been imaged and which have been downlinked
+
         :return downlinked: 1 x n_targets np.array of downlinked targets
-        :return imaged: 1 x n_targets np.array of imaged targets
+        :return imaged: 1 x n_targets np.array of imaged targets.
         """
         # Initialize list of targets that were just downlinked or imaged, helpful for
         # reward computation
@@ -1221,9 +1227,10 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def check_image_update(self, idx, storedData, alreadyimaged):
         """
         Checks the storageUnitLog to see if data was added or not
+
         :param idx: index of target
         :param storedData: pulled log of storage unit
-        :return: 1 if data was added since the last decision interval, 0 otherwise
+        :return: 1 if data was added since the last decision interval, 0 otherwise.
         """
         if storedData is not None:
             if storedData[-1, idx] > 0 and not alreadyimaged:
@@ -1236,9 +1243,10 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def check_downlink_update(self, idx, storedData):
         """
         Checks the storageUnitLogs to see if an image was downlinked
+
         :param idx: index of target
         :param storedData: pulled log of storage unit
-        :return: 1 if data was added, 0 otherwise
+        :return: 1 if data was added, 0 otherwise.
         """
         # If the partition has downlinked data greater than or equal to an image size,
         # the image has been downlinked
@@ -1256,7 +1264,8 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def check_target_switch(self, sc_idx):
         """
         Grabs the index(s) of the next upcoming target(s)
-        :return upcoming_tgts: 1 x n_targets nparray of upcoming local tgt indices
+
+        :return upcoming_tgts: 1 x n_targets nparray of upcoming local tgt indices.
         """
         times = self.initial_conditions[str(sc_idx)]["target_times"]
         global_tgts = self.initial_conditions[str(sc_idx)]["targetIndices"]
@@ -1285,6 +1294,7 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def set_up_comms(self):
         """
         Complete any preparatory steps for the comm method.
+
         - none: none
         - los: none
         - los-multi: none
@@ -1306,6 +1316,7 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def communicate(self):
         """
         Share information between satellites based on the comm method.
+
         - none: none
         - los: merge lists from any satellites with los communication
         - los-multi: merge lists from any satellites in a los-connected graph

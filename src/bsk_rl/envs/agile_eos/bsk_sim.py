@@ -76,9 +76,7 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
         max_length=270.0,
         target_tuple_size=4,
     ):
-        """
-        Creates the simulation, but does not initialize the initial conditions.
-        """
+        """Creates the simulation, but does not initialize the initial conditions."""
         self.initialized = False
         self.dynRate = dynRate
         self.fswRate = fswRate
@@ -320,8 +318,8 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def set_dynamics(self):
         """
         Sets up the dynamics modules for the sim.
-
         By default, parameters are set to those for a 6U cubesat.
+
         :return:
         """
         sc_number = 0
@@ -1008,7 +1006,9 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
 
     def set_fsw(self):
         """
-        Sets up the attitude guidance stack for the simulation. This simulator runs:
+        Sets up the attitude guidance stack for the simulation.
+
+        This simulator runs:
         inertial3Dpoint - Sets the attitude guidance objective to point the main panel
         at the sun.
         hillPointTask: Sets the attitude guidance objective to point a "camera" angle
@@ -1369,8 +1369,9 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
         self.vizInterface.settings.showLocationLabels = 1
 
     def setupGatewayMsgs(self):
-        """create C-wrapped gateway messages such that different modules can write to
-        this message and provide a common input msg for down-stream modules"""
+        """Create C-wrapped gateway messages such that different modules can write to
+        this message and provide a common input msg for down-stream modules.
+        """
 
         self.attRefMsg = cMsgPy.AttRefMsg_C()
         self.attGuidMsg = cMsgPy.AttGuidMsg_C()
@@ -1378,7 +1379,7 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
         self.zeroGateWayMsgs()
 
     def zeroGateWayMsgs(self):
-        """Zero all the FSW gateway message payloads"""
+        """Zero all the FSW gateway message payloads."""
         self.attRefMsg.write(messaging.AttRefMsgPayload())
         self.attGuidMsg.write(messaging.AttGuidMsgPayload())
 
@@ -1429,6 +1430,7 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def run_sim(self, action, return_obs=True):
         """
         Executes the sim for a specified duration given a mode command.
+
         :param action:
         :param duration:
         :return:
@@ -1848,7 +1850,8 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
 
     def close_gracefully(self):
         """
-        makes sure spice gets shut down right when we close.
+        Makes sure spice gets shut down right when we close.
+
         :return:
         """
         self.gravFactory.unloadSpiceKernels()
@@ -1863,7 +1866,7 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
         4: Imaged?
         5: Downlinked?
         :return: image state tuples (in a single np array) - normalized and
-                non-normalized
+                non-normalized.
         """
         # Initialize the image tuple array
         image_tuples = np.zeros(self.target_tuple_size * self.n_target_buffer)
@@ -1909,7 +1912,8 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def update_imaged_targets(self):
         """
         Updates which targets have been imaged and which have been downlinked
-        :return: downlinked
+
+        :return: downlinked.
         """
 
         # Initialize list of targets that were just downlinked or imaged, helpful for
@@ -1951,8 +1955,9 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def check_image_update(self, idx, storedData):
         """
         Checks the storageUnitLog to see if data was added or not
+
         :param idx:
-        :return: 1 if data was added, 0 otherwise
+        :return: 1 if data was added, 0 otherwise.
         """
         if storedData is not None:
             if storedData[-1, idx]:
@@ -1966,6 +1971,7 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
     def check_downlink_update(self, idx, storedData):
         """
         Checks the storageUnitLog to see if an image was downlinked
+
         :param idx: The specific buffer to look at
         :return:
         """
@@ -1983,9 +1989,7 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
             return 0
 
     def check_target_switch(self):
-        """
-        Grabs the index(s) of the next upcoming target(s)
-        """
+        """Grabs the index(s) of the next upcoming target(s)."""
         times = self.initial_conditions.get("target_times")
         idx = 0
         upcoming_tgts = []

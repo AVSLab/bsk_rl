@@ -4,6 +4,7 @@ import numpy as np
 def random_tumble(maxSpinRate=0.001):
     """
     Simulates a spacecraft in a random tumble with uniformly sampled initial conditions.
+
     :return: sigma_bn
     :return: omega_bn
     """
@@ -29,6 +30,7 @@ def random_tumble(maxSpinRate=0.001):
 def static_inertial():
     """
     Simulates a spacecraft in a sidereal stare fixed to the inertial origin.
+
     :return:
     """
 

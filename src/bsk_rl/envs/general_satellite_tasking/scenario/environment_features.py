@@ -9,10 +9,10 @@ from Basilisk.utilities import orbitalMotion
 
 
 class EnvironmentFeatures(ABC):
-    """Base environment feature class"""
+    """Base environment feature class."""
 
     def reset(self) -> None:  # pragma: no cover
-        """Reset environment features"""
+        """Reset environment features."""
         pass
 
 
@@ -22,7 +22,7 @@ class Target:
         Args:
             name: Identifier; does not need to be unique
             location: PCPF location [m]
-            priority: Value metric
+            priority: Value metric.
         """
         self.name = name
         self.location = np.array(location)
@@ -30,7 +30,7 @@ class Target:
 
     @property
     def id(self) -> str:
-        """str: Unique human-readable identifier"""
+        """Str: Unique human-readable identifier."""
         try:
             return self._id
         except AttributeError:
@@ -52,6 +52,7 @@ class StaticTargets(EnvironmentFeatures):
         radius: float = orbitalMotion.REQ_EARTH * 1e3,
     ) -> None:
         """Environment with a set number of evenly-distributed static targets.
+
         Args:
             n_targets: Number (or range) of targets to generate
             priority_distribution: Function for generating target priority.
@@ -72,7 +73,7 @@ class StaticTargets(EnvironmentFeatures):
         self.regenerate_targets()
 
     def regenerate_targets(self) -> None:
-        """Regenerate targets uniformly"""
+        """Regenerate targets uniformly."""
         self.targets = []
         for i in range(self.n_targets):
             x = np.random.normal(size=3)
@@ -89,7 +90,7 @@ def lla2ecef(lat: float, long: float, radius: float):
     Args:
         lat: [deg]
         long: [deg]
-        radius: [any]
+        radius: [any].
     """
     lat = np.radians(lat)
     long = np.radians(long)
@@ -108,6 +109,7 @@ class CityTargets(StaticTargets):
         radius: float = orbitalMotion.REQ_EARTH * 1e3,
     ) -> None:
         """Environment with a set number of static targets around population centers.
+
         Args:
             n_targets: Number of targets to generate
             n_select_from: Generate targets from the top n most populous.
@@ -122,7 +124,7 @@ class CityTargets(StaticTargets):
         self.location_offset = location_offset
 
     def regenerate_targets(self) -> None:
-        """Regenerate targets based on cities"""
+        """Regenerate targets based on cities."""
         self.targets = []
         cities = pd.read_csv(
             os.path.join(
@@ -153,12 +155,10 @@ class CityTargets(StaticTargets):
 
 
 class UniformNadirFeature(EnvironmentFeatures):
-    """
-    Defines a nadir target center at the center of the planet.
-    """
+    """Defines a nadir target center at the center of the planet."""
 
     def __init__(self, value_per_second: float = 1.0) -> None:
-        """ "
+        """
         Args:
             value_per_second: Amount of reward per second imaging nadir.
         """

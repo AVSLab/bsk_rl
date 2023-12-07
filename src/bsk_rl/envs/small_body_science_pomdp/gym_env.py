@@ -10,7 +10,9 @@ class SmallBodySciencePOMDP(SmallBodyScience):
     """
     Small body gym environment where an agent can transition between different
     waypoints defined in the sun anti-momentum frame to image candidate landing sites
-    or collect spectroscopy map data while avoiding resource constraint violations. As
+    or collect spectroscopy map data while avoiding resource constraint violations.
+
+    As
     opposed to the SmallBodyScience environment, this environment is utilizes an EKF
     filter for the observation space to simulate a POMDP, which provides a belief state
     for the POMDP.
@@ -77,6 +79,7 @@ class SmallBodySciencePOMDP(SmallBodyScience):
         """
         Modifies the observation of the MDP such that it conforms to the POMDP
         specification.
+
         :param ob:
         :return:
         """
@@ -85,6 +88,7 @@ class SmallBodySciencePOMDP(SmallBodyScience):
     def reset(self, seed=None, options=None):
         """
         Reset the state of the environment and returns an initial observation.
+
         Returns
         -------
         observation (object): the initial observation of the space.

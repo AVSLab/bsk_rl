@@ -30,7 +30,7 @@ bsk_path = __path__[0]
 class EnvironmentModel(ABC):
     @classmethod
     def default_env_args(cls, **kwargs) -> dict[str, Any]:
-        """Compile default argments for the environment model"""
+        """Compile default argments for the environment model."""
         defaults = collect_default_args(cls)
         for k, v in kwargs.items():
             if k not in defaults:
@@ -45,7 +45,7 @@ class EnvironmentModel(ABC):
         priority: int = 300,
         **kwargs,
     ) -> None:
-        """Base environment model
+        """Base environment model.
 
         Args:
             simulator: Simulator using this model
@@ -71,12 +71,12 @@ class EnvironmentModel(ABC):
 
     @abstractmethod  # pragma: no cover
     def _init_environment_objects(self, **kwargs) -> None:
-        """Caller for all environment objects"""
+        """Caller for all environment objects."""
         pass
 
 
 class BasicEnvironmentModel(EnvironmentModel):
-    """Minimal set of Basilisk environment objects"""
+    """Minimal set of Basilisk environment objects."""
 
     @property
     def PN(self):
@@ -230,7 +230,7 @@ class BasicEnvironmentModel(EnvironmentModel):
 
 
 class GroundStationEnvModel(BasicEnvironmentModel):
-    """Model that includes downlink ground stations"""
+    """Model that includes downlink ground stations."""
 
     def _init_environment_objects(self, **kwargs) -> None:
         super()._init_environment_objects(**kwargs)

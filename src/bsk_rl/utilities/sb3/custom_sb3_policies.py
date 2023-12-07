@@ -9,6 +9,7 @@ from torch import nn
 class CustomNetwork(nn.Module):
     """
     Custom network for policy and value function.
+
     It receives as input the features extracted by the feature extractor.
 
     :param feature_dim: dimension of the features extracted with the features_extractor
@@ -63,6 +64,7 @@ class CustomNetwork(nn.Module):
         """
         :return: (th.Tensor, th.Tensor) latent_policy, latent_value of the specified
             network.
+
             If all layers are shared, then ``latent_policy == latent_value``
         """
         # print('Feature shape: ', features.shape)

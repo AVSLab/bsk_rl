@@ -67,7 +67,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
     def _set_environment(
         self, env_type: type["EnvironmentModel"], env_args: dict[str, Any]
     ) -> None:
-        """Construct the simulator environment model
+        """Construct the simulator environment model.
 
         Args:
             env_type: type of environment model to be constructed
@@ -76,7 +76,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self.environment = env_type(self, self.sim_rate, **env_args)
 
     def run(self) -> None:
-        """Propagate the simulator"""
+        """Propagate the simulator."""
         simulation_time = mc.sec2nano(
             min(self.sim_time + self.max_step_duration, self.time_limit)
         )
@@ -84,7 +84,10 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self.ExecuteSimulation()
 
     def delete_event(self, event_name) -> None:
-        """Removes an event from the event map. Makes event checking faster"""
+        """Removes an event from the event map.
+
+        Makes event checking faster
+        """
         event = self.eventMap[event_name]
         self.eventList.remove(event)
         del self.eventMap[event_name]

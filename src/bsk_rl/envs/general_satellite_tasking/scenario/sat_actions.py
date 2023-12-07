@@ -20,9 +20,12 @@ class SatAction(Satellite):
 
 class DiscreteSatAction(SatAction):
     def __init__(self, *args, **kwargs) -> None:
-        """Base satellite subclass for composing discrete actions. Actions are added to
+        """Base satellite subclass for composing discrete actions.
+
+        Actions are added to
         the satellite for each DiscreteSatAction subclass, and can be accessed by index
-        in order added."""
+        in order added.
+        """
         super().__init__(*args, **kwargs)
         self.action_list = []
         self.action_map = {}
@@ -58,7 +61,8 @@ class DiscreteSatAction(SatAction):
 
     def generate_indexed_action(self, act_fn, index: int):
         """Create a indexed action function from an action function that takes an index
-        as an argument"""
+        as an argument.
+        """
 
         def act_i(self, prev_action_key=None) -> Any:
             return getattr(self, act_fn.__name__)(
@@ -68,7 +72,7 @@ class DiscreteSatAction(SatAction):
         return act_i
 
     def set_action(self, action: int):
-        """Function called by the environment when setting action"""
+        """Function called by the environment when setting action."""
         self._disable_timed_terminal_event()
         self.prev_action_key = self.action_list[action](
             prev_action_key=self.prev_action_key
@@ -87,7 +91,7 @@ def fsw_action_gen(fsw_action: str, action_duration: float = 1e9) -> type:
             self, *args, action_duration: float = action_duration, **kwargs
         ) -> None:
             """Discrete action to perform a fsw action; typically this is a function
-            decorated by @action
+            decorated by @action.
 
             Args:
                 action_duration: Time to act when action selected. [s]
@@ -167,7 +171,8 @@ class ImagingActions(DiscreteSatAction, ImagingSatellite):
 
     def set_action(self, action: Union[int, Target, str]):
         """Allow the satellite to be tasked by Target or target id, in addition to
-        index"""
+        index.
+        """
         self._disable_image_event()
         if isinstance(action, (Target, str)):
             self.prev_action_key = self.image(action, self.prev_action_key)

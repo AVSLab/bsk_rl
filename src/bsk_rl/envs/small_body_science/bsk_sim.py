@@ -542,6 +542,7 @@ class SmallBodyScienceSimulator(SimulationBaseClass.SimBaseClass):
     def set_dynamics(self):
         """
         Calls each function to set the dynamics.
+
         :return:
         """
         self.set_spacecraft()
@@ -1503,15 +1504,15 @@ class SmallBodyScienceSimulator(SimulationBaseClass.SimBaseClass):
         return
 
     def set_gateway_msgs(self):
-        """create C-wrapped gateway messages such that different modules can write to
-        this message
-        and provide a common input msg for down-stream modules"""
+        """Create C-wrapped gateway messages such that different modules can write to
+        this message and provide a common input msg for down-stream modules.
+        """
         self.attGuidMsg = cMsgPy.AttGuidMsg_C()
         self.attRefMsg = cMsgPy.AttRefMsg_C()
         return
 
     def zero_gateway_msgs(self):
-        """Zero all the FSW gateway message payloads"""
+        """Zero all the FSW gateway message payloads."""
         self.attGuidMsg.write(messaging.AttGuidMsgPayload())
         self.attRefMsg.write(messaging.AttRefMsgPayload())
         return

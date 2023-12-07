@@ -62,9 +62,7 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
         render=False,
         settings=None,
     ):
-        """
-        Creates the simulation, but does not initialize the initial conditions.
-        """
+        """Creates the simulation, but does not initialize the initial conditions."""
         self.dyn_step = dyn_step
         self.fsw_step = fsw_step
         self.mode_duration = mode_duration
@@ -138,7 +136,7 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
         - Eclipse
         - Planetary atmosphere
         - Gravity
-        - Spherical harmonics
+        - Spherical harmonics.
         """
         # clear prior gravitational body and SPICE setup definitions
         self.gravFactory = simIncludeGravBody.gravBodyFactory()
@@ -195,7 +193,9 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
 
     def set_sc_dynamics(self):
         """
-        Sets up the dynamics modules for the sim. This simulator runs:
+        Sets up the dynamics modules for the sim.
+
+        This simulator runs:
         scObject (spacecraft dynamics simulation)
         EclipseObject (simulates eclipse for simpleSolarPanel)
         extForceTorque (attitude actuation)
@@ -401,7 +401,9 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
 
     def set_fsw(self):
         """
-        Sets up the attitude guidance stack for the simulation. This simulator runs:
+        Sets up the attitude guidance stack for the simulation.
+
+        This simulator runs:
         inertial3Dpoint - Sets the attitude guidance objective to point the main panel
             at the sun.
         hillPointTask: Sets the attitude guidance objective to point a "camera"
@@ -625,7 +627,9 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
 
     def set_logging(self):
         """
-        Logs simulation outputs to return as observations. This simulator observes:
+        Logs simulation outputs to return as observations.
+
+        This simulator observes:
         mrp_bn - inertial to body MRP
         error_mrp - Attitude error given current guidance objective
         power_level - current W-Hr from the battery
@@ -647,19 +651,21 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
         return
 
     def setup_gateway_msgs(self):
-        """create C-wrapped gateway messages such that different modules can write to
+        """Create C-wrapped gateway messages such that different modules can write to
         this message
-        and provide a common input msg for down-stream modules"""
+        and provide a common input msg for down-stream modules.
+        """
         self.attRefMsg = cMsgPy.AttRefMsg_C()
         self.zeroGateWayMsgs()
 
     def zeroGateWayMsgs(self):
-        """Zero all the FSW gateway message payloads"""
+        """Zero all the FSW gateway message payloads."""
         self.attRefMsg.write(messaging.AttRefMsgPayload())
 
     def run_sim(self, action):
         """
         Executes the sim for a specified duration given a mode command.
+
         :param action:
             0 - Point solar panels at the sun
             1 - Desaturate reaction wheels
@@ -877,9 +883,7 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
         return current_sim_state
 
     def check_target_switch(self):
-        """
-        Grabs the index(s) of the next upcoming target(s)
-        """
+        """Grabs the index(s) of the next upcoming target(s)."""
         times = self.initial_conditions.get("target_times")
         idx = 0
         upcoming_tgts = []
@@ -903,6 +907,7 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
     def __del__(self):
         """
         Deletes the simulation instance and calls the spice kernel unloader
+
         :return:
         """
         self.close_gracefully()
@@ -910,7 +915,8 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
 
     def close_gracefully(self):
         """
-        makes sure spice gets shut down right when we close.
+        Makes sure spice gets shut down right when we close.
+
         :return:
         """
         self.gravFactory.unloadSpiceKernels()

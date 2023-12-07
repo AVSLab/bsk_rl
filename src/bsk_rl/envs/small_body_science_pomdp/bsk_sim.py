@@ -110,6 +110,7 @@ class SmallBodySciencePOMDPSimulator(SmallBodyScienceSimulator):
     def set_dynamics(self):
         """
         Calls each function to set the dynamics.
+
         :return:
         """
         self.set_spacecraft()
@@ -1294,7 +1295,9 @@ class SmallBodySciencePOMDPSimulator(SmallBodyScienceSimulator):
 
     def get_eclipse(self):
         """
-        Saves the eclipse state. For the POMDP, a proxy for the eclipse state is used,
+        Saves the eclipse state.
+
+        For the POMDP, a proxy for the eclipse state is used,
         which is just the power output of the panels. Zero power should indicate
         either eclipse or an anti-sun pointing mode. Non-zero power means not in
         eclipse.

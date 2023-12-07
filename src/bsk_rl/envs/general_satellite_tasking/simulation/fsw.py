@@ -41,7 +41,8 @@ def action(
     func: Callable[..., None]
 ) -> Callable[Callable[..., None], Callable[..., None]]:
     """Wrapper to do housekeeping for action functions that should be called by the
-    satellite class."""
+    satellite class.
+    """
 
     def inner(self, *args, **kwargs) -> Callable[..., None]:
         self.fsw_proc.disableAllTasks()
@@ -64,7 +65,7 @@ class FSWModel(ABC):
     def __init__(
         self, satellite: "Satellite", fsw_rate: float, priority: int = 100, **kwargs
     ) -> None:
-        """Base FSWModel
+        """Base FSWModel.
 
         Args:
             satellite: Satellite modelled by this model
@@ -117,7 +118,7 @@ class FSWModel(ABC):
 
     @abstractmethod  # pragma: no cover
     def _set_messages(self) -> None:
-        """Message setup after task creation"""
+        """Message setup after task creation."""
         pass
 
     def is_alive(self) -> bool:
@@ -140,7 +141,7 @@ class Task(ABC):
         pass
 
     def __init__(self, fsw: FSWModel, priority: int) -> None:
-        """Template class for defining FSW processes
+        """Template class for defining FSW processes.
 
         Args:
             fsw: FSW model task contributes to
@@ -183,7 +184,8 @@ class Task(ABC):
 
     def reset_for_action(self) -> None:
         """Housekeeping for task when a new action is called; by default, disable
-        task."""
+        task.
+        """
         self.fsw.simulator.disableTask(self.name + self.fsw.satellite.id)
 
 
@@ -224,12 +226,14 @@ class BasicFSWModel(FSWModel):
 
     def _set_rw_config_msg(self) -> None:
         """Configure RW pyramid exactly as it is in the Dynamics (i.e. FSW with perfect
-        knowledge)."""
+        knowledge).
+        """
         self.fswRwConfigMsg = self.dynamics.rwFactory.getConfigMessage()
 
     def _set_gateway_msgs(self) -> None:
         """Create C-wrapped gateway messages such that different modules can write to
-        this message and provide a common input msg for down-stream modules."""
+        this message and provide a common input msg for down-stream modules.
+        """
         self.attRefMsg = cMsgPy.AttRefMsg_C()
         self.attGuidMsg = cMsgPy.AttGuidMsg_C()
 
@@ -537,7 +541,7 @@ class BasicFSWModel(FSWModel):
 
 
 class ImagingFSWModel(BasicFSWModel):
-    """Extend FSW with instrument pointing and triggering control"""
+    """Extend FSW with instrument pointing and triggering control."""
 
     @classmethod
     @property
@@ -559,7 +563,7 @@ class ImagingFSWModel(BasicFSWModel):
         )
 
     class LocPointTask(Task):
-        """Task to point at targets and trigger the instrument"""
+        """Task to point at targets and trigger the instrument."""
 
         name = "locPointTask"
 
@@ -669,7 +673,7 @@ class ImagingFSWModel(BasicFSWModel):
 
 class ContinuousImagingFSWModel(ImagingFSWModel):
     class LocPointTask(ImagingFSWModel.LocPointTask):
-        """Task to point at targets and trigger the instrument"""
+        """Task to point at targets and trigger the instrument."""
 
         def create_module_data(self) -> None:
             # Location pointing configuration

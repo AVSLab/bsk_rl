@@ -17,6 +17,7 @@ mu = 0.3986004415e15
 def inclined_circular_300km():
     """
     Returns an inclined, circular LEO orbit.
+
     :return:
     """
 
@@ -36,6 +37,7 @@ def inclined_circular_300km():
 def random_inclined_circular_300km():
     """
     Returns an inclined, circular LEO orbit.
+
     :return:
     """
 
@@ -55,6 +57,7 @@ def random_inclined_circular_300km():
 def sampled_400km():
     """
     Returns an elliptical, prograde LEO orbit with an SMA of 400km.
+
     :return:
     """
     oe = orbitalMotion.ClassicElements()
@@ -72,6 +75,7 @@ def sampled_400km():
 def sampled_500km_boulder_gs():
     """
     Returns an elliptical, prograde LEO orbit with an SMA of 500km.
+
     Inclination is bounded so the spacecraft can communicate with Boulder.
     :return:
     """
@@ -93,6 +97,7 @@ def sampled_boulder_gs(nominal_radius):
     """
     Returns an elliptical, prograde LEO orbit with an SMA of 500km.
     Inclination is bounded so the spacecraft can communicate with Boulder.
+
     :return:
     """
     mu = 0.3986004415e15
@@ -168,6 +173,7 @@ def sso_Boulder():
 def inclined_400km():
     """
     Returns an elliptical, prograde LEO orbit with an SMA of 400km.
+
     :return:
     """
     mu = 0.3986004415e15
@@ -187,6 +193,7 @@ def create_ground_tgts(n_targets, rN, vN, sim_length, utc_init):
     """
     Returns a set of targets based on the orbital parameters by running a simplified
     BSK scenario
+
     :param n_targets: number of targets to generate
     :param rN: Initial inertial position
     :param vN: Initial inertial velocity
@@ -298,6 +305,7 @@ def walker_delta(
     """
     Computes the initial orbit conditions of a constellation of spacecraft in the
     walker delta pattern
+
     :param n_spacecraft: number of spacecraft in the constellation
     :param n_planes: number of orbital planes
     :param rel_phasing: relative phasing between the planes [0, 1)
@@ -305,7 +313,7 @@ def walker_delta(
     :param inc: Inclination of the orbit (deg)
     :param clustersize: Size of satellite groups
     :param clusterspacing: True anomaly spacing within cluster (deg)
-    :return oe_all: n_spacecraft x 1 list of BSK oe elements
+    :return oe_all: n_spacecraft x 1 list of BSK oe elements.
     """
     oe_all = []
 
@@ -352,7 +360,7 @@ def distribute_tgts(rN, vN, sim_length, utc_init, global_tgts, dt=60.0):
     :param global_tgts: np.array of global tgts in ECEF coordinates
     :param dt: [s]
     :return local_tgts: list of indexes into global tgts
-    :return local_tgt_times: local time each global tgt in local_tgts is encountered
+    :return local_tgt_times: local time each global tgt in local_tgts is encountered.
     """
 
     local_tgts = []
@@ -457,9 +465,10 @@ def elrange_req(sc_pos, tgt_pos):
     """
     Determines if the spacecraft is within the elevation and range requirements of
       a target
+
     :param sc_pos: spacecraft position expressed in the ECEF frame
     :param tgt_pos: tgt_pos expressed in the ECEF frame
-    :return within: T/F - within el, range requirements or not
+    :return within: T/F - within el, range requirements or not.
     """
 
     # Import relevant library

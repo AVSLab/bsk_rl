@@ -38,6 +38,7 @@ def mcts_batch(
     """
     The function performs a single run of MCTS over a planning horizon, generating \
     performance and training data
+
     :param data_directory: Data directory to store training data
     :param data_indicator: Data indicator to append to filename
     :param c: MCTS exploration constant
@@ -46,7 +47,7 @@ def mcts_batch(
     :param result_list: Results list
     :param render: T/F to render BSK sim using Vizard
     :param env_name: environment name
-    :return: N/A
+    :return: N/A.
     """
     np.random.seed(int(data_indicator.split("_")[-1]))
     # Create env
@@ -113,6 +114,7 @@ def mcts_batch(
 def run_episode(env, num_steps, t_final, c, num_sims, initial_conditions, env_name):
     """
     Runs an episode of MCTS.
+
     :param env: Gym environment
     :param num_steps: number of steps to take
     :param t_final: Final time
@@ -248,7 +250,7 @@ def data_number(x):
     """
     Splits the data indicator string to return the data number
     :param x: data indicator string
-    :return: data number
+    :return: data number.
     """
     return int(((x.rsplit("_")[-1]).rsplit("."))[0])
 
@@ -258,6 +260,7 @@ def create_model(
 ):
     """
     Creates a feedforward neural network subject to various hyperparameters.
+
     :param hidden_layer_num: Number of hidden layers
     :param net_size: Widths of hidden layers
     :param activation: activation function, either Leaky ReLU or tanh
@@ -306,8 +309,11 @@ def create_model(
 def load_and_modify_data(data_directory, modified_states=[]):
     """
     Loads AND modifies the training data
+
     :param data_directory: data directory to load data from
-    :param modified_states: modified states. First entry is a list of indices to keep.\
+    :param modified_states: modified states.
+
+    First entry is a list of indices to keep.\
     Next entries are dictionary keys
     for info.
     :return: train-test split of data
@@ -409,6 +415,7 @@ def load_and_modify_data(data_directory, modified_states=[]):
 def load_data(data_directory):
     """
     Loads the data to train with.
+
     :param data_directory: Data directory to load data from.
     :return: train-test split of training data.
     """
@@ -451,6 +458,7 @@ def load_data(data_directory):
 def run_experiment(data_directory, parameters, modified_states=[], batch_sizes=None):
     """
     Runs a hyperparameter search over neural network hyperparameters
+
     :param data_directory: Data directory to load data from and save networks, \
     training plots.
     :param parameters: dictionary of network hyperparameters.

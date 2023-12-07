@@ -15,7 +15,7 @@ from Basilisk.utilities import macros as mc
 
 
 class FSWModel:
-    """Defines the FSW class"""
+    """Defines the FSW class."""
 
     def __init__(self, SimBase, fswRate, spacecraftIndex):
         # define empty class variables
@@ -199,9 +199,7 @@ class FSWModel:
 
     # These are module-initialization methods
     def SetSunPointGuidance(self, SimBase):
-        """
-        Defines the Sun pointing guidance module.
-        """
+        """Defines the Sun pointing guidance module."""
         self.sunPointData.pHat_B = SimBase.initial_conditions[
             str(self.spacecraftIndex)
         ]["nHat_B"]
@@ -218,9 +216,7 @@ class FSWModel:
         cMsgPy.AttGuidMsg_C_addAuthor(self.sunPointData.attGuidOutMsg, self.attGuidMsg)
 
     def SetNadirPointGuidance(self, SimBase):
-        """
-        Defines the nadir pointing guidance module.
-        """
+        """Defines the nadir pointing guidance module."""
         self.hillPointData.transNavInMsg.subscribeTo(
             SimBase.DynModels[self.spacecraftIndex].simpleNavObject.transOutMsg
         )
@@ -230,9 +226,7 @@ class FSWModel:
         cMsgPy.AttRefMsg_C_addAuthor(self.hillPointData.attRefOutMsg, self.attRefMsg)
 
     def SetLocationPointGuidance(self, SimBase):
-        """
-        Defines the Earth location pointing guidance module.
-        """
+        """Defines the Earth location pointing guidance module."""
         self.locPointConfig.pHat_B = [0, 0, 1]
         self.locPointConfig.scAttInMsg.subscribeTo(
             SimBase.DynModels[self.spacecraftIndex].simpleNavObject.attOutMsg
@@ -251,9 +245,7 @@ class FSWModel:
         )
 
     def SetMomentumDumping(self, SimBase):
-        """
-        Defines the momentum dumping configuration.
-        """
+        """Defines the momentum dumping configuration."""
         self.thrDesatControlConfig.hs_min = SimBase.initial_conditions[
             str(self.spacecraftIndex)
         ].get(
@@ -279,9 +271,7 @@ class FSWModel:
         ].get("thrMinFireTime")
 
     def SetAttitudeTrackingError(self, SimBase):
-        """
-        Defines the module that converts a reference message into a guidance message.
-        """
+        """Defines the module that converts a reference message into a guidance message."""
         self.trackingErrorData.attNavInMsg.subscribeTo(
             SimBase.DynModels[self.spacecraftIndex].simpleNavObject.attOutMsg
         )
@@ -291,9 +281,7 @@ class FSWModel:
         )
 
     def SetMRPFeedbackRWA(self, SimBase):
-        """
-        Defines the control properties.
-        """
+        """Defines the control properties."""
         self.mrpFeedbackControlData.guidInMsg.subscribeTo(self.attGuidMsg)
         self.mrpFeedbackControlData.vehConfigInMsg.subscribeTo(self.vcConfigMsg)
         self.mrpFeedbackControlData.K = SimBase.initial_conditions[
@@ -310,9 +298,7 @@ class FSWModel:
         )
 
     def SetThrusterMapping(self, SimBase):
-        """
-        Defines the thrusters mapping.
-        """
+        """Defines the thrusters mapping."""
         self.thrForceMappingConfig.cmdTorqueInMsg.subscribeTo(
             self.thrDesatControlConfig.deltaHOutMsg
         )
@@ -327,9 +313,7 @@ class FSWModel:
         self.thrForceMappingConfig.angErrThresh = 3.15
 
     def SetRWConfigMsg(self, SimBase):
-        """
-        Imports the RWs configuration information.
-        """
+        """Imports the RWs configuration information."""
         # Configure RW pyramid exactly as it is in the Dynamics
         # (i.e. FSW with perfect knowledge)
         # the same msg is used here for both spacecraft
@@ -338,17 +322,13 @@ class FSWModel:
         ].rwFactory.getConfigMessage()
 
     def SetThrustersConfigMsg(self, SimBase):
-        """
-        Imports the thrusters configuration information.
-        """
+        """Imports the thrusters configuration information."""
         self.thrusterConfigMsg = SimBase.DynModels[
             self.spacecraftIndex
         ].thrFactory.getConfigMessage()
 
     def SetVehicleConfigMsg(self, SimBase):
-        """
-        Set the vehicle configuration message.
-        """
+        """Set the vehicle configuration message."""
         # Specify the vehicle configuration message to tell things what the vehicle
         # inertia is
         vehicleConfigOut = messaging.VehicleConfigMsgPayload()
@@ -358,9 +338,7 @@ class FSWModel:
         self.vcConfigMsg = messaging.VehicleConfigMsg().write(vehicleConfigOut)
 
     def SetRWMotorTorque(self, SimBase):
-        """
-        Defines the motor torque from the control law.
-        """
+        """Defines the motor torque from the control law."""
         self.rwMotorTorqueConfig.rwParamsInMsg.subscribeTo(self.fswRwConfigMsg)
         self.rwMotorTorqueConfig.vehControlInMsg.subscribeTo(
             self.mrpFeedbackControlData.cmdTorqueOutMsg
@@ -370,9 +348,7 @@ class FSWModel:
         ].get("controlAxes_B")
 
     def SetInstrumentController(self, SimBase):
-        """
-        Defines the instrument controller.
-        """
+        """Defines the instrument controller."""
         self.simpleInsControlConfig.attErrTolerance = SimBase.initial_conditions[
             str(self.spacecraftIndex)
         ].get("imageAttErrorRequirement")
@@ -395,9 +371,7 @@ class FSWModel:
 
     # Global call to initialize every module
     def InitAllFSWObjects(self, SimBase):
-        """
-        Initializes all FSW objects.
-        """
+        """Initializes all FSW objects."""
         self.SetSunPointGuidance(SimBase)
         self.SetNadirPointGuidance(SimBase)
         self.SetLocationPointGuidance(SimBase)
@@ -412,8 +386,9 @@ class FSWModel:
         self.SetInstrumentController(SimBase)
 
     def setupGatewayMsgs(self, SimBase):
-        """create C-wrapped gateway messages such that different modules can write to
-        this message and provide a common input msg for down-stream modules"""
+        """Create C-wrapped gateway messages such that different modules can write to
+        this message and provide a common input msg for down-stream modules.
+        """
         self.attRefMsg = cMsgPy.AttRefMsg_C()
         self.attGuidMsg = cMsgPy.AttGuidMsg_C()
 
@@ -433,6 +408,6 @@ class FSWModel:
         )
 
     def zeroGateWayMsgs(self):
-        """Zero all the FSW gateway message payloads"""
+        """Zero all the FSW gateway message payloads."""
         self.attRefMsg.write(messaging.AttRefMsgPayload())
         self.attGuidMsg.write(messaging.AttGuidMsgPayload())

@@ -12,7 +12,9 @@ from matplotlib import pyplot as plt
 
 """
 This file is designed to provide generitc interfaces to a DEAP-based genetic algorithm
-for solving arbitrary gymnasium environments. It does a few things:
+for solving arbitrary gymnasium environments.
+
+It does a few things:
 1. Includes the ability to cast arbitrary gymnasium environments with a max_length
     parameter as many-input, single-output optimzation problems
 2. Allows a genetic algorithm to be called to optimize said environments in a parellel
@@ -27,6 +29,7 @@ def mutUniformIntList(individual, num_samples=2, low=0, up=5, indpb=0.3):
     """
     This function is designed to mutate a list of integers, rather than a single
     integer.
+
     :param individual: The individual to be mutated
     :param num_samples: The number of samples to be mutated
     :param low: The lower bound for the mutation
@@ -68,9 +71,7 @@ class env2opt_problem(object):
         self.action_space = tmp_env.action_space
 
     def evaluate(self, action_set):
-        """
-        Evaluates a full run of the environment given a list of actions.
-        """
+        """Evaluates a full run of the environment given a list of actions."""
         total_reward = 0
 
         self.env = gym.make(self.env_name)
@@ -266,7 +267,8 @@ class ga_env_solver(object):
     def plot_results(self):
         """
         Generates plots of GA convergence, performance, and final population vector
-        behavior
+        behavior.
+
         :param checkpoint_names: list of checkpoint names, assumed to be pickle files.
         :return:
         """

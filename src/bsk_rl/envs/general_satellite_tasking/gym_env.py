@@ -38,6 +38,7 @@ class GeneralSatelliteTasking(Env):
     ) -> None:
         """A Gymnasium environment adaptable to a wide range satellite tasking problems
         that involve satellite(s) being tasked to complete tasks and maintain aliveness.
+
         These tasks often include rewards for data collection. The environment can be
         configured for any collection of satellites, including heterogenous
         constellations. Other configurable aspects are environment features (e.g.
@@ -157,7 +158,9 @@ class GeneralSatelliteTasking(Env):
         return observation, info
 
     def delete_simulator(self):
-        """Delete Basilisk objects. Only self.simulator contains strong references to
+        """Delete Basilisk objects.
+
+        Only self.simulator contains strong references to
         BSK models, so deleting it will delete all Basilisk objects. Enable
         MEMORY_LEAK_CHECKING in bsk_rl/envs/GeneralSatelliteTasking/utils/debug.py to
         verify that the simulator, FSW, dynamics, and environment models are all deleted
@@ -195,7 +198,7 @@ class GeneralSatelliteTasking(Env):
 
     @property
     def action_space(self) -> spaces.Space[MultiSatAct]:
-        """Compose satellite action spaces
+        """Compose satellite action spaces.
 
         Returns:
             Joint action space
@@ -204,7 +207,9 @@ class GeneralSatelliteTasking(Env):
 
     @property
     def observation_space(self) -> spaces.Space[MultiSatObs]:
-        """Compose satellite observation spaces. Note: calls reset(), which can be
+        """Compose satellite observation spaces.
+
+        Note: calls reset(), which can be
         expensive, to determine observation size.
 
         Returns:
@@ -222,7 +227,7 @@ class GeneralSatelliteTasking(Env):
     def step(
         self, actions: MultiSatAct
     ) -> tuple[MultiSatObs, float, bool, bool, dict[str, Any]]:
-        """Propagate the simulation, update information, and get rewards
+        """Propagate the simulation, update information, and get rewards.
 
         Args:
             Joint action for satellites
@@ -273,11 +278,11 @@ class GeneralSatelliteTasking(Env):
         return observation, reward, terminated, truncated, info
 
     def render(self) -> None:  # pragma: no cover
-        """No rendering implemented"""
+        """No rendering implemented."""
         return None
 
     def close(self) -> None:
-        """Try to cleanly delete everything"""
+        """Try to cleanly delete everything."""
         if self.simulator is not None:
             del self.simulator
 
@@ -297,12 +302,12 @@ class SingleSatelliteTasking(GeneralSatelliteTasking):
 
     @property
     def action_space(self) -> spaces.Discrete:
-        """Return the single satellite action space"""
+        """Return the single satellite action space."""
         return self.satellite.action_space
 
     @property
     def observation_space(self) -> spaces.Box:
-        """Return the single satellite observation space"""
+        """Return the single satellite observation space."""
         super().observation_space
         return self.satellite.observation_space
 
@@ -311,7 +316,7 @@ class SingleSatelliteTasking(GeneralSatelliteTasking):
         return self.satellites[0]
 
     def step(self, action) -> tuple[Any, float, bool, bool, dict[str, Any]]:
-        """Task the satellite with a single action"""
+        """Task the satellite with a single action."""
         return super().step([action])
 
     def _get_obs(self) -> Any:

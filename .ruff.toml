@@ -1,1 +1,36 @@
 ignore-init-module-imports = true
+exclude = [
+    ".txt",
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "__pycache__",
+    "_build",
+    "buck-out",
+    "build",
+    "docs",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+select = [
+    "D205", # Blank line after summary
+    "D103", # Public function needs docstring
+    "D101", # Class needs docstring
+    "D102", # Method needs docstring
+    "D417", # Document all arguments
+    "D419", # Docstring is empty
+]

@@ -6,7 +6,7 @@ import numpy as np
 def generate_waypoints(num_spheres, num_lat, num_lon, radius):
     """
     Generates a number of spheres of waypoints, each sphere is at [1...n]*radius,
-    where n is the num_spheres
+    where n is the num_spheres.
     """
 
     for idx in range(num_spheres):
@@ -45,7 +45,7 @@ def generate_waypoints(num_spheres, num_lat, num_lon, radius):
 def generate_mapping_points(num_points, radius):
     """Generates a number of mapping points on the surface of the body using a
     Fibonnaci sphere Algorithm from:
-    https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere
+    https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere.
     """
 
     points = []
@@ -71,7 +71,7 @@ def generate_mapping_points(num_points, radius):
 
 
 def generate_imaging_points(num_points, radius):
-    """Generates a number of random imaging points on the surface of the body"""
+    """Generates a number of random imaging points on the surface of the body."""
     points = np.random.uniform(-1.0, 1.0, size=(num_points, 3))
 
     for idx in range(num_points):

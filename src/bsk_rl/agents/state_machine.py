@@ -5,6 +5,7 @@ class StateMachine:
     def loadTransferConditions(self, strategy_file):
         """
         Load the transfer conditions into the dict machine_strat from a given .adv file
+
         :param adv_file:
         :return:
         """
@@ -24,6 +25,7 @@ class StateMachine:
     def selectAction(self, discrete_state):
         """
         Select an action based on the discretized state
+
         :param discrete_state:
         :return action:
         """
@@ -34,6 +36,7 @@ class StateMachine:
     def SimpleEOSDiscretizer(self, obs):
         """
         Discretizes the simplEOS states into 16 bins
+
         :param SimpleEOS environment, obs:
         :return system_state:
         """
@@ -127,6 +130,7 @@ class StateMachine:
     def earthObsEnvDiscretizer(self, obs):
         """
         Discretizes the MultiSensorEOS environment states into 8 bins
+
         :param MultiSensorEOS, obs:
         :return system_state:
         """
@@ -186,6 +190,7 @@ class StateMachine:
     def AgileEOSEnvDiscretizer(self, obs):
         """
         Discretizes the AgileEOS states into 16 bins
+
         :param AgileEOS environment, obs:
         :return system_state:
         """
@@ -279,6 +284,7 @@ class StateMachine:
     def smallBodyScienceEnvDiscretizer(self, obs):
         """
         Discretizes the SmallBodyScience environment into bins
+
         :param SmallBodyScience, obs:
         :return system_state:
         """
@@ -521,6 +527,7 @@ class StateMachine:
     ):
         """
         Called to determine the next action to take in the small body environment
+
         :param discretized_state: The discretized state of the environment
         :param phi_c: The current latitude of the spacecraft
         :param lambda_c: The current longitude of the spacecraft
@@ -529,7 +536,8 @@ class StateMachine:
         :param requiredWaypointTime: The time required to reach the current waypoint
         :param obs: The current observation
         :param target_hist: The history of the waypoints
-        :return action: The next action to take"""
+        :return action: The next action to take.
+        """
         started_tour = False
         on_tour = False
         finished_tour = False

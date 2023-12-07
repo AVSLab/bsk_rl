@@ -18,7 +18,9 @@ class MultiSatAgileEOS(gym.Env):
     This Gymnasium environment is designed to simulate the multi-satellite agile EOS
     scheduling problem in which K satellites in a low-Earth orbit Walker-delta formation
     attempt to maximize the number of targets imaged and downlinked while avoiding
-    resource constraint violations. Satellites update their local target lists through
+    resource constraint violations.
+
+    Satellites update their local target lists through
     communication with one another. Resource constraint violations include:
 
     1. Power: The spacecraft must keep its battery charge above zero
@@ -161,7 +163,9 @@ class MultiSatAgileEOS(gym.Env):
 
     def sim_attrs(self):
         """
-        Creates keyword arguments for instantiating the simulator. If an attribute is
+        Creates keyword arguments for instantiating the simulator.
+
+        If an attribute is
         present that matches a simulatormkeyword, pass it in.
         """
         attrs = inspect.signature(MultiSatAgileEOSSimulator.__init__).parameters.keys()
@@ -173,7 +177,9 @@ class MultiSatAgileEOS(gym.Env):
 
     def set_env_params(self, **kwargs):
         """
-        Set arbitrary environment variables. Can be used to override simulator defaults.
+        Set arbitrary environment variables.
+
+        Can be used to override simulator defaults.
         """
         for arg, val in kwargs.items():
             setattr(self, arg, val)
@@ -190,7 +196,9 @@ class MultiSatAgileEOS(gym.Env):
         **kwargs,
     ):
         """
-        Updates the constellation and target parameters in the environment. Environment
+        Updates the constellation and target parameters in the environment.
+
+        Environment
         must be reset afterwards. Reset is not called within this function so user can
         choose between reset and reset_init.
         """
@@ -208,9 +216,7 @@ class MultiSatAgileEOS(gym.Env):
         )
 
     def update_spaces(self):
-        """
-        Updates the size of action and observation spaces and preallocations.
-        """
+        """Updates the size of action and observation spaces and preallocations."""
         self.action_space = spaces.MultiDiscrete(
             [3 + self.n_targets] * self.n_spacecraft
         )
@@ -241,7 +247,7 @@ class MultiSatAgileEOS(gym.Env):
         :return reward: 1 x (n_spacecraft + 1) nparray of rewards, last index is global
                 reward, other are local rewards
         :return episode over: True/False if episode is over
-        :return info: dictionary of info for debugging purposes
+        :return info: dictionary of info for debugging purposes.
         """
         # Check if the simulator has been initialized or not
         if self.simulator_init == 0:
@@ -362,7 +368,7 @@ class MultiSatAgileEOS(gym.Env):
         :param action: 1 x n_spacecraft list of actions
         :param return_obs: whether or not to return observation
         :return downlinked: n_spacecraft x m list of downlinked targets
-        :return imaged: n_spacecraft x p list of imaged targets
+        :return imaged: n_spacecraft x p list of imaged targets.
 
         Actions:
         0 - Charging Mode
@@ -386,7 +392,7 @@ class MultiSatAgileEOS(gym.Env):
         :param downlinked: n_spacecraft x m list of downlinked targets
         :param imaged: n_spacecraft x p list of imaged targets
         :return reward: 1 x (n_spacecraft + 1) nparray of rewards, last index is global
-        reward, other are local rewards
+        reward, other are local rewards.
         """
         reward = np.zeros((1, self.n_spacecraft + 1))
         for i in range(0, self.n_spacecraft):
@@ -432,6 +438,7 @@ class MultiSatAgileEOS(gym.Env):
     def reset(self, seed=None, options=None):
         """
         Reset the state of the environment and returns an initial observation.
+
         :return ob: n_spacecraft x dim_obs nparray of observations
         """
         if self.initial_conditions is not None:
@@ -486,7 +493,8 @@ class MultiSatAgileEOS(gym.Env):
     def _get_state(self):
         """
         Return the non-normalized observation to the environment
-        :return ob: n_spacecraft x dim_obs np.array of observations
+
+        :return ob: n_spacecraft x dim_obs np.array of observations.
         """
         return self.obs
 

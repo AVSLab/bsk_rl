@@ -163,6 +163,7 @@ def ppo_experiment(
 ):
     """
     Run a PPO experiment with the given hyperparameters
+
     :param policy_kwargs: (dict) Policy kwargs
     :param learning_rate: (float) Learning rate
     :param clip_range: (float) Clip range
@@ -174,7 +175,7 @@ def ppo_experiment(
     :param n_its: (int) Number of iterations
     :param shielded: (bool) Whether to use the shielded policy
     :param env_name: (str) Name of the environment
-    :param n_steps: (int) Number of steps
+    :param n_steps: (int) Number of steps.
     """
     network_dir = agent_dir + "/network_" + str(idx) + SEP
 
@@ -309,6 +310,7 @@ def a2c_experiment(
 ):
     """
     Run an A2C experiment with the given hyperparameters
+
     :param policy_kwargs: (dict) Policy kwargs
     :param learning_rate: (float) Learning rate
     :param ent_coef: (float) Entropy coefficient
@@ -318,7 +320,8 @@ def a2c_experiment(
     :param env_name: (str) Name of the environment
     :param max_steps: (int) Maximum number of steps in the environment
     :param n_steps: (int) Number of steps before update
-    :param num_cores: (int) Number of cores"""
+    :param num_cores: (int) Number of cores.
+    """
 
     network_dir = agent_dir + "/network_" + str(idx) + SEP
 
@@ -511,6 +514,7 @@ def run_ppo_experiments(
 ):
     """
     Run PPO experiments with the given hyperparameters
+
     :param agent_dir: (str) Directory where to save the agent
     :param n_its: (int) Number of iterations
     :param kwargs_list: (list) List of dictionaries containing hyperparameters
@@ -518,7 +522,7 @@ def run_ppo_experiments(
     :param env_name: (str) Name of the environment
     :param n_steps: (int) Number of steps
     :param num_cores: (int) Number of cores
-    :param shielded: (bool) Whether to use shielded policy]
+    :param shielded: (bool) Whether to use shielded policy].
     """
     results = {}
     idx = 0

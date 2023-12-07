@@ -10,7 +10,9 @@ from bsk_rl.utilities.sb3 import custom_sb3_policies, shields
 
 class CustomActorCriticShieldedPolicy(ActorCriticPolicy):
     """
-    Custom actor critic policy with a shield. Made for AgileEOS environment.
+    Custom actor critic policy with a shield.
+
+    Made for AgileEOS environment.
     """
 
     def __init__(
@@ -81,7 +83,7 @@ class CustomActorCriticShieldedPolicy(ActorCriticPolicy):
         self, obs: th.Tensor, deterministic: bool = False
     ) -> Tuple[th.Tensor, th.Tensor, th.Tensor]:
         """
-        Forward pass in all the networks (actor and critic)
+        Forward pass in all the networks (actor and critic).
 
         :param obs: Observation
         :param deterministic: Whether to sample or use deterministic actions

@@ -8,8 +8,10 @@ def balancedHR16Triad(
 ):
     """
     Creates a set of three HR16 reaction wheels.
+
     Returns a set of thrusters and thrusterFac instance to add thrusters to a
     spacecraft.
+
     :return thrusterSet: thruster dynamic effector instance
     :return thrusterFac: factory containing defined thrusters
     """
@@ -35,8 +37,10 @@ def balancedHR16Triad(
 def idealMonarc1Octet():
     """
     Creates a set of eight ADCS thrusters using MOOG Monarc-1 attributes.
+
     Returns a set of thrusters and thrusterFac instance to add thrusters to a
     spacecraft.
+
     :return thrusterSet: thruster dynamic effector instance
     :return thrusterFac: factory containing defined thrusters
     """

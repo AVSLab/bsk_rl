@@ -13,21 +13,23 @@ from bsk_rl.envs.general_satellite_tasking.simulation.dynamics import LOSCommDyn
 
 class CommunicationMethod(ABC):
     def __init__(self, satellites: Optional[list["Satellite"]] = None) -> None:
-        """Base class for defining data sharing between satellites. Subclasses implement
-        a way of determining which pairs of satellites share data."""
+        """Base class for defining data sharing between satellites.
+
+        Subclasses implement a way of determining which pairs of satellites share data.
+        """
         self.satellites = satellites
 
     def reset(self) -> None:
-        """Called after simulator initialization"""
+        """Called after simulator initialization."""
         pass
 
     @abstractmethod  # pragma: no cover
     def _communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
-        """List pair of satellite that should share data"""
+        """List pair of satellite that should share data."""
         pass
 
     def communicate(self) -> None:
-        """Share data between paired satellites"""
+        """Share data between paired satellites."""
         for sat_1, sat_2 in self._communication_pairs():
             sat_1.data_store.stage_communicated_data(sat_2.data_store.data)
             sat_2.data_store.stage_communicated_data(sat_1.data_store.data)
@@ -36,14 +38,14 @@ class CommunicationMethod(ABC):
 
 
 class NoCommunication(CommunicationMethod):
-    """Implements no communication between satellite"""
+    """Implements no communication between satellite."""
 
     def _communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
         return []
 
 
 class FreeCommunication(CommunicationMethod):
-    """Implements communication between satellites at every step"""
+    """Implements communication between satellites at every step."""
 
     def _communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
         return list(combinations(self.satellites, 2))
@@ -53,7 +55,8 @@ class LOSCommunication(CommunicationMethod):
     # TODO only communicate data from before latest LOS time
     def __init__(self, satellites: list["Satellite"]) -> None:
         """Implements communication between satellites that have a direct line of
-        sight"""
+        sight.
+        """
         super().__init__(satellites)
         for satellite in self.satellites:
             if not issubclass(satellite.dyn_type, LOSCommDynModel):
@@ -98,8 +101,11 @@ class LOSCommunication(CommunicationMethod):
 
 
 class MultiDegreeCommunication(CommunicationMethod):
-    """Compose with another type to have multi-degree communications. For example, if
-    a <-> b and b <-> c, also communicate between a <-> c"""
+    """Compose with another type to have multi-degree communications.
+
+    For example, if
+    a <-> b and b <-> c, also communicate between a <-> c
+    """
 
     def _communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
         graph = np.zeros((len(self.satellites), len(self.satellites)), dtype=bool)

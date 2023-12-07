@@ -10,6 +10,7 @@ class SmallBodyScience(gym.Env):
     Small body gym environment where an agent can transition between different
     waypoints defined in the sun anti-momentum frame to image candidate landing sites
     or collect spectroscopy map data while avoiding resource constraint violations.
+
     Resource constraint violations include:
         - Fuel
         - Power
@@ -130,6 +131,7 @@ class SmallBodyScience(gym.Env):
     def step(self, action):
         """
         The agent takes a step in the environment.
+
         Parameters
         ----------
         action : int
@@ -229,6 +231,7 @@ class SmallBodyScience(gym.Env):
     def _take_action(self, action):
         """
         Interfaces with the simulator to
+
         :param action:
         :return:
         """
@@ -247,10 +250,7 @@ class SmallBodyScience(gym.Env):
         return downlinked_images, downlinked_maps, imaged, mapped
 
     def _get_reward(self, downlinked_images, downlinked_maps, imaged, mapped):
-        """
-        Reward is based on the total amount of imaged data downlinked in MB.
-
-        """
+        """Reward is based on the total amount of imaged data downlinked in MB."""
         reward = 0
         if self.failure:
             reward = -self.failure_penalty
@@ -277,6 +277,7 @@ class SmallBodyScience(gym.Env):
     def reset(self, seed=None, options=None):
         """
         Reset the state of the environment and returns an initial observation.
+
         Returns
         -------
         observation (object): the initial observation of the space.
@@ -324,7 +325,9 @@ class SmallBodyScience(gym.Env):
 
     def _get_state(self):
         """Get the observation.
-        WIP: Work out which error representation to give the algo."""
+
+        WIP: Work out which error representation to give the algo.
+        """
 
         return self.simulator.obs
 

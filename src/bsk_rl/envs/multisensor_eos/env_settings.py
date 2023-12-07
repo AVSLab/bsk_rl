@@ -8,9 +8,7 @@ from bsk_rl.utilities.initial_conditions import leo_orbit
 
 
 class Settings:
-    """
-    To be used as settings for the MultiSensorEOS gymnasium environment and bsk sim.
-    """
+    """To be used as settings for the MultiSensorEOS gymnasium environment and bsk sim."""
 
     def __init__(self):
         # Instrument Settings

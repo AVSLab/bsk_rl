@@ -18,9 +18,7 @@ from bsk_rl.utilities.effector_primitives import actuator_primitives as ap
 
 
 class DynamicModel:
-    """
-    Defines the Dynamics class.
-    """
+    """Defines the Dynamics class."""
 
     def __init__(self, SimBase, dynRate, spacecraftIndex, singleSat=False):
         # Define class variables
@@ -66,9 +64,7 @@ class DynamicModel:
     # These are module-initialization methods
 
     def SetSpacecraftHub(self, SimBase):
-        """
-        Defines the spacecraft object properties.
-        """
+        """Defines the spacecraft object properties."""
         self.scObject = spacecraft.Spacecraft()
         self.scObject.ModelTag = "sat-" + str(self.spacecraftIndex)
         # Grab the mass for readability in inertia computation
@@ -110,32 +106,24 @@ class DynamicModel:
         )
 
     def SetGravityBodies(self, SimBase):
-        """
-        Specify what gravitational bodies to include in the simulation
-        """
+        """Specify what gravitational bodies to include in the simulation."""
         # Attach the gravity body
         self.scObject.gravField.gravBodies = spacecraft.GravBodyVector(
             list(SimBase.EnvModel.gravFactory.gravBodies.values())
         )
 
     def SetDisturbanceTorque(self, SimBase):
-        """
-        Attach the disturbance torque to the spacecraft object
-        """
+        """Attach the disturbance torque to the spacecraft object."""
         self.scObject.addDynamicEffector(
             SimBase.EnvModel.extForceTorqueObjectList[self.spacecraftIndex]
         )
 
     def SetDensityModel(self, SimBase):
-        """
-        Attaches the density model effector to the spacecraft
-        """
+        """Attaches the density model effector to the spacecraft."""
         SimBase.EnvModel.densityModel.addSpacecraftToModel(self.scObject.scStateOutMsg)
 
     def SetDragEffector(self, SimBase):
-        """
-        Set the drag effector
-        """
+        """Set the drag effector."""
         self.dragEffector = facetDragDynamicEffector.FacetDragDynamicEffector()
         self.dragEffector.ModelTag = "FacetDrag"
         #  Set up the geometry of a small satellite, starting w/ bus
@@ -176,9 +164,7 @@ class DynamicModel:
         self.scObject.addDynamicEffector(self.dragEffector)
 
     def SetGroundLocations(self, SimBase):
-        """
-        Adds the spacecraft to the ground location modules.
-        """
+        """Adds the spacecraft to the ground location modules."""
         SimBase.EnvModel.boulderGroundStation.addSpacecraftToModel(
             self.scObject.scStateOutMsg
         )
@@ -205,23 +191,17 @@ class DynamicModel:
         )
 
     def SetEclipseObject(self, SimBase):
-        """
-        Adds the spacecraft to the eclipse module.
-        """
+        """Adds the spacecraft to the eclipse module."""
         SimBase.EnvModel.eclipseObject.addSpacecraftToModel(self.scObject.scStateOutMsg)
 
     def SetSimpleNavObject(self):
-        """
-        Defines the navigation module.
-        """
+        """Defines the navigation module."""
         self.simpleNavObject = simpleNav.SimpleNav()
         self.simpleNavObject.ModelTag = "SimpleNav"
         self.simpleNavObject.scStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
 
     def SetReactionWheelDynEffector(self, SimBase):
-        """
-        Defines the RW state effector.
-        """
+        """Defines the RW state effector."""
         self.rwStateEffector, self.rwFactory, initWheelSpeeds = ap.balancedHR16Triad(
             useRandom=False,
             randomBounds=(-800, 800),
@@ -234,17 +214,13 @@ class DynamicModel:
         )
 
     def SetThrusterDynEffector(self):
-        """
-        Defines the thruster state effector.
-        """
+        """Defines the thruster state effector."""
         self.thrusterSet, self.thrFactory = ap.idealMonarc1Octet()
         thrModelTag = "ACSThrusterDynamics"
         self.thrFactory.addToSpacecraft(thrModelTag, self.thrusterSet, self.scObject)
 
     def SetSolarPanel(self, SimBase):
-        """
-        Sets the solar panel
-        """
+        """Sets the solar panel."""
         self.solarPanel = simpleSolarPanel.SimpleSolarPanel()
         self.solarPanel.ModelTag = "solarPanel" + str(self.spacecraftIndex)
         self.solarPanel.stateInMsg.subscribeTo(self.scObject.scStateOutMsg)
@@ -267,9 +243,7 @@ class DynamicModel:
         )
 
     def SetInstrumentPowerSink(self, SimBase):
-        """
-        Defines the instrument power sink parameters
-        """
+        """Defines the instrument power sink parameters."""
         self.instrumentPowerSink = simplePowerSink.SimplePowerSink()
         self.instrumentPowerSink.ModelTag = "insPowerSink" + str(self.spacecraftIndex)
         self.instrumentPowerSink.nodePowerOut = SimBase.initial_conditions[
@@ -279,9 +253,7 @@ class DynamicModel:
         )  # Watts
 
     def SetTransmitterPowerSink(self, SimBase):
-        """
-        Defines the trasmitter power sink parameters
-        """
+        """Defines the trasmitter power sink parameters."""
         self.transmitterPowerSink = simplePowerSink.SimplePowerSink()
         self.transmitterPowerSink.ModelTag = "transPowerSink" + str(
             self.spacecraftIndex
@@ -293,9 +265,7 @@ class DynamicModel:
         )  # Watts
 
     def SetReactionWheelPower(self, SimBase):
-        """
-        Defines the reaction wheel power draw
-        """
+        """Defines the reaction wheel power draw."""
         self.rwPowerList = []
         for ind in range(self.rwFactory.getNumOfDevices()):
             powerRW = ReactionWheelPower.ReactionWheelPower()
@@ -315,9 +285,7 @@ class DynamicModel:
             self.rwPowerList.append(powerRW)
 
     def SetBattery(self, SimBase):
-        """
-        Sets up the battery with all the power components
-        """
+        """Sets up the battery with all the power components."""
         self.powerMonitor = simpleBattery.SimpleBattery()
         self.powerMonitor.ModelTag = "powerMonitor"
         self.powerMonitor.storageCapacity = SimBase.initial_conditions[
@@ -333,9 +301,7 @@ class DynamicModel:
             self.powerMonitor.addPowerNodeToModel(powerRW.nodePowerOutMsg)
 
     def SetInstrument(self, SimBase):
-        """
-        Create the instrument
-        """
+        """Create the instrument."""
         self.instrument = simpleInstrument.SimpleInstrument()
         self.instrument.ModelTag = "instrument" + str(self.spacecraftIndex)
         self.instrument.nodeBaudRate = (
@@ -347,9 +313,7 @@ class DynamicModel:
         self.instrument.nodeDataName = "Instrument" + str(self.spacecraftIndex)
 
     def SetTransmitter(self, SimBase):
-        """
-        Create the transmitter
-        """
+        """Create the transmitter."""
         self.transmitter = spaceToGroundTransmitter.SpaceToGroundTransmitter()
         self.transmitter.ModelTag = "transmitter" + str(self.spacecraftIndex)
         self.transmitter.nodeBaudRate = SimBase.initial_conditions[
@@ -425,9 +389,7 @@ class DynamicModel:
 
     # Global call to initialize every module
     def InitAllDynObjects(self, SimBase):
-        """
-        Initializes all dynamic objects.
-        """
+        """Initializes all dynamic objects."""
         self.SetSpacecraftHub(SimBase)
         self.SetGravityBodies(SimBase)
         self.SetDensityModel(SimBase)

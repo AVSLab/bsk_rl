@@ -58,7 +58,7 @@ class DynamicsModel(ABC):
         priority: int = 200,
         **kwargs,
     ) -> None:
-        """Base DynamicsModel
+        """Base DynamicsModel.
 
         Args:
             satellite: Satellite modelled by this model
@@ -96,7 +96,7 @@ class DynamicsModel(ABC):
 
     @abstractmethod  # pragma: no cover
     def _init_dynamics_objects(self, **kwargs) -> None:
-        """Caller for all dynamics object initialization"""
+        """Caller for all dynamics object initialization."""
         pass
 
     def is_alive(self) -> bool:
@@ -108,7 +108,7 @@ class DynamicsModel(ABC):
         return check_aliveness_checkers(self)
 
     def reset_for_action(self) -> None:
-        """Called whenever a FSW @action is called"""
+        """Called whenever a FSW @action is called."""
         pass
 
     def __del__(self):
@@ -117,7 +117,7 @@ class DynamicsModel(ABC):
 
 
 class BasicDynamicsModel(DynamicsModel):
-    """Minimal set of Basilisk dynamics objects"""
+    """Minimal set of Basilisk dynamics objects."""
 
     @classmethod
     @property
@@ -154,7 +154,7 @@ class BasicDynamicsModel(DynamicsModel):
 
     @property
     def v_BN_P(self):
-        """P-frame derivative of r_BN"""
+        """P-frame derivative of r_BN."""
         omega_NP_P = np.matmul(self.environment.PN, -self.environment.omega_PN_N)
         return np.matmul(self.environment.PN, self.v_BN_N) + np.cross(
             omega_NP_P, self.r_BN_P
@@ -359,7 +359,8 @@ class BasicDynamicsModel(DynamicsModel):
     @aliveness_checker
     def altitude_valid(self) -> bool:
         """Check for deorbit by checking if altitude is greater than 200km above Earth's
-        surface."""
+        surface.
+        """
         return np.linalg.norm(self.r_BN_N) > (orbitalMotion.REQ_EARTH + 200) * 1e3
 
     @default_args(
@@ -438,7 +439,7 @@ class BasicDynamicsModel(DynamicsModel):
         self.powerMonitor.addPowerNodeToModel(self.thrusterPowerSink.nodePowerOutMsg)
 
     def _set_eclipse_object(self) -> None:
-        """Adds the spacecraft to the eclipse module"""
+        """Adds the spacecraft to the eclipse module."""
         self.environment.eclipseObject.addSpacecraftToModel(self.scObject.scStateOutMsg)
         self.eclipse_index = len(self.environment.eclipseObject.eclipseOutMsgs) - 1
 
@@ -553,7 +554,7 @@ class BasicDynamicsModel(DynamicsModel):
 
 
 class LOSCommDynModel(BasicDynamicsModel):
-    """For evaluating line-of-sight connections between satellites for communication"""
+    """For evaluating line-of-sight connections between satellites for communication."""
 
     def _init_dynamics_objects(self, **kwargs) -> None:
         super()._init_dynamics_objects(**kwargs)
@@ -780,7 +781,9 @@ class ImagingDynModel(BasicDynamicsModel):
         priority: int = 2000,
         **kwargs,
     ) -> None:
-        """Add a generic imaging target to dynamics. The target must be updated with a
+        """Add a generic imaging target to dynamics.
+
+        The target must be updated with a
         particular location when used.
 
         Args:
@@ -821,7 +824,8 @@ class ImagingDynModel(BasicDynamicsModel):
 
 class ContinuousImagingDynModel(ImagingDynModel):
     """Equips the satellite with an instrument, storage unit, and transmitter
-    for continuous nadir imaging."""
+    for continuous nadir imaging.
+    """
 
     @default_args(instrumentBaudRate=8e6)
     def _set_instrument(
@@ -887,7 +891,9 @@ class ContinuousImagingDynModel(ImagingDynModel):
         priority: int = 2000,
         **kwargs,
     ) -> None:
-        """Add a generic imaging target to dynamics. The target must be updated with a
+        """Add a generic imaging target to dynamics.
+
+        The target must be updated with a
         particular location when used.
 
         Args:
@@ -916,7 +922,7 @@ class ContinuousImagingDynModel(ImagingDynModel):
 
 
 class GroundStationDynModel(ImagingDynModel):
-    """Model that connects satellite to environment ground stations"""
+    """Model that connects satellite to environment ground stations."""
 
     @classmethod
     @property

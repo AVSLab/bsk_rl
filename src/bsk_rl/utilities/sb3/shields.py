@@ -9,8 +9,10 @@ abs_path = os.path.dirname(os.path.abspath(__file__))
 
 class AgileEOSShield:
     """Custom shield layer
+
     :param: size_in -> input size, should be equal to the number of actions
-    :param: size_out -> output size, should be equal to the number of actions"""
+    :param: size_out -> output size, should be equal to the number of actions.
+    """
 
     def __init__(self):
         self.state_machine = StateMachine()
@@ -53,8 +55,10 @@ class AgileEOSShield:
 
 class MultiSensorEOSShield:
     """Custom shield layer
+
     :param: size_in -> input size, should be equal to the number of actions
-    :param: size_out -> output size, should be equal to the number of actions"""
+    :param: size_out -> output size, should be equal to the number of actions.
+    """
 
     def __init__(self):
         self.state_machine = StateMachine()

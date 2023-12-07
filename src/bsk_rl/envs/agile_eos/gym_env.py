@@ -10,7 +10,9 @@ class AgileEOS(gym.Env):
     """
     This Gymnasium environment is designed to simulate an agile EOS scheduling problem
     in which a satellite in low-Earth orbit attempts to maximize the number of targets
-    imaged and downlinked while avoiding resource constraint violations. Resource
+    imaged and downlinked while avoiding resource constraint violations.
+
+    Resource
     constraint include:
 
     1. Power: The spacecraft must keep its battery charge above zero
@@ -108,6 +110,7 @@ class AgileEOS(gym.Env):
     def step(self, action):
         """
         The agent takes a step in the environment.
+
         Parameters
         ----------
         action : int
@@ -228,6 +231,7 @@ class AgileEOS(gym.Env):
     def _take_action(self, action):
         """
         Interfaces with the simulator to
+
         :param action:
         :return:
         """
@@ -247,7 +251,7 @@ class AgileEOS(gym.Env):
     def _get_reward(self, downlinked, imaged):
         """
         Reward is based on the total number of imaged and downlinked targets, failure i
-        f it occurs
+        f it occurs.
         """
         reward = 0
         if self.failure:
@@ -275,6 +279,7 @@ class AgileEOS(gym.Env):
     def reset(self, seed=None, options=None):
         """
         Reset the state of the environment and returns an initial observation.
+
         Returns
         -------
         observation (object): the initial observation of the space.
@@ -316,7 +321,7 @@ class AgileEOS(gym.Env):
         return
 
     def _get_state(self):
-        """Return the non-normalized observation to the environment"""
+        """Return the non-normalized observation to the environment."""
 
         return self.simulator.obs
 

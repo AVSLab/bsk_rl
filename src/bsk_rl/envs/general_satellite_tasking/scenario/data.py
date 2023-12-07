@@ -16,11 +16,11 @@ LogStateType = Any
 
 
 class DataType(ABC):
-    """Base class for units of satellite data"""
+    """Base class for units of satellite data."""
 
     @abstractmethod  # pragma: no cover
     def __add__(self, other: "DataType") -> "DataType":
-        """Define the combination of two units of data"""
+        """Define the combination of two units of data."""
         pass
 
 
@@ -28,7 +28,7 @@ class DataStore(ABC):
     DataType: type[DataType]  # Define the unit of data used by the DataStore
 
     def __init__(self, data_manager: "DataManager", satellite: "Satellite") -> None:
-        """Base class for satellite data logging; one created per satellite
+        """Base class for satellite data logging; one created per satellite.
 
         Args:
             data_manager: Simulation data manager to report back to
@@ -44,22 +44,23 @@ class DataStore(ABC):
 
     def _initialize_knowledge(self, env_features: "EnvironmentFeatures") -> None:
         """Establish knowledge about the world known to the satellite. Defaults to
-        knowing everything about the environment."""
+        knowing everything about the environment.
+        """
         self.env_knowledge = env_features
 
     def _clear_logs(self) -> None:
-        """If necessary, clear any loggers"""
+        """If necessary, clear any loggers."""
         pass
 
     def _get_log_state(self) -> LogStateType:
-        """Pull information for current data contribution e.g. sensor readings"""
+        """Pull information for current data contribution e.g. sensor readings."""
         pass
 
     @abstractmethod  # pragma: no cover
     def _compare_log_states(
         self, old_state: LogStateType, new_state: LogStateType
     ) -> "DataType":
-        """Generate a unit of data based on previous step and current step logs
+        """Generate a unit of data based on previous step and current step logs.
 
         Args:
             old_state: A previous result of _get_log_state()
@@ -71,7 +72,7 @@ class DataStore(ABC):
         pass
 
     def internal_update(self) -> "DataType":
-        """Update the data store based on collected information
+        """Update the data store based on collected information.
 
         Returns:
             New data from the previous step
@@ -89,7 +90,7 @@ class DataStore(ABC):
         return new_data
 
     def stage_communicated_data(self, external_data: "DataType") -> None:
-        """Prepare data to be added from another source, but don't add it yet
+        """Prepare data to be added from another source, but don't add it yet.
 
         Args:
             external_data: Data from another satellite to be added
@@ -97,7 +98,7 @@ class DataStore(ABC):
         self.staged_data.append(external_data)
 
     def communication_update(self) -> None:
-        """Update the data store from staged data
+        """Update the data store from staged data.
 
         Args:
             external_data (DataType): Data collected by another satellite
@@ -113,6 +114,7 @@ class DataManager(ABC):
     def __init__(self, env_features: Optional["EnvironmentFeatures"] = None) -> None:
         """Base class for simulation-wide data management; handles data recording and
         rewarding.
+
         TODO: allow for creation/composition of multiple managers
 
         Args:
@@ -126,12 +128,12 @@ class DataManager(ABC):
         self.cum_reward = 0.0
 
     def create_data_store(self, satellite: "Satellite") -> None:
-        """Create a data store for a satellite"""
+        """Create a data store for a satellite."""
         satellite.data_store = self.DataStore(self, satellite)
 
     @abstractmethod  # pragma: no cover
     def _calc_reward(self, new_data_dict: dict[str, DataType]) -> float:
-        """Calculate step reward based on all satellite data from a step
+        """Calculate step reward based on all satellite data from a step.
 
         Args:
             new_data_dict: Satellite-DataType pairs of new data from a step
@@ -142,7 +144,7 @@ class DataManager(ABC):
         pass
 
     def reward(self, new_data_dict: dict[str, DataType]) -> float:
-        """Calls _calc_reward and logs cumulative reward"""
+        """Calls _calc_reward and logs cumulative reward."""
         reward = self._calc_reward(new_data_dict)
         self.cum_reward += reward
         return reward
@@ -179,7 +181,7 @@ class UniqueImageData(DataType):
     def __init__(
         self, imaged: Optional[list["Target"]] = None, duplicates: int = 0
     ) -> None:
-        """DataType to log unique imaging
+        """DataType to log unique imaging.
 
         Args:
             imaged: List of targets that are known to be imaged.
@@ -207,7 +209,7 @@ class UniqueImageStore(DataStore):
     DataType = UniqueImageData
 
     def _get_log_state(self) -> np.ndarray:
-        """Log the instantaneous storage unit state at the end of each step
+        """Log the instantaneous storage unit state at the end of each step.
 
         Returns:
             array: storedData from satellite storage unit
@@ -220,7 +222,7 @@ class UniqueImageStore(DataStore):
         self, old_state: np.ndarray, new_state: np.ndarray
     ) -> UniqueImageData:
         """Checks two storage unit logs for an increase in logged data to identify new
-        images
+        images.
 
         Args:
             old_state: older storedData from satellite storage unit
@@ -252,7 +254,7 @@ class UniqueImagingManager(DataManager):
         env_features: Optional["EnvironmentFeatures"] = None,
         reward_fn: Callable = lambda p: p,
     ) -> None:
-        """DataManager for rewarding unique images
+        """DataManager for rewarding unique images.
 
         Args:
             env_features: DataManager.env_features
@@ -262,7 +264,7 @@ class UniqueImagingManager(DataManager):
         self.reward_fn = reward_fn
 
     def _calc_reward(self, new_data_dict: dict[str, UniqueImageData]) -> float:
-        """Reward new each unique image once using self.reward_fn()
+        """Reward new each unique image once using self.reward_fn().
 
         Args:
             new_data_dict: Record of new images for each satellite
@@ -381,7 +383,7 @@ class UniqueImagingManager(DataManager):
 
 class NadirScanningTimeData(DataType):
     def __init__(self, scanning_time: float = 0.0) -> None:
-        """DataType to log data generated scanning nadir
+        """DataType to log data generated scanning nadir.
 
         Args:
             scanning_time: Time spent scanning nadir
@@ -389,7 +391,7 @@ class NadirScanningTimeData(DataType):
         self.scanning_time = scanning_time
 
     def __add__(self, other: "NadirScanningTimeData") -> "NadirScanningTimeData":
-        """Define the combination of two units of data"""
+        """Define the combination of two units of data."""
         scanning_time = self.scanning_time + other.scanning_time
 
         return self.__class__(scanning_time)
@@ -442,7 +444,7 @@ class NadirScanningManager(DataManager):
         Args:
             env_features: Information about the environment that can be collected as
                 data
-            reward_fn: Reward as function of time spend pointing nadir
+            reward_fn: Reward as function of time spend pointing nadir.
         """
         super().__init__(env_features)
         if reward_fn is None:
@@ -455,7 +457,7 @@ class NadirScanningManager(DataManager):
         self.reward_fn = reward_fn
 
     def _calc_reward(self, new_data_dict: ["NadirScanningTimeData"]) -> float:
-        """Calculate step reward based on all satellite data from a step
+        """Calculate step reward based on all satellite data from a step.
 
         Args:
             new_data_dict (dict): Satellite-DataType of new data from a step

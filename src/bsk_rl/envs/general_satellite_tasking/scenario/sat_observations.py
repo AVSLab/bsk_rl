@@ -33,8 +33,11 @@ class SatObservation(Satellite):
 
     @property
     def obs_dict(self):
-        """Human-readable observation format. Cached so only computed once per
-        timestep."""
+        """Human-readable observation format.
+
+        Cached so only computed once per
+        timestep.
+        """
         if (
             self.obs_dict_cache is None
             or self.simulator.sim_time != self.obs_cache_time
@@ -45,16 +48,16 @@ class SatObservation(Satellite):
 
     @property
     def obs_ndarray(self):
-        """Numpy vector observation format"""
+        """Numpy vector observation format."""
         return vectorize_nested_dict(self.obs_dict)
 
     @property
     def obs_list(self):
-        """List observation format"""
+        """List observation format."""
         return list(self.obs_ndarray)
 
     def get_obs(self) -> Union[dict, np.ndarray, list]:
-        """Update the observation"""
+        """Update the observation."""
         if self.obs_type is dict:
             return self.obs_dict
         elif self.obs_type is np.ndarray:
@@ -65,7 +68,7 @@ class SatObservation(Satellite):
             raise ValueError(f"Invalid observation type: {self.obs_type}")
 
     def add_to_observation(self, obs_element: Callable) -> None:
-        """Add a function to be called when constructing observations
+        """Add a function to be called when constructing observations.
 
         Args:
             obs_element: Callable to be observed
@@ -131,7 +134,9 @@ class NormdPropertyState(SatObservation):
 @configurable
 class TimeState(SatObservation):
     def __init__(self, *args, normalization_time: Optional[float] = None, **kwargs):
-        """Adds the sim time to the observation state. Automatically normalizes to the
+        """Adds the sim time to the observation state.
+
+        Automatically normalizes to the
         sim duration.
 
         Args:
@@ -144,7 +149,7 @@ class TimeState(SatObservation):
         self.add_to_observation(self.normalized_time)
 
     def reset_post_sim(self):
-        """Autodetect normalization time"""
+        """Autodetect normalization time."""
         super().reset_post_sim()
         if self.normalization_time is None:
             self.normalization_time = self.simulator.time_limit
@@ -286,7 +291,7 @@ class GroundStationState(SatObservation, AccessSatellite):
         )
 
     def reset_post_sim(self) -> None:
-        """Add downlink ground stations to be considered by the access checker"""
+        """Add downlink ground stations to be considered by the access checker."""
         for ground_station in self.simulator.environment.groundStations:
             self.add_location_for_access_checking(
                 object=ground_station.ModelTag,

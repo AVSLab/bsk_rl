@@ -67,9 +67,7 @@ class EnvironmentModel:
             )
 
     def SetGravityBodies(self, SimBase):
-        """
-        Specify what gravitational bodies to include in the simulation.
-        """
+        """Specify what gravitational bodies to include in the simulation."""
         self.gravFactory = simIncludeGravBody.gravBodyFactory()
         self.gravFactory.createSun()
         self.planet = self.gravFactory.createEarth()
@@ -95,9 +93,7 @@ class EnvironmentModel:
         )
 
     def SetEpochObject(self):
-        """
-        Add the ephemeris object to use with the SPICE library.
-        """
+        """Add the ephemeris object to use with the SPICE library."""
         self.ephemConverter = ephemerisConverter.EphemerisConverter()
         self.ephemConverter.ModelTag = "ephemConverter"
         self.ephemConverter.addSpiceInputMsg(
@@ -108,9 +104,7 @@ class EnvironmentModel:
         )
 
     def SetEclipseObject(self):
-        """
-        Specify what celestial object is causing an eclipse message.
-        """
+        """Specify what celestial object is causing an eclipse message."""
         self.eclipseObject = eclipse.Eclipse()
         self.eclipseObject.addPlanetToModel(
             self.gravFactory.spiceObject.planetStateOutMsgs[self.earth]
@@ -153,9 +147,7 @@ class EnvironmentModel:
             self.extForceTorqueObjectList.append(extForceTorqueObject)
 
     def SetGroundLocations(self, SimBase):
-        """
-        Specify which ground locations are of interest.
-        """
+        """Specify which ground locations are of interest."""
         # Create a Boulder-based ground station
         self.boulderGroundStation = groundLocation.GroundLocation()
         self.boulderGroundStation.ModelTag = "GroundStation1"

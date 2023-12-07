@@ -76,7 +76,7 @@ class MCTS:
 
     # Define the environment
     def setEnv(self, envType, initial_conditions, max_steps=30, max_length=90):
-        """Sets the environment and initial conditions MCTS will step through"""
+        """Sets the environment and initial conditions MCTS will step through."""
         # Create the environment
         self.envType = envType
         self.env = gym.make(envType)
@@ -91,7 +91,7 @@ class MCTS:
 
     # @profiler.profile
     def selectAction(self, s, d, actHist):
-        """Selects the next action for the true environment to step through"""
+        """Selects the next action for the true environment to step through."""
         # We make a tuple out of s so it an be used as a dictionary key
         s_tuple = tuple(s.reshape(1, -1)[0])
 
@@ -144,7 +144,7 @@ class MCTS:
         return max(self.Q[s_tuple], key=self.Q[s_tuple].get)
 
     def simulate(self, s, d):
-        """Simulates a trajectory through the environment and updates Q_search"""
+        """Simulates a trajectory through the environment and updates Q_search."""
         # We make a tuple out of s so it an be used as a dictionary key
         try:
             s_tuple = tuple(s.reshape(1, -1)[0])
@@ -211,7 +211,7 @@ class MCTS:
         return q
 
     def rollout(self, s, d):
-        """Executes a rollout to the desired depth or end of the environment"""
+        """Executes a rollout to the desired depth or end of the environment."""
         # If we have reached max depth, just return 0
         if d == 0:
             return 0.0
@@ -231,7 +231,7 @@ class MCTS:
             return reward + self.rollout(sp, d - 1)
 
     def backup_tree(self):
-        """Backs up the value along the main tree once the sim has terminated"""
+        """Backs up the value along the main tree once the sim has terminated."""
         # 'Anti-Sum' is added to at each node to subtract from r_sum at last node
         r_anti_sum = 0
         # Grab the total reward from the last node

@@ -71,9 +71,7 @@ class SimpleEOSSimulator(SimulationBaseClass.SimBaseClass):
     def __init__(
         self, dynRate, fswRate, step_duration, initial_conditions=None, render=False
     ):
-        """
-        Creates the simulation, but does not initialize the initial conditions.
-        """
+        """Creates the simulation, but does not initialize the initial conditions."""
         self.dynRate = dynRate
         self.fswRate = fswRate
 
@@ -280,7 +278,9 @@ class SimpleEOSSimulator(SimulationBaseClass.SimBaseClass):
 
     def set_dynamics(self):
         """
-        Sets up the dynamics modules for the sim. This simulator runs:
+        Sets up the dynamics modules for the sim.
+
+        This simulator runs:
         scObject (spacecraft dynamics simulation)
         SpiceObject
         EclipseObject (simulates eclipse for simpleSolarPanel)
@@ -846,7 +846,9 @@ class SimpleEOSSimulator(SimulationBaseClass.SimBaseClass):
 
     def set_fsw(self):
         """
-        Sets up the attitude guidance stack for the simulation. This simulator runs:
+        Sets up the attitude guidance stack for the simulation.
+
+        This simulator runs:
         inertial3Dpoint - Sets the attitude guidance objective to point the main panel
             at the sun.
         hillPointTask: Sets the attitude guidance objective to point a "camera" angle
@@ -1141,19 +1143,22 @@ class SimpleEOSSimulator(SimulationBaseClass.SimBaseClass):
         self.vizInterface.settings.showLocationLabels = 1
 
     def setupGatewayMsgs(self):
-        """create C-wrapped gateway messages such that different modules can write to
-        this message and provide a common input msg for down-stream modules"""
+        """Create C-wrapped gateway messages such that different modules can write to
+        this message and provide a common input msg for down-stream modules.
+        """
         self.attRefMsg = cMsgPy.AttRefMsg_C()
 
         self.zeroGateWayMsgs()
 
     def zeroGateWayMsgs(self):
-        """Zero all the FSW gateway message payloads"""
+        """Zero all the FSW gateway message payloads."""
         self.attRefMsg.write(messaging.AttRefMsgPayload())
 
     def set_logging(self):
         """
-        Logs simulation outputs to return as observations. This simulator observes:
+        Logs simulation outputs to return as observations.
+
+        This simulator observes:
         mrp_bn - inertial to body MRP
         error_mrp - Attitude error given current guidance objective
         power_level - current W-Hr from the battery
@@ -1194,6 +1199,7 @@ class SimpleEOSSimulator(SimulationBaseClass.SimBaseClass):
     def run_sim(self, action, return_obs=True):
         """
         Executes the sim for a specified duration given a mode command.
+
         :param action:
         :param duration:
         :return:
@@ -1434,7 +1440,8 @@ class SimpleEOSSimulator(SimulationBaseClass.SimBaseClass):
 
     def close_gracefully(self):
         """
-        makes sure spice gets shut down right when we close.
+        Makes sure spice gets shut down right when we close.
+
         :return:
         """
         self.gravFactory.unloadSpiceKernels()

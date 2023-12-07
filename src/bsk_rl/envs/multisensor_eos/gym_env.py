@@ -12,6 +12,7 @@ class MultiSensorEOS(gym.Env):
     """
     Earth observation environment - simulates a spacecraft with variable imager modes
     attempting to image a ground location.
+
     Agent must choose between charging, desaturating, and image type(s); also needs to
     choose an appropriate imaging type.
     Taking the image type corresponding to the ground location's required sensor type
@@ -111,7 +112,8 @@ class MultiSensorEOS(gym.Env):
 
     def step(self, action):
         """
-        The agent takes a step in the environment. Note that the simulator must be
+        The agent takes a step in the environment.
+        Note that the simulator must be
         initialized
 
         Parameters
@@ -177,6 +179,7 @@ class MultiSensorEOS(gym.Env):
     def _take_action(self, action):
         """
         Interfaces with the simulator to
+
         :param action:
         :return:
         """
@@ -191,7 +194,6 @@ class MultiSensorEOS(gym.Env):
         """
         Reward is based on time spent with the inertial attitude pointed towards the
         ground within a given tolerance.
-
         """
         reward = 0
         last_action = self.action_episode_memory[self.curr_episode][-1]
@@ -214,7 +216,9 @@ class MultiSensorEOS(gym.Env):
 
     def _get_ob(self):
         """Get the observation.
-        WIP: Work out which error representation to give the algo."""
+
+        WIP: Work out which error representation to give the algo.
+        """
         ob = np.zeros(len(self.obs_defn))
         for i, ob_key in enumerate(self.obs_defn):
             ob[i] = self.sim_state.get(ob_key)
@@ -236,6 +240,7 @@ class MultiSensorEOS(gym.Env):
     def reset(self, seed=None, options=None):
         """
         Reset the state of the environment and returns an initial observation.
+
         Returns
         -------
         observation (object): the initial observation of the space.

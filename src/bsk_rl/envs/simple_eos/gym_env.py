@@ -10,6 +10,7 @@ class SimpleEOS(gym.Env):
     """
     The spacecraft must decide between pointing at the ground to collect science data,
     pointing at the sun to charge, desaturating reaction wheels, and downlinking data.
+
     This is referred to as the "simple" simulator as science data is simply collected
     by nadir pointing. Specific imaging targets are not considered.
 
@@ -86,6 +87,7 @@ class SimpleEOS(gym.Env):
     def step(self, action):
         """
         The agent takes a step in the environment.
+
         Parameters
         ----------
         action : int
@@ -230,7 +232,6 @@ class SimpleEOS(gym.Env):
         """
         Reward is based on time spent with the inertial attitude pointed towards the
         ground within a given tolerance.
-
         """
         if self.failure:
             reward = -self.failure_penalty
@@ -244,6 +245,7 @@ class SimpleEOS(gym.Env):
     def reset(self, seed=None, options=None):
         """
         Reset the state of the environment and returns an initial observation.
+
         Returns
         -------
         observation (object): the initial observation of the space.
@@ -284,7 +286,7 @@ class SimpleEOS(gym.Env):
         return
 
     def _get_state(self):
-        """Return the non-normalized observation from the simulator"""
+        """Return the non-normalized observation from the simulator."""
 
         return self.simulator.obs
 

@@ -43,7 +43,8 @@ def run_ga_hp_experiment(
 ):
     """
     Runs a genetic algorithm experiment hyperparameter search experiment over the
-    number of generations and population size."""
+    number of generations and population size.
+    """
 
     # Set the results dictionary
     results = {}
