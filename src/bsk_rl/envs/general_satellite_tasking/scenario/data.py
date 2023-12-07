@@ -40,6 +40,7 @@ class DataStore(ABC):
 
         self._initialize_knowledge(data_manager.env_features)
         self.data = self.DataType()
+        self.new_data = self.DataType()
 
     def _initialize_knowledge(self, env_features: "EnvironmentFeatures") -> None:
         """Establish knowledge about the world known to the satellite. Defaults to
@@ -84,6 +85,7 @@ class DataStore(ABC):
         self._clear_logs()
         new_data = self._compare_log_states(old_log_state, self.log_state)
         self.data += new_data
+        self.new_data = new_data
         return new_data
 
     def stage_communicated_data(self, external_data: "DataType") -> None:
