@@ -29,8 +29,6 @@ exclude = [
 select = [
     "D205", # Blank line after summary
     "D103", # Public function needs docstring
-    "D101", # Class needs docstring
-    "D102", # Method needs docstring
     "D417", # Document all arguments
     "D419", # Docstring is empty
 ]
