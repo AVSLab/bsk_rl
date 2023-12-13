@@ -1,6 +1,6 @@
 name: Commit Checks
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   Black:
