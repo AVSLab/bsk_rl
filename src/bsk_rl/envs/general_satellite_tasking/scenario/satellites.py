@@ -493,7 +493,9 @@ class AccessSatellite(Satellite):
             list: list of upcoming opportunities
         """
         start = bisect.bisect_left(
-            self.opportunities, self.simulator.sim_time, key=lambda x: x["window"][1]
+            self.opportunities,
+            self.simulator.sim_time + 1e-12,
+            key=lambda x: x["window"][1],
         )
         upcoming = self.opportunities[start:]
         return upcoming
