@@ -121,11 +121,8 @@ class BasicEnvironmentModel(EnvironmentModel):
         self.planet.isCentralBody = (
             True  # ensure this is the central gravitational body
         )
-        self.planet.useSphericalHarmParams = True
-        simIncludeGravBody.loadGravFromFile(
-            bsk_path + "/supportData/LocalGravData/GGM03S.txt",
-            self.planet.spherHarm,
-            10,
+        self.planet.useSphericalHarmonicsGravityModel(
+            bsk_path + "/supportData/LocalGravData/GGM03S.txt", 10
         )
 
         # setup Spice interface for some solar system bodies

@@ -178,9 +178,8 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         planet = self.gravFactory.createEarth()
         self.gravFactory.createSun()
         planet.isCentralBody = True
-        planet.useSphericalHarmParams = True
-        simIncludeGravBody.loadGravFromFile(
-            bskPath + "/supportData/LocalGravData/GGM03S.txt", planet.spherHarm, 10
+        planet.useSphericalHarmonicsGravityModel(
+            bskPath + "/supportData/LocalGravData/GGM03S.txt", 10
         )
         UTCInit = self.utc_init
         self.gravFactory.createSpiceInterface(
