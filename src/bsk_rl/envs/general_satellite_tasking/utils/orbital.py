@@ -183,7 +183,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         )
         UTCInit = self.utc_init
         self.gravFactory.createSpiceInterface(
-            bskPath + "/supportData/EphemerisData/", UTCInit, epochInMsg=True
+            bskPath + "/supportData/EphemerisData/", UTCInit
         )
         self.gravFactory.spiceObject.zeroBase = "earth"
         self.AddModelToTask(simTaskName, self.gravFactory.spiceObject)
