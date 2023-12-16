@@ -13,7 +13,6 @@ from Basilisk.simulation import (
     exponentialAtmosphere,
     groundLocation,
 )
-from Basilisk.topLevelModules import pyswice
 from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion, simIncludeGravBody
 
@@ -131,20 +130,6 @@ class BasicEnvironmentModel(EnvironmentModel):
             bsk_path + "/supportData/EphemerisData/", timeInitString
         )
         self.gravFactory.spiceObject.zeroBase = "earth"
-
-        # Add pyswice instances
-        pyswice.furnsh_c(
-            self.gravFactory.spiceObject.SPICEDataPath + "de430.bsp"
-        )  # solar system bodies
-        pyswice.furnsh_c(
-            self.gravFactory.spiceObject.SPICEDataPath + "naif0012.tls"
-        )  # leap second file
-        pyswice.furnsh_c(
-            self.gravFactory.spiceObject.SPICEDataPath + "de-403-masses.tpc"
-        )  # solar system masses
-        pyswice.furnsh_c(
-            self.gravFactory.spiceObject.SPICEDataPath + "pck00010.tpc"
-        )  # generic Planetary Constants
 
         self.simulator.AddModelToTask(
             self.env_task_name, self.gravFactory.spiceObject, ModelPriority=priority
