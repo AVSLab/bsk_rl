@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, Optional, TypeVar, Union
 
 import numpy as np
 from gymnasium import Env, spaces
@@ -14,8 +14,8 @@ from bsk_rl.envs.general_satellite_tasking.types import (
     Satellite,
 )
 
-SatObs = Any
-SatAct = Any
+SatObs = TypeVar("SatObs")
+SatAct = TypeVar("SatAct")
 MultiSatObs = tuple[SatObs, ...]
 MultiSatAct = Iterable[SatAct]
 
@@ -67,7 +67,7 @@ class GeneralSatelliteTasking(Env):
             communicator: Object to manage communication between satellites
             sim_rate: Rate for model simulation [s].
             max_step_duration: Maximum time to propagate sim at a step [s].
-            failure_penalty: Reward for satellite failure.
+            failure_penalty: Reward for satellite failure. Should be nonpositive.
             time_limit: Time at which to truncate the simulation [s].
             terminate_on_time_limit: Send terminations signal time_limit instead of just
                 truncation.
@@ -193,6 +193,22 @@ class GeneralSatelliteTasking(Env):
         ]
         return info
 
+    def _get_reward(self):
+        reward = sum(self.reward_dict.values())
+        for satellite in self.satellites:
+            if not satellite.is_alive():
+                reward += self.failure_penalty
+        return reward
+
+    def _get_terminated(self) -> bool:
+        if self.terminate_on_time_limit and self._get_truncated():
+            return True
+        else:
+            return not all(satellite.is_alive() for satellite in self.satellites)
+
+    def _get_truncated(self) -> bool:
+        return self.simulator.sim_time >= self.time_limit
+
     @property
     def action_space(self) -> spaces.Space[MultiSatAct]:
         """Compose satellite action spaces
@@ -252,23 +268,14 @@ class GeneralSatelliteTasking(Env):
             satellite.id: satellite.data_store.internal_update()
             for satellite in self.satellites
         }
-        reward = self.data_manager.reward(new_data)
+        self.reward_dict = self.data_manager.reward(new_data)
 
         self.communicator.communicate()
 
-        terminated = False
-        for satellite in self.satellites:
-            if not satellite.is_alive():
-                terminated = True
-                reward += self.failure_penalty
-
-        truncated = False
-        if self.simulator.sim_time >= self.time_limit:
-            truncated = True
-            if self.terminate_on_time_limit:
-                terminated = True
-
         observation = self._get_obs()
+        reward = self._get_reward()
+        terminated = self._get_terminated()
+        truncated = self._get_truncated()
         info = self._get_info()
         return observation, reward, terminated, truncated, info
 
@@ -296,7 +303,7 @@ class SingleSatelliteTasking(GeneralSatelliteTasking):
             )
 
     @property
-    def action_space(self) -> spaces.Discrete:
+    def action_space(self) -> spaces.Space[SatAct]:
         """Return the single satellite action space"""
         return self.satellite.action_space
 

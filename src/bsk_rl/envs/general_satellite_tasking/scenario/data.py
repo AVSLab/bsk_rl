@@ -120,31 +120,34 @@ class DataManager(ABC):
                 data
         """
         self.env_features = env_features
+        self.DataType = self.DataStore.DataType
 
     def reset(self) -> None:
-        self.data = self.DataStore.DataType()
-        self.cum_reward = 0.0
+        self.data = self.DataType()
+        self.cum_reward = {}
 
     def create_data_store(self, satellite: "Satellite") -> None:
         """Create a data store for a satellite"""
         satellite.data_store = self.DataStore(self, satellite)
+        self.cum_reward[satellite.id] = 0.0
 
     @abstractmethod  # pragma: no cover
-    def _calc_reward(self, new_data_dict: dict[str, DataType]) -> float:
+    def _calc_reward(self, new_data_dict: dict[str, DataType]) -> dict[str, float]:
         """Calculate step reward based on all satellite data from a step
 
         Args:
             new_data_dict: Satellite-DataType pairs of new data from a step
 
         Returns:
-            Step reward
+            Step reward for each satellite
         """
         pass
 
-    def reward(self, new_data_dict: dict[str, DataType]) -> float:
+    def reward(self, new_data_dict: dict[str, DataType]) -> dict[str, float]:
         """Calls _calc_reward and logs cumulative reward"""
         reward = self._calc_reward(new_data_dict)
-        self.cum_reward += reward
+        for satellite_id, sat_reward in reward.items():
+            self.cum_reward[satellite_id] += sat_reward
         return reward
 
 
@@ -167,7 +170,7 @@ class NoDataManager(DataManager):
     DataStore = NoDataStore
 
     def _calc_reward(self, new_data_dict):
-        return 0
+        return {sat: 0.0 for sat in new_data_dict.keys()}
 
 
 #######################################
@@ -261,7 +264,9 @@ class UniqueImagingManager(DataManager):
         super().__init__(env_features)
         self.reward_fn = reward_fn
 
-    def _calc_reward(self, new_data_dict: dict[str, UniqueImageData]) -> float:
+    def _calc_reward(
+        self, new_data_dict: dict[str, UniqueImageData]
+    ) -> dict[str, float]:
         """Reward new each unique image once using self.reward_fn()
 
         Args:
@@ -270,11 +275,19 @@ class UniqueImagingManager(DataManager):
         Returns:
             reward: Cumulative reward across satellites for one step
         """
-        reward = 0.0
-        for new_data in new_data_dict.values():
+        reward = {}
+        imaged_targets = sum(
+            [new_data.imaged for new_data in new_data_dict.values()], []
+        )
+        for sat_id, new_data in new_data_dict.items():
+            reward[sat_id] = 0.0
             for target in new_data.imaged:
                 if target not in self.data.imaged:
-                    reward += self.reward_fn(target.priority)
+                    reward[sat_id] += self.reward_fn(
+                        target.priority
+                    ) / imaged_targets.count(target)
+
+        for new_data in new_data_dict.values():
             self.data += new_data
         return reward
 
@@ -454,7 +467,9 @@ class NadirScanningManager(DataManager):
 
         self.reward_fn = reward_fn
 
-    def _calc_reward(self, new_data_dict: ["NadirScanningTimeData"]) -> float:
+    def _calc_reward(
+        self, new_data_dict: dict[str, "NadirScanningTimeData"]
+    ) -> dict[str, float]:
         """Calculate step reward based on all satellite data from a step
 
         Args:
@@ -463,8 +478,8 @@ class NadirScanningManager(DataManager):
         Returns:
             Step reward
         """
-        reward = 0.0
-        for scanning_time in new_data_dict.values():
-            reward += self.reward_fn(scanning_time.scanning_time)
+        reward = {}
+        for sat, scanning_time in new_data_dict.items():
+            reward[sat] = self.reward_fn(scanning_time.scanning_time)
 
         return reward
