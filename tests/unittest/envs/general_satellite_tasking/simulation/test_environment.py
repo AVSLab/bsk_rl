@@ -84,10 +84,6 @@ class TestBasicEnvironmentModel:
 
     @patch(basicenv + "_init_environment_objects", MagicMock())
     @patch(module + "simIncludeGravBody", MagicMock())
-    @patch(
-        module + "pyswice",
-        MagicMock(),
-    )
     def test_set_gravity_bodies(self):
         # Smoke test
         env = BasicEnvironmentModel(MagicMock(), 1.0)
