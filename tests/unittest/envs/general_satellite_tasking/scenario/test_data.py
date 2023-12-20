@@ -38,21 +38,23 @@ class TestDataManager:
         data.DataManager.DataStore = MagicMock()
         dm = data.DataManager(MagicMock())
         dm.reset()
-        assert dm.cum_reward == 0
+        assert dm.cum_reward == {}
 
     def test_create_data_store(self):
         sat = MagicMock()
         data.DataManager.DataStore = MagicMock(return_value="ds")
         dm = data.DataManager(MagicMock())
+        dm.reset()
         dm.create_data_store(sat)
         assert sat.data_store == "ds"
+        assert sat.id in dm.cum_reward
 
     def test_reward(self):
         dm = data.DataManager(MagicMock())
-        dm._calc_reward = MagicMock(return_value=10.0)
-        dm.cum_reward = 0
-        assert 10.0 == dm.reward({"new": "data"})
-        assert dm.cum_reward == 10.0
+        dm._calc_reward = MagicMock(return_value={"sat": 10.0})
+        dm.cum_reward = {"sat": 5.0}
+        assert {"sat": 10.0} == dm.reward({"sat": "data"})
+        assert dm.cum_reward == {"sat": 15.0}
 
 
 class TestNoData:
@@ -73,7 +75,7 @@ class TestNoDataManager:
     def test_calc_reward(self):
         dm = data.NoDataManager(MagicMock())
         reward = dm._calc_reward({"sat1": 0, "sat2": 1})
-        assert reward == 0
+        assert reward == {"sat1": 0.0, "sat2": 0.0}
 
 
 class TestUniqueImageData:
@@ -159,7 +161,7 @@ class TestUniqueImagingManager:
                 "sat2": data.UniqueImageData([MagicMock(priority=0.2)]),
             }
         )
-        assert reward == approx(0.3)
+        assert reward == {"sat1": approx(0.1), "sat2": approx(0.2)}
 
     def test_calc_reward_existing(self):
         tgt = MagicMock(priority=0.2)
@@ -171,7 +173,19 @@ class TestUniqueImagingManager:
                 "sat2": data.UniqueImageData([tgt]),
             }
         )
-        assert reward == approx(0.1)
+        assert reward == {"sat1": approx(0.1), "sat2": 0.0}
+
+    def test_calc_reward_repeated(self):
+        tgt = MagicMock(priority=0.2)
+        dm = data.UniqueImagingManager(MagicMock())
+        dm.data = data.UniqueImageData([])
+        reward = dm._calc_reward(
+            {
+                "sat1": data.UniqueImageData([tgt]),
+                "sat2": data.UniqueImageData([tgt]),
+            }
+        )
+        assert reward == {"sat1": approx(0.1), "sat2": approx(0.1)}
 
     def test_calc_reward_custom_fn(self):
         dm = data.UniqueImagingManager(MagicMock(), reward_fn=lambda x: 1 / x)
@@ -182,7 +196,7 @@ class TestUniqueImagingManager:
                 "sat2": data.UniqueImageData([MagicMock(priority=2)]),
             }
         )
-        assert reward == approx(1.5)
+        assert reward == {"sat1": approx(1.0), "sat2": 0.5}
 
 
 class TestNadirScanningTimeData:
@@ -240,7 +254,7 @@ class TestNadirScanningManager:
                 "sat2": data.NadirScanningTimeData(2),
             }
         )
-        assert reward == approx(3)
+        assert reward == {"sat1": 1.0, "sat2": 2.0}
 
     def test_calc_reward_existing(self):
         dm = data.NadirScanningManager(MagicMock())
@@ -252,7 +266,7 @@ class TestNadirScanningManager:
                 "sat2": data.NadirScanningTimeData(3),
             }
         )
-        assert reward == approx(5)
+        assert reward == {"sat1": 2.0, "sat2": 3.0}
 
     def test_calc_reward_custom_fn(self):
         dm = data.NadirScanningManager(MagicMock(), reward_fn=lambda x: 1 / x)
@@ -263,4 +277,4 @@ class TestNadirScanningManager:
                 "sat2": data.NadirScanningTimeData(2),
             }
         )
-        assert reward == approx(1.0)
+        assert reward == {"sat1": 0.5, "sat2": 0.5}

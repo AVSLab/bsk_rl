@@ -119,7 +119,9 @@ class TestGeneralSatelliteTasking:
             satellites=mock_sats,
             env_type=MagicMock(),
             env_features=MagicMock(),
-            data_manager=MagicMock(reward=MagicMock(return_value=25.0)),
+            data_manager=MagicMock(
+                reward=MagicMock(return_value={sat.id: 12.5 for sat in mock_sats})
+            ),
         )
         env.simulator = MagicMock(sim_time=101.0)
         _, reward, _, _, info = env.step((0, 10))
@@ -154,7 +156,9 @@ class TestGeneralSatelliteTasking:
             satellites=mock_sats,
             env_type=MagicMock(),
             env_features=MagicMock(),
-            data_manager=MagicMock(reward=MagicMock(return_value=25.0)),
+            data_manager=MagicMock(
+                reward=MagicMock(return_value={sat.id: 12.5 for sat in mock_sats})
+            ),
             terminate_on_time_limit=terminate_on_time_limit,
         )
         env.simulator = MagicMock(sim_time=101.0)
@@ -178,7 +182,7 @@ class TestGeneralSatelliteTasking:
             satellites=[mock_sat],
             env_type=MagicMock(),
             env_features=MagicMock(),
-            data_manager=MagicMock(reward=MagicMock(return_value=25.0)),
+            data_manager=MagicMock(reward=MagicMock(return_value={mock_sat.id: 25.0})),
         )
         env.simulator = MagicMock(sim_time=101.0)
         env.step(None)
