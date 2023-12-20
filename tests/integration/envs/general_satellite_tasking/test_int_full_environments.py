@@ -1,6 +1,8 @@
 import gymnasium as gym
 import pytest
+from pettingzoo.test.parallel_test import parallel_api_test
 
+from bsk_rl.envs.general_satellite_tasking.gym_env import MultiagentSatelliteTasking
 from bsk_rl.envs.general_satellite_tasking.scenario import data
 from bsk_rl.envs.general_satellite_tasking.scenario import satellites as sats
 from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
@@ -35,6 +37,30 @@ multi_env = gym.make(
     disable_env_checker=True,
 )
 
+parallel_env = MultiagentSatelliteTasking(
+    satellites=[
+        sats.FullFeaturedSatellite(
+            "Sentinel-2A",
+            sat_args=sats.FullFeaturedSatellite.default_sat_args(oe=random_orbit),
+            imageAttErrorRequirement=0.01,
+            imageRateErrorRequirement=0.01,
+        ),
+        sats.FullFeaturedSatellite(
+            "Sentinel-2B",
+            sat_args=sats.FullFeaturedSatellite.default_sat_args(oe=random_orbit),
+            imageAttErrorRequirement=0.01,
+            imageRateErrorRequirement=0.01,
+        ),
+    ],
+    env_type=environment.GroundStationEnvModel,
+    env_args=None,
+    env_features=StaticTargets(n_targets=1000),
+    data_manager=data.UniqueImagingManager(),
+    sim_rate=0.5,
+    max_step_duration=1e9,
+    time_limit=5700.0,
+)
+
 
 @pytest.mark.parametrize("env", [multi_env])
 def test_reproducibility(env):
@@ -61,3 +87,10 @@ def test_reproducibility(env):
             break
 
     assert reward_sum_2 == reward_sum_1
+
+
+@pytest.mark.repeat(5)
+def test_parallel_api():
+    with pytest.warns(UserWarning):
+        # expect an erroneous warning about the info dict due to our additional info
+        parallel_api_test(parallel_env)

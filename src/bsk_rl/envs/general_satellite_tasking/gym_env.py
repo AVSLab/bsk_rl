@@ -1,8 +1,10 @@
+import functools
 from copy import deepcopy
-from typing import Any, Iterable, Optional, TypeVar, Union
+from typing import Any, Generic, Iterable, Optional, TypeVar, Union
 
 import numpy as np
 from gymnasium import Env, spaces
+from pettingzoo.utils.env import AgentID, ParallelEnv
 
 from bsk_rl.envs.general_satellite_tasking.scenario.communication import NoCommunication
 from bsk_rl.envs.general_satellite_tasking.simulation.simulator import Simulator
@@ -20,7 +22,7 @@ MultiSatObs = tuple[SatObs, ...]
 MultiSatAct = Iterable[SatAct]
 
 
-class GeneralSatelliteTasking(Env):
+class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
     def __init__(
         self,
         satellites: Union[Satellite, list[Satellite]],
@@ -189,11 +191,12 @@ class GeneralSatelliteTasking(Env):
         info["requires_retasking"] = [
             satellite.id
             for satellite in self.satellites
-            if satellite.requires_retasking
+            if satellite.requires_retasking and satellite.is_alive()
         ]
         return info
 
     def _get_reward(self):
+        """Return a scalar reward for the step."""
         reward = sum(self.reward_dict.values())
         for satellite in self.satellites:
             if not satellite.is_alive():
@@ -201,12 +204,14 @@ class GeneralSatelliteTasking(Env):
         return reward
 
     def _get_terminated(self) -> bool:
+        """Return the terminated flag for the step."""
         if self.terminate_on_time_limit and self._get_truncated():
             return True
         else:
             return not all(satellite.is_alive() for satellite in self.satellites)
 
     def _get_truncated(self) -> bool:
+        """Return the truncated flag for the step."""
         return self.simulator.sim_time >= self.time_limit
 
     @property
@@ -235,17 +240,7 @@ class GeneralSatelliteTasking(Env):
             [satellite.observation_space for satellite in self.satellites]
         )
 
-    def step(
-        self, actions: MultiSatAct
-    ) -> tuple[MultiSatObs, float, bool, bool, dict[str, Any]]:
-        """Propagate the simulation, update information, and get rewards
-
-        Args:
-            Joint action for satellites
-
-        Returns:
-            observation, reward, terminated, truncated, info
-        """
+    def _step(self, actions: MultiSatAct) -> None:
         if len(actions) != len(self.satellites):
             raise ValueError("There must be the same number of actions and satellites")
         for satellite, action in zip(self.satellites, actions):
@@ -272,6 +267,19 @@ class GeneralSatelliteTasking(Env):
 
         self.communicator.communicate()
 
+    def step(
+        self, actions: MultiSatAct
+    ) -> tuple[MultiSatObs, float, bool, bool, dict[str, Any]]:
+        """Propagate the simulation, update information, and get rewards
+
+        Args:
+            Joint action for satellites
+
+        Returns:
+            observation, reward, terminated, truncated, info
+        """
+        self._step(actions)
+
         observation = self._get_obs()
         reward = self._get_reward()
         terminated = self._get_terminated()
@@ -289,7 +297,7 @@ class GeneralSatelliteTasking(Env):
             del self.simulator
 
 
-class SingleSatelliteTasking(GeneralSatelliteTasking):
+class SingleSatelliteTasking(GeneralSatelliteTasking, Generic[SatObs, SatAct]):
     """A special case of the GeneralSatelliteTasking for one satellite. For
     compatibility with standard training APIs, actions and observations are directly
     exposed for the single satellite and are not wrapped in a tuple.
@@ -323,3 +331,155 @@ class SingleSatelliteTasking(GeneralSatelliteTasking):
 
     def _get_obs(self) -> Any:
         return self.satellite.get_obs()
+
+
+class MultiagentSatelliteTasking(
+    GeneralSatelliteTasking, ParallelEnv, Generic[SatObs, SatAct, AgentID]
+):
+    """Implements the environment with the PettingZoo parallel API."""
+
+    def reset(
+        self, seed: int | None = None, options=None
+    ) -> tuple[MultiSatObs, dict[str, Any]]:
+        self.newly_dead = []
+        return super().reset(seed, options)
+
+    @property
+    def agents(self) -> list[AgentID]:
+        """Agents currently in the environment"""
+        truncated = super()._get_truncated()
+        return [
+            satellite.id
+            for satellite in self.satellites
+            if (satellite.is_alive() and not truncated)
+        ]
+
+    @property
+    def num_agents(self) -> int:
+        """Number of agents currently in the environment"""
+        return len(self.agents)
+
+    @property
+    def possible_agents(self) -> list[AgentID]:
+        """Return the list of all possible agents."""
+        return [satellite.id for satellite in self.satellites]
+
+    @property
+    def max_num_agents(self) -> int:
+        """Maximum number of agents possible in the environment"""
+        return len(self.possible_agents)
+
+    @property
+    def previously_dead(self) -> list[AgentID]:
+        """Return the list of agents that died at least one step ago."""
+        return list(set(self.possible_agents) - set(self.agents) - set(self.newly_dead))
+
+    @property
+    def observation_spaces(self) -> dict[AgentID, spaces.Box]:
+        """Return the observation space for each agent"""
+        return {
+            agent: obs_space
+            for agent, obs_space in zip(self.possible_agents, super().observation_space)
+        }
+
+    @functools.lru_cache(maxsize=None)
+    def observation_space(self, agent: AgentID) -> spaces.Space[SatObs]:
+        """Return the observation space for a certain agent"""
+        return self.observation_spaces[agent]
+
+    @property
+    def action_spaces(self) -> dict[AgentID, spaces.Space[SatAct]]:
+        """Return the action space for each agent"""
+        return {
+            agent: act_space
+            for agent, act_space in zip(self.possible_agents, super().action_space)
+        }
+
+    @functools.lru_cache(maxsize=None)
+    def action_space(self, agent: AgentID) -> spaces.Space[SatAct]:
+        """Return the action space for a certain agent"""
+        return self.action_spaces[agent]
+
+    def _get_obs(self) -> dict[AgentID, SatObs]:
+        """Format the observation per the PettingZoo Parallel API"""
+        return {
+            agent: satellite.get_obs()
+            for agent, satellite in zip(self.possible_agents, self.satellites)
+            if agent not in self.previously_dead
+        }
+
+    def _get_reward(self) -> dict[AgentID, float]:
+        """Format the reward per the PettingZoo Parallel API"""
+        reward = deepcopy(self.reward_dict)
+        for agent, satellite in zip(self.possible_agents, self.satellites):
+            if not satellite.is_alive():
+                reward[agent] += self.failure_penalty
+
+        reward_keys = list(reward.keys())
+        for agent in reward_keys:
+            if agent in self.previously_dead:
+                del reward[agent]
+
+        return reward
+
+    def _get_terminated(self) -> dict[AgentID, bool]:
+        """Format terminations per the PettingZoo Parallel API"""
+        if self.terminate_on_time_limit and super()._get_truncated():
+            return {
+                agent: True
+                for agent in self.possible_agents
+                if agent not in self.previously_dead
+            }
+        else:
+            return {
+                agent: not satellite.is_alive()
+                for agent, satellite in zip(self.possible_agents, self.satellites)
+                if agent not in self.previously_dead
+            }
+
+    def _get_truncated(self) -> dict[AgentID, bool]:
+        """Format truncations per the PettingZoo Parallel API"""
+        truncated = super()._get_truncated()
+        return {
+            agent: truncated
+            for agent in self.possible_agents
+            if agent not in self.previously_dead
+        }
+
+    def _get_info(self) -> dict[AgentID, dict]:
+        """Format info per the PettingZoo Parallel API"""
+        info = super()._get_info()
+        for agent in self.possible_agents:
+            if agent in self.previously_dead:
+                del info[agent]
+        return info
+
+    def step(
+        self,
+        actions: dict[AgentID, SatAct],
+    ) -> tuple[
+        dict[AgentID, SatObs],
+        dict[AgentID, float],
+        dict[AgentID, bool],
+        dict[AgentID, bool],
+        dict[AgentID, dict],
+    ]:
+        """Step the environment and return PettingZoo Parallel API format"""
+        previous_alive = self.agents
+
+        action_vector = []
+        for agent in self.possible_agents:
+            if agent in actions.keys():
+                action_vector.append(actions[agent])
+            else:
+                action_vector.append(None)
+        self._step(action_vector)
+
+        self.newly_dead = list(set(previous_alive) - set(self.agents))
+
+        observation = self._get_obs()
+        reward = self._get_reward()
+        terminated = self._get_terminated()
+        truncated = self._get_truncated()
+        info = self._get_info()
+        return observation, reward, terminated, truncated, info
