@@ -20,6 +20,7 @@
         "matplotlib",
         "numpy",
         "pandas",
+        "pettingzoo",
         "pytest",
         "pytest-cov",
         "pytest-repeat",

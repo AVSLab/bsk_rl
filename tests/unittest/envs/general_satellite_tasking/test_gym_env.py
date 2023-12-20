@@ -5,6 +5,7 @@ from gymnasium import spaces
 
 from bsk_rl.envs.general_satellite_tasking.gym_env import (
     GeneralSatelliteTasking,
+    MultiagentSatelliteTasking,
     SingleSatelliteTasking,
 )
 from bsk_rl.envs.general_satellite_tasking.scenario.satellites import Satellite
@@ -260,3 +261,249 @@ class TestSingleSatelliteTasking:
     def test_get_obs(self):
         env, mock_sat = self.make_env()
         assert env._get_obs() == mock_sat.get_obs()
+
+
+class TestMultiagentSatelliteTasking:
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.Simulator",
+    )
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.MultiagentSatelliteTasking._get_obs",
+    )
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.MultiagentSatelliteTasking._get_info",
+    )
+    def test_reset(self, mock_sim, obs_fn, info_fn):
+        mock_sat_1 = MagicMock()
+        mock_sat_2 = MagicMock()
+        mock_sat_1.sat_args_generator = {}
+        mock_sat_2.sat_args_generator = {}
+        mock_data = MagicMock(env_features=None)
+        env = MultiagentSatelliteTasking(
+            satellites=[mock_sat_1, mock_sat_2],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=mock_data,
+        )
+        env.env_args_generator = {"utc_init": "a long time ago"}
+        env.communicator = MagicMock()
+        obs, info = env.reset()
+        obs_fn.assert_called_once()
+        info_fn.assert_called_once()
+
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.GeneralSatelliteTasking._get_truncated",
+        MagicMock(return_value=False),
+    )
+    def test_agents(self):
+        env = MultiagentSatelliteTasking(
+            satellites=[MagicMock() for i in range(3)],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(),
+        )
+        assert env.agents == [sat.id for sat in env.satellites]
+        assert env.num_agents == 3
+        assert env.possible_agents == [sat.id for sat in env.satellites]
+        assert env.max_num_agents == 3
+
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.GeneralSatelliteTasking._get_truncated",
+        MagicMock(return_value=False),
+    )
+    def test_get_obs(self):
+        env = MultiagentSatelliteTasking(
+            satellites=[MagicMock(get_obs=MagicMock(return_value=i)) for i in range(3)],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(),
+        )
+        env.newly_dead = []
+        assert env._get_obs() == {sat.id: i for i, sat in enumerate(env.satellites)}
+
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.GeneralSatelliteTasking._get_truncated",
+        MagicMock(return_value=False),
+    )
+    def test_get_info(self):
+        mock_sats = [MagicMock(info={"sat_index": i}) for i in range(3)]
+        env = MultiagentSatelliteTasking(
+            satellites=mock_sats,
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(),
+        )
+        env.newly_dead = []
+        env.latest_step_duration = 10.0
+        expected = {sat.id: {"sat_index": i} for i, sat in enumerate(mock_sats)}
+        expected["d_ts"] = 10.0
+        expected["requires_retasking"] = [sat.id for sat in mock_sats]
+        assert env._get_info() == expected
+
+    def test_action_spaces(self):
+        env = MultiagentSatelliteTasking(
+            satellites=[
+                MagicMock(action_space=spaces.Discrete(i + 1)) for i in range(3)
+            ],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(),
+        )
+        assert env.action_spaces == {
+            env.satellites[0].id: spaces.Discrete(1),
+            env.satellites[1].id: spaces.Discrete(2),
+            env.satellites[2].id: spaces.Discrete(3),
+        }
+
+    def test_obs_spaces(self):
+        env = MultiagentSatelliteTasking(
+            satellites=[
+                MagicMock(observation_space=spaces.Discrete(i + 1)) for i in range(3)
+            ],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(),
+        )
+        env.simulator = MagicMock()
+        env.reset = MagicMock()
+        assert env.observation_spaces == {
+            env.satellites[0].id: spaces.Discrete(1),
+            env.satellites[1].id: spaces.Discrete(2),
+            env.satellites[2].id: spaces.Discrete(3),
+        }
+
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.GeneralSatelliteTasking._get_truncated",
+        MagicMock(return_value=False),
+    )
+    def test_get_reward(self):
+        env = MultiagentSatelliteTasking(
+            satellites=[
+                MagicMock(is_alive=MagicMock(return_value=False)) for i in range(3)
+            ],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(),
+            failure_penalty=-20.0,
+        )
+        env.newly_dead = [sat.id for sat in env.satellites]
+        env.reward_dict = {sat.id: 10.0 for i, sat in enumerate(env.satellites)}
+        assert env._get_reward() == {
+            sat.id: -10.0 for i, sat in enumerate(env.satellites)
+        }
+
+    @pytest.mark.parametrize("timeout", [False, True])
+    @pytest.mark.parametrize("terminate_on_time_limit", [False, True])
+    def test_get_terminated(self, timeout, terminate_on_time_limit):
+        env = MultiagentSatelliteTasking(
+            satellites=[
+                MagicMock(is_alive=MagicMock(return_value=True if i != 0 else False))
+                for i in range(3)
+            ],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(),
+            terminate_on_time_limit=terminate_on_time_limit,
+            time_limit=100,
+        )
+        env.simulator = MagicMock(sim_time=101 if timeout else 99)
+
+        if not timeout or not terminate_on_time_limit:
+            env.newly_dead = [sat.id for sat in env.satellites]
+            assert env._get_terminated() == {
+                env.satellites[0].id: True,
+                env.satellites[1].id: False,
+                env.satellites[2].id: False,
+            }
+        else:
+            env.newly_dead = [sat.id for sat in env.satellites]
+            assert env._get_terminated() == {
+                env.satellites[0].id: True,
+                env.satellites[1].id: True,
+                env.satellites[2].id: True,
+            }
+
+    @pytest.mark.parametrize("time", [99, 101])
+    def test_get_truncated(self, time):
+        env = MultiagentSatelliteTasking(
+            satellites=[MagicMock() for i in range(3)],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(),
+            time_limit=100,
+        )
+        env.simulator = MagicMock(sim_time=time)
+        env.newly_dead = [sat.id for sat in env.satellites] if time >= 100 else []
+        assert env._get_truncated() == {
+            env.satellites[0].id: time >= 100,
+            env.satellites[1].id: time >= 100,
+            env.satellites[2].id: time >= 100,
+        }
+
+    def test_close(self):
+        env = MultiagentSatelliteTasking(
+            satellites=[MagicMock()],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(),
+        )
+        env.simulator = MagicMock()
+        env.close()
+        assert not hasattr(env, "simulator")
+
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.GeneralSatelliteTasking._get_truncated",
+        MagicMock(return_value=False),
+    )
+    def test_dead(self):
+        env = MultiagentSatelliteTasking(
+            satellites=[MagicMock() for _ in range(3)],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(),
+        )
+        env.satellites[1].is_alive = MagicMock(return_value=False)
+        env.satellites[2].is_alive = MagicMock(return_value=False)
+        env.newly_dead = [env.satellites[2].id]
+        assert env.previously_dead == [env.satellites[1].id]
+        assert env.agents == [env.satellites[0].id]
+        assert env.possible_agents == [sat.id for sat in env.satellites]
+
+    mst = "bsk_rl.envs.general_satellite_tasking.gym_env.MultiagentSatelliteTasking."
+
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.GeneralSatelliteTasking._get_truncated",
+        MagicMock(return_value=False),
+    )
+    @patch(mst + "_get_obs", MagicMock())
+    @patch(mst + "_get_reward", MagicMock())
+    @patch(mst + "_get_terminated", MagicMock())
+    @patch(mst + "_get_truncated", MagicMock())
+    @patch(mst + "_get_info", MagicMock())
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.GeneralSatelliteTasking._step",
+        MagicMock(),
+    )
+    def test_step(self):
+        env = MultiagentSatelliteTasking(
+            satellites=[
+                MagicMock(is_alive=MagicMock(return_value=True)) for _ in range(3)
+            ],
+            env_type=MagicMock(),
+            env_features=MagicMock(),
+            data_manager=MagicMock(),
+        )
+
+        def kill_sat_2():
+            env.satellites[2].is_alive.return_value = False
+
+        env._step.side_effect = lambda _: kill_sat_2()
+        env.satellites[1].is_alive.return_value = False
+        env.step(
+            {
+                env.satellites[0].id: 0,
+                env.satellites[2].id: 2,
+            }
+        )
+        env._step.assert_called_with([0, None, 2])
+        assert env.newly_dead == [env.satellites[2].id]
