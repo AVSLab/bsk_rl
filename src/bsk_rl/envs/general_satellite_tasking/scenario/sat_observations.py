@@ -1,6 +1,5 @@
 from copy import deepcopy
 from typing import Any, Callable, Optional, Union
-from warnings import warn
 
 import numpy as np
 from Basilisk.utilities import orbitalMotion
@@ -183,7 +182,7 @@ class TargetState(SatObservation, ImagingSatellite):
                 dict(prop="location", norm=orbitalMotion.REQ_EARTH * 1e3),
             ]
         if "location_norm" in kwargs:
-            warn(
+            self.logger.warning(
                 "location_norm is ignored and should be specified in target_properties"
             )  # pragma: no cover
         self.n_ahead_observe = int(n_ahead_observe)

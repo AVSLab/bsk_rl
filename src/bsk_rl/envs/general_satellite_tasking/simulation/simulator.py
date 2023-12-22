@@ -6,10 +6,12 @@ if TYPE_CHECKING:  # pragma: no cover
         Satellite,
     )
 
+import logging
+
 from Basilisk.utilities import SimulationBaseClass
 from Basilisk.utilities import macros as mc
 
-from bsk_rl.envs.general_satellite_tasking.utils.debug import MEMORY_LEAK_CHECKING
+logger = logging.getLogger(__name__)
 
 
 class Simulator(SimulationBaseClass.SimBaseClass):
@@ -80,6 +82,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         simulation_time = mc.sec2nano(
             min(self.sim_time + self.max_step_duration, self.time_limit)
         )
+        logger.info(f"Running simulation to {simulation_time*mc.NANO2SEC:.2f} seconds")
         self.ConfigureStopTime(simulation_time)
         self.ExecuteSimulation()
 
@@ -90,5 +93,4 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         del self.eventMap[event_name]
 
     def __del__(self):
-        if MEMORY_LEAK_CHECKING:  # pragma: no cover
-            print("~~~ BSK SIMULATOR DELETED ~~~")
+        logger.debug("Basilisk simulator deleted")

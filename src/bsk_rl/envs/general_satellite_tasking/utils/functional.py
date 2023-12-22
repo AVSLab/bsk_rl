@@ -94,23 +94,18 @@ def vectorize_nested_dict(dictionary: dict) -> np.ndarray:
 def aliveness_checker(func: Callable[..., bool]) -> Callable[..., bool]:
     """Decorator to evaluate func -> bool when checking for satellite aliveness"""
 
-    def inner(*args, **kwargs) -> bool:
+    def inner(*args, log_failure=False, **kwargs) -> bool:
         self = args[0]
         alive = func(*args, **kwargs)
-        if not alive:
-            self.satellite.info.append(
-                (self.simulator.sim_time, f"failed {func.__name__} check")
-            )
-            print(
-                f"Satellite with id {self.satellite.id} failed {func.__name__} check!"
-            )
+        if not alive and log_failure:
+            self.satellite.log_info(f"failed {func.__name__} check")
         return alive
 
     inner.is_aliveness_checker = True
     return inner
 
 
-def check_aliveness_checkers(model: Any) -> bool:
+def check_aliveness_checkers(model: Any, log_failure=False) -> bool:
     """Evaluate all functions with @aliveness_checker in a model
 
     Args:
@@ -127,7 +122,7 @@ def check_aliveness_checkers(model: Any) -> bool:
             and callable(getattr(model, name))
             and hasattr(getattr(model, name), "is_aliveness_checker")
         ):
-            is_alive = is_alive and getattr(model, name)()
+            is_alive = is_alive and getattr(model, name)(log_failure=log_failure)
     return is_alive
 
 

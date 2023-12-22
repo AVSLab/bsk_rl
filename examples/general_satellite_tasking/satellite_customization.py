@@ -190,6 +190,7 @@ env = gym.make(
     sim_rate=0.5,
     max_step_duration=600.0,
     time_limit=95 * 60 * 3,
+    log_level="INFO",
 )
 
 # Run the simulation until timeout or agent failure
@@ -209,23 +210,6 @@ while True:
     # Using the composed satellite features also provides a human-readable state:
     for k, v in env.satellite.obs_dict.items():
         print(f"\t\t{k}:  {v}")
-
-    # Print info dict messages from each sat
-    msg_list = []
-    for sat, msgs in info.items():
-        if isinstance(msgs, list):
-            for time, message in msgs:
-                msg_txt = (
-                    f"\t<{'_'.join(sat.split('_')[0:-1])} at {time:.1f}>\t{message}"
-                )
-                msg_list.append(
-                    (
-                        time,
-                        msg_txt,
-                    )
-                )
-    for time, message in sorted(msg_list):
-        print(message)
 
     total_reward += reward
     print(f"\tReward: {reward:.3f} ({total_reward:.3f} cumulative)")

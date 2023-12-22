@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Iterable, Optional
-from warnings import warn
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.envs.general_satellite_tasking.types import (
@@ -34,7 +33,6 @@ from Basilisk.utilities import (
 )
 
 from bsk_rl.envs.general_satellite_tasking.simulation import environment
-from bsk_rl.envs.general_satellite_tasking.utils.debug import MEMORY_LEAK_CHECKING
 from bsk_rl.envs.general_satellite_tasking.utils.functional import (
     aliveness_checker,
     check_aliveness_checkers,
@@ -66,6 +64,7 @@ class DynamicsModel(ABC):
             priority: Model priority.
         """
         self.satellite = satellite
+        self.logger = self.satellite.logger.getChild(self.__class__.__name__)
 
         for required in self.requires_env:
             if not issubclass(type(self.simulator.environment), required):
@@ -99,21 +98,20 @@ class DynamicsModel(ABC):
         """Caller for all dynamics object initialization"""
         pass
 
-    def is_alive(self) -> bool:
+    def is_alive(self, log_failure=False) -> bool:
         """Check if the dynamics model has failed any aliveness requirements.
 
         Returns:
             If the satellite dynamics are still alive
         """
-        return check_aliveness_checkers(self)
+        return check_aliveness_checkers(self, log_failure=log_failure)
 
     def reset_for_action(self) -> None:
         """Called whenever a FSW @action is called"""
         pass
 
     def __del__(self):
-        if MEMORY_LEAK_CHECKING:  # pragma: no cover
-            print("~~~ BSK DYNAMICS DELETED ~~~")
+        self.logger.debug("Basilisk dynamics deleted")
 
 
 class BasicDynamicsModel(DynamicsModel):
@@ -654,7 +652,7 @@ class ImagingDynModel(BasicDynamicsModel):
             priority: Model priority.
         """
         if transmitterBaudRate > 0:
-            warn(
+            self.logger.warning(
                 "Positive transmitterBaudRate will lead to increased data in buffer "
                 + "on downlink"
             )

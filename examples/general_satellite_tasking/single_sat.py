@@ -63,6 +63,7 @@ env = gym.make(
     # Send the terminated signal in addition to the truncated signal at the end of the
     # episode. Needed for some RL algorithms to work correctly.
     terminate_on_time_limit=True,
+    log_level="INFO",
 )
 
 # Run the simulation until timeout or agent failure
@@ -84,18 +85,6 @@ while True:
     observation, reward, terminated, truncated, info = env.step(
         env.action_space.sample()
     )
-
-    # Print info dict messages from each sat
-    msg_list = []
-    for sat, msgs in info.items():
-        if isinstance(msgs, list):
-            for time, message in msgs:
-                msg_str = (
-                    f"\t<{'_'.join(sat.split('_')[0:-1])} at {time:.1f}>\t{message}"
-                )
-                msg_list.append((time, msg_str))
-    for time, message in sorted(msg_list):
-        print(message)
 
     total_reward += reward
     print(f"\tReward: {reward:.3f} ({total_reward:.3f} cumulative)")

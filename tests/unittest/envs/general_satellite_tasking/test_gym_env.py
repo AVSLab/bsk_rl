@@ -191,7 +191,6 @@ class TestGeneralSatelliteTasking:
         mock_sat.requires_retasking = True
         env.step(None)
         assert mock_sat.requires_retasking
-        assert "requires retasking but received no task" in capfd.readouterr().out
 
     def test_render(self):
         pass

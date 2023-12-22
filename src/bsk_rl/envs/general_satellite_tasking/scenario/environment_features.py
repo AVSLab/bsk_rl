@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from abc import ABC
@@ -6,6 +7,8 @@ from typing import Callable, Iterable, Optional, Union
 import numpy as np
 import pandas as pd
 from Basilisk.utilities import orbitalMotion
+
+logger = logging.getLogger(__name__)
 
 
 class EnvironmentFeatures(ABC):
@@ -69,6 +72,7 @@ class StaticTargets(EnvironmentFeatures):
             self.n_targets = self._n_targets
         else:
             self.n_targets = np.random.randint(self._n_targets[0], self._n_targets[1])
+        logger.info(f"Generating {self.n_targets} targets")
         self.regenerate_targets()
 
     def regenerate_targets(self) -> None:
