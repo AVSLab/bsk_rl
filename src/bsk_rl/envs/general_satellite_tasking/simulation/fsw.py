@@ -30,7 +30,6 @@ from Basilisk.fswAlgorithms import (
 from Basilisk.utilities import macros as mc
 
 from bsk_rl.envs.general_satellite_tasking.simulation import dynamics
-from bsk_rl.envs.general_satellite_tasking.utils.debug import MEMORY_LEAK_CHECKING
 from bsk_rl.envs.general_satellite_tasking.utils.functional import (
     check_aliveness_checkers,
     default_args,
@@ -73,6 +72,7 @@ class FSWModel(ABC):
         """
 
         self.satellite = satellite
+        self.logger = self.satellite.logger.getChild(self.__class__.__name__)
 
         for required in self.requires_dyn:
             if not issubclass(satellite.dyn_type, required):
@@ -120,17 +120,16 @@ class FSWModel(ABC):
         """Message setup after task creation"""
         pass
 
-    def is_alive(self) -> bool:
+    def is_alive(self, log_failure=False) -> bool:
         """Check if the fsw model has failed any aliveness requirements.
 
         Returns:
             If the satellite fsw is still alive
         """
-        return check_aliveness_checkers(self)
+        return check_aliveness_checkers(self, log_failure=log_failure)
 
     def __del__(self):
-        if MEMORY_LEAK_CHECKING:  # pragma: no cover
-            print("~~~ BSK FSW DELETED ~~~")
+        self.logger.debug("Basilisk FSW deleted")
 
 
 class Task(ABC):

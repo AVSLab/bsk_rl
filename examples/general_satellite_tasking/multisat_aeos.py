@@ -83,6 +83,7 @@ env = gym.make(
     max_step_duration=600.0,
     # Set 3-orbit long episodes
     time_limit=95 * 60 * 3,
+    log_level="INFO",
 )
 
 # Run the simulation until timeout or agent failure
@@ -90,10 +91,8 @@ total_reward = 0.0
 observation, info = env.reset()
 
 while True:
-    print(f"<time: {env.simulator.sim_time:.1f}s>")
-
     """
-    Task random actions. Look at the set_action function for the chosen satellite type 
+    Task random actions. Look at the set_action function for the chosen satellite type
     to see what actions do. In this case, the action mapping is as follows:
             - 0: charge
             - 1: desaturate
@@ -104,23 +103,6 @@ while True:
     observation, reward, terminated, truncated, info = env.step(
         env.action_space.sample()
     )
-
-    # Print info dict messages from each sat
-    msg_list = []
-    for sat, msgs in info.items():
-        if isinstance(msgs, list):
-            for time, message in msgs:
-                msg_txt = (
-                    f"\t<{'_'.join(sat.split('_')[0:-1])} at {time:.1f}>\t{message}"
-                )
-                msg_list.append(
-                    (
-                        time,
-                        msg_txt,
-                    )
-                )
-    for time, message in sorted(msg_list):
-        print(message)
 
     total_reward += reward
     print(f"\tReward: {reward:.3f} ({total_reward:.3f} cumulative)")

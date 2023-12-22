@@ -1,5 +1,6 @@
 import bisect
 import inspect
+import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
 from weakref import proxy
@@ -80,6 +81,7 @@ class Satellite(ABC):
             variable_interval: Stop simulation at terminal events
         """
         self.name = name
+        self.logger = logging.getLogger(__name__).getChild(self.name)
         if sat_args is None:
             sat_args = self.default_sat_args()
         self.sat_args_generator = self.default_sat_args(**sat_args)
@@ -101,6 +103,7 @@ class Satellite(ABC):
         self.sat_args = {
             k: v if not callable(v) else v() for k, v in self.sat_args_generator.items()
         }
+        self.logger.debug(f"Satellite initialized with {self.sat_args}")
 
     def reset_pre_sim(self) -> None:
         """Called in environment reset, before simulator initialization"""
@@ -178,14 +181,16 @@ class Satellite(ABC):
         """
         pass
 
-    def is_alive(self) -> bool:
+    def is_alive(self, log_failure=False) -> bool:
         """Check if the satellite is violating any requirements from dynamics or FSW
         models
 
         Returns:
             is alive
         """
-        return self.dynamics.is_alive() and self.fsw.is_alive()
+        return self.dynamics.is_alive(log_failure=log_failure) and self.fsw.is_alive(
+            log_failure=log_failure
+        )
 
     @property
     def _satellite_command(self) -> str:
@@ -204,7 +209,7 @@ class Satellite(ABC):
         Returns:
             actionList action for simBase.createNewEvent
         """
-        return self._satellite_command + f".info.append((self.sim_time, '{info}'))"
+        return self._satellite_command + f".log_info('{info}')"
 
     def log_info(self, info: Any) -> None:
         """Record information at the current time
@@ -213,6 +218,7 @@ class Satellite(ABC):
             info: Information to log
         """
         self.info.append((self.simulator.sim_time, info))
+        self.logger.info(f"{info}")
 
     def _update_timed_terminal_event(
         self, t_close: float, info: str = "", extra_actions=[]
@@ -277,7 +283,7 @@ class AccessSatellite(Satellite):
     def __init__(
         self,
         *args,
-        generation_duration: float = 60 * 95 / 10,
+        generation_duration: float = 60 * 95,
         initial_generation_duration: Optional[float] = None,
         access_dist_threshold: float = 4e6,
         **kwargs,
@@ -342,6 +348,12 @@ class AccessSatellite(Satellite):
         """
         if duration <= 0:
             return
+
+        self.logger.info(
+            "Finding opportunity windows from "
+            f"{self.window_calculation_time:.2f} to "
+            f"{self.window_calculation_time + duration:.2f} seconds"
+        )
         calculation_start = self.window_calculation_time
         calculation_end = self.window_calculation_time + max(
             duration, self.trajectory.dt * 2, self.generation_duration

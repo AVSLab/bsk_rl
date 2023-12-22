@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
@@ -11,6 +12,8 @@ if TYPE_CHECKING:  # pragma: no cover
     )
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 LogStateType = Any
 
@@ -148,6 +151,7 @@ class DataManager(ABC):
         reward = self._calc_reward(new_data_dict)
         for satellite_id, sat_reward in reward.items():
             self.cum_reward[satellite_id] += sat_reward
+        logger.info(f"Data reward: {reward}")
         return reward
 
 

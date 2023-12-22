@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Optional, Union
 from weakref import proxy
@@ -16,12 +17,13 @@ from Basilisk.simulation import (
 from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion, simIncludeGravBody
 
-from bsk_rl.envs.general_satellite_tasking.utils.debug import MEMORY_LEAK_CHECKING
 from bsk_rl.envs.general_satellite_tasking.utils.functional import (
     collect_default_args,
     default_args,
 )
 from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_epoch
+
+logger = logging.getLogger(__name__)
 
 bsk_path = __path__[0]
 
@@ -65,8 +67,7 @@ class EnvironmentModel(ABC):
         self._init_environment_objects(**kwargs)
 
     def __del__(self):
-        if MEMORY_LEAK_CHECKING:  # pragma: no cover
-            print("~~~ BSK ENVIRONMENT DELETED ~~~")
+        logger.debug("Basilisk environment deleted")
 
     @abstractmethod  # pragma: no cover
     def _init_environment_objects(self, **kwargs) -> None:

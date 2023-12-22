@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from itertools import combinations
 from typing import TYPE_CHECKING, Optional
@@ -9,6 +10,8 @@ import numpy as np
 from scipy.sparse.csgraph import connected_components
 
 from bsk_rl.envs.general_satellite_tasking.simulation.dynamics import LOSCommDynModel
+
+logger = logging.getLogger(__name__)
 
 
 class CommunicationMethod(ABC):

@@ -1,5 +1,8 @@
 import functools
+import logging
+import os
 from copy import deepcopy
+from time import time_ns
 from typing import Any, Generic, Iterable, Optional, TypeVar, Union
 
 import numpy as np
@@ -15,6 +18,10 @@ from bsk_rl.envs.general_satellite_tasking.types import (
     EnvironmentModel,
     Satellite,
 )
+from bsk_rl.envs.general_satellite_tasking.utils import logging_config
+
+logger = logging.getLogger(__name__)
+
 
 SatObs = TypeVar("SatObs")
 SatAct = TypeVar("SatAct")
@@ -36,6 +43,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         failure_penalty: float = -100,
         time_limit: float = float("inf"),
         terminate_on_time_limit: bool = False,
+        log_level: Union[int, str] = logging.WARNING,
         render_mode=None,
     ) -> None:
         """A Gymnasium environment adaptable to a wide range satellite tasking problems
@@ -73,9 +81,11 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             time_limit: Time at which to truncate the simulation [s].
             terminate_on_time_limit: Send terminations signal time_limit instead of just
                 truncation.
+            log_level: Logging level for the environment. Default is WARNING.
             render_mode: Unused.
         """
         self.seed = None
+        self._configure_logging(log_level)
         if isinstance(satellites, Satellite):
             satellites = [satellites]
         self.satellites = satellites
@@ -103,6 +113,31 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.latest_step_duration = 0
         self.render_mode = render_mode
 
+    def _configure_logging(self, log_level):
+        if isinstance(log_level, str):
+            log_level = log_level.upper()
+        logger = logging.getLogger("bsk_rl.envs.general_satellite_tasking")
+        logger.setLevel(log_level)
+
+        # Ensure each process has its own logger to avoid conflicts when printing
+        # sim timestamps. Running multiple environments in the same process in
+        # parallel will cause logging times to be incorrectly reported.
+        warn_new_env = False
+        for handler in logger.handlers:
+            if handler.filters[0].proc_id == os.getpid():
+                logger.handlers.remove(handler)
+                warn_new_env = True
+
+        ch = logging.StreamHandler()
+        ch.setFormatter(logging_config.sim_format)
+        ch.addFilter(logging_config.ContextFilter(env=self, proc_id=os.getpid()))
+        logger.addHandler(ch)
+        if warn_new_env:
+            logger.warning(
+                f"Creating logger for new env on PID={os.getpid()}. "
+                "Old environments in process now may log times incorrectly."
+            )
+
     def _generate_env_args(self) -> None:
         """Instantiate env_args from any randomizers in provided env_args."""
         self.env_args = {
@@ -123,6 +158,12 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         Returns:
             observation, info
         """
+        # Explicitly delete the Basilisk simulation before creating a new one.
+        self.delete_simulator()
+
+        if seed is None:
+            seed = time_ns() % 2**32
+        logger.info(f"Resetting environment with seed={seed}")
         self.seed = seed
         super().reset(seed=self.seed)
         np.random.seed(self.seed)
@@ -130,9 +171,6 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         self.env_features.reset()
         self.data_manager.reset()
-
-        # Explicitly delete the Basilisk simulation before creating a new one.
-        self.delete_simulator()
 
         for satellite in self.satellites:
             self.data_manager.create_data_store(satellite)
@@ -156,14 +194,14 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         observation = self._get_obs()
         info = self._get_info()
+        logger.info("Environment reset")
         return observation, info
 
     def delete_simulator(self):
         """Delete Basilisk objects. Only self.simulator contains strong references to
-        BSK models, so deleting it will delete all Basilisk objects. Enable
-        MEMORY_LEAK_CHECKING in bsk_rl/envs/GeneralSatelliteTasking/utils/debug.py to
-        verify that the simulator, FSW, dynamics, and environment models are all deleted
-        on reset.
+        BSK models, so deleting it will delete all Basilisk objects. Enable debug-level
+        logging to verify that the simulator, FSW, dynamics, and environment models are
+        all deleted on reset.
         """
         try:
             del self.simulator
@@ -193,13 +231,15 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             for satellite in self.satellites
             if satellite.requires_retasking and satellite.is_alive()
         ]
+        if len(info["requires_retasking"]) > 0:
+            logger.info(f"Satellites requiring retasking: {info['requires_retasking']}")
         return info
 
     def _get_reward(self):
         """Return a scalar reward for the step."""
         reward = sum(self.reward_dict.values())
         for satellite in self.satellites:
-            if not satellite.is_alive():
+            if not satellite.is_alive(log_failure=True):
                 reward += self.failure_penalty
         return reward
 
@@ -234,13 +274,14 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         try:
             self.simulator
         except AttributeError:
-            print("Calling env.reset() to get observation space")
+            logger.info("Calling env.reset() to get observation space")
             self.reset(seed=self.seed)
         return spaces.Tuple(
             [satellite.observation_space for satellite in self.satellites]
         )
 
     def _step(self, actions: MultiSatAct) -> None:
+        logger.debug(f"Stepping environment with actions: {actions}")
         if len(actions) != len(self.satellites):
             raise ValueError("There must be the same number of actions and satellites")
         for satellite, action in zip(self.satellites, actions):
@@ -250,7 +291,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 satellite.set_action(action)
             else:
                 if satellite.requires_retasking:
-                    print(
+                    logger.warning(
                         f"Satellite {satellite.id} requires retasking "
                         "but received no task."
                     )
@@ -278,6 +319,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         Returns:
             observation, reward, terminated, truncated, info
         """
+        logger.info("=== STARTING STEP ===")
         self._step(actions)
 
         observation = self._get_obs()
@@ -285,6 +327,11 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         terminated = self._get_terminated()
         truncated = self._get_truncated()
         info = self._get_info()
+        logger.info(f"Step reward: {reward}")
+        logger.info(f"Episode terminated: {terminated}")
+        logger.info(f"Episode truncated: {truncated}")
+        logger.debug(f"Step info: {info}")
+        logger.debug(f"Step observation: {observation}")
         return observation, reward, terminated, truncated, info
 
     def render(self) -> None:  # pragma: no cover
@@ -465,6 +512,8 @@ class MultiagentSatelliteTasking(
         dict[AgentID, dict],
     ]:
         """Step the environment and return PettingZoo Parallel API format"""
+        logger.info("=== STARTING STEP ===")
+
         previous_alive = self.agents
 
         action_vector = []
@@ -482,4 +531,9 @@ class MultiagentSatelliteTasking(
         terminated = self._get_terminated()
         truncated = self._get_truncated()
         info = self._get_info()
+        logger.info(f"Step reward: {reward}")
+        logger.info(f"Episode terminated: {terminated}")
+        logger.info(f"Episode truncated: {truncated}")
+        logger.debug(f"Step info: {info}")
+        logger.debug(f"Step observation: {observation}")
         return observation, reward, terminated, truncated, info

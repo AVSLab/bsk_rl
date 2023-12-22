@@ -20,6 +20,7 @@ class TestSatellite:
         with_defaults=MagicMock(defaults={"b": 2}),
         some_task=Task,
     )
+    sats.Satellite.logger = MagicMock()
 
     def test_default_sat_args(self):
         assert sats.Satellite.default_sat_args() == {"a": 1, "b": 2, "c": 3}
@@ -98,6 +99,7 @@ class TestSatellite:
     def test_info_command(self):
         sat = sats.Satellite(name="TestSat", sat_args={})
         sat.info = []
+        sat.simulator = MagicMock(sim_time=0.0)
         self.satellites = [sat]
         self.sim_time = 0.0
         eval(sat._info_command("some info"))
