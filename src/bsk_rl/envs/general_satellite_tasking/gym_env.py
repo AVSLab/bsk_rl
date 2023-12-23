@@ -129,13 +129,13 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 warn_new_env = True
 
         ch = logging.StreamHandler()
-        ch.setFormatter(logging_config.sim_format)
+        ch.setFormatter(logging_config.SimFormatter())
         ch.addFilter(logging_config.ContextFilter(env=self, proc_id=os.getpid()))
         logger.addHandler(ch)
         if warn_new_env:
             logger.warning(
                 f"Creating logger for new env on PID={os.getpid()}. "
-                "Old environments in process now may log times incorrectly."
+                "Old environments in process may now log times incorrectly."
             )
 
     def _generate_env_args(self) -> None:
