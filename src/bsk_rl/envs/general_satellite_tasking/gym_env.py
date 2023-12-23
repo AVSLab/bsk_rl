@@ -44,6 +44,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         time_limit: float = float("inf"),
         terminate_on_time_limit: bool = False,
         log_level: Union[int, str] = logging.WARNING,
+        log_dir: Optional[str] = None,
         render_mode=None,
     ) -> None:
         """A Gymnasium environment adaptable to a wide range satellite tasking problems
@@ -82,10 +83,11 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             terminate_on_time_limit: Send terminations signal time_limit instead of just
                 truncation.
             log_level: Logging level for the environment. Default is WARNING.
+            log_dir: Directory to write logs to in addition to the console.
             render_mode: Unused.
         """
         self.seed = None
-        self._configure_logging(log_level)
+        self._configure_logging(log_level, log_dir)
         if isinstance(satellites, Satellite):
             satellites = [satellites]
         self.satellites = satellites
@@ -113,7 +115,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.latest_step_duration = 0
         self.render_mode = render_mode
 
-    def _configure_logging(self, log_level):
+    def _configure_logging(self, log_level, log_dir=None):
         if isinstance(log_level, str):
             log_level = log_level.upper()
         logger = logging.getLogger("bsk_rl.envs.general_satellite_tasking")
@@ -129,7 +131,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 warn_new_env = True
 
         ch = logging.StreamHandler()
-        ch.setFormatter(logging_config.SimFormatter())
+        ch.setFormatter(logging_config.SimFormatter(color_output=True))
         ch.addFilter(logging_config.ContextFilter(env=self, proc_id=os.getpid()))
         logger.addHandler(ch)
         if warn_new_env:
@@ -137,6 +139,12 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 f"Creating logger for new env on PID={os.getpid()}. "
                 "Old environments in process may now log times incorrectly."
             )
+
+        if log_dir is not None:
+            fh = logging.FileHandler(log_dir)
+            fh.setFormatter(logging_config.SimFormatter(color_output=False))
+            fh.addFilter(logging_config.ContextFilter(env=self, proc_id=os.getpid()))
+            logger.addHandler(fh)
 
     def _generate_env_args(self) -> None:
         """Instantiate env_args from any randomizers in provided env_args."""
