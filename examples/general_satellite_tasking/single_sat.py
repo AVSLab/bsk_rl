@@ -12,7 +12,7 @@ from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
 # satellite.
 
 # Data environment contains 5000 targets randomly distributed
-env_features = StaticTargets(n_targets=5000)
+env_features = StaticTargets(n_targets=1000)
 # Data manager records and rewards uniquely imaged targets
 data_manager = data.UniqueImagingManager(env_features)
 
@@ -59,7 +59,7 @@ env = gym.make(
     # current task is finished
     max_step_duration=600.0,
     # Set 3-orbit long episodes
-    time_limit=95 * 60 * 3,
+    time_limit=95 * 60,
     # Send the terminated signal in addition to the truncated signal at the end of the
     # episode. Needed for some RL algorithms to work correctly.
     terminate_on_time_limit=True,

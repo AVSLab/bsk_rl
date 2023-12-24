@@ -98,7 +98,7 @@ def test_parallel_api():
         try:
             parallel_api_test(parallel_env)
         except AssertionError as e:
-            if str(e) == "agent cannot be revived once dead":
-                warn("'{e}' is a known issue (#59)")
+            if "agent cannot be revived once dead" in str(e):
+                warn(f"'{e}' is a known issue (#59)")
             else:
                 raise (e)

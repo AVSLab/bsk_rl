@@ -1,29 +1,30 @@
 ## Description
 Closes #XXX
 
-Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change.
+Please include a summary, motivation, and context of the changes and the related issue.
 
-How should this pull request be reviewed?
-- [ ] By commit
-- [ ] All changes at once
-
-## Type of change
-
+### Type of change
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+
+### How should this pull request be reviewed?
+- [ ] By commit
+- [ ] All changes at once
 
 ## How Has This Been Tested?
 
 Please describe the tests that you ran to verify your changes.
 
+### Passes Tests
 - [ ] __Unit tests__ (General Environment only) `pytest --cov bsk_rl/envs/general_satellite_tasking --cov-report term-missing tests/unittest`
 - [ ] __Integrated tests__ (General Environment only) `pytest --cov bsk_rl/envs/general_satellite_tasking --cov-report term-missing tests/integration`
+- [ ] __Examples__ (General Environment only) `pytest tests/examples`
 
 ### Test Configuration
- - Python: [e.g. 3.10.1]
--  Basilisk: [e.g. 2.2.0]
- - Platform: [e.g. Ubuntu 22.08]
+- Python:
+- Basilisk:
+- Platform: 
 
 # Checklist:
 
@@ -34,4 +35,3 @@ Please describe the tests that you ran to verify your changes.
 - [ ] Commit messages are atomic, are in the form `Issue #XXX: Message` and have a useful message
 - [ ] My changes generate no new warnings
 - [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
