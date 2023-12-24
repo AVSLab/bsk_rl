@@ -161,7 +161,7 @@ class CustomSatComposed(
 
 
 # Configure the environent
-env_features = CityTargets(n_targets=5000)
+env_features = CityTargets(n_targets=1000)
 data_manager = data.UniqueImagingManager(env_features)
 # Use the CustomSat type
 sat_type = CustomSatComposed
@@ -189,7 +189,7 @@ env = gym.make(
     data_manager=data_manager,
     sim_rate=0.5,
     max_step_duration=600.0,
-    time_limit=95 * 60 * 3,
+    time_limit=95 * 60,
     log_level="INFO",
 )
 

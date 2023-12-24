@@ -14,7 +14,7 @@ from bsk_rl.utilities.initial_conditions import leo_orbit
 
 # Data environment contains 5000 targets located near random cities, which are
 # randomized on reset()
-env_features = CityTargets(n_targets=5000, location_offset=10e3)
+env_features = CityTargets(n_targets=500, location_offset=10e3)
 # Data manager records and rewards uniquely imaged targets
 data_manager = data.UniqueImagingManager(env_features)
 
@@ -54,7 +54,7 @@ for i, oe in enumerate(oes):
 
     # Instantiate the satellite object. Arguments to the satellite class are set here.
     satellite = sat_type(
-        "EO" + str(i + 1), sat_args, n_ahead_observe=30, n_ahead_act=15
+        "EO" + str(i + 1), sat_args, n_ahead_observe=15, n_ahead_act=15
     )
     satellites.append(satellite)
 
@@ -82,7 +82,7 @@ env = gym.make(
     # current task is finished
     max_step_duration=600.0,
     # Set 3-orbit long episodes
-    time_limit=95 * 60 * 3,
+    time_limit=95 * 60,
     log_level="INFO",
 )
 
