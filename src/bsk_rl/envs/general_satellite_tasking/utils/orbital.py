@@ -1,3 +1,5 @@
+"""Utilities for computing orbital events."""
+
 from typing import Iterable, Optional
 
 import numpy as np
@@ -19,8 +21,9 @@ def random_orbit(
     omega: Optional[float] = 0,
     f: Optional[float] = None,
 ) -> ClassicElements:
-    """Create a set of orbit elements. Parameters are fixed if specified and randomized
-    if None.
+    """Create a set of orbit elements.
+
+    Parameters are fixed if specified and randomized if None.
 
     Args:
         i: inclination [deg], randomized in [-pi, pi]
@@ -49,7 +52,9 @@ def random_orbit(
 
 
 def random_epoch(start: int = 2000, end: int = 2022):
-    """Generates a random epoch.
+    """Generate a random epoch in a year range.
+
+    Date will always be in the first 28 days of the month.
 
     Args:
         start: Initial year.
@@ -91,7 +96,7 @@ def random_epoch(start: int = 2000, end: int = 2022):
 
 
 def elevation(r_sat: np.ndarray, r_target: np.ndarray) -> np.ndarray:
-    """Find the elevation angle from a target to a satellite
+    """Find the elevation angle from a target to a satellite.
 
     Args:
         r_sat: Satellite position(s)
@@ -113,6 +118,8 @@ def elevation(r_sat: np.ndarray, r_target: np.ndarray) -> np.ndarray:
 
 
 class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
+    """Class for propagating trajectory using a point mass simulation."""
+
     def __init__(
         self,
         utc_init: str,
@@ -122,9 +129,11 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         mu: Optional[float] = None,
         dt: float = 30.0,
     ) -> None:
-        """Class for propagating trajectory using a point mass simulation under the
-        effect of Earth's gravity. Returns interpolators for position as well as
-        upcoming eclipse predictions. Specify either (rN, vN) or (oe, mu).
+        """Initialize simulator conditions.
+
+        Simulated under the effect of Earth's gravity. Returns interpolators for
+        position as well as upcoming eclipse predictions. Specify either (rN, vN) or
+        (oe, mu).
 
         Args:
             utc_init: Simulation start time.
@@ -158,9 +167,9 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         self._eclipse_ends: list[float] = []
         self._eclipse_search_time = 0.0
 
-        self.init_simulator()
+        self._init_simulator()
 
-    def init_simulator(self) -> None:
+    def _init_simulator(self) -> None:
         simTaskName = "simTask"
         simProcessName = "simProcess"
         dynProcess = self.CreateNewProcess(simProcessName)
@@ -217,16 +226,16 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
 
     @property
     def sim_time(self) -> float:
-        """Current simulator end time"""
+        """Current simulator end time."""
         return macros.NANO2SEC * self.TotalSim.CurrentNanos
 
     @property
     def times(self) -> np.ndarray:
-        """Recorder times in seconds"""
+        """Recorder times in seconds."""
         return np.array([macros.NANO2SEC * t for t in self.sc_state_log.times()])
 
     def extend_to(self, t: float) -> None:
-        """Compute the trajectory of the satellite up to t
+        """Compute the trajectory of the satellite up to t.
 
         Args:
             t: Computation end [s]
@@ -236,7 +245,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         self.ConfigureStopTime(macros.sec2nano(t))
         self.ExecuteSimulation()
 
-    def generate_eclipses(self, t: float) -> None:
+    def _generate_eclipses(self, t: float) -> None:
         self.extend_to(t + self.dt)
         upcoming_times = self.times[self.times > self._eclipse_search_time]
         upcoming_eclipse = (
@@ -250,11 +259,14 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         self._eclipse_search_time = t
 
     def next_eclipse(self, t: float, max_tries: int = 100) -> tuple[float, float]:
-        """Find the soonest eclipse transitions. The returned values are not necessarily
-        from the same eclipse event, such as when the search start time is in eclipse.
+        """Find the soonest eclipse transitions.
+
+        The returned values are not necessarily from the same eclipse event, such as
+        when the search start time is in eclipse.
 
         Args:
             t: Time to start searching [s]
+            max_tries: Maximum number of times to search
 
         Returns:
             eclipse_start: Nearest upcoming eclipse beginning
@@ -270,13 +282,13 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
                 eclipse_end = min([t_end for t_end in self._eclipse_ends if t_end > t])
                 return eclipse_start, eclipse_end
 
-            self.generate_eclipses(t + i * self.dt * 10)
+            self._generate_eclipses(t + i * self.dt * 10)
 
         return 1.0, 1.0
 
     @property
     def r_BN_N(self) -> interp1d:
-        """Interpolator for r_BN_N"""
+        """Interpolator for r_BN_N."""
         if self.sim_time < self.dt * 3:
             self.extend_to(self.dt * 3)
         return interp1d(
@@ -289,7 +301,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
 
     @property
     def r_BP_P(self) -> interp1d:
-        """Interpolator for r_BP_P"""
+        """Interpolator for r_BP_P."""
         if self.sim_time < self.dt * 3:
             self.extend_to(self.dt * 3)
         return interp1d(
@@ -306,6 +318,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         )
 
     def __del__(self) -> None:
+        """Unload spice kernels when object is deleted."""
         try:
             self.gravFactory.unloadSpiceKernels()
         except AttributeError:

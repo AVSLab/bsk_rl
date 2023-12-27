@@ -1,3 +1,5 @@
+"""Basilisk environment models."""
+
 import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Optional, Union
@@ -29,9 +31,15 @@ bsk_path = __path__[0]
 
 
 class EnvironmentModel(ABC):
+    """Abstract Basilisk environment model.
+
+    One EnvironmentModel is instantiated for the environment each time a new simulator
+    is created.
+    """
+
     @classmethod
     def default_env_args(cls, **kwargs) -> dict[str, Any]:
-        """Compile default argments for the environment model"""
+        """Compile default argments for the environment model."""
         defaults = collect_default_args(cls)
         for k, v in kwargs.items():
             if k not in defaults:
@@ -46,12 +54,13 @@ class EnvironmentModel(ABC):
         priority: int = 300,
         **kwargs,
     ) -> None:
-        """Base environment model
+        """Construct base environment model.
 
         Args:
             simulator: Simulator using this model
             env_rate: Rate of environment simulation [s]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.simulator: Simulator = proxy(simulator)
 
@@ -67,19 +76,21 @@ class EnvironmentModel(ABC):
         self._init_environment_objects(**kwargs)
 
     def __del__(self):
+        """Log when environment is deleted."""
         logger.debug("Basilisk environment deleted")
 
     @abstractmethod  # pragma: no cover
     def _init_environment_objects(self, **kwargs) -> None:
-        """Caller for all environment objects"""
+        """Caller for all environment objects."""
         pass
 
 
 class BasicEnvironmentModel(EnvironmentModel):
-    """Minimal set of Basilisk environment objects"""
+    """Basic Environment with minimum necessary Basilisk environment components."""
 
     @property
     def PN(self):
+        """Planet relative to inertial frame rotation matrix."""
         return np.array(
             self.gravFactory.spiceObject.planetStateOutMsgs[self.body_index]
             .read()
@@ -88,6 +99,7 @@ class BasicEnvironmentModel(EnvironmentModel):
 
     @property
     def omega_PN_N(self):
+        """Planet angular velocity in inertial frame [rad/s]."""
         PNdot = np.array(
             self.gravFactory.spiceObject.planetStateOutMsgs[self.body_index]
             .read()
@@ -111,6 +123,7 @@ class BasicEnvironmentModel(EnvironmentModel):
         Args:
             utc_init: UTC datetime string
             priority: Model priority.
+            kwargs: Ignored
         """
         self.gravFactory = simIncludeGravBody.gravBodyFactory()
         self.gravFactory.createSun()
@@ -141,6 +154,7 @@ class BasicEnvironmentModel(EnvironmentModel):
 
         Args:
             priority: Model priority.
+            kwargs: Ignored
         """
         self.ephemConverter = ephemerisConverter.EphemerisConverter()
         self.ephemConverter.ModelTag = "ephemConverter"
@@ -174,6 +188,7 @@ class BasicEnvironmentModel(EnvironmentModel):
             baseDensity: Exponential model parameter [kg/m^3]
             scaleHeight: Exponential model parameter [m]
             priority (int, optional): Model priority.
+            kwargs: Ignored
         """
         self.densityModel = exponentialAtmosphere.ExponentialAtmosphere()
         self.densityModel.ModelTag = "expDensity"
@@ -192,6 +207,7 @@ class BasicEnvironmentModel(EnvironmentModel):
 
         Args:
             priority: Model priority.
+            kwargs: Ignored
         """
         self.eclipseObject = eclipse.Eclipse()
         self.eclipseObject.addPlanetToModel(
@@ -205,6 +221,7 @@ class BasicEnvironmentModel(EnvironmentModel):
         )
 
     def __del__(self) -> None:
+        """Log when environment is deleted and unload SPICE."""
         super().__del__()
         try:
             self.gravFactory.unloadSpiceKernels()
@@ -213,7 +230,7 @@ class BasicEnvironmentModel(EnvironmentModel):
 
 
 class GroundStationEnvModel(BasicEnvironmentModel):
-    """Model that includes downlink ground stations"""
+    """Model that includes downlink ground stations."""
 
     def _init_environment_objects(self, **kwargs) -> None:
         super()._init_environment_objects(**kwargs)
@@ -254,6 +271,7 @@ class GroundStationEnvModel(BasicEnvironmentModel):
             gsMaximumRange: Maximum range from station to satellite when downlinking. -1
                 to disable. [m]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.groundStations = []
         self.groundLocationPlanetRadius = groundLocationPlanetRadius

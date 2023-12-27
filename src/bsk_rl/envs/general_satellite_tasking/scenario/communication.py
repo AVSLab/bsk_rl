@@ -1,3 +1,5 @@
+"""Communication of data between satellites."""
+
 import logging
 from abc import ABC, abstractmethod
 from itertools import combinations
@@ -15,22 +17,26 @@ logger = logging.getLogger(__name__)
 
 
 class CommunicationMethod(ABC):
+    """Base class for defining data sharing between satellites."""
+
     def __init__(self, satellites: Optional[list["Satellite"]] = None) -> None:
-        """Base class for defining data sharing between satellites. Subclasses implement
-        a way of determining which pairs of satellites share data."""
+        """Construct base communication class.
+
+        Subclasses implement a way of determining which pairs of satellites share data.
+        """
         self.satellites = satellites
 
     def reset(self) -> None:
-        """Called after simulator initialization"""
+        """Reset communication after simulator initialization."""
         pass
 
     @abstractmethod  # pragma: no cover
     def _communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
-        """List pair of satellite that should share data"""
+        """List pair of satellite that should share data."""
         pass
 
     def communicate(self) -> None:
-        """Share data between paired satellites"""
+        """Share data between paired satellites."""
         for sat_1, sat_2 in self._communication_pairs():
             sat_1.data_store.stage_communicated_data(sat_2.data_store.data)
             sat_2.data_store.stage_communicated_data(sat_1.data_store.data)
@@ -39,24 +45,31 @@ class CommunicationMethod(ABC):
 
 
 class NoCommunication(CommunicationMethod):
-    """Implements no communication between satellite"""
+    """Implements no communication between satellite."""
 
     def _communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
         return []
 
 
 class FreeCommunication(CommunicationMethod):
-    """Implements communication between satellites at every step"""
+    """Implements communication between satellites at every step."""
 
     def _communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
         return list(combinations(self.satellites, 2))
 
 
 class LOSCommunication(CommunicationMethod):
+    """Implements communication between satellites with a direct line-of-sight.
+
     # TODO only communicate data from before latest LOS time
+    """
+
     def __init__(self, satellites: list["Satellite"]) -> None:
-        """Implements communication between satellites that have a direct line of
-        sight"""
+        """Construct line-of-sigh communication management.
+
+        Args:
+            satellites: List of satellites to communicate between.
+        """
         super().__init__(satellites)
         for satellite in self.satellites:
             if not issubclass(satellite.dyn_type, LOSCommDynModel):
@@ -66,6 +79,7 @@ class LOSCommunication(CommunicationMethod):
                 )
 
     def reset(self) -> None:
+        """Add loggers to satellites to track line-of-sight communication."""
         super().reset()
 
         self.los_logs = {}
@@ -94,6 +108,7 @@ class LOSCommunication(CommunicationMethod):
         return pairs
 
     def communicate(self) -> None:
+        """Clear line-of-sight communication logs once communicated."""
         super().communicate()
         for sat_1, logs in self.los_logs.items():
             for sat_2, logger in logs.items():
@@ -101,8 +116,11 @@ class LOSCommunication(CommunicationMethod):
 
 
 class MultiDegreeCommunication(CommunicationMethod):
-    """Compose with another type to have multi-degree communications. For example, if
-    a <-> b and b <-> c, also communicate between a <-> c"""
+    """Compose with another type to use multi-degree communications.
+
+    For example, if a <-> b and b <-> c, multidegree communication will also communicate
+    between a <-> c.
+    """
 
     def _communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
         graph = np.zeros((len(self.satellites), len(self.satellites)), dtype=bool)
@@ -118,4 +136,9 @@ class MultiDegreeCommunication(CommunicationMethod):
 
 
 class LOSMultiCommunication(MultiDegreeCommunication, LOSCommunication):
+    """Multidegree line of sight communication.
+
+    Composes MultiDegreeCommunication with LOSCommunication.
+    """
+
     pass

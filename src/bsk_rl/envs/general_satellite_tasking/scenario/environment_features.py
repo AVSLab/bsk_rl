@@ -1,3 +1,5 @@
+"""Environment features define data available for satellites to collect."""
+
 import logging
 import os
 import sys
@@ -12,20 +14,23 @@ logger = logging.getLogger(__name__)
 
 
 class EnvironmentFeatures(ABC):
-    """Base environment feature class"""
+    """Base environment feature class."""
 
     def reset(self) -> None:  # pragma: no cover
-        """Reset environment features"""
+        """Reset environment features."""
         pass
 
 
 class Target:
+    """Ground target with associated value."""
+
     def __init__(self, name: str, location: Iterable[float], priority: float) -> None:
-        """Representation of a ground target
+        """Construct a Target.
+
         Args:
             name: Identifier; does not need to be unique
             location: PCPF location [m]
-            priority: Value metric
+            priority: Value metric.
         """
         self.name = name
         self.location = np.array(location)
@@ -33,7 +38,11 @@ class Target:
 
     @property
     def id(self) -> str:
-        """str: Unique human-readable identifier"""
+        """Get unique human-readable identifier.
+
+        Returns:
+            Unique human-readable identifier.
+        """
         try:
             return self._id
         except AttributeError:
@@ -41,20 +50,31 @@ class Target:
             return self._id
 
     def __hash__(self) -> int:
+        """Hash target by unique id."""
         return hash((self.id))
 
     def __repr__(self) -> str:
+        """Get string representation of target.
+
+        Use target.id for a unique string identifier.
+
+        Returns:
+            Target string
+        """
         return f"Target({self.name})"
 
 
 class StaticTargets(EnvironmentFeatures):
+    """Environment with targets distributed uniformly."""
+
     def __init__(
         self,
         n_targets: Union[int, tuple[int, int]],
         priority_distribution: Optional[Callable] = None,
         radius: float = orbitalMotion.REQ_EARTH * 1e3,
     ) -> None:
-        """Environment with a set number of evenly-distributed static targets.
+        """Construct an environment with evenly-distributed static targets.
+
         Args:
             n_targets: Number (or range) of targets to generate
             priority_distribution: Function for generating target priority.
@@ -68,6 +88,7 @@ class StaticTargets(EnvironmentFeatures):
         self.targets = []
 
     def reset(self) -> None:
+        """Regenerate target set for new episode."""
         if isinstance(self._n_targets, int):
             self.n_targets = self._n_targets
         else:
@@ -76,7 +97,7 @@ class StaticTargets(EnvironmentFeatures):
         self.regenerate_targets()
 
     def regenerate_targets(self) -> None:
-        """Regenerate targets uniformly"""
+        """Regenerate targets uniformly."""
         self.targets = []
         for i in range(self.n_targets):
             x = np.random.normal(size=3)
@@ -89,7 +110,8 @@ class StaticTargets(EnvironmentFeatures):
 
 
 def lla2ecef(lat: float, long: float, radius: float):
-    """
+    """Project LLA to Earth Centered, Earth Fixed location.
+
     Args:
         lat: [deg]
         long: [deg]
@@ -103,6 +125,8 @@ def lla2ecef(lat: float, long: float, radius: float):
 
 
 class CityTargets(StaticTargets):
+    """Environment with targets distributed around population centers."""
+
     def __init__(
         self,
         n_targets: Union[int, tuple[int, int]],
@@ -111,7 +135,8 @@ class CityTargets(StaticTargets):
         priority_distribution: Optional[Callable] = None,
         radius: float = orbitalMotion.REQ_EARTH * 1e3,
     ) -> None:
-        """Environment with a set number of static targets around population centers.
+        """Construct environment with of static targets around population centers.
+
         Args:
             n_targets: Number of targets to generate
             n_select_from: Generate targets from the top n most populous.
@@ -126,7 +151,7 @@ class CityTargets(StaticTargets):
         self.location_offset = location_offset
 
     def regenerate_targets(self) -> None:
-        """Regenerate targets based on cities"""
+        """Regenerate targets based on cities."""
         self.targets = []
         cities = pd.read_csv(
             os.path.join(
@@ -157,12 +182,11 @@ class CityTargets(StaticTargets):
 
 
 class UniformNadirFeature(EnvironmentFeatures):
-    """
-    Defines a nadir target center at the center of the planet.
-    """
+    """Defines a nadir target center at the center of the planet."""
 
     def __init__(self, value_per_second: float = 1.0) -> None:
-        """ "
+        """Construct uniform data over the surface of the planet.
+
         Args:
             value_per_second: Amount of reward per second imaging nadir.
         """

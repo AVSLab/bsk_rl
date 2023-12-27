@@ -36,10 +36,10 @@ basicdyn = module + "BasicDynamicsModel."
 
 
 def test_basic_requires_env():
-    assert environment.BasicEnvironmentModel in BasicDynamicsModel.requires_env
+    assert environment.BasicEnvironmentModel in BasicDynamicsModel._requires_env
 
 
-@patch(basicdyn + "requires_env", MagicMock(return_value=[]))
+@patch(basicdyn + "_requires_env", MagicMock(return_value=[]))
 @patch(basicdyn + "_set_spacecraft_hub")
 @patch(basicdyn + "_set_drag_effector")
 @patch(basicdyn + "_set_reaction_wheel_dyn_effector")
@@ -56,7 +56,7 @@ def test_basic_init_objects(self, *args):
         setter.assert_called_once()
 
 
-@patch(basicdyn + "requires_env", MagicMock(return_value=[]))
+@patch(basicdyn + "_requires_env", MagicMock(return_value=[]))
 @patch(basicdyn + "_init_dynamics_objects", MagicMock())
 class TestBasicDynamicsModel:
     def test_dynamic_properties(self):
@@ -139,7 +139,7 @@ class TestBasicDynamicsModel:
 class TestLOSCommDynModel:
     losdyn = module + "LOSCommDynModel."
 
-    @patch(losdyn + "requires_env", MagicMock(return_value=[]))
+    @patch(losdyn + "_requires_env", MagicMock(return_value=[]))
     @patch(module + "BasicDynamicsModel._init_dynamics_objects", MagicMock())
     @patch(losdyn + "_set_los_comms")
     def test_init_objects(self, *args):
@@ -147,7 +147,7 @@ class TestLOSCommDynModel:
         for setter in args:
             setter.assert_called_once()
 
-    @patch(losdyn + "requires_env", MagicMock(return_value=[]))
+    @patch(losdyn + "_requires_env", MagicMock(return_value=[]))
     @patch(losdyn + "_init_dynamics_objects", MagicMock())
     @patch(module + "spacecraftLocation", MagicMock())
     def test_set_los_comms(self):
@@ -185,7 +185,7 @@ class TestLOSCommDynModel:
 imdyn = module + "ImagingDynModel."
 
 
-@patch(imdyn + "requires_env", MagicMock(return_value=[]))
+@patch(imdyn + "_requires_env", MagicMock(return_value=[]))
 @patch(module + "BasicDynamicsModel._init_dynamics_objects", MagicMock())
 @patch(imdyn + "_set_instrument_power_sink")
 @patch(imdyn + "_set_transmitter_power_sink")
@@ -199,7 +199,7 @@ def test_init_objects(*args):
         setter.assert_called_once()
 
 
-@patch(imdyn + "requires_env", MagicMock(return_value=[]))
+@patch(imdyn + "_requires_env", MagicMock(return_value=[]))
 @patch(imdyn + "_init_dynamics_objects", MagicMock())
 class TestImagingDynModel:
     def test_storage_properties(self):
@@ -255,11 +255,11 @@ class TestImagingDynModel:
 
 class TestGroundStationDynModel:
     def test_requires_env(self):
-        assert environment.GroundStationEnvModel in GroundStationDynModel.requires_env
+        assert environment.GroundStationEnvModel in GroundStationDynModel._requires_env
 
     gsdyn = module + "GroundStationDynModel."
 
-    @patch(gsdyn + "requires_env", MagicMock(return_value=[]))
+    @patch(gsdyn + "_requires_env", MagicMock(return_value=[]))
     @patch(module + "ImagingDynModel._init_dynamics_objects", MagicMock())
     @patch(gsdyn + "_set_ground_station_locations")
     def test_init_objects(self, *args):
@@ -268,7 +268,7 @@ class TestGroundStationDynModel:
             setter.assert_called_once()
 
 
-@patch(imdyn + "requires_env", MagicMock(return_value=[]))
+@patch(imdyn + "_requires_env", MagicMock(return_value=[]))
 @patch(imdyn + "_init_dynamics_objects", MagicMock())
 class TestContinuousImagingDynModel:
     def test_storage_properties(self):
