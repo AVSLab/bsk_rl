@@ -1,3 +1,5 @@
+"""Satellites are the agents in the environment."""
+
 import bisect
 import inspect
 import logging
@@ -38,12 +40,14 @@ SatAct = Any
 
 
 class Satellite(ABC):
+    """Abstract base class for satellites."""
+
     dyn_type: type["DynamicsModel"]  # Type of dynamics model used by this satellite
     fsw_type: type["FSWModel"]  # Type of FSW model used by this satellite
 
     @classmethod
     def default_sat_args(cls, **kwargs) -> dict[str, Any]:
-        """Compile default arguments for FSW and dynamics models
+        """Compile default arguments for FSW and dynamics models.
 
         Returns:
             default arguments for satellite models
@@ -71,7 +75,7 @@ class Satellite(ABC):
         variable_interval: bool = True,
         **kwargs,
     ) -> None:
-        """Base satellite constructor
+        """Construct base satellite.
 
         Args:
             name: identifier for satellite; does not need to be unique
@@ -79,6 +83,7 @@ class Satellite(ABC):
                 key: function}, where function is called at reset to set the value (used
                 for randomization).
             variable_interval: Stop simulation at terminal events
+            kwargs: Ignored
         """
         self.name = name
         self.logger = logging.getLogger(__name__).getChild(self.name)
@@ -95,18 +100,18 @@ class Satellite(ABC):
 
     @property
     def id(self) -> str:
-        """Unique human-readable identifier"""
+        """Unique human-readable identifier."""
         return f"{self.name}_{id(self)}"
 
     def _generate_sat_args(self) -> None:
-        """Instantiate sat_args from any randomizers in provided sat_args"""
+        """Instantiate sat_args from any randomizers in provided sat_args."""
         self.sat_args = {
             k: v if not callable(v) else v() for k, v in self.sat_args_generator.items()
         }
         self.logger.debug(f"Satellite initialized with {self.sat_args}")
 
     def reset_pre_sim(self) -> None:
-        """Called in environment reset, before simulator initialization"""
+        """Reset during environment reset, before simulator initialization."""
         self.info = []
         self.requires_retasking = True
         self._generate_sat_args()
@@ -123,7 +128,9 @@ class Satellite(ABC):
         self._timed_terminal_event_name = None
 
     def set_simulator(self, simulator: "Simulator"):
-        """Sets the simulator for models; called during simulator initialization
+        """Set the simulator for models.
+
+        Called during simulator initialization.
 
         Args:
             simulator: Basilisk simulator
@@ -131,7 +138,7 @@ class Satellite(ABC):
         self.simulator = proxy(simulator)
 
     def set_dynamics(self, dyn_rate: float) -> "DynamicsModel":
-        """Create dynamics model; called during simulator initialization
+        """Create dynamics model; called during simulator initialization.
 
         Args:
             dyn_rate: rate for dynamics simulation [s]
@@ -144,7 +151,7 @@ class Satellite(ABC):
         return dynamics
 
     def set_fsw(self, fsw_rate: float) -> "FSWModel":
-        """Create flight software model; called during simulator initialization
+        """Create flight software model; called during simulator initialization.
 
         Args:
             fsw_rate: rate for FSW simulation [s]
@@ -157,12 +164,12 @@ class Satellite(ABC):
         return fsw
 
     def reset_post_sim(self) -> None:
-        """Called in environment reset, after simulator initialization"""
+        """Reset in environment reset, after simulator initialization."""
         pass
 
     @property
     def observation_space(self) -> spaces.Box:
-        """Observation space for single satellite, determined from observation
+        """Observation space for single satellite, determined from observation.
 
         Returns:
             gymanisium observation space
@@ -174,7 +181,7 @@ class Satellite(ABC):
     @property
     @abstractmethod  # pragma: no cover
     def action_space(self) -> spaces.Space:
-        """Action space for single satellite
+        """Action space for single satellite.
 
         Returns:
             gymanisium action space
@@ -182,11 +189,12 @@ class Satellite(ABC):
         pass
 
     def is_alive(self, log_failure=False) -> bool:
-        """Check if the satellite is violating any requirements from dynamics or FSW
-        models
+        """Check if the satellite is violating any aliveness requirements.
+
+        Checkes aliveness checkers in dynamics and FSW models.
 
         Returns:
-            is alive
+            is_alive
         """
         return self.dynamics.is_alive(log_failure=log_failure) and self.fsw.is_alive(
             log_failure=log_failure
@@ -194,14 +202,14 @@ class Satellite(ABC):
 
     @property
     def _satellite_command(self) -> str:
-        """Generate string that refers to self in simBase"""
+        """Generate string that refers to self in simBase."""
         return (
             "[satellite for satellite in self.satellites "
             + f"if satellite.id=='{self.id}'][0]"
         )
 
     def _info_command(self, info: str) -> str:
-        """Generate command to log to info from an event
+        """Generate command to log to info from an event.
 
         Args:
             info: information to log; cannot include `'` or `"`
@@ -212,7 +220,7 @@ class Satellite(ABC):
         return self._satellite_command + f".log_info('{info}')"
 
     def log_info(self, info: Any) -> None:
-        """Record information at the current time
+        """Record information at the current time.
 
         Args:
             info: Information to log
@@ -221,13 +229,14 @@ class Satellite(ABC):
         self.logger.info(f"{info}")
 
     def _update_timed_terminal_event(
-        self, t_close: float, info: str = "", extra_actions=[]
+        self, t_close: float, info: str = "", extra_actions: list[str] = []
     ) -> None:
-        """Create a simulator event that causes the simulation to stop at a certain time
+        """Create a simulator event that stops the simulation a certain time.
 
         Args:
             t_close: Termination time [s]
             info: Additional identifying info to log at terminal time
+            extra_actions: Additional actions to perform at terminal time
         """
         self._disable_timed_terminal_event()
         self.log_info(f"setting timed terminal event at {t_close:.1f}")
@@ -251,8 +260,7 @@ class Satellite(ABC):
         self.simulator.eventMap[self._timed_terminal_event_name].eventActive = True
 
     def _disable_timed_terminal_event(self) -> None:
-        """Turn off simulator termination due to this satellite's window close
-        checker"""
+        """Turn off simulator termination due to window close checker."""
         if (
             self._timed_terminal_event_name is not None
             and self._timed_terminal_event_name in self.simulator.eventMap
@@ -261,7 +269,7 @@ class Satellite(ABC):
 
     @abstractmethod  # pragma: no cover
     def get_obs(self) -> SatObs:
-        """Construct the satellite's observation
+        """Construct the satellite's observation.
 
         Returns:
             satellite observation
@@ -270,8 +278,9 @@ class Satellite(ABC):
 
     @abstractmethod  # pragma: no cover
     def set_action(self, action: int) -> None:
-        """Enables certain processes in the simulator to command the satellite task.
-            Should call an @action from FSW, among other things.
+        """Enable certain processes in the simulator to command the satellite task.
+
+        Should call an @action from FSW, among other things.
 
         Args:
             action: action index
@@ -280,6 +289,8 @@ class Satellite(ABC):
 
 
 class AccessSatellite(Satellite):
+    """Satellite that can detect access opportunities for ground locations."""
+
     def __init__(
         self,
         *args,
@@ -288,8 +299,7 @@ class AccessSatellite(Satellite):
         access_dist_threshold: float = 4e6,
         **kwargs,
     ) -> None:
-        """Satellite that can detect access opportunities for ground locations with
-        elevation constraints.
+        """Construct an AccessSatellite.
 
         Args:
             generation_duration: Duration to calculate additional imaging windows for
@@ -299,6 +309,8 @@ class AccessSatellite(Satellite):
                 [s]
             access_dist_threshold: Distance bound [m] for evaluating imaging windows
                 more exactly. 4e6 will capture >10 elevation windows for a 500 km orbit.
+            args: Passed through to Satellite constructor
+            kwargs: Passed through to Satellite constructor
         """
         super().__init__(*args, **kwargs)
         self.generation_duration = generation_duration
@@ -306,6 +318,7 @@ class AccessSatellite(Satellite):
         self.access_dist_threshold = access_dist_threshold
 
     def reset_pre_sim(self) -> None:
+        """Reset satellite window calculations and lists."""
         super().reset_pre_sim()
         self.opportunities: list[dict] = []
         self.window_calculation_time = 0
@@ -318,8 +331,10 @@ class AccessSatellite(Satellite):
         min_elev: float,
         type: str,
     ) -> None:
-        """Adds a location to be included in window calculations. Note that this
-        location will only be included in future calls to calculate_additional_windows.
+        """Add a location to be included in window calculations.
+
+        Note that this location will only be included in future calls to
+        calculate_additional_windows.
 
         Args:
             object: Object to add window for
@@ -332,6 +347,7 @@ class AccessSatellite(Satellite):
         self.locations_for_access_checking.append(location_dict)
 
     def reset_post_sim(self) -> None:
+        """Handle initial window calculations for new simulation."""
         super().reset_post_sim()
         if self.initial_generation_duration is None:
             if self.simulator.time_limit == float("inf"):
@@ -404,8 +420,11 @@ class AccessSatellite(Satellite):
         min_elev: float,
         window: tuple[float, float],
     ):
-        """Find exact times where the satellite's elevation relative to a target is
-        equal to the minimum elevation."""
+        """Find times where the elevation is equal to the minimum elevation.
+
+        Finds exact times where the satellite's elevation relative to a target is
+        equal to the minimum elevation.
+        """
 
         def root_fn(t):
             return elevation(position_interp(t), location) - min_elev
@@ -422,9 +441,11 @@ class AccessSatellite(Satellite):
     def _find_candidate_windows(
         location: np.ndarray, times: np.ndarray, positions: np.ndarray, threshold: float
     ) -> list[tuple[float, float]]:
-        """Find `times` where a window is plausible; i.e. where a `positions` point is
-        within `threshold` of `location`. Too big of a dt in times may miss windows or
-        produce bad results."""
+        """Find `times` where a window is plausible.
+
+        i.e. where a `positions` point is within `threshold` of `location`. Too big of
+        a dt in times may miss windows or produce bad results.
+        """
         close_times = np.linalg.norm(positions - location, axis=1) < threshold
         close_indices = np.where(close_times)[0]
         groups = np.split(close_indices, np.where(np.diff(close_indices) != 1)[0] + 1)
@@ -442,8 +463,7 @@ class AccessSatellite(Satellite):
         candidate_window: tuple[float, float],
         computation_window: tuple[float, float],
     ) -> list[tuple[float, float]]:
-        """Detect if an exact window has been truncated by the edge of the coarse
-        window."""
+        """Detect if an exact window has been truncated by a coarse window."""
         endpoints = list(endpoints)
 
         # Filter endpoints that are too close
@@ -474,13 +494,14 @@ class AccessSatellite(Satellite):
         type: str,
         merge_time: Optional[float] = None,
     ):
-        """
+        """Add an opportunity window.
+
         Args:
             object: Object to add window for
             new_window: New window for target
             type: Type of window being added
             merge_time: Time at which merges with existing windows will occur. If None,
-                check all windows for merges
+                check all windows for merges.
         """
         if new_window[0] == merge_time or merge_time is None:
             for opportunity in self.opportunities:
@@ -517,7 +538,7 @@ class AccessSatellite(Satellite):
         types: Optional[Union[str, list[str]]] = None,
         filter: list = [],
     ) -> dict[Any, list[tuple[float, float]]]:
-        """Dictionary of opportunities that maps objects to lists of windows.
+        """Make dictionary of opportunities that maps objects to lists of windows.
 
         Args:
             types: Types of opportunities to include. If None, include all types.
@@ -543,8 +564,9 @@ class AccessSatellite(Satellite):
         types: Optional[Union[str, list[str]]] = None,
         filter: list = [],
     ) -> dict[Any, list[tuple[float, float]]]:
-        """Dictionary of opportunities that maps objects to lists of windows that have
-        not yet closed.
+        """Get dictionary of opportunities.
+
+        Maps objects to lists of windows that have not yet closed.
 
         Args:
             types: Types of opportunities to include. If None, include all types.
@@ -570,7 +592,7 @@ class AccessSatellite(Satellite):
         types: Optional[Union[str, list[str]]] = None,
         filter: list = [],
     ) -> dict[Any, tuple[float, float]]:
-        """Dictionary of opportunities that maps objects to the next open window.
+        """Make dictionary of opportunities that maps objects to the next open windows.
 
         Args:
             types: Types of opportunities to include. If None, include all types.
@@ -636,6 +658,8 @@ class AccessSatellite(Satellite):
 
 
 class ImagingSatellite(AccessSatellite):
+    """Satellite with agile imaging capabilities."""
+
     dyn_type = dynamics.ImagingDynModel
     fsw_type = fsw.ImagingFSWModel
 
@@ -644,8 +668,9 @@ class ImagingSatellite(AccessSatellite):
         *args,
         **kwargs,
     ) -> None:
-        """Satellite with agile imaging capabilities. Can stop the simulation when a
-        target is imaged or missed.
+        """Construct an ImagingSatellite.
+
+        Can stop the simulation when a target is imaged or missed.
         """
         super().__init__(*args, **kwargs)
         self.fsw: ImagingSatellite.fsw_type
@@ -653,7 +678,7 @@ class ImagingSatellite(AccessSatellite):
         self.data_store: UniqueImageStore
 
     def reset_pre_sim(self) -> None:
-        """Set the buffer parameters based on computed windows"""
+        """Set the buffer parameters based on computed windows."""
         super().reset_pre_sim()
         self.sat_args["transmitterNumBuffers"] = len(
             self.data_store.env_knowledge.targets
@@ -666,7 +691,7 @@ class ImagingSatellite(AccessSatellite):
         self.missed = 0
 
     def reset_post_sim(self) -> None:
-        """Handle initial_generation_duration setting and calculate windows"""
+        """Handle initial_generation_duration setting and calculate windows."""
         for target in self.data_store.env_knowledge.targets:
             self.add_location_for_access_checking(
                 object=target,
@@ -684,7 +709,7 @@ class ImagingSatellite(AccessSatellite):
 
     @property
     def windows(self) -> dict[Target, list[tuple[float, float]]]:
-        """Access windows via dict of targets -> list of windows"""
+        """Access windows via dict of targets -> list of windows."""
         return self.opportunities_dict(types="target", filter=self._get_imaged_filter())
 
     @property
@@ -708,8 +733,9 @@ class ImagingSatellite(AccessSatellite):
     def upcoming_targets(
         self, n: int, pad: bool = True, max_lookahead: int = 100
     ) -> list[Target]:
-        """Find the n nearest targets. Targets are sorted by window close time;
-        currently open windows are included.
+        """Find the n nearest targets.
+
+        Targets are sorted by window close time; currently open windows are included.
 
         Args:
             n: number of windows to look ahead
@@ -732,8 +758,9 @@ class ImagingSatellite(AccessSatellite):
         ]
 
     def _update_image_event(self, target: Target) -> None:
-        """Create a simulator event that causes the simulation to stop when a target is
-        imaged
+        """Create a simulator event that terminates on imaging.
+
+        Causes the simulation to stop when a target is imaged.
 
         Args:
             target: Target expected to be imaged
@@ -772,7 +799,7 @@ class ImagingSatellite(AccessSatellite):
             self.simulator.eventMap[self._image_event_name].eventActive = True
 
     def _disable_image_event(self) -> None:
-        """Turn off simulator termination due to this satellite's imaging checker"""
+        """Turn off simulator termination due to this satellite's imaging checker."""
         if (
             self._image_event_name is not None
             and self._image_event_name in self.simulator.eventMap
@@ -780,8 +807,9 @@ class ImagingSatellite(AccessSatellite):
             self.simulator.delete_event(self._image_event_name)
 
     def parse_target_selection(self, target_query: Union[int, Target, str]):
-        """Identify a target based on upcoming target index, Target object, or target
-        id.
+        """Identify a target from a query.
+
+        Parses an upcoming target index, Target object, or target id.
 
         Args:
             target_query: Taret upcoming index, object, or id.
@@ -802,7 +830,7 @@ class ImagingSatellite(AccessSatellite):
         return target
 
     def enable_target_window(self, target: Target):
-        """Enable the next window close event for target"""
+        """Enable the next window close event for target."""
         self._update_image_event(target)
         next_window = self.next_windows[target]
         self.log_info(
@@ -815,7 +843,7 @@ class ImagingSatellite(AccessSatellite):
         )
 
     def task_target_for_imaging(self, target: Target):
-        """Task the satellite to image a target
+        """Task the satellite to image a target.
 
         Args:
             target: Selected target
@@ -830,11 +858,15 @@ class ImagingSatellite(AccessSatellite):
 ### Convenience Types ###
 #########################
 class SteeringImagerSatellite(ImagingSatellite):
+    """Convenience type for an imaging satellite with MRP steering."""
+
     dyn_type = dynamics.FullFeaturedDynModel
     fsw_type = fsw.SteeringImagerFSWModel
 
 
 class FBImagerSatellite(ImagingSatellite):
+    """Convenience type for an imaging satellite with feedback control."""
+
     dyn_type = dynamics.FullFeaturedDynModel
     fsw_type = fsw.ImagingFSWModel
 
@@ -853,6 +885,8 @@ from bsk_rl.envs.general_satellite_tasking.scenario import (  # noqa: E402
 
 
 class DoNothingSatellite(sa.DriftAction, so.TimeState):
+    """Convenience type for a satellite that does nothing."""
+
     dyn_type = dynamics.BasicDynamicsModel
     fsw_type = fsw.BasicFSWModel
 
@@ -872,6 +906,8 @@ class ImageAheadSatellite(
     ),
     SteeringImagerSatellite,
 ):
+    """Convenience type for a satellite with common features enabled."""
+
     pass
 
 
@@ -892,4 +928,6 @@ class FullFeaturedSatellite(
     ),
     SteeringImagerSatellite,
 ):
+    """Convenience type for a satellite with common features enabled."""
+
     pass

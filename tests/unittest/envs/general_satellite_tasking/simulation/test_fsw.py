@@ -53,7 +53,7 @@ class TestTask:
         task = Task(fsw, 1)
         task.create_task()
         task.fsw.simulator.CreateNewTask.assert_called_once()
-        task.init_objects()
+        task._init_objects()
         task.reset_for_action()
         task.fsw.simulator.disableTask.assert_called_once()
 
@@ -61,7 +61,7 @@ class TestTask:
 basicfsw = module + "BasicFSWModel."
 
 
-@patch(basicfsw + "requires_dyn", MagicMock(return_value=[]))
+@patch(basicfsw + "_requires_dyn", MagicMock(return_value=[]))
 class TestBasicFSWModel:
     @patch(basicfsw + "_set_messages", MagicMock())
     @patch(basicfsw + "SunPointTask")
@@ -73,14 +73,14 @@ class TestBasicFSWModel:
         fsw = BasicFSWModel(MagicMock(), 1)
         for task in fsw.tasks:
             task.create_task.assert_called_once()
-            task.create_module_data.assert_called_once()
-            task.init_objects.assert_called_once()
+            task._create_module_data.assert_called_once()
+            task._init_objects.assert_called_once()
 
 
 imagingfsw = module + "ImagingFSWModel."
 
 
-@patch(imagingfsw + "requires_dyn", MagicMock(return_value=[]))
+@patch(imagingfsw + "_requires_dyn", MagicMock(return_value=[]))
 @patch(imagingfsw + "_make_task_list", MagicMock())
 @patch(imagingfsw + "_set_messages", MagicMock())
 class TestImagingFSWModel:

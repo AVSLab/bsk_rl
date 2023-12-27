@@ -1,3 +1,5 @@
+"""General Satellite Tasking is a framework for satellite tasking RL environments."""
+
 import functools
 import logging
 import os
@@ -30,6 +32,28 @@ MultiSatAct = Iterable[SatAct]
 
 
 class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
+    """A Gymnasium environment adaptable to a wide range satellite tasking problems.
+
+    These problems involve satellite(s) being tasked to complete tasks and maintain
+    aliveness. These tasks often include rewards for data collection. The environment
+    can be configured for any collection of satellites, including heterogenous
+    constellations. Other configurable aspects are environment features (e.g.
+    imaging targets), data collection and recording, and intersatellite
+    communication of data.
+
+    The state space is a tuple containing the state of each satellite. Actions are
+    assigned as a tuple of actions, one per satellite.
+
+    The preferred method of instantiating this environment is to make the
+    "GeneralSatelliteTasking-v1" environment and pass a kwargs dict with the
+    environment configuration. In some cases (e.g. the multiprocessed Gymnasium
+    vector environment), it is necessary for compatibility to instead register a new
+    environment using the GeneralSatelliteTasking class and a kwargs dict. See
+    examples/general_satellite_tasking for examples of environment configuration.
+
+    New environments should be built using this framework.
+    """
+
     def __init__(
         self,
         satellites: Union[Satellite, list[Satellite]],
@@ -47,25 +71,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         log_dir: Optional[str] = None,
         render_mode=None,
     ) -> None:
-        """A Gymnasium environment adaptable to a wide range satellite tasking problems
-        that involve satellite(s) being tasked to complete tasks and maintain aliveness.
-        These tasks often include rewards for data collection. The environment can be
-        configured for any collection of satellites, including heterogenous
-        constellations. Other configurable aspects are environment features (e.g.
-        imaging targets), data collection and recording, and intersatellite
-        communication of data.
-
-        The state space is a tuple containing the state of each satellite. Actions are
-        assigned as a tuple of actions, one per satellite.
-
-        The preferred method of instantiating this environment is to make the
-        "GeneralSatelliteTasking-v1" environment and pass a kwargs dict with the
-        environment configuration. In some cases (e.g. the multiprocessed Gymnasium
-        vector environment), it is necessary for compatibility to instead register a new
-        environment using the GeneralSatelliteTasking class and a kwargs dict. See
-        examples/general_satellite_tasking for examples of environment configuration.
-
-        New environments should be built using this framework.
+        """Construct the GeneralSatelliteTasking environment.
 
         Args:
             satellites: Satellites(s) to be simulated.
@@ -206,10 +212,11 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         return observation, info
 
     def delete_simulator(self):
-        """Delete Basilisk objects. Only self.simulator contains strong references to
-        BSK models, so deleting it will delete all Basilisk objects. Enable debug-level
-        logging to verify that the simulator, FSW, dynamics, and environment models are
-        all deleted on reset.
+        """Delete Basilisk objects.
+
+        Only self.simulator contains strong references to BSK models, so deleting it
+        will delete all Basilisk objects. Enable debug-level logging to verify that the
+        simulator, FSW, dynamics, and environment models are all deleted on reset.
         """
         try:
             del self.simulator
@@ -264,7 +271,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
     @property
     def action_space(self) -> spaces.Space[MultiSatAct]:
-        """Compose satellite action spaces
+        """Compose satellite action spaces.
 
         Returns:
             Joint action space
@@ -273,8 +280,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
     @property
     def observation_space(self) -> spaces.Space[MultiSatObs]:
-        """Compose satellite observation spaces. Note: calls reset(), which can be
-        expensive, to determine observation size.
+        """Compose satellite observation spaces.
+
+        Note: calls reset(), which can be expensive, to determine observation size.
 
         Returns:
             Joint observation space
@@ -319,10 +327,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
     def step(
         self, actions: MultiSatAct
     ) -> tuple[MultiSatObs, float, bool, bool, dict[str, Any]]:
-        """Propagate the simulation, update information, and get rewards
+        """Propagate the simulation, update information, and get rewards.
 
         Args:
-            Joint action for satellites
+            actions: Joint action for satellites
 
         Returns:
             observation, reward, terminated, truncated, info
@@ -343,22 +351,24 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         return observation, reward, terminated, truncated, info
 
     def render(self) -> None:  # pragma: no cover
-        """No rendering implemented"""
+        """No rendering implemented."""
         return None
 
     def close(self) -> None:
-        """Try to cleanly delete everything"""
+        """Try to cleanly delete everything."""
         if self.simulator is not None:
             del self.simulator
 
 
 class SingleSatelliteTasking(GeneralSatelliteTasking, Generic[SatObs, SatAct]):
-    """A special case of the GeneralSatelliteTasking for one satellite. For
-    compatibility with standard training APIs, actions and observations are directly
+    """A special case of the GeneralSatelliteTasking for one satellite.
+
+    For compatibility with standard training APIs, actions and observations are directly
     exposed for the single satellite and are not wrapped in a tuple.
     """
 
     def __init__(self, *args, **kwargs) -> None:
+        """Construct the SingleSatelliteTasking environment."""
         super().__init__(*args, **kwargs)
         if not len(self.satellites) == 1:
             raise ValueError(
@@ -367,21 +377,22 @@ class SingleSatelliteTasking(GeneralSatelliteTasking, Generic[SatObs, SatAct]):
 
     @property
     def action_space(self) -> spaces.Space[SatAct]:
-        """Return the single satellite action space"""
+        """Return the single satellite action space."""
         return self.satellite.action_space
 
     @property
     def observation_space(self) -> spaces.Box:
-        """Return the single satellite observation space"""
+        """Return the single satellite observation space."""
         super().observation_space
         return self.satellite.observation_space
 
     @property
     def satellite(self) -> Satellite:
+        """Satellite being tasked."""
         return self.satellites[0]
 
     def step(self, action) -> tuple[Any, float, bool, bool, dict[str, Any]]:
-        """Task the satellite with a single action"""
+        """Task the satellite with a single action."""
         return super().step([action])
 
     def _get_obs(self) -> Any:
@@ -396,12 +407,13 @@ class MultiagentSatelliteTasking(
     def reset(
         self, seed: int | None = None, options=None
     ) -> tuple[MultiSatObs, dict[str, Any]]:
+        """Reset the environment and return PettingZoo Parallel API format."""
         self.newly_dead = []
         return super().reset(seed, options)
 
     @property
     def agents(self) -> list[AgentID]:
-        """Agents currently in the environment"""
+        """Agents currently in the environment."""
         truncated = super()._get_truncated()
         return [
             satellite.id
@@ -411,7 +423,7 @@ class MultiagentSatelliteTasking(
 
     @property
     def num_agents(self) -> int:
-        """Number of agents currently in the environment"""
+        """Number of agents currently in the environment."""
         return len(self.agents)
 
     @property
@@ -421,7 +433,7 @@ class MultiagentSatelliteTasking(
 
     @property
     def max_num_agents(self) -> int:
-        """Maximum number of agents possible in the environment"""
+        """Maximum number of agents possible in the environment."""
         return len(self.possible_agents)
 
     @property
@@ -431,7 +443,7 @@ class MultiagentSatelliteTasking(
 
     @property
     def observation_spaces(self) -> dict[AgentID, spaces.Box]:
-        """Return the observation space for each agent"""
+        """Return the observation space for each agent."""
         return {
             agent: obs_space
             for agent, obs_space in zip(self.possible_agents, super().observation_space)
@@ -439,12 +451,12 @@ class MultiagentSatelliteTasking(
 
     @functools.lru_cache(maxsize=None)
     def observation_space(self, agent: AgentID) -> spaces.Space[SatObs]:
-        """Return the observation space for a certain agent"""
+        """Return the observation space for a certain agent."""
         return self.observation_spaces[agent]
 
     @property
     def action_spaces(self) -> dict[AgentID, spaces.Space[SatAct]]:
-        """Return the action space for each agent"""
+        """Return the action space for each agent."""
         return {
             agent: act_space
             for agent, act_space in zip(self.possible_agents, super().action_space)
@@ -452,11 +464,11 @@ class MultiagentSatelliteTasking(
 
     @functools.lru_cache(maxsize=None)
     def action_space(self, agent: AgentID) -> spaces.Space[SatAct]:
-        """Return the action space for a certain agent"""
+        """Return the action space for a certain agent."""
         return self.action_spaces[agent]
 
     def _get_obs(self) -> dict[AgentID, SatObs]:
-        """Format the observation per the PettingZoo Parallel API"""
+        """Format the observation per the PettingZoo Parallel API."""
         return {
             agent: satellite.get_obs()
             for agent, satellite in zip(self.possible_agents, self.satellites)
@@ -464,7 +476,7 @@ class MultiagentSatelliteTasking(
         }
 
     def _get_reward(self) -> dict[AgentID, float]:
-        """Format the reward per the PettingZoo Parallel API"""
+        """Format the reward per the PettingZoo Parallel API."""
         reward = deepcopy(self.reward_dict)
         for agent, satellite in zip(self.possible_agents, self.satellites):
             if not satellite.is_alive():
@@ -478,7 +490,7 @@ class MultiagentSatelliteTasking(
         return reward
 
     def _get_terminated(self) -> dict[AgentID, bool]:
-        """Format terminations per the PettingZoo Parallel API"""
+        """Format terminations per the PettingZoo Parallel API."""
         if self.terminate_on_time_limit and super()._get_truncated():
             return {
                 agent: True
@@ -493,7 +505,7 @@ class MultiagentSatelliteTasking(
             }
 
     def _get_truncated(self) -> dict[AgentID, bool]:
-        """Format truncations per the PettingZoo Parallel API"""
+        """Format truncations per the PettingZoo Parallel API."""
         truncated = super()._get_truncated()
         return {
             agent: truncated
@@ -502,7 +514,7 @@ class MultiagentSatelliteTasking(
         }
 
     def _get_info(self) -> dict[AgentID, dict]:
-        """Format info per the PettingZoo Parallel API"""
+        """Format info per the PettingZoo Parallel API."""
         info = super()._get_info()
         for agent in self.possible_agents:
             if agent in self.previously_dead:
@@ -519,7 +531,7 @@ class MultiagentSatelliteTasking(
         dict[AgentID, bool],
         dict[AgentID, dict],
     ]:
-        """Step the environment and return PettingZoo Parallel API format"""
+        """Step the environment and return PettingZoo Parallel API format."""
         logger.info("=== STARTING STEP ===")
 
         previous_alive = self.agents

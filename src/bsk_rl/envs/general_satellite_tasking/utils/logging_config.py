@@ -1,9 +1,5 @@
+# ruff: noqa
 import logging
-
-# sim_format = logging.Formatter(
-#     "\x1b[30;3m%(asctime)s\x1b[0m %(shortname)-30s %(levelname)-10s <%(sim_time)-.2f> %(message)s",
-#     defaults={"sim_time": -1},
-# )
 
 fstr = "\x1b[30;3m%(asctime)s\x1b[0m %(shortname)-30s %(levelname)-10s <%(sim_time)-.2f> %(message)s"
 

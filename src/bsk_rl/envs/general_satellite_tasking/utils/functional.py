@@ -1,3 +1,5 @@
+"""General utility functions."""
+
 import inspect
 import re
 import warnings
@@ -8,7 +10,7 @@ import numpy as np
 
 
 def valid_func_name(name: str) -> str:
-    """Converts a string into a valid function name.
+    """Convert a string into a valid function name.
 
     Args:
         name: desired function name
@@ -25,7 +27,7 @@ def valid_func_name(name: str) -> str:
 
 
 def safe_dict_merge(updates: dict, base: dict) -> dict:
-    """Merges a dict with another dict, warning for conflicts
+    """Merge a dict with another dict, warning for conflicts.
 
     Args:
         updates: dictionary to be added to base
@@ -43,8 +45,7 @@ def safe_dict_merge(updates: dict, base: dict) -> dict:
 
 
 def default_args(**defaults) -> Callable:
-    """Decorator to enumerate default arguments of certain functions so they can be
-    collected"""
+    """Decorate function to enumerate default arguments for collection."""
 
     def inner_dec(func) -> Callable:
         def inner(*args, **kwargs) -> Callable:
@@ -57,7 +58,7 @@ def default_args(**defaults) -> Callable:
 
 
 def collect_default_args(object: object) -> dict[str, Any]:
-    """Collect all function @default_args in an object
+    """Collect all function @default_args in an object.
 
     Args:
         object: object with @default_args decorated functions
@@ -77,8 +78,7 @@ def collect_default_args(object: object) -> dict[str, Any]:
 
 
 def vectorize_nested_dict(dictionary: dict) -> np.ndarray:
-    """Flattens a dictionary of dictionaries, arrays, and scalars into a single
-    vector."""
+    """Flattens a dictionary of dicts, arrays, and scalars into a single vector."""
     values = list(dictionary.values())
     for i, value in enumerate(values):
         if isinstance(value, np.ndarray):
@@ -92,7 +92,7 @@ def vectorize_nested_dict(dictionary: dict) -> np.ndarray:
 
 
 def aliveness_checker(func: Callable[..., bool]) -> Callable[..., bool]:
-    """Decorator to evaluate func -> bool when checking for satellite aliveness"""
+    """Decorate function to evaluate when checking for satellite aliveness."""
 
     def inner(*args, log_failure=False, **kwargs) -> bool:
         self = args[0]
@@ -106,10 +106,11 @@ def aliveness_checker(func: Callable[..., bool]) -> Callable[..., bool]:
 
 
 def check_aliveness_checkers(model: Any, log_failure=False) -> bool:
-    """Evaluate all functions with @aliveness_checker in a model
+    """Evaluate all functions with @aliveness_checker in a model.
 
     Args:
-        model (Any): Model to search for checkers in
+        model: Model to search for checkers in
+        log_failure: Whether to log on checker failure
 
     Returns:
         bool: Model aliveness status
@@ -127,15 +128,14 @@ def check_aliveness_checkers(model: Any, log_failure=False) -> bool:
 
 
 def is_property(obj: Any, attr_name: str) -> bool:
-    """Check if obj has an @property attr_name without calling it"""
+    """Check if obj has an @property attr_name without calling it."""
     cls = type(obj)
     attribute = getattr(cls, attr_name, None)
     return attribute is not None and isinstance(attribute, property)
 
 
 def configurable(cls):
-    """Class decorator to create new instance of a class with different defaults to
-    __init__"""
+    """Class decorator to create class with different init defaults."""
 
     @classmethod
     def configure(cls, **config_kwargs):
@@ -162,10 +162,10 @@ def configurable(cls):
 
 
 def bind(instance, func, as_name=None):
-    """
-    Bind the function *func* to *instance*, with either provided name *as_name*
-    or the existing name of *func*. The provided *func* should accept the
-    instance as the first argument, i.e. "self".
+    """Bind the function *func* to *instance*.
+
+    Uses either provided name *as_name* or the existing name of *func*. The provided
+    *func* should accept the instance as the first argument, i.e. "self".
     """
     if as_name is None:
         as_name = func.__name__

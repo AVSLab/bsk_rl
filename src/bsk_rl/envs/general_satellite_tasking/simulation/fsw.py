@@ -1,3 +1,5 @@
+"""Basilisk flight software models."""
+
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Callable, Iterable, Optional
 from weakref import proxy
@@ -39,8 +41,7 @@ from bsk_rl.envs.general_satellite_tasking.utils.functional import (
 def action(
     func: Callable[..., None]
 ) -> Callable[Callable[..., None], Callable[..., None]]:
-    """Wrapper to do housekeeping for action functions that should be called by the
-    satellite class."""
+    """Decorate to run housekeeping for action functions called by the satellite."""
 
     def inner(self, *args, **kwargs) -> Callable[..., None]:
         self.fsw_proc.disableAllTasks()
@@ -54,27 +55,33 @@ def action(
 
 
 class FSWModel(ABC):
+    """Abstract Basilisk flight software model.
+
+    One FSWModel is instantiated for each satellite in the environment each time a
+    new simulator is created.
+    """
+
     @classmethod
     @property
-    def requires_dyn(cls) -> list[type["DynamicsModel"]]:
+    def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
         """Define minimum DynamicsModels for compatibility."""
         return []
 
     def __init__(
         self, satellite: "Satellite", fsw_rate: float, priority: int = 100, **kwargs
     ) -> None:
-        """Base FSWModel
+        """Construct a base flight software model.
 
         Args:
             satellite: Satellite modelled by this model
             fsw_rate: Rate of FSW simulation [s]
             priority: Model priority.
+            kwargs: Passed to task creation functions
         """
-
         self.satellite = satellite
         self.logger = self.satellite.logger.getChild(self.__class__.__name__)
 
-        for required in self.requires_dyn:
+        for required in self._requires_dyn:
             if not issubclass(satellite.dyn_type, required):
                 raise TypeError(
                     f"{satellite.dyn_type} must be a subclass of {required} to "
@@ -91,25 +98,28 @@ class FSWModel(ABC):
             task.create_task()
 
         for task in self.tasks:
-            task.create_module_data()
+            task._create_module_data()
 
         self._set_messages()
 
         for task in self.tasks:
-            task.init_objects(**kwargs)
+            task._init_objects(**kwargs)
 
         self.fsw_proc.disableAllTasks()
 
     @property
     def simulator(self) -> "Simulator":
+        """Reference to the episode simulator."""
         return self.satellite.simulator
 
     @property
     def environment(self) -> "EnvironmentModel":
+        """Reference to the episode environment model."""
         return self.simulator.environment
 
     @property
     def dynamics(self) -> "DynamicsModel":
+        """Reference to the satellite dynamics model for the episode."""
         return self.satellite.dynamics
 
     def _make_task_list(self) -> list["Task"]:
@@ -117,7 +127,7 @@ class FSWModel(ABC):
 
     @abstractmethod  # pragma: no cover
     def _set_messages(self) -> None:
-        """Message setup after task creation"""
+        """Message setup after task creation."""
         pass
 
     def is_alive(self, log_failure=False) -> bool:
@@ -129,17 +139,20 @@ class FSWModel(ABC):
         return check_aliveness_checkers(self, log_failure=log_failure)
 
     def __del__(self):
+        """Log when FSW model is deleted."""
         self.logger.debug("Basilisk FSW deleted")
 
 
 class Task(ABC):
+    """Abstract class for defining FSW tasks."""
+
     @property
     @abstractmethod  # pragma: no cover
-    def name(self) -> str:
+    def name(self) -> str:  # noqa: D102
         pass
 
     def __init__(self, fsw: FSWModel, priority: int) -> None:
-        """Template class for defining FSW processes
+        """Template class for defining FSW processes.
 
         Args:
             fsw: FSW model task contributes to
@@ -158,12 +171,12 @@ class Task(ABC):
         )
 
     @abstractmethod  # pragma: no cover
-    def create_module_data(self) -> None:
+    def _create_module_data(self) -> None:
         """Create module data wrappers."""
         pass
 
     @abstractmethod  # pragma: no cover
-    def init_objects(self, **kwargs) -> None:
+    def _init_objects(self, **kwargs) -> None:
         """Initialize model parameters with satellite arguments."""
         pass
 
@@ -181,15 +194,19 @@ class Task(ABC):
         )
 
     def reset_for_action(self) -> None:
-        """Housekeeping for task when a new action is called; by default, disable
-        task."""
+        """Housekeeping for task when a new action is called.
+
+        Disables task by default, can be overridden by subclasses.
+        """
         self.fsw.simulator.disableTask(self.name + self.fsw.satellite.id)
 
 
 class BasicFSWModel(FSWModel):
+    """Basic FSW model with minimum necessary Basilisk components."""
+
     @classmethod
     @property
-    def requires_dyn(cls) -> list[type["DynamicsModel"]]:
+    def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
         return [dynamics.BasicDynamicsModel]
 
     def _make_task_list(self) -> list[Task]:
@@ -222,13 +239,11 @@ class BasicFSWModel(FSWModel):
         self.thrusterConfigMsg = self.dynamics.thrFactory.getConfigMessage()
 
     def _set_rw_config_msg(self) -> None:
-        """Configure RW pyramid exactly as it is in the Dynamics (i.e. FSW with perfect
-        knowledge)."""
+        """Configure RW pyramid exactly as it is in dynamics."""
         self.fswRwConfigMsg = self.dynamics.rwFactory.getConfigMessage()
 
     def _set_gateway_msgs(self) -> None:
-        """Create C-wrapped gateway messages such that different modules can write to
-        this message and provide a common input msg for down-stream modules."""
+        """Create C-wrapped gateway messages."""
         self.attRefMsg = cMsgPy.AttRefMsg_C()
         self.attGuidMsg = cMsgPy.AttGuidMsg_C()
 
@@ -249,7 +264,7 @@ class BasicFSWModel(FSWModel):
 
     @action
     def action_drift(self) -> None:
-        """Action to disable all tasks."""
+        """Disable all tasks."""
         self.simulator.disableTask(
             BasicFSWModel.MRPControlTask.name + self.satellite.id
         )
@@ -259,18 +274,19 @@ class BasicFSWModel(FSWModel):
 
         name = "sunPointTask"
 
-        def __init__(self, fsw, priority=99) -> None:
+        def __init__(self, fsw, priority=99) -> None:  # noqa: D107
             super().__init__(fsw, priority)
 
-        def create_module_data(self) -> None:
+        def _create_module_data(self) -> None:
             self.sunPoint = self.fsw.sunPoint = locationPointing.locationPointing()
             self.sunPoint.ModelTag = "sunPoint"
 
-        def init_objects(self, nHat_B: Iterable[float], **kwargs) -> None:
+        def _init_objects(self, nHat_B: Iterable[float], **kwargs) -> None:
             """Configure the sun-pointing task.
 
             Args:
                 nHat_B: Solar array normal vector
+                kwargs: Ignored
             """
             self.sunPoint.pHat_B = nHat_B
             self.sunPoint.scAttInMsg.subscribeTo(
@@ -293,7 +309,7 @@ class BasicFSWModel(FSWModel):
 
     @action
     def action_charge(self) -> None:
-        """Action to charge solar panels."""
+        """Charge battery using solar panels."""
         self.sunPoint.Reset(self.simulator.sim_time_ns)
         self.simulator.enableTask(self.SunPointTask.name + self.satellite.id)
 
@@ -302,14 +318,14 @@ class BasicFSWModel(FSWModel):
 
         name = "nadirPointTask"
 
-        def __init__(self, fsw, priority=98) -> None:
+        def __init__(self, fsw, priority=98) -> None:  # noqa: D107
             super().__init__(fsw, priority)
 
-        def create_module_data(self) -> None:
+        def _create_module_data(self) -> None:
             self.hillPoint = self.fsw.hillPoint = hillPoint.hillPoint()
             self.hillPoint.ModelTag = "hillPoint"
 
-        def init_objects(self, **kwargs) -> None:
+        def _init_objects(self, **kwargs) -> None:
             """Configure the nadir-pointing task."""
             self.hillPoint.transNavInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.transOutMsg
@@ -330,10 +346,10 @@ class BasicFSWModel(FSWModel):
 
         name = "rwDesatTask"
 
-        def __init__(self, fsw, priority=97) -> None:
+        def __init__(self, fsw, priority=97) -> None:  # noqa: D107
             super().__init__(fsw, priority)
 
-        def create_module_data(self) -> None:
+        def _create_module_data(self) -> None:
             """Set up momentum dumping and thruster control."""
             # Momentum dumping configuration
             self.thrDesatControl = (
@@ -350,7 +366,7 @@ class BasicFSWModel(FSWModel):
             ) = thrForceMapping.thrForceMapping()
             self.thrForceMapping.ModelTag = "thrForceMapping"
 
-        def init_objects(self, **kwargs) -> None:
+        def _init_objects(self, **kwargs) -> None:
             self._set_thruster_mapping(**kwargs)
             self._set_momentum_dumping(**kwargs)
 
@@ -364,6 +380,7 @@ class BasicFSWModel(FSWModel):
                 controlAxes_B: Control unit axes
                 thrForceSign: Flag indicating if pos (+1) or negative (-1) thruster
                     solutions are found
+                kwargs: Ignored
             """
             self.thrForceMapping.cmdTorqueInMsg.subscribeTo(
                 self.thrDesatControl.deltaHOutMsg
@@ -399,6 +416,7 @@ class BasicFSWModel(FSWModel):
                 desatAttitude: Direction to point while desaturating: "sun" points
                     panels at sun, "nadir" points instrument nadir, None disables
                     attitude control
+                kwargs: Ignored
             """
             self.fsw.desatAttitude = desatAttitude
             self.thrDesatControl.hs_min = hs_min  # Nms
@@ -419,12 +437,13 @@ class BasicFSWModel(FSWModel):
             self._add_model_to_task(self.thrDump, priority=1191)
 
         def reset_for_action(self) -> None:
+            """Disable power draw for thrusters."""
             super().reset_for_action()
             self.fsw.dynamics.thrusterPowerSink.powerStatus = 0
 
     @action
     def action_desat(self) -> None:
-        """Action to charge while desaturating reaction wheels."""
+        """Charge while desaturating reaction wheels."""
         self.trackingError.Reset(self.simulator.sim_time_ns)
         self.thrDesatControl.Reset(self.simulator.sim_time_ns)
         self.thrDump.Reset(self.simulator.sim_time_ns)
@@ -449,16 +468,16 @@ class BasicFSWModel(FSWModel):
 
         name = "trackingErrTask"
 
-        def __init__(self, fsw, priority=90) -> None:
+        def __init__(self, fsw, priority=90) -> None:  # noqa: D107
             super().__init__(fsw, priority)
 
-        def create_module_data(self) -> None:
+        def _create_module_data(self) -> None:
             self.trackingError = (
                 self.fsw.trackingError
             ) = attTrackingError.attTrackingError()
             self.trackingError.ModelTag = "trackingError"
 
-        def init_objects(self, **kwargs) -> None:
+        def _init_objects(self, **kwargs) -> None:
             self.trackingError.attNavInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.attOutMsg
             )
@@ -474,10 +493,10 @@ class BasicFSWModel(FSWModel):
 
         name = "mrpControlTask"
 
-        def __init__(self, fsw, priority=80) -> None:
+        def __init__(self, fsw, priority=80) -> None:  # noqa: D107
             super().__init__(fsw, priority)
 
-        def create_module_data(self) -> None:
+        def _create_module_data(self) -> None:
             # Attitude controller configuration
             self.mrpFeedbackControl = (
                 self.fsw.mrpFeedbackControl
@@ -488,7 +507,7 @@ class BasicFSWModel(FSWModel):
             self.rwMotorTorque = self.fsw.rwMotorTorque = rwMotorTorque.rwMotorTorque()
             self.rwMotorTorque.ModelTag = "rwMotorTorque"
 
-        def init_objects(self, **kwargs) -> None:
+        def _init_objects(self, **kwargs) -> None:
             self._set_mrp_feedback_rwa(**kwargs)
             self._set_rw_motor_torque(**kwargs)
 
@@ -496,12 +515,13 @@ class BasicFSWModel(FSWModel):
         def _set_mrp_feedback_rwa(
             self, K: float, Ki: float, P: float, **kwargs
         ) -> None:
-            """Defines the control properties.
+            """Set the MRP feedback control properties.
 
             Args:
                 K: Proportional gain
                 Ki: Integral gain
                 P: Derivative gain
+                kwargs: Ignored
             """
             self.mrpFeedbackControl.guidInMsg.subscribeTo(self.fsw.attGuidMsg)
             self.mrpFeedbackControl.vehConfigInMsg.subscribeTo(self.fsw.vcConfigMsg)
@@ -517,10 +537,11 @@ class BasicFSWModel(FSWModel):
         def _set_rw_motor_torque(
             self, controlAxes_B: Iterable[float], **kwargs
         ) -> None:
-            """Defines the motor torque from the control law.
+            """Set parameters for finding motor torque from the control law.
 
             Args:
-                controlAxes_B): Control unit axes
+                controlAxes_B: Control unit axes
+                kwargs: Ignored
             """
             self.rwMotorTorque.rwParamsInMsg.subscribeTo(self.fsw.fswRwConfigMsg)
             self.rwMotorTorque.vehControlInMsg.subscribeTo(
@@ -536,15 +557,16 @@ class BasicFSWModel(FSWModel):
 
 
 class ImagingFSWModel(BasicFSWModel):
-    """Extend FSW with instrument pointing and triggering control"""
+    """Extend FSW with instrument pointing and triggering control."""
 
     @classmethod
     @property
-    def requires_dyn(cls) -> list[type["DynamicsModel"]]:
-        return super().requires_dyn + [dynamics.ImagingDynModel]
+    def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
+        return super()._requires_dyn + [dynamics.ImagingDynModel]
 
     @property
     def c_hat_P(self):
+        """Instrument pointing direction in the planet frame."""
         c_hat_B = self.locPoint.pHat_B
         return np.matmul(self.dynamics.BP.T, c_hat_B)
 
@@ -558,14 +580,14 @@ class ImagingFSWModel(BasicFSWModel):
         )
 
     class LocPointTask(Task):
-        """Task to point at targets and trigger the instrument"""
+        """Task to point at targets and trigger the instrument."""
 
         name = "locPointTask"
 
-        def __init__(self, fsw, priority=96) -> None:
+        def __init__(self, fsw, priority=96) -> None:  # noqa: D107
             super().__init__(fsw, priority)
 
-        def create_module_data(self) -> None:
+        def _create_module_data(self) -> None:
             # Location pointing configuration
             self.locPoint = self.fsw.locPoint = locationPointing.locationPointing()
             self.locPoint.ModelTag = "locPoint"
@@ -576,7 +598,7 @@ class ImagingFSWModel(BasicFSWModel):
             ) = simpleInstrumentController.simpleInstrumentController()
             self.insControl.ModelTag = "instrumentController"
 
-        def init_objects(self, **kwargs) -> None:
+        def _init_objects(self, **kwargs) -> None:
             self._set_location_pointing(**kwargs)
             self._set_instrument_controller(**kwargs)
 
@@ -584,10 +606,11 @@ class ImagingFSWModel(BasicFSWModel):
         def _set_location_pointing(
             self, inst_pHat_B: Iterable[float], **kwargs
         ) -> None:
-            """Defines the Earth location pointing guidance module.
+            """Set the Earth location pointing guidance module.
 
             Args:
                 inst_pHat_B: Instrument pointing direction
+                kwargs: Ignored
             """
             self.locPoint.pHat_B = inst_pHat_B
             self.locPoint.scAttInMsg.subscribeTo(
@@ -613,13 +636,14 @@ class ImagingFSWModel(BasicFSWModel):
             imageRateErrorRequirement: float,
             **kwargs,
         ) -> None:
-            """Defines the instrument controller parameters.
+            """Set the instrument controller parameters.
 
             Args:
                 imageAttErrorRequirement: Pointing attitude error tolerance for imaging
                     [MRP norm]
                 imageRateErrorRequirement: Rate tolerance for imaging. Disable with
                     None. [rad/s]
+                kwargs: Ignored
             """
             self.insControl.attErrTolerance = imageAttErrorRequirement
             if imageRateErrorRequirement is not None:
@@ -633,6 +657,7 @@ class ImagingFSWModel(BasicFSWModel):
             self._add_model_to_task(self.insControl, priority=987)
 
         def reset_for_action(self) -> None:
+            """Reset pointing controller."""
             self.fsw.dynamics.imagingTarget.Reset(self.fsw.simulator.sim_time_ns)
             self.locPoint.Reset(self.fsw.simulator.sim_time_ns)
             self.insControl.controllerStatus = 0
@@ -640,7 +665,7 @@ class ImagingFSWModel(BasicFSWModel):
 
     @action
     def action_image(self, location: Iterable[float], data_name: str) -> None:
-        """Action to image a target at a location.
+        """Attempt to image a target at a location.
 
         Args:
             location: PCPF target location [m]
@@ -655,7 +680,7 @@ class ImagingFSWModel(BasicFSWModel):
 
     @action
     def action_downlink(self) -> None:
-        """Action to attempt to downlink data."""
+        """Attempt to downlink data."""
         self.hillPoint.Reset(self.simulator.sim_time_ns)
         self.trackingError.Reset(self.simulator.sim_time_ns)
         self.dynamics.transmitter.dataStatus = 1
@@ -667,10 +692,12 @@ class ImagingFSWModel(BasicFSWModel):
 
 
 class ContinuousImagingFSWModel(ImagingFSWModel):
-    class LocPointTask(ImagingFSWModel.LocPointTask):
-        """Task to point at targets and trigger the instrument"""
+    """FSW model for continuous nadir scanning."""
 
-        def create_module_data(self) -> None:
+    class LocPointTask(ImagingFSWModel.LocPointTask):
+        """Task to point at targets and trigger the instrument."""
+
+        def _create_module_data(self) -> None:
             # Location pointing configuration
             self.locPoint = self.fsw.locPoint = locationPointing.locationPointing()
             self.locPoint.ModelTag = "locPoint"
@@ -688,13 +715,14 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
             imageRateErrorRequirement: float,
             **kwargs,
         ) -> None:
-            """Defines the instrument controller parameters.
+            """Set the instrument controller parameters.
 
             Args:
                 imageAttErrorRequirement: Pointing attitude error tolerance for imaging
                     [MRP norm]
                 imageRateErrorRequirement: Rate tolerance for imaging. Disable with
                     None. [rad/s]
+                kwargs: Ignored
             """
             self.insControl.attErrTolerance = imageAttErrorRequirement
             if imageRateErrorRequirement is not None:
@@ -708,6 +736,7 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
             self._add_model_to_task(self.insControl, priority=987)
 
         def reset_for_action(self) -> None:
+            """Reset scanning controller."""
             self.instMsg = cMsgPy.DeviceCmdMsg_C()
             self.instMsg.write(messaging.DeviceCmdMsgPayload())
             self.fsw.dynamics.instrument.nodeStatusInMsg.subscribeTo(self.instMsg)
@@ -715,7 +744,7 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
 
     @action
     def action_nadir_scan(self) -> None:
-        """Action scan nadir.
+        """Scan nadir.
 
         Args:
             location: PCPF target location [m]
@@ -732,19 +761,22 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
 
     @action
     def action_image(self, *args, **kwargs) -> None:
+        """Disable imaging from parent class."""
         raise NotImplementedError("Use action_nadir_scan instead")
 
 
 class SteeringFSWModel(BasicFSWModel):
-    """FSW extending MRP control to use MRP steering instesd of MRP feedback."""
+    """FSW extending MRP control to use MRP steering instead of MRP feedback."""
 
     class MRPControlTask(Task):
+        """Task that uses MRP steering to control reaction wheels."""
+
         name = "mrpControlTask"
 
-        def __init__(self, fsw, priority=80) -> None:
+        def __init__(self, fsw, priority=80) -> None:  # noqa: D107
             super().__init__(fsw, priority)
 
-        def create_module_data(self) -> None:
+        def _create_module_data(self) -> None:
             # Attitude controller configuration
             self.mrpSteeringControl = (
                 self.fsw.mrpSteeringControl
@@ -761,7 +793,7 @@ class SteeringFSWModel(BasicFSWModel):
             self.rwMotorTorque = self.fsw.rwMotorTorque = rwMotorTorque.rwMotorTorque()
             self.rwMotorTorque.ModelTag = "rwMotorTorque"
 
-        def init_objects(self, **kwargs) -> None:
+        def _init_objects(self, **kwargs) -> None:
             self._set_mrp_steering_rwa(**kwargs)
             self._set_rw_motor_torque(**kwargs)
 
@@ -775,7 +807,7 @@ class SteeringFSWModel(BasicFSWModel):
             servo_P: float,
             **kwargs,
         ) -> None:
-            """Defines the control properties.
+            """Define the control properties.
 
             Args:
                 K1: MRP steering gain
@@ -783,6 +815,7 @@ class SteeringFSWModel(BasicFSWModel):
                 omega_max: Maximum targetable spacecraft body rate [rad/s]
                 servo_Ki: Servo gain
                 servo_P: Servo gain
+                kwargs: Ignored
             """
             self.mrpSteeringControl.guidInMsg.subscribeTo(self.fsw.attGuidMsg)
             self.mrpSteeringControl.K1 = K1
@@ -810,10 +843,11 @@ class SteeringFSWModel(BasicFSWModel):
         def _set_rw_motor_torque(
             self, controlAxes_B: Iterable[float], **kwargs
         ) -> None:
-            """Defines the motor torque from the control law.
+            """Define the motor torque from the control law.
 
             Args:
                 controlAxes_B: Control unit axes
+                kwargs: Ignored
             """
             self.rwMotorTorque.rwParamsInMsg.subscribeTo(self.fsw.fswRwConfigMsg)
             self.rwMotorTorque.vehControlInMsg.subscribeTo(self.servo.cmdTorqueOutMsg)
@@ -822,9 +856,11 @@ class SteeringFSWModel(BasicFSWModel):
             self._add_model_to_task(self.rwMotorTorque, priority=1194)
 
         def reset_for_action(self) -> None:
-            # MRP control enabled by default
+            """Keep MRP control enabled on action calls."""
             self.fsw.simulator.enableTask(self.name + self.fsw.satellite.id)
 
 
 class SteeringImagerFSWModel(SteeringFSWModel, ImagingFSWModel):
+    """Convenience type for ImagingFSWModel with MRP steering."""
+
     pass

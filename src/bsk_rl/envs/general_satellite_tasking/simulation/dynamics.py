@@ -1,3 +1,6 @@
+"""Basilisk dynamics models."""
+
+
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Iterable, Optional
 
@@ -43,9 +46,15 @@ from bsk_rl.utilities.initial_conditions import leo_orbit, sc_attitudes
 
 
 class DynamicsModel(ABC):
+    """Abstract Basilisk dynamics model.
+
+    One DynamicsModel is instantiated for each satellite in the environment each time a
+    new simulator is created.
+    """
+
     @classmethod
     @property
-    def requires_env(cls) -> list[type["EnvironmentModel"]]:
+    def _requires_env(cls) -> list[type["EnvironmentModel"]]:
         """Define minimum EnvironmentModels for compatibility."""
         return []
 
@@ -56,17 +65,18 @@ class DynamicsModel(ABC):
         priority: int = 200,
         **kwargs,
     ) -> None:
-        """Base DynamicsModel
+        """Construct a base dynamics model.
 
         Args:
             satellite: Satellite modelled by this model
             dyn_rate: Rate of dynamics simulation [s]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.satellite = satellite
         self.logger = self.satellite.logger.getChild(self.__class__.__name__)
 
-        for required in self.requires_env:
+        for required in self._requires_env:
             if not issubclass(type(self.simulator.environment), required):
                 raise TypeError(
                     f"{self.simulator.environment} must be a subclass of {required} to "
@@ -87,15 +97,17 @@ class DynamicsModel(ABC):
 
     @property
     def simulator(self) -> "Simulator":
+        """Reference to the episode simulator."""
         return self.satellite.simulator
 
     @property
     def environment(self) -> "EnvironmentModel":
+        """Reference to the episode environment model."""
         return self.simulator.environment
 
     @abstractmethod  # pragma: no cover
     def _init_dynamics_objects(self, **kwargs) -> None:
-        """Caller for all dynamics object initialization"""
+        """Caller for all dynamics object initialization."""
         pass
 
     def is_alive(self, log_failure=False) -> bool:
@@ -107,52 +119,60 @@ class DynamicsModel(ABC):
         return check_aliveness_checkers(self, log_failure=log_failure)
 
     def reset_for_action(self) -> None:
-        """Called whenever a FSW @action is called"""
+        """Reset whenever a FSW @action is called."""
         pass
 
     def __del__(self):
+        """Log when dynamics are deleted."""
         self.logger.debug("Basilisk dynamics deleted")
 
 
 class BasicDynamicsModel(DynamicsModel):
-    """Minimal set of Basilisk dynamics objects"""
+    """Basic Dynamics model with minimum necessary Basilisk components."""
 
     @classmethod
     @property
-    def requires_env(cls) -> list[type["EnvironmentModel"]]:
+    def _requires_env(cls) -> list[type["EnvironmentModel"]]:
         return [environment.BasicEnvironmentModel]
 
     @property
     def sigma_BN(self):
+        """Body attitude MRP relative to inertial frame."""
         return self.scObject.scStateOutMsg.read().sigma_BN
 
     @property
     def BN(self):
+        """Body relative to inertial frame rotation matrix."""
         return RigidBodyKinematics.MRP2C(self.sigma_BN)
 
     @property
     def omega_BN_B(self):
+        """Body rate relative to inertial frame in body frame [rad/s]."""
         return self.scObject.scStateOutMsg.read().omega_BN_B
 
     @property
     def BP(self):
+        """Body relative to planet freame rotation matrix."""
         return np.matmul(self.BN, self.environment.PN.T)
 
     @property
     def r_BN_N(self):
+        """Body position relative to inertial origin in inertial frame [m]."""
         return self.scObject.scStateOutMsg.read().r_BN_N
 
     @property
     def r_BN_P(self):
+        """Body position relative to inertial origin in planet frame [m]."""
         return np.matmul(self.environment.PN, self.r_BN_N)
 
     @property
     def v_BN_N(self):
+        """Body velocity relative to inertial origin in inertial frame [m/s]."""
         return self.scObject.scStateOutMsg.read().v_BN_N
 
     @property
     def v_BN_P(self):
-        """P-frame derivative of r_BN"""
+        """P-frame derivative of r_BN."""
         omega_NP_P = np.matmul(self.environment.PN, -self.environment.omega_PN_N)
         return np.matmul(self.environment.PN, self.v_BN_N) + np.cross(
             omega_NP_P, self.r_BN_P
@@ -160,24 +180,29 @@ class BasicDynamicsModel(DynamicsModel):
 
     @property
     def omega_BP_P(self):
+        """Body angular velocity relative to planet frame in plant frame [rad/s]."""
         omega_BN_N = np.matmul(self.BN.T, self.omega_BN_B)
         omega_BP_N = omega_BN_N - self.environment.omega_PN_N
         return np.matmul(self.environment.PN, omega_BP_N)
 
     @property
     def battery_charge(self):
+        """Battery charge [W*s]."""
         return self.powerMonitor.batPowerOutMsg.read().storageLevel
 
     @property
     def battery_charge_fraction(self):
+        """Battery charge as a fraction of capacity."""
         return self.battery_charge / self.powerMonitor.storageCapacity
 
     @property
     def wheel_speeds(self):
+        """Wheel speeds [rad/s]."""
         return np.array(self.rwStateEffector.rwSpeedOutMsg.read().wheelSpeeds)
 
     @property
     def wheel_speeds_fraction(self):
+        """Wheel speeds normalized by maximum."""
         return self.wheel_speeds / (self.maxWheelSpeed * macros.rpm2radsec)
 
     def _init_dynamics_objects(self, **kwargs) -> None:
@@ -219,7 +244,7 @@ class BasicDynamicsModel(DynamicsModel):
         priority: int = 2000,
         **kwargs,
     ) -> None:
-        """Defines the spacecraft object properties.
+        """Set the spacecraft object properties.
 
         Args:
             mass: Hub mass [kg]
@@ -233,6 +258,7 @@ class BasicDynamicsModel(DynamicsModel):
             oe: (a, e, i, AN, AP, f); alternative to rN, vN [km, rad]
             mu: Gravitational parameter (used only with oe)
             priority: Model priority.
+            kwargs: Ignored
         """
         if rN is not None and vN is not None and oe is None:
             pass
@@ -280,6 +306,7 @@ class BasicDynamicsModel(DynamicsModel):
 
         Args:
             disturbance_vector: Constant disturbance torque [N*m].
+            kwargs: Ignored
         """
         if disturbance_vector is None:
             disturbance_vector = np.array([0, 0, 0])
@@ -309,6 +336,7 @@ class BasicDynamicsModel(DynamicsModel):
             height: Hub height [m]
             panelArea: Solar panel surface area [m**2]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.dragEffector = facetDragDynamicEffector.FacetDragDynamicEffector()
         self.dragEffector.ModelTag = "FacetDrag"
@@ -342,10 +370,11 @@ class BasicDynamicsModel(DynamicsModel):
         )
 
     def _set_simple_nav_object(self, priority: int = 1400, **kwargs) -> None:
-        """Defines the navigation module.
+        """Make the navigation module.
 
         Args:
             priority: Model priority.
+            kwargs: Ignored
         """
         self.simpleNavObject = simpleNav.SimpleNav()
         self.simpleNavObject.ModelTag = "SimpleNav"
@@ -356,8 +385,10 @@ class BasicDynamicsModel(DynamicsModel):
 
     @aliveness_checker
     def altitude_valid(self) -> bool:
-        """Check for deorbit by checking if altitude is greater than 200km above Earth's
-        surface."""
+        """Check that satellite has not deorbited.
+
+        Checks if altitude is greater than 200km above Earth's surface.
+        """
         return np.linalg.norm(self.r_BN_N) > (orbitalMotion.REQ_EARTH + 200) * 1e3
 
     @default_args(
@@ -373,12 +404,14 @@ class BasicDynamicsModel(DynamicsModel):
         priority: int = 997,
         **kwargs,
     ) -> None:
-        """Defines the RW state effector.
+        """Set the RW state effector parameters.
 
         Args:
             wheelSpeeds: Initial speeds of each wheel [RPM]
             maxWheelSpeed: Failure speed for wheels [RPM]
+            u_max: Torque producible by wheel [N*m]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.maxWheelSpeed = maxWheelSpeed
         self.rwStateEffector, self.rwFactory, _ = aP.balancedHR16Triad(
@@ -404,7 +437,7 @@ class BasicDynamicsModel(DynamicsModel):
         return valid
 
     def _set_thruster_dyn_effector(self, priority: int = 996) -> None:
-        """Defines the thruster state effector.
+        """Make the thruster state effector.
 
         Args:
             priority: Model priority.
@@ -420,13 +453,13 @@ class BasicDynamicsModel(DynamicsModel):
     def _set_thruster_power(
         self, thrusterPowerDraw, priority: int = 899, **kwargs
     ) -> None:
-        """Defines the thruster power draw.
+        """Set the thruster power draw.
 
         Args:
             thrusterPowerDraw: Constant power draw desat mode is active. [W]
             priority: Model priority.
+            kwargs: Ignored
         """
-
         self.thrusterPowerSink = simplePowerSink.SimplePowerSink()
         self.thrusterPowerSink.ModelTag = "thrustPowerSink" + self.satellite.id
         self.thrusterPowerSink.nodePowerOut = thrusterPowerDraw  # Watts
@@ -436,7 +469,7 @@ class BasicDynamicsModel(DynamicsModel):
         self.powerMonitor.addPowerNodeToModel(self.thrusterPowerSink.nodePowerOutMsg)
 
     def _set_eclipse_object(self) -> None:
-        """Adds the spacecraft to the eclipse module"""
+        """Add the spacecraft to the eclipse module."""
         self.environment.eclipseObject.addSpacecraftToModel(self.scObject.scStateOutMsg)
         self.eclipse_index = len(self.environment.eclipseObject.eclipseOutMsgs) - 1
 
@@ -453,7 +486,7 @@ class BasicDynamicsModel(DynamicsModel):
         priority: int = 898,
         **kwargs,
     ) -> None:
-        """Sets the solar panel for power generation.
+        """Set the solar panel parameters for power generation.
 
         Args:
             panelArea: Solar panel surface area [m**2]
@@ -461,6 +494,7 @@ class BasicDynamicsModel(DynamicsModel):
                 conversion
             nHat_B: Body-fixed array normal vector
             priority: Model priority.
+            kwargs: Ignored
         """
         self.solarPanel = simpleSolarPanel.SimpleSolarPanel()
         self.solarPanel.ModelTag = "solarPanel" + self.satellite.id
@@ -493,12 +527,13 @@ class BasicDynamicsModel(DynamicsModel):
         priority: int = 799,
         **kwargs,
     ) -> None:
-        """Sets the battery model.
+        """Set the battery model parameters.
 
         Args:
             batteryStorageCapacity: Maximum battery charge [W*s]
             storedCharge_Init: Initial battery charge [W*s]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.powerMonitor = simpleBattery.SimpleBattery()
         self.powerMonitor.ModelTag = "powerMonitor"
@@ -525,7 +560,7 @@ class BasicDynamicsModel(DynamicsModel):
         priority: int = 987,
         **kwargs,
     ) -> None:
-        """Defines the reaction wheel power draw.
+        """Set the reaction wheel power draw.
 
         Args:
             rwBasePower: Constant power draw when operational [W]
@@ -534,6 +569,7 @@ class BasicDynamicsModel(DynamicsModel):
             rwElecToMechEfficiency: Efficiency factor to convert electrical power to
                 mechanical power
             priority: Model priority.
+            kwargs: Ignored
         """
         self.rwPowerList = []
         for i_device in range(self.rwFactory.getNumOfDevices()):
@@ -551,7 +587,7 @@ class BasicDynamicsModel(DynamicsModel):
 
 
 class LOSCommDynModel(BasicDynamicsModel):
-    """For evaluating line-of-sight connections between satellites for communication"""
+    """For evaluating line-of-sight connections between satellites for communication."""
 
     def _init_dynamics_objects(self, **kwargs) -> None:
         super()._init_dynamics_objects(**kwargs)
@@ -562,6 +598,7 @@ class LOSCommDynModel(BasicDynamicsModel):
 
         Args:
             priority: Model priority.
+            kwargs: Ignored
         """
         self.losComms = spacecraftLocation.SpacecraftLocation()
         self.losComms.ModelTag = "losComms"
@@ -599,10 +636,12 @@ class ImagingDynModel(BasicDynamicsModel):
 
     @property
     def storage_level(self):
+        """Storage level [bits]."""
         return self.storageUnit.storageUnitDataOutMsg.read().storageLevel
 
     @property
     def storage_level_fraction(self):
+        """Storage level as a fraction of capacity."""
         return self.storage_level / self.storageUnit.storageCapacity
 
     def _init_dynamics_objects(self, **kwargs) -> None:
@@ -623,6 +662,7 @@ class ImagingDynModel(BasicDynamicsModel):
         Args:
             instrumentBaudRate: Data generated in a single step by an image [bits]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.instrument = simpleInstrument.SimpleInstrument()
         self.instrument.ModelTag = "instrument" + self.satellite.id
@@ -650,6 +690,7 @@ class ImagingDynModel(BasicDynamicsModel):
             instrumentBaudRate: Image size, used to set packet size [bits]
             transmitterNumBuffers: Number of transmitter buffers
             priority: Model priority.
+            kwargs: Ignored
         """
         if transmitterBaudRate > 0:
             self.logger.warning(
@@ -663,18 +704,19 @@ class ImagingDynModel(BasicDynamicsModel):
         self.transmitter.packetSize = -instrumentBaudRate  # bits
         self.transmitter.numBuffers = transmitterNumBuffers
         self.simulator.AddModelToTask(
-            self.task_name, self.transmitter, ModelPriority=798
+            self.task_name, self.transmitter, ModelPriority=priority
         )
 
     @default_args(instrumentPowerDraw=-30.0)
     def _set_instrument_power_sink(
         self, instrumentPowerDraw: float, priority: int = 897, **kwargs
     ) -> None:
-        """Defines the instrument power sink parameters.
+        """Set the instrument power sink parameters.
 
         Args:
             instrumentPowerDraw: Power draw when instrument is enabled [W]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.instrumentPowerSink = simplePowerSink.SimplePowerSink()
         self.instrumentPowerSink.ModelTag = "insPowerSink" + self.satellite.id
@@ -688,11 +730,12 @@ class ImagingDynModel(BasicDynamicsModel):
     def _set_transmitter_power_sink(
         self, transmitterPowerDraw: float, priority: int = 896, **kwargs
     ) -> None:
-        """Defines the transmitter power sink parameters.
+        """Set the transmitter power sink parameters.
 
         Args:
             transmitterPowerDraw: Power draw when transmitter is enabled [W]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.transmitterPowerSink = simplePowerSink.SimplePowerSink()
         self.transmitterPowerSink.ModelTag = "transPowerSink" + self.satellite.id
@@ -724,6 +767,7 @@ class ImagingDynModel(BasicDynamicsModel):
             priority: Model priority.
             storageUnitValidCheck: If True, check that the storage level is below the
                 storage capacity.
+            kwargs: Ignored
         """
         self.storageUnit = partitionedStorageUnit.PartitionedStorageUnit()
         self.storageUnit.ModelTag = "storageUnit" + self.satellite.id
@@ -778,8 +822,9 @@ class ImagingDynModel(BasicDynamicsModel):
         priority: int = 2000,
         **kwargs,
     ) -> None:
-        """Add a generic imaging target to dynamics. The target must be updated with a
-        particular location when used.
+        """Add a generic imaging target to dynamics.
+
+        The target must be updated with a particular location when used.
 
         Args:
             groundLocationPlanetRadius: Radius of ground locations from center of planet
@@ -789,6 +834,7 @@ class ImagingDynModel(BasicDynamicsModel):
             imageTargetMaximumRange: Maximum range from target to satellite when
                 imaging. -1 to disable. [m]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.imagingTarget = groundLocation.GroundLocation()
         self.imagingTarget.ModelTag = "ImagingTarget"
@@ -818,8 +864,11 @@ class ImagingDynModel(BasicDynamicsModel):
 
 
 class ContinuousImagingDynModel(ImagingDynModel):
-    """Equips the satellite with an instrument, storage unit, and transmitter
-    for continuous nadir imaging."""
+    """Equips the satellite for continuous nadir imaging.
+
+    Equips satellite with an instrument, storage unit, and transmitter
+    for continuous nadir imaging.
+    """
 
     @default_args(instrumentBaudRate=8e6)
     def _set_instrument(
@@ -830,6 +879,7 @@ class ContinuousImagingDynModel(ImagingDynModel):
         Args:
             instrumentBaudRate: Data generated in step by continuous imaging [bits]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.instrument = simpleInstrument.SimpleInstrument()
         self.instrument.ModelTag = "instrument" + self.satellite.id
@@ -857,7 +907,8 @@ class ContinuousImagingDynModel(ImagingDynModel):
             priority: Model priority.
             storageUnitValidCheck: If True, check that the storage level is below the
                 storage capacity.
-            setStorageInit: Initial storage level [bits]
+            storageInit: Initial storage level [bits]
+            kwargs: Ignored
         """
         self.storageUnit = simpleStorageUnit.SimpleStorageUnit()
         self.storageUnit.ModelTag = "storageUnit" + self.satellite.id
@@ -885,13 +936,15 @@ class ContinuousImagingDynModel(ImagingDynModel):
         priority: int = 2000,
         **kwargs,
     ) -> None:
-        """Add a generic imaging target to dynamics. The target must be updated with a
-        particular location when used.
+        """Add a generic imaging target to dynamics.
+
+        The target must be updated with a particular location when used.
 
         Args:
             imageTargetMaximumRange: Maximum range from target to satellite when
                 imaging. -1 to disable. [m]
             priority: Model priority.
+            kwargs: Ignored
         """
         self.imagingTarget = groundLocation.GroundLocation()
         self.imagingTarget.ModelTag = "scanningTarget"
@@ -914,12 +967,12 @@ class ContinuousImagingDynModel(ImagingDynModel):
 
 
 class GroundStationDynModel(ImagingDynModel):
-    """Model that connects satellite to environment ground stations"""
+    """Model that connects satellite to environment ground stations."""
 
     @classmethod
     @property
-    def requires_env(cls) -> list[type["EnvironmentModel"]]:
-        return super().requires_env + [environment.GroundStationEnvModel]
+    def _requires_env(cls) -> list[type["EnvironmentModel"]]:
+        return super()._requires_env + [environment.GroundStationEnvModel]
 
     def _init_dynamics_objects(self, **kwargs) -> None:
         super()._init_dynamics_objects(**kwargs)
@@ -933,4 +986,6 @@ class GroundStationDynModel(ImagingDynModel):
 
 
 class FullFeaturedDynModel(GroundStationDynModel, LOSCommDynModel):
+    """Convenience class for a satellite with ground station and line-of-sight comms."""
+
     pass

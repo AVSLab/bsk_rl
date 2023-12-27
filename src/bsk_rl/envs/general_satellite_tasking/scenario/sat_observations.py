@@ -1,3 +1,5 @@
+"""Satellite observation types can be used to add information to the observation."""
+
 from copy import deepcopy
 from typing import Any, Callable, Optional, Union
 
@@ -18,11 +20,15 @@ from bsk_rl.envs.general_satellite_tasking.utils.functional import (
 
 @configurable
 class SatObservation(Satellite):
+    """Base satellite subclass for composing observations."""
+
     def __init__(self, *args, obs_type: type = np.ndarray, **kwargs) -> None:
         """Satellite subclass for composing observations.
 
         Args:
             obs_type: Datatype of satellite's returned observation
+            args: Passed through to satellite
+            kwargs: Passed through to satellite
         """
         super().__init__(*args, **kwargs)
         self.obs_type = obs_type
@@ -32,8 +38,10 @@ class SatObservation(Satellite):
 
     @property
     def obs_dict(self):
-        """Human-readable observation format. Cached so only computed once per
-        timestep."""
+        """Human-readable observation format.
+
+        Cached so only computed once per timestep.
+        """
         if (
             self.obs_dict_cache is None
             or self.simulator.sim_time != self.obs_cache_time
@@ -44,16 +52,16 @@ class SatObservation(Satellite):
 
     @property
     def obs_ndarray(self):
-        """Numpy vector observation format"""
+        """Numpy vector observation format."""
         return vectorize_nested_dict(self.obs_dict)
 
     @property
     def obs_list(self):
-        """List observation format"""
+        """List observation format."""
         return list(self.obs_ndarray)
 
     def get_obs(self) -> Union[dict, np.ndarray, list]:
-        """Update the observation"""
+        """Update the observation."""
         if self.obs_type is dict:
             return self.obs_dict
         elif self.obs_type is np.ndarray:
@@ -64,7 +72,7 @@ class SatObservation(Satellite):
             raise ValueError(f"Invalid observation type: {self.obs_type}")
 
     def add_to_observation(self, obs_element: Callable) -> None:
-        """Add a function to be called when constructing observations
+        """Add a function to be called when constructing observations.
 
         Args:
             obs_element: Callable to be observed
@@ -74,6 +82,8 @@ class SatObservation(Satellite):
 
 @configurable
 class NormdPropertyState(SatObservation):
+    """Satellite subclass to add satellites properties to the observation."""
+
     def __init__(
         self, *args, obs_properties: list[dict[str, Any]] = [], **kwargs
     ) -> None:
@@ -86,8 +96,9 @@ class NormdPropertyState(SatObservation):
                     [dict(prop="prop_name", module="fsw"/"dynamics"/None, norm=1.0)]
                 If module is not specified or None, the source of the property is
                 inferred. If norm is not specified, it is set to 1.0 (no normalization).
+            args: Passed through to satellite
+            kwargs: Passed through to satellite
         """
-
         super().__init__(*args, **kwargs)
 
         for obs_prop in obs_properties:
@@ -102,9 +113,6 @@ class NormdPropertyState(SatObservation):
             prop: Property to query
             module: Module (dynamics or fsw) that holds the property. Can be inferred.
             norm: Value to normalize property by. Defaults to 1.0.
-
-        Returns:
-            _type_: _description_
         """
         if module is not None:
 
@@ -129,32 +137,39 @@ class NormdPropertyState(SatObservation):
 
 @configurable
 class TimeState(SatObservation):
+    """Satellite subclass to add simulation time to the observation."""
+
     def __init__(self, *args, normalization_time: Optional[float] = None, **kwargs):
-        """Adds the sim time to the observation state. Automatically normalizes to the
-        sim duration.
+        """Add the sim time to the observation state.
+
+        Automatically normalizes to the sim duration.
 
         Args:
             normalization_time: Time to normalize by. If None, is set to simulation
                 duration
+            args: Passed through to satellite
+            kwargs: Passed through to satellite
         """
-
         super().__init__(*args, **kwargs)
         self.normalization_time = normalization_time
         self.add_to_observation(self.normalized_time)
 
     def reset_post_sim(self):
-        """Autodetect normalization time"""
+        """Autodetect normalization time."""
         super().reset_post_sim()
         if self.normalization_time is None:
             self.normalization_time = self.simulator.time_limit
 
     def normalized_time(self):
+        """Return time normalized by normalization_time."""
         assert self.normalization_time is not None
         return self.simulator.sim_time / self.normalization_time
 
 
 @configurable
 class TargetState(SatObservation, ImagingSatellite):
+    """Satellite subclass to add upcoming target information to the observation."""
+
     def __init__(
         self,
         *args,
@@ -162,7 +177,7 @@ class TargetState(SatObservation, ImagingSatellite):
         target_properties: Optional[list[dict[str, Any]]] = None,
         **kwargs,
     ):
-        """Adds information about upcoming targets to the observation state.
+        """Add information about upcoming targets to the observation state.
 
         Args:
             n_ahead_observe: Number of upcoming targets to consider.
@@ -174,6 +189,8 @@ class TargetState(SatObservation, ImagingSatellite):
                     - window_open
                     - window_mid
                     - window_close
+            args: Passed through to satellite
+            kwargs: Passed through to satellite
         """
         super().__init__(*args, n_ahead_observe=n_ahead_observe, **kwargs)
         if target_properties is None:
@@ -189,7 +206,9 @@ class TargetState(SatObservation, ImagingSatellite):
         self.target_obs_generator(target_properties)
 
     def target_obs_generator(self, target_properties):
-        """Generate the target_obs function from the target_properties spec and add it
+        """Generate the target_obs function.
+
+        Generates the observation function from the target_properties spec and add it
         to the observation.
         """
 
@@ -231,18 +250,22 @@ class TargetState(SatObservation, ImagingSatellite):
 
 @configurable
 class EclipseState(SatObservation):
+    """Satellite subclass to add upcoming eclipse information to the observation."""
+
     def __init__(self, *args, orbit_period=5700, **kwargs):
-        """Adds a tuple of the orbit-normalized next orbit start and end.
+        """Add a tuple of the orbit-normalized next orbit start and end.
 
         Args:
             orbit_period: Normalization factor for eclipse time.
+            args: Passed through to satellite
+            kwargs: Passed through to satellite
         """
-
         super().__init__(*args, **kwargs)
         self.orbit_period_eclipse_norm = orbit_period
         self.add_to_observation(self.eclipse_state)
 
     def eclipse_state(self):
+        """Return tuple of normalized next eclipse start and end."""
         eclipse_start, eclipse_end = self.trajectory.next_eclipse(
             self.simulator.sim_time
         )
@@ -254,6 +277,8 @@ class EclipseState(SatObservation):
 
 @configurable
 class GroundStationState(SatObservation, AccessSatellite):
+    """Satellite subclass to add ground station information to the observation."""
+
     def __init__(
         self,
         *args,
@@ -261,18 +286,21 @@ class GroundStationState(SatObservation, AccessSatellite):
         downlink_window_properties: Optional[list[dict[str, Any]]] = None,
         **kwargs,
     ):
-        """Adds information about upcoming downlink opportunities to the observation
-        state.
+        """Add information about downlink opportunities to the observation state.
 
         Args:
-            n_ahead_observe: Number of upcoming downlink opportunities to consider.
-            target_properties: List of properties to include in the observation in the
-                format [dict(prop="prop_name", norm=norm)]. If norm is not specified, it
-                is set to 1.0 (no normalization). Properties to choose from:
+            n_ahead_observe_downlinks: Number of upcoming downlink opportunities to
+                consider.
+            downlink_window_properties: List of properties to include in the observation
+                in the format [dict(prop="prop_name", norm=norm)]. If norm is not
+                specified, it is set to 1.0 (no normalization). Properties to choose
+                from:
                     - location
                     - window_open
                     - window_mid
                     - window_close
+            args: Passed through to satellite
+            kwargs: Passed through to satellite
         """
         super().__init__(*args, **kwargs)
         if downlink_window_properties is None:
@@ -285,7 +313,7 @@ class GroundStationState(SatObservation, AccessSatellite):
         )
 
     def reset_post_sim(self) -> None:
-        """Add downlink ground stations to be considered by the access checker"""
+        """Add downlink ground stations to be considered by the access checker."""
         for ground_station in self.simulator.environment.groundStations:
             self.add_location_for_access_checking(
                 object=ground_station.ModelTag,
@@ -299,9 +327,11 @@ class GroundStationState(SatObservation, AccessSatellite):
         self,
         downlink_window_properties: list[dict[str, Any]],
         n_ahead_observe_downlinks: int,
-    ):
-        """Generate the ground_station_obs function from the downlink_window_properties
-        spec and add it to the observation.
+    ) -> None:
+        """Generate the ground_station_obs function.
+
+        Generates an obs function from the downlink_window_properties spec and adds it
+        to the observation.
         """
 
         def ground_station_obs(self):
