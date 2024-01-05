@@ -15,6 +15,8 @@ BSK-RL: Environments and Algorithms for Spacecraft Planning and Scheduling
 .. note::
 
     BSK-RL and its documentation are under active development. Please continue to check back for updates. 
+
+.. note::
     
     New environments should be built using the :ref:`general satellite tasking framework <bsk_rl.envs.general_satellite_tasking>`; legacy environments are in the process of being ported to this framework.
 
