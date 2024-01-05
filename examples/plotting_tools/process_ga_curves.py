@@ -5,8 +5,6 @@ from pathlib import Path
 from deap import base, creator
 from matplotlib import pyplot as plt
 
-plt.style.use("seaborn-colorblind")
-
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMax)
 

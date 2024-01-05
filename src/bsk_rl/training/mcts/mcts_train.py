@@ -19,9 +19,6 @@ from bsk_rl.utilities.mcts.rollout_policies import (
     SmallBodyRolloutPolicy,
 )
 
-plt.style.use("tableau-colorblind10")
-plt.style.use("seaborn-colorblind")
-
 
 def mcts_batch(
     data_directory,

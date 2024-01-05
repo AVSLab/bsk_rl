@@ -8,7 +8,6 @@ from matplotlib import pyplot as plt
 
 SEP = os.path.sep
 
-plt.style.use("seaborn-colorblind")
 matplotlib.rcParams["lines.linewidth"] = 2
 
 
