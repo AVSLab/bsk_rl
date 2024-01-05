@@ -6,6 +6,14 @@ from packaging.version import parse as parse_version
 
 
 def _check_bsk_version():
+    # Don't run check if Basilisk is mocked
+    try:
+        if os.environ["PYTHON_MOCK_BASILISK"] == "1":
+            return
+    except KeyError:
+        pass
+
+    # Otherwise, check Basilisk version against requirement
     f = open(
         os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
