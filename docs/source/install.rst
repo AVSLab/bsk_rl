@@ -45,6 +45,4 @@ Instructions
 Common Issues
 -------------
 
-.. note::
-
-    See `#51 <https://github.com/AVSLab/bsk_rl/issues/51>`_ for issues with `chebpy` installation on Silicon Macs during or after ``finish_install``.
+Please report new installation issues on GitHub.
