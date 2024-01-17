@@ -1,4 +1,5 @@
 import io
+import os
 import subprocess
 import sys
 import zipfile
@@ -10,15 +11,27 @@ from bsk_rl.check_bsk_version import check_bsk_version
 
 
 def pck_install():
-    subprocess.check_call(
-        [
-            sys.executable,
-            "-m",
-            "pip",
-            "install",
-            "git+https://github.com/chebpy/chebpy.git",
-        ]
-    )
+    if os.uname().sysname == "Darwin" and os.uname().machine == "arm64":
+        subprocess.check_call(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "--no-deps",
+                "git+https://github.com/chebpy/chebpy.git",
+            ]
+        )
+    else:
+        subprocess.check_call(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "git+https://github.com/chebpy/chebpy.git",
+            ]
+        )
 
     r = requests.get(
         "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.76.zip"
