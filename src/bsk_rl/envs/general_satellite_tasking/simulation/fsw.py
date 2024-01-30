@@ -352,18 +352,18 @@ class BasicFSWModel(FSWModel):
         def _create_module_data(self) -> None:
             """Set up momentum dumping and thruster control."""
             # Momentum dumping configuration
-            self.thrDesatControl = (
-                self.fsw.thrDesatControl
-            ) = thrMomentumManagement.thrMomentumManagement()
+            self.thrDesatControl = self.fsw.thrDesatControl = (
+                thrMomentumManagement.thrMomentumManagement()
+            )
             self.thrDesatControl.ModelTag = "thrMomentumManagement"
 
             self.thrDump = self.fsw.thrDump = thrMomentumDumping.thrMomentumDumping()
             self.thrDump.ModelTag = "thrDump"
 
             # Thruster force mapping configuration
-            self.thrForceMapping = (
-                self.fsw.thrForceMapping
-            ) = thrForceMapping.thrForceMapping()
+            self.thrForceMapping = self.fsw.thrForceMapping = (
+                thrForceMapping.thrForceMapping()
+            )
             self.thrForceMapping.ModelTag = "thrForceMapping"
 
         def _init_objects(self, **kwargs) -> None:
@@ -472,9 +472,9 @@ class BasicFSWModel(FSWModel):
             super().__init__(fsw, priority)
 
         def _create_module_data(self) -> None:
-            self.trackingError = (
-                self.fsw.trackingError
-            ) = attTrackingError.attTrackingError()
+            self.trackingError = self.fsw.trackingError = (
+                attTrackingError.attTrackingError()
+            )
             self.trackingError.ModelTag = "trackingError"
 
         def _init_objects(self, **kwargs) -> None:
@@ -498,9 +498,9 @@ class BasicFSWModel(FSWModel):
 
         def _create_module_data(self) -> None:
             # Attitude controller configuration
-            self.mrpFeedbackControl = (
-                self.fsw.mrpFeedbackControl
-            ) = mrpFeedback.mrpFeedback()
+            self.mrpFeedbackControl = self.fsw.mrpFeedbackControl = (
+                mrpFeedback.mrpFeedback()
+            )
             self.mrpFeedbackControl.ModelTag = "mrpFeedbackControl"
 
             # add module that maps the Lr control torque into the RW motor torques
@@ -593,9 +593,9 @@ class ImagingFSWModel(BasicFSWModel):
             self.locPoint.ModelTag = "locPoint"
 
             # SimpleInstrumentController configuration
-            self.insControl = (
-                self.fsw.insControl
-            ) = simpleInstrumentController.simpleInstrumentController()
+            self.insControl = self.fsw.insControl = (
+                simpleInstrumentController.simpleInstrumentController()
+            )
             self.insControl.ModelTag = "instrumentController"
 
         def _init_objects(self, **kwargs) -> None:
@@ -703,9 +703,9 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
             self.locPoint.ModelTag = "locPoint"
 
             # scanningInstrumentController configuration
-            self.insControl = (
-                self.fsw.insControl
-            ) = scanningInstrumentController.scanningInstrumentController()
+            self.insControl = self.fsw.insControl = (
+                scanningInstrumentController.scanningInstrumentController()
+            )
             self.insControl.ModelTag = "instrumentController"
 
         @default_args(imageAttErrorRequirement=0.01, imageRateErrorRequirement=None)
@@ -778,15 +778,15 @@ class SteeringFSWModel(BasicFSWModel):
 
         def _create_module_data(self) -> None:
             # Attitude controller configuration
-            self.mrpSteeringControl = (
-                self.fsw.mrpSteeringControl
-            ) = mrpSteering.mrpSteering()
+            self.mrpSteeringControl = self.fsw.mrpSteeringControl = (
+                mrpSteering.mrpSteering()
+            )
             self.mrpSteeringControl.ModelTag = "mrpSteeringControl"
 
             # Rate servo
-            self.servo = (
-                self.fsw.servo
-            ) = rateServoFullNonlinear.rateServoFullNonlinear()
+            self.servo = self.fsw.servo = (
+                rateServoFullNonlinear.rateServoFullNonlinear()
+            )
             self.servo.ModelTag = "rateServo"
 
             # add module that maps the Lr control torque into the RW motor torques

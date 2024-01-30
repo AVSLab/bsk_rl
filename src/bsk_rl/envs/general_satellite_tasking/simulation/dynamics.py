@@ -1,6 +1,5 @@
 """Basilisk dynamics models."""
 
-
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Iterable, Optional
 

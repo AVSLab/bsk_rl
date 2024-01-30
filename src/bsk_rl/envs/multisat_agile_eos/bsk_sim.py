@@ -781,9 +781,9 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
                         int(self.current_tgt_indices[idx][int(action[idx]) - 3])
                     ]
                     if self.target_indexing == "local"
-                    else int(action[idx] - 3)
-                    if self.target_indexing == "global"
-                    else -1
+                    else (
+                        int(action[idx] - 3) if self.target_indexing == "global" else -1
+                    )
                 )
 
                 if self.renew_tasks or self.prev_target[idx] != global_tgt:
@@ -1343,13 +1343,15 @@ class MultiSatAgileEOSSimulator(SimulationBaseClass.SimBaseClass):
             connectivity = np.array(
                 [
                     [
-                        any(
-                            self.losLogs[sc_idx][comm_idx].hasAccess[
-                                -int(self.step_duration / self.dynRate) :
-                            ]
+                        (
+                            any(
+                                self.losLogs[sc_idx][comm_idx].hasAccess[
+                                    -int(self.step_duration / self.dynRate) :
+                                ]
+                            )
+                            if comm_idx != sc_idx
+                            else False
                         )
-                        if comm_idx != sc_idx
-                        else False
                         for comm_idx in range(self.n_spacecraft)
                     ]
                     for sc_idx in range(self.n_spacecraft)

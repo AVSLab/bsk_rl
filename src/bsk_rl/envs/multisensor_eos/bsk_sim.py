@@ -147,9 +147,9 @@ class MultiSensorEOSSimulator(SimulationBaseClass.SimBaseClass):
         self.central_body = 1
         body_name = self.initial_conditions.get("central_body")
         gravBodies = self.gravFactory.createBodies(["sun", body_name])
-        gravBodies[
-            body_name
-        ].isCentralBody = True  # ensure this is the central gravitational body
+        gravBodies[body_name].isCentralBody = (
+            True  # ensure this is the central gravitational body
+        )
 
         self.mu = gravBodies[body_name].mu
         self.radEquator = gravBodies[body_name].radEquator

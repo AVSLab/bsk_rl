@@ -91,9 +91,9 @@ class LOSCommunication(CommunicationMethod):
                         self.los_logs[sat_1] = {}
 
                     msg_index = sat_1.dynamics.los_comms_ids.index(sat_2.id)
-                    logger = self.los_logs[sat_1][
-                        sat_2
-                    ] = sat_1.dynamics.losComms.accessOutMsgs[msg_index].recorder()
+                    logger = self.los_logs[sat_1][sat_2] = (
+                        sat_1.dynamics.losComms.accessOutMsgs[msg_index].recorder()
+                    )
 
                     sat_1.simulator.AddModelToTask(
                         sat_1.dynamics.task_name, logger, ModelPriority=586
