@@ -757,10 +757,9 @@ class SimpleEOSSimulator(SimulationBaseClass.SimBaseClass):
             mc.RPM * 6000
         )
         # Stored charge
-        self.obs[
-            11, 0
-        ] = self.powerMonitor.storedCharge_Init / self.initial_conditions.get(
-            "batteryStorageCapacity"
+        self.obs[11, 0] = (
+            self.powerMonitor.storedCharge_Init
+            / self.initial_conditions.get("batteryStorageCapacity")
         )
 
         # Initialize the full observations

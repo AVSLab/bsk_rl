@@ -868,10 +868,9 @@ class AgileEOSSimulator(SimulationBaseClass.SimBaseClass):
             mc.RPM * self.initial_conditions["maxSpeed"]
         )
         # Stored charge
-        self.obs[
-            11, 0
-        ] = self.powerMonitor.storedCharge_Init / self.initial_conditions.get(
-            "batteryStorageCapacity"
+        self.obs[11, 0] = (
+            self.powerMonitor.storedCharge_Init
+            / self.initial_conditions.get("batteryStorageCapacity")
         )
 
         # Initialize the full observations

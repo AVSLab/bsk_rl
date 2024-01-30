@@ -1487,7 +1487,7 @@ class SmallBodyScienceSimulator(SimulationBaseClass.SimBaseClass):
         self.vizInterface = vizSupport.enableUnityVisualization(
             self,
             self.dynTaskName,
-            self.scObject
+            self.scObject,
             # , saveFile=fileName
         )
         self.vizInterface.settings.showSpacecraftLabels = 1
