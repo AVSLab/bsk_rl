@@ -9,6 +9,10 @@ from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import 
 
 @patch.multiple(sa.DiscreteSatAction, __abstractmethods__=set())
 @patch("bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.__init__")
+@patch(
+    "bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.reset_pre_sim",
+    MagicMock,
+)
 class TestDiscreteSatAction:
     def test_init(self, sat_init):
         sa.DiscreteSatAction()
@@ -51,6 +55,7 @@ class TestDiscreteSatAction:
     )
     def test_set_action(self, sat_init, disable_timed):
         sat = sa.DiscreteSatAction()
+        sat.reset_pre_sim()
         sat.action_list = [MagicMock(return_value="act_key")]
         sat.set_action(0)
         disable_timed.assert_called_once()
@@ -62,9 +67,19 @@ class TestDiscreteSatAction:
         sat.action_list = [0, 1, 2]
         assert sat.action_space == spaces.Discrete(3)
 
+    def test_reset_pre_sim(self, sat_init):
+        sat = sa.DiscreteSatAction()
+        sat.prev_action_key = "some_action"
+        sat.reset_pre_sim()
+        assert sat.prev_action_key is None
+
 
 @patch.multiple(sa.DiscreteSatAction, __abstractmethods__=set())
 @patch("bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.__init__")
+@patch(
+    "bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.reset_pre_sim",
+    MagicMock,
+)
 class TestFSWAction:
     def test_init(self, sat_init):
         FSWAct = sa.fsw_action_gen("cool_action")
@@ -75,6 +90,7 @@ class TestFSWAction:
     def make_action_sat(self):
         FSWAct = sa.fsw_action_gen("cool_action", 60.0)
         sat = FSWAct()
+        sat.reset_pre_sim()
         sat.fsw = MagicMock(cool_action=MagicMock())
         sat.log_info = MagicMock()
         sat._disable_timed_terminal_event = MagicMock()
@@ -93,6 +109,7 @@ class TestFSWAction:
     def make_action_sat_configured(self):
         FSWAct = sa.fsw_action_gen("cool_action", 59.0).configure(action_duration=60.0)
         sat = FSWAct()
+        sat.reset_pre_sim()
         sat.fsw = MagicMock(cool_action=MagicMock())
         sat.log_info = MagicMock()
         sat._disable_timed_terminal_event = MagicMock()
@@ -158,6 +175,7 @@ class TestImagingActions:
     @pytest.mark.parametrize("target", [1, "target_1", MockTarget()])
     def test_set_action(self, sat_init, discrete_set, target):
         sat = sa.ImagingActions()
+        sat.prev_action_key = None
         sat._disable_image_event = MagicMock()
         sat.image = MagicMock()
         sat.set_action(target)

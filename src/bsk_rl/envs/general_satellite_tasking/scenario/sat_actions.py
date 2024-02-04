@@ -32,7 +32,11 @@ class DiscreteSatAction(SatAction):
         super().__init__(*args, **kwargs)
         self.action_list = []
         self.action_map = {}
+
+    def reset_pre_sim(self) -> None:
+        """Reset the previous action key."""
         self.prev_action_key = None  # Used to avoid retasking of BSK tasks
+        return super().reset_pre_sim()
 
     def add_action(
         self, act_fn, act_name: Optional[str] = None, n_actions: Optional[int] = None
