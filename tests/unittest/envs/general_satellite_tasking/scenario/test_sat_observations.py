@@ -149,6 +149,7 @@ class TestTargetState:
                 dict(prop="window_open", norm=10.0),
                 dict(prop="window_mid"),
                 dict(prop="window_close"),
+                dict(prop="target_angle"),
             ],
         )
 
@@ -163,6 +164,17 @@ class TestTargetState:
             for target in sat.upcoming_targets()
         ]
         sat.simulator = MagicMock(sim_time=5.0)
+        sat.dynamics = MagicMock(r_BN_P=np.array([5.0, 5.0, 0.0]))
+        sat.fsw = MagicMock(c_hat_P=np.array([0.0, 1.0, 0.0]))
+
+        vector_target_sat = [
+            sat.upcoming_targets()[i].location - sat.dynamics.r_BN_P
+            for i in range(n_ahead)
+        ]
+        vector_target_sat_hat = [
+            vector_target_sat[i] / np.linalg.norm(vector_target_sat[i])
+            for i in range(n_ahead)
+        ]
 
         expected = dict(
             target_0=dict(
@@ -171,6 +183,9 @@ class TestTargetState:
                 window_open_normd=5.0 / 10.0,
                 window_mid=10.0,
                 window_close=15.0,
+                target_angle=np.arccos(
+                    np.dot(vector_target_sat_hat[0], sat.fsw.c_hat_P)
+                ),
             ),
             target_1=dict(
                 priority=1.0,
@@ -178,6 +193,9 @@ class TestTargetState:
                 window_open_normd=5.0 / 10.0,
                 window_mid=10.0,
                 window_close=15.0,
+                target_angle=np.arccos(
+                    np.dot(vector_target_sat_hat[1], sat.fsw.c_hat_P)
+                ),
             ),
         )
         for k1, v1 in sat.target_obs().items():
