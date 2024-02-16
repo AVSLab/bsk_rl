@@ -200,6 +200,7 @@ class TargetState(SatObservation, ImagingSatellite):
                 * window_open
                 * window_mid
                 * window_close
+                * target_angle
             args: Passed through to satellite
             kwargs: Passed through to satellite
         """
@@ -246,6 +247,17 @@ class TargetState(SatObservation, ImagingSatellite):
                         value = sum(opportunity["window"]) / 2 - self.simulator.sim_time
                     elif name == "window_close":
                         value = opportunity["window"][1] - self.simulator.sim_time
+                    elif name == "target_angle":
+                        vector_target_spacecraft_P = (
+                            opportunity["target"].location - self.dynamics.r_BN_P
+                        )
+                        vector_target_spacecraft_P_hat = (
+                            vector_target_spacecraft_P
+                            / np.linalg.norm(vector_target_spacecraft_P)
+                        )
+                        value = np.arccos(
+                            np.dot(vector_target_spacecraft_P_hat, self.fsw.c_hat_P)
+                        )
                     else:
                         raise ValueError(
                             f"Invalid target property: {prop_spec['prop']}"
