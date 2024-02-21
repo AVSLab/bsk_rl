@@ -745,7 +745,10 @@ class ImagingDynModel(BasicDynamicsModel):
         self.powerMonitor.addPowerNodeToModel(self.transmitterPowerSink.nodePowerOutMsg)
 
     @default_args(
-        dataStorageCapacity=20 * 8e6, bufferNames=None, storageUnitValidCheck=True
+        dataStorageCapacity=20 * 8e6,
+        bufferNames=None,
+        storageUnitValidCheck=True,
+        storageInit=0,
     )
     def _set_storage_unit(
         self,
@@ -754,6 +757,7 @@ class ImagingDynModel(BasicDynamicsModel):
         bufferNames: Optional[Iterable[str]] = None,
         priority: int = 699,
         storageUnitValidCheck: bool = True,
+        storageInit: int = 0,
         **kwargs,
     ) -> None:
         """Configure the storage unit and its buffers.
@@ -766,6 +770,7 @@ class ImagingDynModel(BasicDynamicsModel):
             priority: Model priority.
             storageUnitValidCheck: If True, check that the storage level is below the
                 storage capacity.
+            storageInit: Initial storage level [bits]
             kwargs: Ignored
         """
         self.storageUnit = partitionedStorageUnit.PartitionedStorageUnit()
@@ -787,6 +792,9 @@ class ImagingDynModel(BasicDynamicsModel):
                 )
             for buffer_name in bufferNames:
                 self.storageUnit.addPartition(buffer_name)
+
+        if storageInit != 0:
+            self.storageUnit.setDataBuffer(["STORED DATA"], [int(storageInit)])
 
         # Add the storage unit to the transmitter
         self.transmitter.addStorageUnitToTransmitter(
