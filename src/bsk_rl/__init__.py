@@ -1,40 +1,26 @@
+import gymnasium as gym
 from gymnasium.envs.registration import register
 
 from bsk_rl._check_bsk_version import _check_bsk_version
-
-register(id="SimpleEOS-v0", entry_point="bsk_rl.envs.simple_eos.gym_env:SimpleEOS")
-
-register(
-    id="MultiSensorEOS-v0",
-    entry_point="bsk_rl.envs.multisensor_eos.gym_env:MultiSensorEOS",
-)
-
-register(id="AgileEOS-v0", entry_point="bsk_rl.envs.agile_eos.gym_env:AgileEOS")
-
-register(
-    id="MultiSatAgileEOS-v0",
-    entry_point="bsk_rl.envs.multisat_agile_eos.gym_env:MultiSatAgileEOS",
-)
-
-register(
-    id="SmallBodyScience-v0",
-    entry_point="bsk_rl.envs.small_body_science.gym_env:SmallBodyScience",
-)
-
-register(
-    id="SmallBodySciencePOMDP-v0",
-    entry_point="bsk_rl.envs.small_body_science_pomdp.gym_env:SmallBodySciencePOMDP",
+from bsk_rl.env.gym_env import (
+    GeneralSatelliteTasking,
+    MultiagentSatelliteTasking,
+    SingleSatelliteTasking,
 )
 
 register(
     id="GeneralSatelliteTasking-v1",
-    entry_point="bsk_rl.envs.general_satellite_tasking.gym_env:GeneralSatelliteTasking",
+    entry_point="bsk_rl.env.gym_env:GeneralSatelliteTasking",
 )
 
 register(
     id="SingleSatelliteTasking-v1",
-    entry_point="bsk_rl.envs.general_satellite_tasking.gym_env:SingleSatelliteTasking",
+    entry_point="bsk_rl.env.gym_env:SingleSatelliteTasking",
 )
 
+register(
+    id="MultiagentSatelliteTasking-v1",
+    entry_point="bsk_rl.env.gym_env:MultiagentSatelliteTasking",
+)
 
 _check_bsk_version()

@@ -21,9 +21,19 @@ a.el, a.el:visited {
 	color: #565A5C; # CU dark gray
 }
 
-.wy-nav-content {
-    max-width: none;
+@media screen and (min-width: 1100px) {
+    .wy-nav-side,
+    .wy-grid-for-nav {
+        margin-left: calc(((100vw - 1100px) / 2));
+    }
+    .wy-nav-content-wrap {
+        background: none;
+    }
+    .wy-body-for-nav {
+        background: #565A5C;
+    }
 }
+
 
 code span.pre, code {
 	color: #cb7ccf;
@@ -87,12 +97,11 @@ ul.simple li p, aside.sidebar ul li p {
 
 ul.simple ul li {
 	list-style-type: circle;
-	margin-left: 1.5em;
 }
 
 ul.simple, aside.sidebar ul {
 	all: revert;
-	padding-left: 1.5em;
+	padding-left: 0em;
 }
 
 figure {
