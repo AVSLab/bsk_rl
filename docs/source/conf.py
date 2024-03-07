@@ -11,6 +11,7 @@ import datetime
 import os
 import re
 import sys
+from importlib import metadata
 from pathlib import Path
 
 # sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
@@ -19,7 +20,8 @@ now = datetime.datetime.now()
 project = "BSK-RL"
 copyright = str(now.year) + ", Autonomous Vehicle Systems (AVS) Laboratory"
 author = "Mark Stephenson"
-release = "0.0.0"
+release = metadata.version("bsk_rl")
+version = "Version " + release
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

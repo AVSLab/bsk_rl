@@ -18,7 +18,7 @@ BSK-RL: Environments and Algorithms for Spacecraft Planning and Scheduling
 
 .. warning::
     
-    With the 1.0.0, one-off environments and associated scripts have been deprecated. The :code:`envs.general_satellite_tasking` module has been renamed to :code:`env`.
+    With the 1.0.0 release, one-off environments and associated scripts have been deprecated. The :code:`envs.general_satellite_tasking` module has been renamed to :code:`env`.
 
 
 **BSK-RL** (`Basilisk <https://hanspeterschaub.info/basilisk>`_ + `Reinforcement Learning <https://en.wikipedia.org/wiki/Reinforcement_learning>`_) is a Python package for constructing `Gymnasium <https://gymnasium.farama.org/index.html>`_ environments for spacecraft tasking problems. It is built on top of `Basilisk <https://hanspeterschaub.info/basilisk>`_, a modular and fast spacecraft simulation framework, making the simulation environments high-fidelity and computationally efficient. BSK-RL also includes a collection of agents, training scripts, and examples for working with these environments.
