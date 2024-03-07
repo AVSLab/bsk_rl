@@ -17,8 +17,8 @@ Please include a summary, motivation, and context of the changes and the related
 Please describe the tests that you ran to verify your changes.
 
 ### Passes Tests
-- [ ] __Unit tests__ (General Environment only) `pytest --cov bsk_rl/envs/general_satellite_tasking --cov-report term-missing tests/unittest`
-- [ ] __Integrated tests__ (General Environment only) `pytest --cov bsk_rl/envs/general_satellite_tasking --cov-report term-missing tests/integration`
+- [ ] __Unit tests__ (General Environment only) `pytest --cov bsk_rl/env --cov-report term-missing tests/unittest`
+- [ ] __Integrated tests__ (General Environment only) `pytest --cov bsk_rl/env --cov-report term-missing tests/integration`
 - [ ] __Examples__ (General Environment only) `pytest tests/examples`
 
 ### Test Configuration

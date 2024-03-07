@@ -87,6 +87,7 @@ class FileCrawler:
             r".*\.ruff_cache.*",
             r".*\.egg-info",
             r".*\/simplemaps_worldcities",
+            r".*\/data",
         ]
         dirs_in_dir = list(
             filter(
@@ -100,6 +101,7 @@ class FileCrawler:
         file_filters = [
             r".*__init__\.py",
             r"(.*\/|)_[a-zA-Z0-9_]*\.py",
+            r".*types.py",
         ]
         files_in_dir = list(
             filter(
