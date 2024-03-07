@@ -16,9 +16,9 @@ BSK-RL: Environments and Algorithms for Spacecraft Planning and Scheduling
 
     BSK-RL and its documentation are under active development. Please continue to check back for updates. 
 
-.. note::
+.. warning::
     
-    New environments should be built using the :ref:`general satellite tasking framework <bsk_rl.envs.general_satellite_tasking>`; legacy environments are in the process of being ported to this framework.
+    With the 1.0.0 release, one-off environments and associated scripts have been deprecated. The :code:`envs.general_satellite_tasking` module has been renamed to :code:`env`.
 
 
 **BSK-RL** (`Basilisk <https://hanspeterschaub.info/basilisk>`_ + `Reinforcement Learning <https://en.wikipedia.org/wiki/Reinforcement_learning>`_) is a Python package for constructing `Gymnasium <https://gymnasium.farama.org/index.html>`_ environments for spacecraft tasking problems. It is built on top of `Basilisk <https://hanspeterschaub.info/basilisk>`_, a modular and fast spacecraft simulation framework, making the simulation environments high-fidelity and computationally efficient. BSK-RL also includes a collection of agents, training scripts, and examples for working with these environments.
@@ -56,11 +56,11 @@ TODO: Add more detail to this example
 
     import gymnasium as gym
 
-    from bsk_rl.envs.general_satellite_tasking.scenario import data
-    from bsk_rl.envs.general_satellite_tasking.scenario import satellites as sats
-    from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import StaticTargets
-    from bsk_rl.envs.general_satellite_tasking.simulation import environment
-    from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
+    from bsk_rl.env.scenario import data
+    from bsk_rl.env.scenario import satellites as sats
+    from bsk_rl.env.scenario.environment_features import StaticTargets
+    from bsk_rl.env.simulation import environment
+    from bsk_rl.utils.orbital import random_orbit
 
     env = gym.make(
         "SingleSatelliteTasking-v1",

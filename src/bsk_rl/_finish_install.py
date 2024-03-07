@@ -12,12 +12,6 @@ def pck_install():
         "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.76.zip"
     )
     z = zipfile.ZipFile(io.BytesIO(r.content))
-    z.extractall(
-        Path(__file__).parent.resolve()
-        / "envs"
-        / "general_satellite_tasking"
-        / "scenario"
-        / "simplemaps_worldcities"
-    )
+    z.extractall(Path(__file__).parent.resolve() / "data" / "simplemaps_worldcities")
 
     _check_bsk_version()
