@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.envs.multisensor_eos.env_settings &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.envs.multisensor_eos.env_settings</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.envs.multisensor_eos.env_settings</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">macros</span> <span class="k">as</span> <span class="n">mc</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">orbitalMotion</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.utilities.initial_conditions</span> <span class="kn">import</span> <span class="n">leo_orbit</span>
+
+
+<div class="viewcode-block" id="Settings">
+<a class="viewcode-back" href="../../../../API%20Reference/envs/multisensor_eos/env_settings.html#bsk_rl.envs.multisensor_eos.env_settings.Settings">[docs]</a>
+<span class="k">class</span> <span class="nc">Settings</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    To be used as settings for the MultiSensorEOS gymnasium environment and bsk sim.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Settings.__init__">
+<a class="viewcode-back" href="../../../../API%20Reference/envs/multisensor_eos/env_settings.html#bsk_rl.envs.multisensor_eos.env_settings.Settings.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Instrument Settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_modes</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="c1"># Simulation parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SIM_TIME</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span>  <span class="c1"># number of planning intervals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_TGTS</span> <span class="o">=</span> <span class="mi">50</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">STEP_DURATION</span> <span class="o">=</span> <span class="mf">180.0</span>  <span class="c1"># [sec] length of planning interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DYN_STEP</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># [sec]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FSW_STEP</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># [sec]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">RENDER</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># will render every episode if used in training</span>
+
+        <span class="c1"># Spacecraft Attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MASS</span> <span class="o">=</span> <span class="mf">330.0</span>  <span class="c1"># [kg]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">POWER_DRAW</span> <span class="o">=</span> <span class="o">-</span><span class="mf">5.0</span>  <span class="c1"># [W]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">WHEEL_LIM</span> <span class="o">=</span> <span class="mi">3000</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">RPM</span>  <span class="c1"># [rad/s]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">POWER_MAX</span> <span class="o">=</span> <span class="mf">50.0</span> <span class="o">*</span> <span class="mf">3600.0</span>  <span class="c1"># J</span>
+
+        <span class="c1"># Learning Parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">REWARD_MULTIPLIER</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="c1"># Observation Space (each obs element is a scalar value)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">OBSERVATIONS</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="c1"># &quot;rx_target_N&quot;,</span>
+            <span class="c1"># &quot;ry_target_N&quot;,</span>
+            <span class="c1"># &quot;rz_target_N&quot;,</span>
+            <span class="c1"># &quot;rx_sc_N&quot;,</span>
+            <span class="c1"># &quot;ry_sc_N&quot;,</span>
+            <span class="c1"># &quot;rz_sc_N&quot;,</span>
+            <span class="c1"># &quot;sc_az&quot;,</span>
+            <span class="c1"># &quot;sc_el&quot;,</span>
+            <span class="c1"># &quot;sc_az_dot&quot;,</span>
+            <span class="c1"># &quot;sc_el_dot&quot;,</span>
+            <span class="c1"># &quot;rx_BL_L&quot;,</span>
+            <span class="c1"># &quot;ry_BL_L&quot;,</span>
+            <span class="c1"># &quot;rz_BL_L&quot;,</span>
+            <span class="s2">&quot;rx_canonical_BL_L&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ry_canonical_BL_L&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;rz_canonical_BL_L&quot;</span><span class="p">,</span>
+            <span class="c1"># &quot;rxy_2norm_canonical_BL_L&quot;,</span>
+            <span class="c1"># &quot;xDot_BL_L&quot;,</span>
+            <span class="c1"># &quot;yDot_BL_L&quot;,</span>
+            <span class="c1"># &quot;zDot_BL_L&quot;,</span>
+            <span class="s2">&quot;xDot_canonical_BL_L&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;yDot_canonical_BL_L&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;zDot_canonical_BL_L&quot;</span><span class="p">,</span>
+            <span class="c1"># &quot;rxhat_target_N&quot;,</span>
+            <span class="c1"># &quot;ryhat_target_N&quot;,</span>
+            <span class="c1"># &quot;rzhat_target_N&quot;,</span>
+            <span class="s2">&quot;att_err&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;att_rate&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;wheel_speed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;stored_charge&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sun_indicator&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;access_indicator&quot;</span><span class="p">,</span>
+            <span class="c1"># &quot;sc_mode&quot;,</span>
+            <span class="c1"># &quot;data_buffer&quot;,</span>
+            <span class="s2">&quot;img_mode_norm&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">UTC_INIT</span> <span class="o">=</span> <span class="s2">&quot;2021 MAY 04 06:47:48.965 (UTC)&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">CENTRAL_BODY</span> <span class="o">=</span> <span class="s2">&quot;earth&quot;</span>
+
+        <span class="c1"># Attitude rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxSpinRate</span> <span class="o">=</span> <span class="mf">0.001</span></div>
+
+
+    <span class="k">def</span> <span class="nf">generate_new_ic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">oe</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">leo_orbit</span><span class="o">.</span><span class="n">sampled_400km</span><span class="p">()</span>
+
+        <span class="n">targets</span><span class="p">,</span> <span class="n">times</span> <span class="o">=</span> <span class="n">leo_orbit</span><span class="o">.</span><span class="n">create_ground_tgts</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">N_TGTS</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIM_TIME</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">STEP_DURATION</span> <span class="o">/</span> <span class="mi">60</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">UTC_INIT</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Sample random values</span>
+        <span class="n">sigma_init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span>
+        <span class="n">omega_init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxSpinRate</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">disturbance_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span>
+        <span class="n">wheelSpeeds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">WHEEL_LIM</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">storedCharge_Init</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">POWER_MAX</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">POWER_MAX</span><span class="p">)</span>
+
+        <span class="c1"># Dict of initial conditions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">INITIAL_CONDITIONS</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="c1"># Initialize the start time of the sim</span>
+            <span class="s2">&quot;utc_init&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">UTC_INIT</span><span class="p">,</span>
+            <span class="c1"># Mass</span>
+            <span class="s2">&quot;mass&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">MASS</span><span class="p">,</span>  <span class="c1"># kg</span>
+            <span class="c1"># Orbital parameters</span>
+            <span class="s2">&quot;central_body&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">CENTRAL_BODY</span><span class="p">,</span>
+            <span class="s2">&quot;oe&quot;</span><span class="p">:</span> <span class="n">oe</span><span class="p">,</span>
+            <span class="s2">&quot;rN&quot;</span><span class="p">:</span> <span class="n">rN</span><span class="p">,</span>
+            <span class="s2">&quot;vN&quot;</span><span class="p">:</span> <span class="n">vN</span><span class="p">,</span>
+            <span class="c1"># Spacecraft dimensions</span>
+            <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">1.38</span><span class="p">,</span>
+            <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="mf">1.04</span><span class="p">,</span>
+            <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="mf">1.58</span><span class="p">,</span>
+            <span class="c1"># Attitude and rate initialization</span>
+            <span class="s2">&quot;sigma_init&quot;</span><span class="p">:</span> <span class="n">sigma_init</span><span class="p">,</span>
+            <span class="s2">&quot;omega_init&quot;</span><span class="p">:</span> <span class="n">omega_init</span><span class="p">,</span>
+            <span class="c1"># Atmospheric density</span>
+            <span class="s2">&quot;planetRadius&quot;</span><span class="p">:</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1000.0</span><span class="p">,</span>
+            <span class="s2">&quot;baseDensity&quot;</span><span class="p">:</span> <span class="mf">1.22</span><span class="p">,</span>  <span class="c1"># kg/m^3</span>
+            <span class="s2">&quot;scaleHeight&quot;</span><span class="p">:</span> <span class="mf">8e3</span><span class="p">,</span>  <span class="c1"># m</span>
+            <span class="c1"># Disturbance Torque</span>
+            <span class="s2">&quot;disturbance_magnitude&quot;</span><span class="p">:</span> <span class="mf">5e-3</span><span class="p">,</span>
+            <span class="s2">&quot;disturbance_vector&quot;</span><span class="p">:</span> <span class="n">disturbance_vector</span>
+            <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">disturbance_vector</span><span class="p">),</span>
+            <span class="c1"># Reaction Wheel speeds</span>
+            <span class="s2">&quot;wheelSpeeds&quot;</span><span class="p">:</span> <span class="n">wheelSpeeds</span><span class="p">,</span>  <span class="c1"># rad/s</span>
+            <span class="c1"># Solar Panel Parameters</span>
+            <span class="s2">&quot;nHat_B&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
+            <span class="s2">&quot;panelArea&quot;</span><span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="mf">0.15</span> <span class="o">*</span> <span class="mf">0.3</span><span class="p">,</span>
+            <span class="s2">&quot;panelEfficiency&quot;</span><span class="p">:</span> <span class="mf">0.20</span><span class="p">,</span>
+            <span class="c1"># Power Sink Parameters</span>
+            <span class="s2">&quot;powerDraw&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">POWER_DRAW</span><span class="p">,</span>  <span class="c1"># W</span>
+            <span class="c1"># Battery Parameters</span>
+            <span class="s2">&quot;storageCapacity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">POWER_MAX</span><span class="p">,</span>
+            <span class="s2">&quot;storedCharge_Init&quot;</span><span class="p">:</span> <span class="n">storedCharge_Init</span><span class="p">,</span>
+            <span class="c1"># Pointing Configuration (Solar panels &amp; cameras)</span>
+            <span class="s2">&quot;C_R0R&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="c1"># RW motor torque and thruster force mapping FSW config</span>
+            <span class="s2">&quot;controlAxes_B&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="c1"># Attitude controller FSW config</span>
+            <span class="s2">&quot;K&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+            <span class="s2">&quot;Ki&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Note: make value negative to turn off integral feedback</span>
+            <span class="s2">&quot;P&quot;</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span>
+            <span class="c1"># Momentum dumping config</span>
+            <span class="s2">&quot;hs_min&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># Nms</span>
+            <span class="c1"># Thruster force mapping FSW module</span>
+            <span class="s2">&quot;thrForceSign&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="c1"># Thruster momentum dumping FSW config</span>
+            <span class="s2">&quot;maxCounterValue&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="s2">&quot;thrMinFireTime&quot;</span><span class="p">:</span> <span class="mf">0.02</span><span class="p">,</span>  <span class="c1"># Seconds</span>
+            <span class="c1"># Ground target locations</span>
+            <span class="s2">&quot;targetLocation&quot;</span><span class="p">:</span> <span class="n">targets</span><span class="p">,</span>  <span class="c1"># m</span>
+            <span class="s2">&quot;instrumentSpecification&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+                <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_modes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_TGTS</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;target_times&quot;</span><span class="p">:</span> <span class="n">times</span><span class="p">,</span>  <span class="c1"># seconds</span>
+            <span class="s2">&quot;minElev&quot;</span><span class="p">:</span> <span class="mf">60.0</span><span class="p">,</span>  <span class="c1"># [degrees]</span>
+            <span class="s2">&quot;maxRange&quot;</span><span class="p">:</span> <span class="mf">5.0e7</span><span class="p">,</span>  <span class="c1"># [meters}</span>
+            <span class="s2">&quot;n_targets&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_TGTS</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

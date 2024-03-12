@@ -1,0 +1,26 @@
+.. _examples.sb3:
+
+sb3
+===
+
+``examples.sb3``
+
+.. automodule:: examples.sb3
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+   a2c_hyperparam_search
+   dqn_hyperparam_search
+   ppo_hyperparam_search
+   sppo_hyperparam_search
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+

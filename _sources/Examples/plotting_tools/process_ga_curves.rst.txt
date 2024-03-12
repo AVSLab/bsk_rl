@@ -1,0 +1,15 @@
+.. _examples.plotting_tools.process_ga_curves:
+
+process_ga_curves
+=================
+
+``examples.plotting_tools.process_ga_curves``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: examples.plotting_tools.process_ga_curves
+   :members:
+   :show-inheritance:
+

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.training.sb3.experiments &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.training.sb3.experiments</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.training.sb3.experiments</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">gymnasium</span> <span class="k">as</span> <span class="nn">gym</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">from</span> <span class="nn">stable_baselines3</span> <span class="kn">import</span> <span class="n">A2C</span><span class="p">,</span> <span class="n">DQN</span><span class="p">,</span> <span class="n">PPO</span>
+<span class="kn">from</span> <span class="nn">stable_baselines3.common.logger</span> <span class="kn">import</span> <span class="n">configure</span>
+<span class="kn">from</span> <span class="nn">stable_baselines3.common.vec_env</span> <span class="kn">import</span> <span class="n">SubprocVecEnv</span><span class="p">,</span> <span class="n">VecMonitor</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.utilities.sb3.custom_sb3_policies</span> <span class="kn">import</span> <span class="n">CustomActorCriticPolicy</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utilities.sb3.shielded_policies</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CustomActorCriticShieldedAgileEOSPolicy</span><span class="p">,</span>
+    <span class="n">CustomActorCriticShieldedMultiSensorEOSPolicy</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SEP</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span>
+
+
+<span class="k">def</span> <span class="nf">create_ppo_kwargs_list</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">activation_functions</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;activation_functions&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">LeakyReLU</span><span class="p">])</span>
+    <span class="n">dropouts</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dropouts&quot;</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">])</span>
+    <span class="n">alphas</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;alphas&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">])</span>
+    <span class="n">learning_rates</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rates&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">3e-4</span><span class="p">])</span>
+    <span class="n">clip_ranges</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;clip_ranges&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">])</span>
+    <span class="n">entropy_coeffs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;entropy_coeffs&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">])</span>
+    <span class="n">widths</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;widths&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">20</span><span class="p">])</span>
+    <span class="n">depths</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depths&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+    <span class="n">batch_sizes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;batch_sizes&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">64</span><span class="p">])</span>
+    <span class="n">n_epochs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_epochs&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">50</span><span class="p">])</span>
+    <span class="n">max_grad_norms</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_grad_norms&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">])</span>
+    <span class="n">n_experiments</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_experiments&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">kwargs_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Set the experiment ID to zero</span>
+    <span class="n">experiment_ID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="c1"># Get the cartesian product of hyperparameter values</span>
+    <span class="k">for</span> <span class="n">activation_fn</span> <span class="ow">in</span> <span class="n">activation_functions</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">dropout</span> <span class="ow">in</span> <span class="n">dropouts</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">alpha</span> <span class="ow">in</span> <span class="n">alphas</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">lr</span> <span class="ow">in</span> <span class="n">learning_rates</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">clip_range</span> <span class="ow">in</span> <span class="n">clip_ranges</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">ent_coef</span> <span class="ow">in</span> <span class="n">entropy_coeffs</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">widths</span><span class="p">:</span>
+                                <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="n">depths</span><span class="p">:</span>
+                                    <span class="k">for</span> <span class="n">batch_size</span> <span class="ow">in</span> <span class="n">batch_sizes</span><span class="p">:</span>
+                                        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">n_epochs</span><span class="p">:</span>
+                                            <span class="k">for</span> <span class="n">max_grad_norm</span> <span class="ow">in</span> <span class="n">max_grad_norms</span><span class="p">:</span>
+                                                <span class="c1"># Update the experiment ID</span>
+                                                <span class="n">experiment_ID</span> <span class="o">+=</span> <span class="mi">1</span>
+                                                <span class="k">for</span> <span class="n">experiment_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                                                    <span class="n">n_experiments</span>
+                                                <span class="p">):</span>
+                                                    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                                                        <span class="s2">&quot;activation_fn&quot;</span><span class="p">:</span> <span class="n">activation_fn</span><span class="p">,</span>
+                                                        <span class="s2">&quot;dropout&quot;</span><span class="p">:</span> <span class="n">dropout</span><span class="p">,</span>
+                                                        <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">,</span>
+                                                        <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">lr</span><span class="p">,</span>
+                                                        <span class="s2">&quot;clip_range&quot;</span><span class="p">:</span> <span class="n">clip_range</span><span class="p">,</span>
+                                                        <span class="s2">&quot;ent_coef&quot;</span><span class="p">:</span> <span class="n">ent_coef</span><span class="p">,</span>
+                                                        <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">width</span><span class="p">,</span>
+                                                        <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="n">depth</span><span class="p">,</span>
+                                                        <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">,</span>
+                                                        <span class="s2">&quot;epoch&quot;</span><span class="p">:</span> <span class="n">epoch</span><span class="p">,</span>
+                                                        <span class="s2">&quot;max_grad_norm&quot;</span><span class="p">:</span> <span class="n">max_grad_norm</span><span class="p">,</span>
+                                                        <span class="s2">&quot;experiment_ID&quot;</span><span class="p">:</span> <span class="n">experiment_ID</span><span class="p">,</span>
+                                                    <span class="p">}</span>
+                                                    <span class="n">kwargs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">kwargs_list</span>
+
+
+<span class="k">def</span> <span class="nf">create_a2c_kwargs_list</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">activation_functions</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;activation_functions&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">LeakyReLU</span><span class="p">])</span>
+    <span class="n">widths</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;widths&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">20</span><span class="p">])</span>
+    <span class="n">depths</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depths&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+    <span class="n">dropouts</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dropouts&quot;</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">])</span>
+    <span class="n">alphas</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;alphas&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">])</span>
+    <span class="n">learning_rates</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rates&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">3e-4</span><span class="p">])</span>
+    <span class="n">entropy_coeffs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;entropy_coeffs&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">])</span>
+    <span class="n">n_steps_</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_steps_&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">45</span><span class="p">])</span>
+    <span class="n">n_experiments</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_experiments&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">kwargs_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">experiment_ID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">activation_fn</span> <span class="ow">in</span> <span class="n">activation_functions</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">widths</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="n">depths</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">dropout</span> <span class="ow">in</span> <span class="n">dropouts</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">alpha</span> <span class="ow">in</span> <span class="n">alphas</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">lr</span> <span class="ow">in</span> <span class="n">learning_rates</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">ent_coef</span> <span class="ow">in</span> <span class="n">entropy_coeffs</span><span class="p">:</span>
+                                <span class="k">for</span> <span class="n">n_steps</span> <span class="ow">in</span> <span class="n">n_steps_</span><span class="p">:</span>
+                                    <span class="n">experiment_ID</span> <span class="o">+=</span> <span class="mi">1</span>
+                                    <span class="k">for</span> <span class="n">experiment_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_experiments</span><span class="p">):</span>
+                                        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                                            <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">width</span><span class="p">,</span>
+                                            <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="n">depth</span><span class="p">,</span>
+                                            <span class="s2">&quot;dropout&quot;</span><span class="p">:</span> <span class="n">dropout</span><span class="p">,</span>
+                                            <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">,</span>
+                                            <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">lr</span><span class="p">,</span>
+                                            <span class="s2">&quot;ent_coef&quot;</span><span class="p">:</span> <span class="n">ent_coef</span><span class="p">,</span>
+                                            <span class="s2">&quot;n_steps&quot;</span><span class="p">:</span> <span class="n">n_steps</span><span class="p">,</span>
+                                            <span class="s2">&quot;activation_fn&quot;</span><span class="p">:</span> <span class="n">activation_fn</span><span class="p">,</span>
+                                            <span class="s2">&quot;experiment_ID&quot;</span><span class="p">:</span> <span class="n">experiment_ID</span><span class="p">,</span>
+                                        <span class="p">}</span>
+                                        <span class="n">kwargs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">kwargs_list</span>
+
+
+<span class="k">def</span> <span class="nf">create_dqn_kwargs_list</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">learning_rates</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rates&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">1e-4</span><span class="p">])</span>
+    <span class="n">depths</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depths&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+    <span class="n">widths</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;widths&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">20</span><span class="p">])</span>
+    <span class="n">batch_sizes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;batch_sizes&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">64</span><span class="p">])</span>
+    <span class="n">buffer_sizes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;buffer_sizes&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">5e5</span><span class="p">])</span>
+    <span class="n">n_experiments</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_experiments&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">kwargs_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">experiment_ID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">lr</span> <span class="ow">in</span> <span class="n">learning_rates</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="n">depths</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">widths</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">batch_size</span> <span class="ow">in</span> <span class="n">batch_sizes</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">buffer_size</span> <span class="ow">in</span> <span class="n">buffer_sizes</span><span class="p">:</span>
+                        <span class="n">experiment_ID</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">for</span> <span class="n">experiment_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_experiments</span><span class="p">):</span>
+                            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                                <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">lr</span><span class="p">,</span>
+                                <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="n">depth</span><span class="p">,</span>
+                                <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">width</span><span class="p">,</span>
+                                <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">,</span>
+                                <span class="s2">&quot;buffer_size&quot;</span><span class="p">:</span> <span class="n">buffer_size</span><span class="p">,</span>
+                                <span class="s2">&quot;experiment_ID&quot;</span><span class="p">:</span> <span class="n">experiment_ID</span><span class="p">,</span>
+                            <span class="p">}</span>
+                            <span class="n">kwargs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">kwargs_list</span>
+
+
+<div class="viewcode-block" id="ppo_experiment">
+<a class="viewcode-back" href="../../../../API%20Reference/training/sb3/experiments.html#bsk_rl.training.sb3.experiments.ppo_experiment">[docs]</a>
+<span class="k">def</span> <span class="nf">ppo_experiment</span><span class="p">(</span>
+    <span class="n">policy_kwargs</span><span class="p">,</span>
+    <span class="n">learning_rate</span><span class="p">,</span>
+    <span class="n">clip_range</span><span class="p">,</span>
+    <span class="n">ent_coef</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="p">,</span>
+    <span class="n">epoch</span><span class="p">,</span>
+    <span class="n">max_grad_norm</span><span class="p">,</span>
+    <span class="n">idx</span><span class="p">,</span>
+    <span class="n">agent_dir</span><span class="p">,</span>
+    <span class="n">n_its</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">base_steps</span><span class="o">=</span><span class="mi">1020</span><span class="p">,</span>
+    <span class="n">shielded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">env_name</span><span class="o">=</span><span class="s2">&quot;MultiSensorEOS-v0&quot;</span><span class="p">,</span>
+    <span class="n">n_steps</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">num_cores</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run a PPO experiment with the given hyperparameters</span>
+<span class="sd">    :param policy_kwargs: (dict) Policy kwargs</span>
+<span class="sd">    :param learning_rate: (float) Learning rate</span>
+<span class="sd">    :param clip_range: (float) Clip range</span>
+<span class="sd">    :param ent_coef: (float) Entropy coefficient</span>
+<span class="sd">    :param batch_size: (int) Batch size</span>
+<span class="sd">    :param epoch: (int) Number of epochs</span>
+<span class="sd">    :param idx: (int) Index of the experiment</span>
+<span class="sd">    :param agent_dir: (str) Directory where to save the agent</span>
+<span class="sd">    :param n_its: (int) Number of iterations</span>
+<span class="sd">    :param shielded: (bool) Whether to use the shielded policy</span>
+<span class="sd">    :param env_name: (str) Name of the environment</span>
+<span class="sd">    :param n_steps: (int) Number of steps</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">network_dir</span> <span class="o">=</span> <span class="n">agent_dir</span> <span class="o">+</span> <span class="s2">&quot;/network_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">+</span> <span class="n">SEP</span>
+
+    <span class="n">validation_reward</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">total_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">base_steps</span> <span class="o">*</span> <span class="n">n_its</span> <span class="o">*</span> <span class="n">n_steps</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Base steps: &quot;</span><span class="p">,</span> <span class="n">base_steps</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Iterations: &quot;</span><span class="p">,</span> <span class="n">n_its</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total steps: &quot;</span><span class="p">,</span> <span class="n">total_step</span><span class="p">)</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logs/&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logger/&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">multienv</span> <span class="o">=</span> <span class="n">SubprocVecEnv</span><span class="p">(</span>
+        <span class="p">[</span><span class="k">lambda</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cores</span><span class="p">)],</span> <span class="n">start_method</span><span class="o">=</span><span class="s2">&quot;spawn&quot;</span>
+    <span class="p">)</span>
+    <span class="n">multienv</span> <span class="o">=</span> <span class="n">VecMonitor</span><span class="p">(</span><span class="n">multienv</span><span class="p">,</span> <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logs/&quot;</span><span class="p">)</span>
+
+    <span class="c1"># set up logger</span>
+    <span class="n">new_logger</span> <span class="o">=</span> <span class="n">configure</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logger/&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;stdout&quot;</span><span class="p">,</span> <span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="s2">&quot;tensorboard&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">shielded</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">env_name</span> <span class="o">==</span> <span class="s2">&quot;MultiSensorEOS-v0&quot;</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span>
+                <span class="n">CustomActorCriticShieldedMultiSensorEOSPolicy</span><span class="p">,</span>
+                <span class="n">multienv</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">tensorboard_log</span><span class="o">=</span><span class="n">network_dir</span><span class="p">,</span>
+                <span class="n">n_epochs</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span>
+                <span class="n">n_steps</span><span class="o">=</span><span class="n">n_steps</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
+                <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">max_grad_norm</span><span class="p">,</span>
+                <span class="n">clip_range</span><span class="o">=</span><span class="n">clip_range</span><span class="p">,</span>
+                <span class="n">ent_coef</span><span class="o">=</span><span class="n">ent_coef</span><span class="p">,</span>
+                <span class="n">gamma</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span>
+                <span class="n">policy_kwargs</span><span class="o">=</span><span class="n">policy_kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">env_name</span> <span class="o">==</span> <span class="s2">&quot;AgileEOS-v0&quot;</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span>
+                <span class="n">CustomActorCriticShieldedAgileEOSPolicy</span><span class="p">,</span>
+                <span class="n">multienv</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">tensorboard_log</span><span class="o">=</span><span class="n">network_dir</span><span class="p">,</span>
+                <span class="n">n_epochs</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span>
+                <span class="n">n_steps</span><span class="o">=</span><span class="n">n_steps</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
+                <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">max_grad_norm</span><span class="p">,</span>
+                <span class="n">clip_range</span><span class="o">=</span><span class="n">clip_range</span><span class="p">,</span>
+                <span class="n">ent_coef</span><span class="o">=</span><span class="n">ent_coef</span><span class="p">,</span>
+                <span class="n">gamma</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span>
+                <span class="n">policy_kwargs</span><span class="o">=</span><span class="n">policy_kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shielding not implemented for this environment&quot;</span><span class="p">,</span> <span class="n">env_name</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span>
+            <span class="n">CustomActorCriticPolicy</span><span class="p">,</span>
+            <span class="n">multienv</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">tensorboard_log</span><span class="o">=</span><span class="n">network_dir</span><span class="p">,</span>
+            <span class="n">n_epochs</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span>
+            <span class="n">n_steps</span><span class="o">=</span><span class="n">n_steps</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
+            <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">max_grad_norm</span><span class="p">,</span>
+            <span class="n">clip_range</span><span class="o">=</span><span class="n">clip_range</span><span class="p">,</span>
+            <span class="n">ent_coef</span><span class="o">=</span><span class="n">ent_coef</span><span class="p">,</span>
+            <span class="n">gamma</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span>
+            <span class="n">policy_kwargs</span><span class="o">=</span><span class="n">policy_kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Set new logger</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_logger</span><span class="p">(</span><span class="n">new_logger</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_its</span><span class="p">):</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">set_env</span><span class="p">(</span><span class="n">multienv</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">total_timesteps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">total_step</span> <span class="o">/</span> <span class="n">n_its</span><span class="p">),</span> <span class="n">reset_num_timesteps</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">multienv</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">del</span> <span class="n">multienv</span>
+
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+            <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logs/monitor.csv&quot;</span><span class="p">,</span>
+            <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logs/monitor_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">multienv</span> <span class="o">=</span> <span class="n">SubprocVecEnv</span><span class="p">(</span>
+            <span class="p">[</span><span class="k">lambda</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cores</span><span class="p">)],</span> <span class="n">start_method</span><span class="o">=</span><span class="s2">&quot;spawn&quot;</span>
+        <span class="p">)</span>
+        <span class="n">multienv</span> <span class="o">=</span> <span class="n">VecMonitor</span><span class="p">(</span><span class="n">multienv</span><span class="p">,</span> <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logs/&quot;</span><span class="p">)</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;final_network_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+
+    <span class="c1"># run environment</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="n">multienv</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">reward_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_cores</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">):</span>
+            <span class="n">action</span><span class="p">,</span> <span class="n">_states</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">obs</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">dones</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">multienv</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            <span class="n">reward_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">reward_sum</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rewards</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reward_sum</span><span class="p">:</span>
+            <span class="n">validation_reward</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Average Reward: &quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">validation_reward</span><span class="p">))</span>
+
+    <span class="n">multienv</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">del</span> <span class="n">multienv</span>
+    <span class="k">del</span> <span class="n">model</span>
+
+    <span class="k">return</span> <span class="n">validation_reward</span><span class="p">,</span> <span class="s2">&quot;final_network_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="a2c_experiment">
+<a class="viewcode-back" href="../../../../API%20Reference/training/sb3/experiments.html#bsk_rl.training.sb3.experiments.a2c_experiment">[docs]</a>
+<span class="k">def</span> <span class="nf">a2c_experiment</span><span class="p">(</span>
+    <span class="n">agent_dir</span><span class="p">,</span>
+    <span class="n">policy_kwargs</span><span class="p">,</span>
+    <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.0007</span><span class="p">,</span>
+    <span class="n">ent_coef</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">n_its</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">base_steps</span><span class="o">=</span><span class="mi">1020</span><span class="p">,</span>
+    <span class="n">env_name</span><span class="o">=</span><span class="s2">&quot;MultiSensorEOS-v0&quot;</span><span class="p">,</span>
+    <span class="n">max_steps</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">n_steps</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span>
+    <span class="n">num_cores</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run an A2C experiment with the given hyperparameters</span>
+<span class="sd">    :param policy_kwargs: (dict) Policy kwargs</span>
+<span class="sd">    :param learning_rate: (float) Learning rate</span>
+<span class="sd">    :param ent_coef: (float) Entropy coefficient</span>
+<span class="sd">    :param idx: (int) Index of the experiment</span>
+<span class="sd">    :param agent_dir: (str) Directory where to save the agent</span>
+<span class="sd">    :param n_its: (int) Number of iterations</span>
+<span class="sd">    :param env_name: (str) Name of the environment</span>
+<span class="sd">    :param max_steps: (int) Maximum number of steps in the environment</span>
+<span class="sd">    :param n_steps: (int) Number of steps before update</span>
+<span class="sd">    :param num_cores: (int) Number of cores&quot;&quot;&quot;</span>
+
+    <span class="n">network_dir</span> <span class="o">=</span> <span class="n">agent_dir</span> <span class="o">+</span> <span class="s2">&quot;/network_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">+</span> <span class="n">SEP</span>
+
+    <span class="n">validation_reward</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">total_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">base_steps</span> <span class="o">*</span> <span class="n">n_its</span> <span class="o">*</span> <span class="n">max_steps</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Base steps: &quot;</span><span class="p">,</span> <span class="n">base_steps</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Iterations: &quot;</span><span class="p">,</span> <span class="n">n_its</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total steps: &quot;</span><span class="p">,</span> <span class="n">total_step</span><span class="p">)</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;/logs/&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;/logger/&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">multienv</span> <span class="o">=</span> <span class="n">SubprocVecEnv</span><span class="p">(</span>
+        <span class="p">[</span><span class="k">lambda</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cores</span><span class="p">)],</span> <span class="n">start_method</span><span class="o">=</span><span class="s2">&quot;spawn&quot;</span>
+    <span class="p">)</span>
+    <span class="n">multienv</span> <span class="o">=</span> <span class="n">VecMonitor</span><span class="p">(</span><span class="n">multienv</span><span class="p">,</span> <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;/logs/&quot;</span><span class="p">)</span>
+
+    <span class="c1"># set up logger</span>
+    <span class="n">new_logger</span> <span class="o">=</span> <span class="n">configure</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;/logger/&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;stdout&quot;</span><span class="p">,</span> <span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="s2">&quot;tensorboard&quot;</span><span class="p">])</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">A2C</span><span class="p">(</span>
+        <span class="n">CustomActorCriticPolicy</span><span class="p">,</span>
+        <span class="n">multienv</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">tensorboard_log</span><span class="o">=</span><span class="n">network_dir</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="o">=</span><span class="n">n_steps</span><span class="p">,</span>
+        <span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
+        <span class="n">ent_coef</span><span class="o">=</span><span class="n">ent_coef</span><span class="p">,</span>
+        <span class="n">gamma</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span>
+        <span class="n">policy_kwargs</span><span class="o">=</span><span class="n">policy_kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Set new logger</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_logger</span><span class="p">(</span><span class="n">new_logger</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_its</span><span class="p">):</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">set_env</span><span class="p">(</span><span class="n">multienv</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span>
+            <span class="n">total_timesteps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">total_step</span> <span class="o">/</span> <span class="n">n_its</span><span class="p">),</span>
+            <span class="n">reset_num_timesteps</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">log_interval</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">multienv</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">del</span> <span class="n">multienv</span>
+
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+            <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;/logs/monitor.csv&quot;</span><span class="p">,</span>
+            <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;/logs/monitor_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">multienv</span> <span class="o">=</span> <span class="n">SubprocVecEnv</span><span class="p">(</span>
+            <span class="p">[</span><span class="k">lambda</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cores</span><span class="p">)],</span> <span class="n">start_method</span><span class="o">=</span><span class="s2">&quot;spawn&quot;</span>
+        <span class="p">)</span>
+        <span class="n">multienv</span> <span class="o">=</span> <span class="n">VecMonitor</span><span class="p">(</span><span class="n">multienv</span><span class="p">,</span> <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;/logs/&quot;</span><span class="p">)</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;/final_network_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+
+    <span class="c1"># run environment</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="n">multienv</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">reward_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_cores</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_steps</span><span class="p">):</span>
+            <span class="n">action</span><span class="p">,</span> <span class="n">_states</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">obs</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">dones</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">multienv</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            <span class="n">reward_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">reward_sum</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rewards</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reward_sum</span><span class="p">:</span>
+            <span class="n">validation_reward</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Average Reward: &quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">validation_reward</span><span class="p">))</span>
+
+    <span class="n">multienv</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">del</span> <span class="n">multienv</span>
+    <span class="k">del</span> <span class="n">model</span>
+
+    <span class="k">return</span> <span class="n">validation_reward</span><span class="p">,</span> <span class="s2">&quot;final_network_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">dqn_experiment</span><span class="p">(</span>
+    <span class="n">agent_dir</span><span class="p">,</span>
+    <span class="n">policy_kwargs</span><span class="p">,</span>
+    <span class="n">idx</span><span class="p">,</span>
+    <span class="n">n_its</span><span class="p">,</span>
+    <span class="n">base_steps</span><span class="p">,</span>
+    <span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">buffer_size</span><span class="o">=</span><span class="mf">5e5</span><span class="p">,</span>
+    <span class="n">num_cores</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">n_steps</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">env_name</span><span class="o">=</span><span class="s2">&quot;MultiSensorEOS-v0&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">network_dir</span> <span class="o">=</span> <span class="n">agent_dir</span> <span class="o">+</span> <span class="s2">&quot;/network_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">+</span> <span class="n">SEP</span>
+
+    <span class="n">validation_reward</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">total_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">base_steps</span> <span class="o">*</span> <span class="n">n_its</span> <span class="o">*</span> <span class="n">n_steps</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Policy Kwargs: &quot;</span><span class="p">,</span> <span class="n">policy_kwargs</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Learning Rate: &quot;</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Batch Size: &quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Buffer Size: &quot;</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Num Cores: &quot;</span><span class="p">,</span> <span class="n">num_cores</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Num Steps: &quot;</span><span class="p">,</span> <span class="n">total_step</span><span class="p">)</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logs/&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logger/&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">multienv</span> <span class="o">=</span> <span class="n">SubprocVecEnv</span><span class="p">(</span>
+        <span class="p">[</span><span class="k">lambda</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cores</span><span class="p">)],</span> <span class="n">start_method</span><span class="o">=</span><span class="s2">&quot;spawn&quot;</span>
+    <span class="p">)</span>
+    <span class="n">multienv</span> <span class="o">=</span> <span class="n">VecMonitor</span><span class="p">(</span><span class="n">multienv</span><span class="p">,</span> <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logs/&quot;</span><span class="p">)</span>
+
+    <span class="c1"># set up logger</span>
+    <span class="n">new_logger</span> <span class="o">=</span> <span class="n">configure</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logger/&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;stdout&quot;</span><span class="p">,</span> <span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="s2">&quot;tensorboard&quot;</span><span class="p">])</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">DQN</span><span class="p">(</span>
+        <span class="s2">&quot;MlpPolicy&quot;</span><span class="p">,</span>
+        <span class="n">multienv</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">tensorboard_log</span><span class="o">=</span><span class="n">network_dir</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
+        <span class="n">gamma</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span>
+        <span class="n">buffer_size</span><span class="o">=</span><span class="n">buffer_size</span><span class="p">,</span>
+        <span class="n">policy_kwargs</span><span class="o">=</span><span class="n">policy_kwargs</span><span class="p">,</span>
+        <span class="n">train_freq</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">learning_starts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">target_update_interval</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Set new logger</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_logger</span><span class="p">(</span><span class="n">new_logger</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_its</span><span class="p">):</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">set_env</span><span class="p">(</span><span class="n">multienv</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span>
+            <span class="n">total_timesteps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">total_step</span> <span class="o">/</span> <span class="n">n_its</span><span class="p">),</span>
+            <span class="n">reset_num_timesteps</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">log_interval</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">multienv</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">del</span> <span class="n">multienv</span>
+
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+            <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logs/monitor.csv&quot;</span><span class="p">,</span>
+            <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logs/monitor_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">multienv</span> <span class="o">=</span> <span class="n">SubprocVecEnv</span><span class="p">(</span>
+            <span class="p">[</span><span class="k">lambda</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cores</span><span class="p">)],</span> <span class="n">start_method</span><span class="o">=</span><span class="s2">&quot;spawn&quot;</span>
+        <span class="p">)</span>
+        <span class="n">multienv</span> <span class="o">=</span> <span class="n">VecMonitor</span><span class="p">(</span><span class="n">multienv</span><span class="p">,</span> <span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;logs/&quot;</span><span class="p">)</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">network_dir</span> <span class="o">+</span> <span class="s2">&quot;final_network_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+
+    <span class="c1"># run environment</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="n">multienv</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">reward_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_cores</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">):</span>
+            <span class="n">action</span><span class="p">,</span> <span class="n">_states</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">obs</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">dones</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">multienv</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            <span class="n">reward_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">reward_sum</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rewards</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reward_sum</span><span class="p">:</span>
+            <span class="n">validation_reward</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Average Reward: &quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">validation_reward</span><span class="p">))</span>
+
+    <span class="n">multienv</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">del</span> <span class="n">multienv</span>
+    <span class="k">del</span> <span class="n">model</span>
+
+    <span class="k">return</span> <span class="n">validation_reward</span><span class="p">,</span> <span class="s2">&quot;final_network_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="run_ppo_experiments">
+<a class="viewcode-back" href="../../../../API%20Reference/training/sb3/experiments.html#bsk_rl.training.sb3.experiments.run_ppo_experiments">[docs]</a>
+<span class="k">def</span> <span class="nf">run_ppo_experiments</span><span class="p">(</span>
+    <span class="n">agent_dir</span><span class="p">,</span>
+    <span class="n">kwargs_list</span><span class="p">,</span>
+    <span class="n">n_its</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">base_steps</span><span class="o">=</span><span class="mi">1020</span><span class="p">,</span>
+    <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">env_name</span><span class="o">=</span><span class="s2">&quot;MultiSensorEOS-v0&quot;</span><span class="p">,</span>
+    <span class="n">n_steps</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span>
+    <span class="n">num_cores</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">shielded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run PPO experiments with the given hyperparameters</span>
+<span class="sd">    :param agent_dir: (str) Directory where to save the agent</span>
+<span class="sd">    :param n_its: (int) Number of iterations</span>
+<span class="sd">    :param kwargs_list: (list) List of dictionaries containing hyperparameters</span>
+<span class="sd">    :param index: (int) Index of the hyperparameter dictionary to use</span>
+<span class="sd">    :param env_name: (str) Name of the environment</span>
+<span class="sd">    :param n_steps: (int) Number of steps</span>
+<span class="sd">    :param num_cores: (int) Number of cores</span>
+<span class="sd">    :param shielded: (bool) Whether to use shielded policy]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">kwargs_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">kwargs_list</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">index</span>
+
+    <span class="k">for</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="n">kwargs_list</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">activation_fn</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;activation_fn&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">LeakyReLU</span><span class="p">)</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">dropout</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dropout&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">lr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lr&quot;</span><span class="p">,</span> <span class="mf">3e-4</span><span class="p">)</span>
+        <span class="n">clip_range</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;clip_range&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">ent_coef</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ent_coef&quot;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+        <span class="n">epoch</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;epoch&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;batch_size&quot;</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+        <span class="n">max_grad_norm</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_grad_norm&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">experiment_ID</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;experiment_ID&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Create the policy kwargs</span>
+        <span class="n">policy_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">activation_fn</span><span class="o">=</span><span class="n">activation_fn</span><span class="p">,</span>
+            <span class="n">net_arch</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">width</span><span class="p">,</span>
+                <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="n">depth</span><span class="p">,</span>
+                <span class="s2">&quot;dropout&quot;</span><span class="p">:</span> <span class="n">dropout</span><span class="p">,</span>
+                <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Call the training function</span>
+        <span class="n">reward</span><span class="p">,</span> <span class="n">model_name</span> <span class="o">=</span> <span class="n">ppo_experiment</span><span class="p">(</span>
+            <span class="n">policy_kwargs</span><span class="p">,</span>
+            <span class="n">lr</span><span class="p">,</span>
+            <span class="n">clip_range</span><span class="p">,</span>
+            <span class="n">ent_coef</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">epoch</span><span class="p">,</span>
+            <span class="n">max_grad_norm</span><span class="p">,</span>
+            <span class="n">idx</span><span class="p">,</span>
+            <span class="n">agent_dir</span><span class="p">,</span>
+            <span class="n">n_its</span><span class="p">,</span>
+            <span class="n">base_steps</span><span class="p">,</span>
+            <span class="n">env_name</span><span class="o">=</span><span class="n">env_name</span><span class="p">,</span>
+            <span class="n">n_steps</span><span class="o">=</span><span class="n">n_steps</span><span class="p">,</span>
+            <span class="n">num_cores</span><span class="o">=</span><span class="n">num_cores</span><span class="p">,</span>
+            <span class="n">shielded</span><span class="o">=</span><span class="n">shielded</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Append to the results</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">model_name</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;validation_reward&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
+                    <span class="s2">&quot;policy_kwargs&quot;</span><span class="p">:</span> <span class="n">policy_kwargs</span><span class="p">,</span>
+                    <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">lr</span><span class="p">,</span>
+                    <span class="s2">&quot;clip_range&quot;</span><span class="p">:</span> <span class="n">clip_range</span><span class="p">,</span>
+                    <span class="s2">&quot;ent_coef&quot;</span><span class="p">:</span> <span class="n">ent_coef</span><span class="p">,</span>
+                    <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">,</span>
+                    <span class="s2">&quot;n_epochs&quot;</span><span class="p">:</span> <span class="n">epoch</span><span class="p">,</span>
+                    <span class="s2">&quot;max_grad_norm&quot;</span><span class="p">:</span> <span class="n">max_grad_norm</span><span class="p">,</span>
+                    <span class="s2">&quot;experiment_ID&quot;</span><span class="p">:</span> <span class="n">experiment_ID</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Intermittently save the results</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">agent_dir</span> <span class="o">+</span> <span class="n">SEP</span> <span class="o">+</span> <span class="s2">&quot;results_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.npy&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+
+        <span class="c1"># Increment the index</span>
+        <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">run_a2c_experiments</span><span class="p">(</span>
+    <span class="n">agent_dir</span><span class="p">,</span>
+    <span class="n">kwargs_list</span><span class="p">,</span>
+    <span class="n">n_its</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">base_steps</span><span class="o">=</span><span class="mi">1020</span><span class="p">,</span>
+    <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">env_name</span><span class="o">=</span><span class="s2">&quot;MultiSensorEOS-v0&quot;</span><span class="p">,</span>
+    <span class="n">max_steps</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">num_cores</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">kwargs_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">kwargs_list</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">index</span>
+
+    <span class="k">for</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="n">kwargs_list</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">activation_fn</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;activation_fn&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">LeakyReLU</span><span class="p">)</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">dropout</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dropout&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">lr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lr&quot;</span><span class="p">,</span> <span class="mf">3e-4</span><span class="p">)</span>
+        <span class="n">ent_coef</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ent_coef&quot;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+        <span class="n">n_steps</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_steps&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+        <span class="c1"># Create the policy kwargs</span>
+        <span class="n">policy_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">activation_fn</span><span class="o">=</span><span class="n">activation_fn</span><span class="p">,</span>
+            <span class="n">net_arch</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">width</span><span class="p">,</span>
+                <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="n">depth</span><span class="p">,</span>
+                <span class="s2">&quot;dropout&quot;</span><span class="p">:</span> <span class="n">dropout</span><span class="p">,</span>
+                <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Call the training function</span>
+        <span class="n">reward</span><span class="p">,</span> <span class="n">model_name</span> <span class="o">=</span> <span class="n">a2c_experiment</span><span class="p">(</span>
+            <span class="n">agent_dir</span><span class="p">,</span>
+            <span class="n">policy_kwargs</span><span class="p">,</span>
+            <span class="n">lr</span><span class="p">,</span>
+            <span class="n">ent_coef</span><span class="p">,</span>
+            <span class="n">idx</span><span class="p">,</span>
+            <span class="n">n_its</span><span class="p">,</span>
+            <span class="n">base_steps</span><span class="p">,</span>
+            <span class="n">env_name</span><span class="o">=</span><span class="n">env_name</span><span class="p">,</span>
+            <span class="n">max_steps</span><span class="o">=</span><span class="n">max_steps</span><span class="p">,</span>
+            <span class="n">n_steps</span><span class="o">=</span><span class="n">n_steps</span><span class="p">,</span>
+            <span class="n">num_cores</span><span class="o">=</span><span class="n">num_cores</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Append to the results</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">model_name</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;validation_reward&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
+                    <span class="s2">&quot;policy_kwargs&quot;</span><span class="p">:</span> <span class="n">policy_kwargs</span><span class="p">,</span>
+                    <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">lr</span><span class="p">,</span>
+                    <span class="s2">&quot;ent_coef&quot;</span><span class="p">:</span> <span class="n">ent_coef</span><span class="p">,</span>
+                    <span class="s2">&quot;n_steps&quot;</span><span class="p">:</span> <span class="n">n_steps</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Intermittently save the results</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">agent_dir</span> <span class="o">+</span> <span class="n">SEP</span> <span class="o">+</span> <span class="s2">&quot;results_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.npy&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+
+        <span class="c1"># Increment the index</span>
+        <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">run_dqn_experiments</span><span class="p">(</span>
+    <span class="n">agent_dir</span><span class="p">,</span>
+    <span class="n">kwargs_list</span><span class="p">,</span>
+    <span class="n">n_its</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">base_steps</span><span class="o">=</span><span class="mi">1020</span><span class="p">,</span>
+    <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">env_name</span><span class="o">=</span><span class="s2">&quot;MultiSensorEOS-v0&quot;</span><span class="p">,</span>
+    <span class="n">max_steps</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">num_cores</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">kwargs_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">kwargs_list</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">index</span>
+
+    <span class="k">for</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="n">kwargs_list</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">lr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lr&quot;</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">)</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;batch_size&quot;</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+        <span class="n">buffer_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;buffer_size&quot;</span><span class="p">,</span> <span class="mf">5e5</span><span class="p">)</span>
+
+        <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">width</span><span class="p">]</span> <span class="o">*</span> <span class="n">depth</span>
+
+        <span class="c1"># Create the policy kwargs</span>
+        <span class="n">policy_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">net_arch</span><span class="o">=</span><span class="n">sizes</span><span class="p">)</span>
+
+        <span class="c1"># Call the training function</span>
+        <span class="n">reward</span><span class="p">,</span> <span class="n">model_name</span> <span class="o">=</span> <span class="n">dqn_experiment</span><span class="p">(</span>
+            <span class="n">agent_dir</span><span class="p">,</span>
+            <span class="n">policy_kwargs</span><span class="p">,</span>
+            <span class="n">idx</span><span class="p">,</span>
+            <span class="n">n_its</span><span class="p">,</span>
+            <span class="n">base_steps</span><span class="p">,</span>
+            <span class="n">learning_rate</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">buffer_size</span><span class="o">=</span><span class="n">buffer_size</span><span class="p">,</span>
+            <span class="n">num_cores</span><span class="o">=</span><span class="n">num_cores</span><span class="p">,</span>
+            <span class="n">n_steps</span><span class="o">=</span><span class="n">max_steps</span><span class="p">,</span>
+            <span class="n">env_name</span><span class="o">=</span><span class="n">env_name</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Append to the results</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">model_name</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;validation_reward&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
+                    <span class="s2">&quot;policy_kwargs&quot;</span><span class="p">:</span> <span class="n">policy_kwargs</span><span class="p">,</span>
+                    <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">lr</span><span class="p">,</span>
+                    <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">,</span>
+                    <span class="s2">&quot;buffer_size&quot;</span><span class="p">:</span> <span class="n">buffer_size</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Intermittently save the results</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">agent_dir</span> <span class="o">+</span> <span class="n">SEP</span> <span class="o">+</span> <span class="s2">&quot;results_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.npy&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+
+        <span class="c1"># Increment the index</span>
+        <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

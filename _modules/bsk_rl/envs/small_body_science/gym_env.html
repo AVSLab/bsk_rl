@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.envs.small_body_science.gym_env &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.envs.small_body_science.gym_env</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.envs.small_body_science.gym_env</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">gymnasium</span> <span class="k">as</span> <span class="nn">gym</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">gymnasium</span> <span class="kn">import</span> <span class="n">spaces</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.small_body_science.bsk_sim</span> <span class="kn">import</span> <span class="n">SmallBodyScienceSimulator</span>
+
+
+<div class="viewcode-block" id="SmallBodyScience">
+<a class="viewcode-back" href="../../../../API%20Reference/envs/small_body_science/gym_env.html#bsk_rl.envs.small_body_science.gym_env.SmallBodyScience">[docs]</a>
+<span class="k">class</span> <span class="nc">SmallBodyScience</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Small body gym environment where an agent can transition between different</span>
+<span class="sd">    waypoints defined in the sun anti-momentum frame to image candidate landing sites</span>
+<span class="sd">    or collect spectroscopy map data while avoiding resource constraint violations.</span>
+<span class="sd">    Resource constraint violations include:</span>
+<span class="sd">    * Fuel</span>
+<span class="sd">    * Power</span>
+<span class="sd">    * Data storage</span>
+<span class="sd">    * Collision with the body (not necessarilly a resource, but considered a</span>
+<span class="sd">    failure condition)</span>
+
+<span class="sd">    Action Space (Discrete):</span>
+<span class="sd">    * 0 - Charging Mode</span>
+<span class="sd">    * 1 - 8 - Transition to waypoint 1-8</span>
+<span class="sd">    * 9 - Map</span>
+<span class="sd">    * 10 - Downlink</span>
+<span class="sd">    * 11 - Image</span>
+
+<span class="sd">    Observation Space (Box):</span>
+<span class="sd">    * 0-2: Hill-frame position</span>
+<span class="sd">    * 3-5: Hill-frame velocity</span>
+<span class="sd">    * 6: Eclipse</span>
+<span class="sd">    * 7: Data buffer storage</span>
+<span class="sd">    * 8: Battery level</span>
+<span class="sd">    * 9: dV consumed</span>
+<span class="sd">    * 10: Downlink availability</span>
+<span class="sd">    * 11-13: Current waypoint</span>
+<span class="sd">    * 14-16: Last waypoint</span>
+<span class="sd">    * 17: Imaged targets</span>
+<span class="sd">    * 18: Downlinked targets</span>
+<span class="sd">    * 19-21: Next closest unimaged target position in Hill frame</span>
+<span class="sd">    * 22-30: Map regions collected</span>
+
+<span class="sd">    Reward Function:</span>
+<span class="sd">    * r = +A each tgt downlinked for first time</span>
+<span class="sd">    * r = +B for each tgt imaged for first time</span>
+<span class="sd">    * r = +C for each map region downlinked for first time</span>
+<span class="sd">    * r = +D for each map region collected for first time</span>
+<span class="sd">    * r = -E for failure</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SmallBodyScience.__init__">
+<a class="viewcode-back" href="../../../../API%20Reference/envs/small_body_science/gym_env.html#bsk_rl.envs.small_body_science.gym_env.SmallBodyScience.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">failure_penalty</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">target_component</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">target_downlink_component</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">map_component</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">map_downlink_component</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Basilisk Small Body Science Sim - Version </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__version__</span><span class="p">))</span>
+
+        <span class="c1"># Set the fidelity of the environment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fidelity</span> <span class="o">=</span> <span class="s2">&quot;high&quot;</span>
+
+        <span class="c1"># General variables defining the environment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span> <span class="o">=</span> <span class="mf">10000.0</span>  <span class="c1"># Specify the maximum number of minutes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_steps</span> <span class="o">=</span> <span class="mi">200</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">render</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1">#   Tell the environment that it doesn&#39;t have a sim attribute...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator_init</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_total</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Set initial conditions to none (gets assigned in reset)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Set the dynRate for the env, which is passed into the simulator</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fidelity</span> <span class="o">==</span> <span class="s2">&quot;high&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dynRate</span> <span class="o">=</span> <span class="mf">2.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fswRate</span> <span class="o">=</span> <span class="mf">2.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapRate</span> <span class="o">=</span> <span class="mf">180.0</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">fidelity</span> <span class="o">==</span> <span class="s2">&quot;low&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dynRate</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fswRate</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapRate</span> <span class="o">=</span> <span class="mf">180.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid fidelity, choose either low or high. Selected = &quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fidelity</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Set up options, constants for this environment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_duration</span> <span class="o">=</span> <span class="mf">10000.0</span>  <span class="c1"># seconds, tune as desired</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_mult</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">failure_penalty</span> <span class="o">=</span> <span class="n">failure_penalty</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_component</span> <span class="o">=</span> <span class="n">target_component</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_downlink_component</span> <span class="o">=</span> <span class="n">target_downlink_component</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">map_component</span> <span class="o">=</span> <span class="n">map_component</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">map_downlink_component</span> <span class="o">=</span> <span class="n">map_downlink_component</span>
+
+        <span class="c1"># Define number of image targets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_targets</span> <span class="o">=</span> <span class="mi">10</span>
+
+        <span class="c1"># Define number of map targets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_maps</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_map_points</span> <span class="o">=</span> <span class="mi">500</span>  <span class="c1"># Number of grid points per map</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi_c</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_c</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Define observation space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_states</span> <span class="o">=</span> <span class="mi">31</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_states</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_states</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span> <span class="o">=</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="o">-</span><span class="mf">1e16</span><span class="p">,</span> <span class="mf">1e16</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_states</span><span class="p">,))</span>
+
+        <span class="c1"># Define the action space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+
+        <span class="c1"># Store what the agent tried</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_episode</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_episode_memory</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_step</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_obs</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="SmallBodyScience.step">
+<a class="viewcode-back" href="../../../../API%20Reference/envs/small_body_science/gym_env.html#bsk_rl.envs.small_body_science.gym_env.SmallBodyScience.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The agent takes a step in the environment.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        action : int</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ob, reward, episode_over, truncated, info : tuple</span>
+<span class="sd">            ob (object) :</span>
+<span class="sd">                an environment-specific object representing your observation of</span>
+<span class="sd">                the environment.</span>
+<span class="sd">            reward (float) :</span>
+<span class="sd">                amount of reward achieved by the previous action. The scale</span>
+<span class="sd">                varies between environments, but the goal is always to increase</span>
+<span class="sd">                your total reward.</span>
+<span class="sd">            episode_over (bool) :</span>
+<span class="sd">                whether it&#39;s time to reset the environment again. Most (but not</span>
+<span class="sd">                all) tasks are divided up into well-defined episodes, and done</span>
+<span class="sd">                being True indicates the episode has terminated. (For example,</span>
+<span class="sd">                perhaps the pole tipped too far, or you lost your last life.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># If the simTime in minutes is greater than the planning interval in minutes,</span>
+        <span class="c1"># end the sim</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">simTime</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;End of simulation reached&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">simTime</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">downlinked_images</span><span class="p">,</span> <span class="n">downlinked_maps</span><span class="p">,</span> <span class="n">imaged</span><span class="p">,</span> <span class="n">mapped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_take_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+        <span class="c1"># If we want to return observations, do the following</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_obs</span><span class="p">:</span>
+            <span class="n">ob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_state</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">powerLevel</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;Ran out of power. Battery level at: &quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">powerLevel</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="o">+</span> <span class="s2">&quot;, env step &quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_step</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;, action taken was &quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="c1"># If we overflow the buffer, end the episode.</span>
+            <span class="k">elif</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">storageLevel</span>
+                <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">dataStorageUnit</span><span class="o">.</span><span class="n">storageCapacity</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;Data buffer overflow. Data storage level at:&quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">storageLevel</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;, env step, &quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_step</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;, action taken was &quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">dV</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;max_dV&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;Ran out of fuel. Total dV consumed: &quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">dV</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;, env step &quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_step</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">collision</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Collided with the body, env step &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_step</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_reward</span><span class="p">(</span>
+                <span class="n">downlinked_images</span><span class="p">,</span> <span class="n">downlinked_maps</span><span class="p">,</span> <span class="n">imaged</span><span class="p">,</span> <span class="n">mapped</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reward_total</span> <span class="o">+=</span> <span class="n">reward</span>
+
+        <span class="c1"># Otherwise, return nothing</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ob</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;metrics&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;imaged_targets&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">imaged_targets</span><span class="p">,</span>
+            <span class="s2">&quot;downlinked_targets&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">downlinked_targets</span><span class="p">,</span>
+            <span class="s2">&quot;imaged_maps&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">imaged_maps</span><span class="p">,</span>
+            <span class="s2">&quot;downlinked_maps&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">downlinked_maps</span><span class="p">,</span>
+            <span class="s2">&quot;sim_length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">simTime</span> <span class="o">/</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_step</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">ob</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">info</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_take_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Interfaces with the simulator to</span>
+<span class="sd">        :param action:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_episode_memory</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_episode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sim_over</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_full</span><span class="p">,</span>
+            <span class="n">downlinked_images</span><span class="p">,</span>
+            <span class="n">downlinked_maps</span><span class="p">,</span>
+            <span class="n">imaged</span><span class="p">,</span>
+            <span class="n">mapped</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">run_sim</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">downlinked_images</span><span class="p">,</span> <span class="n">downlinked_maps</span><span class="p">,</span> <span class="n">imaged</span><span class="p">,</span> <span class="n">mapped</span>
+
+    <span class="k">def</span> <span class="nf">_get_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">downlinked_images</span><span class="p">,</span> <span class="n">downlinked_maps</span><span class="p">,</span> <span class="n">imaged</span><span class="p">,</span> <span class="n">mapped</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reward is based on the total amount of imaged data downlinked in MB.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">failure_penalty</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Map image reward</span>
+            <span class="n">reward</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">map_component</span>
+                <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">n_maps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">n_map_points</span><span class="p">)</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">mapped</span><span class="p">)</span>
+            <span class="c1"># Map downlink reward</span>
+            <span class="n">reward</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">map_downlink_component</span>
+                <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">n_maps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">n_map_points</span><span class="p">)</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">downlinked_maps</span><span class="p">)</span>
+            <span class="c1"># Target imaging reward</span>
+            <span class="n">reward</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_component</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">n_targets</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">imaged</span><span class="p">)</span>
+            <span class="c1"># Target downlink reward</span>
+            <span class="n">reward</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_downlink_component</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">n_targets</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span>
+                <span class="n">downlinked_images</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">reward</span>
+
+<div class="viewcode-block" id="SmallBodyScience.reset">
+<a class="viewcode-back" href="../../../../API%20Reference/envs/small_body_science/gym_env.html#bsk_rl.envs.small_body_science.gym_env.SmallBodyScience.reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset the state of the environment and returns an initial observation.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        observation (object): the initial observation of the space.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_episode_memory</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_step</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_total</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># If initial conditions are passed in, use those</span>
+        <span class="k">if</span> <span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;initial_conditions&quot;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s2">&quot;initial_conditions&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span>
+
+        <span class="c1"># Create the simulator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">SmallBodyScienceSimulator</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dynRate</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fswRate</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapRate</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">step_duration</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">,</span>
+            <span class="n">render</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">,</span>
+            <span class="n">n_targets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_targets</span><span class="p">,</span>
+            <span class="n">n_map_points</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_map_points</span><span class="p">,</span>
+            <span class="n">max_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_length</span><span class="p">,</span>
+            <span class="n">n_states</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_states</span><span class="p">,</span>
+            <span class="n">n_maps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_maps</span><span class="p">,</span>
+            <span class="n">phi_c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">phi_c</span><span class="p">,</span>
+            <span class="n">lambda_c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lambda_c</span><span class="p">,</span>
+            <span class="n">fidelity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fidelity</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">init_tasks_and_processes</span><span class="p">()</span>
+
+        <span class="c1"># Extract initial conditions from instantiation of simulator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">initial_conditions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">max_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator_init</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="p">{}</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_get_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the observation.</span>
+<span class="sd">        WIP: Work out which error representation to give the algo.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">obs</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">&quot;SmallBodyScience-v0&quot;</span><span class="p">)</span>
+
+    <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="n">reward_sum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">max_steps</span><span class="p">):</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+        <span class="n">ob</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">episode_over</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="n">reward_sum</span> <span class="o">+=</span> <span class="n">reward</span>
+
+        <span class="k">if</span> <span class="n">episode_over</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Episode over at step &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+            <span class="k">break</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reward total: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">reward_sum</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

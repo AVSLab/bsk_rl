@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.envs.multisensor_eos.gym_env &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.envs.multisensor_eos.gym_env</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.envs.multisensor_eos.gym_env</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span> <span class="nn">gymnasium</span> <span class="k">as</span> <span class="nn">gym</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">gymnasium</span> <span class="kn">import</span> <span class="n">spaces</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.multisensor_eos.bsk_sim</span> <span class="kn">import</span> <span class="n">MultiSensorEOSSimulator</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.multisensor_eos.env_settings</span> <span class="kn">import</span> <span class="n">Settings</span>
+
+
+<div class="viewcode-block" id="MultiSensorEOS">
+<a class="viewcode-back" href="../../../../API%20Reference/envs/multisensor_eos/gym_env.html#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS">[docs]</a>
+<span class="k">class</span> <span class="nc">MultiSensorEOS</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Earth observation environment - simulates a spacecraft with variable imager modes</span>
+<span class="sd">    attempting to image a ground location.</span>
+<span class="sd">    Agent must choose between charging, desaturating, and image type(s); also needs to</span>
+<span class="sd">    choose an appropriate imaging type.</span>
+<span class="sd">    Taking the image type corresponding to the ground location&#39;s required sensor type</span>
+<span class="sd">    results in full reward, other image types results in no reward.</span>
+
+<span class="sd">    Action Space (discrete):</span>
+
+<span class="sd">    * 0 - Points solar panels at the sun.</span>
+<span class="sd">    * 1 - Desaturates the reaction wheels.</span>
+<span class="sd">    * &gt;1 - Orients the s/c towards the earth; takes image of type _.</span>
+
+<span class="sd">    Observation Space:</span>
+
+<span class="sd">    * r_sc_I - float[3,] - spacecraft position.</span>
+<span class="sd">    * v_sc - float[3,] - spacecraft velocity in PCPF.</span>
+<span class="sd">    * sigma_RB - float [0,1] - norm of the spacecraft error MRP with respect to the</span>
+<span class="sd">      last reference frame specified.</span>
+<span class="sd">    * omega_BN - float - norm of the total spacecraft bus rotational velocity with</span>
+<span class="sd">      respect to the inertial frame.</span>
+<span class="sd">    * omega_RW - float - norm of the reaction wheel rotational velocities.</span>
+<span class="sd">    * storedCharge - float [0,batCapacity] - indicates the s/c battery charge level in</span>
+<span class="sd">      W-s.</span>
+<span class="sd">    * sun_indicator - float [0, 1] - indicates the flux mitigator due to eclipse.</span>
+<span class="sd">    * access indicator - access to the next target</span>
+<span class="sd">    * img_mode norm - float [0,1] - indicates the required imaging mode.</span>
+
+<span class="sd">    Reward Function:</span>
+<span class="sd">    r = 1/(1+ | sigma_RB|) if correct sensor</span>
+
+<span class="sd">    Intended to provide a rich reward in action 1 when the spacecraft is pointed</span>
+<span class="sd">    towards the earth, decaying as sigma^2 as the pointing error increases.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MultiSensorEOS.__init__">
+<a class="viewcode-back" href="../../../../API%20Reference/envs/multisensor_eos/gym_env.html#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;Earth Observation Sim, State Guarded Actions - Version </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__version__</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Set up simulation parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">Settings</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_duration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">STEP_DURATION</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">SIM_TIME</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dyn_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">DYN_STEP</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">FSW_STEP</span>
+
+        <span class="c1"># Set up environment parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_step</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_total</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_episode</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ob</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_machine_state</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_ins_spec</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_sim_state</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_state</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Set up setting variables locally</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wheel_lim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">WHEEL_LIM</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">POWER_MAX</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_defn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">OBSERVATIONS</span>
+
+        <span class="c1">#   Reward function parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_observations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">N_TGTS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_mult</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">REWARD_MULTIPLIER</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_observations</span>
+        <span class="p">)</span>  <span class="c1"># Normalize reward to episode duration; &#39;1&#39; represents 100% target</span>
+        <span class="c1"># observation with 100% accuracy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">failure_penalty</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># episode reward of 0 or less is a failed episode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_modes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">img_modes</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1">#   Set observation space</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1e16</span>
+        <span class="n">high</span> <span class="o">=</span> <span class="mf">1e16</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span> <span class="o">=</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+            <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_defn</span><span class="p">),),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Observation space: &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c1"># Action Space description</span>
+        <span class="c1">#   0 - sun pointing (power objective)</span>
+        <span class="c1">#   1 - desaturation (required for long-term pointing)</span>
+        <span class="c1">#   &gt;1 - imaging types</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_modes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_episode_memory</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Action space: &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">render</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">RENDER</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_obs</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="MultiSensorEOS.step">
+<a class="viewcode-back" href="../../../../API%20Reference/envs/multisensor_eos/gym_env.html#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The agent takes a step in the environment. Note that the simulator must be</span>
+<span class="sd">        initialized</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            action: int</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        * ob (object): an environment-specific object representing your observation of</span>
+<span class="sd">          the environment.</span>
+<span class="sd">        * reward (float): amount of reward achieved by the previous action. The scale</span>
+<span class="sd">          varies between environments, but the goal is always to increase</span>
+<span class="sd">          your total reward.</span>
+<span class="sd">        * episode_over (bool): whether it&#39;s time to reset the environment again. Most (but not</span>
+<span class="sd">          all) tasks are divided up into well-defined episodes, and done</span>
+<span class="sd">          being True indicates the episode has terminated. (For example,</span>
+<span class="sd">          perhaps the pole tipped too far, or you lost your last life.)</span>
+<span class="sd">        * truncated (truncated): set to false. Gymnasium requirement.</span>
+<span class="sd">        * info (dict): diagnostic information useful for debugging. It can sometimes</span>
+<span class="sd">          be useful for learning (for example, it might contain the raw</span>
+<span class="sd">          probabilities behind the environment&#39;s last state change).</span>
+<span class="sd">          However, official evaluations of your agent are not allowed to</span>
+<span class="sd">          use this for learning.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_step</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_sim_state</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sim_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_ins_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">img_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_take_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+        <span class="c1">#   If the wheel speeds get too large, end the episode.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wheel_speed&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheel_lim</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Died from wheel explosion.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stored_charge&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ran out of power.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_over</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_reward</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_total</span> <span class="o">+=</span> <span class="n">reward</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;episode&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_total</span><span class="p">,</span> <span class="s2">&quot;l&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">curr_step</span><span class="p">},</span>
+            <span class="s2">&quot;obs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ob</span><span class="p">,</span>
+            <span class="s2">&quot;fsm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_ins_spec</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;metrics&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;sim_length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">/</span> <span class="mi">60</span><span class="p">,</span>
+            <span class="s2">&quot;num_imaged&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_num_imaged</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ob</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_take_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Interfaces with the simulator to</span>
+<span class="sd">        :param action:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_episode_memory</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_episode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+        <span class="c1">#   Let the simulator handle action management:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">run_sim</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ob</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reward is based on time spent with the inertial attitude pointed towards the</span>
+<span class="sd">        ground within a given tolerance.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">last_action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_episode_memory</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_episode</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">failure_penalty</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">last_action</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_sim_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;access_indicator&quot;</span><span class="p">):</span>
+            <span class="c1">#   Attitude contribution:</span>
+            <span class="n">att_reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_mult</span> <span class="o">/</span> <span class="p">(</span>
+                <span class="mf">1.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_sim_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;att_err&quot;</span><span class="p">)</span> <span class="o">**</span> <span class="mf">2.0</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">last_action</span> <span class="o">==</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">prev_ins_spec</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="p">):</span>  <span class="c1"># If the obs taken matches the correction insturment action type</span>
+                <span class="n">freq_mult</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">freq_mult</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="n">att_reward</span> <span class="o">*</span> <span class="n">freq_mult</span>
+
+        <span class="k">return</span> <span class="n">reward</span>
+
+    <span class="k">def</span> <span class="nf">_get_ob</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the observation.</span>
+<span class="sd">        WIP: Work out which error representation to give the algo.&quot;&quot;&quot;</span>
+        <span class="n">ob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_defn</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ob_key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_defn</span><span class="p">):</span>
+            <span class="n">ob</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ob_key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ob_key</span> <span class="o">==</span> <span class="s2">&quot;wheel_speed&quot;</span><span class="p">:</span>
+                <span class="n">ob</span><span class="p">[</span>
+                    <span class="n">i</span>
+                <span class="p">]</span> <span class="o">/=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">wheel_lim</span>
+                <span class="p">)</span>  <span class="c1"># Normalize reaction wheel speed to fraction of limit</span>
+            <span class="k">elif</span> <span class="n">ob_key</span> <span class="o">==</span> <span class="s2">&quot;stored_charge&quot;</span><span class="p">:</span>
+                <span class="n">ob</span><span class="p">[</span>
+                    <span class="n">i</span>
+                <span class="p">]</span> <span class="o">/=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">power_max</span>
+                <span class="p">)</span>  <span class="c1"># Normalize current power to fraction of total power</span>
+
+        <span class="k">return</span> <span class="n">ob</span>
+
+<div class="viewcode-block" id="MultiSensorEOS.reset">
+<a class="viewcode-back" href="../../../../API%20Reference/envs/multisensor_eos/gym_env.html#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset the state of the environment and returns an initial observation.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        observation (object): the initial observation of the space.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_episode</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_episode_memory</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_step</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_total</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">del</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span>
+        <span class="p">)</span>  <span class="c1"># Force delete the sim to make sure nothing funky happens under the hood</span>
+        <span class="n">tFinal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_steps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_duration</span>
+
+        <span class="k">if</span> <span class="n">options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">generate_new_ic</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">INITIAL_CONDITIONS</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;initial_conditions&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">generate_new_ic</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">INITIAL_CONDITIONS</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s2">&quot;initial_conditions&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">MultiSensorEOSSimulator</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dyn_step</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw_step</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">step_duration</span><span class="p">,</span>
+            <span class="n">tFinal</span><span class="p">,</span>
+            <span class="n">initial_conditions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">,</span>
+            <span class="n">render</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">,</span>
+            <span class="n">settings</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode_over</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_over</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">get_sim_state</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ob</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ob</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;human&quot;</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">render</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_get_num_imaged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">num_imaged</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">imaged_targets</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">imaged_targets</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="n">num_imaged</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">&quot;MultiSensorEOS-v0&quot;</span><span class="p">)</span>
+
+    <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="n">reward_sum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">max_steps</span><span class="p">):</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+        <span class="n">ob</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">episode_over</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="n">reward_sum</span> <span class="o">+=</span> <span class="n">reward</span>
+
+        <span class="k">if</span> <span class="n">episode_over</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Episode over at step &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+            <span class="k">break</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reward total: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">reward_sum</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

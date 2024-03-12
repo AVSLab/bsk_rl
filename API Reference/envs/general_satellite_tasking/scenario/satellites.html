@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>satellites &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="simulation" href="../simulation/index.html" />
+    <link rel="prev" title="sat_observations" href="sat_observations.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../agents/index.html">agents</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">envs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../../agile_eos/index.html">agile_eos</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html">general_satellite_tasking</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../gym_env.html">gym_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../types.html">types</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html">scenario</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="communication.html">communication</a></li>
+<li class="toctree-l5"><a class="reference internal" href="data.html">data</a></li>
+<li class="toctree-l5"><a class="reference internal" href="environment_features.html">environment_features</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sat_actions.html">sat_actions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sat_observations.html">sat_observations</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">satellites</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite"><code class="docutils literal notranslate"><span class="pre">AccessSatellite</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.__init__"><code class="docutils literal notranslate"><span class="pre">AccessSatellite.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.add_location_for_access_checking"><code class="docutils literal notranslate"><span class="pre">AccessSatellite.add_location_for_access_checking()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.calculate_additional_windows"><code class="docutils literal notranslate"><span class="pre">AccessSatellite.calculate_additional_windows()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.find_next_opportunities"><code class="docutils literal notranslate"><span class="pre">AccessSatellite.find_next_opportunities()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.next_opportunities_dict"><code class="docutils literal notranslate"><span class="pre">AccessSatellite.next_opportunities_dict()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.opportunities_dict"><code class="docutils literal notranslate"><span class="pre">AccessSatellite.opportunities_dict()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.reset_post_sim"><code class="docutils literal notranslate"><span class="pre">AccessSatellite.reset_post_sim()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.reset_pre_sim"><code class="docutils literal notranslate"><span class="pre">AccessSatellite.reset_pre_sim()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.upcoming_opportunities"><code class="docutils literal notranslate"><span class="pre">AccessSatellite.upcoming_opportunities</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.upcoming_opportunities_dict"><code class="docutils literal notranslate"><span class="pre">AccessSatellite.upcoming_opportunities_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.DoNothingSatellite"><code class="docutils literal notranslate"><span class="pre">DoNothingSatellite</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.DoNothingSatellite.dyn_type"><code class="docutils literal notranslate"><span class="pre">DoNothingSatellite.dyn_type</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.DoNothingSatellite.fsw_type"><code class="docutils literal notranslate"><span class="pre">DoNothingSatellite.fsw_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.FBImagerSatellite"><code class="docutils literal notranslate"><span class="pre">FBImagerSatellite</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.FBImagerSatellite.dyn_type"><code class="docutils literal notranslate"><span class="pre">FBImagerSatellite.dyn_type</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.FBImagerSatellite.fsw_type"><code class="docutils literal notranslate"><span class="pre">FBImagerSatellite.fsw_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.FullFeaturedSatellite"><code class="docutils literal notranslate"><span class="pre">FullFeaturedSatellite</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImageAheadSatellite"><code class="docutils literal notranslate"><span class="pre">ImageAheadSatellite</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.__init__"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.dyn_type"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.dyn_type</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.enable_target_window"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.enable_target_window()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.fsw_type"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.fsw_type</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.next_windows"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.next_windows</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.parse_target_selection"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.parse_target_selection()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.reset_post_sim"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.reset_post_sim()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.reset_pre_sim"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.reset_pre_sim()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.task_target_for_imaging"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.task_target_for_imaging()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.upcoming_targets"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.upcoming_targets()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.upcoming_windows"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.upcoming_windows</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.windows"><code class="docutils literal notranslate"><span class="pre">ImagingSatellite.windows</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><code class="docutils literal notranslate"><span class="pre">Satellite</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.__init__"><code class="docutils literal notranslate"><span class="pre">Satellite.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.action_space"><code class="docutils literal notranslate"><span class="pre">Satellite.action_space</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.default_sat_args"><code class="docutils literal notranslate"><span class="pre">Satellite.default_sat_args()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.get_obs"><code class="docutils literal notranslate"><span class="pre">Satellite.get_obs()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.id"><code class="docutils literal notranslate"><span class="pre">Satellite.id</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.is_alive"><code class="docutils literal notranslate"><span class="pre">Satellite.is_alive()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.log_info"><code class="docutils literal notranslate"><span class="pre">Satellite.log_info()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.observation_space"><code class="docutils literal notranslate"><span class="pre">Satellite.observation_space</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.reset_post_sim"><code class="docutils literal notranslate"><span class="pre">Satellite.reset_post_sim()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.reset_pre_sim"><code class="docutils literal notranslate"><span class="pre">Satellite.reset_pre_sim()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_action"><code class="docutils literal notranslate"><span class="pre">Satellite.set_action()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_dynamics"><code class="docutils literal notranslate"><span class="pre">Satellite.set_dynamics()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_fsw"><code class="docutils literal notranslate"><span class="pre">Satellite.set_fsw()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_simulator"><code class="docutils literal notranslate"><span class="pre">Satellite.set_simulator()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite"><code class="docutils literal notranslate"><span class="pre">SteeringImagerSatellite</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite.dyn_type"><code class="docutils literal notranslate"><span class="pre">SteeringImagerSatellite.dyn_type</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite.fsw_type"><code class="docutils literal notranslate"><span class="pre">SteeringImagerSatellite.fsw_type</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../simulation/index.html">simulation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html">utils</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../multisat_agile_eos/index.html">multisat_agile_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../multisensor_eos/index.html">multisensor_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple_eos/index.html">simple_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science/index.html">small_body_science</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science_pomdp/index.html">small_body_science_pomdp</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../training/index.html">training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utilities/index.html">utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">envs</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">general_satellite_tasking</a></li>
+          <li class="breadcrumb-item"><a href="index.html">scenario</a></li>
+      <li class="breadcrumb-item active">satellites</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/API Reference/envs/general_satellite_tasking/scenario/satellites.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="satellites">
+<span id="bsk-rl-envs-general-satellite-tasking-scenario-satellites"></span><h1>satellites<a class="headerlink" href="#satellites" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl.envs.general_satellite_tasking.scenario.satellites</span></code></p>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.envs.general_satellite_tasking.scenario.satellites">Satellites are the agents in the environment.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AccessSatellite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generation_duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5700</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_generation_duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">access_dist_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4000000.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#AccessSatellite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">Satellite</span></code></a></p>
+<p>Satellite that can detect access opportunities for ground locations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generation_duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5700</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_generation_duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">access_dist_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4000000.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#AccessSatellite.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.__init__" title="Link to this definition"></a></dt>
+<dd><p>Construct an AccessSatellite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>generation_duration</strong> – Duration to calculate additional imaging windows for
+when windows are exhausted. If <cite>None</cite>, generate for the simulation
+<cite>time_limit</cite> unless the simulation is infinite. [s]</p></li>
+<li><p><strong>initial_generation_duration</strong> – Duration to initially calculate imaging windows
+[s]</p></li>
+<li><p><strong>access_dist_threshold</strong> – Distance bound [m] for evaluating imaging windows
+more exactly. 4e6 will capture &gt;10 elevation windows for a 500 km orbit.</p></li>
+<li><p><strong>args</strong> – Passed through to Satellite constructor</p></li>
+<li><p><strong>kwargs</strong> – Passed through to Satellite constructor</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.add_location_for_access_checking">
+<span class="sig-name descname"><span class="pre">add_location_for_access_checking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_elev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#AccessSatellite.add_location_for_access_checking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.add_location_for_access_checking" title="Link to this definition"></a></dt>
+<dd><p>Add a location to be included in window calculations.</p>
+<p>Note that this location will only be included in future calls to
+calculate_additional_windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>object</strong> – Object to add window for</p></li>
+<li><p><strong>location</strong> – Objects PCPF location [m]</p></li>
+<li><p><strong>min_elev</strong> – Minimum elevation angle for access [rad]</p></li>
+<li><p><strong>type</strong> – Category of windows to add location to</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.calculate_additional_windows">
+<span class="sig-name descname"><span class="pre">calculate_additional_windows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#AccessSatellite.calculate_additional_windows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.calculate_additional_windows" title="Link to this definition"></a></dt>
+<dd><p>Use a multiroot finding method to evaluate imaging windows for each location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>duration</strong> – Time to calculate windows from end of previous window.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.find_next_opportunities">
+<span class="sig-name descname"><span class="pre">find_next_opportunities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#AccessSatellite.find_next_opportunities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.find_next_opportunities" title="Link to this definition"></a></dt>
+<dd><p>Find the n nearest opportunities, sorted by window close time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> – Number of opportunities to attempt to include.</p></li>
+<li><p><strong>pad</strong> – If true, duplicates the last target if the number of opportunities
+found is less than n.</p></li>
+<li><p><strong>max_lookahead</strong> – Maximum times to call calculate_additional_windows.</p></li>
+<li><p><strong>types</strong> – Types of opportunities to include. If None, include all types.</p></li>
+<li><p><strong>filter</strong> – Objects to exclude from the dictionary.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>n nearest opportunities, ordered</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.next_opportunities_dict">
+<span class="sig-name descname"><span class="pre">next_opportunities_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#AccessSatellite.next_opportunities_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.next_opportunities_dict" title="Link to this definition"></a></dt>
+<dd><p>Make dictionary of opportunities that maps objects to the next open windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>types</strong> – Types of opportunities to include. If None, include all types.</p></li>
+<li><p><strong>filter</strong> – Objects to exclude from the dictionary.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>objects -&gt; next window</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>windows</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.opportunities_dict">
+<span class="sig-name descname"><span class="pre">opportunities_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#AccessSatellite.opportunities_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.opportunities_dict" title="Link to this definition"></a></dt>
+<dd><p>Make dictionary of opportunities that maps objects to lists of windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>types</strong> – Types of opportunities to include. If None, include all types.</p></li>
+<li><p><strong>filter</strong> – Objects to exclude from the dictionary.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>objects -&gt; windows list</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>windows</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.reset_post_sim">
+<span class="sig-name descname"><span class="pre">reset_post_sim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#AccessSatellite.reset_post_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.reset_post_sim" title="Link to this definition"></a></dt>
+<dd><p>Handle initial window calculations for new simulation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.reset_pre_sim">
+<span class="sig-name descname"><span class="pre">reset_pre_sim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#AccessSatellite.reset_pre_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.reset_pre_sim" title="Link to this definition"></a></dt>
+<dd><p>Reset satellite window calculations and lists.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.upcoming_opportunities">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">upcoming_opportunities</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.upcoming_opportunities" title="Link to this definition"></a></dt>
+<dd><p>Ordered list of opportunities that have not yet closed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of upcoming opportunities</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.upcoming_opportunities_dict">
+<span class="sig-name descname"><span class="pre">upcoming_opportunities_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#AccessSatellite.upcoming_opportunities_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.upcoming_opportunities_dict" title="Link to this definition"></a></dt>
+<dd><p>Get dictionary of opportunities.</p>
+<p>Maps objects to lists of windows that have not yet closed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>types</strong> – Types of opportunities to include. If None, include all types.</p></li>
+<li><p><strong>filter</strong> – Objects to exclude from the dictionary.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>objects -&gt; windows list (upcoming only)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>windows</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.DoNothingSatellite">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoNothingSatellite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000000000.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#DoNothingSatellite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.DoNothingSatellite" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FSWAction</span></code>, <a class="reference internal" href="sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState" title="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeState</span></code></a></p>
+<p>Convenience type for a satellite that does nothing.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.DoNothingSatellite.dyn_type">
+<span class="sig-name descname"><span class="pre">dyn_type</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.DoNothingSatellite.dyn_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="../simulation/dynamics.html#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicDynamicsModel</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.DoNothingSatellite.fsw_type">
+<span class="sig-name descname"><span class="pre">fsw_type</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.DoNothingSatellite.fsw_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="../simulation/fsw.html#bsk_rl.envs.general_satellite_tasking.simulation.fsw.BasicFSWModel" title="bsk_rl.envs.general_satellite_tasking.simulation.fsw.BasicFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicFSWModel</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.FBImagerSatellite">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FBImagerSatellite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#FBImagerSatellite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.FBImagerSatellite" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingSatellite</span></code></a></p>
+<p>Convenience type for an imaging satellite with feedback control.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.FBImagerSatellite.dyn_type">
+<span class="sig-name descname"><span class="pre">dyn_type</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.FBImagerSatellite.dyn_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="../simulation/dynamics.html#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.FullFeaturedDynModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.FullFeaturedDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">FullFeaturedDynModel</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.FBImagerSatellite.fsw_type">
+<span class="sig-name descname"><span class="pre">fsw_type</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.FBImagerSatellite.fsw_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="../simulation/fsw.html#bsk_rl.envs.general_satellite_tasking.simulation.fsw.ImagingFSWModel" title="bsk_rl.envs.general_satellite_tasking.simulation.fsw.ImagingFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingFSWModel</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.FullFeaturedSatellite">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FullFeaturedSatellite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_ahead_act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#FullFeaturedSatellite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.FullFeaturedSatellite" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.ImagingActions" title="bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.ImagingActions"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingActions</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">FSWAction</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">FSWAction</span></code>, <a class="reference internal" href="sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState" title="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeState</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Configurable</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Configurable</span></code>, <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">SteeringImagerSatellite</span></code></a></p>
+<p>Convenience type for a satellite with common features enabled.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImageAheadSatellite">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ImageAheadSatellite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_ahead_act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#ImageAheadSatellite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImageAheadSatellite" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.ImagingActions" title="bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.ImagingActions"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingActions</span></code></a>, <a class="reference internal" href="sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState" title="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeState</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Configurable</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Configurable</span></code>, <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">SteeringImagerSatellite</span></code></a></p>
+<p>Convenience type for a satellite with common features enabled.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ImagingSatellite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#ImagingSatellite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">AccessSatellite</span></code></a></p>
+<p>Satellite with agile imaging capabilities.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#ImagingSatellite.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.__init__" title="Link to this definition"></a></dt>
+<dd><p>Construct an ImagingSatellite.</p>
+<p>Can stop the simulation when a target is imaged or missed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.dyn_type">
+<span class="sig-name descname"><span class="pre">dyn_type</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.dyn_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="../simulation/dynamics.html#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.enable_target_window">
+<span class="sig-name descname"><span class="pre">enable_target_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target"><span class="pre">Target</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#ImagingSatellite.enable_target_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.enable_target_window" title="Link to this definition"></a></dt>
+<dd><p>Enable the next window close event for target.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.fsw_type">
+<span class="sig-name descname"><span class="pre">fsw_type</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.fsw_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="../simulation/fsw.html#bsk_rl.envs.general_satellite_tasking.simulation.fsw.ImagingFSWModel" title="bsk_rl.envs.general_satellite_tasking.simulation.fsw.ImagingFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingFSWModel</span></code></a></p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.next_windows">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">next_windows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target"><span class="pre">Target</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.next_windows" title="Link to this definition"></a></dt>
+<dd><p>Soonest window for each target.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>first non-closed window for each target</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.parse_target_selection">
+<span class="sig-name descname"><span class="pre">parse_target_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target"><span class="pre">Target</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#ImagingSatellite.parse_target_selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.parse_target_selection" title="Link to this definition"></a></dt>
+<dd><p>Identify a target from a query.</p>
+<p>Parses an upcoming target index, Target object, or target id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target_query</strong> – Taret upcoming index, object, or id.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.reset_post_sim">
+<span class="sig-name descname"><span class="pre">reset_post_sim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#ImagingSatellite.reset_post_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.reset_post_sim" title="Link to this definition"></a></dt>
+<dd><p>Handle initial_generation_duration setting and calculate windows.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.reset_pre_sim">
+<span class="sig-name descname"><span class="pre">reset_pre_sim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#ImagingSatellite.reset_pre_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.reset_pre_sim" title="Link to this definition"></a></dt>
+<dd><p>Set the buffer parameters based on computed windows.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.task_target_for_imaging">
+<span class="sig-name descname"><span class="pre">task_target_for_imaging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target"><span class="pre">Target</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#ImagingSatellite.task_target_for_imaging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.task_target_for_imaging" title="Link to this definition"></a></dt>
+<dd><p>Task the satellite to image a target.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target</strong> – Selected target</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.upcoming_targets">
+<span class="sig-name descname"><span class="pre">upcoming_targets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target"><span class="pre">Target</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#ImagingSatellite.upcoming_targets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.upcoming_targets" title="Link to this definition"></a></dt>
+<dd><p>Find the n nearest targets.</p>
+<p>Targets are sorted by window close time; currently open windows are included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> – number of windows to look ahead</p></li>
+<li><p><strong>pad</strong> – if true, duplicates the last target if the number of targets found is
+less than n</p></li>
+<li><p><strong>max_lookahead</strong> – maximum times to call calculate_additional_windows</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>n nearest targets, ordered</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.upcoming_windows">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">upcoming_windows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target"><span class="pre">Target</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.upcoming_windows" title="Link to this definition"></a></dt>
+<dd><p>Access upcoming windows in a dict of targets -&gt; list of windows.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.windows">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">windows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target"><span class="pre">Target</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.windows" title="Link to this definition"></a></dt>
+<dd><p>Access windows via dict of targets -&gt; list of windows.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Satellite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sat_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for satellites.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sat_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.__init__" title="Link to this definition"></a></dt>
+<dd><p>Construct base satellite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – identifier for satellite; does not need to be unique</p></li>
+<li><p><strong>sat_args</strong> – arguments for FSW and dynamic model construction. {key: value or
+key: function}, where function is called at reset to set the value (used
+for randomization).</p></li>
+<li><p><strong>variable_interval</strong> – Stop simulation at terminal events</p></li>
+<li><p><strong>kwargs</strong> – Ignored</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.action_space">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">action_space</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Space</span></em><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.action_space" title="Link to this definition"></a></dt>
+<dd><p>Action space for single satellite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>gymanisium action space</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.default_sat_args">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_sat_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite.default_sat_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.default_sat_args" title="Link to this definition"></a></dt>
+<dd><p>Compile default arguments for FSW and dynamics models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>default arguments for satellite models</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.get_obs">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_obs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite.get_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.get_obs" title="Link to this definition"></a></dt>
+<dd><p>Construct the satellite’s observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>satellite observation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.id">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.id" title="Link to this definition"></a></dt>
+<dd><p>Unique human-readable identifier.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.is_alive">
+<span class="sig-name descname"><span class="pre">is_alive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite.is_alive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.is_alive" title="Link to this definition"></a></dt>
+<dd><p>Check if the satellite is violating any aliveness requirements.</p>
+<p>Checkes aliveness checkers in dynamics and FSW models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>is_alive</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.log_info">
+<span class="sig-name descname"><span class="pre">log_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite.log_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.log_info" title="Link to this definition"></a></dt>
+<dd><p>Record information at the current time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>info</strong> – Information to log</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.observation_space">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">observation_space</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Box</span></em><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.observation_space" title="Link to this definition"></a></dt>
+<dd><p>Observation space for single satellite, determined from observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>gymanisium observation space</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.reset_post_sim">
+<span class="sig-name descname"><span class="pre">reset_post_sim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite.reset_post_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.reset_post_sim" title="Link to this definition"></a></dt>
+<dd><p>Reset in environment reset, after simulator initialization.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.reset_pre_sim">
+<span class="sig-name descname"><span class="pre">reset_pre_sim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite.reset_pre_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.reset_pre_sim" title="Link to this definition"></a></dt>
+<dd><p>Reset during environment reset, before simulator initialization.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_action">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite.set_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_action" title="Link to this definition"></a></dt>
+<dd><p>Enable certain processes in the simulator to command the satellite task.</p>
+<p>Should call an &#64;action from FSW, among other things.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>action</strong> – action index</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_dynamics">
+<span class="sig-name descname"><span class="pre">set_dynamics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dyn_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../simulation/dynamics.html#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel"><span class="pre">DynamicsModel</span></a></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite.set_dynamics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_dynamics" title="Link to this definition"></a></dt>
+<dd><p>Create dynamics model; called during simulator initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dyn_rate</strong> – rate for dynamics simulation [s]</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Satellite’s dynamics model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_fsw">
+<span class="sig-name descname"><span class="pre">set_fsw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fsw_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../simulation/fsw.html#bsk_rl.envs.general_satellite_tasking.simulation.fsw.FSWModel" title="bsk_rl.envs.general_satellite_tasking.simulation.fsw.FSWModel"><span class="pre">FSWModel</span></a></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite.set_fsw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_fsw" title="Link to this definition"></a></dt>
+<dd><p>Create flight software model; called during simulator initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fsw_rate</strong> – rate for FSW simulation [s]</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Satellite’s FSW model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_simulator">
+<span class="sig-name descname"><span class="pre">set_simulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Simulator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#Satellite.set_simulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_simulator" title="Link to this definition"></a></dt>
+<dd><p>Set the simulator for models.</p>
+<p>Called during simulator initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>simulator</strong> – Basilisk simulator</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SteeringImagerSatellite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/satellites.html#SteeringImagerSatellite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingSatellite</span></code></a></p>
+<p>Convenience type for an imaging satellite with MRP steering.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite.dyn_type">
+<span class="sig-name descname"><span class="pre">dyn_type</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite.dyn_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="../simulation/dynamics.html#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.FullFeaturedDynModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.FullFeaturedDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">FullFeaturedDynModel</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite.fsw_type">
+<span class="sig-name descname"><span class="pre">fsw_type</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite.fsw_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="../simulation/fsw.html#bsk_rl.envs.general_satellite_tasking.simulation.fsw.SteeringImagerFSWModel" title="bsk_rl.envs.general_satellite_tasking.simulation.fsw.SteeringImagerFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">SteeringImagerFSWModel</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sat_observations.html" class="btn btn-neutral float-left" title="sat_observations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../simulation/index.html" class="btn btn-neutral float-right" title="simulation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

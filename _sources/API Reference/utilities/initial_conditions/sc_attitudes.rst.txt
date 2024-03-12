@@ -1,0 +1,15 @@
+.. _bsk_rl.utilities.initial_conditions.sc_attitudes:
+
+sc_attitudes
+============
+
+``bsk_rl.utilities.initial_conditions.sc_attitudes``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.utilities.initial_conditions.sc_attitudes
+   :members:
+   :show-inheritance:
+

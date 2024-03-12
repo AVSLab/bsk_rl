@@ -1,0 +1,23 @@
+.. _examples.state_machine:
+
+state_machine
+=============
+
+``examples.state_machine``
+
+.. automodule:: examples.state_machine
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+   state_machine_example
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+

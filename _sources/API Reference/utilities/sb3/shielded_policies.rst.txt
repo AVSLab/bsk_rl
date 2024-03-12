@@ -1,0 +1,15 @@
+.. _bsk_rl.utilities.sb3.shielded_policies:
+
+shielded_policies
+=================
+
+``bsk_rl.utilities.sb3.shielded_policies``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.utilities.sb3.shielded_policies
+   :members:
+   :show-inheritance:
+

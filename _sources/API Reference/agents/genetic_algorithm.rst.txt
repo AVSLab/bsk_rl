@@ -1,0 +1,15 @@
+.. _bsk_rl.agents.genetic_algorithm:
+
+genetic_algorithm
+=================
+
+``bsk_rl.agents.genetic_algorithm``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.agents.genetic_algorithm
+   :members:
+   :show-inheritance:
+

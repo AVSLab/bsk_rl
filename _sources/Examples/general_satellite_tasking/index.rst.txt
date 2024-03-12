@@ -1,0 +1,25 @@
+.. _examples.general_satellite_tasking:
+
+general_satellite_tasking
+=========================
+
+``examples.general_satellite_tasking``
+
+.. automodule:: examples.general_satellite_tasking
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+   multisat_aeos
+   satellite_customization
+   single_sat
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+

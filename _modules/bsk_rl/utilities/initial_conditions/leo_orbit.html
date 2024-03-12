@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.utilities.initial_conditions.leo_orbit &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.utilities.initial_conditions.leo_orbit</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.utilities.initial_conditions.leo_orbit</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">math</span> <span class="k">as</span> <span class="nn">m</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">Basilisk</span> <span class="kn">import</span> <span class="n">__path__</span>
+<span class="kn">from</span> <span class="nn">Basilisk.simulation</span> <span class="kn">import</span> <span class="n">spacecraft</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">SimulationBaseClass</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">macros</span> <span class="k">as</span> <span class="n">mc</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">orbitalMotion</span><span class="p">,</span> <span class="n">simIncludeGravBody</span>
+
+<span class="n">bskPath</span> <span class="o">=</span> <span class="n">__path__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">mu</span> <span class="o">=</span> <span class="mf">0.3986004415e15</span>
+
+
+<div class="viewcode-block" id="inclined_circular_300km">
+<a class="viewcode-back" href="../../../../API%20Reference/utilities/initial_conditions/leo_orbit.html#bsk_rl.utilities.initial_conditions.leo_orbit.inclined_circular_300km">[docs]</a>
+<span class="k">def</span> <span class="nf">inclined_circular_300km</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an inclined, circular LEO orbit.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">oe</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">6371</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">+</span> <span class="mf">300.0</span> <span class="o">*</span> <span class="mi">1000</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mf">45.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+
+    <span class="n">oe</span><span class="o">.</span><span class="n">Omega</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">oe</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oe</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span></div>
+
+
+
+<div class="viewcode-block" id="random_inclined_circular_300km">
+<a class="viewcode-back" href="../../../../API%20Reference/utilities/initial_conditions/leo_orbit.html#bsk_rl.utilities.initial_conditions.leo_orbit.random_inclined_circular_300km">[docs]</a>
+<span class="k">def</span> <span class="nf">random_inclined_circular_300km</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an inclined, circular LEO orbit.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">oe</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">6371</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">290e3</span><span class="p">,</span> <span class="mf">310e3</span><span class="p">)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mf">45.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+
+    <span class="n">oe</span><span class="o">.</span><span class="n">Omega</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">oe</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oe</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span></div>
+
+
+
+<div class="viewcode-block" id="sampled_400km">
+<a class="viewcode-back" href="../../../../API%20Reference/utilities/initial_conditions/leo_orbit.html#bsk_rl.utilities.initial_conditions.leo_orbit.sampled_400km">[docs]</a>
+<span class="k">def</span> <span class="nf">sampled_400km</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an elliptical, prograde LEO orbit with an SMA of 400km.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">oe</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">6371</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">+</span> <span class="mf">400.0</span> <span class="o">*</span> <span class="mi">1000</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">Omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">360</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">360</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">360</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">oe</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oe</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span></div>
+
+
+
+<div class="viewcode-block" id="sampled_500km_boulder_gs">
+<a class="viewcode-back" href="../../../../API%20Reference/utilities/initial_conditions/leo_orbit.html#bsk_rl.utilities.initial_conditions.leo_orbit.sampled_500km_boulder_gs">[docs]</a>
+<span class="k">def</span> <span class="nf">sampled_500km_boulder_gs</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an elliptical, prograde LEO orbit with an SMA of 500km.</span>
+<span class="sd">    Inclination is bounded so the spacecraft can communicate with Boulder.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="mf">0.3986004415e15</span>
+    <span class="n">oe</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">6371</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">+</span> <span class="mf">500.0</span> <span class="o">*</span> <span class="mi">1000</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># oe.i = np.random.uniform(40*mc.D2R, 60*mc.D2R,1)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">40</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">60</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">Omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">360</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">oe</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oe</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span></div>
+
+
+
+<div class="viewcode-block" id="sampled_boulder_gs">
+<a class="viewcode-back" href="../../../../API%20Reference/utilities/initial_conditions/leo_orbit.html#bsk_rl.utilities.initial_conditions.leo_orbit.sampled_boulder_gs">[docs]</a>
+<span class="k">def</span> <span class="nf">sampled_boulder_gs</span><span class="p">(</span><span class="n">nominal_radius</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an elliptical, prograde LEO orbit with an SMA of 500km.</span>
+<span class="sd">    Inclination is bounded so the spacecraft can communicate with Boulder.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="mf">0.3986004415e15</span>
+    <span class="n">oe</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">nominal_radius</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># oe.i = np.random.uniform(40*mc.D2R, 60*mc.D2R,1)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">40</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">60</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">Omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">360</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">360</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">360</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">oe</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oe</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">coordinated_pass_1</span><span class="p">():</span>
+    <span class="n">r_sc1</span> <span class="o">=</span> <span class="p">(</span><span class="mf">6378.0</span> <span class="o">+</span> <span class="mf">500.0</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># meters</span>
+    <span class="n">oe_sc1</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+    <span class="n">oe_sc1</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">r_sc1</span>
+    <span class="n">oe_sc1</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">0.00001</span>
+    <span class="n">oe_sc1</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mf">70.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc1</span><span class="o">.</span><span class="n">Omega</span> <span class="o">=</span> <span class="mf">135.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc1</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="mf">184.8</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc1</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">85.3</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">oe_sc1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oe_sc1</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span>
+
+
+<span class="k">def</span> <span class="nf">coordinated_pass_2</span><span class="p">():</span>
+    <span class="n">r_sc2</span> <span class="o">=</span> <span class="p">(</span><span class="mf">6378.0</span> <span class="o">+</span> <span class="mf">2000.0</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># meters</span>
+    <span class="n">oe_sc2</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">r_sc2</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">0.00001</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mf">53.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">Omega</span> <span class="o">=</span> <span class="mf">115.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="mf">5.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">240.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">oe_sc2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oe_sc2</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span>
+
+
+<span class="k">def</span> <span class="nf">coordinated_pass_3</span><span class="p">():</span>
+    <span class="n">r_sc2</span> <span class="o">=</span> <span class="p">(</span><span class="mf">6378.0</span> <span class="o">+</span> <span class="mf">7500.0</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># meters</span>
+    <span class="n">oe_sc2</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">r_sc2</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">0.00001</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mf">53.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">Omega</span> <span class="o">=</span> <span class="mf">115.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="mf">5.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc2</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">240.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">oe_sc2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oe_sc2</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span>
+
+
+<span class="k">def</span> <span class="nf">sso_Boulder</span><span class="p">():</span>
+    <span class="n">r_sc</span> <span class="o">=</span> <span class="mi">42164125</span>  <span class="c1"># meters</span>
+    <span class="n">oe_sc</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+    <span class="n">oe_sc</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">r_sc</span>
+    <span class="n">oe_sc</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">0.00001</span>
+    <span class="n">oe_sc</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mf">53.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc</span><span class="o">.</span><span class="n">Omega</span> <span class="o">=</span> <span class="mf">115.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="mf">5.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">oe_sc</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">75.0</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span>
+    <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">oe_sc</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oe_sc</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span>
+
+
+<div class="viewcode-block" id="inclined_400km">
+<a class="viewcode-back" href="../../../../API%20Reference/utilities/initial_conditions/leo_orbit.html#bsk_rl.utilities.initial_conditions.leo_orbit.inclined_400km">[docs]</a>
+<span class="k">def</span> <span class="nf">inclined_400km</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an elliptical, prograde LEO orbit with an SMA of 400km.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="mf">0.3986004415e15</span>
+    <span class="n">oe</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">6371</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">+</span> <span class="mf">500.0</span> <span class="o">*</span> <span class="mi">1000</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">0.0001</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span> <span class="o">*</span> <span class="mf">45.0</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">Omega</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span> <span class="o">*</span> <span class="mf">45.0</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">oe</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">oe</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oe</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span></div>
+
+
+
+<div class="viewcode-block" id="create_ground_tgts">
+<a class="viewcode-back" href="../../../../API%20Reference/utilities/initial_conditions/leo_orbit.html#bsk_rl.utilities.initial_conditions.leo_orbit.create_ground_tgts">[docs]</a>
+<span class="k">def</span> <span class="nf">create_ground_tgts</span><span class="p">(</span><span class="n">n_targets</span><span class="p">,</span> <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span><span class="p">,</span> <span class="n">sim_length</span><span class="p">,</span> <span class="n">utc_init</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a set of targets based on the orbital parameters by running a simplified</span>
+<span class="sd">    BSK scenario</span>
+<span class="sd">    :param n_targets: number of targets to generate</span>
+<span class="sd">    :param rN: Initial inertial position</span>
+<span class="sd">    :param vN: Initial inertial velocity</span>
+<span class="sd">    :param sim_length: simulation length</span>
+<span class="sd">    :param uct_init: time initialization string</span>
+<span class="sd">    :return targets:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create simulation variable names</span>
+    <span class="n">simTaskName</span> <span class="o">=</span> <span class="s2">&quot;simTask&quot;</span>
+    <span class="n">simProcessName</span> <span class="o">=</span> <span class="s2">&quot;simProcess&quot;</span>
+
+    <span class="c1">#  Create a sim module as an empty container</span>
+    <span class="n">scSim</span> <span class="o">=</span> <span class="n">SimulationBaseClass</span><span class="o">.</span><span class="n">SimBaseClass</span><span class="p">()</span>
+
+    <span class="c1">#  create the simulation process</span>
+    <span class="n">dynProcess</span> <span class="o">=</span> <span class="n">scSim</span><span class="o">.</span><span class="n">CreateNewProcess</span><span class="p">(</span><span class="n">simProcessName</span><span class="p">)</span>
+
+    <span class="c1"># Create the dynamics task and specify the integration update time</span>
+    <span class="n">simulationTimeStep</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span>
+    <span class="n">dynProcess</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span><span class="n">scSim</span><span class="o">.</span><span class="n">CreateNewTask</span><span class="p">(</span><span class="n">simTaskName</span><span class="p">,</span> <span class="n">simulationTimeStep</span><span class="p">))</span>
+
+    <span class="c1"># Setup the simulation tasks/objects, initialize spacecraft object</span>
+    <span class="c1"># and set properties</span>
+    <span class="n">scObject</span> <span class="o">=</span> <span class="n">spacecraft</span><span class="o">.</span><span class="n">Spacecraft</span><span class="p">()</span>
+    <span class="n">scObject</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;bsk-Sat&quot;</span>
+
+    <span class="c1"># Add spacecraft object to the simulation process</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="n">simTaskName</span><span class="p">,</span> <span class="n">scObject</span><span class="p">)</span>
+
+    <span class="c1"># Setup Gravity Body</span>
+    <span class="n">gravFactory</span> <span class="o">=</span> <span class="n">simIncludeGravBody</span><span class="o">.</span><span class="n">gravBodyFactory</span><span class="p">()</span>
+    <span class="n">planet</span> <span class="o">=</span> <span class="n">gravFactory</span><span class="o">.</span><span class="n">createEarth</span><span class="p">()</span>
+    <span class="n">planet</span><span class="o">.</span><span class="n">isCentralBody</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">planet</span><span class="o">.</span><span class="n">useSphericalHarmParams</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">simIncludeGravBody</span><span class="o">.</span><span class="n">loadGravFromFile</span><span class="p">(</span>
+        <span class="n">bskPath</span> <span class="o">+</span> <span class="s2">&quot;/supportData/LocalGravData/GGM03S.txt&quot;</span><span class="p">,</span> <span class="n">planet</span><span class="o">.</span><span class="n">spherHarm</span><span class="p">,</span> <span class="mi">10</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Set up spice with spice time</span>
+    <span class="n">UTCInit</span> <span class="o">=</span> <span class="n">utc_init</span>
+    <span class="n">gravFactory</span><span class="o">.</span><span class="n">createSpiceInterface</span><span class="p">(</span>
+        <span class="n">bskPath</span> <span class="o">+</span> <span class="s2">&quot;/supportData/EphemerisData/&quot;</span><span class="p">,</span> <span class="n">UTCInit</span><span class="p">,</span> <span class="n">epochInMsg</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">zeroBase</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;earth&quot;</span>  <span class="c1"># Make sure that the Earth is the zero base</span>
+    <span class="p">)</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="n">simTaskName</span><span class="p">,</span> <span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="p">)</span>
+
+    <span class="c1"># Finally, the gravitational body must be connected to the spacecraft object.</span>
+    <span class="n">scObject</span><span class="o">.</span><span class="n">gravField</span><span class="o">.</span><span class="n">gravBodies</span> <span class="o">=</span> <span class="n">spacecraft</span><span class="o">.</span><span class="n">GravBodyVector</span><span class="p">(</span>
+        <span class="nb">list</span><span class="p">(</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">gravBodies</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="p">)</span>
+
+    <span class="c1"># To set the spacecraft initial conditions, the following initial position and</span>
+    <span class="c1"># velocity variables are set:</span>
+    <span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">r_CN_NInit</span> <span class="o">=</span> <span class="n">rN</span>  <span class="c1"># m   - r_BN_N</span>
+    <span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">v_CN_NInit</span> <span class="o">=</span> <span class="n">vN</span>  <span class="c1"># m/s - v_BN_N</span>
+
+    <span class="c1"># Set the simulation time</span>
+    <span class="n">simulationTime</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="n">sim_length</span> <span class="o">*</span> <span class="mf">60.0</span><span class="p">)</span>
+
+    <span class="c1"># create a logging task object of the spacecraft output message at the desired</span>
+    <span class="c1"># down sampling ratio</span>
+    <span class="n">dataRec1</span> <span class="o">=</span> <span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="o">.</span><span class="n">recorder</span><span class="p">()</span>
+    <span class="n">dataRec2</span> <span class="o">=</span> <span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">recorder</span><span class="p">()</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="n">simTaskName</span><span class="p">,</span> <span class="n">dataRec1</span><span class="p">)</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="n">simTaskName</span><span class="p">,</span> <span class="n">dataRec2</span><span class="p">)</span>
+
+    <span class="n">scSim</span><span class="o">.</span><span class="n">InitializeSimulation</span><span class="p">()</span>
+
+    <span class="c1">#   configure a simulation stop time time and execute the simulation run</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">ConfigureStopTime</span><span class="p">(</span><span class="n">simulationTime</span><span class="p">)</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">ExecuteSimulation</span><span class="p">()</span>
+
+    <span class="n">posData</span> <span class="o">=</span> <span class="n">dataRec1</span><span class="o">.</span><span class="n">r_BN_N</span>
+    <span class="n">dcm_PN</span> <span class="o">=</span> <span class="n">dataRec2</span><span class="o">.</span><span class="n">J20002Pfix</span>
+
+    <span class="n">pcpf_positions</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Compute the position in the planet-centered, planet-fixed frame</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">posData</span><span class="p">):</span>
+        <span class="n">pcpf_positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">dcm_PN</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">pos</span><span class="p">))</span>
+
+    <span class="c1"># Grab random PCPF targets</span>
+    <span class="n">candidate_position_indices</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">posData</span><span class="p">)),</span> <span class="n">k</span><span class="o">=</span><span class="n">n_targets</span><span class="p">)</span>
+    <span class="n">candidate_position_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+        <span class="n">candidate_position_indices</span>
+    <span class="p">)</span>  <span class="c1"># list of the indices of the ordered targets</span>
+    <span class="n">candidate_position_times</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="mi">10</span> <span class="o">*</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">candidate_position_indices</span>
+    <span class="p">]</span>  <span class="c1"># list of the ordered times of the targets in seconds</span>
+
+    <span class="c1"># Initialize targets</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">candidate_position_indices</span><span class="p">:</span>
+        <span class="c1"># Add noise to s/c position vector</span>
+        <span class="n">temp_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pcpf_positions</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0e5</span><span class="p">,</span> <span class="mf">1.0e5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="c1"># Normalize and multiply by Earth&#39;s radius</span>
+        <span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">6378.0</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">*</span> <span class="n">temp_pos</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp_pos</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">candidate_position_times</span></div>
+
+
+
+<div class="viewcode-block" id="walker_delta">
+<a class="viewcode-back" href="../../../../API%20Reference/utilities/initial_conditions/leo_orbit.html#bsk_rl.utilities.initial_conditions.leo_orbit.walker_delta">[docs]</a>
+<span class="k">def</span> <span class="nf">walker_delta</span><span class="p">(</span>
+    <span class="n">n_spacecraft</span><span class="p">,</span> <span class="n">n_planes</span><span class="p">,</span> <span class="n">rel_phasing</span><span class="p">,</span> <span class="n">altitude</span><span class="p">,</span> <span class="n">inc</span><span class="p">,</span> <span class="n">clustersize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">clusterspacing</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the initial orbit conditions of a constellation of spacecraft in the</span>
+<span class="sd">    walker delta pattern</span>
+<span class="sd">    :param n_spacecraft: number of spacecraft in the constellation</span>
+<span class="sd">    :param n_planes: number of orbital planes</span>
+<span class="sd">    :param rel_phasing: relative phasing between the planes [0, 1)</span>
+<span class="sd">    :param altitude: Altitude of the s/c (m)</span>
+<span class="sd">    :param inc: Inclination of the orbit (deg)</span>
+<span class="sd">    :param clustersize: Size of satellite groups</span>
+<span class="sd">    :param clusterspacing: True anomaly spacing within cluster (deg)</span>
+<span class="sd">    :return oe_all: n_spacecraft x 1 list of BSK oe elements</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">oe_all</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Loop through s/c</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_spacecraft</span><span class="p">):</span>
+        <span class="c1"># Instantiate orbital elements</span>
+        <span class="n">oe</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+
+        <span class="c1"># Define altitude, eccentricity, and inclination</span>
+        <span class="n">oe</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">6371</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">+</span> <span class="n">altitude</span>
+        <span class="n">oe</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">oe</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span> <span class="o">*</span> <span class="n">inc</span>
+
+        <span class="c1"># Define the plane number</span>
+        <span class="n">spacecraft_per_plane</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_spacecraft</span> <span class="o">/</span> <span class="n">n_planes</span><span class="p">)</span>
+        <span class="n">plane_num</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">idx</span> <span class="o">/</span> <span class="n">spacecraft_per_plane</span><span class="p">))</span>
+
+        <span class="c1"># Compute longitude of ascending node</span>
+        <span class="n">oe</span><span class="o">.</span><span class="n">Omega</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span> <span class="o">*</span> <span class="p">(</span><span class="n">plane_num</span> <span class="o">*</span> <span class="mf">360.0</span> <span class="o">/</span> <span class="n">n_planes</span> <span class="o">%</span> <span class="mi">360</span><span class="p">)</span>
+
+        <span class="c1"># Set argument of periapsis using relative phasing</span>
+        <span class="n">dPhi_rel</span> <span class="o">=</span> <span class="n">plane_num</span> <span class="o">*</span> <span class="n">rel_phasing</span> <span class="o">*</span> <span class="mf">360.0</span> <span class="o">/</span> <span class="n">n_planes</span>
+        <span class="n">oe</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span> <span class="o">*</span> <span class="n">dPhi_rel</span>
+
+        <span class="c1"># Define true anomoly using in-plane phasing</span>
+        <span class="n">dPhi_inplane</span> <span class="o">=</span> <span class="mf">360.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">spacecraft_per_plane</span> <span class="o">/</span> <span class="n">clustersize</span><span class="p">)</span>
+        <span class="n">oe</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">D2R</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="n">idx</span> <span class="o">%</span> <span class="n">spacecraft_per_plane</span><span class="p">)</span> <span class="o">/</span> <span class="n">clustersize</span><span class="p">)</span> <span class="o">*</span> <span class="n">dPhi_inplane</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">clusterspacing</span> <span class="o">*</span> <span class="p">(</span><span class="n">idx</span> <span class="o">%</span> <span class="n">clustersize</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Append to oe_all</span>
+        <span class="n">oe_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oe</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">oe_all</span></div>
+
+
+
+<div class="viewcode-block" id="distribute_tgts">
+<a class="viewcode-back" href="../../../../API%20Reference/utilities/initial_conditions/leo_orbit.html#bsk_rl.utilities.initial_conditions.leo_orbit.distribute_tgts">[docs]</a>
+<span class="k">def</span> <span class="nf">distribute_tgts</span><span class="p">(</span><span class="n">rN</span><span class="p">,</span> <span class="n">vN</span><span class="p">,</span> <span class="n">sim_length</span><span class="p">,</span> <span class="n">utc_init</span><span class="p">,</span> <span class="n">global_tgts</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">60.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param rN:</span>
+<span class="sd">    :param vN:</span>
+<span class="sd">    :param sim_length: [m]</span>
+<span class="sd">    :param utc_init:</span>
+<span class="sd">    :param global_tgts: np.array of global tgts in ECEF coordinates</span>
+<span class="sd">    :param dt: [s]</span>
+<span class="sd">    :return local_tgts: list of indexes into global tgts</span>
+<span class="sd">    :return local_tgt_times: local time each global tgt in local_tgts is encountered</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">local_tgts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">local_tgt_times</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Create simulation variable names</span>
+    <span class="n">simTaskName</span> <span class="o">=</span> <span class="s2">&quot;simTask&quot;</span>
+    <span class="n">simProcessName</span> <span class="o">=</span> <span class="s2">&quot;simProcess&quot;</span>
+
+    <span class="c1">#  Create a sim module as an empty container</span>
+    <span class="n">scSim</span> <span class="o">=</span> <span class="n">SimulationBaseClass</span><span class="o">.</span><span class="n">SimBaseClass</span><span class="p">()</span>
+
+    <span class="c1">#  create the simulation process</span>
+    <span class="n">dynProcess</span> <span class="o">=</span> <span class="n">scSim</span><span class="o">.</span><span class="n">CreateNewProcess</span><span class="p">(</span><span class="n">simProcessName</span><span class="p">)</span>
+
+    <span class="c1"># Create the dynamics task and specify the integration update time</span>
+    <span class="n">simulationTimeStep</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+    <span class="n">dynProcess</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span><span class="n">scSim</span><span class="o">.</span><span class="n">CreateNewTask</span><span class="p">(</span><span class="n">simTaskName</span><span class="p">,</span> <span class="n">simulationTimeStep</span><span class="p">))</span>
+
+    <span class="c1"># Setup the simulation tasks/objects, initialize spacecraft object and</span>
+    <span class="c1"># set properties</span>
+    <span class="n">scObject</span> <span class="o">=</span> <span class="n">spacecraft</span><span class="o">.</span><span class="n">Spacecraft</span><span class="p">()</span>
+    <span class="n">scObject</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;bsk-Sat&quot;</span>
+
+    <span class="c1"># Add spacecraft object to the simulation process</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="n">simTaskName</span><span class="p">,</span> <span class="n">scObject</span><span class="p">)</span>
+
+    <span class="c1"># Setup Gravity Body</span>
+    <span class="n">gravFactory</span> <span class="o">=</span> <span class="n">simIncludeGravBody</span><span class="o">.</span><span class="n">gravBodyFactory</span><span class="p">()</span>
+    <span class="n">planet</span> <span class="o">=</span> <span class="n">gravFactory</span><span class="o">.</span><span class="n">createEarth</span><span class="p">()</span>
+    <span class="n">gravFactory</span><span class="o">.</span><span class="n">createSun</span><span class="p">()</span>
+    <span class="n">planet</span><span class="o">.</span><span class="n">isCentralBody</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">planet</span><span class="o">.</span><span class="n">useSphericalHarmParams</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">simIncludeGravBody</span><span class="o">.</span><span class="n">loadGravFromFile</span><span class="p">(</span>
+        <span class="n">bskPath</span> <span class="o">+</span> <span class="s2">&quot;/supportData/LocalGravData/GGM03S.txt&quot;</span><span class="p">,</span> <span class="n">planet</span><span class="o">.</span><span class="n">spherHarm</span><span class="p">,</span> <span class="mi">10</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Set up spice with spice time</span>
+    <span class="n">UTCInit</span> <span class="o">=</span> <span class="n">utc_init</span>
+    <span class="n">gravFactory</span><span class="o">.</span><span class="n">createSpiceInterface</span><span class="p">(</span>
+        <span class="n">bskPath</span> <span class="o">+</span> <span class="s2">&quot;/supportData/EphemerisData/&quot;</span><span class="p">,</span> <span class="n">UTCInit</span><span class="p">,</span> <span class="n">epochInMsg</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">zeroBase</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;earth&quot;</span>  <span class="c1"># Make sure that the Earth is the zero base</span>
+    <span class="p">)</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="n">simTaskName</span><span class="p">,</span> <span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="p">)</span>
+
+    <span class="c1"># Finally, the gravitational body must be connected to the spacecraft object.</span>
+    <span class="n">scObject</span><span class="o">.</span><span class="n">gravField</span><span class="o">.</span><span class="n">gravBodies</span> <span class="o">=</span> <span class="n">spacecraft</span><span class="o">.</span><span class="n">GravBodyVector</span><span class="p">(</span>
+        <span class="nb">list</span><span class="p">(</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">gravBodies</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="p">)</span>
+
+    <span class="c1"># To set the spacecraft initial conditions, the following initial position and</span>
+    <span class="c1"># velocity variables are set:</span>
+    <span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">r_CN_NInit</span> <span class="o">=</span> <span class="n">rN</span>  <span class="c1"># m   - r_BN_N</span>
+    <span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">v_CN_NInit</span> <span class="o">=</span> <span class="n">vN</span>  <span class="c1"># m/s - v_BN_N</span>
+
+    <span class="c1"># Set the simulation time</span>
+    <span class="n">simulationTime</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="n">sim_length</span> <span class="o">*</span> <span class="mf">60.0</span><span class="p">)</span>
+
+    <span class="c1"># create a logging task object of the spacecraft output message</span>
+    <span class="n">dataRec1</span> <span class="o">=</span> <span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="o">.</span><span class="n">recorder</span><span class="p">()</span>
+    <span class="n">dataRec2</span> <span class="o">=</span> <span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">recorder</span><span class="p">()</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="n">simTaskName</span><span class="p">,</span> <span class="n">dataRec1</span><span class="p">)</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="n">simTaskName</span><span class="p">,</span> <span class="n">dataRec2</span><span class="p">)</span>
+
+    <span class="n">scSim</span><span class="o">.</span><span class="n">InitializeSimulation</span><span class="p">()</span>
+
+    <span class="c1">#   configure a simulation stop time time and execute the simulation run</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">ConfigureStopTime</span><span class="p">(</span><span class="n">simulationTime</span><span class="p">)</span>
+    <span class="n">scSim</span><span class="o">.</span><span class="n">ExecuteSimulation</span><span class="p">()</span>
+
+    <span class="n">posData</span> <span class="o">=</span> <span class="n">dataRec1</span><span class="o">.</span><span class="n">r_BN_N</span>
+    <span class="n">dcm_PN</span> <span class="o">=</span> <span class="n">dataRec2</span><span class="o">.</span><span class="n">J20002Pfix</span>
+
+    <span class="n">pcpf_positions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">local_tgt_locations</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Compute the position in the planet-centered, planet-fixed frame</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">posData</span><span class="p">):</span>
+        <span class="c1"># Compute the pcpf position of the s/c</span>
+        <span class="n">pcpf_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">dcm_PN</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pos</span><span class="p">)</span>
+        <span class="n">pcpf_positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pcpf_pos</span><span class="p">)</span>
+
+        <span class="c1"># Loop through every target to check if within azelrange requirements</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">tgt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">global_tgts</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pcpf_pos</span> <span class="o">-</span> <span class="n">tgt</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">750e3</span> <span class="ow">and</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">local_tgts</span>
+            <span class="p">):</span>  <span class="c1"># Perform a quick check - ensure difference is less than ~500km/cosd(45)</span>
+                <span class="n">local_tgts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>  <span class="c1"># Append the target idx</span>
+                <span class="n">local_tgt_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">dt</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">i</span>
+                <span class="p">)</span>  <span class="c1"># Append the time the target is encountered</span>
+                <span class="n">local_tgt_locations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span>
+
+    <span class="n">gravFactory</span><span class="o">.</span><span class="n">unloadSpiceKernels</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">local_tgts</span><span class="p">,</span> <span class="n">local_tgt_times</span><span class="p">,</span> <span class="n">pcpf_positions</span><span class="p">,</span> <span class="n">local_tgt_locations</span></div>
+
+
+
+<div class="viewcode-block" id="elrange_req">
+<a class="viewcode-back" href="../../../../API%20Reference/utilities/initial_conditions/leo_orbit.html#bsk_rl.utilities.initial_conditions.leo_orbit.elrange_req">[docs]</a>
+<span class="k">def</span> <span class="nf">elrange_req</span><span class="p">(</span><span class="n">sc_pos</span><span class="p">,</span> <span class="n">tgt_pos</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines if the spacecraft is within the elevation and range requirements of</span>
+<span class="sd">    a target</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sc_pos: spacecraft position expressed in the ECEF frame</span>
+<span class="sd">        tgt_pos: tgt_pos expressed in the ECEF frame</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        T/F - within el, range requirements or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Import relevant library</span>
+    <span class="kn">import</span> <span class="nn">pyproj</span>
+
+    <span class="c1"># Set the elevation and range requirements</span>
+    <span class="n">el_req</span> <span class="o">=</span> <span class="mi">75</span>  <span class="c1"># deg</span>
+    <span class="n">range_req</span> <span class="o">=</span> <span class="mf">1e9</span>  <span class="c1"># m</span>
+
+    <span class="c1"># get the lat, long, and altitude of the target (assumes WGS84 ellipsoid)</span>
+    <span class="n">ecef</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Proj</span><span class="p">(</span><span class="n">proj</span><span class="o">=</span><span class="s2">&quot;geocent&quot;</span><span class="p">,</span> <span class="n">ellps</span><span class="o">=</span><span class="s2">&quot;WGS84&quot;</span><span class="p">,</span> <span class="n">datum</span><span class="o">=</span><span class="s2">&quot;WGS84&quot;</span><span class="p">)</span>
+    <span class="n">lla</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Proj</span><span class="p">(</span><span class="n">proj</span><span class="o">=</span><span class="s2">&quot;latlong&quot;</span><span class="p">,</span> <span class="n">ellps</span><span class="o">=</span><span class="s2">&quot;WGS84&quot;</span><span class="p">,</span> <span class="n">datum</span><span class="o">=</span><span class="s2">&quot;WGS84&quot;</span><span class="p">)</span>
+    <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">alt</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
+        <span class="n">ecef</span><span class="p">,</span> <span class="n">lla</span><span class="p">,</span> <span class="n">tgt_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tgt_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">tgt_pos</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">radians</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>  <span class="c1"># rad, rad, m</span>
+
+    <span class="c1"># Compute the line of sight vector</span>
+    <span class="n">los_ecef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sc_pos</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tgt_pos</span><span class="p">)</span>
+
+    <span class="c1"># Normalize the vector</span>
+    <span class="n">los_ecef_norm</span> <span class="o">=</span> <span class="n">los_ecef</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">los_ecef</span><span class="p">)</span>
+
+    <span class="c1"># Compute the transformation from ECEF to ENU</span>
+    <span class="n">ECEF2ENU</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">[</span><span class="o">-</span><span class="n">m</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lon</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lon</span><span class="p">),</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="n">m</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lon</span><span class="p">),</span> <span class="o">-</span><span class="n">m</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lon</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat</span><span class="p">)],</span>
+            <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lon</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lon</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span><span class="p">)],</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Compute the los vector in ENU coordinates</span>
+    <span class="n">los_enu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">ECEF2ENU</span><span class="p">,</span> <span class="n">los_ecef_norm</span><span class="p">)</span>
+
+    <span class="c1"># Compute the elevation</span>
+    <span class="n">el</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">asin</span><span class="p">(</span><span class="n">los_enu</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+    <span class="c1"># Compute the range</span>
+    <span class="nb">range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">los_ecef</span><span class="p">)</span>  <span class="c1"># m</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">el</span> <span class="o">&gt;</span> <span class="n">el_req</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">range</span> <span class="o">&lt;</span> <span class="n">range_req</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

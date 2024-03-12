@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fsw &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="fsw_steering" href="fsw_steering.html" />
+    <link rel="prev" title="environment" href="environment.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../agents/index.html">agents</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">envs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../../agile_eos/index.html">agile_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../general_satellite_tasking/index.html">general_satellite_tasking</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html">multisat_agile_eos</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../bsk_sim.html">bsk_sim</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../env_settings.html">env_settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../gym_env.html">gym_env</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html">bsk_models</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l5"><a class="reference internal" href="environment.html">environment</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">fsw</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel"><code class="docutils literal notranslate"><span class="pre">FSWModel</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.InitAllFSWObjects"><code class="docutils literal notranslate"><span class="pre">FSWModel.InitAllFSWObjects()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetAttitudeTrackingError"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetAttitudeTrackingError()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetInstrumentController"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetInstrumentController()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetLocationPointGuidance"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetLocationPointGuidance()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetMRPFeedbackRWA"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetMRPFeedbackRWA()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetMomentumDumping"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetMomentumDumping()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetNadirPointGuidance"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetNadirPointGuidance()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetRWConfigMsg"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetRWConfigMsg()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetRWMotorTorque"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetRWMotorTorque()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetSunPointGuidance"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetSunPointGuidance()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetThrusterMapping"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetThrusterMapping()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetThrustersConfigMsg"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetThrustersConfigMsg()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetVehicleConfigMsg"><code class="docutils literal notranslate"><span class="pre">FSWModel.SetVehicleConfigMsg()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.__init__"><code class="docutils literal notranslate"><span class="pre">FSWModel.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.setupGatewayMsgs"><code class="docutils literal notranslate"><span class="pre">FSWModel.setupGatewayMsgs()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.zeroGateWayMsgs"><code class="docutils literal notranslate"><span class="pre">FSWModel.zeroGateWayMsgs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="fsw_steering.html">fsw_steering</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../multisensor_eos/index.html">multisensor_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple_eos/index.html">simple_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science/index.html">small_body_science</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science_pomdp/index.html">small_body_science_pomdp</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../training/index.html">training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utilities/index.html">utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">envs</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">multisat_agile_eos</a></li>
+          <li class="breadcrumb-item"><a href="index.html">bsk_models</a></li>
+      <li class="breadcrumb-item active">fsw</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/API Reference/envs/multisat_agile_eos/bsk_models/fsw.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fsw">
+<span id="bsk-rl-envs-multisat-agile-eos-bsk-models-fsw"></span><h1>fsw<a class="headerlink" href="#fsw" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl.envs.multisat_agile_eos.bsk_models.fsw</span></code></p>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="py class" id="module-bsk_rl.envs.multisat_agile_eos.bsk_models.fsw">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FSWModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fswRate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacecraftIndex</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Defines the FSW class</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.InitAllFSWObjects">
+<span class="sig-name descname"><span class="pre">InitAllFSWObjects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.InitAllFSWObjects"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.InitAllFSWObjects" title="Link to this definition"></a></dt>
+<dd><p>Initializes all FSW objects.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetAttitudeTrackingError">
+<span class="sig-name descname"><span class="pre">SetAttitudeTrackingError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetAttitudeTrackingError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetAttitudeTrackingError" title="Link to this definition"></a></dt>
+<dd><p>Defines the module that converts a reference message into a guidance message.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetInstrumentController">
+<span class="sig-name descname"><span class="pre">SetInstrumentController</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetInstrumentController"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetInstrumentController" title="Link to this definition"></a></dt>
+<dd><p>Defines the instrument controller.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetLocationPointGuidance">
+<span class="sig-name descname"><span class="pre">SetLocationPointGuidance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetLocationPointGuidance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetLocationPointGuidance" title="Link to this definition"></a></dt>
+<dd><p>Defines the Earth location pointing guidance module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetMRPFeedbackRWA">
+<span class="sig-name descname"><span class="pre">SetMRPFeedbackRWA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetMRPFeedbackRWA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetMRPFeedbackRWA" title="Link to this definition"></a></dt>
+<dd><p>Defines the control properties.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetMomentumDumping">
+<span class="sig-name descname"><span class="pre">SetMomentumDumping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetMomentumDumping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetMomentumDumping" title="Link to this definition"></a></dt>
+<dd><p>Defines the momentum dumping configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetNadirPointGuidance">
+<span class="sig-name descname"><span class="pre">SetNadirPointGuidance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetNadirPointGuidance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetNadirPointGuidance" title="Link to this definition"></a></dt>
+<dd><p>Defines the nadir pointing guidance module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetRWConfigMsg">
+<span class="sig-name descname"><span class="pre">SetRWConfigMsg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetRWConfigMsg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetRWConfigMsg" title="Link to this definition"></a></dt>
+<dd><p>Imports the RWs configuration information.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetRWMotorTorque">
+<span class="sig-name descname"><span class="pre">SetRWMotorTorque</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetRWMotorTorque"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetRWMotorTorque" title="Link to this definition"></a></dt>
+<dd><p>Defines the motor torque from the control law.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetSunPointGuidance">
+<span class="sig-name descname"><span class="pre">SetSunPointGuidance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetSunPointGuidance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetSunPointGuidance" title="Link to this definition"></a></dt>
+<dd><p>Defines the Sun pointing guidance module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetThrusterMapping">
+<span class="sig-name descname"><span class="pre">SetThrusterMapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetThrusterMapping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetThrusterMapping" title="Link to this definition"></a></dt>
+<dd><p>Defines the thrusters mapping.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetThrustersConfigMsg">
+<span class="sig-name descname"><span class="pre">SetThrustersConfigMsg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetThrustersConfigMsg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetThrustersConfigMsg" title="Link to this definition"></a></dt>
+<dd><p>Imports the thrusters configuration information.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetVehicleConfigMsg">
+<span class="sig-name descname"><span class="pre">SetVehicleConfigMsg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.SetVehicleConfigMsg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.SetVehicleConfigMsg" title="Link to this definition"></a></dt>
+<dd><p>Set the vehicle configuration message.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fswRate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacecraftIndex</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.setupGatewayMsgs">
+<span class="sig-name descname"><span class="pre">setupGatewayMsgs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.setupGatewayMsgs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.setupGatewayMsgs" title="Link to this definition"></a></dt>
+<dd><p>create C-wrapped gateway messages such that different modules can write to
+this message and provide a common input msg for down-stream modules</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.zeroGateWayMsgs">
+<span class="sig-name descname"><span class="pre">zeroGateWayMsgs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/fsw.html#FSWModel.zeroGateWayMsgs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.fsw.FSWModel.zeroGateWayMsgs" title="Link to this definition"></a></dt>
+<dd><p>Zero all the FSW gateway message payloads</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="environment.html" class="btn btn-neutral float-left" title="environment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fsw_steering.html" class="btn btn-neutral float-right" title="fsw_steering" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+.. _examples.genetic_algorithm:
+
+genetic_algorithm
+=================
+
+``examples.genetic_algorithm``
+
+.. automodule:: examples.genetic_algorithm
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+   ga_hp_solver
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+

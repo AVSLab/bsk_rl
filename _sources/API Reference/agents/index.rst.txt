@@ -1,0 +1,25 @@
+.. _bsk_rl.agents:
+
+agents
+======
+
+``bsk_rl.agents``
+
+.. automodule:: bsk_rl.agents
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+   genetic_algorithm
+   mcts
+   state_machine
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+

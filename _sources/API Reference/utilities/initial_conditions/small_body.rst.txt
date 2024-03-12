@@ -1,0 +1,15 @@
+.. _bsk_rl.utilities.initial_conditions.small_body:
+
+small_body
+==========
+
+``bsk_rl.utilities.initial_conditions.small_body``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.utilities.initial_conditions.small_body
+   :members:
+   :show-inheritance:
+

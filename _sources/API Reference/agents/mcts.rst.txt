@@ -1,0 +1,15 @@
+.. _bsk_rl.agents.mcts:
+
+mcts
+====
+
+``bsk_rl.agents.mcts``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.agents.mcts
+   :members:
+   :show-inheritance:
+

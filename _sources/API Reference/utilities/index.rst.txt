@@ -1,0 +1,28 @@
+.. _bsk_rl.utilities:
+
+utilities
+=========
+
+``bsk_rl.utilities``
+
+.. automodule:: bsk_rl.utilities
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+
+   effector_primitives/index
+   genetic_algorithm/index
+   initial_conditions/index
+   mcts/index
+   sb3/index
+   state_machine/index

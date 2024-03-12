@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mcts_train &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="sb3" href="../sb3/index.html" />
+    <link rel="prev" title="mcts" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../agents/index.html">agents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../envs/index.html">envs</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">training</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">mcts</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">mcts_train</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.training.mcts.mcts_train.create_model"><code class="docutils literal notranslate"><span class="pre">create_model()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.training.mcts.mcts_train.data_number"><code class="docutils literal notranslate"><span class="pre">data_number()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.training.mcts.mcts_train.load_and_modify_data"><code class="docutils literal notranslate"><span class="pre">load_and_modify_data()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.training.mcts.mcts_train.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.training.mcts.mcts_train.mcts_batch"><code class="docutils literal notranslate"><span class="pre">mcts_batch()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.training.mcts.mcts_train.run_episode"><code class="docutils literal notranslate"><span class="pre">run_episode()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.training.mcts.mcts_train.run_experiment"><code class="docutils literal notranslate"><span class="pre">run_experiment()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../sb3/index.html">sb3</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../utilities/index.html">utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">training</a></li>
+          <li class="breadcrumb-item"><a href="index.html">mcts</a></li>
+      <li class="breadcrumb-item active">mcts_train</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/API Reference/training/mcts/mcts_train.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mcts-train">
+<span id="bsk-rl-training-mcts-mcts-train"></span><h1>mcts_train<a class="headerlink" href="#mcts-train" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl.training.mcts.mcts_train</span></code></p>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="py function" id="module-bsk_rl.training.mcts.mcts_train">
+<dt class="sig sig-object py" id="bsk_rl.training.mcts.mcts_train.create_model">
+<span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_layer_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">net_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/training/mcts/mcts_train.html#create_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.training.mcts.mcts_train.create_model" title="Link to this definition"></a></dt>
+<dd><p>Creates a feedforward neural network subject to various hyperparameters.
+:param hidden_layer_num: Number of hidden layers
+:param net_size: Widths of hidden layers
+:param activation: activation function, either Leaky ReLU or tanh
+:param num_states: Number of states
+:param dropout: Dropout rate
+:param alpha: alpha-parameter for Leaky ReLU activation function
+:param num_actions: number of actions
+:return: model</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.training.mcts.mcts_train.data_number">
+<span class="sig-name descname"><span class="pre">data_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/training/mcts/mcts_train.html#data_number"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.training.mcts.mcts_train.data_number" title="Link to this definition"></a></dt>
+<dd><p>Splits the data indicator string to return the data number
+:param x: data indicator string
+:return: data number</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.training.mcts.mcts_train.load_and_modify_data">
+<span class="sig-name descname"><span class="pre">load_and_modify_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/training/mcts/mcts_train.html#load_and_modify_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.training.mcts.mcts_train.load_and_modify_data" title="Link to this definition"></a></dt>
+<dd><p>Loads AND modifies the training data
+:param data_directory: data directory to load data from
+:param modified_states: modified states. First entry is a list of indices to keep.    Next entries are dictionary keys
+for info.
+:return: train-test split of data</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.training.mcts.mcts_train.load_data">
+<span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/training/mcts/mcts_train.html#load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.training.mcts.mcts_train.load_data" title="Link to this definition"></a></dt>
+<dd><p>Loads the data to train with.
+:param data_directory: Data directory to load data from.
+:return: train-test split of training data.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.training.mcts.mcts_train.mcts_batch">
+<span class="sig-name descname"><span class="pre">mcts_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_indicator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_conditions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SimpleEOS-v0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">45</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">270.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/training/mcts/mcts_train.html#mcts_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.training.mcts.mcts_train.mcts_batch" title="Link to this definition"></a></dt>
+<dd><p>The function performs a single run of MCTS over a planning horizon, generating     performance and training data
+:param data_directory: Data directory to store training data
+:param data_indicator: Data indicator to append to filename
+:param c: MCTS exploration constant
+:param num_sims: number of simulations-per-step
+:param initial_conditions: Dictionary of initial conditions
+:param result_list: Results list
+:param render: T/F to render BSK sim using Vizard
+:param env_name: environment name
+:return: N/A</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.training.mcts.mcts_train.run_episode">
+<span class="sig-name descname"><span class="pre">run_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_final</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_sims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_conditions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/training/mcts/mcts_train.html#run_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.training.mcts.mcts_train.run_episode" title="Link to this definition"></a></dt>
+<dd><p>Runs an episode of MCTS.
+:param env: Gym environment
+:param num_steps: number of steps to take
+:param t_final: Final time
+:param c: Exploration constant
+:param num_sims: Number of simulations-per-step
+:param initial_conditions: Dictionary of initial conditions
+:param env_name: environment name
+:return Q: state-action value estimates
+:return N: Number of times the state-action pairs were visited
+:return reward: Reward sum
+:return actHist: history of actions
+:return exec_time: execution time
+:return final_info: final infor from env</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.training.mcts.mcts_train.run_experiment">
+<span class="sig-name descname"><span class="pre">run_experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_sizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/training/mcts/mcts_train.html#run_experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.training.mcts.mcts_train.run_experiment" title="Link to this definition"></a></dt>
+<dd><p>Runs a hyperparameter search over neural network hyperparameters
+:param data_directory: Data directory to load data from and save networks,     training plots.
+:param parameters: dictionary of network hyperparameters.
+:param modified_states (optional): Modified states
+:return:</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="mcts" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../sb3/index.html" class="btn btn-neutral float-right" title="sb3" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

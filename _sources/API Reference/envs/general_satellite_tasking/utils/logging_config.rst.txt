@@ -1,0 +1,15 @@
+.. _bsk_rl.envs.general_satellite_tasking.utils.logging_config:
+
+logging_config
+==============
+
+``bsk_rl.envs.general_satellite_tasking.utils.logging_config``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.envs.general_satellite_tasking.utils.logging_config
+   :members:
+   :show-inheritance:
+

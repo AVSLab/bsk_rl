@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.envs.general_satellite_tasking.scenario.sat_actions &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.envs.general_satellite_tasking.scenario.sat_actions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.envs.general_satellite_tasking.scenario.sat_actions</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Satellite action types can be used to add actions to the agents.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">gymnasium</span> <span class="kn">import</span> <span class="n">spaces</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.scenario.environment_features</span> <span class="kn">import</span> <span class="n">Target</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.scenario.satellites</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ImagingSatellite</span><span class="p">,</span>
+    <span class="n">Satellite</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.utils.functional</span> <span class="kn">import</span> <span class="n">bind</span><span class="p">,</span> <span class="n">configurable</span>
+
+
+<div class="viewcode-block" id="SatAction">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.SatAction">[docs]</a>
+<span class="k">class</span> <span class="nc">SatAction</span><span class="p">(</span><span class="n">Satellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base satellite subclass for composing actions.&quot;&quot;&quot;</span>
+
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="DiscreteSatAction">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.DiscreteSatAction">[docs]</a>
+<span class="k">class</span> <span class="nc">DiscreteSatAction</span><span class="p">(</span><span class="n">SatAction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base satellite subclass for composing discrete actions.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DiscreteSatAction.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.DiscreteSatAction.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct satellite with discrete actions.</span>
+
+<span class="sd">        Actions are added to the satellite for each DiscreteSatAction subclass, and can</span>
+<span class="sd">        be accessed by index in order added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_map</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+
+<div class="viewcode-block" id="DiscreteSatAction.reset_pre_sim">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.DiscreteSatAction.reset_pre_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_pre_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset the previous action key.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_action_key</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Used to avoid retasking of BSK tasks</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_pre_sim</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="DiscreteSatAction.add_action">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.DiscreteSatAction.add_action">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_action</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">act_fn</span><span class="p">,</span> <span class="n">act_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_actions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an action to the action map.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            act_fn: Function to call when selecting action. Takes as a keyword</span>
+<span class="sd">                prev_action_key, used to avoid retasking of BSK models. Can accept an</span>
+<span class="sd">                integer argument.</span>
+<span class="sd">            act_name: String to refer to action.</span>
+<span class="sd">            n_actions: If not none, add action n_actions times, calling it with an</span>
+<span class="sd">                increasing integer argument for each subsequent action.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">act_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">act_name</span> <span class="o">=</span> <span class="n">act_fn</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="k">if</span> <span class="n">n_actions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action_map</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_list</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">act_name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">act_fn</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action_map</span><span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_list</span><span class="p">)</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_list</span><span class="p">)</span><span class="o">+</span><span class="n">n_actions</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="n">act_name</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_actions</span><span class="p">):</span>
+                <span class="n">act_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_indexed_action</span><span class="p">(</span><span class="n">act_fn</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">act_i</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;act_</span><span class="si">{</span><span class="n">act_fn</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">action_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">act_i</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="DiscreteSatAction.generate_indexed_action">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.DiscreteSatAction.generate_indexed_action">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_indexed_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">act_fn</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create an indexed action function.</span>
+
+<span class="sd">        Makes an indexed action function from an action function that takes an index</span>
+<span class="sd">        as an argument.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            act_fn: Action function to index.</span>
+<span class="sd">            index: Index to pass to act_fn.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">act_i</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">act_fn</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)(</span>
+                <span class="n">index</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="o">=</span><span class="n">prev_action_key</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">act_i</span></div>
+
+
+<div class="viewcode-block" id="DiscreteSatAction.set_action">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.DiscreteSatAction.set_action">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Call action function my index.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_disable_timed_terminal_event</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_action_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_list</span><span class="p">[</span><span class="n">action</span><span class="p">](</span>
+            <span class="n">prev_action_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prev_action_key</span>
+        <span class="p">)</span>  <span class="c1"># Update prev action data to avoid retasking</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Infer action space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_list</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="fsw_action_gen">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.fsw_action_gen">[docs]</a>
+<span class="k">def</span> <span class="nf">fsw_action_gen</span><span class="p">(</span><span class="n">fsw_action</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action_duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e9</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate an action class for a FSW @action.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fsw_action: Function name of FSW action.</span>
+<span class="sd">        action_duration: Time to task action for.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Satellite action class with fsw_action action.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@configurable</span>
+    <span class="k">class</span> <span class="nc">FSWAction</span><span class="p">(</span><span class="n">DiscreteSatAction</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">action_duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">action_duration</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Discrete action to perform a fsw action.</span>
+
+<span class="sd">            Typically this is includes a function decorated by @action.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                action_duration: Time to act when action selected. [s]</span>
+<span class="sd">                args: Passed through to satellite</span>
+<span class="sd">                kwargs: Passed through to satellite</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw_action</span> <span class="o">+</span> <span class="s2">&quot;_duration&quot;</span><span class="p">,</span> <span class="n">action_duration</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">act</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Activate action.</span>
+
+<span class="sd">                Returns:</span>
+<span class="sd">                    action key</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="n">duration</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw_action</span> <span class="o">+</span> <span class="s2">&quot;_duration&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log_info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fsw_action</span><span class="si">}</span><span class="s2"> tasked for </span><span class="si">{</span><span class="n">duration</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_disable_timed_terminal_event</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update_timed_terminal_event</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">+</span> <span class="n">duration</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="n">fsw_action</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">prev_action_key</span> <span class="o">!=</span> <span class="n">fsw_action</span><span class="p">:</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="p">,</span> <span class="n">fsw_action</span><span class="p">)()</span>
+                <span class="k">return</span> <span class="n">fsw_action</span>
+
+            <span class="n">act</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;act_</span><span class="si">{</span><span class="n">fsw_action</span><span class="si">}</span><span class="s2">&quot;</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_action</span><span class="p">(</span>
+                <span class="n">bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">act</span><span class="p">),</span>
+                <span class="n">act_name</span><span class="o">=</span><span class="n">fsw_action</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">FSWAction</span></div>
+
+
+
+<span class="c1"># Charges the satellite</span>
+<span class="n">ChargingAction</span> <span class="o">=</span> <span class="n">fsw_action_gen</span><span class="p">(</span><span class="s2">&quot;action_charge&quot;</span><span class="p">)</span>
+
+<span class="c1"># Disables all actuators and control</span>
+<span class="n">DriftAction</span> <span class="o">=</span> <span class="n">fsw_action_gen</span><span class="p">(</span><span class="s2">&quot;action_drift&quot;</span><span class="p">)</span>
+
+<span class="c1"># Points in a specified direction while firing desat thrusters and desaturating wheels</span>
+<span class="n">DesatAction</span> <span class="o">=</span> <span class="n">fsw_action_gen</span><span class="p">(</span><span class="s2">&quot;action_desat&quot;</span><span class="p">)</span>
+
+<span class="c1"># Points nadir while downlinking data</span>
+<span class="n">DownlinkAction</span> <span class="o">=</span> <span class="n">fsw_action_gen</span><span class="p">(</span><span class="s2">&quot;action_downlink&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ImagingActions">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.ImagingActions">[docs]</a>
+<span class="nd">@configurable</span>
+<span class="k">class</span> <span class="nc">ImagingActions</span><span class="p">(</span><span class="n">DiscreteSatAction</span><span class="p">,</span> <span class="n">ImagingSatellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Satellite subclass to add upcoming target imaging to action space.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ImagingActions.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.ImagingActions.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">n_ahead_act</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Discrete action to image upcoming targets.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_ahead_act: Number of actions to include in action space.</span>
+<span class="sd">            args: Passed through to satellite</span>
+<span class="sd">            kwargs: Passed through to satellite</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_action</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="n">n_actions</span><span class="o">=</span><span class="n">n_ahead_act</span><span class="p">,</span> <span class="n">act_name</span><span class="o">=</span><span class="s2">&quot;image&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingActions.image">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.ImagingActions.image">[docs]</a>
+    <span class="k">def</span> <span class="nf">image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Target</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">prev_action_key</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Activate imaging action.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target: Target, in terms of upcoming index, Target, or ID,</span>
+<span class="sd">            prev_action_key: Previous action key</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Target ID</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;target index </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> tasked&quot;</span><span class="p">)</span>
+
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_target_selection</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="n">prev_action_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_target_for_imaging</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">enable_target_window</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span></div>
+
+
+<div class="viewcode-block" id="ImagingActions.set_action">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_actions.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_actions.ImagingActions.set_action">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Target</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Allow the satellite to be tasked by Target or target id.</span>
+
+<span class="sd">        Allows for additional tasking modes in addition to action index-based tasking.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_disable_image_event</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="p">(</span><span class="n">Target</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prev_action_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_action_key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">NadirImagingAction</span> <span class="o">=</span> <span class="n">fsw_action_gen</span><span class="p">(</span><span class="s2">&quot;action_nadir_scan&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

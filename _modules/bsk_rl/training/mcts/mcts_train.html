@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.training.mcts.mcts_train &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.training.mcts.mcts_train</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.training.mcts.mcts_train</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">gymnasium</span> <span class="k">as</span> <span class="nn">gym</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_absolute_error</span><span class="p">,</span> <span class="n">mean_squared_error</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">LeakyReLU</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="n">Sequential</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.agents.mcts</span> <span class="kn">import</span> <span class="n">MCTS</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.agents.state_machine</span> <span class="kn">import</span> <span class="n">StateMachine</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utilities.mcts.rollout_policies</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AgileEOSRolloutPolicy</span><span class="p">,</span>
+    <span class="n">MultiSensorEOSRolloutPolicy</span><span class="p">,</span>
+    <span class="n">SimpleEOSRolloutPolicy</span><span class="p">,</span>
+    <span class="n">SmallBodyRolloutPolicy</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="mcts_batch">
+<a class="viewcode-back" href="../../../../API%20Reference/training/mcts/mcts_train.html#bsk_rl.training.mcts.mcts_train.mcts_batch">[docs]</a>
+<span class="k">def</span> <span class="nf">mcts_batch</span><span class="p">(</span>
+    <span class="n">data_directory</span><span class="p">,</span>
+    <span class="n">data_indicator</span><span class="p">,</span>
+    <span class="n">c</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">num_sims</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">initial_conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">result_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">render</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">env_name</span><span class="o">=</span><span class="s2">&quot;SimpleEOS-v0&quot;</span><span class="p">,</span>
+    <span class="n">num_steps</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span>
+    <span class="n">t_final</span><span class="o">=</span><span class="mf">270.0</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The function performs a single run of MCTS over a planning horizon, generating \</span>
+<span class="sd">    performance and training data</span>
+<span class="sd">    :param data_directory: Data directory to store training data</span>
+<span class="sd">    :param data_indicator: Data indicator to append to filename</span>
+<span class="sd">    :param c: MCTS exploration constant</span>
+<span class="sd">    :param num_sims: number of simulations-per-step</span>
+<span class="sd">    :param initial_conditions: Dictionary of initial conditions</span>
+<span class="sd">    :param result_list: Results list</span>
+<span class="sd">    :param render: T/F to render BSK sim using Vizard</span>
+<span class="sd">    :param env_name: environment name</span>
+<span class="sd">    :return: N/A</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">data_indicator</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="c1"># Create env</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">max_length</span> <span class="o">=</span> <span class="n">t_final</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">max_steps</span> <span class="o">=</span> <span class="n">num_steps</span>
+
+    <span class="n">env</span><span class="o">.</span><span class="n">render</span> <span class="o">=</span> <span class="n">render</span>
+
+    <span class="c1"># Run an MCTS episode, returning Q, N, reward sum, and action history</span>
+    <span class="n">Q</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">act_hist</span><span class="p">,</span> <span class="n">exec_time</span><span class="p">,</span> <span class="n">final_info</span><span class="p">,</span> <span class="n">metrics</span> <span class="o">=</span> <span class="n">run_episode</span><span class="p">(</span>
+        <span class="n">env</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">,</span> <span class="n">t_final</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">num_sims</span><span class="p">,</span> <span class="n">initial_conditions</span><span class="p">,</span> <span class="n">env_name</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Grab the performance metrics from the environment (downlink utilization, etc)</span>
+    <span class="n">performance_metrics</span> <span class="o">=</span> <span class="n">metrics</span>
+    <span class="n">performance_metrics</span><span class="p">[</span><span class="s2">&quot;reward_sum&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reward</span>
+    <span class="n">performance_metrics</span><span class="p">[</span><span class="s2">&quot;action_history&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">act_hist</span>
+    <span class="n">performance_metrics</span><span class="p">[</span><span class="s2">&quot;exec_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">exec_time</span>
+
+    <span class="c1"># Grab the states and value functions after the training cycle</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+    <span class="n">state_action_output</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">state_actions</span> <span class="ow">in</span> <span class="n">Q</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">state_action_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">state_actions</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="n">state_action_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">state_action_output</span><span class="p">)</span>
+
+    <span class="n">num_visited_output</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">num_visited</span> <span class="ow">in</span> <span class="n">N</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">num_visited_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">num_visited</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="n">num_visited_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">num_visited_output</span><span class="p">)</span>
+
+    <span class="c1"># Add to the data dictionary</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;states&quot;</span><span class="p">:</span> <span class="n">states</span><span class="p">,</span>
+        <span class="s2">&quot;action_value&quot;</span><span class="p">:</span> <span class="n">state_action_output</span><span class="p">,</span>
+        <span class="s2">&quot;num_visited&quot;</span><span class="p">:</span> <span class="n">num_visited_output</span><span class="p">,</span>
+        <span class="s2">&quot;ic&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">,</span>
+        <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">final_info</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Save the training data</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_directory</span> <span class="o">+</span> <span class="s2">&quot;/Training Data/&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_directory</span> <span class="o">+</span> <span class="s2">&quot;/Validation Plots/&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+        <span class="n">data_directory</span>
+        <span class="o">+</span> <span class="s2">&quot;/Training Data/&quot;</span>
+        <span class="o">+</span> <span class="s2">&quot;action_value_all_info_&quot;</span>
+        <span class="o">+</span> <span class="n">data_indicator</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;__&quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="s2">&quot;.npy&quot;</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">result_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># return performance_metrics as a dictionary</span>
+        <span class="n">result_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{(</span><span class="n">c</span><span class="p">,</span> <span class="n">num_sims</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_indicator</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])):</span> <span class="n">performance_metrics</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{(</span><span class="n">c</span><span class="p">,</span> <span class="n">num_sims</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_indicator</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])):</span> <span class="n">performance_metrics</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="run_episode">
+<a class="viewcode-back" href="../../../../API%20Reference/training/mcts/mcts_train.html#bsk_rl.training.mcts.mcts_train.run_episode">[docs]</a>
+<span class="k">def</span> <span class="nf">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">,</span> <span class="n">t_final</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">num_sims</span><span class="p">,</span> <span class="n">initial_conditions</span><span class="p">,</span> <span class="n">env_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs an episode of MCTS.</span>
+<span class="sd">    :param env: Gym environment</span>
+<span class="sd">    :param num_steps: number of steps to take</span>
+<span class="sd">    :param t_final: Final time</span>
+<span class="sd">    :param c: Exploration constant</span>
+<span class="sd">    :param num_sims: Number of simulations-per-step</span>
+<span class="sd">    :param initial_conditions: Dictionary of initial conditions</span>
+<span class="sd">    :param env_name: environment name</span>
+<span class="sd">    :return Q: state-action value estimates</span>
+<span class="sd">    :return N: Number of times the state-action pairs were visited</span>
+<span class="sd">    :return reward: Reward sum</span>
+<span class="sd">    :return actHist: history of actions</span>
+<span class="sd">    :return exec_time: execution time</span>
+<span class="sd">    :return final_info: final infor from env</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Call reset on the environment</span>
+    <span class="n">ob</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="c1"># Create rollout policies automatically</span>
+    <span class="n">state_machine</span> <span class="o">=</span> <span class="n">StateMachine</span><span class="p">()</span>
+    <span class="n">abs_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s2">&quot;AgileEOS&quot;</span> <span class="ow">in</span> <span class="n">env_name</span><span class="p">:</span>
+        <span class="n">state_machine</span><span class="o">.</span><span class="n">loadTransferConditions</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="s2">&quot;../../utilities/state_machine/agile_eos_ops.adv&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rollout_policy</span> <span class="o">=</span> <span class="n">AgileEOSRolloutPolicy</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">state_machine</span><span class="o">=</span><span class="n">state_machine</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s2">&quot;SimpleEOS&quot;</span> <span class="ow">in</span> <span class="n">env_name</span><span class="p">:</span>
+        <span class="c1"># Get the path relative to directory</span>
+        <span class="n">state_machine</span><span class="o">.</span><span class="n">loadTransferConditions</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="s2">&quot;../../utilities/state_machine/simple_eos_ops.adv&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rollout_policy</span> <span class="o">=</span> <span class="n">SimpleEOSRolloutPolicy</span><span class="p">(</span><span class="n">state_machine</span><span class="o">=</span><span class="n">state_machine</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s2">&quot;SmallBodyScience&quot;</span> <span class="ow">in</span> <span class="n">env_name</span><span class="p">:</span>
+        <span class="n">rollout_policy</span> <span class="o">=</span> <span class="n">SmallBodyRolloutPolicy</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">state_machine</span><span class="o">=</span><span class="n">state_machine</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s2">&quot;MultiSensorEOS&quot;</span> <span class="ow">in</span> <span class="n">env_name</span><span class="p">:</span>
+        <span class="n">state_machine</span><span class="o">.</span><span class="n">loadTransferConditions</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">abs_path</span><span class="p">,</span> <span class="s2">&quot;../../utilities/state_machine/multisensor_eos_ops.adv&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rollout_policy</span> <span class="o">=</span> <span class="n">MultiSensorEOSRolloutPolicy</span><span class="p">(</span>
+            <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">state_machine</span><span class="o">=</span><span class="n">state_machine</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;Environment name &quot;</span>
+            <span class="o">+</span> <span class="n">env_name</span>
+            <span class="o">+</span> <span class="s2">&quot; not found while instantiating state machine&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Create an MCTS agent</span>
+    <span class="n">MCTS_Agent</span> <span class="o">=</span> <span class="n">MCTS</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">num_sims</span><span class="o">=</span><span class="n">num_sims</span><span class="p">,</span> <span class="n">rollout_policy</span><span class="o">=</span><span class="n">rollout_policy</span><span class="p">)</span>
+
+    <span class="c1"># Set the initial conditions if they don&#39;t exist</span>
+    <span class="k">if</span> <span class="n">initial_conditions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">initial_conditions</span>
+
+    <span class="c1"># Reset with the initial conditions</span>
+    <span class="n">ob</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;initial_conditions&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">})</span>
+    <span class="n">ob_hist</span> <span class="o">=</span> <span class="p">[</span><span class="n">ob</span><span class="p">]</span>
+
+    <span class="c1"># Set the type of environment in the MCTS agent</span>
+    <span class="n">MCTS_Agent</span><span class="o">.</span><span class="n">setEnv</span><span class="p">(</span>
+        <span class="n">env_name</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">,</span> <span class="n">max_steps</span><span class="o">=</span><span class="n">num_steps</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="n">t_final</span>
+    <span class="p">)</span>
+
+    <span class="n">actHist</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Total reward</span>
+    <span class="n">reward_sum</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="c1"># Start the execution timer</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="c1"># Loop through each time step</span>
+    <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
+        <span class="c1"># Set the depth to be the end of the environment</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">num_steps</span> <span class="o">-</span> <span class="n">ind</span>
+
+        <span class="c1"># Select new action</span>
+        <span class="n">act</span> <span class="o">=</span> <span class="n">MCTS_Agent</span><span class="o">.</span><span class="n">selectAction</span><span class="p">(</span><span class="n">ob</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">actHist</span><span class="p">)</span>
+
+        <span class="c1"># Reset with the initial conditions</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;initial_conditions&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">})</span>
+
+        <span class="c1"># Step through env to take it to current place</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">return_obs</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">stepAct</span> <span class="ow">in</span> <span class="n">actHist</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">stepAct</span><span class="p">)</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">return_obs</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Append last action to action list</span>
+        <span class="n">actHist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">act</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actual Action Taken: &quot;</span><span class="p">,</span> <span class="n">act</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Real Environment Step: &quot;</span><span class="p">,</span> <span class="n">ind</span><span class="p">)</span>
+
+        <span class="c1"># Take the step in the environment</span>
+        <span class="n">ob</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">episode_over</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">act</span><span class="p">)</span>
+        <span class="n">ob_hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ob</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reward: &quot;</span><span class="p">,</span> <span class="n">reward</span><span class="p">)</span>
+
+        <span class="c1"># Sum the reward, add to rewards array</span>
+        <span class="n">reward_sum</span> <span class="o">=</span> <span class="n">reward_sum</span> <span class="o">+</span> <span class="n">reward</span>
+
+        <span class="c1"># Append to the trajectory</span>
+        <span class="n">MCTS_Agent</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">ob_hist</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">act</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">reward_sum</span><span class="p">,</span> <span class="n">info</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># If the episode is over, end the simulation</span>
+        <span class="k">if</span> <span class="n">episode_over</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;episode over&quot;</span><span class="p">)</span>
+            <span class="k">break</span>
+
+    <span class="c1"># End the execution timer</span>
+    <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">exec_time</span> <span class="o">=</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
+
+    <span class="c1"># Backup the trajectory along the main tree</span>
+    <span class="n">MCTS_Agent</span><span class="o">.</span><span class="n">backup_tree</span><span class="p">()</span>
+
+    <span class="c1"># Append Q</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">MCTS_Agent</span><span class="o">.</span><span class="n">Q_main</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">MCTS_Agent</span><span class="o">.</span><span class="n">N_main</span>
+    <span class="n">final_info</span> <span class="o">=</span> <span class="n">MCTS_Agent</span><span class="o">.</span><span class="n">info</span>
+    <span class="n">reward</span> <span class="o">=</span> <span class="n">reward_sum</span>
+
+    <span class="k">return</span> <span class="n">Q</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">actHist</span><span class="p">,</span> <span class="n">exec_time</span><span class="p">,</span> <span class="n">final_info</span><span class="p">,</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;metrics&quot;</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="data_number">
+<a class="viewcode-back" href="../../../../API%20Reference/training/mcts/mcts_train.html#bsk_rl.training.mcts.mcts_train.data_number">[docs]</a>
+<span class="k">def</span> <span class="nf">data_number</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Splits the data indicator string to return the data number</span>
+<span class="sd">    :param x: data indicator string</span>
+<span class="sd">    :return: data number</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(((</span><span class="n">x</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">))[</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="create_model">
+<a class="viewcode-back" href="../../../../API%20Reference/training/mcts/mcts_train.html#bsk_rl.training.mcts.mcts_train.create_model">[docs]</a>
+<span class="k">def</span> <span class="nf">create_model</span><span class="p">(</span>
+    <span class="n">hidden_layer_num</span><span class="p">,</span> <span class="n">net_size</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="n">num_states</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">num_actions</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a feedforward neural network subject to various hyperparameters.</span>
+<span class="sd">    :param hidden_layer_num: Number of hidden layers</span>
+<span class="sd">    :param net_size: Widths of hidden layers</span>
+<span class="sd">    :param activation: activation function, either Leaky ReLU or tanh</span>
+<span class="sd">    :param num_states: Number of states</span>
+<span class="sd">    :param dropout: Dropout rate</span>
+<span class="sd">    :param alpha: alpha-parameter for Leaky ReLU activation function</span>
+<span class="sd">    :param num_actions: number of actions</span>
+<span class="sd">    :return: model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create model</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+
+    <span class="c1"># Add layers</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">hidden_layer_num</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">layer</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;tanh&quot;</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="n">Dense</span><span class="p">(</span><span class="n">net_size</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_states</span><span class="p">,),</span> <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;LeakyReLU&quot;</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">net_size</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_states</span><span class="p">,)))</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;tanh&quot;</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">net_size</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;LeakyReLU&quot;</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">net_size</span><span class="p">))</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">))</span>
+
+        <span class="c1"># Add dropout layers</span>
+        <span class="k">if</span> <span class="n">dropout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout</span><span class="p">))</span>
+
+    <span class="c1"># Add the output layer and compile</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">num_actions</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">))</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+        <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span>
+        <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;Adam&quot;</span><span class="p">,</span>
+        <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mean_squared_error&quot;</span><span class="p">,</span> <span class="s2">&quot;mean_absolute_error&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+
+<div class="viewcode-block" id="load_and_modify_data">
+<a class="viewcode-back" href="../../../../API%20Reference/training/mcts/mcts_train.html#bsk_rl.training.mcts.mcts_train.load_and_modify_data">[docs]</a>
+<span class="k">def</span> <span class="nf">load_and_modify_data</span><span class="p">(</span><span class="n">data_directory</span><span class="p">,</span> <span class="n">modified_states</span><span class="o">=</span><span class="p">[]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads AND modifies the training data</span>
+<span class="sd">    :param data_directory: data directory to load data from</span>
+<span class="sd">    :param modified_states: modified states. First entry is a list of indices to keep.\</span>
+<span class="sd">    Next entries are dictionary keys</span>
+<span class="sd">    for info.</span>
+<span class="sd">    :return: train-test split of data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Load the data</span>
+    <span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+        <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">data_directory</span> <span class="o">+</span> <span class="s2">&quot;/Training Data/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span>
+        <span class="p">),</span>
+        <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="c1"># if filename.startswith(&#39;AlphaZero&#39;):</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+    <span class="n">states</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Load the data</span>
+    <span class="k">for</span> <span class="n">idx2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">act_val</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">act_val</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;action_value&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;action_value&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+            <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">states</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">modified_states</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">idx3</span><span class="p">,</span> <span class="n">elem</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">modified_states</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">idx3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">states</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;states&quot;</span><span class="p">][:,</span> <span class="n">elem</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">states_to_add</span> <span class="o">=</span> <span class="p">[</span>
+                            <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">][</span><span class="n">elem</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                                <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">][</span><span class="n">elem</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+                            <span class="p">)</span>
+                        <span class="p">]</span>
+                        <span class="k">for</span> <span class="n">idx4</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()))):</span>
+                            <span class="n">states_to_add</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                                <span class="p">(</span>
+                                    <span class="n">states_to_add</span><span class="p">,</span>
+                                    <span class="p">[</span>
+                                        <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="n">idx4</span><span class="p">][</span>
+                                            <span class="n">elem</span>
+                                        <span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                                            <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="n">idx4</span><span class="p">][</span>
+                                                <span class="n">elem</span>
+                                            <span class="p">]</span><span class="o">.</span><span class="n">size</span>
+                                        <span class="p">)</span>
+                                    <span class="p">],</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+                        <span class="n">states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">states</span><span class="p">,</span> <span class="n">states_to_add</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">states</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">states</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;states&quot;</span><span class="p">]</span>
+            <span class="n">action_value</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;action_value&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">modified_states</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">idx3</span><span class="p">,</span> <span class="n">elem</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">modified_states</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">idx3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">states_2</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;states&quot;</span><span class="p">][:,</span> <span class="n">elem</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">states_to_add</span> <span class="o">=</span> <span class="p">[</span>
+                            <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">][</span><span class="n">elem</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                                <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">][</span><span class="n">elem</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+                            <span class="p">)</span>
+                        <span class="p">]</span>
+                        <span class="k">for</span> <span class="n">idx4</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()))):</span>
+                            <span class="n">states_to_add</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                                <span class="p">(</span>
+                                    <span class="n">states_to_add</span><span class="p">,</span>
+                                    <span class="p">[</span>
+                                        <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="n">idx4</span><span class="p">][</span>
+                                            <span class="n">elem</span>
+                                        <span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                                            <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="n">idx4</span><span class="p">][</span>
+                                                <span class="n">elem</span>
+                                            <span class="p">]</span><span class="o">.</span><span class="n">size</span>
+                                        <span class="p">)</span>
+                                    <span class="p">],</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="n">states_to_add</span><span class="p">)</span>
+                        <span class="n">states_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">states_2</span><span class="p">,</span> <span class="n">states_to_add</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;States to add: &quot;</span><span class="p">,</span> <span class="n">states_2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="n">states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">states</span><span class="p">,</span> <span class="n">states_2</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Full states: &quot;</span><span class="p">,</span> <span class="n">states</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">states</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;states&quot;</span><span class="p">]))</span>
+
+            <span class="n">action_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">action_value</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;action_value&quot;</span><span class="p">]))</span>
+
+    <span class="k">return</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">action_value</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="load_data">
+<a class="viewcode-back" href="../../../../API%20Reference/training/mcts/mcts_train.html#bsk_rl.training.mcts.mcts_train.load_data">[docs]</a>
+<span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="n">data_directory</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads the data to train with.</span>
+<span class="sd">    :param data_directory: Data directory to load data from.</span>
+<span class="sd">    :return: train-test split of training data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Load the data</span>
+    <span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+        <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">data_directory</span> <span class="o">+</span> <span class="s2">&quot;/Training Data/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span>
+        <span class="p">),</span>
+        <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="c1"># if filename.startswith(&#39;AlphaZero&#39;):</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+    <span class="n">states</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Load the data</span>
+    <span class="k">for</span> <span class="n">idx2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+        <span class="c1"># print(data[idx2][&#39;action_value&#39;][1,:])</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">act_val</span> <span class="o">&lt;</span> <span class="mf">0.1</span> <span class="k">for</span> <span class="n">act_val</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;action_value&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]):</span>
+            <span class="c1"># print(data[idx2][&#39;action_value&#39;][1,:])</span>
+            <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">states</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">states</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;states&quot;</span><span class="p">]</span>
+            <span class="n">action_value</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;action_value&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">states</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;states&quot;</span><span class="p">]))</span>
+            <span class="n">action_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">action_value</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">idx2</span><span class="p">][</span><span class="s2">&quot;action_value&quot;</span><span class="p">]))</span>
+
+    <span class="c1"># split the training and test data, shuffle around the data to decorrelate</span>
+    <span class="k">return</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">action_value</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="run_experiment">
+<a class="viewcode-back" href="../../../../API%20Reference/training/mcts/mcts_train.html#bsk_rl.training.mcts.mcts_train.run_experiment">[docs]</a>
+<span class="k">def</span> <span class="nf">run_experiment</span><span class="p">(</span><span class="n">data_directory</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">modified_states</span><span class="o">=</span><span class="p">[],</span> <span class="n">batch_sizes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs a hyperparameter search over neural network hyperparameters</span>
+<span class="sd">    :param data_directory: Data directory to load data from and save networks, \</span>
+<span class="sd">    training plots.</span>
+<span class="sd">    :param parameters: dictionary of network hyperparameters.</span>
+<span class="sd">    :param modified_states (optional): Modified states</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">net_sizes</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;net_sizes&quot;</span><span class="p">]</span>
+    <span class="n">layers</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;layers&quot;</span><span class="p">]</span>
+    <span class="n">activations</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;activations&quot;</span><span class="p">]</span>
+    <span class="n">dropouts</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;dropouts&quot;</span><span class="p">]</span>
+    <span class="n">alphas</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;alphas&quot;</span><span class="p">]</span>
+    <span class="n">epoch_num</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;epoch_num&quot;</span><span class="p">]</span>
+
+    <span class="p">(</span>
+        <span class="n">states_train</span><span class="p">,</span>
+        <span class="n">states_test</span><span class="p">,</span>
+        <span class="n">action_value_train</span><span class="p">,</span>
+        <span class="n">action_value_test</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">load_and_modify_data</span><span class="p">(</span><span class="n">data_directory</span><span class="p">,</span> <span class="n">modified_states</span><span class="p">)</span>
+
+    <span class="n">master_data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">num_states</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">states_train</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])</span>
+
+    <span class="k">if</span> <span class="n">batch_sizes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">batch_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">states_train</span><span class="p">)]</span>
+
+    <span class="n">net_idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Search loop</span>
+    <span class="k">for</span> <span class="n">hidden_layer_num</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">net_size</span> <span class="ow">in</span> <span class="n">net_sizes</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">activation</span> <span class="ow">in</span> <span class="n">activations</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">dropout</span> <span class="ow">in</span> <span class="n">dropouts</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">batch_size</span> <span class="ow">in</span> <span class="n">batch_sizes</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">epoch_num</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">alpha_idx</span><span class="p">,</span> <span class="n">alpha</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">alphas</span><span class="p">):</span>
+                                <span class="c1"># Break out of the loop if on second alpha for tanh</span>
+                                <span class="k">if</span> <span class="n">alpha_idx</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;tanh&quot;</span><span class="p">:</span>
+                                    <span class="k">break</span>
+                                <span class="nb">print</span><span class="p">(</span>
+                                    <span class="s2">&quot;Hyperparam combination: &quot;</span><span class="p">,</span>
+                                    <span class="p">[</span>
+                                        <span class="n">hidden_layer_num</span><span class="p">,</span>
+                                        <span class="n">net_size</span><span class="p">,</span>
+                                        <span class="n">activation</span><span class="p">,</span>
+                                        <span class="n">dropout</span><span class="p">,</span>
+                                        <span class="n">alpha</span><span class="p">,</span>
+                                    <span class="p">],</span>
+                                <span class="p">)</span>
+
+                                <span class="n">model</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">(</span>
+                                    <span class="n">hidden_layer_num</span><span class="p">,</span>
+                                    <span class="n">net_size</span><span class="p">,</span>
+                                    <span class="n">activation</span><span class="p">,</span>
+                                    <span class="n">num_states</span><span class="p">,</span>
+                                    <span class="n">dropout</span><span class="p">,</span>
+                                    <span class="n">alpha</span><span class="p">,</span>
+                                    <span class="nb">len</span><span class="p">(</span><span class="n">action_value_test</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]),</span>
+                                <span class="p">)</span>
+
+                                <span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                                    <span class="n">states_train</span><span class="p">,</span>
+                                    <span class="n">action_value_train</span><span class="p">,</span>
+                                    <span class="n">epochs</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span>
+                                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                                    <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                    <span class="n">validation_data</span><span class="o">=</span><span class="p">(</span><span class="n">states_test</span><span class="p">,</span> <span class="n">action_value_test</span><span class="p">),</span>
+                                <span class="p">)</span>
+                                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span>
+                                    <span class="n">data_directory</span> <span class="o">+</span> <span class="s2">&quot;/Network History&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span>
+                                <span class="p">)</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+                                    <span class="n">data_directory</span>
+                                    <span class="o">+</span> <span class="s2">&quot;/Network History/&quot;</span>
+                                    <span class="o">+</span> <span class="s2">&quot;network_hist_&quot;</span>
+                                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">net_idx</span><span class="p">)</span>
+                                    <span class="o">+</span> <span class="s2">&quot;.npy&quot;</span><span class="p">,</span>
+                                    <span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">,</span>
+                                <span class="p">)</span>
+
+                                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span>
+                                    <span class="n">data_directory</span> <span class="o">+</span> <span class="s2">&quot;/Networks/&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span>
+                                <span class="p">)</span>
+                                <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+                                    <span class="n">data_directory</span>
+                                    <span class="o">+</span> <span class="s2">&quot;/Networks/&quot;</span>
+                                    <span class="o">+</span> <span class="s2">&quot;network_&quot;</span>
+                                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">net_idx</span><span class="p">)</span>
+                                <span class="p">)</span>
+
+                                <span class="n">prediction</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">states_test</span><span class="p">)</span>
+
+                                <span class="n">final_mse_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span>
+                                    <span class="p">[</span>
+                                        <span class="n">mean_squared_error</span><span class="p">(</span>
+                                            <span class="n">action_value_test</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">prediction</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+                                        <span class="p">)</span>
+                                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">action_value_test</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]))</span>
+                                    <span class="p">]</span>
+                                <span class="p">)</span>
+                                <span class="n">final_mae_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span>
+                                    <span class="p">[</span>
+                                        <span class="n">mean_absolute_error</span><span class="p">(</span>
+                                            <span class="n">action_value_test</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">prediction</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+                                        <span class="p">)</span>
+                                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">action_value_test</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]))</span>
+                                    <span class="p">]</span>
+                                <span class="p">)</span>
+
+                                <span class="n">master_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                    <span class="p">{</span>
+                                        <span class="s2">&quot;file_name&quot;</span><span class="p">:</span> <span class="s2">&quot;network_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">net_idx</span><span class="p">),</span>
+                                        <span class="s2">&quot;hidden_layer_num&quot;</span><span class="p">:</span> <span class="n">hidden_layer_num</span><span class="p">,</span>
+                                        <span class="s2">&quot;net_size&quot;</span><span class="p">:</span> <span class="n">net_size</span><span class="p">,</span>
+                                        <span class="s2">&quot;activation&quot;</span><span class="p">:</span> <span class="n">activation</span><span class="p">,</span>
+                                        <span class="s2">&quot;dropout&quot;</span><span class="p">:</span> <span class="n">dropout</span><span class="p">,</span>
+                                        <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">,</span>
+                                        <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">,</span>
+                                        <span class="s2">&quot;epochs&quot;</span><span class="p">:</span> <span class="n">epoch</span><span class="p">,</span>
+                                        <span class="s2">&quot;final_mse_mean&quot;</span><span class="p">:</span> <span class="n">final_mse_mean</span><span class="p">,</span>
+                                        <span class="s2">&quot;final_mae_mean&quot;</span><span class="p">:</span> <span class="n">final_mae_mean</span><span class="p">,</span>
+                                    <span class="p">}</span>
+                                <span class="p">)</span>
+
+                                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span>
+                                    <span class="n">data_directory</span> <span class="o">+</span> <span class="s2">&quot;/Training Plots/&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span>
+                                <span class="p">)</span>
+
+                                <span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s2">&quot;xtick&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s2">&quot;ytick&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+
+                                <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                                    <span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s2">&quot;mean_squared_error&quot;</span><span class="p">],</span>
+                                    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Training Set&quot;</span><span class="p">,</span>
+                                <span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                                    <span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s2">&quot;val_mean_squared_error&quot;</span><span class="p">],</span>
+                                    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Validation Set&quot;</span><span class="p">,</span>
+                                <span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;dotted&quot;</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">minorticks_on</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Epochs&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Mean Squared Error&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+                                    <span class="n">data_directory</span>
+                                    <span class="o">+</span> <span class="s2">&quot;/Training Plots&quot;</span>
+                                    <span class="o">+</span> <span class="s2">&quot;/network_&quot;</span>
+                                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">net_idx</span><span class="p">)</span>
+                                    <span class="o">+</span> <span class="s2">&quot;_mse.pdf&quot;</span><span class="p">,</span>
+                                    <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+                                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span>
+                                <span class="p">)</span>
+
+                                <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                                    <span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s2">&quot;mean_absolute_error&quot;</span><span class="p">],</span>
+                                    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Training Set&quot;</span><span class="p">,</span>
+                                <span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                                    <span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s2">&quot;val_mean_absolute_error&quot;</span><span class="p">],</span>
+                                    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Validation Set&quot;</span><span class="p">,</span>
+                                <span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Epochs&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Mean Absolute Error&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;dotted&quot;</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+                                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+                                    <span class="n">data_directory</span>
+                                    <span class="o">+</span> <span class="s2">&quot;/Training Plots&quot;</span>
+                                    <span class="o">+</span> <span class="s2">&quot;/network_&quot;</span>
+                                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">net_idx</span><span class="p">)</span>
+                                    <span class="o">+</span> <span class="s2">&quot;_mae.pdf&quot;</span><span class="p">,</span>
+                                    <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+                                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span>
+                                <span class="p">)</span>
+
+                                <span class="n">net_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">data_directory</span> <span class="o">+</span> <span class="s2">&quot;/network_results.npy&quot;</span><span class="p">,</span> <span class="n">master_data</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

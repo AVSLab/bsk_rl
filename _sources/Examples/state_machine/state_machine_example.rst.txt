@@ -1,0 +1,15 @@
+.. _examples.state_machine.state_machine_example:
+
+state_machine_example
+=====================
+
+``examples.state_machine.state_machine_example``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: examples.state_machine.state_machine_example
+   :members:
+   :show-inheritance:
+

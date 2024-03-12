@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>dynamics &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="environment" href="environment.html" />
+    <link rel="prev" title="simulation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../agents/index.html">agents</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">envs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../../agile_eos/index.html">agile_eos</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html">general_satellite_tasking</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../gym_env.html">gym_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../types.html">types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../scenario/index.html">scenario</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html">simulation</a><ul class="current">
+<li class="toctree-l5 current"><a class="current reference internal" href="#">dynamics</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.BN"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.BN</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.BP"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.BP</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.battery_charge"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.battery_charge</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.battery_charge_fraction"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.battery_charge_fraction</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.omega_BN_B"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.omega_BN_B</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.omega_BP_P"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.omega_BP_P</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.r_BN_N"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.r_BN_N</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.r_BN_P"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.r_BN_P</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.sigma_BN"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.sigma_BN</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.v_BN_N"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.v_BN_N</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.v_BN_P"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.v_BN_P</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.wheel_speeds"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.wheel_speeds</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.wheel_speeds_fraction"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.wheel_speeds_fraction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ContinuousImagingDynModel"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingDynModel</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel"><code class="docutils literal notranslate"><span class="pre">DynamicsModel</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.__init__"><code class="docutils literal notranslate"><span class="pre">DynamicsModel.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.environment"><code class="docutils literal notranslate"><span class="pre">DynamicsModel.environment</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.is_alive"><code class="docutils literal notranslate"><span class="pre">DynamicsModel.is_alive()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.reset_for_action"><code class="docutils literal notranslate"><span class="pre">DynamicsModel.reset_for_action()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.simulator"><code class="docutils literal notranslate"><span class="pre">DynamicsModel.simulator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.FullFeaturedDynModel"><code class="docutils literal notranslate"><span class="pre">FullFeaturedDynModel</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.GroundStationDynModel"><code class="docutils literal notranslate"><span class="pre">GroundStationDynModel</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel.reset_for_action"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.reset_for_action()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel.storage_level"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.storage_level</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel.storage_level_fraction"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.storage_level_fraction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.LOSCommDynModel"><code class="docutils literal notranslate"><span class="pre">LOSCommDynModel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="environment.html">environment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="fsw.html">fsw</a></li>
+<li class="toctree-l5"><a class="reference internal" href="simulator.html">simulator</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html">utils</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../multisat_agile_eos/index.html">multisat_agile_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../multisensor_eos/index.html">multisensor_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple_eos/index.html">simple_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science/index.html">small_body_science</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science_pomdp/index.html">small_body_science_pomdp</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../training/index.html">training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utilities/index.html">utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">envs</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">general_satellite_tasking</a></li>
+          <li class="breadcrumb-item"><a href="index.html">simulation</a></li>
+      <li class="breadcrumb-item active">dynamics</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/API Reference/envs/general_satellite_tasking/simulation/dynamics.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dynamics">
+<span id="bsk-rl-envs-general-satellite-tasking-simulation-dynamics"></span><h1>dynamics<a class="headerlink" href="#dynamics" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl.envs.general_satellite_tasking.simulation.dynamics</span></code></p>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.envs.general_satellite_tasking.simulation.dynamics">Basilisk dynamics models.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BasicDynamicsModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dyn_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/simulation/dynamics.html#BasicDynamicsModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">DynamicsModel</span></code></a></p>
+<p>Basic Dynamics model with minimum necessary Basilisk components.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.BN">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BN</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.BN" title="Link to this definition"></a></dt>
+<dd><p>Body relative to inertial frame rotation matrix.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.BP">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BP</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.BP" title="Link to this definition"></a></dt>
+<dd><p>Body relative to planet freame rotation matrix.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.battery_charge">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">battery_charge</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.battery_charge" title="Link to this definition"></a></dt>
+<dd><p>Battery charge [W*s].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.battery_charge_fraction">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">battery_charge_fraction</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.battery_charge_fraction" title="Link to this definition"></a></dt>
+<dd><p>Battery charge as a fraction of capacity.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.omega_BN_B">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">omega_BN_B</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.omega_BN_B" title="Link to this definition"></a></dt>
+<dd><p>Body rate relative to inertial frame in body frame [rad/s].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.omega_BP_P">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">omega_BP_P</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.omega_BP_P" title="Link to this definition"></a></dt>
+<dd><p>Body angular velocity relative to planet frame in plant frame [rad/s].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.r_BN_N">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">r_BN_N</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.r_BN_N" title="Link to this definition"></a></dt>
+<dd><p>Body position relative to inertial origin in inertial frame [m].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.r_BN_P">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">r_BN_P</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.r_BN_P" title="Link to this definition"></a></dt>
+<dd><p>Body position relative to inertial origin in planet frame [m].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.sigma_BN">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sigma_BN</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.sigma_BN" title="Link to this definition"></a></dt>
+<dd><p>Body attitude MRP relative to inertial frame.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.v_BN_N">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">v_BN_N</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.v_BN_N" title="Link to this definition"></a></dt>
+<dd><p>Body velocity relative to inertial origin in inertial frame [m/s].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.v_BN_P">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">v_BN_P</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.v_BN_P" title="Link to this definition"></a></dt>
+<dd><p>P-frame derivative of r_BN.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.wheel_speeds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wheel_speeds</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.wheel_speeds" title="Link to this definition"></a></dt>
+<dd><p>Wheel speeds [rad/s].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.wheel_speeds_fraction">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wheel_speeds_fraction</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel.wheel_speeds_fraction" title="Link to this definition"></a></dt>
+<dd><p>Wheel speeds normalized by maximum.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ContinuousImagingDynModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ContinuousImagingDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dyn_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/simulation/dynamics.html#ContinuousImagingDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ContinuousImagingDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a></p>
+<p>Equips the satellite for continuous nadir imaging.</p>
+<p>Equips satellite with an instrument, storage unit, and transmitter
+for continuous nadir imaging.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DynamicsModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dyn_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/simulation/dynamics.html#DynamicsModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract Basilisk dynamics model.</p>
+<p>One DynamicsModel is instantiated for each satellite in the environment each time a
+new simulator is created.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dyn_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/simulation/dynamics.html#DynamicsModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.__init__" title="Link to this definition"></a></dt>
+<dd><p>Construct a base dynamics model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite</strong> – Satellite modelled by this model</p></li>
+<li><p><strong>dyn_rate</strong> – Rate of dynamics simulation [s]</p></li>
+<li><p><strong>priority</strong> – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Ignored</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.environment">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">environment</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="environment.html#bsk_rl.envs.general_satellite_tasking.simulation.environment.EnvironmentModel" title="bsk_rl.envs.general_satellite_tasking.simulation.environment.EnvironmentModel"><span class="pre">EnvironmentModel</span></a></em><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.environment" title="Link to this definition"></a></dt>
+<dd><p>Reference to the episode environment model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.is_alive">
+<span class="sig-name descname"><span class="pre">is_alive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/simulation/dynamics.html#DynamicsModel.is_alive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.is_alive" title="Link to this definition"></a></dt>
+<dd><p>Check if the dynamics model has failed any aliveness requirements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If the satellite dynamics are still alive</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.reset_for_action">
+<span class="sig-name descname"><span class="pre">reset_for_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/simulation/dynamics.html#DynamicsModel.reset_for_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.reset_for_action" title="Link to this definition"></a></dt>
+<dd><p>Reset whenever a FSW &#64;action is called.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.simulator">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">simulator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Simulator</span></em><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.DynamicsModel.simulator" title="Link to this definition"></a></dt>
+<dd><p>Reference to the episode simulator.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.FullFeaturedDynModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FullFeaturedDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dyn_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/simulation/dynamics.html#FullFeaturedDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.FullFeaturedDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.GroundStationDynModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.GroundStationDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroundStationDynModel</span></code></a>, <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.LOSCommDynModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.LOSCommDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">LOSCommDynModel</span></code></a></p>
+<p>Convenience class for a satellite with ground station and line-of-sight comms.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.GroundStationDynModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GroundStationDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dyn_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/simulation/dynamics.html#GroundStationDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.GroundStationDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a></p>
+<p>Model that connects satellite to environment ground stations.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ImagingDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dyn_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/simulation/dynamics.html#ImagingDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicDynamicsModel</span></code></a></p>
+<p>Equips the satellite with an instrument, storage unit, and transmitter.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel.reset_for_action">
+<span class="sig-name descname"><span class="pre">reset_for_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/simulation/dynamics.html#ImagingDynModel.reset_for_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel.reset_for_action" title="Link to this definition"></a></dt>
+<dd><p>Shut off power sinks.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel.storage_level">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">storage_level</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel.storage_level" title="Link to this definition"></a></dt>
+<dd><p>Storage level [bits].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel.storage_level_fraction">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">storage_level_fraction</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.ImagingDynModel.storage_level_fraction" title="Link to this definition"></a></dt>
+<dd><p>Storage level as a fraction of capacity.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.LOSCommDynModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LOSCommDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dyn_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/simulation/dynamics.html#LOSCommDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.LOSCommDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel" title="bsk_rl.envs.general_satellite_tasking.simulation.dynamics.BasicDynamicsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicDynamicsModel</span></code></a></p>
+<p>For evaluating line-of-sight connections between satellites for communication.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="simulation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="environment.html" class="btn btn-neutral float-right" title="environment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

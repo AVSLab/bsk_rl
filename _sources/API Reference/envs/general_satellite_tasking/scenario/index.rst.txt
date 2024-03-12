@@ -1,0 +1,28 @@
+.. _bsk_rl.envs.general_satellite_tasking.scenario:
+
+scenario
+========
+
+``bsk_rl.envs.general_satellite_tasking.scenario``
+
+.. automodule:: bsk_rl.envs.general_satellite_tasking.scenario
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+   communication
+   data
+   environment_features
+   sat_actions
+   sat_observations
+   satellites
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+

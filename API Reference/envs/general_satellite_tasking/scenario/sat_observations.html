@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sat_observations &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="satellites" href="satellites.html" />
+    <link rel="prev" title="sat_actions" href="sat_actions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../agents/index.html">agents</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">envs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../../agile_eos/index.html">agile_eos</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html">general_satellite_tasking</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../gym_env.html">gym_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../types.html">types</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html">scenario</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="communication.html">communication</a></li>
+<li class="toctree-l5"><a class="reference internal" href="data.html">data</a></li>
+<li class="toctree-l5"><a class="reference internal" href="environment_features.html">environment_features</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sat_actions.html">sat_actions</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">sat_observations</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState"><code class="docutils literal notranslate"><span class="pre">EclipseState</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState.__init__"><code class="docutils literal notranslate"><span class="pre">EclipseState.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState.eclipse_state"><code class="docutils literal notranslate"><span class="pre">EclipseState.eclipse_state()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState"><code class="docutils literal notranslate"><span class="pre">GroundStationState</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.__init__"><code class="docutils literal notranslate"><span class="pre">GroundStationState.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.ground_station_obs_generator"><code class="docutils literal notranslate"><span class="pre">GroundStationState.ground_station_obs_generator()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.reset_post_sim"><code class="docutils literal notranslate"><span class="pre">GroundStationState.reset_post_sim()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState"><code class="docutils literal notranslate"><span class="pre">NormdPropertyState</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState.__init__"><code class="docutils literal notranslate"><span class="pre">NormdPropertyState.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState.add_prop_function"><code class="docutils literal notranslate"><span class="pre">NormdPropertyState.add_prop_function()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation"><code class="docutils literal notranslate"><span class="pre">SatObservation</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.__init__"><code class="docutils literal notranslate"><span class="pre">SatObservation.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.add_to_observation"><code class="docutils literal notranslate"><span class="pre">SatObservation.add_to_observation()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.get_obs"><code class="docutils literal notranslate"><span class="pre">SatObservation.get_obs()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_array_keys"><code class="docutils literal notranslate"><span class="pre">SatObservation.obs_array_keys</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_dict"><code class="docutils literal notranslate"><span class="pre">SatObservation.obs_dict</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_list"><code class="docutils literal notranslate"><span class="pre">SatObservation.obs_list</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_ndarray"><code class="docutils literal notranslate"><span class="pre">SatObservation.obs_ndarray</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState"><code class="docutils literal notranslate"><span class="pre">TargetState</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState.__init__"><code class="docutils literal notranslate"><span class="pre">TargetState.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState.target_obs_generator"><code class="docutils literal notranslate"><span class="pre">TargetState.target_obs_generator()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState"><code class="docutils literal notranslate"><span class="pre">TimeState</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.__init__"><code class="docutils literal notranslate"><span class="pre">TimeState.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.normalized_time"><code class="docutils literal notranslate"><span class="pre">TimeState.normalized_time()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.reset_post_sim"><code class="docutils literal notranslate"><span class="pre">TimeState.reset_post_sim()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="satellites.html">satellites</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../simulation/index.html">simulation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html">utils</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../multisat_agile_eos/index.html">multisat_agile_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../multisensor_eos/index.html">multisensor_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple_eos/index.html">simple_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science/index.html">small_body_science</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science_pomdp/index.html">small_body_science_pomdp</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../training/index.html">training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utilities/index.html">utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">envs</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">general_satellite_tasking</a></li>
+          <li class="breadcrumb-item"><a href="index.html">scenario</a></li>
+      <li class="breadcrumb-item active">sat_observations</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/API Reference/envs/general_satellite_tasking/scenario/sat_observations.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="sat-observations">
+<span id="bsk-rl-envs-general-satellite-tasking-scenario-sat-observations"></span><h1>sat_observations<a class="headerlink" href="#sat-observations" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl.envs.general_satellite_tasking.scenario.sat_observations</span></code></p>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.envs.general_satellite_tasking.scenario.sat_observations">Satellite observation types can be used to add information to the observation.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EclipseState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5700</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#EclipseState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation" title="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation"><code class="xref py py-class docutils literal notranslate"><span class="pre">SatObservation</span></code></a></p>
+<p>Satellite subclass to add upcoming eclipse information to the observation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5700</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#EclipseState.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState.__init__" title="Link to this definition"></a></dt>
+<dd><p>Add a tuple of the orbit-normalized next orbit start and end.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>orbit_period</strong> – Normalization factor for eclipse time.</p></li>
+<li><p><strong>args</strong> – Passed through to satellite</p></li>
+<li><p><strong>kwargs</strong> – Passed through to satellite</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState.eclipse_state">
+<span class="sig-name descname"><span class="pre">eclipse_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#EclipseState.eclipse_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState.eclipse_state" title="Link to this definition"></a></dt>
+<dd><p>Return tuple of normalized next eclipse start and end.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GroundStationState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_ahead_observe_downlinks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downlink_window_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#GroundStationState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation" title="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation"><code class="xref py py-class docutils literal notranslate"><span class="pre">SatObservation</span></code></a>, <a class="reference internal" href="satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">AccessSatellite</span></code></a></p>
+<p>Satellite subclass to add ground station information to the observation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_ahead_observe_downlinks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downlink_window_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#GroundStationState.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.__init__" title="Link to this definition"></a></dt>
+<dd><p>Add information about downlink opportunities to the observation state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_ahead_observe_downlinks</strong> – Number of upcoming downlink opportunities to
+consider.</p></li>
+<li><p><strong>downlink_window_properties</strong> – List of properties to include in the observation
+in the format [dict(prop=”prop_name”, norm=norm)]. If norm is not
+specified, it is set to 1.0 (no normalization). Properties to choose
+from:
+* location
+* window_open
+* window_mid
+* window_close</p></li>
+<li><p><strong>args</strong> – Passed through to satellite</p></li>
+<li><p><strong>kwargs</strong> – Passed through to satellite</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.ground_station_obs_generator">
+<span class="sig-name descname"><span class="pre">ground_station_obs_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">downlink_window_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_ahead_observe_downlinks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#GroundStationState.ground_station_obs_generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.ground_station_obs_generator" title="Link to this definition"></a></dt>
+<dd><p>Generate the ground_station_obs function.</p>
+<p>Generates an obs function from the downlink_window_properties spec and adds it
+to the observation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.reset_post_sim">
+<span class="sig-name descname"><span class="pre">reset_post_sim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#GroundStationState.reset_post_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.reset_post_sim" title="Link to this definition"></a></dt>
+<dd><p>Add downlink ground stations to be considered by the access checker.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NormdPropertyState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#NormdPropertyState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation" title="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation"><code class="xref py py-class docutils literal notranslate"><span class="pre">SatObservation</span></code></a></p>
+<p>Satellite subclass to add satellites properties to the observation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#NormdPropertyState.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState.__init__" title="Link to this definition"></a></dt>
+<dd><p>Add a list of properties to the satellite observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs_properties</strong> – <p>List of properties that can be found in fsw or dynamics that
+are to be appended to the the observation. Properties are optionally
+normalized by some factor. Specified in the form</p>
+<dl class="field-list">
+<dt class="field-odd">code-block<span class="colon">:</span></dt>
+<dd class="field-odd"><p>python</p>
+<p>[dict(prop=”prop_name”, module=”fsw”/”dynamics”/None, norm=1.0)]</p>
+</dd>
+</dl>
+<p>If module is not specified or None, the source of the property is
+inferred. If norm is not specified, it is set to 1.0 (no normalization).</p>
+</p></li>
+<li><p><strong>args</strong> – Passed through to satellite</p></li>
+<li><p><strong>kwargs</strong> – Passed through to satellite</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState.add_prop_function">
+<span class="sig-name descname"><span class="pre">add_prop_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#NormdPropertyState.add_prop_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState.add_prop_function" title="Link to this definition"></a></dt>
+<dd><p>Add a property to the observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prop</strong> – Property to query</p></li>
+<li><p><strong>module</strong> – Module (dynamics or fsw) that holds the property. Can be inferred.</p></li>
+<li><p><strong>norm</strong> – Value to normalize property by. Defaults to 1.0.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SatObservation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs_type:</span> <span class="pre">type</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'numpy.ndarray'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#SatObservation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">Satellite</span></code></a></p>
+<p>Base satellite subclass for composing observations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs_type:</span> <span class="pre">type</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'numpy.ndarray'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#SatObservation.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.__init__" title="Link to this definition"></a></dt>
+<dd><p>Satellite subclass for composing observations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs_type</strong> – Datatype of satellite’s returned observation</p></li>
+<li><p><strong>args</strong> – Passed through to satellite</p></li>
+<li><p><strong>kwargs</strong> – Passed through to satellite</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.add_to_observation">
+<span class="sig-name descname"><span class="pre">add_to_observation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_element</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#SatObservation.add_to_observation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.add_to_observation" title="Link to this definition"></a></dt>
+<dd><p>Add a function to be called when constructing observations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obs_element</strong> – Callable to be observed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.get_obs">
+<span class="sig-name descname"><span class="pre">get_obs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#SatObservation.get_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.get_obs" title="Link to this definition"></a></dt>
+<dd><p>Update the observation.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_array_keys">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">obs_array_keys</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_array_keys" title="Link to this definition"></a></dt>
+<dd><p>Utility to get the keys of the obs_ndarray.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_dict">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">obs_dict</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_dict" title="Link to this definition"></a></dt>
+<dd><p>Human-readable observation format.</p>
+<p>Cached so only computed once per timestep.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_list">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">obs_list</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_list" title="Link to this definition"></a></dt>
+<dd><p>List observation format.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_ndarray">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">obs_ndarray</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.obs_ndarray" title="Link to this definition"></a></dt>
+<dd><p>Numpy vector observation format.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TargetState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_ahead_observe</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#TargetState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation" title="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation"><code class="xref py py-class docutils literal notranslate"><span class="pre">SatObservation</span></code></a>, <a class="reference internal" href="satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingSatellite</span></code></a></p>
+<p>Satellite subclass to add upcoming target information to the observation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_ahead_observe</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#TargetState.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState.__init__" title="Link to this definition"></a></dt>
+<dd><p>Add information about upcoming targets to the observation state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_ahead_observe</strong> – Number of upcoming targets to consider.</p></li>
+<li><p><strong>target_properties</strong> – List of properties to include in the observation in the
+format [dict(prop=”prop_name”, norm=norm)]. If norm is not specified, it
+is set to 1.0 (no normalization). Properties to choose from:
+* priority
+* location
+* window_open
+* window_mid
+* window_close
+* target_angle</p></li>
+<li><p><strong>args</strong> – Passed through to satellite</p></li>
+<li><p><strong>kwargs</strong> – Passed through to satellite</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState.target_obs_generator">
+<span class="sig-name descname"><span class="pre">target_obs_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#TargetState.target_obs_generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState.target_obs_generator" title="Link to this definition"></a></dt>
+<dd><p>Generate the target_obs function.</p>
+<p>Generates the observation function from the target_properties spec and add it
+to the observation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TimeState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalization_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#TimeState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation" title="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation"><code class="xref py py-class docutils literal notranslate"><span class="pre">SatObservation</span></code></a></p>
+<p>Satellite subclass to add simulation time to the observation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalization_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#TimeState.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.__init__" title="Link to this definition"></a></dt>
+<dd><p>Add the sim time to the observation state.</p>
+<p>Automatically normalizes to the sim duration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>normalization_time</strong> – Time to normalize by. If None, is set to simulation
+duration</p></li>
+<li><p><strong>args</strong> – Passed through to satellite</p></li>
+<li><p><strong>kwargs</strong> – Passed through to satellite</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.normalized_time">
+<span class="sig-name descname"><span class="pre">normalized_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#TimeState.normalized_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.normalized_time" title="Link to this definition"></a></dt>
+<dd><p>Return time normalized by normalization_time.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.reset_post_sim">
+<span class="sig-name descname"><span class="pre">reset_post_sim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/sat_observations.html#TimeState.reset_post_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.reset_post_sim" title="Link to this definition"></a></dt>
+<dd><p>Autodetect normalization time.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sat_actions.html" class="btn btn-neutral float-left" title="sat_actions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="satellites.html" class="btn btn-neutral float-right" title="satellites" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

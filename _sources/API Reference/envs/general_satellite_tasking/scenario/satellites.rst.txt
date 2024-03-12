@@ -1,0 +1,15 @@
+.. _bsk_rl.envs.general_satellite_tasking.scenario.satellites:
+
+satellites
+==========
+
+``bsk_rl.envs.general_satellite_tasking.scenario.satellites``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.envs.general_satellite_tasking.scenario.satellites
+   :members:
+   :show-inheritance:
+

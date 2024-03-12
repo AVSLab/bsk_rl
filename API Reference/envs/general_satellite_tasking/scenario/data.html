@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>data &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="environment_features" href="environment_features.html" />
+    <link rel="prev" title="communication" href="communication.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../agents/index.html">agents</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">envs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../../agile_eos/index.html">agile_eos</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html">general_satellite_tasking</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../gym_env.html">gym_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../types.html">types</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html">scenario</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="communication.html">communication</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">data</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager"><code class="docutils literal notranslate"><span class="pre">DataManager</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.__init__"><code class="docutils literal notranslate"><span class="pre">DataManager.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.create_data_store"><code class="docutils literal notranslate"><span class="pre">DataManager.create_data_store()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.reset"><code class="docutils literal notranslate"><span class="pre">DataManager.reset()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.reward"><code class="docutils literal notranslate"><span class="pre">DataManager.reward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore"><code class="docutils literal notranslate"><span class="pre">DataStore</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.__init__"><code class="docutils literal notranslate"><span class="pre">DataStore.__init__()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.communication_update"><code class="docutils literal notranslate"><span class="pre">DataStore.communication_update()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.internal_update"><code class="docutils literal notranslate"><span class="pre">DataStore.internal_update()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.stage_communicated_data"><code class="docutils literal notranslate"><span class="pre">DataStore.stage_communicated_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataType"><code class="docutils literal notranslate"><span class="pre">DataType</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningManager"><code class="docutils literal notranslate"><span class="pre">NadirScanningManager</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningManager.DataStore"><code class="docutils literal notranslate"><span class="pre">NadirScanningManager.DataStore</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningManager.__init__"><code class="docutils literal notranslate"><span class="pre">NadirScanningManager.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningTimeData"><code class="docutils literal notranslate"><span class="pre">NadirScanningTimeData</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningTimeData.__init__"><code class="docutils literal notranslate"><span class="pre">NadirScanningTimeData.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoData"><code class="docutils literal notranslate"><span class="pre">NoData</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataManager"><code class="docutils literal notranslate"><span class="pre">NoDataManager</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataManager.DataStore"><code class="docutils literal notranslate"><span class="pre">NoDataManager.DataStore</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataStore"><code class="docutils literal notranslate"><span class="pre">NoDataStore</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataStore.DataType"><code class="docutils literal notranslate"><span class="pre">NoDataStore.DataType</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.ScanningNadirTimeStore"><code class="docutils literal notranslate"><span class="pre">ScanningNadirTimeStore</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.ScanningNadirTimeStore.DataType"><code class="docutils literal notranslate"><span class="pre">ScanningNadirTimeStore.DataType</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageData"><code class="docutils literal notranslate"><span class="pre">UniqueImageData</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageData.__init__"><code class="docutils literal notranslate"><span class="pre">UniqueImageData.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageStore"><code class="docutils literal notranslate"><span class="pre">UniqueImageStore</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageStore.DataType"><code class="docutils literal notranslate"><span class="pre">UniqueImageStore.DataType</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImagingManager"><code class="docutils literal notranslate"><span class="pre">UniqueImagingManager</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImagingManager.DataStore"><code class="docutils literal notranslate"><span class="pre">UniqueImagingManager.DataStore</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImagingManager.__init__"><code class="docutils literal notranslate"><span class="pre">UniqueImagingManager.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="environment_features.html">environment_features</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sat_actions.html">sat_actions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sat_observations.html">sat_observations</a></li>
+<li class="toctree-l5"><a class="reference internal" href="satellites.html">satellites</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../simulation/index.html">simulation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html">utils</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../multisat_agile_eos/index.html">multisat_agile_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../multisensor_eos/index.html">multisensor_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple_eos/index.html">simple_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science/index.html">small_body_science</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science_pomdp/index.html">small_body_science_pomdp</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../training/index.html">training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utilities/index.html">utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">envs</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">general_satellite_tasking</a></li>
+          <li class="breadcrumb-item"><a href="index.html">scenario</a></li>
+      <li class="breadcrumb-item active">data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/API Reference/envs/general_satellite_tasking/scenario/data.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data">
+<span id="bsk-rl-envs-general-satellite-tasking-scenario-data"></span><h1>data<a class="headerlink" href="#data" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl.envs.general_satellite_tasking.scenario.data</span></code></p>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.envs.general_satellite_tasking.scenario.data">Data logging, management, and reward calculation.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.EnvironmentFeatures" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.EnvironmentFeatures"><span class="pre">EnvironmentFeatures</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#DataManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base class for simulation-wide data management.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.EnvironmentFeatures" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.EnvironmentFeatures"><span class="pre">EnvironmentFeatures</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#DataManager.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.__init__" title="Link to this definition"></a></dt>
+<dd><p>Construct base class to handle data recording and rewarding.</p>
+<p>TODO: allow for creation/composition of multiple managers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>env_features</strong> – Information about the environment that can be collected as
+data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.create_data_store">
+<span class="sig-name descname"><span class="pre">create_data_store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#DataManager.create_data_store"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.create_data_store" title="Link to this definition"></a></dt>
+<dd><p>Create a data store for a satellite.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#DataManager.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.reset" title="Link to this definition"></a></dt>
+<dd><p>Refresh data and cumulative reward for a new episode.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.reward">
+<span class="sig-name descname"><span class="pre">reward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_data_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataType" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataType"><span class="pre">DataType</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#DataManager.reward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.reward" title="Link to this definition"></a></dt>
+<dd><p>Call _calc_reward and log cumulative reward.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager"><span class="pre">DataManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#DataStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base class for satellite data logging.</p>
+<p>One DataStore is created per satellite.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager"><span class="pre">DataManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#DataStore.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.__init__" title="Link to this definition"></a></dt>
+<dd><p>Construct a DataStore base class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_manager</strong> – Simulation data manager to report back to</p></li>
+<li><p><strong>satellite</strong> – Satellite’s data being stored</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.communication_update">
+<span class="sig-name descname"><span class="pre">communication_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#DataStore.communication_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.communication_update" title="Link to this definition"></a></dt>
+<dd><p>Update the data store from staged data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>external_data</strong> (<a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataType" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataType"><em>DataType</em></a>) – Data collected by another satellite</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.internal_update">
+<span class="sig-name descname"><span class="pre">internal_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataType" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataType"><span class="pre">DataType</span></a></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#DataStore.internal_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.internal_update" title="Link to this definition"></a></dt>
+<dd><p>Update the data store based on collected information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>New data from the previous step</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.stage_communicated_data">
+<span class="sig-name descname"><span class="pre">stage_communicated_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">external_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataType" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataType"><span class="pre">DataType</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#DataStore.stage_communicated_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.stage_communicated_data" title="Link to this definition"></a></dt>
+<dd><p>Prepare data to be added from another source, but don’t add it yet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>external_data</strong> – Data from another satellite to be added</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.DataType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataType</span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#DataType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base class for units of satellite data.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NadirScanningManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.EnvironmentFeatures" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.EnvironmentFeatures"><span class="pre">EnvironmentFeatures</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#NadirScanningManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningManager" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataManager</span></code></a></p>
+<p>DataManager for rewarding time spent scanning nadir.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningManager.DataStore">
+<span class="sig-name descname"><span class="pre">DataStore</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningManager.DataStore" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.ScanningNadirTimeStore" title="bsk_rl.envs.general_satellite_tasking.scenario.data.ScanningNadirTimeStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScanningNadirTimeStore</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.EnvironmentFeatures" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.EnvironmentFeatures"><span class="pre">EnvironmentFeatures</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#NadirScanningManager.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningManager.__init__" title="Link to this definition"></a></dt>
+<dd><p>Construct a data manager for nadir scanning.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env_features</strong> – Information about the environment that can be collected as
+data</p></li>
+<li><p><strong>reward_fn</strong> – Reward as function of time spend pointing nadir.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningTimeData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NadirScanningTimeData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scanning_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#NadirScanningTimeData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningTimeData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataType" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataType"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataType</span></code></a></p>
+<p>DataType for time spent scanning nadir.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningTimeData.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scanning_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#NadirScanningTimeData.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningTimeData.__init__" title="Link to this definition"></a></dt>
+<dd><p>DataType to log data generated scanning nadir.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scanning_time</strong> – Time spent scanning nadir</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.NoData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NoData</span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#NoData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataType" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataType"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataType</span></code></a></p>
+<p>DataType for no data.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NoDataManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.EnvironmentFeatures" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.EnvironmentFeatures"><span class="pre">EnvironmentFeatures</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#NoDataManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataManager" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataManager</span></code></a></p>
+<p>DataManager for no data.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataManager.DataStore">
+<span class="sig-name descname"><span class="pre">DataStore</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataManager.DataStore" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataStore" title="bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">NoDataStore</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NoDataStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager"><span class="pre">DataManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#NoDataStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataStore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataStore</span></code></a></p>
+<p>DataStore for no data.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataStore.DataType">
+<span class="sig-name descname"><span class="pre">DataType</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataStore.DataType" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NoData" title="bsk_rl.envs.general_satellite_tasking.scenario.data.NoData"><code class="xref py py-class docutils literal notranslate"><span class="pre">NoData</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.ScanningNadirTimeStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ScanningNadirTimeStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager"><span class="pre">DataManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#ScanningNadirTimeStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.ScanningNadirTimeStore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataStore</span></code></a></p>
+<p>DataStore for time spent scanning nadir.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.ScanningNadirTimeStore.DataType">
+<span class="sig-name descname"><span class="pre">DataType</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.ScanningNadirTimeStore.DataType" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningTimeData" title="bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningTimeData"><code class="xref py py-class docutils literal notranslate"><span class="pre">NadirScanningTimeData</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UniqueImageData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imaged</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target"><span class="pre">Target</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#UniqueImageData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataType" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataType"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataType</span></code></a></p>
+<p>DataType for unique images of targets.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageData.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imaged</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="environment_features.html#bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target" title="bsk_rl.envs.general_satellite_tasking.scenario.environment_features.Target"><span class="pre">Target</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#UniqueImageData.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageData.__init__" title="Link to this definition"></a></dt>
+<dd><p>Construct unit of data to record unique images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imaged</strong> – List of targets that are known to be imaged.</p></li>
+<li><p><strong>duplicates</strong> – Count of target imaging duplication.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UniqueImageStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager"><span class="pre">DataManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite" title="bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite"><span class="pre">Satellite</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#UniqueImageStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageStore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataStore</span></code></a></p>
+<p>DataStore for unique images of targets.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageStore.DataType">
+<span class="sig-name descname"><span class="pre">DataType</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageStore.DataType" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageData" title="bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageData"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueImageData</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImagingManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UniqueImagingManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_features:</span> <span class="pre">EnvironmentFeatures</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_fn:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">UniqueImagingManager.&lt;lambda&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#UniqueImagingManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImagingManager" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager" title="bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataManager</span></code></a></p>
+<p>DataManager for rewarding unique images.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImagingManager.DataStore">
+<span class="sig-name descname"><span class="pre">DataStore</span></span><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImagingManager.DataStore" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageStore" title="bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueImageStore</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImagingManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_features:</span> <span class="pre">EnvironmentFeatures</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_fn:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">UniqueImagingManager.&lt;lambda&gt;&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/general_satellite_tasking/scenario/data.html#UniqueImagingManager.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImagingManager.__init__" title="Link to this definition"></a></dt>
+<dd><p>DataManager for rewarding unique images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env_features</strong> – DataManager.env_features</p></li>
+<li><p><strong>reward_fn</strong> – Reward as function of priority.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="communication.html" class="btn btn-neutral float-left" title="communication" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="environment_features.html" class="btn btn-neutral float-right" title="environment_features" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

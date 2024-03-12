@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">Basilisk.simulation</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ReactionWheelPower</span><span class="p">,</span>
+    <span class="n">facetDragDynamicEffector</span><span class="p">,</span>
+    <span class="n">partitionedStorageUnit</span><span class="p">,</span>
+    <span class="n">simpleBattery</span><span class="p">,</span>
+    <span class="n">simpleInstrument</span><span class="p">,</span>
+    <span class="n">simpleNav</span><span class="p">,</span>
+    <span class="n">simplePowerSink</span><span class="p">,</span>
+    <span class="n">simpleSolarPanel</span><span class="p">,</span>
+    <span class="n">spacecraft</span><span class="p">,</span>
+    <span class="n">spacecraftLocation</span><span class="p">,</span>
+    <span class="n">spaceToGroundTransmitter</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">macros</span> <span class="k">as</span> <span class="n">mc</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">unitTestSupport</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.utilities.effector_primitives</span> <span class="kn">import</span> <span class="n">actuator_primitives</span> <span class="k">as</span> <span class="n">ap</span>
+
+
+<div class="viewcode-block" id="DynamicModel">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel">[docs]</a>
+<span class="k">class</span> <span class="nc">DynamicModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines the Dynamics class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DynamicModel.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">,</span> <span class="n">dynRate</span><span class="p">,</span> <span class="n">spacecraftIndex</span><span class="p">,</span> <span class="n">singleSat</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># Define class variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span> <span class="o">=</span> <span class="n">spacecraftIndex</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynRate</span> <span class="o">=</span> <span class="n">dynRate</span>
+
+        <span class="c1"># Define process name, task name and task time-step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">taskName</span> <span class="o">=</span> <span class="s2">&quot;DynamicsTask&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processTasksTimeStep</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dynRate</span><span class="p">)</span>
+
+        <span class="c1"># Create task</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">dynProc</span><span class="p">[</span><span class="n">spacecraftIndex</span><span class="p">]</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">CreateNewTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">processTasksTimeStep</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Initialize all modules and write init one-time messages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">InitAllDynObjects</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+
+        <span class="c1"># Assign initialized modules to tasks</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">999</span><span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">1400</span><span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">997</span><span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrusterSet</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">996</span><span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">898</span><span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">897</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">896</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">895</span><span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">799</span><span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">798</span><span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">699</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">getNumOfDevices</span><span class="p">()):</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwPowerList</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="p">(</span><span class="mi">987</span> <span class="o">-</span> <span class="n">ind</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">singleSat</span><span class="p">:</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">taskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span></div>
+
+
+    <span class="c1"># These are module-initialization methods</span>
+
+<div class="viewcode-block" id="DynamicModel.SetSpacecraftHub">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSpacecraftHub">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetSpacecraftHub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the spacecraft object properties.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span> <span class="o">=</span> <span class="n">spacecraft</span><span class="o">.</span><span class="n">Spacecraft</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;sat-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="c1"># Grab the mass for readability in inertia computation</span>
+        <span class="n">mass</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mass&quot;</span><span class="p">)</span>
+        <span class="c1"># Get the spacecraft geometric properties</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;width&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depth&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;height&quot;</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">I_mat</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="n">mass</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="o">**</span><span class="mf">2.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="o">**</span><span class="mf">2.0</span><span class="p">),</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="n">mass</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="o">**</span><span class="mf">2.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="o">**</span><span class="mf">2.0</span><span class="p">),</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="n">mass</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="o">**</span><span class="mf">2.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="o">**</span><span class="mf">2.0</span><span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">mHub</span> <span class="o">=</span> <span class="n">mass</span>  <span class="c1"># kg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">IHubPntBc_B</span> <span class="o">=</span> <span class="n">unitTestSupport</span><span class="o">.</span><span class="n">np2EigenMatrix3d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">I_mat</span><span class="p">)</span>
+
+        <span class="c1"># Set the initial attitude and position</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">sigma_BNInit</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sigma_init&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">omega_BN_BInit</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;omega_init&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">r_CN_NInit</span> <span class="o">=</span> <span class="n">unitTestSupport</span><span class="o">.</span><span class="n">np2EigenVectorXd</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rN&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">v_CN_NInit</span> <span class="o">=</span> <span class="n">unitTestSupport</span><span class="o">.</span><span class="n">np2EigenVectorXd</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;vN&quot;</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetGravityBodies">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetGravityBodies">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetGravityBodies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specify what gravitational bodies to include in the simulation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Attach the gravity body</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">gravField</span><span class="o">.</span><span class="n">gravBodies</span> <span class="o">=</span> <span class="n">spacecraft</span><span class="o">.</span><span class="n">GravBodyVector</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">gravBodies</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetDisturbanceTorque">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDisturbanceTorque">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetDisturbanceTorque</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attach the disturbance torque to the spacecraft object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">addDynamicEffector</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">extForceTorqueObjectList</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetDensityModel">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDensityModel">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetDensityModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attaches the density model effector to the spacecraft</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetDragEffector">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDragEffector">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetDragEffector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the drag effector</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span> <span class="o">=</span> <span class="n">facetDragDynamicEffector</span><span class="o">.</span><span class="n">FacetDragDynamicEffector</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;FacetDrag&quot;</span>
+        <span class="c1">#  Set up the geometry of a small satellite, starting w/ bus</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Add solar panels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;panelArea&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="mf">2.2</span><span class="p">,</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;panelArea&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="mf">2.2</span><span class="p">,</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">atmoDensInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">envOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">addDynamicEffector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetGroundLocations">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetGroundLocations">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetGroundLocations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds the spacecraft to the ground location modules.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">boulderGroundStation</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">merrittGroundStation</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">singaporeGroundStation</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">weilheimGroundStation</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">santiagoGroundStation</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">dongaraGroundStation</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">hawaiiGroundStation</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">imagingTargetList</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">]</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetEclipseObject">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetEclipseObject">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetEclipseObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds the spacecraft to the eclipse module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">eclipseObject</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetSimpleNavObject">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSimpleNavObject">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetSimpleNavObject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the navigation module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simpleNavObject</span> <span class="o">=</span> <span class="n">simpleNav</span><span class="o">.</span><span class="n">SimpleNav</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;SimpleNav&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">scStateInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetReactionWheelDynEffector">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetReactionWheelDynEffector">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetReactionWheelDynEffector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the RW state effector.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwFactory</span><span class="p">,</span> <span class="n">initWheelSpeeds</span> <span class="o">=</span> <span class="n">ap</span><span class="o">.</span><span class="n">balancedHR16Triad</span><span class="p">(</span>
+            <span class="n">useRandom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">randomBounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">800</span><span class="p">,</span> <span class="mi">800</span><span class="p">),</span>
+            <span class="n">wheelSpeeds</span><span class="o">=</span><span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;wheelSpeeds&quot;</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">addToSpacecraft</span><span class="p">(</span>
+            <span class="s2">&quot;ReactionWheels&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetThrusterDynEffector">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetThrusterDynEffector">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetThrusterDynEffector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the thruster state effector.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrusterSet</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrFactory</span> <span class="o">=</span> <span class="n">ap</span><span class="o">.</span><span class="n">idealMonarc1Octet</span><span class="p">()</span>
+        <span class="n">thrModelTag</span> <span class="o">=</span> <span class="s2">&quot;ACSThrusterDynamics&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrFactory</span><span class="o">.</span><span class="n">addToSpacecraft</span><span class="p">(</span><span class="n">thrModelTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrusterSet</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetSolarPanel">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSolarPanel">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetSolarPanel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the solar panel</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span> <span class="o">=</span> <span class="n">simpleSolarPanel</span><span class="o">.</span><span class="n">SimpleSolarPanel</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;solarPanel&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">stateInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">sunEclipseInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">eclipseObject</span><span class="o">.</span><span class="n">eclipseOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">sunInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span>
+                <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">sun</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">setPanelParameters</span><span class="p">(</span>
+            <span class="n">unitTestSupport</span><span class="o">.</span><span class="n">np2EigenVectorXd</span><span class="p">(</span>
+                <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nHat_B&quot;</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;panelArea&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;panelEfficiency&quot;</span>
+            <span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetInstrumentPowerSink">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetInstrumentPowerSink">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetInstrumentPowerSink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the instrument power sink parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span> <span class="o">=</span> <span class="n">simplePowerSink</span><span class="o">.</span><span class="n">SimplePowerSink</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;insPowerSink&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">nodePowerOut</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;instrumentPowerDraw&quot;</span>
+        <span class="p">)</span>  <span class="c1"># Watts</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetTransmitterPowerSink">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetTransmitterPowerSink">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetTransmitterPowerSink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the trasmitter power sink parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span> <span class="o">=</span> <span class="n">simplePowerSink</span><span class="o">.</span><span class="n">SimplePowerSink</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;transPowerSink&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">nodePowerOut</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;transmitterPowerDraw&quot;</span>
+        <span class="p">)</span>  <span class="c1"># Watts</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetReactionWheelPower">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetReactionWheelPower">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetReactionWheelPower</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the reaction wheel power draw</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwPowerList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">getNumOfDevices</span><span class="p">()):</span>
+            <span class="n">powerRW</span> <span class="o">=</span> <span class="n">ReactionWheelPower</span><span class="o">.</span><span class="n">ReactionWheelPower</span><span class="p">()</span>
+            <span class="n">powerRW</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;rwPower&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
+            <span class="n">powerRW</span><span class="o">.</span><span class="n">basePowerNeed</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+                <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;rwBasePower&quot;</span>
+            <span class="p">)</span>  <span class="c1"># baseline power draw, Watts</span>
+            <span class="n">powerRW</span><span class="o">.</span><span class="n">rwStateInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="o">.</span><span class="n">rwOutMsgs</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+            <span class="n">powerRW</span><span class="o">.</span><span class="n">mechToElecEfficiency</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+                <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rwMechToElecEfficiency&quot;</span><span class="p">)</span>
+            <span class="n">powerRW</span><span class="o">.</span><span class="n">elecToMechEfficiency</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+                <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rwElecToMechEfficiency&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwPowerList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">powerRW</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetBattery">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetBattery">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetBattery</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets up the battery with all the power components</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span> <span class="o">=</span> <span class="n">simpleBattery</span><span class="o">.</span><span class="n">SimpleBattery</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;powerMonitor&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">storageCapacity</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;batteryStorageCapacity&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">storedCharge_Init</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;storedCharge_Init&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">powerRW</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwPowerList</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="n">powerRW</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetInstrument">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetInstrument">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetInstrument</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create the instrument</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span> <span class="o">=</span> <span class="n">simpleInstrument</span><span class="o">.</span><span class="n">SimpleInstrument</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;instrument&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeBaudRate</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;instrumentBaudRate&quot;</span>
+            <span class="p">)</span>
+            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynRate</span>
+        <span class="p">)</span>  <span class="c1"># baud</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataName</span> <span class="o">=</span> <span class="s2">&quot;Instrument&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicModel.SetTransmitter">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetTransmitter">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetTransmitter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create the transmitter</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">spaceToGroundTransmitter</span><span class="o">.</span><span class="n">SpaceToGroundTransmitter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;transmitter&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">nodeBaudRate</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;transmitterBaudRate&quot;</span>
+        <span class="p">)</span>  <span class="c1"># baud</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">packetSize</span> <span class="o">=</span> <span class="o">-</span><span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;instrumentBaudRate&quot;</span>
+        <span class="p">)</span>  <span class="c1"># bits, set packet size equal to the size of a single image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">numBuffers</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;transmitterNumBuffers&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addAccessMsgToTransmitter</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">boulderGroundStation</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addAccessMsgToTransmitter</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">merrittGroundStation</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addAccessMsgToTransmitter</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">singaporeGroundStation</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addAccessMsgToTransmitter</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">weilheimGroundStation</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addAccessMsgToTransmitter</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">santiagoGroundStation</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addAccessMsgToTransmitter</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">dongaraGroundStation</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addAccessMsgToTransmitter</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">hawaiiGroundStation</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">SetStorageUnit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span> <span class="o">=</span> <span class="n">partitionedStorageUnit</span><span class="o">.</span><span class="n">PartitionedStorageUnit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;storageUnit&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;dataStorageCapacity&quot;</span>
+        <span class="p">)</span>  <span class="c1"># bits (1 GB)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addDataNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addDataNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">nodeDataOutMsg</span><span class="p">)</span>
+        <span class="c1"># Add all of the targets to the data buffer</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacecraftIndex</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;transmitterNumBuffers&quot;</span>
+            <span class="p">)</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addPartition</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+
+        <span class="c1"># Add the storage unit to the transmitter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addStorageUnitToTransmitter</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">SetLosComms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span> <span class="o">=</span> <span class="n">spacecraftLocation</span><span class="o">.</span><span class="n">SpacecraftLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;losComms&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">primaryScStateInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span>
+                <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">earth</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">rEquator</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">planet</span><span class="o">.</span><span class="n">radEquator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">rPolar</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">EnvModel</span><span class="o">.</span><span class="n">planet</span><span class="o">.</span><span class="n">radEquator</span> <span class="o">*</span> <span class="mf">0.98</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>  <span class="c1"># m, unlimited</span>
+
+    <span class="c1"># Global call to initialize every module</span>
+<div class="viewcode-block" id="DynamicModel.InitAllDynObjects">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/dynamics.html#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.InitAllDynObjects">[docs]</a>
+    <span class="k">def</span> <span class="nf">InitAllDynObjects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes all dynamic objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetSpacecraftHub</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetGravityBodies</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetDensityModel</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetDragEffector</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetReactionWheelDynEffector</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetThrusterDynEffector</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetSimpleNavObject</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetGroundLocations</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetEclipseObject</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetReactionWheelPower</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetSolarPanel</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetInstrumentPowerSink</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetTransmitterPowerSink</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetBattery</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetInstrument</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetTransmitter</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetStorageUnit</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetLosComms</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetDisturbanceTorque</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">ConnectLosComms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SatList</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">SatList</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sat</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="n">sat</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+.. _examples.mcts.mcts_data_generator:
+
+mcts_data_generator
+===================
+
+``examples.mcts.mcts_data_generator``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: examples.mcts.mcts_data_generator
+   :members:
+   :show-inheritance:
+

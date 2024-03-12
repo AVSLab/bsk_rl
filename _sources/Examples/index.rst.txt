@@ -1,0 +1,28 @@
+.. _examples:
+
+Examples
+========
+
+``examples``
+
+.. automodule:: examples
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+
+   general_satellite_tasking/index
+   genetic_algorithm/index
+   mcts/index
+   plotting_tools/index
+   sb3/index
+   state_machine/index

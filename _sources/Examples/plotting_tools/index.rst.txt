@@ -1,0 +1,29 @@
+.. _examples.plotting_tools:
+
+plotting_tools
+==============
+
+``examples.plotting_tools``
+
+.. automodule:: examples.plotting_tools
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+   plot_a2c_hyperparams
+   plot_dqn_hyperparams
+   plot_ga_hyperparams
+   plot_mcts_hyperparams
+   plot_ppo_hyperparams
+   process_ga_curves
+   process_sb3_curves
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+

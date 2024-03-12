@@ -1,0 +1,15 @@
+.. _bsk_rl.envs.simple_eos.bsk_sim:
+
+bsk_sim
+=======
+
+``bsk_rl.envs.simple_eos.bsk_sim``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.envs.simple_eos.bsk_sim
+   :members:
+   :show-inheritance:
+

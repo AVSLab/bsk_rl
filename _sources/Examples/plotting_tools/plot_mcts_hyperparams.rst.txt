@@ -1,0 +1,15 @@
+.. _examples.plotting_tools.plot_mcts_hyperparams:
+
+plot_mcts_hyperparams
+=====================
+
+``examples.plotting_tools.plot_mcts_hyperparams``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: examples.plotting_tools.plot_mcts_hyperparams
+   :members:
+   :show-inheritance:
+

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>leo_orbit &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="sc_attitudes" href="sc_attitudes.html" />
+    <link rel="prev" title="leo_initial_conditions" href="leo_initial_conditions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../agents/index.html">agents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../envs/index.html">envs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../training/index.html">training</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">utilities</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../effector_primitives/index.html">effector_primitives</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../genetic_algorithm/index.html">genetic_algorithm</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">initial_conditions</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="leo_initial_conditions.html">leo_initial_conditions</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">leo_orbit</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.utilities.initial_conditions.leo_orbit.create_ground_tgts"><code class="docutils literal notranslate"><span class="pre">create_ground_tgts()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.utilities.initial_conditions.leo_orbit.distribute_tgts"><code class="docutils literal notranslate"><span class="pre">distribute_tgts()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.utilities.initial_conditions.leo_orbit.elrange_req"><code class="docutils literal notranslate"><span class="pre">elrange_req()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.utilities.initial_conditions.leo_orbit.inclined_400km"><code class="docutils literal notranslate"><span class="pre">inclined_400km()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.utilities.initial_conditions.leo_orbit.inclined_circular_300km"><code class="docutils literal notranslate"><span class="pre">inclined_circular_300km()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.utilities.initial_conditions.leo_orbit.random_inclined_circular_300km"><code class="docutils literal notranslate"><span class="pre">random_inclined_circular_300km()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.utilities.initial_conditions.leo_orbit.sampled_400km"><code class="docutils literal notranslate"><span class="pre">sampled_400km()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.utilities.initial_conditions.leo_orbit.sampled_500km_boulder_gs"><code class="docutils literal notranslate"><span class="pre">sampled_500km_boulder_gs()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.utilities.initial_conditions.leo_orbit.sampled_boulder_gs"><code class="docutils literal notranslate"><span class="pre">sampled_boulder_gs()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.utilities.initial_conditions.leo_orbit.walker_delta"><code class="docutils literal notranslate"><span class="pre">walker_delta()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="sc_attitudes.html">sc_attitudes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="small_body.html">small_body</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../mcts/index.html">mcts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sb3/index.html">sb3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../state_machine/index.html">state_machine</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">utilities</a></li>
+          <li class="breadcrumb-item"><a href="index.html">initial_conditions</a></li>
+      <li class="breadcrumb-item active">leo_orbit</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/API Reference/utilities/initial_conditions/leo_orbit.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="leo-orbit">
+<span id="bsk-rl-utilities-initial-conditions-leo-orbit"></span><h1>leo_orbit<a class="headerlink" href="#leo-orbit" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl.utilities.initial_conditions.leo_orbit</span></code></p>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="py function" id="module-bsk_rl.utilities.initial_conditions.leo_orbit">
+<dt class="sig sig-object py" id="bsk_rl.utilities.initial_conditions.leo_orbit.create_ground_tgts">
+<span class="sig-name descname"><span class="pre">create_ground_tgts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utc_init</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/utilities/initial_conditions/leo_orbit.html#create_ground_tgts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utilities.initial_conditions.leo_orbit.create_ground_tgts" title="Link to this definition"></a></dt>
+<dd><p>Returns a set of targets based on the orbital parameters by running a simplified
+BSK scenario
+:param n_targets: number of targets to generate
+:param rN: Initial inertial position
+:param vN: Initial inertial velocity
+:param sim_length: simulation length
+:param uct_init: time initialization string
+:return targets:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utilities.initial_conditions.leo_orbit.distribute_tgts">
+<span class="sig-name descname"><span class="pre">distribute_tgts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utc_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_tgts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/utilities/initial_conditions/leo_orbit.html#distribute_tgts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utilities.initial_conditions.leo_orbit.distribute_tgts" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rN</strong> – </p></li>
+<li><p><strong>vN</strong> – </p></li>
+<li><p><strong>sim_length</strong> – [m]</p></li>
+<li><p><strong>utc_init</strong> – </p></li>
+<li><p><strong>global_tgts</strong> – np.array of global tgts in ECEF coordinates</p></li>
+<li><p><strong>dt</strong> – [s]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return local_tgts<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of indexes into global tgts</p>
+</dd>
+<dt class="field-odd">Return local_tgt_times<span class="colon">:</span></dt>
+<dd class="field-odd"><p>local time each global tgt in local_tgts is encountered</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utilities.initial_conditions.leo_orbit.elrange_req">
+<span class="sig-name descname"><span class="pre">elrange_req</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sc_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgt_pos</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/utilities/initial_conditions/leo_orbit.html#elrange_req"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utilities.initial_conditions.leo_orbit.elrange_req" title="Link to this definition"></a></dt>
+<dd><p>Determines if the spacecraft is within the elevation and range requirements of
+a target</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sc_pos</strong> – spacecraft position expressed in the ECEF frame</p></li>
+<li><p><strong>tgt_pos</strong> – tgt_pos expressed in the ECEF frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>T/F - within el, range requirements or not</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utilities.initial_conditions.leo_orbit.inclined_400km">
+<span class="sig-name descname"><span class="pre">inclined_400km</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/utilities/initial_conditions/leo_orbit.html#inclined_400km"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utilities.initial_conditions.leo_orbit.inclined_400km" title="Link to this definition"></a></dt>
+<dd><p>Returns an elliptical, prograde LEO orbit with an SMA of 400km.
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utilities.initial_conditions.leo_orbit.inclined_circular_300km">
+<span class="sig-name descname"><span class="pre">inclined_circular_300km</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/utilities/initial_conditions/leo_orbit.html#inclined_circular_300km"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utilities.initial_conditions.leo_orbit.inclined_circular_300km" title="Link to this definition"></a></dt>
+<dd><p>Returns an inclined, circular LEO orbit.
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utilities.initial_conditions.leo_orbit.random_inclined_circular_300km">
+<span class="sig-name descname"><span class="pre">random_inclined_circular_300km</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/utilities/initial_conditions/leo_orbit.html#random_inclined_circular_300km"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utilities.initial_conditions.leo_orbit.random_inclined_circular_300km" title="Link to this definition"></a></dt>
+<dd><p>Returns an inclined, circular LEO orbit.
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utilities.initial_conditions.leo_orbit.sampled_400km">
+<span class="sig-name descname"><span class="pre">sampled_400km</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/utilities/initial_conditions/leo_orbit.html#sampled_400km"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utilities.initial_conditions.leo_orbit.sampled_400km" title="Link to this definition"></a></dt>
+<dd><p>Returns an elliptical, prograde LEO orbit with an SMA of 400km.
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utilities.initial_conditions.leo_orbit.sampled_500km_boulder_gs">
+<span class="sig-name descname"><span class="pre">sampled_500km_boulder_gs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/utilities/initial_conditions/leo_orbit.html#sampled_500km_boulder_gs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utilities.initial_conditions.leo_orbit.sampled_500km_boulder_gs" title="Link to this definition"></a></dt>
+<dd><p>Returns an elliptical, prograde LEO orbit with an SMA of 500km.
+Inclination is bounded so the spacecraft can communicate with Boulder.
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utilities.initial_conditions.leo_orbit.sampled_boulder_gs">
+<span class="sig-name descname"><span class="pre">sampled_boulder_gs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nominal_radius</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/utilities/initial_conditions/leo_orbit.html#sampled_boulder_gs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utilities.initial_conditions.leo_orbit.sampled_boulder_gs" title="Link to this definition"></a></dt>
+<dd><p>Returns an elliptical, prograde LEO orbit with an SMA of 500km.
+Inclination is bounded so the spacecraft can communicate with Boulder.
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utilities.initial_conditions.leo_orbit.walker_delta">
+<span class="sig-name descname"><span class="pre">walker_delta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_spacecraft</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_planes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_phasing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">altitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clustersize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clusterspacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/utilities/initial_conditions/leo_orbit.html#walker_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utilities.initial_conditions.leo_orbit.walker_delta" title="Link to this definition"></a></dt>
+<dd><p>Computes the initial orbit conditions of a constellation of spacecraft in the
+walker delta pattern
+:param n_spacecraft: number of spacecraft in the constellation
+:param n_planes: number of orbital planes
+:param rel_phasing: relative phasing between the planes [0, 1)
+:param altitude: Altitude of the s/c (m)
+:param inc: Inclination of the orbit (deg)
+:param clustersize: Size of satellite groups
+:param clusterspacing: True anomaly spacing within cluster (deg)
+:return oe_all: n_spacecraft x 1 list of BSK oe elements</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="leo_initial_conditions.html" class="btn btn-neutral float-left" title="leo_initial_conditions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sc_attitudes.html" class="btn btn-neutral float-right" title="sc_attitudes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

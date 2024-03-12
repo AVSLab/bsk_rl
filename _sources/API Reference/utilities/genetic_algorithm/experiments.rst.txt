@@ -1,0 +1,15 @@
+.. _bsk_rl.utilities.genetic_algorithm.experiments:
+
+experiments
+===========
+
+``bsk_rl.utilities.genetic_algorithm.experiments``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.utilities.genetic_algorithm.experiments
+   :members:
+   :show-inheritance:
+

@@ -1,0 +1,26 @@
+.. _bsk_rl:
+
+API Reference
+=============
+
+``bsk_rl``
+
+.. automodule:: bsk_rl
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+
+   agents/index
+   envs/index
+   training/index
+   utilities/index

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.agents.genetic_algorithm &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.agents.genetic_algorithm</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.agents.genetic_algorithm</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">sep</span> <span class="k">as</span> <span class="n">SEP</span>
+
+<span class="kn">import</span> <span class="nn">gymnasium</span> <span class="k">as</span> <span class="nn">gym</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">deap</span> <span class="kn">import</span> <span class="n">algorithms</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">creator</span><span class="p">,</span> <span class="n">tools</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This file is designed to provide generitc interfaces to a DEAP-based genetic algorithm</span>
+<span class="sd">for solving arbitrary gymnasium environments. It does a few things:</span>
+<span class="sd">1. Includes the ability to cast arbitrary gymnasium environments with a max_length</span>
+<span class="sd">    parameter as many-input, single-output optimzation problems</span>
+<span class="sd">2. Allows a genetic algorithm to be called to optimize said environments in a parellel</span>
+<span class="sd">    way</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">creator</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;FitnessMax&quot;</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">Fitness</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,))</span>
+<span class="n">creator</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;Individual&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">fitness</span><span class="o">=</span><span class="n">creator</span><span class="o">.</span><span class="n">FitnessMax</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="mutUniformIntList">
+<a class="viewcode-back" href="../../../API%20Reference/agents/genetic_algorithm.html#bsk_rl.agents.genetic_algorithm.mutUniformIntList">[docs]</a>
+<span class="k">def</span> <span class="nf">mutUniformIntList</span><span class="p">(</span><span class="n">individual</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">up</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">indpb</span><span class="o">=</span><span class="mf">0.3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function is designed to mutate a list of integers, rather than a single</span>
+<span class="sd">    integer.</span>
+<span class="sd">    :param individual: The individual to be mutated</span>
+<span class="sd">    :param num_samples: The number of samples to be mutated</span>
+<span class="sd">    :param low: The lower bound for the mutation</span>
+<span class="sd">    :param up: The upper bound for the mutation</span>
+<span class="sd">    :param indpb: The probability of mutation</span>
+<span class="sd">    :returns: A list of a single individual.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">individual</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">indpb</span><span class="p">:</span>
+                <span class="n">individual</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">up</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">individual</span><span class="p">,)</span></div>
+
+
+
+<div class="viewcode-block" id="env2opt_problem">
+<a class="viewcode-back" href="../../../API%20Reference/agents/genetic_algorithm.html#bsk_rl.agents.genetic_algorithm.env2opt_problem">[docs]</a>
+<span class="k">class</span> <span class="nc">env2opt_problem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class provides a generic interface for recasting a gymnasium environment as a</span>
+<span class="sd">    total reward maximization problem.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="env2opt_problem.__init__">
+<a class="viewcode-back" href="../../../API%20Reference/agents/genetic_algorithm.html#bsk_rl.agents.genetic_algorithm.env2opt_problem.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_name</span><span class="p">,</span> <span class="n">initial_conditions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">=</span> <span class="n">env_name</span>
+        <span class="n">tmp_env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">initial_conditions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tmp_env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">tmp_env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">initial_conditions</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">initial_conditions</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_actions</span> <span class="o">=</span> <span class="n">tmp_env</span><span class="o">.</span><span class="n">max_steps</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error - environment must have max_steps attribute.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">tmp_env</span><span class="o">.</span><span class="n">action_space</span></div>
+
+
+<div class="viewcode-block" id="env2opt_problem.evaluate">
+<a class="viewcode-back" href="../../../API%20Reference/agents/genetic_algorithm.html#bsk_rl.agents.genetic_algorithm.env2opt_problem.evaluate">[docs]</a>
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_set</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluates a full run of the environment given a list of actions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">total_reward</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;initial_conditions&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">})</span>
+
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_actions</span><span class="p">):</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">ep_over</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action_set</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+            <span class="n">total_reward</span> <span class="o">=</span> <span class="n">total_reward</span> <span class="o">+</span> <span class="n">r</span>
+            <span class="k">if</span> <span class="n">ep_over</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="c1"># Initialize a metrics dictionary</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Add the total reward to the metrics dictionary</span>
+        <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;total_reward&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">total_reward</span>
+        <span class="c1"># Add the number of steps taken to the metrics dictionary</span>
+        <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">==</span> <span class="s2">&quot;AgileEOS-v0&quot;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">==</span> <span class="s2">&quot;MultiSatAgileEOS-v0&quot;</span><span class="p">:</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;imaged_targets&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">imaged_targets</span><span class="p">)</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;downlinked_targets&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">downlinked_targets</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">==</span> <span class="s2">&quot;MultiSensorEOS-v0&quot;</span><span class="p">:</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;imaged_targets&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">imaged_targets</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">==</span> <span class="s2">&quot;SmallBodyScience-v0&quot;</span><span class="p">:</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;imaged_targets&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">imaged_targets</span><span class="p">)</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;downlinked_targets&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">downlinked_targets</span>
+            <span class="p">)</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;imaged_maps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">imaged_maps</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;downlinked_maps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">downlinked_maps</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">==</span> <span class="s2">&quot;SimpleEOS-v0&quot;</span><span class="p">:</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;downlinked&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">downlinked</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;total_access&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">total_access</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;utilized_access&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">utilized_access</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">==</span> <span class="s2">&quot;MultiSatAgileEOS-v0&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">total_reward</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">metrics</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">total_reward</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">class</span> <span class="nc">ga_env_solver</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">env_name</span><span class="p">,</span>
+        <span class="n">n_gens</span><span class="p">,</span>
+        <span class="n">gen_size</span><span class="p">,</span>
+        <span class="n">cx_prob</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">mut_prob</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">num_cores</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">ga_dir</span><span class="o">=</span><span class="s2">&quot;ga_results&quot;</span> <span class="o">+</span> <span class="n">SEP</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">=</span> <span class="n">env_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_gens</span> <span class="o">=</span> <span class="n">n_gens</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gen_size</span> <span class="o">=</span> <span class="n">gen_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ga_dir</span> <span class="o">=</span> <span class="n">ga_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_cores</span> <span class="o">=</span> <span class="n">num_cores</span>
+
+        <span class="n">problem</span> <span class="o">=</span> <span class="n">env2opt_problem</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span>
+
+        <span class="c1">#   Define some problem-specific parameters</span>
+        <span class="n">IND_SIZE</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">problem</span><span class="o">.</span><span class="n">n_actions</span>
+        <span class="p">)</span>  <span class="c1"># Each individual is a list of actions to take at each env.step()</span>
+
+        <span class="n">creator</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;FitnessMax&quot;</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">Fitness</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,))</span>
+        <span class="n">creator</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;Individual&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">fitness</span><span class="o">=</span><span class="n">creator</span><span class="o">.</span><span class="n">FitnessMax</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">Toolbox</span><span class="p">()</span>
+
+        <span class="c1">#   Check to see whether the env takes integer, list of integer, or float inputs</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">action_space</span><span class="p">)</span> <span class="o">==</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">discrete</span><span class="o">.</span><span class="n">Discrete</span><span class="p">:</span>
+            <span class="n">act_min</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">act_max</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;attr_action&quot;</span><span class="p">,</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">,</span> <span class="n">act_min</span><span class="p">,</span> <span class="n">act_max</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+                <span class="s2">&quot;mutate&quot;</span><span class="p">,</span> <span class="n">tools</span><span class="o">.</span><span class="n">mutUniformInt</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="n">act_min</span><span class="p">,</span> <span class="n">up</span><span class="o">=</span><span class="n">act_max</span><span class="p">,</span> <span class="n">indpb</span><span class="o">=</span><span class="mf">0.3</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">action_space</span><span class="p">)</span> <span class="o">==</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">multi_discrete</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">:</span>
+            <span class="n">num_agents</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">nvec</span><span class="p">)</span>
+            <span class="n">act_min</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">act_max</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">nvec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+                <span class="s2">&quot;attr_action&quot;</span><span class="p">,</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">act_min</span><span class="p">,</span> <span class="n">act_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">num_agents</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+                <span class="s2">&quot;mutate&quot;</span><span class="p">,</span>
+                <span class="n">mutUniformIntList</span><span class="p">,</span>
+                <span class="n">num_samples</span><span class="o">=</span><span class="n">num_agents</span><span class="p">,</span>
+                <span class="n">low</span><span class="o">=</span><span class="n">act_min</span><span class="p">,</span>
+                <span class="n">up</span><span class="o">=</span><span class="n">act_max</span><span class="p">,</span>
+                <span class="n">indpb</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">MU</span> <span class="o">=</span> <span class="n">gen_size</span>  <span class="c1"># Number of individuals per generation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">NGEN</span> <span class="o">=</span> <span class="n">n_gens</span>  <span class="c1"># Number of generations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CXPB</span> <span class="o">=</span> <span class="n">cx_prob</span>  <span class="c1"># Crossover probability.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MUTPB</span> <span class="o">=</span> <span class="n">mut_prob</span>  <span class="c1"># Mutation probability.</span>
+
+        <span class="c1"># generation functions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+            <span class="s2">&quot;individual&quot;</span><span class="p">,</span>
+            <span class="n">tools</span><span class="o">.</span><span class="n">initRepeat</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">.</span><span class="n">Individual</span><span class="p">,</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">attr_action</span><span class="p">),</span>
+            <span class="n">n</span><span class="o">=</span><span class="n">IND_SIZE</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+            <span class="s2">&quot;population&quot;</span><span class="p">,</span> <span class="n">tools</span><span class="o">.</span><span class="n">initRepeat</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">individual</span>
+        <span class="p">)</span>
+
+        <span class="c1"># evolutionary ops</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;mate&quot;</span><span class="p">,</span> <span class="n">tools</span><span class="o">.</span><span class="n">cxOnePoint</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;select&quot;</span><span class="p">,</span> <span class="n">tools</span><span class="o">.</span><span class="n">selTournament</span><span class="p">,</span> <span class="n">tournsize</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="c1">#   Evaluation ops</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;evaluate&quot;</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">evaluate</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">checkpoint_freq</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ga_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ga_dir</span><span class="p">)</span>
+
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cores</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">MU</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;map&quot;</span><span class="p">,</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">)</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">Statistics</span><span class="p">(</span><span class="k">lambda</span> <span class="n">ind</span><span class="p">:</span> <span class="n">ind</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">stats</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;avg&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">stats</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;std&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">stats</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">stats</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;max&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Multiprocessing start method: &quot;</span><span class="p">,</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_start_method</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">checkpoint_file</span><span class="p">:</span>
+                <span class="n">check_dict</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">checkpoint_file</span><span class="p">)</span>
+                <span class="n">pop</span> <span class="o">=</span> <span class="n">check_dict</span><span class="p">[</span><span class="s2">&quot;population&quot;</span><span class="p">]</span>
+                <span class="n">start_gen</span> <span class="o">=</span> <span class="n">check_dict</span><span class="p">[</span><span class="s2">&quot;generation&quot;</span><span class="p">]</span>
+                <span class="n">logbook</span> <span class="o">=</span> <span class="n">check_dict</span><span class="p">[</span><span class="s2">&quot;logbook&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logbook</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">Logbook</span><span class="p">()</span>
+            <span class="n">logbook</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="s2">&quot;gen&quot;</span><span class="p">,</span> <span class="s2">&quot;evals&quot;</span><span class="p">,</span> <span class="s2">&quot;std&quot;</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="s2">&quot;avg&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span>
+            <span class="n">pop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">MU</span><span class="p">)</span>
+
+            <span class="n">invalid_ind</span> <span class="o">=</span> <span class="p">[</span><span class="n">ind</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">pop</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">ind</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">valid</span><span class="p">]</span>
+            <span class="n">fitnesses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">evaluate</span><span class="p">,</span> <span class="n">invalid_ind</span><span class="p">)</span>
+            <span class="n">fitness_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">fitness</span><span class="p">)</span> <span class="k">for</span> <span class="n">fitness</span> <span class="ow">in</span> <span class="n">fitnesses</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">fit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">invalid_ind</span><span class="p">,</span> <span class="n">fitnesses</span><span class="p">):</span>
+                <span class="n">ind</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">fit</span><span class="p">[</span><span class="mi">0</span><span class="p">],)</span>
+
+            <span class="n">record</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">pop</span><span class="p">)</span>
+            <span class="n">logbook</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">gen</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">evals</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">invalid_ind</span><span class="p">),</span> <span class="o">**</span><span class="n">record</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">logbook</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="n">start_gen</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_gen</span><span class="p">,</span> <span class="n">start_gen</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">NGEN</span><span class="p">):</span>
+            <span class="n">offspring</span> <span class="o">=</span> <span class="n">algorithms</span><span class="o">.</span><span class="n">varAnd</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">CXPB</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">MUTPB</span><span class="p">)</span>
+
+            <span class="n">invalid_ind</span> <span class="o">=</span> <span class="p">[</span><span class="n">ind</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">offspring</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">ind</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">valid</span><span class="p">]</span>
+            <span class="n">fitnesses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">evaluate</span><span class="p">,</span> <span class="n">invalid_ind</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">fit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">invalid_ind</span><span class="p">,</span> <span class="n">fitnesses</span><span class="p">):</span>
+                <span class="n">ind</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">fit</span><span class="p">[</span><span class="mi">0</span><span class="p">],)</span>
+
+            <span class="n">fitness_list</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="n">fitness</span><span class="p">)</span> <span class="k">for</span> <span class="n">fitness</span> <span class="ow">in</span> <span class="n">fitnesses</span><span class="p">])</span>
+
+            <span class="n">pop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">pop</span> <span class="o">+</span> <span class="n">offspring</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">MU</span><span class="p">)</span>
+
+            <span class="n">record</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">pop</span><span class="p">)</span>
+            <span class="n">logbook</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">gen</span><span class="o">=</span><span class="n">gen</span><span class="p">,</span> <span class="n">evals</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">invalid_ind</span><span class="p">),</span> <span class="o">**</span><span class="n">record</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">logbook</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">gen</span> <span class="o">%</span> <span class="n">checkpoint_freq</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">chkpnt</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                    <span class="n">population</span><span class="o">=</span><span class="n">pop</span><span class="p">,</span>
+                    <span class="n">generation</span><span class="o">=</span><span class="n">gen</span><span class="p">,</span>
+                    <span class="n">logbook</span><span class="o">=</span><span class="n">logbook</span><span class="p">,</span>
+                    <span class="n">rndstate</span><span class="o">=</span><span class="n">random</span><span class="o">.</span><span class="n">getstate</span><span class="p">(),</span>
+                <span class="p">)</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
+                    <span class="n">chkpnt</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ga_dir</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">gen</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">fitness_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fitness_list</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">fitness_list</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">fitness_list</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">max_reward</span> <span class="o">=</span> <span class="n">fitness_list</span><span class="p">[</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">fitness_list</span><span class="p">[</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">(</span><span class="n">max_reward</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates plots of GA convergence, performance, and final population vector</span>
+<span class="sd">        behavior</span>
+<span class="sd">        :param checkpoint_names: list of checkpoint names, assumed to be pickle files.</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#   Pull data out of the pickles</span>
+        <span class="n">gen_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">min_reward</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">max_reward</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">mean_reward</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">checkpoint_names</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ga_dir</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">gen</span><span class="si">}</span><span class="s2">.pkl&quot;</span> <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_gens</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">checkpoint_names</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="n">gen_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;generation&quot;</span><span class="p">])</span>
+            <span class="n">tmp_log</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;logbook&quot;</span><span class="p">]</span>
+            <span class="n">mean_reward</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_log</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;avg&quot;</span><span class="p">])</span>
+            <span class="n">min_reward</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_log</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;min&quot;</span><span class="p">])</span>
+            <span class="n">max_reward</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_log</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;max&quot;</span><span class="p">])</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">gen_list</span><span class="p">,</span> <span class="n">mean_reward</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Mean Reward&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">gen_list</span><span class="p">,</span> <span class="n">max_reward</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Max Reward&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">gen_list</span><span class="p">,</span> <span class="n">min_reward</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Min Reward&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Total Reward&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Training Generation&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ga_dir</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">+</span> <span class="s2">&quot;_training.png&quot;</span><span class="p">,</span>
+            <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+            <span class="n">pad_inches</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+            <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span>
+            <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+.. _examples.genetic_algorithm.ga_hp_solver:
+
+ga_hp_solver
+============
+
+``examples.genetic_algorithm.ga_hp_solver``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: examples.genetic_algorithm.ga_hp_solver
+   :members:
+   :show-inheritance:
+

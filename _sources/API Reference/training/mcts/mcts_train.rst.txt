@@ -1,0 +1,15 @@
+.. _bsk_rl.training.mcts.mcts_train:
+
+mcts_train
+==========
+
+``bsk_rl.training.mcts.mcts_train``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.training.mcts.mcts_train
+   :members:
+   :show-inheritance:
+

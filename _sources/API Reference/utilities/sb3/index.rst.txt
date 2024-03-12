@@ -1,0 +1,25 @@
+.. _bsk_rl.utilities.sb3:
+
+sb3
+===
+
+``bsk_rl.utilities.sb3``
+
+.. automodule:: bsk_rl.utilities.sb3
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+   custom_sb3_policies
+   shielded_policies
+   shields
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+

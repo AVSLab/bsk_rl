@@ -1,0 +1,15 @@
+.. _bsk_rl.utilities.sb3.custom_sb3_policies:
+
+custom_sb3_policies
+===================
+
+``bsk_rl.utilities.sb3.custom_sb3_policies``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.utilities.sb3.custom_sb3_policies
+   :members:
+   :show-inheritance:
+

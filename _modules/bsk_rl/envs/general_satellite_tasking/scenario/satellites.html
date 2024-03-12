@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.envs.general_satellite_tasking.scenario.satellites &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.envs.general_satellite_tasking.scenario.satellites</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.envs.general_satellite_tasking.scenario.satellites</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Satellites are the agents in the environment.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">bisect</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">weakref</span> <span class="kn">import</span> <span class="n">proxy</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.types</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">DynamicsModel</span><span class="p">,</span>
+        <span class="n">FSWModel</span><span class="p">,</span>
+        <span class="n">Simulator</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">chebpy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">macros</span>
+<span class="kn">from</span> <span class="nn">gymnasium</span> <span class="kn">import</span> <span class="n">spaces</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.scenario.data</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DataStore</span><span class="p">,</span>
+    <span class="n">UniqueImageStore</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.scenario.environment_features</span> <span class="kn">import</span> <span class="n">Target</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.simulation</span> <span class="kn">import</span> <span class="n">dynamics</span><span class="p">,</span> <span class="n">fsw</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.utils.functional</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">collect_default_args</span><span class="p">,</span>
+    <span class="n">safe_dict_merge</span><span class="p">,</span>
+    <span class="n">valid_func_name</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.utils.orbital</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TrajectorySimulator</span><span class="p">,</span>
+    <span class="n">elevation</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SatObs</span> <span class="o">=</span> <span class="n">Any</span>
+<span class="n">SatAct</span> <span class="o">=</span> <span class="n">Any</span>
+
+
+<div class="viewcode-block" id="Satellite">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite">[docs]</a>
+<span class="k">class</span> <span class="nc">Satellite</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for satellites.&quot;&quot;&quot;</span>
+
+    <span class="n">dyn_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="s2">&quot;DynamicsModel&quot;</span><span class="p">]</span>  <span class="c1"># Type of dynamics model used by this satellite</span>
+    <span class="n">fsw_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="s2">&quot;FSWModel&quot;</span><span class="p">]</span>  <span class="c1"># Type of FSW model used by this satellite</span>
+
+<div class="viewcode-block" id="Satellite.default_sat_args">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.default_sat_args">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_sat_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compile default arguments for FSW and dynamics models.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            default arguments for satellite models</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="n">collect_default_args</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">dyn_type</span><span class="p">)</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="n">safe_dict_merge</span><span class="p">(</span><span class="n">defaults</span><span class="p">,</span> <span class="n">collect_default_args</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">fsw_type</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">fsw_type</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">fsw_type</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">fsw_type</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">fsw</span><span class="o">.</span><span class="n">Task</span>
+            <span class="p">):</span>
+                <span class="n">defaults</span> <span class="o">=</span> <span class="n">safe_dict_merge</span><span class="p">(</span>
+                    <span class="n">defaults</span><span class="p">,</span> <span class="n">collect_default_args</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">fsw_type</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+                <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">defaults</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> not a valid key for sat_args&quot;</span><span class="p">)</span>
+            <span class="n">defaults</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">return</span> <span class="n">defaults</span></div>
+
+
+<div class="viewcode-block" id="Satellite.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">sat_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">variable_interval</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct base satellite.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: identifier for satellite; does not need to be unique</span>
+<span class="sd">            sat_args: arguments for FSW and dynamic model construction. {key: value or</span>
+<span class="sd">                key: function}, where function is called at reset to set the value (used</span>
+<span class="sd">                for randomization).</span>
+<span class="sd">            variable_interval: Stop simulation at terminal events</span>
+<span class="sd">            kwargs: Ignored</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sat_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sat_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_sat_args</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sat_args_generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_sat_args</span><span class="p">(</span><span class="o">**</span><span class="n">sat_args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="p">:</span> <span class="n">Simulator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="p">:</span> <span class="s2">&quot;FSWModel&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="p">:</span> <span class="s2">&quot;DynamicsModel&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="p">:</span> <span class="n">DataStore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">requires_retasking</span><span class="p">:</span> <span class="nb">bool</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variable_interval</span> <span class="o">=</span> <span class="n">variable_interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timed_terminal_event_name</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unique human-readable identifier.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_generate_sat_args</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate sat_args from any randomizers in provided sat_args.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sat_args_generator</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Satellite initialized with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Satellite.reset_pre_sim">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.reset_pre_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_pre_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset during environment reset, before simulator initialization.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">requires_retasking</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_generate_sat_args</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">is_fresh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">is_fresh</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span> <span class="o">=</span> <span class="n">TrajectorySimulator</span><span class="p">(</span>
+            <span class="n">utc_init</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;utc_init&quot;</span><span class="p">],</span>
+            <span class="n">rN</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;rN&quot;</span><span class="p">],</span>
+            <span class="n">vN</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;vN&quot;</span><span class="p">],</span>
+            <span class="n">oe</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;oe&quot;</span><span class="p">],</span>
+            <span class="n">mu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;mu&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timed_terminal_event_name</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Satellite.set_simulator">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_simulator">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulator</span><span class="p">:</span> <span class="s2">&quot;Simulator&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the simulator for models.</span>
+
+<span class="sd">        Called during simulator initialization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            simulator: Basilisk simulator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">proxy</span><span class="p">(</span><span class="n">simulator</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Satellite.set_dynamics">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_dynamics">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dyn_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DynamicsModel&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create dynamics model; called during simulator initialization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dyn_rate: rate for dynamics simulation [s]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Satellite&#39;s dynamics model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dynamics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dyn_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dyn_rate</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span> <span class="o">=</span> <span class="n">proxy</span><span class="p">(</span><span class="n">dynamics</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dynamics</span></div>
+
+
+<div class="viewcode-block" id="Satellite.set_fsw">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_fsw">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_fsw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FSWModel&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create flight software model; called during simulator initialization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fsw_rate: rate for FSW simulation [s]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Satellite&#39;s FSW model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fsw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw_rate</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span> <span class="o">=</span> <span class="n">proxy</span><span class="p">(</span><span class="n">fsw</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fsw</span></div>
+
+
+<div class="viewcode-block" id="Satellite.reset_post_sim">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.reset_post_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_post_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset in environment reset, after simulator initialization.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Observation space for single satellite, determined from observation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            gymanisium observation space</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+            <span class="n">low</span><span class="o">=-</span><span class="mf">1e16</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1e16</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_obs</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Space</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Action space for single satellite.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            gymanisium action space</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="Satellite.is_alive">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.is_alive">[docs]</a>
+    <span class="k">def</span> <span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_failure</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the satellite is violating any aliveness requirements.</span>
+
+<span class="sd">        Checkes aliveness checkers in dynamics and FSW models.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            is_alive</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">is_alive</span><span class="p">(</span><span class="n">log_failure</span><span class="o">=</span><span class="n">log_failure</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">is_alive</span><span class="p">(</span>
+            <span class="n">log_failure</span><span class="o">=</span><span class="n">log_failure</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_satellite_command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate string that refers to self in simBase.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s2">&quot;[satellite for satellite in self.satellites &quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;if satellite.id==&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&#39;][0]&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_info_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate command to log to info from an event.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            info: information to log; cannot include `&#39;` or `&quot;`</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            actionList action for simBase.createNewEvent</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_satellite_command</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;.log_info(&#39;</span><span class="si">{</span><span class="n">info</span><span class="si">}</span><span class="s2">&#39;)&quot;</span>
+
+<div class="viewcode-block" id="Satellite.log_info">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.log_info">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Record information at the current time.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            info: Information to log</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">,</span> <span class="n">info</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_update_timed_terminal_event</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">t_close</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">extra_actions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a simulator event that stops the simulation a certain time.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            t_close: Termination time [s]</span>
+<span class="sd">            info: Additional identifying info to log at terminal time</span>
+<span class="sd">            extra_actions: Additional actions to perform at terminal time</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_disable_timed_terminal_event</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;setting timed terminal event at </span><span class="si">{</span><span class="n">t_close</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create new timed terminal event</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timed_terminal_event_name</span> <span class="o">=</span> <span class="n">valid_func_name</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;timed_terminal_</span><span class="si">{</span><span class="n">t_close</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">createNewEvent</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_timed_terminal_event_name</span><span class="p">,</span>
+            <span class="n">macros</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_rate</span><span class="p">),</span>
+            <span class="kc">True</span><span class="p">,</span>
+            <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;self.TotalSim.CurrentNanos * </span><span class="si">{</span><span class="n">macros</span><span class="o">.</span><span class="n">NANO2SEC</span><span class="si">}</span><span class="s2"> &gt;= </span><span class="si">{</span><span class="n">t_close</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_info_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;timed termination at </span><span class="si">{</span><span class="n">t_close</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> &quot;</span> <span class="o">+</span> <span class="n">info</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_satellite_command</span> <span class="o">+</span> <span class="s2">&quot;.requires_retasking = True&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="o">+</span> <span class="n">extra_actions</span><span class="p">,</span>
+            <span class="n">terminal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_interval</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">eventMap</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_timed_terminal_event_name</span><span class="p">]</span><span class="o">.</span><span class="n">eventActive</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_disable_timed_terminal_event</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turn off simulator termination due to window close checker.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_timed_terminal_event_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timed_terminal_event_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">eventMap</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">delete_event</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_timed_terminal_event_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Satellite.get_obs">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.get_obs">[docs]</a>
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SatObs</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct the satellite&#39;s observation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            satellite observation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Satellite.set_action">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.Satellite.set_action">[docs]</a>
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">set_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enable certain processes in the simulator to command the satellite task.</span>
+
+<span class="sd">        Should call an @action from FSW, among other things.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            action: action index</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AccessSatellite">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite">[docs]</a>
+<span class="k">class</span> <span class="nc">AccessSatellite</span><span class="p">(</span><span class="n">Satellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Satellite that can detect access opportunities for ground locations.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AccessSatellite.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">generation_duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">95</span><span class="p">,</span>
+        <span class="n">initial_generation_duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">access_dist_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4e6</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct an AccessSatellite.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            generation_duration: Duration to calculate additional imaging windows for</span>
+<span class="sd">                when windows are exhausted. If `None`, generate for the simulation</span>
+<span class="sd">                `time_limit` unless the simulation is infinite. [s]</span>
+<span class="sd">            initial_generation_duration: Duration to initially calculate imaging windows</span>
+<span class="sd">                [s]</span>
+<span class="sd">            access_dist_threshold: Distance bound [m] for evaluating imaging windows</span>
+<span class="sd">                more exactly. 4e6 will capture &gt;10 elevation windows for a 500 km orbit.</span>
+<span class="sd">            args: Passed through to Satellite constructor</span>
+<span class="sd">            kwargs: Passed through to Satellite constructor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generation_duration</span> <span class="o">=</span> <span class="n">generation_duration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_generation_duration</span> <span class="o">=</span> <span class="n">initial_generation_duration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">access_dist_threshold</span> <span class="o">=</span> <span class="n">access_dist_threshold</span></div>
+
+
+<div class="viewcode-block" id="AccessSatellite.reset_pre_sim">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.reset_pre_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_pre_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset satellite window calculations and lists.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_pre_sim</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locations_for_access_checking</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="AccessSatellite.add_location_for_access_checking">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.add_location_for_access_checking">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_location_for_access_checking</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="nb">object</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">location</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">min_elev</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a location to be included in window calculations.</span>
+
+<span class="sd">        Note that this location will only be included in future calls to</span>
+<span class="sd">        calculate_additional_windows.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            object: Object to add window for</span>
+<span class="sd">            location: Objects PCPF location [m]</span>
+<span class="sd">            min_elev: Minimum elevation angle for access [rad]</span>
+<span class="sd">            type: Category of windows to add location to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">location_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span> <span class="n">min_elev</span><span class="o">=</span><span class="n">min_elev</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">)</span>
+        <span class="n">location_dict</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="nb">object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locations_for_access_checking</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">location_dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AccessSatellite.reset_post_sim">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.reset_post_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_post_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle initial window calculations for new simulation.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_post_sim</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_generation_duration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">==</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">initial_generation_duration</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">initial_generation_duration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">time_limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calculate_additional_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_generation_duration</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AccessSatellite.calculate_additional_windows">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.calculate_additional_windows">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_additional_windows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Use a multiroot finding method to evaluate imaging windows for each location.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            duration: Time to calculate windows from end of previous window.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">duration</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Finding opportunity windows from &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> to &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">duration</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds&quot;</span>
+        <span class="p">)</span>
+        <span class="n">calculation_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span>
+        <span class="n">calculation_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="n">duration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_duration</span>
+        <span class="p">)</span>
+        <span class="n">calculation_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_duration</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+            <span class="n">calculation_end</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_duration</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Get discrete times and positions for next trajectory segment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">extend_to</span><span class="p">(</span><span class="n">calculation_end</span><span class="p">)</span>
+        <span class="n">r_BP_P_interp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">r_BP_P</span>
+        <span class="n">window_calc_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span>
+            <span class="n">r_BP_P_interp</span><span class="o">.</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="n">calculation_start</span> <span class="o">-</span> <span class="mf">1e-9</span><span class="p">,</span>
+            <span class="n">r_BP_P_interp</span><span class="o">.</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="n">calculation_end</span> <span class="o">+</span> <span class="mf">1e-9</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># Account for floating point error in window_calculation_time</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">r_BP_P_interp</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">window_calc_span</span><span class="p">]</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">r_BP_P_interp</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">window_calc_span</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">location</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">locations_for_access_checking</span><span class="p">:</span>
+            <span class="n">candidate_windows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_candidate_windows</span><span class="p">(</span>
+                <span class="n">location</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">],</span> <span class="n">times</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">access_dist_threshold</span>
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">candidate_window</span> <span class="ow">in</span> <span class="n">candidate_windows</span><span class="p">:</span>
+                <span class="n">roots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_elevation_roots</span><span class="p">(</span>
+                    <span class="n">r_BP_P_interp</span><span class="p">,</span>
+                    <span class="n">location</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">],</span>
+                    <span class="n">location</span><span class="p">[</span><span class="s2">&quot;min_elev&quot;</span><span class="p">],</span>
+                    <span class="n">candidate_window</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">new_windows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refine_window</span><span class="p">(</span>
+                    <span class="n">roots</span><span class="p">,</span> <span class="n">candidate_window</span><span class="p">,</span> <span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">new_window</span> <span class="ow">in</span> <span class="n">new_windows</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_add_window</span><span class="p">(</span>
+                        <span class="n">location</span><span class="p">[</span><span class="n">location</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]],</span>
+                        <span class="n">new_window</span><span class="p">,</span>
+                        <span class="nb">type</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+                        <span class="n">merge_time</span><span class="o">=</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span> <span class="o">=</span> <span class="n">calculation_end</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_find_elevation_roots</span><span class="p">(</span>
+        <span class="n">position_interp</span><span class="p">,</span>
+        <span class="n">location</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">min_elev</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find times where the elevation is equal to the minimum elevation.</span>
+
+<span class="sd">        Finds exact times where the satellite&#39;s elevation relative to a target is</span>
+<span class="sd">        equal to the minimum elevation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">root_fn</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">elevation</span><span class="p">(</span><span class="n">position_interp</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">location</span><span class="p">)</span> <span class="o">-</span> <span class="n">min_elev</span>
+
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">chebpy</span><span class="o">.</span><span class="n">UserPreferences</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">settings</span><span class="p">:</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-6</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">sortroots</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">roots</span> <span class="o">=</span> <span class="n">chebpy</span><span class="o">.</span><span class="n">chebfun</span><span class="p">(</span><span class="n">root_fn</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">roots</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">roots</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_find_candidate_windows</span><span class="p">(</span>
+        <span class="n">location</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">times</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">positions</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find `times` where a window is plausible.</span>
+
+<span class="sd">        i.e. where a `positions` point is within `threshold` of `location`. Too big of</span>
+<span class="sd">        a dt in times may miss windows or produce bad results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">close_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">positions</span> <span class="o">-</span> <span class="n">location</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">threshold</span>
+        <span class="n">close_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">close_times</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">close_indices</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">close_indices</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">group</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">candidate_windows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+            <span class="n">t_start</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="n">t_end</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">group</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="n">candidate_windows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">candidate_windows</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_refine_window</span><span class="p">(</span>
+        <span class="n">endpoints</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span>
+        <span class="n">candidate_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">computation_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect if an exact window has been truncated by a coarse window.&quot;&quot;&quot;</span>
+        <span class="n">endpoints</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">endpoints</span><span class="p">)</span>
+
+        <span class="c1"># Filter endpoints that are too close</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">endpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">endpoint</span> <span class="o">-</span> <span class="n">endpoints</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">:</span>
+                <span class="n">endpoints</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">endpoints</span> <span class="o">=</span> <span class="p">[</span><span class="n">endpoint</span> <span class="k">for</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="n">endpoints</span> <span class="k">if</span> <span class="n">endpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="c1"># Find pairs</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">endpoints</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">candidate_window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">computation_window</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">endpoints</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">computation_window</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">candidate_window</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">computation_window</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">endpoints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">computation_window</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>  <span class="c1"># Temporary fix for rare issue.</span>
+
+        <span class="n">new_windows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">endpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">endpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]):</span>
+            <span class="n">new_windows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">new_windows</span>
+
+    <span class="k">def</span> <span class="nf">_add_window</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="nb">object</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">new_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">merge_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an opportunity window.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            object: Object to add window for</span>
+<span class="sd">            new_window: New window for target</span>
+<span class="sd">            type: Type of window being added</span>
+<span class="sd">            merge_time: Time at which merges with existing windows will occur. If None,</span>
+<span class="sd">                check all windows for merges.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">new_window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">merge_time</span> <span class="ow">or</span> <span class="n">merge_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">type</span>
+                    <span class="ow">and</span> <span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">==</span> <span class="nb">object</span>
+                    <span class="ow">and</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">new_window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">):</span>
+                    <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_window</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="k">return</span>
+        <span class="n">bisect</span><span class="o">.</span><span class="n">insort</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">,</span>
+            <span class="p">{</span><span class="nb">type</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="s2">&quot;window&quot;</span><span class="p">:</span> <span class="n">new_window</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">},</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">upcoming_opportunities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ordered list of opportunities that have not yet closed.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: list of upcoming opportunities</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">bisect</span><span class="o">.</span><span class="n">bisect_left</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">+</span> <span class="mf">1e-12</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">upcoming</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">[</span><span class="n">start</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="n">upcoming</span>
+
+<div class="viewcode-block" id="AccessSatellite.opportunities_dict">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.opportunities_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">opportunities_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make dictionary of opportunities that maps objects to lists of windows.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            types: Types of opportunities to include. If None, include all types.</span>
+<span class="sd">            filter: Objects to exclude from the dictionary.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            windows: objects -&gt; windows list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+
+        <span class="n">windows</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">:</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">)</span> <span class="ow">and</span> <span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">windows</span><span class="p">:</span>
+                    <span class="n">windows</span><span class="p">[</span><span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">windows</span><span class="p">[</span><span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">windows</span></div>
+
+
+<div class="viewcode-block" id="AccessSatellite.upcoming_opportunities_dict">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.upcoming_opportunities_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">upcoming_opportunities_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get dictionary of opportunities.</span>
+
+<span class="sd">        Maps objects to lists of windows that have not yet closed.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            types: Types of opportunities to include. If None, include all types.</span>
+<span class="sd">            filter: Objects to exclude from the dictionary.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            windows: objects -&gt; windows list (upcoming only)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+
+        <span class="n">windows</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">upcoming_opportunities</span><span class="p">:</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">)</span> <span class="ow">and</span> <span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">windows</span><span class="p">:</span>
+                    <span class="n">windows</span><span class="p">[</span><span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">windows</span><span class="p">[</span><span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">windows</span></div>
+
+
+<div class="viewcode-block" id="AccessSatellite.next_opportunities_dict">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.next_opportunities_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">next_opportunities_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make dictionary of opportunities that maps objects to the next open windows.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            types: Types of opportunities to include. If None, include all types.</span>
+<span class="sd">            filter: Objects to exclude from the dictionary.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            windows: objects -&gt; next window</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+
+        <span class="n">next_windows</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">upcoming_opportunities</span><span class="p">:</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">)</span> <span class="ow">and</span> <span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">next_windows</span><span class="p">:</span>
+                    <span class="n">next_windows</span><span class="p">[</span><span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]]</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">next_windows</span></div>
+
+
+<div class="viewcode-block" id="AccessSatellite.find_next_opportunities">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.AccessSatellite.find_next_opportunities">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_next_opportunities</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">pad</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">max_lookahead</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find the n nearest opportunities, sorted by window close time.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n: Number of opportunities to attempt to include.</span>
+<span class="sd">            pad: If true, duplicates the last target if the number of opportunities</span>
+<span class="sd">                found is less than n.</span>
+<span class="sd">            max_lookahead: Maximum times to call calculate_additional_windows.</span>
+<span class="sd">            types: Types of opportunities to include. If None, include all types.</span>
+<span class="sd">            filter: Objects to exclude from the dictionary.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: n nearest opportunities, ordered</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lookahead</span><span class="p">):</span>
+            <span class="n">upcoming_opportunities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upcoming_opportunities</span>
+            <span class="n">next_opportunities</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="n">upcoming_opportunities</span><span class="p">:</span>
+                <span class="nb">type</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">)</span> <span class="ow">and</span> <span class="n">opportunity</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">:</span>
+                    <span class="n">next_opportunities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opportunity</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_opportunities</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">next_opportunities</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calculate_additional_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation_duration</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pad</span><span class="p">:</span>
+            <span class="n">next_opportunities</span> <span class="o">+=</span> <span class="p">[</span><span class="n">next_opportunities</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">n</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_opportunities</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">next_opportunities</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ImagingSatellite">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite">[docs]</a>
+<span class="k">class</span> <span class="nc">ImagingSatellite</span><span class="p">(</span><span class="n">AccessSatellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Satellite with agile imaging capabilities.&quot;&quot;&quot;</span>
+
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dynamics</span><span class="o">.</span><span class="n">ImagingDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">ImagingFSWModel</span>
+
+<div class="viewcode-block" id="ImagingSatellite.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct an ImagingSatellite.</span>
+
+<span class="sd">        Can stop the simulation when a target is imaged or missed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="p">:</span> <span class="n">ImagingSatellite</span><span class="o">.</span><span class="n">fsw_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="p">:</span> <span class="n">ImagingSatellite</span><span class="o">.</span><span class="n">dyn_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="p">:</span> <span class="n">UniqueImageStore</span></div>
+
+
+<div class="viewcode-block" id="ImagingSatellite.reset_pre_sim">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.reset_pre_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_pre_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the buffer parameters based on computed windows.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_pre_sim</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;transmitterNumBuffers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">env_knowledge</span><span class="o">.</span><span class="n">targets</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;bufferNames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">env_knowledge</span><span class="o">.</span><span class="n">targets</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imaged</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missed</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="ImagingSatellite.reset_post_sim">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.reset_post_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_post_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle initial_generation_duration setting and calculate windows.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">env_knowledge</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_location_for_access_checking</span><span class="p">(</span>
+                <span class="nb">object</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+                <span class="n">location</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">location</span><span class="p">,</span>
+                <span class="n">min_elev</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;imageTargetMinimumElevation&quot;</span><span class="p">],</span>
+                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_post_sim</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_get_imaged_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imaged</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">windows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Target</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access windows via dict of targets -&gt; list of windows.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">opportunities_dict</span><span class="p">(</span><span class="n">types</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_imaged_filter</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">upcoming_windows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Target</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access upcoming windows in a dict of targets -&gt; list of windows.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upcoming_opportunities_dict</span><span class="p">(</span>
+            <span class="n">types</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_imaged_filter</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">next_windows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Target</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Soonest window for each target.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: first non-closed window for each target</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_opportunities_dict</span><span class="p">(</span>
+            <span class="n">types</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_imaged_filter</span><span class="p">()</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ImagingSatellite.upcoming_targets">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.upcoming_targets">[docs]</a>
+    <span class="k">def</span> <span class="nf">upcoming_targets</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pad</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">max_lookahead</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Target</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find the n nearest targets.</span>
+
+<span class="sd">        Targets are sorted by window close time; currently open windows are included.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n: number of windows to look ahead</span>
+<span class="sd">            pad: if true, duplicates the last target if the number of targets found is</span>
+<span class="sd">                less than n</span>
+<span class="sd">            max_lookahead: maximum times to call calculate_additional_windows</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: n nearest targets, ordered</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_next_opportunities</span><span class="p">(</span>
+                <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+                <span class="n">pad</span><span class="o">=</span><span class="n">pad</span><span class="p">,</span>
+                <span class="n">max_lookahead</span><span class="o">=</span><span class="n">max_lookahead</span><span class="p">,</span>
+                <span class="nb">filter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_imaged_filter</span><span class="p">(),</span>
+                <span class="n">types</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">]</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_update_image_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Target</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a simulator event that terminates on imaging.</span>
+
+<span class="sd">        Causes the simulation to stop when a target is imaged.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target: Target expected to be imaged</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_disable_image_event</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span> <span class="o">=</span> <span class="n">valid_func_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;image_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">eventMap</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">data_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">storedDataName</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">data_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data_names</span> <span class="o">==</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">current_data_level</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">storedData</span><span class="p">[</span>
+                    <span class="n">data_index</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">createNewEvent</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span><span class="p">,</span>
+                <span class="n">macros</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">fsw_rate</span><span class="p">),</span>
+                <span class="kc">True</span><span class="p">,</span>
+                <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">&quot;self.dynamics_list[&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&#39;].storageUnit.storageUnitDataOutMsg.read()&quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;.storedData[</span><span class="si">{</span><span class="n">data_index</span><span class="si">}</span><span class="s2">] &gt; </span><span class="si">{</span><span class="n">current_data_level</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_info_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;imaged </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_satellite_command</span> <span class="o">+</span> <span class="s2">&quot;.imaged += 1&quot;</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_satellite_command</span> <span class="o">+</span> <span class="s2">&quot;.requires_retasking = True&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="n">terminal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_interval</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">eventMap</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span><span class="p">]</span><span class="o">.</span><span class="n">eventActive</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_disable_image_event</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turn off simulator termination due to this satellite&#39;s imaging checker.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">eventMap</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">delete_event</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ImagingSatellite.parse_target_selection">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.parse_target_selection">[docs]</a>
+    <span class="k">def</span> <span class="nf">parse_target_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_query</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Target</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Identify a target from a query.</span>
+
+<span class="sd">        Parses an upcoming target index, Target object, or target id.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target_query: Taret upcoming index, object, or id.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">target_query</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upcoming_targets</span><span class="p">(</span><span class="n">target_query</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_query</span><span class="p">,</span> <span class="n">Target</span><span class="p">):</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">target_query</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_query</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">target</span>
+                <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">env_knowledge</span><span class="o">.</span><span class="n">targets</span>
+                <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">target_query</span>
+            <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid target_query! Cannot be a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">target_query</span><span class="p">)</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">target</span></div>
+
+
+<div class="viewcode-block" id="ImagingSatellite.enable_target_window">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.enable_target_window">[docs]</a>
+    <span class="k">def</span> <span class="nf">enable_target_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Target</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enable the next window close event for target.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_image_event</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="n">next_window</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_windows</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> window enabled: </span><span class="si">{</span><span class="n">next_window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">next_window</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_timed_terminal_event</span><span class="p">(</span>
+            <span class="n">next_window</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">info</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> window&quot;</span><span class="p">,</span>
+            <span class="n">extra_actions</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_satellite_command</span> <span class="o">+</span> <span class="s2">&quot;.missed += 1&quot;</span><span class="p">],</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingSatellite.task_target_for_imaging">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImagingSatellite.task_target_for_imaging">[docs]</a>
+    <span class="k">def</span> <span class="nf">task_target_for_imaging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Target</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task the satellite to image a target.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target: Selected target</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> tasked for imaging&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">action_image</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enable_target_window</span><span class="p">(</span><span class="n">target</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1">#########################</span>
+<span class="c1">### Convenience Types ###</span>
+<span class="c1">#########################</span>
+<div class="viewcode-block" id="SteeringImagerSatellite">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.SteeringImagerSatellite">[docs]</a>
+<span class="k">class</span> <span class="nc">SteeringImagerSatellite</span><span class="p">(</span><span class="n">ImagingSatellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience type for an imaging satellite with MRP steering.&quot;&quot;&quot;</span>
+
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dynamics</span><span class="o">.</span><span class="n">FullFeaturedDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">SteeringImagerFSWModel</span></div>
+
+
+
+<div class="viewcode-block" id="FBImagerSatellite">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.FBImagerSatellite">[docs]</a>
+<span class="k">class</span> <span class="nc">FBImagerSatellite</span><span class="p">(</span><span class="n">ImagingSatellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience type for an imaging satellite with feedback control.&quot;&quot;&quot;</span>
+
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dynamics</span><span class="o">.</span><span class="n">FullFeaturedDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">ImagingFSWModel</span></div>
+
+
+
+<span class="c1">##########################</span>
+<span class="c1">### Ready-to-use Types ###</span>
+<span class="c1">##########################</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">orbitalMotion</span>  <span class="c1"># noqa: E402</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.scenario</span> <span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: E402</span>
+    <span class="n">sat_actions</span> <span class="k">as</span> <span class="n">sa</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.scenario</span> <span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: E402</span>
+    <span class="n">sat_observations</span> <span class="k">as</span> <span class="n">so</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="DoNothingSatellite">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.DoNothingSatellite">[docs]</a>
+<span class="k">class</span> <span class="nc">DoNothingSatellite</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">DriftAction</span><span class="p">,</span> <span class="n">so</span><span class="o">.</span><span class="n">TimeState</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience type for a satellite that does nothing.&quot;&quot;&quot;</span>
+
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dynamics</span><span class="o">.</span><span class="n">BasicDynamicsModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">BasicFSWModel</span></div>
+
+
+
+<div class="viewcode-block" id="ImageAheadSatellite">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.ImageAheadSatellite">[docs]</a>
+<span class="k">class</span> <span class="nc">ImageAheadSatellite</span><span class="p">(</span>
+    <span class="n">sa</span><span class="o">.</span><span class="n">ImagingActions</span><span class="p">,</span>
+    <span class="n">so</span><span class="o">.</span><span class="n">TimeState</span><span class="p">,</span>
+    <span class="n">so</span><span class="o">.</span><span class="n">TargetState</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+    <span class="n">so</span><span class="o">.</span><span class="n">NormdPropertyState</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span>
+        <span class="n">obs_properties</span><span class="o">=</span><span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;omega_BP_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;c_hat_P&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;r_BN_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;v_BN_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7616.5</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;battery_charge_fraction&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">SteeringImagerSatellite</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience type for a satellite with common features enabled.&quot;&quot;&quot;</span>
+
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="FullFeaturedSatellite">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/satellites.html#bsk_rl.envs.general_satellite_tasking.scenario.satellites.FullFeaturedSatellite">[docs]</a>
+<span class="k">class</span> <span class="nc">FullFeaturedSatellite</span><span class="p">(</span>
+    <span class="n">sa</span><span class="o">.</span><span class="n">ImagingActions</span><span class="p">,</span>
+    <span class="n">sa</span><span class="o">.</span><span class="n">DesatAction</span><span class="p">,</span>
+    <span class="n">sa</span><span class="o">.</span><span class="n">ChargingAction</span><span class="p">,</span>
+    <span class="n">so</span><span class="o">.</span><span class="n">TimeState</span><span class="p">,</span>
+    <span class="n">so</span><span class="o">.</span><span class="n">TargetState</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+    <span class="n">so</span><span class="o">.</span><span class="n">NormdPropertyState</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span>
+        <span class="n">obs_properties</span><span class="o">=</span><span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;omega_BP_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;c_hat_P&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;r_BN_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;v_BN_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7616.5</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;battery_charge_fraction&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">SteeringImagerSatellite</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience type for a satellite with common features enabled.&quot;&quot;&quot;</span>
+
+    <span class="k">pass</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

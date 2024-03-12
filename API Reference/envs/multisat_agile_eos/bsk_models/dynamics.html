@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>dynamics &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="environment" href="environment.html" />
+    <link rel="prev" title="bsk_models" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../agents/index.html">agents</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">envs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../../agile_eos/index.html">agile_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../general_satellite_tasking/index.html">general_satellite_tasking</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html">multisat_agile_eos</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../bsk_sim.html">bsk_sim</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../env_settings.html">env_settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../gym_env.html">gym_env</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="index.html">bsk_models</a><ul class="current">
+<li class="toctree-l5 current"><a class="current reference internal" href="#">dynamics</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel"><code class="docutils literal notranslate"><span class="pre">DynamicModel</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.InitAllDynObjects"><code class="docutils literal notranslate"><span class="pre">DynamicModel.InitAllDynObjects()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetBattery"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetBattery()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDensityModel"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetDensityModel()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDisturbanceTorque"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetDisturbanceTorque()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDragEffector"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetDragEffector()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetEclipseObject"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetEclipseObject()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetGravityBodies"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetGravityBodies()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetGroundLocations"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetGroundLocations()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetInstrument"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetInstrument()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetInstrumentPowerSink"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetInstrumentPowerSink()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetReactionWheelDynEffector"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetReactionWheelDynEffector()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetReactionWheelPower"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetReactionWheelPower()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSimpleNavObject"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetSimpleNavObject()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSolarPanel"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetSolarPanel()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSpacecraftHub"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetSpacecraftHub()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetThrusterDynEffector"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetThrusterDynEffector()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetTransmitter"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetTransmitter()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetTransmitterPowerSink"><code class="docutils literal notranslate"><span class="pre">DynamicModel.SetTransmitterPowerSink()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.__init__"><code class="docutils literal notranslate"><span class="pre">DynamicModel.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="environment.html">environment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="fsw.html">fsw</a></li>
+<li class="toctree-l5"><a class="reference internal" href="fsw_steering.html">fsw_steering</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../multisensor_eos/index.html">multisensor_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple_eos/index.html">simple_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science/index.html">small_body_science</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../small_body_science_pomdp/index.html">small_body_science_pomdp</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../training/index.html">training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utilities/index.html">utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">envs</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">multisat_agile_eos</a></li>
+          <li class="breadcrumb-item"><a href="index.html">bsk_models</a></li>
+      <li class="breadcrumb-item active">dynamics</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/API Reference/envs/multisat_agile_eos/bsk_models/dynamics.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dynamics">
+<span id="bsk-rl-envs-multisat-agile-eos-bsk-models-dynamics"></span><h1>dynamics<a class="headerlink" href="#dynamics" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics</span></code></p>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="py class" id="module-bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DynamicModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynRate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacecraftIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">singleSat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Defines the Dynamics class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.InitAllDynObjects">
+<span class="sig-name descname"><span class="pre">InitAllDynObjects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.InitAllDynObjects"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.InitAllDynObjects" title="Link to this definition"></a></dt>
+<dd><p>Initializes all dynamic objects.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetBattery">
+<span class="sig-name descname"><span class="pre">SetBattery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetBattery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetBattery" title="Link to this definition"></a></dt>
+<dd><p>Sets up the battery with all the power components</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDensityModel">
+<span class="sig-name descname"><span class="pre">SetDensityModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetDensityModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDensityModel" title="Link to this definition"></a></dt>
+<dd><p>Attaches the density model effector to the spacecraft</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDisturbanceTorque">
+<span class="sig-name descname"><span class="pre">SetDisturbanceTorque</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetDisturbanceTorque"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDisturbanceTorque" title="Link to this definition"></a></dt>
+<dd><p>Attach the disturbance torque to the spacecraft object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDragEffector">
+<span class="sig-name descname"><span class="pre">SetDragEffector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetDragEffector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetDragEffector" title="Link to this definition"></a></dt>
+<dd><p>Set the drag effector</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetEclipseObject">
+<span class="sig-name descname"><span class="pre">SetEclipseObject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetEclipseObject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetEclipseObject" title="Link to this definition"></a></dt>
+<dd><p>Adds the spacecraft to the eclipse module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetGravityBodies">
+<span class="sig-name descname"><span class="pre">SetGravityBodies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetGravityBodies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetGravityBodies" title="Link to this definition"></a></dt>
+<dd><p>Specify what gravitational bodies to include in the simulation</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetGroundLocations">
+<span class="sig-name descname"><span class="pre">SetGroundLocations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetGroundLocations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetGroundLocations" title="Link to this definition"></a></dt>
+<dd><p>Adds the spacecraft to the ground location modules.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetInstrument">
+<span class="sig-name descname"><span class="pre">SetInstrument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetInstrument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetInstrument" title="Link to this definition"></a></dt>
+<dd><p>Create the instrument</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetInstrumentPowerSink">
+<span class="sig-name descname"><span class="pre">SetInstrumentPowerSink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetInstrumentPowerSink"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetInstrumentPowerSink" title="Link to this definition"></a></dt>
+<dd><p>Defines the instrument power sink parameters</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetReactionWheelDynEffector">
+<span class="sig-name descname"><span class="pre">SetReactionWheelDynEffector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetReactionWheelDynEffector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetReactionWheelDynEffector" title="Link to this definition"></a></dt>
+<dd><p>Defines the RW state effector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetReactionWheelPower">
+<span class="sig-name descname"><span class="pre">SetReactionWheelPower</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetReactionWheelPower"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetReactionWheelPower" title="Link to this definition"></a></dt>
+<dd><p>Defines the reaction wheel power draw</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSimpleNavObject">
+<span class="sig-name descname"><span class="pre">SetSimpleNavObject</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetSimpleNavObject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSimpleNavObject" title="Link to this definition"></a></dt>
+<dd><p>Defines the navigation module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSolarPanel">
+<span class="sig-name descname"><span class="pre">SetSolarPanel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetSolarPanel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSolarPanel" title="Link to this definition"></a></dt>
+<dd><p>Sets the solar panel</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSpacecraftHub">
+<span class="sig-name descname"><span class="pre">SetSpacecraftHub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetSpacecraftHub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetSpacecraftHub" title="Link to this definition"></a></dt>
+<dd><p>Defines the spacecraft object properties.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetThrusterDynEffector">
+<span class="sig-name descname"><span class="pre">SetThrusterDynEffector</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetThrusterDynEffector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetThrusterDynEffector" title="Link to this definition"></a></dt>
+<dd><p>Defines the thruster state effector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetTransmitter">
+<span class="sig-name descname"><span class="pre">SetTransmitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetTransmitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetTransmitter" title="Link to this definition"></a></dt>
+<dd><p>Create the transmitter</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetTransmitterPowerSink">
+<span class="sig-name descname"><span class="pre">SetTransmitterPowerSink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.SetTransmitterPowerSink"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.SetTransmitterPowerSink" title="Link to this definition"></a></dt>
+<dd><p>Defines the trasmitter power sink parameters</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SimBase</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynRate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacecraftIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">singleSat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/bsk_rl/envs/multisat_agile_eos/bsk_models/dynamics.html#DynamicModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisat_agile_eos.bsk_models.dynamics.DynamicModel.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="bsk_models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="environment.html" class="btn btn-neutral float-right" title="environment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

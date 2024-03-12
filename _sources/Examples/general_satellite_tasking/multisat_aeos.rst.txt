@@ -1,0 +1,15 @@
+.. _examples.general_satellite_tasking.multisat_aeos:
+
+multisat_aeos
+=============
+
+``examples.general_satellite_tasking.multisat_aeos``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: examples.general_satellite_tasking.multisat_aeos
+   :members:
+   :show-inheritance:
+

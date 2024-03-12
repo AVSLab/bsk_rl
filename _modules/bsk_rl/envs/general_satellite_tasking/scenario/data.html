@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.envs.general_satellite_tasking.scenario.data &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.envs.general_satellite_tasking.scenario.data</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.envs.general_satellite_tasking.scenario.data</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Data logging, management, and reward calculation.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.scenario.environment_features</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">Target</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.types</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">EnvironmentFeatures</span><span class="p">,</span>
+        <span class="n">Satellite</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">LogStateType</span> <span class="o">=</span> <span class="n">Any</span>
+
+
+<div class="viewcode-block" id="DataType">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.DataType">[docs]</a>
+<span class="k">class</span> <span class="nc">DataType</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for units of satellite data.&quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;DataType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DataType&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define the combination of two units of data.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="DataStore">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore">[docs]</a>
+<span class="k">class</span> <span class="nc">DataStore</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for satellite data logging.</span>
+
+<span class="sd">    One DataStore is created per satellite.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">DataType</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">DataType</span><span class="p">]</span>  <span class="c1"># Define the unit of data used by the DataStore</span>
+
+<div class="viewcode-block" id="DataStore.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_manager</span><span class="p">:</span> <span class="s2">&quot;DataManager&quot;</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a DataStore base class.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_manager: Simulation data manager to report back to</span>
+<span class="sd">            satellite: Satellite&#39;s data being stored</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span> <span class="o">=</span> <span class="n">satellite</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_fresh</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">staged_data</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_knowledge</span><span class="p">(</span><span class="n">data_manager</span><span class="o">.</span><span class="n">env_features</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DataType</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DataType</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_initialize_knowledge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_features</span><span class="p">:</span> <span class="s2">&quot;EnvironmentFeatures&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Establish knowledge about the world known to the satellite.</span>
+
+<span class="sd">        Defaults to knowing everything about the environment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env_knowledge</span> <span class="o">=</span> <span class="n">env_features</span>
+
+    <span class="k">def</span> <span class="nf">_clear_logs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If necessary, clear any loggers.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_get_log_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LogStateType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pull information for current data contribution e.g. sensor readings.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">_compare_log_states</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">old_state</span><span class="p">:</span> <span class="n">LogStateType</span><span class="p">,</span> <span class="n">new_state</span><span class="p">:</span> <span class="n">LogStateType</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DataType&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a unit of data based on previous step and current step logs.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            old_state: A previous result of _get_log_state()</span>
+<span class="sd">            new_state: A newer result of _get_log_state()</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            DataType: Data generated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="DataStore.internal_update">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.internal_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">internal_update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DataType&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the data store based on collected information.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            New data from the previous step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;log_state&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_log_state</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_clear_logs</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">DataType</span><span class="p">()</span>
+        <span class="n">old_log_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_log_state</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clear_logs</span><span class="p">()</span>
+        <span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compare_log_states</span><span class="p">(</span><span class="n">old_log_state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">+=</span> <span class="n">new_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_data</span> <span class="o">=</span> <span class="n">new_data</span>
+        <span class="k">return</span> <span class="n">new_data</span></div>
+
+
+<div class="viewcode-block" id="DataStore.stage_communicated_data">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.stage_communicated_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">stage_communicated_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">external_data</span><span class="p">:</span> <span class="s2">&quot;DataType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare data to be added from another source, but don&#39;t add it yet.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            external_data: Data from another satellite to be added</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">staged_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">external_data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DataStore.communication_update">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.DataStore.communication_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">communication_update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the data store from staged data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            external_data (DataType): Data collected by another satellite</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">staged</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">staged_data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">+=</span> <span class="n">staged</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">staged_data</span> <span class="o">=</span> <span class="p">[]</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="DataManager">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager">[docs]</a>
+<span class="k">class</span> <span class="nc">DataManager</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for simulation-wide data management.&quot;&quot;&quot;</span>
+
+    <span class="n">DataStore</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">DataStore</span><span class="p">]</span>  <span class="c1"># type of DataStore managed by the DataManager</span>
+
+<div class="viewcode-block" id="DataManager.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;EnvironmentFeatures&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct base class to handle data recording and rewarding.</span>
+
+<span class="sd">        TODO: allow for creation/composition of multiple managers.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            env_features: Information about the environment that can be collected as</span>
+<span class="sd">                data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env_features</span> <span class="o">=</span> <span class="n">env_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DataType</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DataStore</span><span class="o">.</span><span class="n">DataType</span></div>
+
+
+<div class="viewcode-block" id="DataManager.reset">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refresh data and cumulative reward for a new episode.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DataType</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cum_reward</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+
+<div class="viewcode-block" id="DataManager.create_data_store">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.create_data_store">[docs]</a>
+    <span class="k">def</span> <span class="nf">create_data_store</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a data store for a satellite.&quot;&quot;&quot;</span>
+        <span class="n">satellite</span><span class="o">.</span><span class="n">data_store</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DataStore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cum_reward</span><span class="p">[</span><span class="n">satellite</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span></div>
+
+
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">_calc_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_data_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataType</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate step reward based on all satellite data from a step.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            new_data_dict: Satellite-DataType pairs of new data from a step</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Step reward for each satellite</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="DataManager.reward">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.DataManager.reward">[docs]</a>
+    <span class="k">def</span> <span class="nf">reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_data_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataType</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Call _calc_reward and log cumulative reward.&quot;&quot;&quot;</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_reward</span><span class="p">(</span><span class="n">new_data_dict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">satellite_id</span><span class="p">,</span> <span class="n">sat_reward</span> <span class="ow">in</span> <span class="n">reward</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cum_reward</span><span class="p">[</span><span class="n">satellite_id</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sat_reward</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data reward: </span><span class="si">{</span><span class="n">reward</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">reward</span></div>
+</div>
+
+
+
+<span class="c1">###########</span>
+<span class="c1"># No Data #</span>
+<span class="c1">###########</span>
+<div class="viewcode-block" id="NoData">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.NoData">[docs]</a>
+<span class="k">class</span> <span class="nc">NoData</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataType for no data.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add nothing to nothing.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="NoDataStore">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataStore">[docs]</a>
+<span class="k">class</span> <span class="nc">NoDataStore</span><span class="p">(</span><span class="n">DataStore</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataStore for no data.&quot;&quot;&quot;</span>
+
+    <span class="n">DataType</span> <span class="o">=</span> <span class="n">NoData</span>
+
+    <span class="k">def</span> <span class="nf">_compare_log_states</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_state</span><span class="p">,</span> <span class="n">new_state</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">DataType</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="NoDataManager">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.NoDataManager">[docs]</a>
+<span class="k">class</span> <span class="nc">NoDataManager</span><span class="p">(</span><span class="n">DataManager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataManager for no data.&quot;&quot;&quot;</span>
+
+    <span class="n">DataStore</span> <span class="o">=</span> <span class="n">NoDataStore</span>
+
+    <span class="k">def</span> <span class="nf">_calc_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_data_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reward nothing.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">sat</span><span class="p">:</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span></div>
+
+
+
+<span class="c1">#######################################</span>
+<span class="c1"># Unique Targets with Constant Values #</span>
+<span class="c1">#######################################</span>
+
+
+<div class="viewcode-block" id="UniqueImageData">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageData">[docs]</a>
+<span class="k">class</span> <span class="nc">UniqueImageData</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataType for unique images of targets.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="UniqueImageData.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageData.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">imaged</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Target&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">duplicates</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct unit of data to record unique images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            imaged: List of targets that are known to be imaged.</span>
+<span class="sd">            duplicates: Count of target imaging duplication.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">imaged</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">imaged</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">imaged</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">imaged</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duplicates</span> <span class="o">=</span> <span class="n">duplicates</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">imaged</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">imaged</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;UniqueImageData&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;UniqueImageData&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Combine two units of data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: Another unit of data to combine with this one.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Combined unit of data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">imaged</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">imaged</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">imaged</span><span class="p">))</span>
+        <span class="n">duplicates</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">duplicates</span>
+            <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">duplicates</span>
+            <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">imaged</span><span class="p">)</span>
+            <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">imaged</span><span class="p">)</span>
+            <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">imaged</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">imaged</span><span class="o">=</span><span class="n">imaged</span><span class="p">,</span> <span class="n">duplicates</span><span class="o">=</span><span class="n">duplicates</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="UniqueImageStore">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImageStore">[docs]</a>
+<span class="k">class</span> <span class="nc">UniqueImageStore</span><span class="p">(</span><span class="n">DataStore</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataStore for unique images of targets.&quot;&quot;&quot;</span>
+
+    <span class="n">DataType</span> <span class="o">=</span> <span class="n">UniqueImageData</span>
+
+    <span class="k">def</span> <span class="nf">_get_log_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log the instantaneous storage unit state at the end of each step.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            array: storedData from satellite storage unit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">storedData</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compare_log_states</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">old_state</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">new_state</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UniqueImageData</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check for an increase in logged data to identify new images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            old_state: older storedData from satellite storage unit</span>
+<span class="sd">            new_state: newer storedData from satellite storage unit</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: Targets imaged at new_state that were unimaged at old_state</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">update_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">new_state</span> <span class="o">-</span> <span class="n">old_state</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">imaged</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">update_idx</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span>
+            <span class="n">target_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">storedDataName</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span>
+            <span class="n">imaged</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">target</span>
+                    <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_knowledge</span><span class="o">.</span><span class="n">targets</span>
+                    <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">target_id</span>
+                <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">UniqueImageData</span><span class="p">(</span><span class="n">imaged</span><span class="o">=</span><span class="n">imaged</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="UniqueImagingManager">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImagingManager">[docs]</a>
+<span class="k">class</span> <span class="nc">UniqueImagingManager</span><span class="p">(</span><span class="n">DataManager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataManager for rewarding unique images.&quot;&quot;&quot;</span>
+
+    <span class="n">DataStore</span> <span class="o">=</span> <span class="n">UniqueImageStore</span>
+
+<div class="viewcode-block" id="UniqueImagingManager.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.UniqueImagingManager.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">env_features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;EnvironmentFeatures&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reward_fn</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;DataManager for rewarding unique images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            env_features: DataManager.env_features</span>
+<span class="sd">            reward_fn: Reward as function of priority.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_features</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_fn</span> <span class="o">=</span> <span class="n">reward_fn</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_calc_reward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">new_data_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UniqueImageData</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reward new each unique image once using self.reward_fn().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            new_data_dict: Record of new images for each satellite</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            reward: Cumulative reward across satellites for one step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">imaged_targets</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">new_data</span><span class="o">.</span><span class="n">imaged</span> <span class="k">for</span> <span class="n">new_data</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()],</span> <span class="p">[]</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">sat_id</span><span class="p">,</span> <span class="n">new_data</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">reward</span><span class="p">[</span><span class="n">sat_id</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">new_data</span><span class="o">.</span><span class="n">imaged</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imaged</span><span class="p">:</span>
+                    <span class="n">reward</span><span class="p">[</span><span class="n">sat_id</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_fn</span><span class="p">(</span>
+                        <span class="n">target</span><span class="o">.</span><span class="n">priority</span>
+                    <span class="p">)</span> <span class="o">/</span> <span class="n">imaged_targets</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">new_data</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">+=</span> <span class="n">new_data</span>
+        <span class="k">return</span> <span class="n">reward</span></div>
+
+
+
+<span class="sd">&quot;&quot;&quot;Targets with Time-Dependent Rewards&quot;&quot;&quot;</span>
+
+
+<span class="c1"># class TimeDepImageData(DataType):</span>
+<span class="c1">#     def __init__(self, rewards=None) -&gt; None:</span>
+<span class="c1">#         &quot;&quot;&quot;DataType to log scalar imaging</span>
+
+<span class="c1">#         Args:</span>
+<span class="c1">#             imaged (dict, optional): Reward obtained from each target.</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         if rewards is None:</span>
+<span class="c1">#             rewards = {}</span>
+<span class="c1">#         self.rewards = rewards</span>
+
+<span class="c1">#     def __add__(self, other) -&gt; &quot;TimeDepImageData&quot;:</span>
+<span class="c1">#         rewards = copy(self.rewards)</span>
+<span class="c1">#         for target, reward in other.rewards.items():</span>
+<span class="c1">#             if target in rewards:</span>
+<span class="c1">#                 rewards[target] = max(rewards[target], reward)</span>
+<span class="c1">#             else:</span>
+<span class="c1">#                 rewards[target] = reward</span>
+<span class="c1">#         return self.__class__(rewards=rewards)</span>
+
+
+<span class="c1"># class TimeDepImageStore(DataStore):</span>
+<span class="c1">#     DataType = TimeDepImageData</span>
+
+<span class="c1">#     def _get_log_state(self) -&gt; Iterable[float]:</span>
+<span class="c1">#         &quot;&quot;&quot;Log the instaneous storage unit state at the end of each step</span>
+
+<span class="c1">#         Returns:</span>
+<span class="c1">#             array: storedData from satellite storage unit</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         return np.array(</span>
+<span class="c1">#           self.satellite.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData</span>
+<span class="c1">#         )</span>
+
+<span class="c1">#     def _compare_log_states(self, old_state, new_state) -&gt; TimeDepImageData:</span>
+<span class="c1">#         &quot;&quot;&quot;Checks two storage unit logs for an increase in logged data to identify new</span>
+<span class="c1">#         images</span>
+
+<span class="c1">#         Args:</span>
+<span class="c1">#             old_state (array): older storedData from satellite storage unit</span>
+<span class="c1">#             new_state (array): newer storedData from satellite storage unit</span>
+
+<span class="c1">#         Returns:</span>
+<span class="c1">#             list: Targets imaged at new_state that were unimaged at old_state</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         update_idx = np.where(new_state - old_state &gt; 0)[0]</span>
+<span class="c1">#         imaged = []</span>
+<span class="c1">#         for idx in update_idx:</span>
+<span class="c1">#             message = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg</span>
+<span class="c1">#             target_id = message.read().storedDataName[int(idx)]</span>
+<span class="c1">#             imaged.append(</span>
+<span class="c1">#                 [</span>
+<span class="c1">#                     target</span>
+<span class="c1">#                     for target in self.env_knowledge.targets</span>
+<span class="c1">#                     if target.id == target_id</span>
+<span class="c1">#                 ][0]</span>
+<span class="c1">#             )</span>
+<span class="c1">#         return self.DataType(imaged=imaged)</span>
+
+
+<span class="c1"># class TimeDepImagingManager(DataManager):</span>
+<span class="c1">#     DataStore = TimeDepImageStore</span>
+
+<span class="c1">#     # def __init__(self, env_features):</span>
+<span class="c1">#     #     &quot;&quot;&quot;DataManager for rewarding time-dependent images. Will only give marginal</span>
+<span class="c1">#     #       reward for reimaging at higher value</span>
+
+<span class="c1">#     #     Args:</span>
+<span class="c1">#     #         env_features (EnvironmentFeatures): DataManager.env_features</span>
+<span class="c1">#     #         reward_fn (function, optional): Reward as function of priority.</span>
+<span class="c1">#     #     &quot;&quot;&quot;</span>
+<span class="c1">#     #     super().__init__(env_features)</span>
+
+<span class="c1">#     def _calc_reward(self, new_data_dict):</span>
+<span class="c1">#         &quot;&quot;&quot;Reward each image for additional reward from higher quality images</span>
+
+<span class="c1">#         Args:</span>
+<span class="c1">#             new_data_dict (dict): Record of new images for each satellite</span>
+
+<span class="c1">#         Returns:</span>
+<span class="c1">#             float: Cumulative new reward</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         reward = 0.0</span>
+<span class="c1">#         for new_data in new_data_dict.values():</span>
+<span class="c1">#             for target, reward in new_data.rewards.items():</span>
+<span class="c1">#                 if target not in self.data.rewards:</span>
+<span class="c1">#                     reward += reward</span>
+<span class="c1">#                 elif reward &gt; self.data.rewards[target]:</span>
+<span class="c1">#                     reward += reward - self.data.rewards[target]</span>
+<span class="c1">#             self.data += new_data</span>
+<span class="c1">#         return reward</span>
+
+<span class="c1">##################</span>
+<span class="c1"># Nadir Pointing #</span>
+<span class="c1">##################</span>
+
+
+<div class="viewcode-block" id="NadirScanningTimeData">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningTimeData">[docs]</a>
+<span class="k">class</span> <span class="nc">NadirScanningTimeData</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataType for time spent scanning nadir.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NadirScanningTimeData.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningTimeData.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scanning_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;DataType to log data generated scanning nadir.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scanning_time: Time spent scanning nadir</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scanning_time</span> <span class="o">=</span> <span class="n">scanning_time</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;NadirScanningTimeData&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;NadirScanningTimeData&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define the combination of two units of data.&quot;&quot;&quot;</span>
+        <span class="n">scanning_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanning_time</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">scanning_time</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">scanning_time</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ScanningNadirTimeStore">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.ScanningNadirTimeStore">[docs]</a>
+<span class="k">class</span> <span class="nc">ScanningNadirTimeStore</span><span class="p">(</span><span class="n">DataStore</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataStore for time spent scanning nadir.&quot;&quot;&quot;</span>
+
+    <span class="n">DataType</span> <span class="o">=</span> <span class="n">NadirScanningTimeData</span>
+
+    <span class="k">def</span> <span class="nf">_get_log_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LogStateType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the amount of data stored in the storage unit.&quot;&quot;&quot;</span>
+        <span class="n">storage_unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">stored_amount</span> <span class="o">=</span> <span class="n">storage_unit</span><span class="o">.</span><span class="n">storageLevel</span>
+
+        <span class="c1"># return amount of data stored</span>
+        <span class="k">return</span> <span class="n">stored_amount</span>
+
+    <span class="k">def</span> <span class="nf">_compare_log_states</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">old_state</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">new_state</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;NadirScanningTimeData&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a unit of data based on change in stored data amount.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            old_state: Previous amount of data in the storage unit</span>
+<span class="sd">            new_state: Current amount of data in the storage unit</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            DataType: Data generated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">instrument_baudrate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeBaudRate</span>
+
+        <span class="k">if</span> <span class="n">new_state</span> <span class="o">&gt;</span> <span class="n">old_state</span><span class="p">:</span>
+            <span class="n">data_generated</span> <span class="o">=</span> <span class="p">(</span><span class="n">new_state</span> <span class="o">-</span> <span class="n">old_state</span><span class="p">)</span> <span class="o">/</span> <span class="n">instrument_baudrate</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data_generated</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">return</span> <span class="n">NadirScanningTimeData</span><span class="p">(</span><span class="n">data_generated</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="NadirScanningManager">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningManager">[docs]</a>
+<span class="k">class</span> <span class="nc">NadirScanningManager</span><span class="p">(</span><span class="n">DataManager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataManager for rewarding time spent scanning nadir.&quot;&quot;&quot;</span>
+
+    <span class="n">DataStore</span> <span class="o">=</span> <span class="n">ScanningNadirTimeStore</span>  <span class="c1"># type of DataStore managed by the DataManager</span>
+
+<div class="viewcode-block" id="NadirScanningManager.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/data.html#bsk_rl.envs.general_satellite_tasking.scenario.data.NadirScanningManager.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">env_features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;EnvironmentFeatures&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reward_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a data manager for nadir scanning.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            env_features: Information about the environment that can be collected as</span>
+<span class="sd">                data</span>
+<span class="sd">            reward_fn: Reward as function of time spend pointing nadir.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_features</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reward_fn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">def</span> <span class="nf">reward_fn</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+                <span class="c1"># Reward as a function of time send pointing nadir (p) and value</span>
+                <span class="c1"># per second</span>
+                <span class="k">return</span> <span class="n">p</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_features</span><span class="o">.</span><span class="n">value_per_second</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_fn</span> <span class="o">=</span> <span class="n">reward_fn</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_calc_reward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">new_data_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;NadirScanningTimeData&quot;</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate step reward based on all satellite data from a step.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            new_data_dict (dict): Satellite-DataType of new data from a step</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Step reward</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">sat</span><span class="p">,</span> <span class="n">scanning_time</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">reward</span><span class="p">[</span><span class="n">sat</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_fn</span><span class="p">(</span><span class="n">scanning_time</span><span class="o">.</span><span class="n">scanning_time</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">reward</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

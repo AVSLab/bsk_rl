@@ -1,0 +1,24 @@
+.. _bsk_rl.envs.simple_eos:
+
+simple_eos
+==========
+
+``bsk_rl.envs.simple_eos``
+
+.. automodule:: bsk_rl.envs.simple_eos
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+   bsk_sim
+   gym_env
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+

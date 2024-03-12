@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.envs.general_satellite_tasking.scenario.sat_observations &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.envs.general_satellite_tasking.scenario.sat_observations</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.envs.general_satellite_tasking.scenario.sat_observations</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Satellite observation types can be used to add information to the observation.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">orbitalMotion</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.scenario.satellites</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AccessSatellite</span><span class="p">,</span>
+    <span class="n">ImagingSatellite</span><span class="p">,</span>
+    <span class="n">Satellite</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.envs.general_satellite_tasking.utils.functional</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">bind</span><span class="p">,</span>
+    <span class="n">configurable</span><span class="p">,</span>
+    <span class="n">vectorize_nested_dict</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="SatObservation">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation">[docs]</a>
+<span class="nd">@configurable</span>
+<span class="k">class</span> <span class="nc">SatObservation</span><span class="p">(</span><span class="n">Satellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base satellite subclass for composing observations.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SatObservation.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">obs_type</span><span class="p">:</span> <span class="nb">type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Satellite subclass for composing observations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            obs_type: Datatype of satellite&#39;s returned observation</span>
+<span class="sd">            args: Passed through to satellite</span>
+<span class="sd">            kwargs: Passed through to satellite</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_type</span> <span class="o">=</span> <span class="n">obs_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_fn_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_dict_cache</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_cache_time</span> <span class="o">=</span> <span class="mf">0.0</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">obs_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Human-readable observation format.</span>
+
+<span class="sd">        Cached so only computed once per timestep.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_dict_cache</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_cache_time</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_dict_cache</span> <span class="o">=</span> <span class="p">{</span><span class="n">obs</span><span class="o">.</span><span class="vm">__name__</span><span class="p">:</span> <span class="n">obs</span><span class="p">()</span> <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_fn_list</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_cache_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_dict_cache</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">obs_ndarray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Numpy vector observation format.&quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">vectorize_nested_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">obs_array_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Utility to get the keys of the obs_ndarray.&quot;&quot;&quot;</span>
+        <span class="n">keys</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">vectorize_nested_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">keys</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">obs_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List observation format.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_ndarray</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SatObservation.get_obs">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.get_obs">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the observation.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_type</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_dict</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_type</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_ndarray</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_type</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_list</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid observation type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SatObservation.add_to_observation">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.SatObservation.add_to_observation">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_to_observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs_element</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a function to be called when constructing observations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            obs_element: Callable to be observed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_fn_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obs_element</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="NormdPropertyState">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState">[docs]</a>
+<span class="nd">@configurable</span>
+<span class="k">class</span> <span class="nc">NormdPropertyState</span><span class="p">(</span><span class="n">SatObservation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Satellite subclass to add satellites properties to the observation.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NormdPropertyState.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">obs_properties</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[],</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a list of properties to the satellite observation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            obs_properties: List of properties that can be found in fsw or dynamics that</span>
+<span class="sd">                are to be appended to the the observation. Properties are optionally</span>
+<span class="sd">                normalized by some factor. Specified in the form</span>
+
+<span class="sd">                :code-block: python</span>
+
+<span class="sd">                    [dict(prop=&quot;prop_name&quot;, module=&quot;fsw&quot;/&quot;dynamics&quot;/None, norm=1.0)]</span>
+
+<span class="sd">                If module is not specified or None, the source of the property is</span>
+<span class="sd">                inferred. If norm is not specified, it is set to 1.0 (no normalization).</span>
+<span class="sd">            args: Passed through to satellite</span>
+<span class="sd">            kwargs: Passed through to satellite</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">obs_prop</span> <span class="ow">in</span> <span class="n">obs_properties</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_prop_function</span><span class="p">(</span><span class="o">**</span><span class="n">obs_prop</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NormdPropertyState.add_prop_function">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.NormdPropertyState.add_prop_function">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_prop_function</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">norm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a property to the observation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            prop: Property to query</span>
+<span class="sd">            module: Module (dynamics or fsw) that holds the property. Can be inferred.</span>
+<span class="sd">            norm: Value to normalize property by. Defaults to 1.0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">module</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">def</span> <span class="nf">prop_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">),</span> <span class="n">prop</span><span class="p">))</span> <span class="o">/</span> <span class="n">norm</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">def</span> <span class="nf">prop_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;dynamics&quot;</span><span class="p">,</span> <span class="s2">&quot;fsw&quot;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">),</span> <span class="n">prop</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">),</span> <span class="n">prop</span><span class="p">))</span> <span class="o">/</span> <span class="n">norm</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Property </span><span class="si">{</span><span class="n">prop</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
+
+        <span class="n">prop_fn</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">prop</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">prop_fn</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+=</span> <span class="s2">&quot;_normd&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_observation</span><span class="p">(</span><span class="n">bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop_fn</span><span class="p">,</span> <span class="n">prop_fn</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;_bound&quot;</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TimeState">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState">[docs]</a>
+<span class="nd">@configurable</span>
+<span class="k">class</span> <span class="nc">TimeState</span><span class="p">(</span><span class="n">SatObservation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Satellite subclass to add simulation time to the observation.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TimeState.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">normalization_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add the sim time to the observation state.</span>
+
+<span class="sd">        Automatically normalizes to the sim duration.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            normalization_time: Time to normalize by. If None, is set to simulation</span>
+<span class="sd">                duration</span>
+<span class="sd">            args: Passed through to satellite</span>
+<span class="sd">            kwargs: Passed through to satellite</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalization_time</span> <span class="o">=</span> <span class="n">normalization_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_observation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normalized_time</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TimeState.reset_post_sim">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.reset_post_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_post_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Autodetect normalization time.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_post_sim</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">normalization_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">time_limit</span></div>
+
+
+<div class="viewcode-block" id="TimeState.normalized_time">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TimeState.normalized_time">[docs]</a>
+    <span class="k">def</span> <span class="nf">normalized_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return time normalized by normalization_time.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization_time</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TargetState">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState">[docs]</a>
+<span class="nd">@configurable</span>
+<span class="k">class</span> <span class="nc">TargetState</span><span class="p">(</span><span class="n">SatObservation</span><span class="p">,</span> <span class="n">ImagingSatellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Satellite subclass to add upcoming target information to the observation.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TargetState.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">n_ahead_observe</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">target_properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add information about upcoming targets to the observation state.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_ahead_observe: Number of upcoming targets to consider.</span>
+<span class="sd">            target_properties: List of properties to include in the observation in the</span>
+<span class="sd">                format [dict(prop=&quot;prop_name&quot;, norm=norm)]. If norm is not specified, it</span>
+<span class="sd">                is set to 1.0 (no normalization). Properties to choose from:</span>
+<span class="sd">                * priority</span>
+<span class="sd">                * location</span>
+<span class="sd">                * window_open</span>
+<span class="sd">                * window_mid</span>
+<span class="sd">                * window_close</span>
+<span class="sd">                * target_angle</span>
+<span class="sd">            args: Passed through to satellite</span>
+<span class="sd">            kwargs: Passed through to satellite</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">n_ahead_observe</span><span class="o">=</span><span class="n">n_ahead_observe</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">target_properties</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">target_properties</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;priority&quot;</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+            <span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;location_norm&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;location_norm is ignored and should be specified in target_properties&quot;</span>
+            <span class="p">)</span>  <span class="c1"># pragma: no cover</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_ahead_observe</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_ahead_observe</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_obs_generator</span><span class="p">(</span><span class="n">target_properties</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TargetState.target_obs_generator">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.TargetState.target_obs_generator">[docs]</a>
+    <span class="k">def</span> <span class="nf">target_obs_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_properties</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate the target_obs function.</span>
+
+<span class="sd">        Generates the observation function from the target_properties spec and add it</span>
+<span class="sd">        to the observation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">target_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">obs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">find_next_opportunities</span><span class="p">(</span>
+                    <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_ahead_observe</span><span class="p">,</span>
+                    <span class="nb">filter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_imaged_filter</span><span class="p">(),</span>
+                    <span class="n">types</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">):</span>
+                <span class="n">props</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">prop_spec</span> <span class="ow">in</span> <span class="n">target_properties</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">prop_spec</span><span class="p">[</span><span class="s2">&quot;prop&quot;</span><span class="p">]</span>
+                    <span class="n">norm</span> <span class="o">=</span> <span class="n">prop_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;norm&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;priority&quot;</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">priority</span>
+                    <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;location&quot;</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location</span>
+                    <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;window_open&quot;</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+                    <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;window_mid&quot;</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+                    <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;window_close&quot;</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+                    <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;target_angle&quot;</span><span class="p">:</span>
+                        <span class="n">vector_target_spacecraft_P</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_P</span>
+                        <span class="p">)</span>
+                        <span class="n">vector_target_spacecraft_P_hat</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">vector_target_spacecraft_P</span>
+                            <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">vector_target_spacecraft_P</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vector_target_spacecraft_P_hat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">c_hat_P</span><span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Invalid target property: </span><span class="si">{</span><span class="n">prop_spec</span><span class="p">[</span><span class="s1">&#39;prop&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">norm</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+                        <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;_normd&quot;</span>
+                    <span class="n">props</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">norm</span>
+                <span class="n">obs</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;target_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">props</span>
+            <span class="k">return</span> <span class="n">obs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_observation</span><span class="p">(</span><span class="n">bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_obs</span><span class="p">,</span> <span class="s2">&quot;target_obs&quot;</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="EclipseState">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState">[docs]</a>
+<span class="nd">@configurable</span>
+<span class="k">class</span> <span class="nc">EclipseState</span><span class="p">(</span><span class="n">SatObservation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Satellite subclass to add upcoming eclipse information to the observation.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EclipseState.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">orbit_period</span><span class="o">=</span><span class="mi">5700</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a tuple of the orbit-normalized next orbit start and end.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            orbit_period: Normalization factor for eclipse time.</span>
+<span class="sd">            args: Passed through to satellite</span>
+<span class="sd">            kwargs: Passed through to satellite</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orbit_period_eclipse_norm</span> <span class="o">=</span> <span class="n">orbit_period</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_observation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eclipse_state</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EclipseState.eclipse_state">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.EclipseState.eclipse_state">[docs]</a>
+    <span class="k">def</span> <span class="nf">eclipse_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return tuple of normalized next eclipse start and end.&quot;&quot;&quot;</span>
+        <span class="n">eclipse_start</span><span class="p">,</span> <span class="n">eclipse_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">next_eclipse</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">eclipse_start</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">orbit_period_eclipse_norm</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">eclipse_end</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">orbit_period_eclipse_norm</span><span class="p">,</span>
+        <span class="p">]</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="GroundStationState">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState">[docs]</a>
+<span class="nd">@configurable</span>
+<span class="k">class</span> <span class="nc">GroundStationState</span><span class="p">(</span><span class="n">SatObservation</span><span class="p">,</span> <span class="n">AccessSatellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Satellite subclass to add ground station information to the observation.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="GroundStationState.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">n_ahead_observe_downlinks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">downlink_window_properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add information about downlink opportunities to the observation state.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_ahead_observe_downlinks: Number of upcoming downlink opportunities to</span>
+<span class="sd">                consider.</span>
+<span class="sd">            downlink_window_properties: List of properties to include in the observation</span>
+<span class="sd">                in the format [dict(prop=&quot;prop_name&quot;, norm=norm)]. If norm is not</span>
+<span class="sd">                specified, it is set to 1.0 (no normalization). Properties to choose</span>
+<span class="sd">                from:</span>
+<span class="sd">                * location</span>
+<span class="sd">                * window_open</span>
+<span class="sd">                * window_mid</span>
+<span class="sd">                * window_close</span>
+<span class="sd">            args: Passed through to satellite</span>
+<span class="sd">            kwargs: Passed through to satellite</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">downlink_window_properties</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">downlink_window_properties</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;window_open&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;window_close&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+            <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ground_station_obs_generator</span><span class="p">(</span>
+            <span class="n">downlink_window_properties</span><span class="p">,</span> <span class="n">n_ahead_observe_downlinks</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GroundStationState.reset_post_sim">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.reset_post_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_post_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add downlink ground stations to be considered by the access checker.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">ground_station</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">groundStations</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_location_for_access_checking</span><span class="p">(</span>
+                <span class="nb">object</span><span class="o">=</span><span class="n">ground_station</span><span class="o">.</span><span class="n">ModelTag</span><span class="p">,</span>
+                <span class="n">location</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ground_station</span><span class="o">.</span><span class="n">r_LP_P_Init</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                <span class="n">min_elev</span><span class="o">=</span><span class="n">ground_station</span><span class="o">.</span><span class="n">minimumElevation</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ground_station&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_post_sim</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GroundStationState.ground_station_obs_generator">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/general_satellite_tasking/scenario/sat_observations.html#bsk_rl.envs.general_satellite_tasking.scenario.sat_observations.GroundStationState.ground_station_obs_generator">[docs]</a>
+    <span class="k">def</span> <span class="nf">ground_station_obs_generator</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">downlink_window_properties</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">n_ahead_observe_downlinks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate the ground_station_obs function.</span>
+
+<span class="sd">        Generates an obs function from the downlink_window_properties spec and adds it</span>
+<span class="sd">        to the observation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">ground_station_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">obs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">find_next_opportunities</span><span class="p">(</span>
+                    <span class="n">n</span><span class="o">=</span><span class="n">n_ahead_observe_downlinks</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="s2">&quot;ground_station&quot;</span>
+                <span class="p">)</span>
+            <span class="p">):</span>
+                <span class="n">props</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">prop_spec</span> <span class="ow">in</span> <span class="n">downlink_window_properties</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">prop_spec</span><span class="p">[</span><span class="s2">&quot;prop&quot;</span><span class="p">]</span>
+                    <span class="n">norm</span> <span class="o">=</span> <span class="n">prop_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;norm&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;location&quot;</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;window_open&quot;</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+                    <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;window_mid&quot;</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+                    <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;window_close&quot;</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Invalid ground station property: </span><span class="si">{</span><span class="n">prop_spec</span><span class="p">[</span><span class="s1">&#39;prop&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">norm</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+                        <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;_normd&quot;</span>
+                    <span class="n">props</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">norm</span>
+                <span class="n">obs</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;ground_station_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">props</span>
+            <span class="k">return</span> <span class="n">obs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_observation</span><span class="p">(</span><span class="n">bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ground_station_obs</span><span class="p">,</span> <span class="s2">&quot;ground_station_obs&quot;</span><span class="p">))</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

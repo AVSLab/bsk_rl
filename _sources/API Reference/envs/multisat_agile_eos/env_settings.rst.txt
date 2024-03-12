@@ -1,0 +1,15 @@
+.. _bsk_rl.envs.multisat_agile_eos.env_settings:
+
+env_settings
+============
+
+``bsk_rl.envs.multisat_agile_eos.env_settings``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.envs.multisat_agile_eos.env_settings
+   :members:
+   :show-inheritance:
+

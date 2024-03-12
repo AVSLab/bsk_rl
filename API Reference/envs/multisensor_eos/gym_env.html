@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gym_env &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="simple_eos" href="../simple_eos/index.html" />
+    <link rel="prev" title="env_settings" href="env_settings.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../agents/index.html">agents</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">envs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../agile_eos/index.html">agile_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../general_satellite_tasking/index.html">general_satellite_tasking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../multisat_agile_eos/index.html">multisat_agile_eos</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">multisensor_eos</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="bsk_sim.html">bsk_sim</a></li>
+<li class="toctree-l4"><a class="reference internal" href="env_settings.html">env_settings</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">gym_env</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS"><code class="docutils literal notranslate"><span class="pre">MultiSensorEOS</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.__init__"><code class="docutils literal notranslate"><span class="pre">MultiSensorEOS.__init__()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.reset"><code class="docutils literal notranslate"><span class="pre">MultiSensorEOS.reset()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.step"><code class="docutils literal notranslate"><span class="pre">MultiSensorEOS.step()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../simple_eos/index.html">simple_eos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../small_body_science/index.html">small_body_science</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../small_body_science_pomdp/index.html">small_body_science_pomdp</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../training/index.html">training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../utilities/index.html">utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">envs</a></li>
+          <li class="breadcrumb-item"><a href="index.html">multisensor_eos</a></li>
+      <li class="breadcrumb-item active">gym_env</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/API Reference/envs/multisensor_eos/gym_env.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gym-env">
+<span id="bsk-rl-envs-multisensor-eos-gym-env"></span><h1>gym_env<a class="headerlink" href="#gym-env" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl.envs.multisensor_eos.gym_env</span></code></p>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="py class" id="module-bsk_rl.envs.multisensor_eos.gym_env">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultiSensorEOS</span></span><a class="reference internal" href="../../../_modules/bsk_rl/envs/multisensor_eos/gym_env.html#MultiSensorEOS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Env</span></code></p>
+<p>Earth observation environment - simulates a spacecraft with variable imager modes
+attempting to image a ground location.
+Agent must choose between charging, desaturating, and image type(s); also needs to
+choose an appropriate imaging type.
+Taking the image type corresponding to the ground location’s required sensor type
+results in full reward, other image types results in no reward.</p>
+<p>Action Space (discrete):</p>
+<ul class="simple">
+<li><p>0 - Points solar panels at the sun.</p></li>
+<li><p>1 - Desaturates the reaction wheels.</p></li>
+<li><p>&gt;1 - Orients the s/c towards the earth; takes image of type _.</p></li>
+</ul>
+<p>Observation Space:</p>
+<ul class="simple">
+<li><p>r_sc_I - float[3,] - spacecraft position.</p></li>
+<li><p>v_sc - float[3,] - spacecraft velocity in PCPF.</p></li>
+<li><p>sigma_RB - float [0,1] - norm of the spacecraft error MRP with respect to the
+last reference frame specified.</p></li>
+<li><p>omega_BN - float - norm of the total spacecraft bus rotational velocity with
+respect to the inertial frame.</p></li>
+<li><p>omega_RW - float - norm of the reaction wheel rotational velocities.</p></li>
+<li><p>storedCharge - float [0,batCapacity] - indicates the s/c battery charge level in
+W-s.</p></li>
+<li><p>sun_indicator - float [0, 1] - indicates the flux mitigator due to eclipse.</p></li>
+<li><p>access indicator - access to the next target</p></li>
+<li><p>img_mode norm - float [0,1] - indicates the required imaging mode.</p></li>
+</ul>
+<p>Reward Function:
+r = 1/(1+ | sigma_RB|) if correct sensor</p>
+<p>Intended to provide a rich reward in action 1 when the spacecraft is pointed
+towards the earth, decaying as sigma^2 as the pointing error increases.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/envs/multisensor_eos/gym_env.html#MultiSensorEOS.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/envs/multisensor_eos/gym_env.html#MultiSensorEOS.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.reset" title="Link to this definition"></a></dt>
+<dd><p>Reset the state of the environment and returns an initial observation.
+:returns: <strong>observation (object)</strong>
+:rtype: the initial observation of the space.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/envs/multisensor_eos/gym_env.html#MultiSensorEOS.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.envs.multisensor_eos.gym_env.MultiSensorEOS.step" title="Link to this definition"></a></dt>
+<dd><p>The agent takes a step in the environment. Note that the simulator must be
+initialized</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>action</strong> – int</p>
+</dd>
+</dl>
+<p>Returns:</p>
+<ul class="simple">
+<li><p>ob (object): an environment-specific object representing your observation of
+the environment.</p></li>
+<li><p>reward (float): amount of reward achieved by the previous action. The scale
+varies between environments, but the goal is always to increase
+your total reward.</p></li>
+<li><p>episode_over (bool): whether it’s time to reset the environment again. Most (but not
+all) tasks are divided up into well-defined episodes, and done
+being True indicates the episode has terminated. (For example,
+perhaps the pole tipped too far, or you lost your last life.)</p></li>
+<li><p>truncated (truncated): set to false. Gymnasium requirement.</p></li>
+<li><p>info (dict): diagnostic information useful for debugging. It can sometimes
+be useful for learning (for example, it might contain the raw
+probabilities behind the environment’s last state change).
+However, official evaluations of your agent are not allowed to
+use this for learning.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="env_settings.html" class="btn btn-neutral float-left" title="env_settings" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../simple_eos/index.html" class="btn btn-neutral float-right" title="simple_eos" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

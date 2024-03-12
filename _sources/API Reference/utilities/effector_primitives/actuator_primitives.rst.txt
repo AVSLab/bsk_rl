@@ -1,0 +1,15 @@
+.. _bsk_rl.utilities.effector_primitives.actuator_primitives:
+
+actuator_primitives
+===================
+
+``bsk_rl.utilities.effector_primitives.actuator_primitives``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.utilities.effector_primitives.actuator_primitives
+   :members:
+   :show-inheritance:
+

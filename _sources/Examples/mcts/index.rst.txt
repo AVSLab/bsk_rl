@@ -1,0 +1,25 @@
+.. _examples.mcts:
+
+mcts
+====
+
+``examples.mcts``
+
+.. automodule:: examples.mcts
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+   mcts_data_generator
+   network_hyperparam_search
+   network_validation_multiprocessing
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+

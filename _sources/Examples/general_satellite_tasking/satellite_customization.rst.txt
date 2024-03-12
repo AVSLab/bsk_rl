@@ -1,0 +1,15 @@
+.. _examples.general_satellite_tasking.satellite_customization:
+
+satellite_customization
+=======================
+
+``examples.general_satellite_tasking.satellite_customization``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: examples.general_satellite_tasking.satellite_customization
+   :members:
+   :show-inheritance:
+

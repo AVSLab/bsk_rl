@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>experiments &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="utilities" href="../../utilities/index.html" />
+    <link rel="prev" title="sb3" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../agents/index.html">agents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../envs/index.html">envs</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">training</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../mcts/index.html">mcts</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">sb3</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">experiments</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.training.sb3.experiments.a2c_experiment"><code class="docutils literal notranslate"><span class="pre">a2c_experiment()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.training.sb3.experiments.ppo_experiment"><code class="docutils literal notranslate"><span class="pre">ppo_experiment()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.training.sb3.experiments.run_ppo_experiments"><code class="docutils literal notranslate"><span class="pre">run_ppo_experiments()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../utilities/index.html">utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">training</a></li>
+          <li class="breadcrumb-item"><a href="index.html">sb3</a></li>
+      <li class="breadcrumb-item active">experiments</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/API Reference/training/sb3/experiments.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="experiments">
+<span id="bsk-rl-training-sb3-experiments"></span><h1>experiments<a class="headerlink" href="#experiments" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl.training.sb3.experiments</span></code></p>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="py function" id="module-bsk_rl.training.sb3.experiments">
+<dt class="sig sig-object py" id="bsk_rl.training.sb3.experiments.a2c_experiment">
+<span class="sig-name descname"><span class="pre">a2c_experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0007</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ent_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_its</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1020</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MultiSensorEOS-v0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">45</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/training/sb3/experiments.html#a2c_experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.training.sb3.experiments.a2c_experiment" title="Link to this definition"></a></dt>
+<dd><p>Run an A2C experiment with the given hyperparameters
+:param policy_kwargs: (dict) Policy kwargs
+:param learning_rate: (float) Learning rate
+:param ent_coef: (float) Entropy coefficient
+:param idx: (int) Index of the experiment
+:param agent_dir: (str) Directory where to save the agent
+:param n_its: (int) Number of iterations
+:param env_name: (str) Name of the environment
+:param max_steps: (int) Maximum number of steps in the environment
+:param n_steps: (int) Number of steps before update
+:param num_cores: (int) Number of cores</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.training.sb3.experiments.ppo_experiment">
+<span class="sig-name descname"><span class="pre">ppo_experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">policy_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ent_coef</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_its</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1020</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shielded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MultiSensorEOS-v0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/training/sb3/experiments.html#ppo_experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.training.sb3.experiments.ppo_experiment" title="Link to this definition"></a></dt>
+<dd><p>Run a PPO experiment with the given hyperparameters
+:param policy_kwargs: (dict) Policy kwargs
+:param learning_rate: (float) Learning rate
+:param clip_range: (float) Clip range
+:param ent_coef: (float) Entropy coefficient
+:param batch_size: (int) Batch size
+:param epoch: (int) Number of epochs
+:param idx: (int) Index of the experiment
+:param agent_dir: (str) Directory where to save the agent
+:param n_its: (int) Number of iterations
+:param shielded: (bool) Whether to use the shielded policy
+:param env_name: (str) Name of the environment
+:param n_steps: (int) Number of steps</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.training.sb3.experiments.run_ppo_experiments">
+<span class="sig-name descname"><span class="pre">run_ppo_experiments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_its</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1020</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MultiSensorEOS-v0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">45</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shielded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/training/sb3/experiments.html#run_ppo_experiments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.training.sb3.experiments.run_ppo_experiments" title="Link to this definition"></a></dt>
+<dd><p>Run PPO experiments with the given hyperparameters
+:param agent_dir: (str) Directory where to save the agent
+:param n_its: (int) Number of iterations
+:param kwargs_list: (list) List of dictionaries containing hyperparameters
+:param index: (int) Index of the hyperparameter dictionary to use
+:param env_name: (str) Name of the environment
+:param n_steps: (int) Number of steps
+:param num_cores: (int) Number of cores
+:param shielded: (bool) Whether to use shielded policy]</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="sb3" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../utilities/index.html" class="btn btn-neutral float-right" title="utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

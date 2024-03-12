@@ -1,0 +1,15 @@
+.. _examples.plotting_tools.process_sb3_curves:
+
+process_sb3_curves
+==================
+
+``examples.plotting_tools.process_sb3_curves``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: examples.plotting_tools.process_sb3_curves
+   :members:
+   :show-inheritance:
+

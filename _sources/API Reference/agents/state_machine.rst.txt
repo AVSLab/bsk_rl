@@ -1,0 +1,15 @@
+.. _bsk_rl.agents.state_machine:
+
+state_machine
+=============
+
+``bsk_rl.agents.state_machine``
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+.. automodule:: bsk_rl.agents.state_machine
+   :members:
+   :show-inheritance:
+

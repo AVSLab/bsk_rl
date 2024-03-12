@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.envs.multisat_agile_eos.bsk_models.environment &mdash; BSK-RL 0.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/custom.css?v=8b8c5be3" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=7026087e"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../../../_static/Basilisk-Logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../API%20Reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.envs.multisat_agile_eos.bsk_models.environment</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.envs.multisat_agile_eos.bsk_models.environment</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">Basilisk</span> <span class="kn">import</span> <span class="n">__path__</span>
+<span class="kn">from</span> <span class="nn">Basilisk.simulation</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">eclipse</span><span class="p">,</span>
+    <span class="n">ephemerisConverter</span><span class="p">,</span>
+    <span class="n">exponentialAtmosphere</span><span class="p">,</span>
+    <span class="n">extForceTorque</span><span class="p">,</span>
+    <span class="n">groundLocation</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">macros</span> <span class="k">as</span> <span class="n">mc</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">simIncludeGravBody</span>
+
+<span class="n">bskPath</span> <span class="o">=</span> <span class="n">__path__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="EnvironmentModel">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/environment.html#bsk_rl.envs.multisat_agile_eos.bsk_models.environment.EnvironmentModel">[docs]</a>
+<span class="k">class</span> <span class="nc">EnvironmentModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Defines the Earth Environment.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EnvironmentModel.__init__">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/environment.html#bsk_rl.envs.multisat_agile_eos.bsk_models.environment.EnvironmentModel.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">,</span> <span class="n">envRate</span><span class="p">):</span>
+        <span class="c1"># Define class variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTargetList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extForceTorqueObjectList</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Define process name, task name and task time-step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span> <span class="o">=</span> <span class="s2">&quot;EnvironmentTask&quot;</span>
+        <span class="n">processTasksTimeStep</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="n">envRate</span><span class="p">)</span>
+
+        <span class="c1"># Create task</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">envProc</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">CreateNewTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="n">processTasksTimeStep</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Initialize all modules and write init one-time messages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">InitAllEnvObjects</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+
+        <span class="c1"># Add modules to environment task</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">1100</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">boulderGroundStation</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">1399</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">merrittGroundStation</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">1398</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">singaporeGroundStation</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">1397</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weilheimGroundStation</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">1396</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">santiagoGroundStation</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">1395</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dongaraGroundStation</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">1394</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hawaiiGroundStation</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">1393</span>
+        <span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eclipseObject</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">988</span><span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ephemConverter</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">988</span><span class="p">)</span>
+        <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">SimBase</span><span class="o">.</span><span class="n">n_spacecraft</span><span class="p">):</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">envTaskName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imagingTargetList</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">2000</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EnvironmentModel.SetGravityBodies">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/environment.html#bsk_rl.envs.multisat_agile_eos.bsk_models.environment.EnvironmentModel.SetGravityBodies">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetGravityBodies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specify what gravitational bodies to include in the simulation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span> <span class="o">=</span> <span class="n">simIncludeGravBody</span><span class="o">.</span><span class="n">gravBodyFactory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">createSun</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">createEarth</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sun</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">earth</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">planet</span><span class="o">.</span><span class="n">isCentralBody</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="kc">True</span>  <span class="c1"># ensure this is the central gravitational body</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planet</span><span class="o">.</span><span class="n">useSphericalHarmParams</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">simIncludeGravBody</span><span class="o">.</span><span class="n">loadGravFromFile</span><span class="p">(</span>
+            <span class="n">bskPath</span> <span class="o">+</span> <span class="s2">&quot;/supportData/LocalGravData/GGM03S.txt&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">planet</span><span class="o">.</span><span class="n">spherHarm</span><span class="p">,</span> <span class="mi">10</span>
+        <span class="p">)</span>
+
+        <span class="c1"># setup Spice interface for some solar system bodies</span>
+        <span class="n">timeInitString</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;utc_init&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">createSpiceInterface</span><span class="p">(</span>
+            <span class="n">bskPath</span> <span class="o">+</span> <span class="s2">&quot;/supportData/EphemerisData/&quot;</span><span class="p">,</span> <span class="n">timeInitString</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">zeroBase</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;earth&quot;</span>  <span class="c1"># Make sure that the Earth is the zero base</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EnvironmentModel.SetEpochObject">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/environment.html#bsk_rl.envs.multisat_agile_eos.bsk_models.environment.EnvironmentModel.SetEpochObject">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetEpochObject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add the ephemeris object to use with the SPICE library.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ephemConverter</span> <span class="o">=</span> <span class="n">ephemerisConverter</span><span class="o">.</span><span class="n">EphemerisConverter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ephemConverter</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;ephemConverter&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ephemConverter</span><span class="o">.</span><span class="n">addSpiceInputMsg</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sun</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ephemConverter</span><span class="o">.</span><span class="n">addSpiceInputMsg</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">earth</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EnvironmentModel.SetEclipseObject">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/environment.html#bsk_rl.envs.multisat_agile_eos.bsk_models.environment.EnvironmentModel.SetEclipseObject">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetEclipseObject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specify what celestial object is causing an eclipse message.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eclipseObject</span> <span class="o">=</span> <span class="n">eclipse</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eclipseObject</span><span class="o">.</span><span class="n">addPlanetToModel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">earth</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eclipseObject</span><span class="o">.</span><span class="n">sunInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sun</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">SetAtmosphereDensityModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span> <span class="o">=</span> <span class="n">exponentialAtmosphere</span><span class="o">.</span><span class="n">ExponentialAtmosphere</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;expDensity&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;planetRadius&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">baseDensity</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;baseDensity&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">scaleHeight</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;scaleHeight&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">planetPosInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">earth</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">SetDisturbanceTorque</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+        <span class="c1"># Loop through every spacecraft to get the disturbance torque</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">SimBase</span><span class="o">.</span><span class="n">n_spacecraft</span><span class="p">):</span>
+            <span class="n">disturbance_magnitude</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;disturbance_magnitude&quot;</span>
+            <span class="p">)</span>
+            <span class="n">disturbance_vector</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;disturbance_vector&quot;</span>
+            <span class="p">)</span>
+            <span class="n">unit_disturbance</span> <span class="o">=</span> <span class="n">disturbance_vector</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">disturbance_vector</span><span class="p">)</span>
+            <span class="n">extForceTorqueObject</span> <span class="o">=</span> <span class="n">extForceTorque</span><span class="o">.</span><span class="n">ExtForceTorque</span><span class="p">()</span>
+            <span class="n">extForceTorqueObject</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;DisturbanceTorque&quot;</span>
+            <span class="n">extForceTorqueObject</span><span class="o">.</span><span class="n">extTorquePntB_B</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">disturbance_magnitude</span> <span class="o">*</span> <span class="n">unit_disturbance</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extForceTorqueObjectList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extForceTorqueObject</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EnvironmentModel.SetGroundLocations">
+<a class="viewcode-back" href="../../../../../API%20Reference/envs/multisat_agile_eos/bsk_models/environment.html#bsk_rl.envs.multisat_agile_eos.bsk_models.environment.EnvironmentModel.SetGroundLocations">[docs]</a>
+    <span class="k">def</span> <span class="nf">SetGroundLocations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specify which ground locations are of interest.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Create a Boulder-based ground station</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boulderGroundStation</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boulderGroundStation</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;GroundStation1&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boulderGroundStation</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;groundLocationPlanetRadius&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boulderGroundStation</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;boulderGroundStationLat&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;boulderGroundStationLong&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;boulderGroundStationAlt&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boulderGroundStation</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">earth</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boulderGroundStation</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;boulderMinimumElevation&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boulderGroundStation</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;boulderMaximumRange&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create a Merritt-Island ground station (NASA&#39;s Near Earth Network)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merrittGroundStation</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merrittGroundStation</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;GroundStation2&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merrittGroundStation</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;groundLocationPlanetRadius&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merrittGroundStation</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;merrittGroundStationLat&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;merrittGroundStationLong&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;merrittGroundStationAlt&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merrittGroundStation</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">earth</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merrittGroundStation</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;merrittMinimumElevation&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merrittGroundStation</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;merrittMaximumRange&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create a Singapore ground station (NASA&#39;s Near Earth Network)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">singaporeGroundStation</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">singaporeGroundStation</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;GroundStation3&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">singaporeGroundStation</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;groundLocationPlanetRadius&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">singaporeGroundStation</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;singaporeGroundStationLat&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;singaporeGroundStationLong&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;singaporeGroundStationAlt&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">singaporeGroundStation</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">earth</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">singaporeGroundStation</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;singaporeMinimumElevation&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">singaporeGroundStation</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;singaporeMaximumRange&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create a Weilheim Germany ground station (NASA&#39;s Near Earth Network)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weilheimGroundStation</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weilheimGroundStation</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;GroundStation4&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weilheimGroundStation</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;groundLocationPlanetRadius&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weilheimGroundStation</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weilheimGroundStationLat&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weilheimGroundStationLong&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weilheimGroundStationAlt&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weilheimGroundStation</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">earth</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weilheimGroundStation</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weilheimMinimumElevation&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weilheimGroundStation</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weilheimMaximumRange&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create a Santiago, Chile ground station (NASA&#39;s Near Earth Network)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">santiagoGroundStation</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">santiagoGroundStation</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;GroundStation5&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">santiagoGroundStation</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;groundLocationPlanetRadius&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">santiagoGroundStation</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;santiagoGroundStationLat&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;santiagoGroundStationLong&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;santiagoGroundStationAlt&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">santiagoGroundStation</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">earth</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">santiagoGroundStation</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;santiagoMinimumElevation&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">santiagoGroundStation</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;santiagoMaximumRange&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create a Dongara, Australia ground station (NASA&#39;s Near Earth Network)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dongaraGroundStation</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dongaraGroundStation</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;GroundStation6&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dongaraGroundStation</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;groundLocationPlanetRadius&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dongaraGroundStation</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dongaraGroundStationLat&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dongaraGroundStationLong&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dongaraGroundStationAlt&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dongaraGroundStation</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">earth</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dongaraGroundStation</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dongaraMinimumElevation&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dongaraGroundStation</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dongaraMaximumRange&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create a Dongara, Australia ground station (NASA&#39;s Near Earth Network)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hawaiiGroundStation</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hawaiiGroundStation</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;GroundStation7&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hawaiiGroundStation</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;groundLocationPlanetRadius&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hawaiiGroundStation</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hawaiiGroundStationLat&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hawaiiGroundStationLong&quot;</span><span class="p">),</span>
+            <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hawaiiGroundStationAlt&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hawaiiGroundStation</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">earth</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hawaiiGroundStation</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hawaiiMinimumElevation&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hawaiiGroundStation</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span>
+            <span class="s2">&quot;env_params&quot;</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hawaiiMaximumRange&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">SetImagingTarget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+        <span class="c1"># Create one imaging target per spacecraft</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">SimBase</span><span class="o">.</span><span class="n">n_spacecraft</span><span class="p">):</span>
+            <span class="n">imagingTarget</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+            <span class="n">imagingTarget</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;ImagingTarget&quot;</span>
+            <span class="n">imagingTarget</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;groundLocationPlanetRadius&quot;</span>
+            <span class="p">)</span>
+            <span class="c1"># Just initialize to Hawaii... will get re-initialized with target during</span>
+            <span class="c1"># step</span>
+            <span class="n">imagingTarget</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span>
+                <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hawaiiGroundStationLat&quot;</span><span class="p">),</span>
+                <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hawaiiGroundStationLong&quot;</span><span class="p">),</span>
+                <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="s2">&quot;env_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hawaiiGroundStationAlt&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">imagingTarget</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">earth</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">imagingTarget</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;imageTargetMinimumElevation&quot;</span>
+            <span class="p">)</span>
+            <span class="n">imagingTarget</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">SimBase</span><span class="o">.</span><span class="n">initial_conditions</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">)]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;imageTargetMaximumRange&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imagingTargetList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">imagingTarget</span><span class="p">)</span>
+
+    <span class="c1"># Global call to initialize every module</span>
+    <span class="k">def</span> <span class="nf">InitAllEnvObjects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SimBase</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetGravityBodies</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetEpochObject</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetEclipseObject</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetGroundLocations</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetImagingTarget</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetAtmosphereDensityModel</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SetDisturbanceTorque</span><span class="p">(</span><span class="n">SimBase</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

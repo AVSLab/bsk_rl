@@ -1,0 +1,24 @@
+.. _bsk_rl.training:
+
+training
+========
+
+``bsk_rl.training``
+
+.. automodule:: bsk_rl.training
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Files:
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Directories:
+
+   mcts/index
+   sb3/index
