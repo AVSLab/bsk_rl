@@ -21,7 +21,7 @@ dependencies = [
     "numpy",
     "pandas",
     "pettingzoo",
-    "pytest",
+    "pytest==7.3.1",
     "pytest-cov",
     "pytest-repeat",
     "requests",
