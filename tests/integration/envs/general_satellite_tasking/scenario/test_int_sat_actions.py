@@ -139,7 +139,7 @@ class TestDesatAction:
             data_manager=data.NoDataManager(),
             sim_rate=1.0,
             max_step_duration=300.0,
-            time_limit=300.0,
+            time_limit=1200.0,
             disable_env_checker=True,
         )
 
@@ -147,10 +147,11 @@ class TestDesatAction:
         env = self.make_env()
         env.reset()
         init_speeds = env.satellite.dynamics.wheel_speeds
-        env.step(0)  # Desat
-        assert np.linalg.norm(env.satellite.dynamics.wheel_speeds) < np.linalg.norm(
-            init_speeds
-        )
+        for _ in range(4):
+            env.step(0)
+            current_speeds = env.satellite.dynamics.wheel_speeds
+            assert np.linalg.norm(current_speeds) < np.linalg.norm(init_speeds)
+            init_speeds = current_speeds
 
     def test_desat_action_power_draw(self):
         env = self.make_env()
