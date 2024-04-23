@@ -97,12 +97,15 @@ class DiscreteSatAction(SatAction):
         return spaces.Discrete(len(self.action_list))
 
 
-def fsw_action_gen(fsw_action: str, action_duration: float = 1e9) -> type:
+def fsw_action_gen(
+    fsw_action: str, action_duration: float = 1e9, always_reset: bool = False
+) -> type:
     """Generate an action class for a FSW @action.
 
     Args:
         fsw_action: Function name of FSW action.
         action_duration: Time to task action for.
+        always_reset: Reset action if selected more than once in a row.
 
     Returns:
         Satellite action class with fsw_action action.
@@ -138,7 +141,7 @@ def fsw_action_gen(fsw_action: str, action_duration: float = 1e9) -> type:
                 self._update_timed_terminal_event(
                     self.simulator.sim_time + duration, info=f"for {fsw_action}"
                 )
-                if prev_action_key != fsw_action:
+                if prev_action_key != fsw_action or always_reset:
                     getattr(self.fsw, fsw_action)()
                 return fsw_action
 
@@ -159,7 +162,7 @@ ChargingAction = fsw_action_gen("action_charge")
 DriftAction = fsw_action_gen("action_drift")
 
 # Points in a specified direction while firing desat thrusters and desaturating wheels
-DesatAction = fsw_action_gen("action_desat")
+DesatAction = fsw_action_gen("action_desat", always_reset=True)
 
 # Points nadir while downlinking data
 DownlinkAction = fsw_action_gen("action_downlink")
