@@ -239,25 +239,34 @@ class TargetState(SatObservation, ImagingSatellite):
                     norm = prop_spec.get("norm", 1.0)
                     if name == "priority":
                         value = opportunity["target"].priority
-                    elif name == "location":
+                    elif name == "location" or name == "r_TP_P":
                         value = opportunity["target"].location
+                    elif name == "r_TB_H":
+                        r_TP_P = opportunity["target"].location
+                        r_BN_N = self.dynamics.r_BN_N
+                        r_TB_N = self.simulator.environment.PN.T @ r_TP_P - r_BN_N
+                        value = self.dynamics.HN @ r_TB_N
                     elif name == "window_open":
                         value = opportunity["window"][0] - self.simulator.sim_time
                     elif name == "window_mid":
                         value = sum(opportunity["window"]) / 2 - self.simulator.sim_time
                     elif name == "window_close":
                         value = opportunity["window"][1] - self.simulator.sim_time
-                    elif name == "target_angle":
-                        vector_target_spacecraft_P = (
-                            opportunity["target"].location - self.dynamics.r_BN_P
+                    elif name == "target_angle" or name == "theta_error":
+                        r_TP_P = opportunity["target"].location - self.dynamics.r_BN_P
+                        r_TP_P_hat = r_TP_P / np.linalg.norm(r_TP_P)
+                        value = np.arccos(np.dot(r_TP_P_hat, self.fsw.c_hat_P))
+                    elif name == "omega_error":
+                        r_BN_P = self.dynamics.v_BN_P
+                        v_BN_P = self.dynamics.v_BN_P
+                        r_TP_P = opportunity["target"].location
+                        omega_BP_P = self.dynamics.omega_BP_P
+                        omega_CP_ref = (
+                            omega_BP_P
+                            - np.cross(v_BN_P, r_TP_P - r_BN_P)
+                            / np.linalg.norm(r_TP_P - r_BN_P) ** 2
                         )
-                        vector_target_spacecraft_P_hat = (
-                            vector_target_spacecraft_P
-                            / np.linalg.norm(vector_target_spacecraft_P)
-                        )
-                        value = np.arccos(
-                            np.dot(vector_target_spacecraft_P_hat, self.fsw.c_hat_P)
-                        )
+                        value = np.linalg.norm(omega_CP_ref)
                     else:
                         raise ValueError(
                             f"Invalid target property: {prop_spec['prop']}"

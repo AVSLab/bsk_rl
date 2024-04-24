@@ -567,6 +567,12 @@ class ImagingFSWModel(BasicFSWModel):
         c_hat_B = self.locPoint.pHat_B
         return np.matmul(self.dynamics.BP.T, c_hat_B)
 
+    @property
+    def c_hat_H(self):
+        """Instrument pointing direction in the hill frame."""
+        c_hat_B = self.locPoint.pHat_B
+        return self.dynamics.HN @ self.dynamics.BN.T @ c_hat_B
+
     def _make_task_list(self) -> list[Task]:
         return super()._make_task_list() + [self.LocPointTask(self)]
 

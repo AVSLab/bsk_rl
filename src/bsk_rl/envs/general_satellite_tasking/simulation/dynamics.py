@@ -40,6 +40,7 @@ from bsk_rl.envs.general_satellite_tasking.utils.functional import (
     check_aliveness_checkers,
     default_args,
 )
+from bsk_rl.envs.general_satellite_tasking.utils.orbital import rv2HN, rv2omega
 from bsk_rl.utilities.effector_primitives import actuator_primitives as aP
 from bsk_rl.utilities.initial_conditions import leo_orbit, sc_attitudes
 
@@ -143,6 +144,11 @@ class BasicDynamicsModel(DynamicsModel):
         return RigidBodyKinematics.MRP2C(self.sigma_BN)
 
     @property
+    def HN(self):
+        """Hill relative to inertial frame rotation matrix."""
+        return rv2HN(self.r_BN_N, self.v_BN_N)
+
+    @property
     def omega_BN_B(self):
         """Body rate relative to inertial frame in body frame [rad/s]."""
         return self.scObject.scStateOutMsg.read().omega_BN_B
@@ -181,6 +187,14 @@ class BasicDynamicsModel(DynamicsModel):
         omega_BN_N = np.matmul(self.BN.T, self.omega_BN_B)
         omega_BP_N = omega_BN_N - self.environment.omega_PN_N
         return np.matmul(self.environment.PN, omega_BP_N)
+
+    @property
+    def omega_BH_H(self):
+        """Body angular velocity relative to Hill frame in Hill frame [rad/s]."""
+        omega_BN_N = np.matmul(self.BN.T, self.omega_BN_B)
+        omega_HN_N = rv2omega(self.r_BN_N, self.v_BN_N)
+        omega_BH_N = omega_BN_N - omega_HN_N
+        return self.HN @ omega_BH_N
 
     @property
     def battery_charge(self):

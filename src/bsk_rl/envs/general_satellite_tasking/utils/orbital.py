@@ -117,6 +117,42 @@ def elevation(r_sat: np.ndarray, r_target: np.ndarray) -> np.ndarray:
         )
 
 
+def rv2HN(r_N: np.ndarray, v_N: np.ndarray):
+    """Find the Hill frame rotation matrix from position and velocity.
+
+    Args:
+        r_N: Position vector in the inertial frame
+        v_N: Velocity vector in the inertial frame
+
+    Returns:
+        Hill frame rotation matrix
+    """
+    o_r_N = r_N / np.linalg.norm(v_N)
+    h_N = np.cross(r_N, v_N)
+    o_h_N = h_N / np.linalg.norm(h_N)
+    o_theta_N = np.cross(o_h_N, o_r_N)
+    HN = np.array([o_r_N, o_theta_N, o_h_N])
+    return HN
+
+
+def rv2omega(r_N: np.ndarray, v_N: np.ndarray):
+    """Find the Hill frame rotation rate from position and velocity.
+
+    Args:
+        r_N: Position vector in the inertial frame
+        v_N: Velocity vector in the inertial frame
+
+    Returns:
+        omega_HN_N: Angular velocity of the Hill frame in the inertial frame
+    """
+    o_r_N = r_N / np.linalg.norm(v_N)
+    h_N = np.cross(r_N, v_N)
+    o_h_N = h_N / np.linalg.norm(h_N)
+    o_theta_N = np.cross(o_h_N, o_r_N)
+    omega_HN_N = o_h_N * np.dot(v_N, o_theta_N) / np.linalg.norm(r_N)
+    return omega_HN_N
+
+
 class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
     """Class for propagating trajectory using a point mass simulation."""
 
