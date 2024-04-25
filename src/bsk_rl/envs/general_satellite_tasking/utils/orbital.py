@@ -127,7 +127,7 @@ def rv2HN(r_N: np.ndarray, v_N: np.ndarray):
     Returns:
         Hill frame rotation matrix
     """
-    o_r_N = r_N / np.linalg.norm(v_N)
+    o_r_N = r_N / np.linalg.norm(r_N)
     h_N = np.cross(r_N, v_N)
     o_h_N = h_N / np.linalg.norm(h_N)
     o_theta_N = np.cross(o_h_N, o_r_N)
@@ -145,7 +145,7 @@ def rv2omega(r_N: np.ndarray, v_N: np.ndarray):
     Returns:
         omega_HN_N: Angular velocity of the Hill frame in the inertial frame
     """
-    o_r_N = r_N / np.linalg.norm(v_N)
+    o_r_N = r_N / np.linalg.norm(r_N)
     h_N = np.cross(r_N, v_N)
     o_h_N = h_N / np.linalg.norm(h_N)
     o_theta_N = np.cross(o_h_N, o_r_N)
