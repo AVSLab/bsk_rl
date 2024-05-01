@@ -7,7 +7,6 @@ from bsk_rl.envs.general_satellite_tasking.scenario import satellites as sats
 from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
     StaticTargets,
 )
-from bsk_rl.envs.general_satellite_tasking.simulation import environment
 from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
 
 
@@ -18,8 +17,6 @@ class TestSingleSatelliteTasking:
             "Sputnik",
             sat_args=sats.DoNothingSatellite.default_sat_args(oe=random_orbit),
         ),
-        env_type=environment.BasicEnvironmentModel,
-        env_args=environment.BasicEnvironmentModel.default_env_args(),
         env_features=StaticTargets(n_targets=0),
         data_manager=data.NoDataManager(),
         sim_rate=1.0,
@@ -75,8 +72,6 @@ class TestSingleSatelliteDeath:
                 rN=[0, 0, 7e6], vN=[0, 0, -100.0]
             ),
         ),
-        env_type=environment.BasicEnvironmentModel,
-        env_args=environment.BasicEnvironmentModel.default_env_args(),
         env_features=StaticTargets(n_targets=0),
         data_manager=data.NoDataManager(),
         sim_rate=1.0,
@@ -108,8 +103,6 @@ class TestGeneralSatelliteTasking:
                 sat_args=sats.DoNothingSatellite.default_sat_args(oe=random_orbit),
             ),
         ],
-        env_type=environment.BasicEnvironmentModel,
-        env_args=None,
         env_features=StaticTargets(n_targets=0),
         data_manager=data.NoDataManager(),
         sim_rate=1.0,

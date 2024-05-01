@@ -11,6 +11,18 @@ from bsk_rl.envs.general_satellite_tasking.gym_env import (
 from bsk_rl.envs.general_satellite_tasking.scenario.satellites import Satellite
 
 
+class TypeA:
+    pass
+
+
+class TypeB:
+    pass
+
+
+class TypeAprime(TypeA):
+    pass
+
+
 class TestGeneralSatelliteTasking:
     @patch(
         "bsk_rl.envs.general_satellite_tasking.gym_env.GeneralSatelliteTasking.__init__",
@@ -21,6 +33,44 @@ class TestGeneralSatelliteTasking:
         env.env_args_generator = {"a": 1, "b": lambda: 2}
         env._generate_env_args()
         assert env.env_args == {"a": 1, "b": 2}
+
+    @pytest.mark.parametrize(
+        "classes,result",
+        [
+            ([[TypeA]], TypeA),
+            ([[TypeA], [TypeA]], TypeA),
+            ([[TypeA], [TypeAprime]], TypeAprime),
+        ],
+    )
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.GeneralSatelliteTasking.__init__",
+        MagicMock(return_value=None),
+    )
+    def test_minimum_env_model(self, classes, result):
+        env = GeneralSatelliteTasking()
+        env.satellites = [
+            MagicMock(
+                dyn_type=MagicMock(_requires_env=MagicMock(return_value=class_list))
+            )
+            for class_list in classes
+        ]
+        assert env._minimum_env_model() == result
+
+    @patch(
+        "bsk_rl.envs.general_satellite_tasking.gym_env.GeneralSatelliteTasking.__init__",
+        MagicMock(return_value=None),
+    )
+    def test_minimum_env_model_mixed(self):
+        env = GeneralSatelliteTasking()
+        env.satellites = [
+            MagicMock(
+                dyn_type=MagicMock(_requires_env=MagicMock(return_value=class_list))
+            )
+            for class_list in [[TypeA], [TypeB]]
+        ]
+        model = env._minimum_env_model()
+        assert issubclass(model, TypeA)
+        assert issubclass(model, TypeB)
 
     @patch(
         "bsk_rl.envs.general_satellite_tasking.gym_env.Simulator",
@@ -208,9 +258,13 @@ class TestGeneralSatelliteTasking:
 
 
 class TestSingleSatelliteTasking:
-    @patch.multiple(Satellite, __abstractmethods__=set())
+    @patch.multiple(
+        Satellite,
+        __abstractmethods__=set(),
+        __init__=MagicMock(return_value=None),
+    )
     def test_init(self):
-        mock_sat = Satellite("Sat", {})
+        mock_sat = Satellite("sat", {})
         env = SingleSatelliteTasking(
             satellites=mock_sat,
             env_type=MagicMock(),

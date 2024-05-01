@@ -9,7 +9,7 @@ from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import 
     StaticTargets,
     UniformNadirFeature,
 )
-from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, environment, fsw
+from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, fsw
 from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
 
 #########################
@@ -40,8 +40,6 @@ class TestImagingAndDownlink:
                 transmitterBaudRate=-1.0,
             ),
         ),
-        env_type=environment.GroundStationEnvModel,
-        env_args=environment.GroundStationEnvModel.default_env_args(),
         env_features=StaticTargets(n_targets=1000),
         data_manager=data.NoDataManager(),
         sim_rate=1.0,
@@ -98,8 +96,6 @@ class TestChargingAction:
                 storedCharge_Init=250_000,
             ),
         ),
-        env_type=environment.BasicEnvironmentModel,
-        env_args=environment.BasicEnvironmentModel.default_env_args(),
         env_features=StaticTargets(n_targets=0),
         data_manager=data.NoDataManager(),
         sim_rate=1.0,
@@ -133,8 +129,6 @@ class TestDesatAction:
                     wheelSpeeds=[1000.0, -1000.0, 1000.0],
                 ),
             ),
-            env_type=environment.BasicEnvironmentModel,
-            env_args=environment.BasicEnvironmentModel.default_env_args(),
             env_features=StaticTargets(n_targets=0),
             data_manager=data.NoDataManager(),
             sim_rate=1.0,
@@ -201,8 +195,6 @@ class TestNadirImagingActions:
                 transmitterBaudRate=-1.0,
             ),
         ),
-        env_type=environment.BasicEnvironmentModel,
-        env_args=environment.BasicEnvironmentModel.default_env_args(),
         env_features=UniformNadirFeature(),
         data_manager=data.NoDataManager(),
         sim_rate=1.0,

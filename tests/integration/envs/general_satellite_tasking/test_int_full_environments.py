@@ -10,7 +10,6 @@ from bsk_rl.envs.general_satellite_tasking.scenario import satellites as sats
 from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
     StaticTargets,
 )
-from bsk_rl.envs.general_satellite_tasking.simulation import environment
 from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
 
 multi_env = gym.make(
@@ -29,8 +28,6 @@ multi_env = gym.make(
             imageRateErrorRequirement=0.01,
         ),
     ],
-    env_type=environment.GroundStationEnvModel,
-    env_args=None,
     env_features=StaticTargets(n_targets=1000),
     data_manager=data.UniqueImagingManager(),
     sim_rate=0.5,
@@ -54,8 +51,6 @@ parallel_env = MultiagentSatelliteTasking(
             imageRateErrorRequirement=0.01,
         ),
     ],
-    env_type=environment.GroundStationEnvModel,
-    env_args=None,
     env_features=StaticTargets(n_targets=1000),
     data_manager=data.UniqueImagingManager(),
     sim_rate=0.5,

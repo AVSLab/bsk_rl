@@ -9,7 +9,7 @@ from bsk_rl.envs.general_satellite_tasking.scenario import satellites as sats
 from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
     CityTargets,
 )
-from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, environment, fsw
+from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, fsw
 from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
 
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
@@ -181,8 +181,6 @@ if __name__ == "__main__":
         "SingleSatelliteTasking-v1",
         satellites=satellite,
         # Select an EnvironmentModel compatible with the models in the satellite
-        env_type=environment.BasicEnvironmentModel,
-        env_args=environment.BasicEnvironmentModel.default_env_args(),
         env_features=env_features,
         data_manager=data_manager,
         sim_rate=0.5,

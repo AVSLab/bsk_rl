@@ -62,7 +62,6 @@ class FSWModel(ABC):
     """
 
     @classmethod
-    @property
     def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
         """Define minimum DynamicsModels for compatibility."""
         return []
@@ -81,7 +80,7 @@ class FSWModel(ABC):
         self.satellite = satellite
         self.logger = self.satellite.logger.getChild(self.__class__.__name__)
 
-        for required in self._requires_dyn:
+        for required in self._requires_dyn():
             if not issubclass(satellite.dyn_type, required):
                 raise TypeError(
                     f"{satellite.dyn_type} must be a subclass of {required} to "
@@ -205,7 +204,6 @@ class BasicFSWModel(FSWModel):
     """Basic FSW model with minimum necessary Basilisk components."""
 
     @classmethod
-    @property
     def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
         return [dynamics.BasicDynamicsModel]
 
@@ -560,9 +558,8 @@ class ImagingFSWModel(BasicFSWModel):
     """Extend FSW with instrument pointing and triggering control."""
 
     @classmethod
-    @property
     def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
-        return super()._requires_dyn + [dynamics.ImagingDynModel]
+        return super()._requires_dyn() + [dynamics.ImagingDynModel]
 
     @property
     def c_hat_P(self):

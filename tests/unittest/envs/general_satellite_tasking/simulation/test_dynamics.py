@@ -36,7 +36,7 @@ basicdyn = module + "BasicDynamicsModel."
 
 
 def test_basic_requires_env():
-    assert environment.BasicEnvironmentModel in BasicDynamicsModel._requires_env
+    assert environment.BasicEnvironmentModel in BasicDynamicsModel._requires_env()
 
 
 @patch(basicdyn + "_requires_env", MagicMock(return_value=[]))
@@ -255,7 +255,9 @@ class TestImagingDynModel:
 
 class TestGroundStationDynModel:
     def test_requires_env(self):
-        assert environment.GroundStationEnvModel in GroundStationDynModel._requires_env
+        assert (
+            environment.GroundStationEnvModel in GroundStationDynModel._requires_env()
+        )
 
     gsdyn = module + "GroundStationDynModel."
 

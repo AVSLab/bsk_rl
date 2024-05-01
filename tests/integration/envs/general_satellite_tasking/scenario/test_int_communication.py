@@ -11,7 +11,6 @@ from bsk_rl.envs.general_satellite_tasking.scenario.communication import (
 from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
     StaticTargets,
 )
-from bsk_rl.envs.general_satellite_tasking.simulation import environment
 from bsk_rl.utilities.initial_conditions import leo_orbit
 
 oes_visible = leo_orbit.walker_delta(
@@ -53,8 +52,6 @@ def make_communication_env(oes, comm_type):
     env = gym.make(
         "GeneralSatelliteTasking-v1",
         satellites=satellites,
-        env_type=environment.GroundStationEnvModel,
-        env_args=environment.GroundStationEnvModel.default_env_args(),
         env_features=StaticTargets(n_targets=1000),
         data_manager=data.UniqueImagingManager(),
         communicator=comm_type(satellites),

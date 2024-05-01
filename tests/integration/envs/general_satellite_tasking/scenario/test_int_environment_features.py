@@ -7,7 +7,7 @@ from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import 
     CityTargets,
     StaticTargets,
 )
-from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, environment, fsw
+from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, fsw
 from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
 
 
@@ -30,8 +30,6 @@ def make_env(env_features):
                 imageRateErrorRequirement=0.05,
             ),
         ),
-        env_type=environment.GroundStationEnvModel,
-        env_args=environment.GroundStationEnvModel.default_env_args(),
         env_features=env_features,
         data_manager=data.UniqueImagingManager(),
         sim_rate=1.0,
