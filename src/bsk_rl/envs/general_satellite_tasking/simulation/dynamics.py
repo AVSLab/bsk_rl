@@ -52,7 +52,6 @@ class DynamicsModel(ABC):
     """
 
     @classmethod
-    @property
     def _requires_env(cls) -> list[type["EnvironmentModel"]]:
         """Define minimum EnvironmentModels for compatibility."""
         return []
@@ -75,7 +74,7 @@ class DynamicsModel(ABC):
         self.satellite = satellite
         self.logger = self.satellite.logger.getChild(self.__class__.__name__)
 
-        for required in self._requires_env:
+        for required in self._requires_env():
             if not issubclass(type(self.simulator.environment), required):
                 raise TypeError(
                     f"{self.simulator.environment} must be a subclass of {required} to "
@@ -130,7 +129,6 @@ class BasicDynamicsModel(DynamicsModel):
     """Basic Dynamics model with minimum necessary Basilisk components."""
 
     @classmethod
-    @property
     def _requires_env(cls) -> list[type["EnvironmentModel"]]:
         return [environment.BasicEnvironmentModel]
 
@@ -977,9 +975,8 @@ class GroundStationDynModel(ImagingDynModel):
     """Model that connects satellite to environment ground stations."""
 
     @classmethod
-    @property
     def _requires_env(cls) -> list[type["EnvironmentModel"]]:
-        return super()._requires_env + [environment.GroundStationEnvModel]
+        return super()._requires_env() + [environment.GroundStationEnvModel]
 
     def _init_dynamics_objects(self, **kwargs) -> None:
         super()._init_dynamics_objects(**kwargs)

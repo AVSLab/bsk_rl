@@ -57,9 +57,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
     def __init__(
         self,
         satellites: Union[Satellite, list[Satellite]],
-        env_type: type[EnvironmentModel],
         env_features: EnvironmentFeatures,
         data_manager: DataManager,
+        env_type: Optional[type[EnvironmentModel]] = None,
         env_args: Optional[dict[str, Any]] = None,
         communicator: Optional[CommunicationMethod] = None,
         sim_rate: float = 1.0,
@@ -75,13 +75,13 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         Args:
             satellites: Satellites(s) to be simulated.
+            env_features: Information about the environment.
+            data_manager: Object to record and reward data collection.
+            communicator: Object to manage communication between satellites/
             env_type: Type of environment model to be constructed.
             env_args: Arguments for environment model construction. {key: value or key:
                 function}, where function is called at reset to set the value (used for
                 randomization).
-            env_features: Information about the environment.
-            data_manager: Object to record and reward data collection.
-            communicator: Object to manage communication between satellites
             sim_rate: Rate for model simulation [s].
             max_step_duration: Maximum time to propagate sim at a step [s].
             failure_penalty: Reward for satellite failure. Should be nonpositive.
@@ -98,6 +98,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             satellites = [satellites]
         self.satellites = satellites
         self.simulator: Simulator
+        if env_type is None:
+            env_type = self._minimum_env_model()
         self.env_type = env_type
         if env_args is None:
             env_args = self.env_type.default_env_args()
@@ -120,6 +122,26 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.terminate_on_time_limit = terminate_on_time_limit
         self.latest_step_duration = 0
         self.render_mode = render_mode
+
+    def _minimum_env_model(self) -> type[EnvironmentModel]:
+        """Determine the minimum environment model required by the satellites."""
+        types = set(
+            sum(
+                [satellite.dyn_type._requires_env() for satellite in self.satellites],
+                [],
+            )
+        )
+        if len(types) == 1:
+            return list(types)[0]
+        for test_type in types:
+            if all([issubclass(test_type, other_type) for other_type in types]):
+                return test_type
+
+        # Else compose all types into a new class
+        class MinimumEnv(*types):
+            pass
+
+        return MinimumEnv
 
     def _configure_logging(self, log_level, log_dir=None):
         if isinstance(log_level, str):

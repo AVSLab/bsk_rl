@@ -8,7 +8,7 @@ from bsk_rl.envs.general_satellite_tasking.scenario import sat_observations as s
 from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
     StaticTargets,
 )
-from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, environment, fsw
+from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, fsw
 from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
 
 
@@ -33,8 +33,6 @@ class TestImagingSatellite:
                 imageRateErrorRequirement=0.05,
             ),
         ),
-        env_type=environment.BasicEnvironmentModel,
-        env_args=environment.BasicEnvironmentModel.default_env_args(),
         env_features=StaticTargets(n_targets=5000),
         data_manager=data.NoDataManager(),
         sim_rate=1.0,

@@ -7,7 +7,7 @@ from bsk_rl.envs.general_satellite_tasking.scenario import sat_observations as s
 from bsk_rl.envs.general_satellite_tasking.scenario.environment_features import (
     StaticTargets,
 )
-from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, environment, fsw
+from bsk_rl.envs.general_satellite_tasking.simulation import dynamics, fsw
 from bsk_rl.envs.general_satellite_tasking.utils.orbital import random_orbit
 
 ###########################
@@ -48,8 +48,6 @@ class TestImagingDynModelStorage:
                     storageInit=initial_storage,
                 ),
             ),
-            env_type=environment.GroundStationEnvModel,
-            env_args=environment.GroundStationEnvModel.default_env_args(),
             env_features=StaticTargets(n_targets=1000),
             data_manager=data.NoDataManager(),
             sim_rate=1.0,
@@ -92,8 +90,6 @@ class TestImagingDynModelStorage:
                     storageInit=initial_storage,
                 ),
             ),
-            env_type=environment.GroundStationEnvModel,
-            env_args=environment.GroundStationEnvModel.default_env_args(),
             env_features=StaticTargets(n_targets=1000),
             data_manager=data.NoDataManager(),
             sim_rate=1.0,

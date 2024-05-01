@@ -69,8 +69,6 @@ TODO: Add more detail to this example
             sats.FullFeaturedSatellite.default_sat_args(oe=random_orbit), n_ahead_observe=30, 
             n_ahead_act=15
         ),
-        env_type=environment.GroundStationEnvModel,
-        env_args=environment.GroundStationEnvModel.default_env_args(),
         env_features=StaticTargets(n_targets=1000),
         data_manager=data.UniqueImagingManager,
         max_step_duration=600.0,
