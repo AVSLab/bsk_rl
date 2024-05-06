@@ -2,9 +2,9 @@ import gymnasium as gym
 import numpy as np
 from pytest import approx
 
+from bsk_rl.env.scenario import actions as act
 from bsk_rl.env.scenario import data
-from bsk_rl.env.scenario import sat_actions as sa
-from bsk_rl.env.scenario import sat_observations as so
+from bsk_rl.env.scenario import observations as obs
 from bsk_rl.env.scenario import satellites as sats
 from bsk_rl.env.scenario.environment_features import StaticTargets
 from bsk_rl.env.simulation import dynamics, fsw
@@ -16,20 +16,20 @@ from bsk_rl.utils.orbital import random_orbit
 ##############################
 class TestComposedState:
     class ComposedPropSat(
-        sa.DriftAction,
-        so.EclipseState,
-        so.TargetState.configure(n_ahead_observe=2),
-        so.NormdPropertyState.configure(
-            obs_properties=[
-                dict(prop="r_BN_N", module="dynamics"),
-                dict(prop="r_BN_N", norm=7000.0 * 1e3),
-            ]
-        ),
-        so.TimeState,
+        act.DriftAction,
         sats.ImagingSatellite,
     ):
         dyn_type = dynamics.ImagingDynModel
         fsw_type = fsw.ImagingFSWModel
+        observation_spec = [
+            obs.Time(),
+            obs.SatProperties(
+                dict(prop="r_BN_N", module="dynamics"),
+                dict(prop="r_BN_N", norm=7000.0 * 1e3),
+            ),
+            obs.OpportunityProperties(dict(prop="priority"), n_ahead_observe=2),
+            obs.Eclipse(),
+        ]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
@@ -48,7 +48,8 @@ class TestComposedState:
     def test_normd_property_state(self):
         observation, info = self.env.reset()
         assert observation[0] == 0.0  # Timed observation should be first
-        eclipse = self.env.satellite.obs_dict["eclipse_state"]
+        self.env.satellite.observation_builder.obs_type = dict
+        eclipse = self.env.satellite.get_obs()["eclipse"]
         assert observation[-2] == eclipse[0]  # Eclipse should be last
         assert observation[-1] == eclipse[1]  # Eclipse should be last
 
@@ -58,24 +59,24 @@ class TestComposedState:
 ################################
 
 
-class TestNormdPropertyState:
-    class NormdPropSat(
-        sa.DriftAction,
-        so.NormdPropertyState.configure(
-            obs_properties=[
-                dict(prop="r_BN_N", module="dynamics"),
-                dict(prop="r_BN_N", norm=7000.0 * 1e3),
-            ]
-        ),
-    ):
+class TestSatProperties:
+    class SatPropertiesSat(act.DriftAction):
         dyn_type = dynamics.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
+        observation_spec = [
+            obs.SatProperties(
+                dict(prop="r_BN_N", module="dynamics"),
+                dict(prop="r_BN_N", norm=7000.0 * 1e3),
+            ),
+        ]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
-        satellites=NormdPropSat(
+        satellites=SatPropertiesSat(
             "Sputnik",
-            sat_args=NormdPropSat.default_sat_args(oe=random_orbit(r_body=7000, alt=0)),
+            sat_args=SatPropertiesSat.default_sat_args(
+                oe=random_orbit(r_body=7000, alt=0)
+            ),
         ),
         env_features=StaticTargets(n_targets=0),
         data_manager=data.NoDataManager(),
@@ -91,13 +92,11 @@ class TestNormdPropertyState:
         assert np.linalg.norm(observation[3:6]) == approx(1.0)
 
 
-class TestTimeState:
-    class TimedSat(
-        sa.DriftAction,
-        so.TimeState,
-    ):
+class TestTime:
+    class TimedSat(act.DriftAction):
         dyn_type = dynamics.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
+        observation_spec = [obs.Time()]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
@@ -120,20 +119,19 @@ class TestTimeState:
         assert observation[0] == 0.1
 
 
-class TestTargetState:
-    class TargetSat(
-        sa.DriftAction,
-        so.TargetState,
-    ):
+class TestOpportunityProperties:
+    class TargetSat(act.DriftAction, sats.ImagingSatellite):
         dyn_type = dynamics.ImagingDynModel
         fsw_type = fsw.ImagingFSWModel
+        observation_spec = [
+            obs.OpportunityProperties(dict(prop="priority"), n_ahead_observe=2)
+        ]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
         satellites=TargetSat(
             "Bullseye",
             obs_type=dict,
-            n_ahead_observe=2,
             sat_args=TargetSat.default_sat_args(oe=random_orbit()),
         ),
         env_features=StaticTargets(n_targets=100),
@@ -146,18 +144,15 @@ class TestTargetState:
 
     def test_target_state(self):
         observation, info = self.env.reset()
-        assert "target_1" in observation["target_obs"]
-        assert "priority" in observation["target_obs"]["target_1"]
-        assert "location_normd" in observation["target_obs"]["target_1"]
+        assert "target_1" in observation["target"]
+        assert "priority" in observation["target"]["target_1"]
 
 
-class TestEclipseState:
-    class EclipseSat(
-        sa.DriftAction,
-        so.EclipseState,
-    ):
+class TestEclipse:
+    class EclipseSat(act.DriftAction):
         dyn_type = dynamics.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
+        observation_spec = [obs.Eclipse()]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
@@ -181,12 +176,19 @@ class TestEclipseState:
         assert (observation2[1] - observation1[1]) < 0.05
 
 
-class TestGroundStationState:
-    class GroundSat(
-        sa.DriftAction, so.GroundStationState.configure(n_ahead_observe_downlinks=2)
-    ):
+class TestGroundStationProperties:
+    class GroundSat(act.DriftAction, sats.AccessSatellite):
         dyn_type = dynamics.GroundStationDynModel
         fsw_type = fsw.ImagingFSWModel
+        observation_spec = [
+            obs.OpportunityProperties(
+                dict(
+                    prop="opportunity_open",
+                ),
+                n_ahead_observe=2,
+                type="ground_station",
+            ),
+        ]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",

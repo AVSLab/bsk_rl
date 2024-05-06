@@ -5,26 +5,40 @@ import pytest
 from pettingzoo.test.parallel_test import parallel_api_test
 
 from bsk_rl.env.gym_env import MultiagentSatelliteTasking
+from bsk_rl.env.scenario import actions as act
 from bsk_rl.env.scenario import data
+from bsk_rl.env.scenario import observations as obs
 from bsk_rl.env.scenario import satellites as sats
 from bsk_rl.env.scenario.environment_features import StaticTargets
 from bsk_rl.env.simulation import environment
 from bsk_rl.utils.orbital import random_orbit
 
+
+class FullFeaturedSatellite(sats.SteeringImagerSatellite, act.ImagingActions):
+    observation_spec = [
+        obs.SatProperties(dict(prop="r_BN_P", module="dynamics", norm=6e6)),
+        obs.Time(),
+    ]
+
+
 multi_env = gym.make(
     "GeneralSatelliteTasking-v1",
     satellites=[
-        sats.FullFeaturedSatellite(
+        FullFeaturedSatellite(
             "Sentinel-2A",
-            sat_args=sats.FullFeaturedSatellite.default_sat_args(oe=random_orbit),
-            imageAttErrorRequirement=0.01,
-            imageRateErrorRequirement=0.01,
+            sat_args=FullFeaturedSatellite.default_sat_args(
+                oe=random_orbit,
+                imageAttErrorRequirement=0.01,
+                imageRateErrorRequirement=0.01,
+            ),
         ),
-        sats.FullFeaturedSatellite(
+        FullFeaturedSatellite(
             "Sentinel-2B",
-            sat_args=sats.FullFeaturedSatellite.default_sat_args(oe=random_orbit),
-            imageAttErrorRequirement=0.01,
-            imageRateErrorRequirement=0.01,
+            sat_args=FullFeaturedSatellite.default_sat_args(
+                oe=random_orbit,
+                imageAttErrorRequirement=0.01,
+                imageRateErrorRequirement=0.01,
+            ),
         ),
     ],
     env_features=StaticTargets(n_targets=1000),
@@ -37,17 +51,21 @@ multi_env = gym.make(
 
 parallel_env = MultiagentSatelliteTasking(
     satellites=[
-        sats.FullFeaturedSatellite(
+        FullFeaturedSatellite(
             "Sentinel-2A",
-            sat_args=sats.FullFeaturedSatellite.default_sat_args(oe=random_orbit),
-            imageAttErrorRequirement=0.01,
-            imageRateErrorRequirement=0.01,
+            sat_args=FullFeaturedSatellite.default_sat_args(
+                oe=random_orbit,
+                imageAttErrorRequirement=0.01,
+                imageRateErrorRequirement=0.01,
+            ),
         ),
-        sats.FullFeaturedSatellite(
+        FullFeaturedSatellite(
             "Sentinel-2B",
-            sat_args=sats.FullFeaturedSatellite.default_sat_args(oe=random_orbit),
-            imageAttErrorRequirement=0.01,
-            imageRateErrorRequirement=0.01,
+            sat_args=FullFeaturedSatellite.default_sat_args(
+                oe=random_orbit,
+                imageAttErrorRequirement=0.01,
+                imageRateErrorRequirement=0.01,
+            ),
         ),
     ],
     env_features=StaticTargets(n_targets=1000),

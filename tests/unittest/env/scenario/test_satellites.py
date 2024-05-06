@@ -13,6 +13,7 @@ from bsk_rl.utils.functional import valid_func_name
 
 
 @patch.multiple(sats.Satellite, __abstractmethods__=set())
+@patch("bsk_rl.env.scenario.satellites.Satellite.observation_spec", MagicMock())
 class TestSatellite:
     sats.Satellite.dyn_type = MagicMock(with_defaults=MagicMock(defaults={"a": 1}))
     Task.with_defaults = MagicMock(defaults={"c": 3})
@@ -155,7 +156,7 @@ class TestSatellite:
     "bsk_rl.env.scenario.satellites.Satellite.__init__",
     MagicMock(),
 )
-@patch("bsk_rl.env.utils.orbital.elevation", lambda x, y: y - x)
+@patch("bsk_rl.utils.orbital.elevation", lambda x, y: y - x)
 @patch.multiple(sats.AccessSatellite, __abstractmethods__=set())
 class TestAccessSatellite:
     def make_sat(self):
@@ -358,7 +359,9 @@ class TestAccessSatellite:
             dict(target=self.tgt1, window=(3.0, 8.0), type="target"),
             dict(target=self.tgt0, window=(2.0, 10.0), type="target"),
         ]
-        sat._add_window(tgt, window, merge_time=merge_time, type="target")
+        sat._add_window(
+            tgt, window, merge_time=merge_time, type="target", location=np.zeros(3)
+        )
         assert expected_window in sat.opportunities_dict()[tgt]
 
     opportunities = [

@@ -2,18 +2,26 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
+from bsk_rl.env.scenario import actions as act
 from bsk_rl.env.scenario import data
+from bsk_rl.env.scenario import observations as obs
 from bsk_rl.env.scenario import satellites as sats
 from bsk_rl.env.scenario.environment_features import StaticTargets
 from bsk_rl.utils.orbital import random_orbit
 
 
+class DoNothingSatellite(sats.SteeringImagerSatellite, act.DriftAction):
+    observation_spec = [
+        obs.Time(),
+    ]
+
+
 class TestSingleSatelliteTasking:
     env = gym.make(
         "SingleSatelliteTasking-v1",
-        satellites=sats.DoNothingSatellite(
+        satellites=DoNothingSatellite(
             "Sputnik",
-            sat_args=sats.DoNothingSatellite.default_sat_args(oe=random_orbit),
+            sat_args=DoNothingSatellite.default_sat_args(oe=random_orbit),
         ),
         env_features=StaticTargets(n_targets=0),
         data_manager=data.NoDataManager(),
@@ -64,9 +72,9 @@ class TestSingleSatelliteTasking:
 class TestSingleSatelliteDeath:
     env = gym.make(
         "SingleSatelliteTasking-v1",
-        satellites=sats.DoNothingSatellite(
+        satellites=DoNothingSatellite(
             "Skydiver",
-            sat_args=sats.DoNothingSatellite.default_sat_args(
+            sat_args=DoNothingSatellite.default_sat_args(
                 rN=[0, 0, 7e6], vN=[0, 0, -100.0]
             ),
         ),
@@ -92,13 +100,13 @@ class TestGeneralSatelliteTasking:
     env = gym.make(
         "GeneralSatelliteTasking-v1",
         satellites=[
-            sats.DoNothingSatellite(
+            DoNothingSatellite(
                 "Sentinel-2A",
-                sat_args=sats.DoNothingSatellite.default_sat_args(oe=random_orbit),
+                sat_args=DoNothingSatellite.default_sat_args(oe=random_orbit),
             ),
-            sats.DoNothingSatellite(
+            DoNothingSatellite(
                 "Sentinel-2B",
-                sat_args=sats.DoNothingSatellite.default_sat_args(oe=random_orbit),
+                sat_args=DoNothingSatellite.default_sat_args(oe=random_orbit),
             ),
         ],
         env_features=StaticTargets(n_targets=0),

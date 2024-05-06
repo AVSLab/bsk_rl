@@ -1,9 +1,9 @@
 import gymnasium as gym
 import pytest
 
+from bsk_rl.env.scenario import actions as act
 from bsk_rl.env.scenario import data
-from bsk_rl.env.scenario import sat_actions as sa
-from bsk_rl.env.scenario import sat_observations as obs
+from bsk_rl.env.scenario import observations as obs
 from bsk_rl.env.scenario.environment_features import StaticTargets
 from bsk_rl.env.simulation import dynamics, fsw
 from bsk_rl.utils.orbital import random_orbit
@@ -28,18 +28,18 @@ class TestImagingDynModelStorage:
     def test_storageInit(self, storage_capacity, initial_storage):
 
         class ImageSat(
-            sa.ImagingActions,
-            sa.DownlinkAction,
-            so.TimeState,
+            act.ImagingActions,
+            act.DownlinkAction,
         ):
             dyn_type = dynamics.ImagingDynModel
             fsw_type = fsw.ImagingFSWModel
+            observation_spec = [obs.Time()]
 
         env = gym.make(
             "SingleSatelliteTasking-v1",
             satellites=ImageSat(
                 "EO-1",
-                n_ahead_act=10,
+                # n_ahead_act=10,
                 sat_args=ImageSat.default_sat_args(
                     oe=random_orbit,
                     dataStorageCapacity=storage_capacity,
@@ -71,17 +71,17 @@ class TestImagingDynModelStorage:
     def test_storageInit_downlink(self, storage_capacity, initial_storage):
 
         class ImageSat(
-            sa.DownlinkAction,
-            so.TimeState,
+            act.DownlinkAction,
         ):
             dyn_type = dynamics.FullFeaturedDynModel
             fsw_type = fsw.ImagingFSWModel
+            observation_spec = [obs.Time()]
 
         env = gym.make(
             "SingleSatelliteTasking-v1",
             satellites=ImageSat(
                 "EO-1",
-                n_ahead_act=10,
+                # n_ahead_act=10,
                 sat_args=ImageSat.default_sat_args(
                     oe=random_orbit,
                     dataStorageCapacity=storage_capacity,

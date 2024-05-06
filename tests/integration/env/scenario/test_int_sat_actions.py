@@ -2,9 +2,9 @@ import gymnasium as gym
 import numpy as np
 from pytest import approx
 
+from bsk_rl.env.scenario import actions as act
 from bsk_rl.env.scenario import data
-from bsk_rl.env.scenario import sat_actions as sa
-from bsk_rl.env.scenario import sat_observations as so
+from bsk_rl.env.scenario import observations as obs
 from bsk_rl.env.scenario.environment_features import StaticTargets, UniformNadirFeature
 from bsk_rl.env.simulation import dynamics, environment, fsw
 from bsk_rl.utils.orbital import random_orbit
@@ -16,18 +16,18 @@ from bsk_rl.utils.orbital import random_orbit
 
 class TestImagingAndDownlink:
     class ImageSat(
-        sa.ImagingActions,
-        sa.DownlinkAction,
-        so.TimeState,
+        act.ImagingActions,
+        act.DownlinkAction,
     ):
         dyn_type = dynamics.GroundStationDynModel
         fsw_type = fsw.ImagingFSWModel
+        observation_spec = [obs.Time()]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
         satellites=ImageSat(
             "EO-1",
-            n_ahead_act=10,
+            # n_ahead_act=10,
             sat_args=ImageSat.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.05,
@@ -76,11 +76,11 @@ class TestImagingAndDownlink:
 
 class TestChargingAction:
     class ChargeSat(
-        sa.ChargingAction,
-        so.TimeState,
+        act.ChargingAction,
     ):
         dyn_type = dynamics.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
+        observation_spec = [obs.Time()]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
@@ -110,11 +110,11 @@ class TestChargingAction:
 
 class TestDesatAction:
     class DesatSat(
-        sa.DesatAction,
-        so.TimeState,
+        act.DesatAction,
     ):
         dyn_type = dynamics.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
+        observation_spec = [obs.Time()]
 
     def make_env(self):
         return gym.make(
@@ -172,17 +172,17 @@ class TestDesatAction:
 
 class TestNadirImagingActions:
     class ImageSat(
-        sa.NadirImagingAction,
-        so.TimeState,
+        act.NadirImagingAction,
     ):
         dyn_type = dynamics.ContinuousImagingDynModel
         fsw_type = fsw.ContinuousImagingFSWModel
+        observation_spec = [obs.Time()]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
         satellites=ImageSat(
             "EO-1",
-            n_ahead_act=10,
+            # n_ahead_act=10,
             sat_args=ImageSat.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.05,
