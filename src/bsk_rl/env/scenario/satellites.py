@@ -7,13 +7,12 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
 from weakref import proxy
 
-from bsk_rl.env.simulation import dynamics
-
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.env.types import (
         DynamicsModel,
         FSWModel,
         Simulator,
+        SatObservation,
     )
 
 import numpy as np
@@ -23,8 +22,10 @@ from scipy.optimize import minimize_scalar, root_scalar
 
 from bsk_rl.env.scenario.data import DataStore, UniqueImageStore
 from bsk_rl.env.scenario.environment_features import Target
-from bsk_rl.env.simulation import fsw
+from bsk_rl.env.scenario.observations import ObservationBuilder
+from bsk_rl.env.simulation import dynamics, fsw
 from bsk_rl.utils.functional import (
+    AbstractClassProperty,
     collect_default_args,
     safe_dict_merge,
     valid_func_name,
@@ -38,8 +39,9 @@ SatAct = Any
 class Satellite(ABC):
     """Abstract base class for satellites."""
 
-    dyn_type: type["DynamicsModel"]  # Type of dynamics model used by this satellite
-    fsw_type: type["FSWModel"]  # Type of FSW model used by this satellite
+    dyn_type: type["DynamicsModel"] = AbstractClassProperty()
+    fsw_type: type["FSWModel"] = AbstractClassProperty()
+    observation_spec: list["SatObservation"] = AbstractClassProperty()
 
     @classmethod
     def default_sat_args(cls, **kwargs) -> dict[str, Any]:
@@ -68,8 +70,8 @@ class Satellite(ABC):
         self,
         name: str,
         sat_args: Optional[dict[str, Any]],
+        obs_type=np.ndarray,
         variable_interval: bool = True,
-        **kwargs,
     ) -> None:
         """Construct base satellite.
 
@@ -79,7 +81,6 @@ class Satellite(ABC):
                 key: function}, where function is called at reset to set the value (used
                 for randomization).
             variable_interval: Stop simulation at terminal events
-            kwargs: Ignored
         """
         self.name = name
         self.logger = logging.getLogger(__name__).getChild(self.name)
@@ -93,6 +94,7 @@ class Satellite(ABC):
         self.requires_retasking: bool
         self.variable_interval = variable_interval
         self._timed_terminal_event_name = None
+        self.observation_builder = ObservationBuilder(self, obs_type=obs_type)
 
     @property
     def id(self) -> str:
@@ -161,7 +163,7 @@ class Satellite(ABC):
 
     def reset_post_sim(self) -> None:
         """Reset in environment reset, after simulator initialization."""
-        pass
+        self.observation_builder.reset_post_sim()
 
     @property
     def observation_space(self) -> spaces.Box:
@@ -263,14 +265,13 @@ class Satellite(ABC):
         ):
             self.simulator.delete_event(self._timed_terminal_event_name)
 
-    @abstractmethod  # pragma: no cover
     def get_obs(self) -> SatObs:
         """Construct the satellite's observation.
 
         Returns:
             satellite observation
         """
-        pass
+        return self.observation_builder.get_obs()
 
     @abstractmethod  # pragma: no cover
     def set_action(self, action: int) -> None:
@@ -406,6 +407,7 @@ class AccessSatellite(Satellite):
                         location[location["type"]],
                         new_window,
                         type=location["type"],
+                        location=location["location"],
                         merge_time=times[0],
                     )
 
@@ -503,6 +505,7 @@ class AccessSatellite(Satellite):
         object: Any,
         new_window: tuple[float, float],
         type: str,
+        location: np.ndarray,
         merge_time: Optional[float] = None,
     ):
         """Add an opportunity window.
@@ -525,7 +528,7 @@ class AccessSatellite(Satellite):
                     return
         bisect.insort(
             self.opportunities,
-            {type: object, "window": new_window, "type": type},
+            {type: object, "window": new_window, "type": type, "location": location},
             key=lambda x: x["window"][1],
         )
 
@@ -667,6 +670,9 @@ class AccessSatellite(Satellite):
             )
         return next_opportunities
 
+    def _get_access_filter(self):
+        return []
+
 
 class ImagingSatellite(AccessSatellite):
     """Satellite with agile imaging capabilities."""
@@ -712,7 +718,7 @@ class ImagingSatellite(AccessSatellite):
             )
         super().reset_post_sim()
 
-    def _get_imaged_filter(self):
+    def _get_access_filter(self):
         try:
             return self.data_store.data.imaged
         except AttributeError:
@@ -721,13 +727,13 @@ class ImagingSatellite(AccessSatellite):
     @property
     def windows(self) -> dict[Target, list[tuple[float, float]]]:
         """Access windows via dict of targets -> list of windows."""
-        return self.opportunities_dict(types="target", filter=self._get_imaged_filter())
+        return self.opportunities_dict(types="target", filter=self._get_access_filter())
 
     @property
     def upcoming_windows(self) -> dict[Target, list[tuple[float, float]]]:
         """Access upcoming windows in a dict of targets -> list of windows."""
         return self.upcoming_opportunities_dict(
-            types="target", filter=self._get_imaged_filter()
+            types="target", filter=self._get_access_filter()
         )
 
     @property
@@ -738,7 +744,7 @@ class ImagingSatellite(AccessSatellite):
             dict: first non-closed window for each target
         """
         return self.next_opportunities_dict(
-            types="target", filter=self._get_imaged_filter()
+            types="target", filter=self._get_access_filter()
         )
 
     def upcoming_targets(
@@ -763,7 +769,7 @@ class ImagingSatellite(AccessSatellite):
                 n=n,
                 pad=pad,
                 max_lookahead=max_lookahead,
-                filter=self._get_imaged_filter(),
+                filter=self._get_access_filter(),
                 types="target",
             )
         ]
@@ -880,61 +886,3 @@ class FBImagerSatellite(ImagingSatellite):
 
     dyn_type = dynamics.FullFeaturedDynModel
     fsw_type = fsw.ImagingFSWModel
-
-
-##########################
-### Ready-to-use Types ###
-##########################
-from Basilisk.utilities import orbitalMotion  # noqa: E402
-
-from bsk_rl.env.scenario import sat_actions as sa  # noqa: E402
-from bsk_rl.env.scenario import sat_observations as so  # noqa: E402
-
-
-class DoNothingSatellite(sa.DriftAction, so.TimeState):
-    """Convenience type for a satellite that does nothing."""
-
-    dyn_type = dynamics.BasicDynamicsModel
-    fsw_type = fsw.BasicFSWModel
-
-
-class ImageAheadSatellite(
-    sa.ImagingActions,
-    so.TimeState,
-    so.TargetState.configure(n_ahead_observe=3),
-    so.NormdPropertyState.configure(
-        obs_properties=[
-            dict(prop="omega_BP_P", norm=0.03),
-            dict(prop="c_hat_P"),
-            dict(prop="r_BN_P", norm=orbitalMotion.REQ_EARTH * 1e3),
-            dict(prop="v_BN_P", norm=7616.5),
-            dict(prop="battery_charge_fraction"),
-        ]
-    ),
-    SteeringImagerSatellite,
-):
-    """Convenience type for a satellite with common features enabled."""
-
-    pass
-
-
-class FullFeaturedSatellite(
-    sa.ImagingActions,
-    sa.DesatAction,
-    sa.ChargingAction,
-    so.TimeState,
-    so.TargetState.configure(n_ahead_observe=3),
-    so.NormdPropertyState.configure(
-        obs_properties=[
-            dict(prop="omega_BP_P", norm=0.03),
-            dict(prop="c_hat_P"),
-            dict(prop="r_BN_P", norm=orbitalMotion.REQ_EARTH * 1e3),
-            dict(prop="v_BN_P", norm=7616.5),
-            dict(prop="battery_charge_fraction"),
-        ]
-    ),
-    SteeringImagerSatellite,
-):
-    """Convenience type for a satellite with common features enabled."""
-
-    pass

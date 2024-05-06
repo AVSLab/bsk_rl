@@ -179,3 +179,18 @@ def bind(instance, func, as_name=None):
     bound_method = func.__get__(instance, instance.__class__)
     setattr(instance, as_name, bound_method)
     return bound_method
+
+
+class AbstractClassProperty:
+    def __init__(self):
+        self.__isabstractmethod__ = True
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        raise NotImplementedError(
+            f"AbstractClassProperty '{self.name}' must be set in subclass"
+        )

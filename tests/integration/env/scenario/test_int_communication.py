@@ -1,6 +1,8 @@
 import gymnasium as gym
 
+from bsk_rl.env.scenario import actions as act
 from bsk_rl.env.scenario import data
+from bsk_rl.env.scenario import observations as obs
 from bsk_rl.env.scenario import satellites as sats
 from bsk_rl.env.scenario.communication import (
     FreeCommunication,
@@ -33,12 +35,19 @@ oes_eclipsed = walker_delta(
 )
 
 
+class FullFeaturedSatellite(sats.SteeringImagerSatellite, act.ImagingActions):
+    observation_spec = [
+        obs.SatProperties(dict(prop="r_BN_P", module="dynamics", norm=6e6)),
+        obs.Time(),
+    ]
+
+
 def make_communication_env(oes, comm_type):
     satellites = [
-        sats.FullFeaturedSatellite(
+        FullFeaturedSatellite(
             "EO-1",
             n_ahead_act=10,
-            sat_args=sats.FullFeaturedSatellite.default_sat_args(
+            sat_args=FullFeaturedSatellite.default_sat_args(
                 oe=oe,
                 imageAttErrorRequirement=0.05,
                 imageRateErrorRequirement=0.05,

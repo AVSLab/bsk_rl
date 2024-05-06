@@ -2,9 +2,9 @@ import gymnasium as gym
 from Basilisk.architecture import bskLogging
 from Basilisk.utilities import orbitalMotion
 
+from bsk_rl.env.scenario import actions as act
 from bsk_rl.env.scenario import data
-from bsk_rl.env.scenario import sat_actions as sa
-from bsk_rl.env.scenario import sat_observations as so
+from bsk_rl.env.scenario import observations as obs
 from bsk_rl.env.scenario import satellites as sats
 from bsk_rl.env.scenario.environment_features import CityTargets
 from bsk_rl.env.simulation import dynamics, environment, fsw
