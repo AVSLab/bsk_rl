@@ -50,16 +50,16 @@ class TestSingleSatelliteTasking:
         while not (terminated or truncated):
             observation, reward, terminated, truncated, info = self.env.step(0)
         assert truncated
-        assert self.env.simulator.sim_time == 100.0
+        assert self.env.unwrapped.simulator.sim_time == 100.0
 
     def test_repeatable(self):
         self.env.reset(seed=0)
-        env_args_old = self.env.env_args
-        sat_args_old = self.env.satellite.sat_args
+        env_args_old = self.env.unwrapped.env_args
+        sat_args_old = self.env.unwrapped.satellite.sat_args
         self.env.reset(seed=0)
-        assert self.env.env_args == env_args_old
+        assert self.env.unwrapped.env_args == env_args_old
         for val, val_old in zip(
-            self.env.satellite.sat_args.values(), sat_args_old.values()
+            self.env.unwrapped.satellite.sat_args.values(), sat_args_old.values()
         ):
             if (
                 isinstance(val, (np.ndarray, list, type(None)))
@@ -140,4 +140,4 @@ class TestGeneralSatelliteTasking:
         while not (terminated or truncated):
             observation, reward, terminated, truncated, info = self.env.step([0, 0])
         assert truncated
-        assert self.env.simulator.sim_time == 100.0
+        assert self.env.unwrapped.simulator.sim_time == 100.0

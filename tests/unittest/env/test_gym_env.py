@@ -30,9 +30,9 @@ class TestGeneralSatelliteTasking:
     )
     def test_generate_env_args(self):
         env = GeneralSatelliteTasking()
-        env.env_args_generator = {"a": 1, "b": lambda: 2}
+        env.unwrapped.env_args_generator = {"a": 1, "b": lambda: 2}
         env._generate_env_args()
-        assert env.env_args == {"a": 1, "b": 2}
+        assert env.unwrapped.env_args == {"a": 1, "b": 2}
 
     @pytest.mark.parametrize(
         "classes,result",
@@ -48,7 +48,7 @@ class TestGeneralSatelliteTasking:
     )
     def test_minimum_env_model(self, classes, result):
         env = GeneralSatelliteTasking()
-        env.satellites = [
+        env.unwrapped.satellites = [
             MagicMock(
                 dyn_type=MagicMock(_requires_env=MagicMock(return_value=class_list))
             )
@@ -62,7 +62,7 @@ class TestGeneralSatelliteTasking:
     )
     def test_minimum_env_model_mixed(self):
         env = GeneralSatelliteTasking()
-        env.satellites = [
+        env.unwrapped.satellites = [
             MagicMock(
                 dyn_type=MagicMock(_requires_env=MagicMock(return_value=class_list))
             )
@@ -85,10 +85,13 @@ class TestGeneralSatelliteTasking:
             env_features=MagicMock(),
             data_manager=mock_data,
         )
-        env.env_args_generator = {"utc_init": "a long time ago"}
+        env.unwrapped.env_args_generator = {"utc_init": "a long time ago"}
         env.communicator = MagicMock()
         env.reset()
-        assert mock_sat.sat_args_generator["utc_init"] == env.env_args["utc_init"]
+        assert (
+            mock_sat.sat_args_generator["utc_init"]
+            == env.unwrapped.env_args["utc_init"]
+        )
         mock_sim.assert_called_once()
         mock_sat.reset_pre_sim.assert_called_once()
         mock_data.create_data_store.assert_called_once_with(mock_sat)
@@ -157,7 +160,7 @@ class TestGeneralSatelliteTasking:
             env_features=MagicMock(),
             data_manager=MagicMock(),
         )
-        env.simulator = MagicMock()
+        env.unwrapped.simulator = MagicMock()
         env.reset = MagicMock()
         assert env.observation_space == spaces.Tuple(
             (spaces.Discrete(1), spaces.Discrete(2), spaces.Discrete(3))
@@ -174,11 +177,11 @@ class TestGeneralSatelliteTasking:
                 reward=MagicMock(return_value={sat.id: 12.5 for sat in mock_sats})
             ),
         )
-        env.simulator = MagicMock(sim_time=101.0)
+        env.unwrapped.simulator = MagicMock(sim_time=101.0)
         _, reward, _, _, info = env.step((0, 10))
         mock_sats[0].set_action.assert_called_once_with(0)
         mock_sats[1].set_action.assert_called_once_with(10)
-        env.simulator.run.assert_called_once()
+        env.unwrapped.simulator.run.assert_called_once()
         assert env.latest_step_duration == 0.0
         for sat in mock_sats:
             sat.data_store.internal_update.assert_called_once()
@@ -192,7 +195,7 @@ class TestGeneralSatelliteTasking:
             env_features=MagicMock(),
             data_manager=MagicMock(reward=MagicMock(return_value=25.0)),
         )
-        env.simulator = MagicMock(sim_time=101.0)
+        env.unwrapped.simulator = MagicMock(sim_time=101.0)
         with pytest.raises(ValueError):
             env.step((0, 10, 20))
         with pytest.raises(ValueError):
@@ -212,7 +215,7 @@ class TestGeneralSatelliteTasking:
             ),
             terminate_on_time_limit=terminate_on_time_limit,
         )
-        env.simulator = MagicMock(sim_time=101.0)
+        env.unwrapped.simulator = MagicMock(sim_time=101.0)
         if timeout:
             env.time_limit = 100.0
         else:
@@ -235,7 +238,7 @@ class TestGeneralSatelliteTasking:
             env_features=MagicMock(),
             data_manager=MagicMock(reward=MagicMock(return_value={mock_sat.id: 25.0})),
         )
-        env.simulator = MagicMock(sim_time=101.0)
+        env.unwrapped.simulator = MagicMock(sim_time=101.0)
         env.step(None)
         assert mock_sat.requires_retasking
         mock_sat.requires_retasking = True
@@ -252,7 +255,7 @@ class TestGeneralSatelliteTasking:
             env_features=MagicMock(),
             data_manager=MagicMock(),
         )
-        env.simulator = MagicMock()
+        env.unwrapped.simulator = MagicMock()
         env.close()
         assert not hasattr(env, "simulator")
 
@@ -271,7 +274,7 @@ class TestSingleSatelliteTasking:
             env_features=MagicMock(),
             data_manager=MagicMock(),
         )
-        assert env.satellite == mock_sat
+        assert env.unwrapped.satellite == mock_sat
 
     def test_init_multisat(self):
         with pytest.raises(ValueError):
@@ -300,7 +303,7 @@ class TestSingleSatelliteTasking:
     @patch("bsk_rl.env.gym_env.GeneralSatelliteTasking.observation_space")
     def test_observation_space(self, obs_patch):
         env, mock_sat = self.make_env()
-        env.simulator = MagicMock()
+        env.unwrapped.simulator = MagicMock()
         assert env.observation_space == mock_sat.observation_space
 
     @patch("bsk_rl.env.gym_env.GeneralSatelliteTasking.step")
@@ -336,7 +339,7 @@ class TestMultiagentSatelliteTasking:
             env_features=MagicMock(),
             data_manager=mock_data,
         )
-        env.env_args_generator = {"utc_init": "a long time ago"}
+        env.unwrapped.env_args_generator = {"utc_init": "a long time ago"}
         env.communicator = MagicMock()
         obs, info = env.reset()
         obs_fn.assert_called_once()
@@ -353,9 +356,9 @@ class TestMultiagentSatelliteTasking:
             env_features=MagicMock(),
             data_manager=MagicMock(),
         )
-        assert env.agents == [sat.id for sat in env.satellites]
+        assert env.agents == [sat.id for sat in env.unwrapped.satellites]
         assert env.num_agents == 3
-        assert env.possible_agents == [sat.id for sat in env.satellites]
+        assert env.possible_agents == [sat.id for sat in env.unwrapped.satellites]
         assert env.max_num_agents == 3
 
     @patch(
@@ -370,7 +373,9 @@ class TestMultiagentSatelliteTasking:
             data_manager=MagicMock(),
         )
         env.newly_dead = []
-        assert env._get_obs() == {sat.id: i for i, sat in enumerate(env.satellites)}
+        assert env._get_obs() == {
+            sat.id: i for i, sat in enumerate(env.unwrapped.satellites)
+        }
 
     @patch(
         "bsk_rl.env.gym_env.GeneralSatelliteTasking._get_truncated",
@@ -401,9 +406,9 @@ class TestMultiagentSatelliteTasking:
             data_manager=MagicMock(),
         )
         assert env.action_spaces == {
-            env.satellites[0].id: spaces.Discrete(1),
-            env.satellites[1].id: spaces.Discrete(2),
-            env.satellites[2].id: spaces.Discrete(3),
+            env.unwrapped.satellites[0].id: spaces.Discrete(1),
+            env.unwrapped.satellites[1].id: spaces.Discrete(2),
+            env.unwrapped.satellites[2].id: spaces.Discrete(3),
         }
 
     def test_obs_spaces(self):
@@ -415,12 +420,12 @@ class TestMultiagentSatelliteTasking:
             env_features=MagicMock(),
             data_manager=MagicMock(),
         )
-        env.simulator = MagicMock()
+        env.unwrapped.simulator = MagicMock()
         env.reset = MagicMock()
         assert env.observation_spaces == {
-            env.satellites[0].id: spaces.Discrete(1),
-            env.satellites[1].id: spaces.Discrete(2),
-            env.satellites[2].id: spaces.Discrete(3),
+            env.unwrapped.satellites[0].id: spaces.Discrete(1),
+            env.unwrapped.satellites[1].id: spaces.Discrete(2),
+            env.unwrapped.satellites[2].id: spaces.Discrete(3),
         }
 
     @patch(
@@ -437,10 +442,12 @@ class TestMultiagentSatelliteTasking:
             data_manager=MagicMock(),
             failure_penalty=-20.0,
         )
-        env.newly_dead = [sat.id for sat in env.satellites]
-        env.reward_dict = {sat.id: 10.0 for i, sat in enumerate(env.satellites)}
+        env.newly_dead = [sat.id for sat in env.unwrapped.satellites]
+        env.reward_dict = {
+            sat.id: 10.0 for i, sat in enumerate(env.unwrapped.satellites)
+        }
         assert env._get_reward() == {
-            sat.id: -10.0 for i, sat in enumerate(env.satellites)
+            sat.id: -10.0 for i, sat in enumerate(env.unwrapped.satellites)
         }
 
     @pytest.mark.parametrize("timeout", [False, True])
@@ -457,21 +464,21 @@ class TestMultiagentSatelliteTasking:
             terminate_on_time_limit=terminate_on_time_limit,
             time_limit=100,
         )
-        env.simulator = MagicMock(sim_time=101 if timeout else 99)
+        env.unwrapped.simulator = MagicMock(sim_time=101 if timeout else 99)
 
         if not timeout or not terminate_on_time_limit:
-            env.newly_dead = [sat.id for sat in env.satellites]
+            env.newly_dead = [sat.id for sat in env.unwrapped.satellites]
             assert env._get_terminated() == {
-                env.satellites[0].id: True,
-                env.satellites[1].id: False,
-                env.satellites[2].id: False,
+                env.unwrapped.satellites[0].id: True,
+                env.unwrapped.satellites[1].id: False,
+                env.unwrapped.satellites[2].id: False,
             }
         else:
-            env.newly_dead = [sat.id for sat in env.satellites]
+            env.newly_dead = [sat.id for sat in env.unwrapped.satellites]
             assert env._get_terminated() == {
-                env.satellites[0].id: True,
-                env.satellites[1].id: True,
-                env.satellites[2].id: True,
+                env.unwrapped.satellites[0].id: True,
+                env.unwrapped.satellites[1].id: True,
+                env.unwrapped.satellites[2].id: True,
             }
 
     @pytest.mark.parametrize("time", [99, 101])
@@ -483,12 +490,14 @@ class TestMultiagentSatelliteTasking:
             data_manager=MagicMock(),
             time_limit=100,
         )
-        env.simulator = MagicMock(sim_time=time)
-        env.newly_dead = [sat.id for sat in env.satellites] if time >= 100 else []
+        env.unwrapped.simulator = MagicMock(sim_time=time)
+        env.newly_dead = (
+            [sat.id for sat in env.unwrapped.satellites] if time >= 100 else []
+        )
         assert env._get_truncated() == {
-            env.satellites[0].id: time >= 100,
-            env.satellites[1].id: time >= 100,
-            env.satellites[2].id: time >= 100,
+            env.unwrapped.satellites[0].id: time >= 100,
+            env.unwrapped.satellites[1].id: time >= 100,
+            env.unwrapped.satellites[2].id: time >= 100,
         }
 
     def test_close(self):
@@ -498,7 +507,7 @@ class TestMultiagentSatelliteTasking:
             env_features=MagicMock(),
             data_manager=MagicMock(),
         )
-        env.simulator = MagicMock()
+        env.unwrapped.simulator = MagicMock()
         env.close()
         assert not hasattr(env, "simulator")
 
@@ -513,12 +522,12 @@ class TestMultiagentSatelliteTasking:
             env_features=MagicMock(),
             data_manager=MagicMock(),
         )
-        env.satellites[1].is_alive = MagicMock(return_value=False)
-        env.satellites[2].is_alive = MagicMock(return_value=False)
-        env.newly_dead = [env.satellites[2].id]
-        assert env.previously_dead == [env.satellites[1].id]
-        assert env.agents == [env.satellites[0].id]
-        assert env.possible_agents == [sat.id for sat in env.satellites]
+        env.unwrapped.satellites[1].is_alive = MagicMock(return_value=False)
+        env.unwrapped.satellites[2].is_alive = MagicMock(return_value=False)
+        env.newly_dead = [env.unwrapped.satellites[2].id]
+        assert env.previously_dead == [env.unwrapped.satellites[1].id]
+        assert env.agents == [env.unwrapped.satellites[0].id]
+        assert env.possible_agents == [sat.id for sat in env.unwrapped.satellites]
 
     mst = "bsk_rl.env.gym_env.MultiagentSatelliteTasking."
 
@@ -546,15 +555,15 @@ class TestMultiagentSatelliteTasking:
         )
 
         def kill_sat_2():
-            env.satellites[2].is_alive.return_value = False
+            env.unwrapped.satellites[2].is_alive.return_value = False
 
         env._step.side_effect = lambda _: kill_sat_2()
-        env.satellites[1].is_alive.return_value = False
+        env.unwrapped.satellites[1].is_alive.return_value = False
         env.step(
             {
-                env.satellites[0].id: 0,
-                env.satellites[2].id: 2,
+                env.unwrapped.satellites[0].id: 0,
+                env.unwrapped.satellites[2].id: 2,
             }
         )
         env._step.assert_called_with([0, None, 2])
-        assert env.newly_dead == [env.satellites[2].id]
+        assert env.newly_dead == [env.unwrapped.satellites[2].id]
