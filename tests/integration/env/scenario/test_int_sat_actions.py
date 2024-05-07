@@ -47,24 +47,24 @@ class TestImagingAndDownlink:
 
     def test_image(self):
         self.env.reset()
-        storage_init = self.env.satellite.dynamics.storage_level
+        storage_init = self.env.unwrapped.satellite.dynamics.storage_level
         for i in range(10):
             self.env.step(i + 1)
-        assert self.env.satellite.dynamics.storage_level > storage_init
-        assert self.env.satellite.dynamics.storage_level == approx(3.0)
+        assert self.env.unwrapped.satellite.dynamics.storage_level > storage_init
+        assert self.env.unwrapped.satellite.dynamics.storage_level == approx(3.0)
 
     def test_downlink(self):
-        storage_init = self.env.satellite.dynamics.storage_level
+        storage_init = self.env.unwrapped.satellite.dynamics.storage_level
         assert storage_init > 0.0  # Should be filled from previous test
         self.env.step(0)  # Should encounter a downlink opportunity before timeout
-        assert self.env.satellite.dynamics.storage_level < storage_init
+        assert self.env.unwrapped.satellite.dynamics.storage_level < storage_init
 
     def test_image_by_name(self):
         # Smoketest
         self.env.reset()
-        target = self.env.satellite.upcoming_targets(10)[9]
+        target = self.env.unwrapped.satellite.upcoming_targets(10)[9]
         self.env.step(target)
-        target = self.env.satellite.upcoming_targets(10)[9]
+        target = self.env.unwrapped.satellite.upcoming_targets(10)[9]
         self.env.step(target.id)
         assert True
 
@@ -103,9 +103,9 @@ class TestChargingAction:
 
     def test_charging_action(self):
         self.env.reset()
-        init_charge = self.env.satellite.dynamics.battery_charge
+        init_charge = self.env.unwrapped.satellite.dynamics.battery_charge
         self.env.step(0)  # Charge
-        assert self.env.satellite.dynamics.battery_charge > init_charge
+        assert self.env.unwrapped.satellite.dynamics.battery_charge > init_charge
 
 
 class TestDesatAction:
@@ -137,36 +137,36 @@ class TestDesatAction:
     def test_desat_action(self):
         env = self.make_env()
         env.reset()
-        init_speeds = env.satellite.dynamics.wheel_speeds
+        init_speeds = env.unwrapped.satellite.dynamics.wheel_speeds
         for _ in range(4):
             env.step(0)
-            current_speeds = env.satellite.dynamics.wheel_speeds
+            current_speeds = env.unwrapped.satellite.dynamics.wheel_speeds
             assert np.linalg.norm(current_speeds) < np.linalg.norm(init_speeds)
             init_speeds = current_speeds
 
     def test_desat_action_power_draw(self):
         env = self.make_env()
-        env.satellite.sat_args_generator["thrusterPowerDraw"] = 0.0
+        env.unwrapped.satellite.sat_args_generator["thrusterPowerDraw"] = 0.0
         env.reset()
         env.step(0)  # Desat
-        assert env.satellite.dynamics.battery_valid()
+        assert env.unwrapped.satellite.dynamics.battery_valid()
 
-        env.satellite.sat_args_generator["thrusterPowerDraw"] = -10000.0
+        env.unwrapped.satellite.sat_args_generator["thrusterPowerDraw"] = -10000.0
         env.reset()
         env.step(0)  # Desat
-        assert not env.satellite.dynamics.battery_valid()
+        assert not env.unwrapped.satellite.dynamics.battery_valid()
 
     def test_desat_action_pointing(self):
         env = self.make_env()
-        env.satellite.sat_args_generator["desatAttitude"] = "nadir"
+        env.unwrapped.satellite.sat_args_generator["desatAttitude"] = "nadir"
         env.reset(seed=0)
         env.step(0)  # Desat
-        battery_level_nadir = env.satellite.dynamics.battery_charge
+        battery_level_nadir = env.unwrapped.satellite.dynamics.battery_charge
 
-        env.satellite.sat_args_generator["desatAttitude"] = "sun"
+        env.unwrapped.satellite.sat_args_generator["desatAttitude"] = "sun"
         env.reset(seed=0)
         env.step(0)  # Desat
-        battery_level_sun = env.satellite.dynamics.battery_charge
+        battery_level_sun = env.unwrapped.satellite.dynamics.battery_charge
         assert battery_level_sun > battery_level_nadir
 
 
@@ -202,6 +202,6 @@ class TestNadirImagingActions:
 
     def test_image(self):
         self.env.reset()
-        storage_init = self.env.satellite.dynamics.storage_level
+        storage_init = self.env.unwrapped.satellite.dynamics.storage_level
         self.env.step(0)
-        assert self.env.satellite.dynamics.storage_level > storage_init
+        assert self.env.unwrapped.satellite.dynamics.storage_level > storage_init

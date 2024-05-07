@@ -42,17 +42,17 @@ class TestImagingSatellite:
     def test_generate_more_windows(self):
         self.env.reset()
         dts = []
-        while self.env.simulator.sim_time < 1500.0:
+        while self.env.unwrapped.simulator.sim_time < 1500.0:
             observation, reward, terminated, truncated, info = self.env.step(1)
             dts.append(info["d_ts"])
         assert True  # Ensure stepping past initial generation duration works
         assert (np.array(dts) < 500.0).any()  # Ensure variable interval works
 
     def test_fixed_interval(self):
-        self.env.satellite.variable_interval = False
+        self.env.unwrapped.satellite.variable_interval = False
         self.env.reset()
         dts = []
-        while self.env.simulator.sim_time < 1500.0:
+        while self.env.unwrapped.simulator.sim_time < 1500.0:
             observation, reward, terminated, truncated, info = self.env.step(1)
             dts.append(info["d_ts"])
         assert True  # Ensure stepping past initial generation duration works

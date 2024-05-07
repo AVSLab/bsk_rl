@@ -154,7 +154,7 @@ class ContextFilter(logging.Filter):
 
     def filter(self, record):
         try:
-            record.sim_time = self.env.simulator.sim_time
+            record.sim_time = self.env.unwrapped.simulator.sim_time
         except AttributeError:
             pass
         return self.proc_id == record.process

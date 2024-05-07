@@ -77,7 +77,9 @@ class TestNoCommunication:
         self.env.reset()
         for _ in range(10):
             self.env.step([5, 5, 5])
-        imagesets = [set(sat.data_store.data.imaged) for sat in self.env.satellites]
+        imagesets = [
+            set(sat.data_store.data.imaged) for sat in self.env.unwrapped.satellites
+        ]
         assert imagesets[0] != imagesets[1]
         assert imagesets[0] != imagesets[2]
         assert imagesets[1] != imagesets[2]
@@ -90,7 +92,9 @@ class TestFreeCommunication:
         self.env.reset()
         for _ in range(10):
             self.env.step([5, 5, 5])
-        imagesets = [set(sat.data_store.data.imaged) for sat in self.env.satellites]
+        imagesets = [
+            set(sat.data_store.data.imaged) for sat in self.env.unwrapped.satellites
+        ]
         assert imagesets[0] == imagesets[1]
         assert imagesets[1] == imagesets[2]
 
@@ -102,7 +106,9 @@ class TestLOSCommunication:
         self.env.reset()
         for _ in range(10):
             self.env.step([5, 5, 5])
-        imagesets = [set(sat.data_store.data.imaged) for sat in self.env.satellites]
+        imagesets = [
+            set(sat.data_store.data.imaged) for sat in self.env.unwrapped.satellites
+        ]
         assert imagesets[0].issubset(imagesets[1])
         assert imagesets[2].issubset(imagesets[1])
 
@@ -114,7 +120,9 @@ class TestMultiDegreeCommunication:
         self.env.reset()
         for _ in range(10):
             self.env.step([5, 5, 5])
-        imagesets = [set(sat.data_store.data.imaged) for sat in self.env.satellites]
+        imagesets = [
+            set(sat.data_store.data.imaged) for sat in self.env.unwrapped.satellites
+        ]
         assert imagesets[0] == imagesets[1]
         assert imagesets[1] == imagesets[2]
 
@@ -126,7 +134,9 @@ class TestEclipsedLOSCommunication:
         self.env.reset()
         for _ in range(10):
             self.env.step([5, 5, 5])
-        imagesets = [set(sat.data_store.data.imaged) for sat in self.env.satellites]
+        imagesets = [
+            set(sat.data_store.data.imaged) for sat in self.env.unwrapped.satellites
+        ]
         assert imagesets[0] != imagesets[1]
         assert imagesets[0] != imagesets[2]
         assert imagesets[1] != imagesets[2]

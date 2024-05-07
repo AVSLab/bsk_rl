@@ -57,9 +57,9 @@ class TestImagingDynModelStorage:
         env.reset()
 
         if initial_storage > storage_capacity or initial_storage < 0:
-            assert env.satellite.dynamics.storage_level == 0
+            assert env.unwrapped.satellite.dynamics.storage_level == 0
         else:
-            assert env.satellite.dynamics.storage_level == initial_storage
+            assert env.unwrapped.satellite.dynamics.storage_level == initial_storage
 
     @pytest.mark.parametrize(
         "storage_capacity, initial_storage",
@@ -103,4 +103,4 @@ class TestImagingDynModelStorage:
         while not terminated and not truncated:
             observation, reward, terminated, truncated, info = env.step(0)
 
-        assert env.satellite.dynamics.storage_level < initial_storage
+        assert env.unwrapped.satellite.dynamics.storage_level < initial_storage

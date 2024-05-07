@@ -48,8 +48,8 @@ class TestComposedState:
     def test_normd_property_state(self):
         observation, info = self.env.reset()
         assert observation[0] == 0.0  # Timed observation should be first
-        self.env.satellite.observation_builder.obs_type = dict
-        eclipse = self.env.satellite.get_obs()["eclipse"]
+        self.env.unwrapped.satellite.observation_builder.obs_type = dict
+        eclipse = self.env.unwrapped.satellite.get_obs()["eclipse"]
         assert observation[-2] == eclipse[0]  # Eclipse should be last
         assert observation[-1] == eclipse[1]  # Eclipse should be last
 
