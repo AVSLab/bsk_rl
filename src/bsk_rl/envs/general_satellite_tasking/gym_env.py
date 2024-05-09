@@ -120,7 +120,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.failure_penalty = failure_penalty
         self.time_limit = time_limit
         self.terminate_on_time_limit = terminate_on_time_limit
-        self.latest_step_duration = 0
+        self.latest_step_duration = 0.0
         self.render_mode = render_mode
 
     def _minimum_env_model(self) -> type[EnvironmentModel]:
@@ -204,6 +204,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         super().reset(seed=self.seed)
         np.random.seed(self.seed)
         self._generate_env_args()
+
+        self.latest_step_duration = 0.0
 
         self.env_features.reset()
         self.data_manager.reset()
