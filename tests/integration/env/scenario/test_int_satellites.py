@@ -5,24 +5,23 @@ from pytest import approx
 from bsk_rl.env.scenario import actions as act
 from bsk_rl.env.scenario import data
 from bsk_rl.env.scenario import observations as obs
+from bsk_rl.env.scenario import satellites as sats
 from bsk_rl.env.scenario.environment_features import StaticTargets
 from bsk_rl.env.simulation import dynamics, fsw
 from bsk_rl.utils.orbital import random_orbit
 
 
 class TestImagingSatellite:
-    class ImageSat(
-        act.ImagingActions.configure(),
-    ):
+    class ImageSat(sats.ImagingSatellite):
         dyn_type = dynamics.ImagingDynModel
         fsw_type = fsw.ImagingFSWModel
         observation_spec = [obs.Time()]
+        action_spec = [act.Image(n_ahead_image=10)]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
         satellites=ImageSat(
             "EO-1",
-            n_ahead_act=10,
             initial_generation_duration=1000.0,
             generation_duration=100.0,
             sat_args=ImageSat.default_sat_args(

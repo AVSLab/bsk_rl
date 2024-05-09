@@ -2,15 +2,15 @@
 
 Three classes are provided for creating environments:
 
-+-------------------------------------+------------+-------------+--------------------------------------------------------------------+
-| Environment                         | API        | Agent Count | Purpose                                                            |
-+-------------------------------------+------------+-------------+--------------------------------------------------------------------+
-| :class:`SingleSatelliteTasking`     | Gymnasium  | 1           | Single-agent training; compatible with most RL libraries.          |
-+-------------------------------------+------------+-------------+--------------------------------------------------------------------+
-| :class:`GeneralSatelliteTasking`    | Gymnasium  | ≥1          | Multi-agent testing; actions and observations are given in tuples. |
-+-------------------------------------+------------+-------------+--------------------------------------------------------------------+
-| :class:`MultiagentSatelliteTasking` | PettingZoo | ≥1          | Multi-agent training; compatible with multiagency RL libraries.    |
-+-------------------------------------+------------+-------------+--------------------------------------------------------------------+
++-------------------------------------+------------+---------------+--------------------------------------------------------------------+
+| **Environment**                     | **API**    |**Agent Count**| **Purpose**                                                        |
++-------------------------------------+------------+---------------+--------------------------------------------------------------------+
+| :class:`SingleSatelliteTasking`     | Gymnasium  | 1             | Single-agent training; compatible with most RL libraries.          |
++-------------------------------------+------------+---------------+--------------------------------------------------------------------+
+| :class:`GeneralSatelliteTasking`    | Gymnasium  | ≥1            | Multi-agent testing; actions and observations are given in tuples. |
++-------------------------------------+------------+---------------+--------------------------------------------------------------------+
+| :class:`MultiagentSatelliteTasking` | PettingZoo | ≥1            | Multi-agent training; compatible with multiagency RL libraries.    |
++-------------------------------------+------------+---------------+--------------------------------------------------------------------+
 
 Environments are customized by passing keyword arguments to the environment constructor.
 When using ``gym.make``, the syntax looks like this:
@@ -105,7 +105,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 function}, where function is called at reset to set the value (used for
                 randomization).
             sim_rate: Rate for model simulation [s].
-            max_step_duration: Maximum time to propagate sim at a step [s].
+            max_step_duration: Maximum time to propagate sim at a step [s]. If
+                satellites are using variable interval actions, the step duration will
+                be less than or equal to this value.
             failure_penalty: Reward for satellite failure. Should be nonpositive.
             time_limit: Time at which to truncate the simulation [s].
             terminate_on_time_limit: Send terminations signal time_limit instead of just
@@ -463,7 +465,7 @@ class MultiagentSatelliteTasking(
             *args: Passed to :class:`GeneralSatelliteTasking`.
             **kwargs: Passed to :class:`GeneralSatelliteTasking`.
         """
-        pass
+        super().__init__(*args, **kwargs)
 
     def reset(
         self, seed: int | None = None, options=None

@@ -10,10 +10,9 @@ from bsk_rl.env.scenario.environment_features import StaticTargets
 from bsk_rl.utils.orbital import random_orbit
 
 
-class DoNothingSatellite(sats.SteeringImagerSatellite, act.DriftAction):
-    observation_spec = [
-        obs.Time(),
-    ]
+class DoNothingSatellite(sats.SteeringImagerSatellite):
+    observation_spec = [obs.Time()]
+    action_spec = [act.Drift()]
 
 
 class TestSingleSatelliteTasking:
@@ -75,7 +74,7 @@ class TestSingleSatelliteDeath:
         satellites=DoNothingSatellite(
             "Skydiver",
             sat_args=DoNothingSatellite.default_sat_args(
-                rN=[0, 0, 7e6], vN=[0, 0, -100.0]
+                rN=[0, 0, 7e6], vN=[0, 0, -100.0], oe=None
             ),
         ),
         env_features=StaticTargets(n_targets=0),

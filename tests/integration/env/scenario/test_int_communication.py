@@ -35,18 +35,18 @@ oes_eclipsed = walker_delta(
 )
 
 
-class FullFeaturedSatellite(sats.SteeringImagerSatellite, act.ImagingActions):
+class FullFeaturedSatellite(sats.SteeringImagerSatellite):
     observation_spec = [
         obs.SatProperties(dict(prop="r_BN_P", module="dynamics", norm=6e6)),
         obs.Time(),
     ]
+    action_spec = [act.Image(n_ahead_image=10)]
 
 
 def make_communication_env(oes, comm_type):
     satellites = [
         FullFeaturedSatellite(
             "EO-1",
-            n_ahead_act=10,
             sat_args=FullFeaturedSatellite.default_sat_args(
                 oe=oe,
                 imageAttErrorRequirement=0.05,

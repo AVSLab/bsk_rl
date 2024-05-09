@@ -1,8 +1,8 @@
 """Satellite observation types can be used to add information to the observation.
 
-:class:`SatObservation` provides an interface for creating new observation types. To
-configure the observation, set the ``observation_spec`` attribute of the satellite
-subclass. For example:
+:class:`Observation` provides an interface for creating new observation types. To
+configure the observation, set the ``observation_spec`` attribute of a
+:class:`~bsk_rl.env.scenario.satellites.Satellite` subclass. For example:
 
 .. code-block:: python
 
@@ -37,6 +37,8 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
+from gymnasium import spaces
+
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.env.types import Satellite, Simulator
 
@@ -48,15 +50,41 @@ from bsk_rl.utils.functional import vectorize_nested_dict
 logger = logging.getLogger(__name__)
 
 
+def obs_dict_to_space(obs_dict):
+    """Convert an observation dictionary to a gym space.
+
+    Args:
+        obs_dict: Observation dictionary
+
+    Returns:
+        gym.Space: Observation space
+
+    :meta private:
+    """
+    if isinstance(obs_dict, dict):
+        return spaces.Dict(
+            {key: obs_dict_to_space(value) for key, value in obs_dict.items()}
+        )
+    elif isinstance(obs_dict, list):
+        return spaces.Box(
+            low=-1e16, high=1e16, shape=(len(obs_dict),), dtype=np.float64
+        )
+    elif isinstance(obs_dict, (float, int)):
+        return spaces.Box(low=-1e16, high=1e16, shape=(1,), dtype=np.float64)
+    else:
+        return spaces.Box(low=-1e16, high=1e16, shape=obs_dict.shape, dtype=np.float64)
+
+
 class ObservationBuilder:
-    """:meta private:"""  # noqa: D415
+    """:meta private:"""
 
     def __init__(self, satellite: "Satellite", obs_type: type = np.ndarray) -> None:
         """Satellite subclass for composing observations.
 
         Args:
             satellite: Satellite to observe
-            obs_type: Datatype of satellite's returned observation
+            obs_type: Datatype of satellite's returned observation. Can be ``np.ndarray``
+                (default), ``dict``, or ``list``.
         """
         self.obs_type = obs_type
         self.obs_dict_cache = None
@@ -121,8 +149,24 @@ class ObservationBuilder:
         else:
             raise ValueError(f"Invalid observation type: {self.obs_type}")
 
+    @property
+    def observation_space(self) -> spaces.Space:
+        """Space of the observation."""
+        obs = self.get_obs()
+        if isinstance(obs, (list, np.ndarray)):
+            return spaces.Box(low=-1e16, high=1e16, shape=obs.shape, dtype=np.float64)
+        elif isinstance(obs, dict):
+            return obs_dict_to_space(obs)
+        else:
+            raise ValueError(f"Invalid observation type: {self.obs_type}")
 
-class SatObservation(ABC):
+    @property
+    def observation_description(self) -> Any:
+        """Human-interpretable description of observation space."""
+        return self.obs_array_keys()
+
+
+class Observation(ABC):
     """Base observations class."""
 
     def __init__(self, name: str = "obs") -> None:
@@ -165,7 +209,7 @@ class SatObservation(ABC):
         pass
 
 
-class SatProperties(SatObservation):
+class SatProperties(Observation):
     """Add arbitrary `dynamics` and `fsw` ."""
 
     def __init__(
@@ -239,7 +283,7 @@ class SatProperties(SatObservation):
         return obs
 
 
-class Time(SatObservation):
+class Time(Observation):
     def __init__(self, norm=None, name="time"):
         """Include the simulation time in the observation.
 
@@ -276,7 +320,7 @@ def _target_angle(sat, opp):
     return np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.c_hat_P))
 
 
-class OpportunityProperties(SatObservation):
+class OpportunityProperties(Observation):
 
     _fn_map = {
         "priority": lambda sat, opp: opp[opp["type"]].priority,
@@ -291,7 +335,7 @@ class OpportunityProperties(SatObservation):
     def __init__(
         self,
         *target_properties: dict[str, Any],
-        n_ahead_observe: int = 10,
+        n_ahead_observe: int,
         type="target",
         name=None,
     ):
@@ -401,7 +445,7 @@ class OpportunityProperties(SatObservation):
         return obs
 
 
-class Eclipse(SatObservation):
+class Eclipse(Observation):
     def __init__(self, norm=5700.0, name="eclipse"):
         """Include a tuple of the next eclipse start and end times in the observation.
 
