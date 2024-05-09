@@ -3,7 +3,7 @@
 import bisect
 import inspect
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
 from weakref import proxy
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
         DynamicsModel,
         FSWModel,
         Simulator,
-        SatObservation,
+        Observation,
     )
 
 import numpy as np
@@ -20,6 +20,7 @@ from Basilisk.utilities import macros
 from gymnasium import spaces
 from scipy.optimize import minimize_scalar, root_scalar
 
+from bsk_rl.env.scenario.actions import select_action_builder
 from bsk_rl.env.scenario.data import DataStore, UniqueImageStore
 from bsk_rl.env.scenario.environment_features import Target
 from bsk_rl.env.scenario.observations import ObservationBuilder
@@ -41,7 +42,8 @@ class Satellite(ABC):
 
     dyn_type: type["DynamicsModel"] = AbstractClassProperty()
     fsw_type: type["FSWModel"] = AbstractClassProperty()
-    observation_spec: list["SatObservation"] = AbstractClassProperty()
+    observation_spec: list["Observation"] = AbstractClassProperty()
+    action_spec: list["Action"] = AbstractClassProperty()
 
     @classmethod
     def default_sat_args(cls, **kwargs) -> dict[str, Any]:
@@ -95,6 +97,7 @@ class Satellite(ABC):
         self.variable_interval = variable_interval
         self._timed_terminal_event_name = None
         self.observation_builder = ObservationBuilder(self, obs_type=obs_type)
+        self.action_builder = select_action_builder(self)
 
     @property
     def id(self) -> str:
@@ -164,27 +167,35 @@ class Satellite(ABC):
     def reset_post_sim(self) -> None:
         """Reset in environment reset, after simulator initialization."""
         self.observation_builder.reset_post_sim()
+        self.action_builder.reset_post_sim()
 
     @property
-    def observation_space(self) -> spaces.Box:
+    def observation_space(self) -> spaces.Space:
         """Observation space for single satellite, determined from observation.
 
         Returns:
             gymanisium observation space
         """
-        return spaces.Box(
-            low=-1e16, high=1e16, shape=self.get_obs().shape, dtype=np.float64
-        )
+        return self.observation_builder.observation_space
 
     @property
-    @abstractmethod  # pragma: no cover
+    def observation_description(self) -> Any:
+        """Human-interpretable description of observation space."""
+        return self.observation_builder.observation_description
+
+    @property
     def action_space(self) -> spaces.Space:
         """Action space for single satellite.
 
         Returns:
             gymanisium action space
         """
-        pass
+        return self.action_builder.action_space
+
+    @property
+    def action_description(self) -> Any:
+        """Human-interpretable description of action space."""
+        return self.action_builder.action_description
 
     def is_alive(self, log_failure=False) -> bool:
         """Check if the satellite is violating any aliveness requirements.
@@ -273,8 +284,7 @@ class Satellite(ABC):
         """
         return self.observation_builder.get_obs()
 
-    @abstractmethod  # pragma: no cover
-    def set_action(self, action: int) -> None:
+    def set_action(self, action: Any) -> None:
         """Enable certain processes in the simulator to command the satellite task.
 
         Should call an @action from FSW, among other things.
@@ -282,7 +292,7 @@ class Satellite(ABC):
         Args:
             action: action index
         """
-        pass
+        self.action_builder.set_action(action)
 
 
 class AccessSatellite(Satellite):

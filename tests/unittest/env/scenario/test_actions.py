@@ -7,211 +7,128 @@ from bsk_rl.env.scenario import actions as act
 from bsk_rl.env.scenario.environment_features import Target
 
 
-@patch.multiple(act.DiscreteSatAction, __abstractmethods__=set())
-@patch("bsk_rl.env.scenario.satellites.Satellite.__init__")
-@patch(
-    "bsk_rl.env.scenario.satellites.Satellite.reset_pre_sim",
-    MagicMock,
-)
-class TestDiscreteSatAction:
-    def test_init(self, sat_init):
-        act.DiscreteSatAction()
-        sat_init.assert_called_once()
+@patch.multiple(act.ActionBuilder, __abstractmethods__=set())
+class TestActionBuilder:
+    def test_init(self):
+        action_spec = [MagicMock() for _ in range(3)]
+        satellite = MagicMock(action_spec=action_spec)
+        ab = act.ActionBuilder(satellite)
+        for a in ab.action_spec:
+            a.link_satellite.assert_called_once()
 
-    mock_action = MagicMock(__name__="some_action")
+    def test_reset_post_sim(self):
+        ab = act.ActionBuilder(MagicMock(action_spec=[MagicMock() for _ in range(3)]))
+        ab.reset_post_sim()
+        for a in ab.action_spec:
+            a.link_simulator.assert_called_once()
+            a.reset_post_sim.assert_called_once()
 
-    @pytest.mark.parametrize(
-        "kwargs,expected_map,expected_list",
-        [
-            (dict(act_fn=mock_action), {"0": "some_action"}, [mock_action]),
-            (
-                dict(act_fn=mock_action, act_name="new_name"),
-                {"0": "new_name"},
-                [mock_action],
-            ),
-        ],
-    )
-    def test_add_single_action(self, sat_init, kwargs, expected_map, expected_list):
-        sat = act.DiscreteSatAction()
-        sat.add_action(**kwargs)
-        assert sat.action_map == expected_map
-        assert sat.action_list == expected_list
 
-    @pytest.mark.parametrize("n_actions", [1, 3])
-    def test_add_multiple_actions(self, sat_init, n_actions):
-        sat = act.DiscreteSatAction()
-        sat.some_action = MagicMock(
-            __name__="some_action", side_effect=lambda x, prev_action_key=None: x
+class TestDiscreteActionBuilder:
+    def test_action_space(self):
+        satellite = MagicMock(
+            action_spec=[MagicMock(n_actions=1), MagicMock(n_actions=2)]
         )
-        sat.add_action(sat.some_action, n_actions=n_actions)
-        assert sat.action_map == {f"0-{n_actions-1}": "some_action"}
-        assert [act() for act in sat.action_list] == list(range(n_actions))
-        sat.some_action.assert_has_calls(
-            [call(i, prev_action_key=None) for i in range(n_actions)]
+        ab = act.DiscreteActionBuilder(satellite)
+        assert ab.action_space == spaces.Discrete(3)
+
+    def test_action_description(self):
+        satellite = MagicMock(
+            action_spec=[
+                MagicMock(n_actions=1),
+                MagicMock(n_actions=2),
+            ]
         )
+        satellite.action_spec[0].name = "foo"
+        satellite.action_spec[1].name = "bar"
+        ab = act.DiscreteActionBuilder(satellite)
+        assert ab.action_description == ["foo", "bar_0", "bar_1"]
 
-    @patch("bsk_rl.env.scenario.satellites.Satellite._disable_timed_terminal_event")
-    def test_set_action(self, sat_init, disable_timed):
-        sat = act.DiscreteSatAction()
-        sat.reset_pre_sim()
-        sat.action_list = [MagicMock(return_value="act_key")]
-        sat.set_action(0)
-        disable_timed.assert_called_once()
-        sat.action_list[0].assert_called_once()
-        assert sat.prev_action_key == "act_key"
+    def test_set_action(self):
+        satellite = MagicMock(
+            action_spec=[
+                MagicMock(n_actions=1, set_action=MagicMock(return_value="foo")),
+                MagicMock(n_actions=2, set_action=MagicMock(return_value="bar")),
+                MagicMock(n_actions=1, set_action=MagicMock(return_value="baz")),
+            ]
+        )
+        ab = act.DiscreteActionBuilder(satellite)
+        ab.set_action(0)
+        assert ab.action_spec[0].set_action.call_args == call(0, prev_action_key=None)
+        ab.set_action(1)
+        assert ab.action_spec[1].set_action.call_args == call(0, prev_action_key="foo")
+        ab.set_action(2)
+        assert ab.action_spec[1].set_action.call_args == call(1, prev_action_key="bar")
+        ab.set_action(3)
+        assert ab.action_spec[2].set_action.call_args == call(0, prev_action_key="bar")
 
-    def test_action_space(self, sat_init):
-        sat = act.DiscreteSatAction()
-        sat.action_list = [0, 1, 2]
-        assert sat.action_space == spaces.Discrete(3)
-
-    def test_reset_pre_sim(self, sat_init):
-        sat = act.DiscreteSatAction()
-        sat.prev_action_key = "some_action"
-        sat.reset_pre_sim()
-        assert sat.prev_action_key is None
-
-
-@patch.multiple(act.DiscreteSatAction, __abstractmethods__=set())
-@patch("bsk_rl.env.scenario.satellites.Satellite.__init__")
-@patch(
-    "bsk_rl.env.scenario.satellites.Satellite.reset_pre_sim",
-    MagicMock,
-)
-class TestFSWAction:
-    def test_init(self, sat_init):
-        FSWAct = act.fsw_action_gen("cool_action")
-        sat = FSWAct(action_duration=10.0)
-        sat_init.assert_called_once()
-        assert sat.cool_action_duration == 10.0
-
-    def make_action_sat(self):
-        FSWAct = act.fsw_action_gen("cool_action", 60.0)
-        sat = FSWAct()
-        sat.reset_pre_sim()
-        sat.fsw = MagicMock(cool_action=MagicMock())
-        sat.log_info = MagicMock()
-        sat._disable_timed_terminal_event = MagicMock()
-        sat._update_timed_terminal_event = MagicMock()
-        sat.simulator = MagicMock(sim_time=0.0)
-        return sat
-
-    def test_act(self, sat_init):
-        sat = self.make_action_sat()
-        assert sat.action_list[0].__name__ == "act_cool_action"
-        sat.set_action(0)
-        assert "cool_action" == sat.prev_action_key
-        sat.log_info.assert_called_once_with("cool_action tasked for 60.0 seconds")
-        sat.fsw.cool_action.assert_called_once()
-
-    def make_action_sat_configured(self):
-        FSWAct = act.fsw_action_gen("cool_action", 59.0).configure(action_duration=60.0)
-        sat = FSWAct()
-        sat.reset_pre_sim()
-        sat.fsw = MagicMock(cool_action=MagicMock())
-        sat.log_info = MagicMock()
-        sat._disable_timed_terminal_event = MagicMock()
-        sat._update_timed_terminal_event = MagicMock()
-        sat.simulator = MagicMock(sim_time=0.0)
-        return sat
-
-    def test_act_configured(self, sat_init):
-        sat = self.make_action_sat_configured()
-        assert sat.action_list[0].__name__ == "act_cool_action"
-        sat.set_action(0)
-        assert "cool_action" == sat.prev_action_key
-        sat.log_info.assert_called_once_with("cool_action tasked for 60.0 seconds")
-        sat.fsw.cool_action.assert_called_once()
-
-    def test_retask(self, sat_init):
-        sat = self.make_action_sat()
-        sat.set_action(0)
-        sat.set_action(0)
-        sat.fsw.cool_action.assert_called_once()
-
-
-@patch.multiple(act.ImagingActions, __abstractmethods__=set())
-@patch("bsk_rl.env.scenario.satellites.ImagingSatellite.__init__")
-class TestImagingActions:
-    def test_init(self, sat_init):
-        sat = act.ImagingActions(n_ahead_act=3)
-        sat_init.assert_called_once()
-        assert sat.action_map == {"0-2": "image"}
-
-    class MockTarget(MagicMock, Target):
-        @property
-        def id(self):
-            return "target_1"
-
-    @pytest.mark.parametrize("target", [1, "target_1", MockTarget()])
-    def test_image(self, sat_init, target):
-        sat = act.ImagingActions()
-        sat.log_info = MagicMock()
-        sat.parse_target_selection = MagicMock(return_value=self.MockTarget())
-        sat.task_target_for_imaging = MagicMock()
-        assert "target_1" == sat.image(target)
-        sat.task_target_for_imaging.assert_called_once_with(
-            sat.parse_target_selection()
+    def test_set_action_override(self):
+        satellite = MagicMock(
+            action_spec=[
+                MagicMock(n_actions=1, set_action_override=None),
+                MagicMock(n_actions=2, set_action_override=MagicMock()),
+            ]
+        )
+        ab = act.DiscreteActionBuilder(satellite)
+        ab.set_action("foo")
+        assert ab.action_spec[1].set_action_override.call_args == call(
+            "foo", prev_action_key=None
         )
 
-    @pytest.mark.parametrize("target", [1, "target_1", MockTarget()])
-    def test_image_retask(self, sat_init, target):
-        sat = act.ImagingActions()
-        sat.log_info = MagicMock()
-        sat.enable_target_window = MagicMock()
-        sat.parse_target_selection = MagicMock(return_value=self.MockTarget())
-        sat.task_target_for_imaging = MagicMock()
-        sat.image(target, prev_action_key="target_1")
-        sat.task_target_for_imaging.assert_not_called()
-        sat.enable_target_window.assert_called()
 
-    @patch("bsk_rl.env.scenario.actions.DiscreteSatAction.set_action")
-    @pytest.mark.parametrize("target", [1, "target_1", MockTarget()])
-    def test_set_action(self, sat_init, discrete_set, target):
-        sat = act.ImagingActions()
-        sat.prev_action_key = None
-        sat._disable_image_event = MagicMock()
-        sat.image = MagicMock()
-        sat.set_action(target)
-        sat._disable_image_event.assert_called()
-        if isinstance(target, int):
-            discrete_set.assert_called_once()
-        elif isinstance(target, (Target, str)):
-            sat.image.assert_called_once()
+class TestDiscreteFSWAction:
+    def test_set_action(self):
+        fswact = act.DiscreteFSWAction("action_fsw")
+        fswact.satellite = MagicMock()
+        fswact.simulator = MagicMock()
+        fswact.set_action(0)
+        fswact.satellite.fsw.action_fsw.assert_called_once()
+
+    def test_set_action_again(self):
+        fswact = act.DiscreteFSWAction("action_fsw")
+        fswact.satellite = MagicMock()
+        fswact.simulator = MagicMock()
+        fswact.set_action(0, prev_action_key="action_fsw")
+        fswact.satellite.fsw.action_fsw.assert_not_called()
+
+    def test_set_action_reset(self):
+        fswact = act.DiscreteFSWAction("action_fsw", reset_task=True)
+        fswact.satellite = MagicMock()
+        fswact.simulator = MagicMock()
+        fswact.set_action(0, prev_action_key="action_fsw")
+        fswact.satellite.fsw.action_fsw.assert_called_once()
 
 
-@patch.multiple(act.NadirImagingAction, __abstractmethods__=set())
-@patch("bsk_rl.env.scenario.satellites.Satellite.__init__")
-class TestNadirImagingActions:
-    def test_init(self, sat_init):
-        sat = act.NadirImagingAction()
-        sat_init.assert_called_once()
-        assert sat.action_map == {"0": "action_nadir_scan"}
+class TestImage:
+    target = MagicMock()
+    target.id = "target_1"
 
+    def test_image(self):
+        image = act.Image(n_ahead_image=10)
+        image.satellite = MagicMock()
+        image.satellite.parse_target_selection.return_value = self.target
+        out = image.image(5, None)
+        image.satellite.task_target_for_imaging.assert_called_once_with(self.target)
+        assert out == "target_1"
 
-@patch.multiple(act.ChargingAction, __abstractmethods__=set())
-@patch.multiple(act.DriftAction, __abstractmethods__=set())
-@patch.multiple(act.DesatAction, __abstractmethods__=set())
-@patch.multiple(act.DownlinkAction, __abstractmethods__=set())
-@patch.multiple(act.ImagingActions, __abstractmethods__=set())
-@patch("bsk_rl.env.scenario.satellites.ImagingSatellite.__init__")
-def test_combination(sat_init):
-    class ComboAct(
-        act.ImagingActions.configure(n_ahead_act=3),
-        act.DownlinkAction,
-        act.DesatAction,
-        act.DriftAction,
-        act.ChargingAction,
-    ):
-        pass
+    def test_image_retask(self):
+        image = act.Image(n_ahead_image=10)
+        image.satellite = MagicMock()
+        image.satellite.parse_target_selection.return_value = self.target
+        out = image.image(5, "target_1")
+        image.satellite.enable_target_window.assert_called_once_with(self.target)
+        assert out == "target_1"
 
-    sat = ComboAct()
-    assert sat.action_map == {
-        "0": "action_charge",
-        "1": "action_drift",
-        "2": "action_desat",
-        "3": "action_downlink",
-        "4-6": "image",
-    }
-    assert len(sat.action_list) == 7
-    sat_init.assert_called_once()
+    def test_set_action(self):
+        image = act.Image(n_ahead_image=10)
+        image.satellite = MagicMock()
+        image.image = MagicMock()
+        image.set_action(5)
+        image.image.assert_called_once_with(5, None)
+
+    def test_set_action_override(self):
+        image = act.Image(n_ahead_image=10)
+        image.satellite = MagicMock()
+        image.image = MagicMock()
+        image.set_action_override("image")
+        image.image.assert_called_once_with("image", None)

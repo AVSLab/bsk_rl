@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import numpy as np
 import pytest
+from gymnasium import spaces
 
 from bsk_rl.env.scenario import observations as obs
 
@@ -63,6 +64,41 @@ class TestObservationBuilder:
         # Step time forward, expect new value
         ob.satellite.simulator.sim_time = 1.0
         assert ob.get_obs()[0] == 1
+
+    @pytest.mark.parametrize(
+        "observation,space",
+        [
+            (
+                np.array([1]),
+                spaces.Box(low=-1e16, high=1e16, shape=(1,), dtype=np.float64),
+            ),
+            (
+                np.array([1, 2]),
+                spaces.Box(low=-1e16, high=1e16, shape=(2,), dtype=np.float64),
+            ),
+            (
+                {"a": 1, "b": {"c": 1}},
+                spaces.Dict(
+                    {
+                        "a": spaces.Box(
+                            low=-1e16, high=1e16, shape=(1,), dtype=np.float64
+                        ),
+                        "b": spaces.Dict(
+                            {
+                                "c": spaces.Box(
+                                    low=-1e16, high=1e16, shape=(1,), dtype=np.float64
+                                )
+                            }
+                        ),
+                    }
+                ),
+            ),
+        ],
+    )
+    def test_obs_space(self, observation, space):
+        ob = obs.ObservationBuilder(MagicMock())
+        ob.get_obs = MagicMock(return_value=observation)
+        assert ob.observation_space == space
 
 
 class TestSatProperties:
@@ -133,6 +169,7 @@ class TestOpportunityProperties:
             dict(
                 prop="double_priority", fn=lambda sat, opp: opp["target"].priority * 2.0
             ),
+            n_ahead_observe=2,
         )
         assert ob.target_properties[0]["fn"]
         assert ob.target_properties[0]["name"] == "location_normd"
@@ -157,7 +194,7 @@ class TestOpportunityProperties:
 
     def test_init_bad(self):
         with pytest.raises(ValueError):
-            obs.OpportunityProperties(dict(prop="not_a_prop"))
+            obs.OpportunityProperties(dict(prop="not_a_prop"), n_ahead_observe=2)
 
 
 class TestEclipse:

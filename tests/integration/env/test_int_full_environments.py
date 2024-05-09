@@ -14,11 +14,12 @@ from bsk_rl.env.simulation import environment
 from bsk_rl.utils.orbital import random_orbit
 
 
-class FullFeaturedSatellite(sats.SteeringImagerSatellite, act.ImagingActions):
+class FullFeaturedSatellite(sats.SteeringImagerSatellite):
     observation_spec = [
         obs.SatProperties(dict(prop="r_BN_P", module="dynamics", norm=6e6)),
         obs.Time(),
     ]
+    action_spec = [act.Image(n_ahead_image=10)]
 
 
 multi_env = gym.make(

@@ -1,216 +1,416 @@
-"""Satellite action types can be used to add actions to the agents."""
+"""Satellite action types can be used to add actions to an agent.
 
+To configure the observation, set the ``action_spec`` attribute of a
+:class:`~bsk_rl.env.scenario.satellites.Satellite` subclass. For example:
+
+.. code-block:: python
+
+    class MyActionSatellite(Satellite):
+        action_spec = [
+            Charge(duration=60.0),
+            Desat(duration=30.0),
+            Downlink(duration=60.0),
+            Image(n_ahead_image=10),
+        ]
+
+Actions in an ``action_spec`` should all be of the same subclass of :class:`Action`. The
+following actions are currently available:
+
+Discrete Actions: :class:`DiscreteAction`
+-----------------------------------------
+For integer-indexable, discrete actions.
+
++----------------------------+---------+-------------------------------------------------------------------------------------------------------+
+| **Action**                 |**Count**| **Description**                                                                                       |
++----------------------------+---------+-------------------------------------------------------------------------------------------------------+
+| :class:`DiscreteFSWAction` | 1       | Call an arbitrary ``@action`` decorated function in the :class:`~bsk_rl.env.simulation.fsw.FSWModel`. |
++----------------------------+---------+-------------------------------------------------------------------------------------------------------+
+| :class:`Charge`            | 1       | Point the solar panels at the sun.                                                                    |
++----------------------------+---------+-------------------------------------------------------------------------------------------------------+
+| :class:`Drift`             | 1       | Do nothing.                                                                                           |
++----------------------------+---------+-------------------------------------------------------------------------------------------------------+
+| :class:`Desat`             | 1       | Desaturate the reaction wheels with RCS thrusters. Needs to be called multiple times.                 |
++----------------------------+---------+-------------------------------------------------------------------------------------------------------+
+| :class:`Downlink`          | 1       | Downlink data to any ground station that is in range.                                                 |
++----------------------------+---------+-------------------------------------------------------------------------------------------------------+
+| :class:`Image`             | ≥1      | Image one of the next ``N`` upcoming, unimaged targets once in range.                                 |
++----------------------------+---------+-------------------------------------------------------------------------------------------------------+
+
+"""
+
+import logging
+from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
+
+if TYPE_CHECKING:  # pragma: no cover
+    from bsk_rl.env.types import Satellite, Simulator
 
 import numpy as np
 from gymnasium import spaces
 
 from bsk_rl.env.scenario.environment_features import Target
-from bsk_rl.env.scenario.satellites import ImagingSatellite, Satellite
-from bsk_rl.utils.functional import bind, configurable
+from bsk_rl.utils.functional import AbstractClassProperty, bind, configurable
 
 
-class SatAction(Satellite):
-    """Base satellite subclass for composing actions."""
+def select_action_builder(satellite: "Satellite") -> "ActionBuilder":
+    """Identify the proper action builder based on a satellite's action spec.
 
-    pass
+    Args:
+        satellite: Satellite to build actions for.
+
+    Returns:
+        action builder of the appropriate type
+
+    :meta private:
+    """
+    builder_types = [spec.builder_type for spec in satellite.action_spec]
+    if all([builder_type == builder_types[0] for builder_type in builder_types]):
+        return builder_types[0](satellite)
+    else:
+        raise NotImplementedError("Heterogenous action builders not supported.")
 
 
-class DiscreteSatAction(SatAction):
-    """Base satellite subclass for composing discrete actions."""
+class ActionBuilder(ABC):
+    """:meta private:"""
 
-    def __init__(self, *args, **kwargs) -> None:
-        """Construct satellite with discrete actions.
+    def __init__(self, satellite: "Satellite") -> None:
+        self.satellite = satellite
+        self.simulator: "Simulator"
+        self.action_spec = deepcopy(self.satellite.action_spec)
+        for act in self.action_spec:
+            act.link_satellite(self.satellite)
 
-        Actions are added to the satellite for each DiscreteSatAction subclass, and can
-        be accessed by index in order added.
-        """
-        super().__init__(*args, **kwargs)
-        self.action_list = []
-        self.action_map = {}
+    def reset_post_sim(self) -> None:
+        """Perform any once-per-episode setup."""
+        self.simulator = self.satellite.simulator  # already a proxy
+        for act in self.action_spec:
+            act.link_simulator(self.simulator)  # already a proxy
+            act.reset_post_sim()
 
-    def reset_pre_sim(self) -> None:
-        """Reset the previous action key."""
-        self.prev_action_key = None  # Used to avoid retasking of BSK tasks
-        return super().reset_pre_sim()
+    @property
+    @abstractmethod
+    def action_space(self) -> spaces.Space:
+        """Return the action space."""
+        pass
 
-    def add_action(
-        self, act_fn, act_name: Optional[str] = None, n_actions: Optional[int] = None
-    ):
-        """Add an action to the action map.
+    @property
+    @abstractmethod
+    def action_description(self) -> Any:
+        """Return a description of the action space."""
+        pass
 
-        Args:
-            act_fn: Function to call when selecting action. Takes as a keyword
-                prev_action_key, used to avoid retasking of BSK models. Can accept an
-                integer argument.
-            act_name: String to refer to action.
-            n_actions: If not none, add action n_actions times, calling it with an
-                increasing integer argument for each subsequent action.
-        """
-        if act_name is None:
-            act_name = act_fn.__name__
+    @abstractmethod
+    def set_action(self, action: Any) -> None:
+        """Set the action to be taken."""
+        pass
 
-        if n_actions is None:
-            self.action_map[f"{len(self.action_list)}"] = act_name
-            self.action_list.append(act_fn)
-        else:
-            self.action_map[
-                f"{len(self.action_list)}-{len(self.action_list)+n_actions-1}"
-            ] = act_name
-            for i in range(n_actions):
-                act_i = self.generate_indexed_action(act_fn, i)
-                act_i.__name__ = f"act_{act_fn.__name__}_{i}"
-                self.action_list.append(bind(self, deepcopy(act_i)))
 
-    def generate_indexed_action(self, act_fn, index: int):
-        """Create an indexed action function.
+class DiscreteActionBuilder(ActionBuilder):
+    """:meta private:"""
 
-        Makes an indexed action function from an action function that takes an index
-        as an argument.
+    def __init__(self, satellite: "Satellite") -> None:
+        super().__init__(satellite)
+        self.prev_action_key = None
 
-        Args:
-            act_fn: Action function to index.
-            index: Index to pass to act_fn.
-        """
-
-        def act_i(self, prev_action_key=None) -> Any:
-            return getattr(self, act_fn.__name__)(
-                index, prev_action_key=prev_action_key
-            )
-
-        return act_i
-
-    def set_action(self, action: int):
-        """Call action function my index."""
-        self._disable_timed_terminal_event()
-        self.prev_action_key = self.action_list[action](
-            prev_action_key=self.prev_action_key
-        )  # Update prev action data to avoid retasking
+    def reset_post_sim(self) -> None:
+        super().reset_post_sim()
+        self.prev_action_key = None
 
     @property
     def action_space(self) -> spaces.Discrete:
-        """Infer action space."""
-        return spaces.Discrete(len(self.action_list))
+        return spaces.Discrete(sum([act.n_actions for act in self.action_spec]))
 
+    @property
+    def action_description(self) -> list[str]:
+        actions = []
+        for act in self.action_spec:
+            if act.n_actions == 1:
+                actions.append(act.name)
+            else:
+                actions.extend([f"{act.name}_{i}" for i in range(act.n_actions)])
+        return actions
 
-def fsw_action_gen(
-    fsw_action: str, action_duration: float = 1e9, always_reset: bool = False
-) -> type:
-    """Generate an action class for a FSW @action.
-
-    Args:
-        fsw_action: Function name of FSW action.
-        action_duration: Time to task action for.
-        always_reset: Reset action if selected more than once in a row.
-
-    Returns:
-        Satellite action class with fsw_action action.
-    """
-
-    @configurable
-    class FSWAction(DiscreteSatAction):
-        def __init__(
-            self, *args, action_duration: float = action_duration, **kwargs
-        ) -> None:
-            """Discrete action to perform a fsw action.
-
-            Typically this is includes a function decorated by @action.
-
-            Args:
-                action_duration: Time to act when action selected. [s]
-                args: Passed through to satellite
-                kwargs: Passed through to satellite
-
-            """
-            super().__init__(*args, **kwargs)
-            setattr(self, fsw_action + "_duration", action_duration)
-
-            def act(self, prev_action_key=None) -> str:
-                """Activate action.
-
-                Returns:
-                    action key
-                """
-                duration = getattr(self, fsw_action + "_duration")
-                self.log_info(f"{fsw_action} tasked for {duration} seconds")
-                self._disable_timed_terminal_event()
-                self._update_timed_terminal_event(
-                    self.simulator.sim_time + duration, info=f"for {fsw_action}"
-                )
-                if prev_action_key != fsw_action or always_reset:
-                    getattr(self.fsw, fsw_action)()
-                return fsw_action
-
-            act.__name__ = f"act_{fsw_action}"
-
-            self.add_action(
-                bind(self, act),
-                act_name=fsw_action,
+    def set_action(self, action: int) -> None:
+        self.satellite._disable_timed_terminal_event()
+        if not np.issubdtype(type(action), np.integer):
+            logging.warning(
+                f"Action '{action}' is not an integer. Will attempt to use compatible set_action_override method."
             )
+            for act in self.action_spec:
+                try:
+                    self.prev_action_key = act.set_action_override(
+                        action, prev_action_key=self.prev_action_key
+                    )
+                    return
+                except AttributeError:
+                    pass
+                except TypeError:
+                    pass
+            else:
+                raise ValueError(
+                    f"Action '{action}' is not an integer and no compatible set_action_override method found."
+                )
+        index = 0
+        for act in self.action_spec:
+            if index + act.n_actions > action:
+                self.prev_action_key = act.set_action(
+                    action - index, prev_action_key=self.prev_action_key
+                )
+                return
+            index += act.n_actions
+        else:
+            raise ValueError(f"Action index {action} out of range.")
 
-    return FSWAction
 
+class Action(ABC):
+    builder_type: type[ActionBuilder] = AbstractClassProperty()  #: :meta private:
 
-# Charges the satellite
-ChargingAction = fsw_action_gen("action_charge")
-
-# Disables all actuators and control
-DriftAction = fsw_action_gen("action_drift")
-
-# Points in a specified direction while firing desat thrusters and desaturating wheels
-DesatAction = fsw_action_gen("action_desat", always_reset=True)
-
-# Points nadir while downlinking data
-DownlinkAction = fsw_action_gen("action_downlink")
-
-
-@configurable
-class ImagingActions(DiscreteSatAction, ImagingSatellite):
-    """Satellite subclass to add upcoming target imaging to action space."""
-
-    def __init__(self, *args, n_ahead_act=10, **kwargs) -> None:
-        """Discrete action to image upcoming targets.
+    def __init__(self, name: str = "act") -> None:
+        """Base class for all actions.
 
         Args:
-            n_ahead_act: Number of actions to include in action space.
-            args: Passed through to satellite
-            kwargs: Passed through to satellite
+            name: Name of the action.
         """
-        super().__init__(*args, **kwargs)
-        self.add_action(self.image, n_actions=n_ahead_act, act_name="image")
+        self.name = name
+        self.satellite: "Satellite"
+        self.simulator: "Simulator"
 
-    def image(self, target: Union[int, Target, str], prev_action_key=None) -> str:
-        """Activate imaging action.
+    def link_satellite(self, satellite: "Satellite") -> None:
+        """Link the action to a satellite.
 
         Args:
-            target: Target, in terms of upcoming index, Target, or ID,
-            prev_action_key: Previous action key
+            satellite: Satellite to link to
+
+        :meta private:
+        """
+        self.satellite = satellite  # already a proxy
+
+    def link_simulator(self, simulator: "Simulator") -> None:
+        """Link the action to a simulator.
+
+        Args:
+            simulator: Simulator to link to
+
+        :meta private:
+        """
+        self.simulator = simulator  # already a proxy
+
+    def reset_post_sim(self) -> None:  # pragma: no cover
+        """Perform any once-per-episode setup."""
+        pass
+
+    @abstractmethod
+    def set_action(self, action: Any) -> None:  # pragma: no cover
+        """Execute code to perform an action."""
+        pass
+
+
+class DiscreteAction(Action):
+    builder_type = DiscreteActionBuilder
+
+    def __init__(self, name: str = "discrete_act", n_actions: int = 1):
+        """Base class for discrete, integer-indexable actions.
+
+        A discrete action may represent multiple indexed actions of the same type.
+
+        Optionally, discrete actions may have a ``set_action_override`` function defined.
+        If the action passed to the satellite is not an integer, the satellite will iterate
+        over the ``action_spec`` and attempt to call ``set_action_override`` on each action
+        until one is successful.
+
+        Args:
+            name: Name of the action.
+            n_actions: Number of actions available.
+        """
+        super().__init__(name=name)
+        self.n_actions = n_actions
+
+    @abstractmethod
+    def set_action(self, action: int, prev_action_key=None) -> str:
+        """Activate an action by local index."""
+        pass
+
+
+class DiscreteFSWAction(DiscreteAction):
+    def __init__(
+        self,
+        fsw_action,
+        name=None,
+        duration: Optional[float] = None,
+        reset_task: bool = False,
+    ):
+        """Discrete action to task a flight software action function.
+
+        This action executes a function of a :class:`~bsk_rl.env.simulation.fsw.FSWModel`
+        instance that takes no arguments, typically decorated with ``@action``.
+
+        Args:
+            fsw_action: Name of the flight software function to task.
+            name: Name of the action. If not specified, defaults to the ``fsw_action`` name.
+            duration: Duration of the action in seconds. Defaults to a large value so that
+                the :class:`~bsk_rl.env.gym_env.GeneralSatelliteTasking` ``max_step_duration``
+                controls step length.
+            reset_task: If true, reset the action if the previous action was the same.
+                Generally, this parameter should be false to ensure realistic, continuous
+                operation of satellite modes; however, some Basilisk modules may require
+                frequent resetting for normal operation.
+        """
+        if name is None:
+            name = fsw_action
+        super().__init__(name=name, n_actions=1)
+        self.fsw_action = fsw_action
+        self.reset_task = reset_task
+        if duration is None:
+            duration = 1e9
+        self.duration = duration
+
+    def set_action(self, action: int, prev_action_key=None) -> str:
+        """Activate the ``fsw_action`` function.
+
+        Args:
+            action: Should always be ``1``.
+            prev_action_key: Previous action key.
 
         Returns:
-            Target ID
+            The name of the activated action.
         """
-        if np.issubdtype(type(target), np.integer):
-            self.log_info(f"target index {target} tasked")
+        assert action == 0
+        self.satellite.log_info(f"{self.name} tasked for {self.duration} seconds")
+        self.satellite._update_timed_terminal_event(
+            self.simulator.sim_time + self.duration, info=f"for {self.fsw_action}"
+        )
 
-        target = self.parse_target_selection(target)
+        if self.reset_task or prev_action_key != self.fsw_action:
+            getattr(self.satellite.fsw, self.fsw_action)()
+
+        return self.fsw_action
+
+
+class Charge(DiscreteFSWAction):
+    def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
+        """Action to enter a sun-pointing charging mode (:class:`~bsk_rl.env.simulation.fsw.BasicFSWModel.action_charge`).
+
+        Charging will only occur if the satellite is in sunlight.
+
+        Args:
+            name: Action name.
+            duration: Time to task action, in seconds.
+        """
+        super().__init__(fsw_action="action_charge", name=name, duration=duration)
+
+
+class Drift(DiscreteFSWAction):
+    def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
+        """Action to disable all FSW tasks (:class:`~bsk_rl.env.simulation.fsw.BasicFSWModel.action_drift`).
+
+        Args:
+            name: Action name.
+            duration: Time to task action, in seconds.
+        """
+        super().__init__(fsw_action="action_drift", name=name, duration=duration)
+
+
+class Desat(DiscreteFSWAction):
+    def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
+        """Action to desaturate reaction wheels (:class:`~bsk_rl.env.simulation.fsw.BasicFSWModel.action_desat`).
+
+        This action must be called repeatedly to fully desaturate the reaction wheels.
+
+        Args:
+            name: Action name.
+            duration: Time to task action, in seconds.
+        """
+        super().__init__(
+            fsw_action="action_desat", name=name, duration=duration, reset_task=True
+        )
+
+
+class Downlink(DiscreteFSWAction):
+    def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
+        """Action to transmit data from the data buffer (:class:`~bsk_rl.env.simulation.fsw.ImagingFSWModel.action_downlink`).
+
+        If not in range of a ground station (defined in
+        :class:`~bsk_rl.env.simulation.environment.GroundStationEnvModel`), no data will
+        be downlinked.
+
+        Args:
+            name: Action name.
+            duration: Time to task action, in seconds.
+        """
+        super().__init__(fsw_action="action_downlink", name=name, duration=duration)
+
+
+class Scan(DiscreteFSWAction):
+    def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
+        """Action to collect data from a :class:`~bsk_rl.env.scenario.environment_features.UniformNadirFeature` (:class:`~bsk_rl.env.simulation.fsw.ContinuousImagingFSWModel.action_nadir_scan`).
+
+        Args:
+            name: Action name.
+            duration: Time to task action, in seconds.
+        """
+        super().__init__(fsw_action="action_nadir_scan", name=name, duration=duration)
+
+
+class Image(DiscreteAction):
+    def __init__(
+        self,
+        n_ahead_image: int,
+        name: str = "action_image",
+    ):
+        """Actions to image upcoming target (:class:`~bsk_rl.env.simulation.fsw.ImagingFSWModel.action_image`).
+
+        Adds `n_ahead_image` actions to the action space, corresponding to the next
+        `n_ahead_image` unimaged targets. The action may be unsuccessful if the target
+        exits the satellite's field of regard before the satellite settles on the target
+        and takes an image. The action with stop as soon as the image is successfully
+        taken, or when the the target exits the field of regard.
+
+        This action implements a `set_action_override` that allows a target to be tasked
+        based on the target's ID string or the Target object.
+
+        Args:
+            name: Action name.
+            n_ahead_image: Number of unimaged, along-track targets to consider.
+        """
+        from bsk_rl.env.scenario.satellites import ImagingSatellite
+
+        self.satellite: "ImagingSatellite"
+        super().__init__(name=name, n_actions=n_ahead_image)
+
+    def image(
+        self, target: Union[int, Target, str], prev_action_key: Optional[str] = None
+    ) -> str:
+        """:meta private:"""
+        target = self.satellite.parse_target_selection(target)
         if target.id != prev_action_key:
-            self.task_target_for_imaging(target)
+            self.satellite.task_target_for_imaging(target)
         else:
-            self.enable_target_window(target)
+            self.satellite.enable_target_window(target)
 
         return target.id
 
-    def set_action(self, action: Union[int, Target, str]):
-        """Allow the satellite to be tasked by Target or target id.
+    def set_action(self, action: int, prev_action_key: Optional[str] = None) -> str:
+        """Image a target by local index.
 
-        Allows for additional tasking modes in addition to action index-based tasking.
+        Args:
+            action: Index of the target to image.
+            prev_action_key: Previous action key.
+
+        :meta_private:
         """
-        self._disable_image_event()
-        if isinstance(action, (Target, str)):
-            self.prev_action_key = self.image(action, self.prev_action_key)
-        else:
-            super().set_action(action)
+        self.satellite.log_info(f"target index {action} tasked")
+        return self.image(action, prev_action_key)
 
+    def set_action_override(
+        self, action: Union[Target, str], prev_action_key: Optional[str] = None
+    ) -> str:
+        """Image a target by target index, Target, or ID.
 
-NadirImagingAction = fsw_action_gen("action_nadir_scan")
+        Args:
+            target: Target to image.
+            prev_action_key: Previous action key.
+
+        :meta_private:
+        """
+        return self.image(action, prev_action_key)

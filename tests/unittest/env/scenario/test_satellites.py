@@ -14,6 +14,7 @@ from bsk_rl.utils.functional import valid_func_name
 
 @patch.multiple(sats.Satellite, __abstractmethods__=set())
 @patch("bsk_rl.env.scenario.satellites.Satellite.observation_spec", MagicMock())
+@patch("bsk_rl.env.scenario.satellites.Satellite.action_spec", [MagicMock()])
 class TestSatellite:
     sats.Satellite.dyn_type = MagicMock(with_defaults=MagicMock(defaults={"a": 1}))
     Task.with_defaults = MagicMock(defaults={"c": 3})
@@ -66,18 +67,6 @@ class TestSatellite:
     #     sat._generate_sat_args.assert_called_once()
     #     assert sat.info == []
     #     assert sat._timed_terminal_event_name is None
-
-    @pytest.mark.parametrize(
-        "obs,space",
-        [
-            (np.array([1]), Box(low=-1e16, high=1e16, shape=(1,), dtype=np.float64)),
-            (np.array([1, 2]), Box(low=-1e16, high=1e16, shape=(2,), dtype=np.float64)),
-        ],
-    )
-    def test_obs_space(self, obs, space):
-        sat = sats.Satellite(name="TestSat", sat_args={})
-        sat.get_obs = MagicMock(return_value=obs)
-        assert sat.observation_space == space
 
     @pytest.mark.parametrize(
         "dyn_state,fsw_state",

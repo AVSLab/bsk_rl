@@ -15,10 +15,7 @@ from bsk_rl.utils.orbital import random_orbit
 # Composed Observation Tests #
 ##############################
 class TestComposedState:
-    class ComposedPropSat(
-        act.DriftAction,
-        sats.ImagingSatellite,
-    ):
+    class ComposedPropSat(sats.ImagingSatellite):
         dyn_type = dynamics.ImagingDynModel
         fsw_type = fsw.ImagingFSWModel
         observation_spec = [
@@ -30,6 +27,7 @@ class TestComposedState:
             obs.OpportunityProperties(dict(prop="priority"), n_ahead_observe=2),
             obs.Eclipse(),
         ]
+        action_spec = [act.Drift()]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
@@ -60,7 +58,7 @@ class TestComposedState:
 
 
 class TestSatProperties:
-    class SatPropertiesSat(act.DriftAction):
+    class SatPropertiesSat(sats.Satellite):
         dyn_type = dynamics.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
         observation_spec = [
@@ -69,6 +67,7 @@ class TestSatProperties:
                 dict(prop="r_BN_N", norm=7000.0 * 1e3),
             ),
         ]
+        action_spec = [act.Drift()]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
@@ -93,10 +92,11 @@ class TestSatProperties:
 
 
 class TestTime:
-    class TimedSat(act.DriftAction):
+    class TimedSat(sats.Satellite):
         dyn_type = dynamics.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
         observation_spec = [obs.Time()]
+        action_spec = [act.Drift()]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
@@ -120,12 +120,13 @@ class TestTime:
 
 
 class TestOpportunityProperties:
-    class TargetSat(act.DriftAction, sats.ImagingSatellite):
+    class TargetSat(sats.ImagingSatellite):
         dyn_type = dynamics.ImagingDynModel
         fsw_type = fsw.ImagingFSWModel
         observation_spec = [
             obs.OpportunityProperties(dict(prop="priority"), n_ahead_observe=2)
         ]
+        action_spec = [act.Drift()]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
@@ -149,10 +150,11 @@ class TestOpportunityProperties:
 
 
 class TestEclipse:
-    class EclipseSat(act.DriftAction):
+    class EclipseSat(sats.Satellite):
         dyn_type = dynamics.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
         observation_spec = [obs.Eclipse()]
+        action_spec = [act.Drift()]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
@@ -177,7 +179,7 @@ class TestEclipse:
 
 
 class TestGroundStationProperties:
-    class GroundSat(act.DriftAction, sats.AccessSatellite):
+    class GroundSat(sats.AccessSatellite):
         dyn_type = dynamics.GroundStationDynModel
         fsw_type = fsw.ImagingFSWModel
         observation_spec = [
@@ -189,6 +191,7 @@ class TestGroundStationProperties:
                 type="ground_station",
             ),
         ]
+        action_spec = [act.Drift()]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",

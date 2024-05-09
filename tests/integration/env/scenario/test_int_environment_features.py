@@ -3,24 +3,23 @@ import gymnasium as gym
 from bsk_rl.env.scenario import actions as act
 from bsk_rl.env.scenario import data
 from bsk_rl.env.scenario import observations as obs
+from bsk_rl.env.scenario import satellites as sats
 from bsk_rl.env.scenario.environment_features import CityTargets, StaticTargets
 from bsk_rl.env.simulation import dynamics, environment, fsw
 from bsk_rl.utils.orbital import random_orbit
 
 
 def make_env(env_features):
-    class ImageSat(
-        act.ImagingActions,
-    ):
+    class ImageSat(sats.ImagingSatellite):
         dyn_type = dynamics.GroundStationDynModel
         fsw_type = fsw.ImagingFSWModel
         observation_spec = [obs.Time()]
+        action_spec = [act.Image(n_ahead_image=10)]
 
     env = gym.make(
         "SingleSatelliteTasking-v1",
         satellites=ImageSat(
             "EO-1",
-            n_ahead_act=10,
             sat_args=ImageSat.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.05,
