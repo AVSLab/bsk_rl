@@ -5,7 +5,7 @@ from Basilisk.simulation import simpleNav
 from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion, unitTestSupport
 
-from bsk_rl.env.small_body_science.bsk_sim import SmallBodyScienceSimulator
+from bsk_rl.scene.small_body_science.bsk_sim import SmallBodyScienceSimulator
 
 
 class SmallBodySciencePOMDPSimulator(SmallBodyScienceSimulator):

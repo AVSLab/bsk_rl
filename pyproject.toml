@@ -14,10 +14,7 @@ readme = "README.md"
 requires-python = ">=3.9.0"
 license = { text = "MIT" }
 dependencies = [
-    "deap==1.3.3",
-    "Deprecated",
     "gymnasium",
-    "matplotlib",
     "numpy",
     "pandas",
     "pettingzoo",
@@ -26,13 +23,12 @@ dependencies = [
     "pytest-repeat",
     "requests",
     "ruff>=0.1.9",
-    "scikit-learn",
     "scipy",
-    "sphinx-rtd-theme",
-    "stable-baselines3",
-    "tensorflow",
-    "torch",
 ]
 
+[project.optional-dependencies]
+docs = ["ipykernel", "ipywidgets", "nbdime", "nbsphinx", "sphinx-rtd-theme"]
+rllib = ["dm_tree", "pyarrow", "ray[rllib]", "scikit-image", "typer"]
+
 [project.scripts]
-finish_install = "bsk_rl._finish_install:pck_install"
+finish_install = "bsk_rl.finish_install:pck_install"

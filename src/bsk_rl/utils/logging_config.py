@@ -99,8 +99,8 @@ class SimFormatter(logging.Formatter):
         sat_name = None
         sat_color = None
         try:
-            if record.name.split(".")[4] == "satellites":
-                sat_name = record.name.split(".")[5]
+            if record.name.split(".")[1] == "sats":
+                sat_name = record.name.split(".")[3]
                 if sat_name not in self.satellite_colors:
                     self.satellite_colors[sat_name] = len(self.satellite_colors) % len(
                         sat_color_cycle
@@ -109,7 +109,7 @@ class SimFormatter(logging.Formatter):
         except IndexError:
             pass
 
-        record.shortname = ".".join(record.name.split(".")[3:])
+        record.shortname = ".".join(record.name.split(".")[1:])
         fstr += style_string("%(shortname)-30s ", color=sat_color, no_format=no_format)
         fstr += style_string(
             "%(levelname)-10s ",

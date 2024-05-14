@@ -1,10 +1,10 @@
-"""General utility functions."""
+"""``bsk_rl.utils.functional``: General utility functions."""
 
-import inspect
 import re
 import warnings
 from copy import deepcopy
-from typing import Any, Callable
+from functools import wraps
+from typing import Any, Callable, ParamSpec, TypeVar
 
 import numpy as np
 
@@ -13,10 +13,10 @@ def valid_func_name(name: str) -> str:
     """Convert a string into a valid function name.
 
     Args:
-        name: desired function name
+        name: Desired function name.
 
     Returns:
-        sanitized function name
+        Sanitized function name.
     """
     # Remove all characters except for letters, digits, and underscores
     name = re.sub(r"\W+", "_", name)
@@ -29,12 +29,21 @@ def valid_func_name(name: str) -> str:
 def safe_dict_merge(updates: dict, base: dict) -> dict:
     """Merge a dict with another dict, warning for conflicts.
 
+    .. code-block:: python
+
+        >>> safe_dict_merge(dict(a=1, b=2), dict(b=2, c=3))
+        {'a': 1, 'b': 2, 'c': 3}
+
+        >>> safe_dict_merge(dict(a=1, b=4), dict(b=2, c=3))
+        Warning: Conflicting values for b: overwriting 2 with 4
+        {'a': 1, 'b': 4, 'c': 3}
+
     Args:
-        updates: dictionary to be added to base
-        base: base dictionary to be modified
+        updates: Dictionary to be added to base.
+        base: Base dictionary to be modified.
 
     Returns:
-        dict: updated base
+        dict: Updated copy of base.
     """
     # Updates base with a copy of elements in updates
     for k, v in updates.items():
@@ -44,27 +53,33 @@ def safe_dict_merge(updates: dict, base: dict) -> dict:
     return base
 
 
+P = ParamSpec("P")
+T = TypeVar("T")
+
+
 def default_args(**defaults) -> Callable:
     """Decorate function to enumerate default arguments for collection."""
 
-    def inner_dec(func) -> Callable:
-        def inner(*args, **kwargs) -> Callable:
+    def inner_dec(func: Callable[P, T]) -> Callable[P, T]:
+        @wraps(func)
+        def inner(*args: P.args, **kwargs: P.kwargs) -> T:
             return func(*args, **kwargs)
 
         inner.defaults = dict(**defaults)
+
         return inner
 
     return inner_dec
 
 
 def collect_default_args(object: object) -> dict[str, Any]:
-    """Collect all function @default_args in an object.
+    """Collect all function :class:`default_args` in an object.
 
     Args:
-        object: object with @default_args decorated functions
+        object: Object with :class:`default_args`-decorated functions.
 
     Returns:
-        dict: dict of keyword-value pairs of default arguments
+        dict: Dict of keyword-value pairs of default arguments.
     """
     defaults = {}
     for name in dir(object):
@@ -101,6 +116,7 @@ def vectorize_nested_dict(dictionary: dict) -> tuple[list[str], np.ndarray]:
 def aliveness_checker(func: Callable[..., bool]) -> Callable[..., bool]:
     """Decorate function to evaluate when checking for satellite aliveness."""
 
+    @wraps(func)
     def inner(*args, log_failure=False, **kwargs) -> bool:
         self = args[0]
         alive = func(*args, **kwargs)
@@ -108,6 +124,10 @@ def aliveness_checker(func: Callable[..., bool]) -> Callable[..., bool]:
             self.satellite.log_info(f"failed {func.__name__} check")
         return alive
 
+    inner.__doc__ = (
+        "*Decorated with* :class:`~bsk_rl.utils.functional.aliveness_checker`\n\n"
+        + str(func.__doc__)
+    )
     inner.is_aliveness_checker = True
     return inner
 
@@ -116,11 +136,11 @@ def check_aliveness_checkers(model: Any, log_failure=False) -> bool:
     """Evaluate all functions with @aliveness_checker in a model.
 
     Args:
-        model: Model to search for checkers in
-        log_failure: Whether to log on checker failure
+        model: Model to search for checkers in.
+        log_failure: Whether to log to the logger on checker failure.
 
     Returns:
-        bool: Model aliveness status
+        bool: Model aliveness status.
     """
     is_alive = True
     for name in dir(model):
@@ -135,62 +155,37 @@ def check_aliveness_checkers(model: Any, log_failure=False) -> bool:
 
 
 def is_property(obj: Any, attr_name: str) -> bool:
-    """Check if obj has an @property attr_name without calling it."""
+    """Check if obj has an ``@property`` called ``attr_name`` without calling it."""
     cls = type(obj)
     attribute = getattr(cls, attr_name, None)
     return attribute is not None and isinstance(attribute, property)
 
 
-def configurable(cls):
-    """Class decorator to create class with different init defaults."""
-
-    @classmethod
-    def configure(cls, **config_kwargs):
-        class Configurable(cls):
-            def __init__(self, *args, **kwargs):
-                init_kwargs = deepcopy(config_kwargs)
-                for key in init_kwargs.keys():
-                    if not (
-                        key in inspect.getfullargspec(super().__init__).args
-                        or key in inspect.getfullargspec(super().__init__).kwonlyargs
-                    ):
-                        raise KeyError(
-                            f"{key} not a keyword argument for {cls.__name__}"
-                        )
-                for k, v in kwargs.items():
-                    init_kwargs[k] = v
-                super().__init__(*args, **init_kwargs)
-
-        configcls = Configurable
-        return configcls
-
-    cls.configure = configure
-    return cls
-
-
-def bind(instance, func, as_name=None):
-    """Bind the function *func* to *instance*.
-
-    Uses either provided name *as_name* or the existing name of *func*. The provided
-    *func* should accept the instance as the first argument, i.e. "self".
-    """
-    if as_name is None:
-        as_name = func.__name__
-    bound_method = func.__get__(instance, instance.__class__)
-    setattr(instance, as_name, bound_method)
-    return bound_method
-
-
 class AbstractClassProperty:
     def __init__(self):
+        """Assign a class property to act like an abstract field."""
         self.__isabstractmethod__ = True
 
-    def __set_name__(self, owner, name):
+    def __set_name__(self, owner, name):  # noqa
         self.name = name
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance, owner):  # noqa
         if instance is None:
             return self
         raise NotImplementedError(
             f"AbstractClassProperty '{self.name}' must be set in subclass"
         )
+
+
+__doc_title__ = "Functional"
+__all__ = [
+    "valid_func_name",
+    "safe_dict_merge",
+    "default_args",
+    "collect_default_args",
+    "vectorize_nested_dict",
+    "aliveness_checker",
+    "check_aliveness_checkers",
+    "is_property",
+    "AbstractClassProperty",
+]

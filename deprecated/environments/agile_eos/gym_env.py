@@ -3,7 +3,7 @@ import numpy as np
 from Basilisk.utilities import macros as mc
 from gymnasium import spaces
 
-from bsk_rl.env.agile_eos.bsk_sim import AgileEOSSimulator
+from bsk_rl.scene.agile_eos.bsk_sim import AgileEOSSimulator
 
 
 class AgileEOS(gym.Env):
