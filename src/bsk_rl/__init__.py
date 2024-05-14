@@ -1,26 +1,28 @@
 import gymnasium as gym
 from gymnasium.envs.registration import register
 
-from bsk_rl._check_bsk_version import _check_bsk_version
-from bsk_rl.env.gym_env import (
-    GeneralSatelliteTasking,
-    MultiagentSatelliteTasking,
-    SingleSatelliteTasking,
-)
+from bsk_rl.check_bsk_version import check_bsk_version
+from bsk_rl.gym import ConstellationTasking, GeneralSatelliteTasking, SatelliteTasking
+
+__all__ = [
+    "GeneralSatelliteTasking",
+    "SatelliteTasking",
+    "ConstellationTasking",
+]
 
 register(
     id="GeneralSatelliteTasking-v1",
-    entry_point="bsk_rl.env.gym_env:GeneralSatelliteTasking",
+    entry_point="bsk_rl.gym:GeneralSatelliteTasking",
 )
 
 register(
-    id="SingleSatelliteTasking-v1",
-    entry_point="bsk_rl.env.gym_env:SingleSatelliteTasking",
+    id="SatelliteTasking-v1",
+    entry_point="bsk_rl.gym:SatelliteTasking",
 )
 
 register(
-    id="MultiagentSatelliteTasking-v1",
-    entry_point="bsk_rl.env.gym_env:MultiagentSatelliteTasking",
+    id="ConstellationTasking-v1",
+    entry_point="bsk_rl.gym:ConstellationTasking",
 )
 
-_check_bsk_version()
+check_bsk_version()

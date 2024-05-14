@@ -1,35 +1,48 @@
-BSK-RL: Environments and Algorithms for Spacecraft Planning and Scheduling
-==========================================================================
+BSK-RL: Environments for Spacecraft Planning and Scheduling
+===========================================================
 
 .. toctree::
     :hidden:
 
     install
-    Examples/index
-    API Reference/index
+    examples/index
+    api_reference/index
+    release_notes
     publications
     citation
     GitHub <https://github.com/AVSLab/bsk_rl/>
 
 
-.. note::
+.. warning::
+    
+    Docs are currently being build from the ``refactor/v1_0_0``. This branch will be
+    merged into ``develop`` imminently, at which point this warning will go away.
 
-    BSK-RL and its documentation are under active development. Please continue to check back for updates. 
 
 .. warning::
     
-    With the 1.0.0 release, one-off environments and associated scripts have been deprecated. The :code:`envs.general_satellite_tasking` module has been renamed to :code:`env`.
+    The 1.0.0 release has significant changes from previous versions. See the 
+    :doc:`Release Notes <release_notes>` for more information.
 
 
-**BSK-RL** (`Basilisk <https://hanspeterschaub.info/basilisk>`_ + `Reinforcement Learning <https://en.wikipedia.org/wiki/Reinforcement_learning>`_) is a Python package for constructing `Gymnasium <https://gymnasium.farama.org/index.html>`_ environments for spacecraft tasking problems. It is built on top of `Basilisk <https://hanspeterschaub.info/basilisk>`_, a modular and fast spacecraft simulation framework, making the simulation environments high-fidelity and computationally efficient. BSK-RL also includes a collection of agents, training scripts, and examples for working with these environments.
+**BSK-RL** (`Basilisk <https://hanspeterschaub.info/basilisk>`_ + 
+`Reinforcement Learning <https://en.wikipedia.org/wiki/Reinforcement_learning>`_) is a 
+Python package for constructing `Gymnasium <https://gymnasium.farama.org/index.html>`_ 
+environments for spacecraft tasking problems. It is built on top of 
+`Basilisk <https://hanspeterschaub.info/basilisk>`_, a modular and fast spacecraft 
+simulation framework, making the simulation environments high-fidelity and computationally 
+efficient. BSK-RL also includes a collection of agents, training scripts, and examples 
+for working with these environments.
 
 Quickstart
 ----------
 Installation
 ^^^^^^^^^^^^
-Complete installation instructions and common troubleshooting tips can be found :doc:`here <install>`. To install BSK-RL:
+Complete installation instructions and common troubleshooting tips can be found 
+:doc:`here <install>`. To install BSK-RL:
 
-#. Install the `Basilisk <https://hanspeterschaub.info/basilisk>`_ spacecraft simulation framework.
+#. Install the `Basilisk <https://hanspeterschaub.info/basilisk>`_ spacecraft simulation 
+   framework.
 #. Clone BSK-RL.
 
     .. code-block:: console
@@ -46,45 +59,24 @@ Complete installation instructions and common troubleshooting tips can be found 
 
     .. code-block:: console
 
-        (.venv) $ pytest ./tests/examples
+        (.venv) $ pytest .
 
 Construct an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^
-TODO: Add more detail to this example
 
-.. code-block:: python
-
-    import gymnasium as gym
-
-    from bsk_rl.env.scenario import data
-    from bsk_rl.env.scenario import satellites as sats
-    from bsk_rl.env.scenario.environment_features import StaticTargets
-    from bsk_rl.env.simulation import environment
-    from bsk_rl.utils.orbital import random_orbit
-
-    env = gym.make(
-        "SingleSatelliteTasking-v1",
-        satellites=sats.FullFeaturedSatellite(
-            "EO1", 
-            sats.FullFeaturedSatellite.default_sat_args(oe=random_orbit), n_ahead_observe=30, 
-            n_ahead_act=15
-        ),
-        env_features=StaticTargets(n_targets=1000),
-        data_manager=data.UniqueImagingManager,
-        max_step_duration=600.0,
-        time_limit=5700.0,
-        terminate_on_time_limit=True,
-    )
-
-Train an Agent
-^^^^^^^^^^^^^^
-Show RLLib or SB3 configs here. 
+A quick but comprehensive tutorial can be found at :doc:`examples/simple_environment`.
 
 
 Acknowledgements
 ----------------
-BSK-RL is developed by the `Autonomous Vehicle Systems (AVS) Lab <https://hanspeterschaub.info/AVSlab.html>`_ at the University of Colorado Boulder. The AVS Lab is part of the `Colorado Center for Astrodynamics Research (CCAR) <https://www.colorado.edu/ccar>`_ and the `Department of Aerospace Engineering Sciences <https://www.colorado.edu/aerospace/>`_.
+BSK-RL is developed by the `Autonomous Vehicle Systems (AVS) Lab <https://hanspeterschaub.info/AVSlab.html>`_ 
+at the University of Colorado Boulder. The AVS Lab is part of the `Colorado Center for Astrodynamics Research (CCAR) <https://www.colorado.edu/ccar>`_ 
+and the `Department of Aerospace Engineering Sciences <https://www.colorado.edu/aerospace/>`_.
 
-Development has been supported by NASA Space Technology Graduate Research Opportunity (NSTGRO) grants, 80NSSC20K1162 and 80NSSC23K1182. This work has also been supported by Air Force Research Lab grant FA9453-22-2-0050. 
+Development has been supported by NASA Space Technology Graduate Research Opportunity 
+(NSTGRO) grants, 80NSSC20K1162 and 80NSSC23K1182. This work has also been supported by 
+Air Force Research Lab grant FA9453-22-2-0050. 
 
-Development of this software has utilized the Alpine high performance computing resource at the University of Colorado Boulder. Alpine is jointly funded by the University of Colorado Boulder, the University of Colorado Anschutz, and Colorado State University.
+Development of this software has utilized the Alpine high performance computing resource
+at the University of Colorado Boulder. Alpine is jointly funded by the University of
+Colorado Boulder, the University of Colorado Anschutz, and Colorado State University.

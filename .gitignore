@@ -13,7 +13,6 @@ __pycache__/
 # Distribution / packaging
 .Python
 bin/
-build/
 develop-eggs/
 dist/
 downloads/
@@ -65,11 +64,6 @@ instance/
 
 # Scrapy stuff:
 .scrapy
-
-# Sphinx documentation
-docs/_build/
-docs/source/API Reference
-docs/source/Examples
 
 # Pickles
 *.pkl
@@ -125,4 +119,15 @@ bsk_rl/results/
 .DS_Store
 
 # data files
-src/bsk_rl/data/simplemaps_worldcities/
+src/bsk_rl/_dat/simplemaps_worldcities/
+
+# Sphinx documentation
+/docs/build/*
+/docs/source/api_reference/*
+/docs/source/examples/*
+
+# executed ipynb cache
+!/docs/build/doctrees
+docs/build/doctrees/*
+!/docs/build/doctrees/nbsphinx
+!/docs/build/doctrees/nbsphinx/*

@@ -3,7 +3,7 @@ import numpy as np
 from Basilisk.utilities import macros as mc
 from gymnasium import spaces
 
-from bsk_rl.env.simple_eos import bsk_sim
+from bsk_rl.scene.simple_eos import bsk_sim
 
 
 class SimpleEOS(gym.Env):

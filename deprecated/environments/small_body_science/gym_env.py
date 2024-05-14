@@ -2,7 +2,7 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-from bsk_rl.env.small_body_science.bsk_sim import SmallBodyScienceSimulator
+from bsk_rl.scene.small_body_science.bsk_sim import SmallBodyScienceSimulator
 
 
 class SmallBodyScience(gym.Env):

@@ -25,7 +25,7 @@ jobs:
           cp docs/sitecustomize.py $(python -c 'import site; print(site.getsitepackages()[0])')/sitecustomize.py
       - name: Install dependencies
         run: |
-          pip install -e .
+          pip install -e '.[docs]'
         # skip finish install steps
       - name: Sphinx build
         run: |

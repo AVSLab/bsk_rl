@@ -20,7 +20,7 @@ help:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 clean:
-	rm -rf "source/Examples" "source/API Reference"
+	rm -rf "source/examples" "source/api_reference" "build"
 
 
 view:

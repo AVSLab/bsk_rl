@@ -1,4 +1,4 @@
-"""Utilities for computing orbital events."""
+"""``bsk_rl.utils.orbital``:Utilities for computing orbital events."""
 
 from typing import Iterable, Optional
 
@@ -28,16 +28,17 @@ def random_orbit(
 ) -> ClassicElements:
     """Create a set of orbit elements.
 
-    Parameters are fixed if specified and randomized if None.
+    Parameters are fixed if specified and randomized if ``None``. Defaults to a random
+    circular orbit at 500 km altitude and 45 deg inclination.
 
     Args:
-        i: inclination [deg], randomized in [-pi, pi]
-        alt: altitude above r_body [km]
-        r_body: body radius [km]
-        e: eccentricity
-        Omega: LAN [deg], randomized in [0, 2pi]
-        omega: Argument of periapsis [deg], randomized in [0, 2pi]
-        f: true anomaly [deg], randomized in [0, 2pi]
+        i: [deg] Inclination, randomized in ``[-pi, pi]``.
+        alt: [km] Altitude above r_body.
+        r_body: [km] Body radius.
+        e: Eccentricity.
+        Omega: [deg] LAN, randomized in ``[0, 2pi]``.
+        omega: [deg] Argument of periapsis, randomized in ``[0, 2pi]``.
+        f: [deg] True anomaly, randomized in ``[0, 2pi]``.
 
     Returns:
         ClassicElements: orbital elements
@@ -104,8 +105,8 @@ def elevation(r_sat: np.ndarray, r_target: np.ndarray) -> np.ndarray:
     """Find the elevation angle from a target to a satellite.
 
     Args:
-        r_sat: Satellite position(s)
-        r_target: Target position
+        r_sat: Satellite position(s).
+        r_target: Target position.
 
     Returns:
         Elevation angle(s)
@@ -134,13 +135,13 @@ def walker_delta(
     """Compute the initial orbit conditions of a Walker-delta constellation.
 
     Args:
-        n_spacecraft: Number of spacecraft
-        n_planes: Number of orbital planes
-        rel_phasing: Relative phasing between planes [deg]
-        altitude: Altitude above Earth's surface [m]
-        inc: Inclination [deg]
-        clustersize: Number of spacecraft in each cluster
-        clusterspacing: Spacing between spacecraft in a cluster [deg]
+        n_spacecraft: Number of spacecraft.
+        n_planes: Number of orbital planes.
+        rel_phasing: [deg] Relative phasing between planes.
+        altitude: [m] Altitude above Earth's surface.
+        inc: [deg] Inclination.
+        clustersize: Number of spacecraft in each cluster.
+        clusterspacing: [deg] Spacing between spacecraft in a cluster.
 
     Returns:
         list: List of orbital elements
@@ -193,11 +194,11 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         mu: Optional[float] = None,
         dt: float = 30.0,
     ) -> None:
-        """Initialize simulator conditions.
+        """Class for propagating trajectory using a point mass simulation.
 
         Simulated under the effect of Earth's gravity. Returns interpolators for
-        position as well as upcoming eclipse predictions. Specify either (rN, vN) or
-        (oe, mu).
+        position as well as upcoming eclipse predictions. Specify either ``(rN, vN)`` or
+        ``(oe, mu)``.
 
         Args:
             utc_init: Simulation start time.
@@ -387,3 +388,29 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
             self.gravFactory.unloadSpiceKernels()
         except AttributeError:
             pass
+
+
+def lla2ecef(lat: float, long: float, radius: float):
+    """Project LLA to Earth Centered, Earth Fixed location.
+
+    Args:
+        lat: [deg]
+        long: [deg]
+        radius: [any]
+    """
+    lat = np.radians(lat)
+    long = np.radians(long)
+    return radius * np.array(
+        [np.cos(lat) * np.cos(long), np.cos(lat) * np.sin(long), np.sin(lat)]
+    )
+
+
+__doc_title__ = "Orbital"
+__all__ = [
+    "random_orbit",
+    "random_epoch",
+    "lla2ecef",
+    "elevation",
+    "walker_delta",
+    "TrajectorySimulator",
+]

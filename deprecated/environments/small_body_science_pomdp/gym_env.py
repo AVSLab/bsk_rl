@@ -2,8 +2,8 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-from bsk_rl.env.small_body_science.gym_env import SmallBodyScience
-from bsk_rl.env.small_body_science_pomdp.bsk_sim import SmallBodySciencePOMDPSimulator
+from bsk_rl.scene.small_body_science.gym_env import SmallBodyScience
+from bsk_rl.scene.small_body_science_pomdp.bsk_sim import SmallBodySciencePOMDPSimulator
 
 
 class SmallBodySciencePOMDP(SmallBodyScience):
