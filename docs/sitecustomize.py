@@ -42,4 +42,3 @@ for submodule_name in all_basilisk_imports:
 
 # Mock some other imports that might cause issues
 sys.modules["Basilisk"].__path__ = "not/a/real/path"
-sys.modules["chebpy"] = MagicMock()

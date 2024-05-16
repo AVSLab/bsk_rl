@@ -14,10 +14,10 @@ if TYPE_CHECKING:  # pragma: no cover
         Simulator,
     )
 
-import chebpy
 import numpy as np
 from Basilisk.utilities import macros
 from gymnasium import spaces
+from scipy.optimize import minimize_scalar, root_scalar
 
 from bsk_rl.envs.general_satellite_tasking.scenario.data import (
     DataStore,
@@ -294,7 +294,7 @@ class AccessSatellite(Satellite):
     def __init__(
         self,
         *args,
-        generation_duration: float = 60 * 95,
+        generation_duration: float = 600.0,
         initial_generation_duration: Optional[float] = None,
         access_dist_threshold: float = 4e6,
         **kwargs,
@@ -419,6 +419,7 @@ class AccessSatellite(Satellite):
         location: np.ndarray,
         min_elev: float,
         window: tuple[float, float],
+        min_duration: float = 0.1,
     ):
         """Find times where the elevation is equal to the minimum elevation.
 
@@ -427,15 +428,27 @@ class AccessSatellite(Satellite):
         """
 
         def root_fn(t):
-            return elevation(position_interp(t), location) - min_elev
+            return -(elevation(position_interp(t), location) - min_elev)
 
-        settings = chebpy.UserPreferences()
-        with settings:
-            settings.eps = 1e-6
-            settings.sortroots = True
-            roots = chebpy.chebfun(root_fn, window).roots()
+        elev_0, elev_1 = root_fn(window[0]), root_fn(window[1])
 
-        return roots
+        if elev_0 < 0 and elev_1 < 0:
+            logging.warning(
+                "initial_generation_duration is shorter than the maximum window length; some windows may be neglected."
+            )
+            return []
+        elif elev_0 < 0 or elev_1 < 0:
+            return [root_scalar(root_fn, bracket=window).root]
+        else:
+            res = minimize_scalar(root_fn, bracket=window, tol=1e-4)
+            if res.fun < 0:
+                window_mid = res.x
+                r_open = root_scalar(root_fn, bracket=(window[0], window_mid)).root
+                r_close = root_scalar(root_fn, bracket=(window_mid, window[1])).root
+                if r_close - r_open > min_duration:
+                    return [r_open, r_close]
+
+        return []
 
     @staticmethod
     def _find_candidate_windows(
