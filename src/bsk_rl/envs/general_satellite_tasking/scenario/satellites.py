@@ -296,7 +296,6 @@ class AccessSatellite(Satellite):
         *args,
         generation_duration: float = 600.0,
         initial_generation_duration: Optional[float] = None,
-        access_dist_threshold: float = 4e6,
         **kwargs,
     ) -> None:
         """Construct an AccessSatellite.
@@ -307,15 +306,12 @@ class AccessSatellite(Satellite):
                 `time_limit` unless the simulation is infinite. [s]
             initial_generation_duration: Duration to initially calculate imaging windows
                 [s]
-            access_dist_threshold: Distance bound [m] for evaluating imaging windows
-                more exactly. 4e6 will capture >10 elevation windows for a 500 km orbit.
             args: Passed through to Satellite constructor
             kwargs: Passed through to Satellite constructor
         """
         super().__init__(*args, **kwargs)
         self.generation_duration = generation_duration
         self.initial_generation_duration = initial_generation_duration
-        self.access_dist_threshold = access_dist_threshold
 
     def reset_pre_sim(self) -> None:
         """Reset satellite window calculations and lists."""
@@ -388,9 +384,15 @@ class AccessSatellite(Satellite):
         times = r_BP_P_interp.x[window_calc_span]
         positions = r_BP_P_interp.y[window_calc_span]
 
+        r_max = np.max(np.linalg.norm(positions, axis=-1))
+        access_dist_thresh_multiplier = 1.1
         for location in self.locations_for_access_checking:
+            alt_est = r_max - np.linalg.norm(location["location"])
+            access_dist_threshold = (
+                access_dist_thresh_multiplier * alt_est / np.sin(location["min_elev"])
+            )
             candidate_windows = self._find_candidate_windows(
-                location["location"], times, positions, self.access_dist_threshold
+                location["location"], times, positions, access_dist_threshold
             )
 
             for candidate_window in candidate_windows:
