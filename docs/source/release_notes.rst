@@ -3,7 +3,7 @@ Release Notes
 
 Version 1.0.0
 -------------
-*Release Date: MMM. DD, YYYY*
+*Release Date: Jun. 12, 2024*
 
 First major release of BSK-RL. 
 
