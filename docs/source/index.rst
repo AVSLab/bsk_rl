@@ -15,12 +15,6 @@ BSK-RL: Environments for Spacecraft Planning and Scheduling
 
 .. warning::
     
-    Docs are currently being build from the ``refactor/v1_0_0``. This branch will be
-    merged into ``develop`` imminently, at which point this warning will go away.
-
-
-.. warning::
-    
     The 1.0.0 release has significant changes from previous versions. See the 
     :doc:`Release Notes <release_notes>` for more information.
 
@@ -31,7 +25,7 @@ Python package for constructing `Gymnasium <https://gymnasium.farama.org/index.h
 environments for spacecraft tasking problems. It is built on top of 
 `Basilisk <https://hanspeterschaub.info/basilisk>`_, a modular and fast spacecraft 
 simulation framework, making the simulation environments high-fidelity and computationally 
-efficient. BSK-RL also includes a collection of agents, training scripts, and examples 
+efficient. BSK-RL also includes a collection of utilities and examples 
 for working with these environments.
 
 Quickstart

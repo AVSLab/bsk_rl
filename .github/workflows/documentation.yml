@@ -16,6 +16,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: pandoc/actions/setup@main
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
         with:
@@ -25,7 +26,7 @@ jobs:
           cp docs/sitecustomize.py $(python -c 'import site; print(site.getsitepackages()[0])')/sitecustomize.py
       - name: Install dependencies
         run: |
-          pip install -e '.[docs]'
+          pip install -e '.[docs,rllib]'
         # skip finish install steps
       - name: Sphinx build
         run: |
