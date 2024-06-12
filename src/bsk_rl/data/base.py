@@ -134,7 +134,7 @@ class GlobalReward(ABC):
         """
         self.scenario = scenario
 
-    def reset_pre_sim(self) -> None:
+    def reset_pre_sim_init(self) -> None:
         """Refresh data and cumulative reward for a new episode prior to simulator construction."""
         self.data = self.data_type()
         self.cum_reward = {}

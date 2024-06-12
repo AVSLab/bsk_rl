@@ -190,7 +190,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         Satellite and world arguments get randomized on reset, if :class:`~bsk_rl.GeneralSatelliteTasking` ``.world_args``
         or :class:`~bsk_rl.sats.Satellite` ``.sat_args`` includes randomization functions.
 
-        Certain classes in ``bsk_rl`` have a ``reset_pre_sim`` and/or ``reset_post_sim``
+        Certain classes in ``bsk_rl`` have a ``reset_pre_sim_init`` and/or ``reset_post_sim_init``
         method. These methods are respectively called before and after the new Basilisk
         :class:`~bsk_rl.sim.Simulator` is created. These allow for reset actions that
         feed into the underlying simulation and those that are dependent on the underlying
@@ -216,13 +216,13 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         self.latest_step_duration = 0.0
 
-        self.scenario.reset_pre_sim()
-        self.rewarder.reset_pre_sim()
+        self.scenario.reset_pre_sim_init()
+        self.rewarder.reset_pre_sim_init()
 
         for satellite in self.satellites:
             self.rewarder.create_data_store(satellite)
             satellite.sat_args_generator["utc_init"] = self.world_args["utc_init"]
-            satellite.reset_pre_sim()
+            satellite.reset_pre_sim_init()
 
         self.simulator = Simulator(
             self.satellites,
@@ -233,10 +233,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             time_limit=self.time_limit,
         )
 
-        self.communicator.reset_post_sim()
+        self.communicator.reset_post_sim_init()
 
         for satellite in self.satellites:
-            satellite.reset_post_sim()
+            satellite.reset_post_sim_init()
             satellite.data_store.update_from_logs()
 
         observation = self._get_obs()

@@ -54,12 +54,12 @@ class AccessSatellite(Satellite):
         self.generation_duration = generation_duration
         self.initial_generation_duration = initial_generation_duration
 
-    def reset_pre_sim(self) -> None:
+    def reset_pre_sim_init(self) -> None:
         """Reset satellite opportunity calculations and lists.
 
         :meta private:
         """
-        super().reset_pre_sim()
+        super().reset_pre_sim_init()
         self.opportunities: list[dict] = []
         self.window_calculation_time = 0
         self.locations_for_access_checking: list[dict[str, Any]] = []
@@ -88,12 +88,12 @@ class AccessSatellite(Satellite):
         location_dict[type] = object
         self.locations_for_access_checking.append(location_dict)
 
-    def reset_post_sim(self) -> None:
+    def reset_post_sim_init(self) -> None:
         """Handle initial window calculations for new simulation.
 
         :meta private:
         """
-        super().reset_post_sim()
+        super().reset_post_sim_init()
         if self.initial_generation_duration is None:
             if self.simulator.time_limit == float("inf"):
                 self.initial_generation_duration = 0
@@ -452,19 +452,19 @@ class ImagingSatellite(AccessSatellite):
         except AttributeError:
             return []
 
-    def reset_pre_sim(self) -> None:
+    def reset_pre_sim_init(self) -> None:
         """Set the buffer parameters based on computed windows.
 
         :meta private:
         """
-        super().reset_pre_sim()
+        super().reset_pre_sim_init()
         self.sat_args["transmitterNumBuffers"] = len(self.known_targets)
         self.sat_args["bufferNames"] = [target.id for target in self.known_targets]
         self._image_event_name = None
         self.imaged = 0
         self.missed = 0
 
-    def reset_post_sim(self) -> None:
+    def reset_post_sim_init(self) -> None:
         """Handle initial_generation_duration setting and calculate windows.
 
         :meta private:
@@ -479,7 +479,7 @@ class ImagingSatellite(AccessSatellite):
                 min_elev=self.sat_args["imageTargetMinimumElevation"],
                 type="target",
             )
-        super().reset_post_sim()
+        super().reset_post_sim_init()
 
     def _update_image_event(self, target: "Target") -> None:
         """Create a simulator event that terminates on imaging.

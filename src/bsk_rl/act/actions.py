@@ -43,12 +43,12 @@ class ActionBuilder(ABC):
         for act in self.action_spec:
             act.link_satellite(self.satellite)
 
-    def reset_post_sim(self) -> None:
+    def reset_post_sim_init(self) -> None:
         """Perform any once-per-episode setup."""
         self.simulator = self.satellite.simulator  # already a proxy
         for act in self.action_spec:
             act.link_simulator(self.simulator)  # already a proxy
-            act.reset_post_sim()
+            act.reset_post_sim_init()
 
     @property
     @abstractmethod
@@ -101,7 +101,7 @@ class Action(ABC):
         """
         self.simulator = simulator  # already a proxy
 
-    def reset_post_sim(self) -> None:  # pragma: no cover
+    def reset_post_sim_init(self) -> None:  # pragma: no cover
         """Perform any once-per-episode setup."""
         pass
 

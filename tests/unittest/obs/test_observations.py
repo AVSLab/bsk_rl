@@ -19,7 +19,7 @@ class TestObservationBuilder:
         assert len(ob.observation_spec) == 3
         assert ob.observation_spec[2].name == "obs_A_2"
 
-    def test_reset_post_sim(self):
+    def test_reset_post_sim_init(self):
         ob = ObservationBuilder(
             satellite=MagicMock(observation_spec=[MagicMock() for _ in range(3)])
         )
@@ -113,7 +113,7 @@ class TestSatProperties:
         ob = obs.SatProperties(dict(prop="world"))
         ob.satellite = MagicMock(dynamics=Mock(), fsw=Mock(world=1.0))
         del ob.satellite.dynamics.world
-        ob.reset_post_sim()
+        ob.reset_post_sim_init()
         assert ob.obs_properties[0]["module"] == "fsw"
 
     def test_get_obs(self):
@@ -128,13 +128,13 @@ class TestTime:
     def test_detect_norm(self):
         ob = obs.Time()
         ob.simulator = MagicMock(sim_time=10.0, time_limit=100.0)
-        ob.reset_post_sim()
+        ob.reset_post_sim_init()
         assert ob.get_obs() == 0.1
 
     def test_manual_norm(self):
         ob = obs.Time(100.0)
         ob.simulator = MagicMock(sim_time=10.0, time_limit=300.0)
-        ob.reset_post_sim()
+        ob.reset_post_sim_init()
         assert ob.get_obs() == 0.1
 
 

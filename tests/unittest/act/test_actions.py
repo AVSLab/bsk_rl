@@ -16,12 +16,12 @@ class TestActionBuilder:
         for a in ab.action_spec:
             a.link_satellite.assert_called_once()
 
-    def test_reset_post_sim(self):
+    def test_reset_post_sim_init(self):
         ab = ActionBuilder(MagicMock(action_spec=[MagicMock() for _ in range(3)]))
-        ab.reset_post_sim()
+        ab.reset_post_sim_init()
         for a in ab.action_spec:
             a.link_simulator.assert_called_once()
-            a.reset_post_sim.assert_called_once()
+            a.reset_post_sim_init.assert_called_once()
 
 
 class TestDiscreteActionBuilder:

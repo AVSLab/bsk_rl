@@ -27,9 +27,9 @@ class DiscreteActionBuilder(ActionBuilder):
         super().__init__(satellite)
         self.prev_action_key = None
 
-    def reset_post_sim(self) -> None:
+    def reset_post_sim_init(self) -> None:
         """Log previous action key."""
-        super().reset_post_sim()
+        super().reset_post_sim_init()
         self.prev_action_key = None
 
     @property

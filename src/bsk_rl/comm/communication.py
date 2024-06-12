@@ -35,7 +35,7 @@ class CommunicationMethod(ABC):
         """
         self.satellites = satellites
 
-    def reset_post_sim(self) -> None:
+    def reset_post_sim_init(self) -> None:
         """Reset communication after simulator initialization."""
         pass
 
@@ -110,9 +110,9 @@ class LOSCommunication(CommunicationMethod):
                     + "of LOSCommDynModel to use LOSCommunication"
                 )
 
-    def reset_post_sim(self) -> None:
+    def reset_post_sim_init(self) -> None:
         """Add loggers to satellites to track line-of-sight communication."""
-        super().reset_post_sim()
+        super().reset_post_sim_init()
 
         self.los_logs = {}
         for sat_1 in self.satellites:
