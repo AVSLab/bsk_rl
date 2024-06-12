@@ -87,10 +87,10 @@ class TestGeneralSatelliteTasking:
             == env.unwrapped.world_args["utc_init"]
         )
         mock_sim.assert_called_once()
-        mock_sat.reset_pre_sim.assert_called_once()
+        mock_sat.reset_pre_sim_init.assert_called_once()
         mock_data.create_data_store.assert_called_once_with(mock_sat)
-        env.communicator.reset_post_sim.assert_called_once()
-        mock_sat.reset_post_sim.assert_called_once()
+        env.communicator.reset_post_sim_init.assert_called_once()
+        mock_sat.reset_post_sim_init.assert_called_once()
 
     def test_get_obs(self):
         env = GeneralSatelliteTasking(

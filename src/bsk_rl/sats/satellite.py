@@ -115,7 +115,7 @@ class Satellite(ABC):
         }
         self.logger.debug(f"Satellite initialized with {self.sat_args}")
 
-    def reset_pre_sim(self) -> None:
+    def reset_pre_sim_init(self) -> None:
         """Called during environment reset, before Basilisk simulation initialization."""
         self.info = []
         self.requires_retasking = True
@@ -171,10 +171,10 @@ class Satellite(ABC):
         self.fsw = proxy(fsw)
         return fsw
 
-    def reset_post_sim(self) -> None:
+    def reset_post_sim_init(self) -> None:
         """Called during environment reset, after Basilisk simulation initialization."""
-        self.observation_builder.reset_post_sim()
-        self.action_builder.reset_post_sim()
+        self.observation_builder.reset_post_sim_init()
+        self.action_builder.reset_post_sim_init()
 
     @property
     def observation_space(self) -> spaces.Space:

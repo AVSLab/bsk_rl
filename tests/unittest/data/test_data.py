@@ -43,7 +43,7 @@ class TestGlobalReward:
     def test_reset(self):
         GlobalReward.datastore_type = MagicMock()
         dm = GlobalReward()
-        dm.reset_pre_sim()
+        dm.reset_pre_sim_init()
         assert dm.cum_reward == {}
 
     def test_create_data_store(self):
@@ -51,7 +51,7 @@ class TestGlobalReward:
         GlobalReward.datastore_type = MagicMock(return_value="ds")
         dm = GlobalReward()
         dm.scenario = MagicMock()
-        dm.reset_pre_sim()
+        dm.reset_pre_sim_init()
         dm.create_data_store(sat)
         assert sat.data_store == "ds"
         assert sat.id in dm.cum_reward

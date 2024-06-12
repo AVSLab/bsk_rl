@@ -74,7 +74,7 @@ class TestLOSCommunication:
         ]
         comms = LOSCommunication()
         comms.link_satellites(mock_sats)
-        comms.reset_post_sim()
+        comms.reset_post_sim_init()
         for sat1 in mock_sats:
             assert sat1 in comms.los_logs
             for sat2 in mock_sats:

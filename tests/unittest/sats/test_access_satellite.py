@@ -298,13 +298,13 @@ class TestImagingSatellite:
             sat_args={"imageTargetMinimumElevation": 1},
         )
 
-    @patch("bsk_rl.sats.Satellite.reset_pre_sim")
-    def test_reset_pre_sim(self, mock_reset):
+    @patch("bsk_rl.sats.Satellite.reset_pre_sim_init")
+    def test_reset_pre_sim_init(self, mock_reset):
         sat = self.make_sat()
         sat.data_store = MagicMock()
         sat.data_store.data.known = [MagicMock()] * 5
         sat.sat_args = {}
-        sat.reset_pre_sim()
+        sat.reset_pre_sim_init()
         mock_reset.assert_called_once()
         assert sat.sat_args["transmitterNumBuffers"] == 5
         assert len(sat.sat_args["bufferNames"]) == 5
@@ -313,15 +313,15 @@ class TestImagingSatellite:
         "gen_duration,time_limit,expected",
         [(None, float("inf"), 0), (None, 100.0, 100.0), (10.0, 100.0, 10.0)],
     )
-    @patch("bsk_rl.sats.Satellite.reset_post_sim")
-    def test_reset_post_sim(self, mock_reset, gen_duration, time_limit, expected):
+    @patch("bsk_rl.sats.Satellite.reset_post_sim_init")
+    def test_reset_post_sim_init(self, mock_reset, gen_duration, time_limit, expected):
         sat = self.make_sat()
         sat.sat_args = {}
         sat.calculate_additional_windows = MagicMock()
         sat.initial_generation_duration = gen_duration
         sat.simulator = MagicMock(time_limit=time_limit)
         sat.data_store = MagicMock()
-        sat.reset_post_sim()
+        sat.reset_post_sim_init()
         mock_reset.assert_called_once()
         assert sat.initial_generation_duration == expected
         sat.calculate_additional_windows.assert_called_once()

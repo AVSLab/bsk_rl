@@ -37,7 +37,7 @@ class TestUniformTargets:
     def test_reset_constant(self):
         st = UniformTargets(10)
         st.regenerate_targets = MagicMock()
-        st.reset_pre_sim()
+        st.reset_pre_sim_init()
         assert st.n_targets == 10
         st.regenerate_targets.assert_called_once()
 
@@ -45,7 +45,7 @@ class TestUniformTargets:
     def test_reset_variable(self):
         st = UniformTargets((8, 10))
         st.regenerate_targets = MagicMock()
-        st.reset_pre_sim()
+        st.reset_pre_sim_init()
         assert 8 <= st.n_targets <= 10
 
     def test_regenerate_targets(self):
@@ -60,10 +60,10 @@ class TestUniformTargets:
     def test_regenerate_targets_repeatable(self):
         np.random.seed(0)
         st1 = UniformTargets(3, radius=1.0)
-        st1.reset_pre_sim()
+        st1.reset_pre_sim_init()
         np.random.seed(0)
         st2 = UniformTargets(3, radius=1.0)
-        st2.reset_pre_sim()
+        st2.reset_pre_sim_init()
         for t1, t2 in zip(st1.targets, st2.targets):
             assert (t1.r_LP_P == t2.r_LP_P).all()
 
@@ -104,9 +104,9 @@ class TestCityTargets:
         ct = CityTargets(n_targets)
         if n_targets > n_database:
             with pytest.raises(ValueError):
-                ct.reset_pre_sim()
+                ct.reset_pre_sim_init()
         else:
-            ct.reset_pre_sim()
+            ct.reset_pre_sim_init()
             assert len(ct.targets) == n_targets
             possible_names = [f"city{i}" for i in range(5)]
             for target in ct.targets:
@@ -122,7 +122,7 @@ class TestCityTargets:
     ):
         self.mock_data(mock_read_csv)
         ct = CityTargets(n_targets, n_select_from=n_select_from)
-        ct.reset_pre_sim()
+        ct.reset_pre_sim_init()
         assert len(ct.targets) == n_targets
         if isinstance(n_select_from, int):
             possible_names = [f"city{i}" for i in range(n_select_from)]
@@ -137,7 +137,7 @@ class TestCityTargets:
         self.mock_data(mock_read_csv, n_database=10)
         n_targets = 10
         ct = CityTargets(n_targets, location_offset=0.01, radius=1.0)
-        ct.reset_pre_sim()
+        ct.reset_pre_sim_init()
         for target in ct.targets:
             assert np.linalg.norm(target.r_LP_P - nominal) <= 0.03
             assert np.linalg.norm(target.r_LP_P) == approx(1.0)

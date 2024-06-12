@@ -51,12 +51,12 @@ class TestSatellite:
         assert sat.sat_args == {"a": 4, "b": 5, "c": 3}
 
     # @patch("bsk_rl.env.utils.orbital.TrajectorySimulator")
-    # def test_reset_pre_sim(self, trajsim_patch):
+    # def test_reset_pre_sim_init(self, trajsim_patch):
     #     sat = sats.Satellite(name="TestSat", sat_args=None)
     #     sat.data_store = MagicMock(is_fresh=True)
     #     sat._generate_sat_args = MagicMock()
     #     sat.sat_args = {"utc_init": 0, "rN": 0, "vN": 0, "oe": 0, "mu": 0}
-    #     sat.reset_pre_sim()
+    #     sat.reset_pre_sim_init()
     #     trajsim_patch.assert_called_once()
     #     sat._generate_sat_args.assert_called_once()
     #     assert sat.info == []

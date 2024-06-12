@@ -92,7 +92,7 @@ class UniformTargets(Scenario):
         self.radius = radius
         self.targets = []
 
-    def reset_pre_sim(self) -> None:
+    def reset_pre_sim_init(self) -> None:
         """Regenerate target set for new episode."""
         if isinstance(self._n_targets, int):
             self.n_targets = self._n_targets

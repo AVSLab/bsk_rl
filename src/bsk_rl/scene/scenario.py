@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class Scenario(ABC):
     """Base scenario class."""
 
-    def reset_pre_sim(self) -> None:  # pragma: no cover
+    def reset_pre_sim_init(self) -> None:  # pragma: no cover
         """Reset the scenario before initializing the simulator."""
         pass
 

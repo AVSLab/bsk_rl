@@ -71,13 +71,13 @@ class ObservationBuilder:
                 name_counts[obs.name] = 1
             obs.link_satellite(self.satellite)
 
-    def reset_post_sim(self) -> None:
+    def reset_post_sim_init(self) -> None:
         """Perform any once-per-episode setup."""
         self.simulator = self.satellite.simulator  # already a proxy
         self.obs_dict_cache = None
         for obs in self.observation_spec:
             obs.link_simulator(self.simulator)  # already a proxy
-            obs.reset_post_sim()
+            obs.reset_post_sim_init()
 
     def obs_dict(self) -> dict[str, Any]:
         """Human-readable observation format.
@@ -164,7 +164,7 @@ class Observation(ABC):
         """
         self.simulator = simulator  # already a proxy
 
-    def reset_post_sim(self) -> None:  # pragma: no cover
+    def reset_post_sim_init(self) -> None:  # pragma: no cover
         """Perform any once-per-episode setup."""
         pass
 
@@ -220,7 +220,7 @@ class SatProperties(Observation):
 
         self.obs_properties = obs_properties
 
-    def reset_post_sim(self) -> None:
+    def reset_post_sim_init(self) -> None:
         """If necessary, automatically determine property location.
 
         :meta private:
@@ -262,7 +262,7 @@ class Time(Observation):
         super().__init__(name=name)
         self.norm = norm
 
-    def reset_post_sim(self) -> None:
+    def reset_post_sim_init(self) -> None:
         """Autodetect normalization time.
 
         :meta private:
@@ -380,7 +380,7 @@ class OpportunityProperties(Observation):
 
         self.n_ahead_observe = int(n_ahead_observe)
 
-    def reset_post_sim(self) -> None:
+    def reset_post_sim_init(self) -> None:
         """Add downlink ground stations to be considered by the access checker.
 
         :meta private:
