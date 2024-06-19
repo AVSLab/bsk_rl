@@ -97,6 +97,10 @@ class ScanningTimeReward(GlobalReward):
 
     @property
     def reward_fn(self):
+        """Function to calculate reward based on time spent scanning nadir.
+
+        :meta private:
+        """
         if self._reward_fn is None:
             return lambda t: t * self.scenario.value_per_second
         return self._reward_fn
