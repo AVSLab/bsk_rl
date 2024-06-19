@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+Version 1.0.1
+-------------
+*Release Date: MMM. DD, YYYY*
+
+* Change the :class:`~bsk_rl.ConstellationTasking` environment info dictionary to include
+  all non-agent information in ``info['__common__']``, which is expected by RLlib's 
+  multiagent interfaces.
+
+
+
 Version 1.0.0
 -------------
 *Release Date: Jun. 12, 2024*
