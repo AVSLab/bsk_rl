@@ -93,10 +93,13 @@ class ScanningTimeReward(GlobalReward):
                 is set to the time spent scanning times ``scenario.value_per_second``.
         """
         super().__init__()
-        if reward_fn is None:
-            reward_fn = lambda t: t * self.scenario.value_per_second
+        self._reward_fn = reward_fn
 
-        self.reward_fn = reward_fn
+    @property
+    def reward_fn(self):
+        if self._reward_fn is None:
+            return lambda t: t * self.scenario.value_per_second
+        return self._reward_fn
 
     def calculate_reward(
         self, new_data_dict: dict[str, "ScanningTime"]
