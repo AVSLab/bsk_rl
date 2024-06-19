@@ -567,6 +567,12 @@ class ConstellationTasking(
         for agent in self.possible_agents:
             if agent in self.previously_dead:
                 del info[agent]
+        for agent in self.agents:
+            info[agent] = {"events": info[agent]}
+        common = {k: v for k, v in info.items() if k not in self.possible_agents}
+        for k in common.keys():
+            del info[k]
+        info["__common__"] = common
         return info
 
     def step(
