@@ -4,6 +4,8 @@ import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
+from bsk_rl.utils.functional import Resetable
+
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
     from bsk_rl.scene import Scenario
@@ -112,7 +114,7 @@ class DataStore(ABC):
         self.staged_data = []
 
 
-class GlobalReward(ABC):
+class GlobalReward(ABC, Resetable):
     """Base class for simulation-wide data management."""
 
     datastore_type: type[DataStore]  # type of DataStore managed by the GlobalReward
@@ -134,8 +136,8 @@ class GlobalReward(ABC):
         """
         self.scenario = scenario
 
-    def reset_pre_sim_init(self) -> None:
-        """Refresh data and cumulative reward for a new episode prior to simulator construction."""
+    def reset_overwrite_previous(self) -> None:
+        """Overwrite attributes from previous episode."""
         self.data = self.data_type()
         self.cum_reward = {}
 

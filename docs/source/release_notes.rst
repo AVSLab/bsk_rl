@@ -8,7 +8,9 @@ Version 1.0.1
 * Change the :class:`~bsk_rl.ConstellationTasking` environment info dictionary to include
   all non-agent information in ``info['__common__']``, which is expected by RLlib's 
   multiagent interfaces.
-
+* Rewarder, communication, scenario, and satellites all have standardized ``reset_overwrite_previous``,
+  ``reset_pre_sim_init``, and ``reset_post_sim_init`` methods to all for more complex
+  initialization dependencies.
 
 
 Version 1.0.0

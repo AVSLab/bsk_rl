@@ -15,6 +15,7 @@ from bsk_rl.obs.observations import ObservationBuilder
 from bsk_rl.sim import dyn, fsw
 from bsk_rl.utils.functional import (
     AbstractClassProperty,
+    Resetable,
     collect_default_args,
     safe_dict_merge,
     valid_func_name,
@@ -32,7 +33,7 @@ SatObs = Any
 SatAct = Any
 
 
-class Satellite(ABC):
+class Satellite(ABC, Resetable):
     """Abstract base class for satellites."""
 
     dyn_type: type["dyn.DynamicsModel"] = AbstractClassProperty()
@@ -115,10 +116,14 @@ class Satellite(ABC):
         }
         self.logger.debug(f"Satellite initialized with {self.sat_args}")
 
-    def reset_pre_sim_init(self) -> None:
-        """Called during environment reset, before Basilisk simulation initialization."""
+    def reset_overwrite_previous(self) -> None:
+        """Overwrite attributes from previous episode."""
         self.info = []
         self.requires_retasking = True
+        self._timed_terminal_event_name = None
+
+    def reset_pre_sim_init(self) -> None:
+        """Called during environment reset, before Basilisk simulation initialization."""
         self._generate_sat_args()
         self.trajectory = TrajectorySimulator(
             utc_init=self.sat_args["utc_init"],
@@ -127,7 +132,6 @@ class Satellite(ABC):
             oe=self.sat_args["oe"],
             mu=self.sat_args["mu"],
         )
-        self._timed_terminal_event_name = None
 
     def set_simulator(self, simulator: "Simulator"):
         """Set the simulator for models.
