@@ -104,6 +104,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.world_args_generator = self.world_type.default_world_args(**world_args)
 
         self.scenario = scenario
+        self.scenario.link_satellites(self.satellites)
         self.rewarder = rewarder
         self.rewarder.link_scenario(self.scenario)
 
@@ -212,12 +213,19 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.seed = seed
         super().reset(seed=self.seed)
         np.random.seed(self.seed)
-        self._generate_world_args()
 
+        self.scenario.reset_overwrite_previous()
+        self.rewarder.reset_overwrite_previous()
+        self.communicator.reset_overwrite_previous()
+        for satellite in self.satellites:
+            satellite.reset_overwrite_previous()
+
+        self._generate_world_args()
         self.latest_step_duration = 0.0
 
         self.scenario.reset_pre_sim_init()
         self.rewarder.reset_pre_sim_init()
+        self.communicator.reset_pre_sim_init()
 
         for satellite in self.satellites:
             self.rewarder.create_data_store(satellite)
@@ -233,6 +241,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             time_limit=self.time_limit,
         )
 
+        self.scenario.reset_post_sim_init()
+        self.rewarder.reset_post_sim_init()
         self.communicator.reset_post_sim_init()
 
         for satellite in self.satellites:

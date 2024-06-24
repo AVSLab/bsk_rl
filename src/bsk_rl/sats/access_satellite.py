@@ -54,12 +54,9 @@ class AccessSatellite(Satellite):
         self.generation_duration = generation_duration
         self.initial_generation_duration = initial_generation_duration
 
-    def reset_pre_sim_init(self) -> None:
-        """Reset satellite opportunity calculations and lists.
-
-        :meta private:
-        """
-        super().reset_pre_sim_init()
+    def reset_overwrite_previous(self) -> None:
+        """Overwrite previous opportunities and locations."""
+        super().reset_overwrite_previous()
         self.opportunities: list[dict] = []
         self.window_calculation_time = 0
         self.locations_for_access_checking: list[dict[str, Any]] = []
@@ -452,6 +449,13 @@ class ImagingSatellite(AccessSatellite):
         except AttributeError:
             return []
 
+    def reset_overwrite_previous(self) -> None:
+        """Overwrite statistics about previous episode."""
+        super().reset_overwrite_previous()
+        self._image_event_name = None
+        self.imaged = 0
+        self.missed = 0
+
     def reset_pre_sim_init(self) -> None:
         """Set the buffer parameters based on computed windows.
 
@@ -460,9 +464,6 @@ class ImagingSatellite(AccessSatellite):
         super().reset_pre_sim_init()
         self.sat_args["transmitterNumBuffers"] = len(self.known_targets)
         self.sat_args["bufferNames"] = [target.id for target in self.known_targets]
-        self._image_event_name = None
-        self.imaged = 0
-        self.missed = 0
 
     def reset_post_sim_init(self) -> None:
         """Handle initial_generation_duration setting and calculate windows.

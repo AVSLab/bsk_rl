@@ -90,6 +90,9 @@ class UniformTargets(Scenario):
             priority_distribution = lambda: np.random.rand()  # noqa: E731
         self.priority_distribution = priority_distribution
         self.radius = radius
+
+    def reset_overwrite_previous(self) -> None:
+        """Overwrite target list from previous episode."""
         self.targets = []
 
     def reset_pre_sim_init(self) -> None:

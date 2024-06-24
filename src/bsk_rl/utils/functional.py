@@ -177,6 +177,34 @@ class AbstractClassProperty:
         )
 
 
+class Resetable:
+    """Base class for resetable objects.
+
+    This class is used to define objects that are reset at the beginning of each episode.
+    These include :class:`~bsk_rl.scene.Scenario`, :class:`~bsk_rl.data.GlobalReward`,
+    :class:`~bsk_rl.comm.CommunicationMethod`, and :class:`~bsk_rl.sats.Satellite`.
+
+    The :class:`~bsk_rl.GeneralSatelliteTasking.reset` method takes the following steps:
+
+    #. ``reset_overwrite_previous`` - Overwrite attributes from previous episode.
+    #. ``reset_pre_sim_init`` - Reset before simulator initialization.
+    #. Initialize a new Basilisk simulator.
+    #. ``reset_post_sim_init`` - Reset after simulator initialization.
+    """
+
+    def reset_overwrite_previous(self) -> None:
+        """Overwrite attributes from previous episode."""
+        pass
+
+    def reset_pre_sim_init(self) -> None:
+        """Reset before simulator initialization."""
+        pass
+
+    def reset_post_sim_init(self) -> None:
+        """Reset after simulator initialization."""
+        pass
+
+
 __doc_title__ = "Functional"
 __all__ = [
     "valid_func_name",
@@ -188,4 +216,5 @@ __all__ = [
     "check_aliveness_checkers",
     "is_property",
     "AbstractClassProperty",
+    "Resetable",
 ]

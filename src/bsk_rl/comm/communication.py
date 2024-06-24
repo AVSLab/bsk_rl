@@ -9,6 +9,7 @@ import numpy as np
 from scipy.sparse.csgraph import connected_components
 
 from bsk_rl.sim.dyn import LOSCommDynModel
+from bsk_rl.utils.functional import Resetable
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -16,7 +17,7 @@ if TYPE_CHECKING:  # pragma: no cover
 logger = logging.getLogger(__name__)
 
 
-class CommunicationMethod(ABC):
+class CommunicationMethod(ABC, Resetable):
     """Base class for defining data sharing between satellites."""
 
     def __init__(self) -> None:
@@ -34,10 +35,6 @@ class CommunicationMethod(ABC):
             satellites: List of satellites to communicate between.
         """
         self.satellites = satellites
-
-    def reset_post_sim_init(self) -> None:
-        """Reset communication after simulator initialization."""
-        pass
 
     @abstractmethod  # pragma: no cover
     def communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:

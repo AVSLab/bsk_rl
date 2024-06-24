@@ -4,6 +4,8 @@ import logging
 from abc import ABC
 from typing import TYPE_CHECKING
 
+from bsk_rl.utils.functional import Resetable
+
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.data.base import Data
     from bsk_rl.sats import Satellite
@@ -11,12 +13,19 @@ if TYPE_CHECKING:  # pragma: no cover
 logger = logging.getLogger(__name__)
 
 
-class Scenario(ABC):
+class Scenario(ABC, Resetable):
     """Base scenario class."""
 
-    def reset_pre_sim_init(self) -> None:  # pragma: no cover
-        """Reset the scenario before initializing the simulator."""
-        pass
+    def __init__(self) -> None:
+        self.satellites: list["Satellite"]
+
+    def link_satellites(self, satellites: list["Satellite"]) -> None:
+        """Link the environment satellite list to the scenario.
+
+        Args:
+            satellites: List of satellites to communicate between.
+        """
+        self.satellites = satellites
 
     def initial_data(self, satellite: "Satellite", data_type: type["Data"]) -> "Data":
         """Furnish the :class:`~bsk_rl.data.base.DataStore` with initial data."""
