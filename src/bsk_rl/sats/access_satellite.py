@@ -296,12 +296,14 @@ class AccessSatellite(Satellite):
     def opportunities_dict(
         self,
         types: Optional[Union[str, list[str]]] = None,
+        check: Optional[list] = None,
         filter: list = [],
     ) -> dict[Any, list[tuple[float, float]]]:
         """Make dictionary of opportunities that maps objects to lists of windows.
 
         Args:
             types: Types of opportunities to include. If None, include all types.
+            check: Objects to include in the dictionary. If None, check all.
             filter: Objects to exclude from the dictionary.
         """
         if isinstance(types, str):
@@ -310,7 +312,11 @@ class AccessSatellite(Satellite):
         windows = {}
         for opportunity in self.opportunities:
             type = opportunity["type"]
-            if (types is None or type in types) and opportunity[type] not in filter:
+            if (
+                (types is None or type in types)
+                and opportunity[type] not in filter
+                and (check is None or opportunity[type] in check)
+            ):
                 if opportunity[type] not in windows:
                     windows[opportunity[type]] = []
                 windows[opportunity[type]].append(opportunity["window"])
@@ -319,6 +325,7 @@ class AccessSatellite(Satellite):
     def upcoming_opportunities_dict(
         self,
         types: Optional[Union[str, list[str]]] = None,
+        check: Optional[list] = None,
         filter: list = [],
     ) -> dict[Any, list[tuple[float, float]]]:
         """Get dictionary of upcoming opportunities.
@@ -327,6 +334,7 @@ class AccessSatellite(Satellite):
 
         Args:
             types: Types of opportunities to include. If None, include all types.
+            check: Objects to include in the dictionary. If None, check all.
             filter: Objects to exclude from the dictionary.
         """
         if isinstance(types, str):
@@ -335,7 +343,11 @@ class AccessSatellite(Satellite):
         windows = {}
         for opportunity in self.upcoming_opportunities:
             type = opportunity["type"]
-            if (types is None or type in types) and opportunity[type] not in filter:
+            if (
+                (types is None or type in types)
+                and opportunity[type] not in filter
+                and (check is None or opportunity[type] in check)
+            ):
                 if opportunity[type] not in windows:
                     windows[opportunity[type]] = []
                 windows[opportunity[type]].append(opportunity["window"])
@@ -344,12 +356,14 @@ class AccessSatellite(Satellite):
     def next_opportunities_dict(
         self,
         types: Optional[Union[str, list[str]]] = None,
+        check: Optional[list] = None,
         filter: list = [],
     ) -> dict[Any, tuple[float, float]]:
         """Make dictionary of opportunities that maps objects to the next open windows.
 
         Args:
             types: Types of opportunities to include. If None, include all types.
+            check: Objects to include in the dictionary. If None, check all.
             filter: Objects to exclude from the dictionary.
         """
         if isinstance(types, str):
@@ -358,7 +372,11 @@ class AccessSatellite(Satellite):
         next_windows = {}
         for opportunity in self.upcoming_opportunities:
             type = opportunity["type"]
-            if (types is None or type in types) and opportunity[type] not in filter:
+            if (
+                (types is None or type in types)
+                and opportunity[type] not in filter
+                and (check is None or opportunity[type] in check)
+            ):
                 if opportunity[type] not in next_windows:
                     next_windows[opportunity[type]] = opportunity["window"]
         return next_windows
@@ -369,6 +387,7 @@ class AccessSatellite(Satellite):
         pad: bool = True,
         max_lookahead: int = 100,
         types: Optional[Union[str, list[str]]] = None,
+        check: Optional[list] = None,
         filter: list = [],
     ) -> list[dict]:
         """Find the n nearest opportunities, sorted by window close time.
@@ -379,6 +398,7 @@ class AccessSatellite(Satellite):
                 found is less than n.
             max_lookahead: Maximum times to call calculate_additional_windows.
             types: Types of opportunities to include. If None, include all types.
+            check: Objects to include in the dictionary. If None, check all.
             filter: Objects to exclude from the dictionary.
 
         Returns:
@@ -395,7 +415,11 @@ class AccessSatellite(Satellite):
             next_opportunities = []
             for opportunity in upcoming_opportunities:
                 type = opportunity["type"]
-                if (types is None or type in types) and opportunity[type] not in filter:
+                if (
+                    (types is None or type in types)
+                    and opportunity[type] not in filter
+                    and (check is None or opportunity[type] in check)
+                ):
                     next_opportunities.append(opportunity)
 
                 if len(next_opportunities) >= n:
@@ -410,6 +434,13 @@ class AccessSatellite(Satellite):
                 "No opportunities found! Use add_location_for_access_checking to add locations."
             )
         return next_opportunities
+
+    def get_access_check(self):  # TODO isolate to imaging sat
+        """Return a list of objects that should be considered for access checking.
+
+        Defaults to checking all except.
+        """
+        return None
 
     def get_access_filter(self):
         """Return a list of objects that should not be considered for access checking.
@@ -462,25 +493,13 @@ class ImagingSatellite(AccessSatellite):
         :meta private:
         """
         super().reset_pre_sim_init()
-        self.sat_args["transmitterNumBuffers"] = len(self.known_targets)
-        self.sat_args["bufferNames"] = [target.id for target in self.known_targets]
+        self.sat_args["bufferNames"] = [
+            loc[loc["type"]].id
+            for loc in self.locations_for_access_checking
+            if hasattr(loc[loc["type"]], "id")
+        ]
 
-    def reset_post_sim_init(self) -> None:
-        """Handle initial_generation_duration setting and calculate windows.
-
-        :meta private:
-        """
-        # TODO: This should add any targets the satellite could know about, then
-        # filter unknown ones instead. As is, if the satellite learns about a target
-        # later than reset, it will never generate opportunities for it.
-        for target in self.known_targets:
-            self.add_location_for_access_checking(
-                object=target,
-                r_LP_P=target.r_LP_P,
-                min_elev=self.sat_args["imageTargetMinimumElevation"],
-                type="target",
-            )
-        super().reset_post_sim_init()
+        self.sat_args["transmitterNumBuffers"] = len(self.sat_args["bufferNames"])
 
     def _update_image_event(self, target: "Target") -> None:
         """Create a simulator event that terminates on imaging.
@@ -537,11 +556,12 @@ class ImagingSatellite(AccessSatellite):
         Parses an upcoming target index, Target object, or target id.
 
         Args:
-            target_query: Taret upcoming index, object, or id.
+            target_query: Target upcoming index, object, or id.
         """
         if np.issubdtype(type(target_query), np.integer):
             target = self.find_next_opportunities(
                 n=target_query + 1,
+                check=self.get_access_check(),
                 filter=self.get_access_filter(),
                 types="target",
             )[-1]["target"]
@@ -567,7 +587,9 @@ class ImagingSatellite(AccessSatellite):
         """
         self._update_image_event(target)
         next_window = self.next_opportunities_dict(
-            types="target", filter=self.get_access_filter()
+            types="target",
+            check=self.get_access_check(),
+            filter=self.get_access_filter(),
         )[target]
         self.log_info(
             f"{target} window enabled: {next_window[0]:.1f} to {next_window[1]:.1f}"

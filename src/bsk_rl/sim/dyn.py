@@ -1142,6 +1142,14 @@ class GroundStationDynModel(ImagingDynModel):
             groundStation.addSpacecraftToModel(self.scObject.scStateOutMsg)
             self.transmitter.addAccessMsgToTransmitter(groundStation.accessOutMsgs[-1])
 
+            if hasattr(self.satellite, "add_location_for_access_checking"):
+                self.satellite.add_location_for_access_checking(
+                    object=groundStation.ModelTag,
+                    r_LP_P=np.array(groundStation.r_LP_P_Init).flatten(),
+                    min_elev=groundStation.minimumElevation,
+                    type="ground_station",
+                )
+
 
 class FullFeaturedDynModel(GroundStationDynModel, LOSCommDynModel):
     """Convenience class for a satellite with ground station and line-of-sight comms."""

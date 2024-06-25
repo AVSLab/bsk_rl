@@ -380,20 +380,6 @@ class OpportunityProperties(Observation):
 
         self.n_ahead_observe = int(n_ahead_observe)
 
-    def reset_post_sim_init(self) -> None:
-        """Add downlink ground stations to be considered by the access checker.
-
-        :meta private:
-        """
-        if self.type == "ground_station":
-            for ground_station in self.simulator.world.groundStations:
-                self.satellite.add_location_for_access_checking(
-                    object=ground_station.ModelTag,
-                    r_LP_P=np.array(ground_station.r_LP_P_Init).flatten(),
-                    min_elev=ground_station.minimumElevation,
-                    type="ground_station",
-                )
-
     def get_obs(self):
         """Iterate over property specs.
 
@@ -412,6 +398,7 @@ class OpportunityProperties(Observation):
                 n=self.n_ahead_observe,
                 filter=self.satellite.get_access_filter(),
                 types=self.type,
+                pad=True,
             )
         ):
             props = {}
