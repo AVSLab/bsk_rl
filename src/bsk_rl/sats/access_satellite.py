@@ -82,7 +82,8 @@ class AccessSatellite(Satellite):
             type: Category of opportunity target provides.
         """
         location_dict = dict(r_LP_P=r_LP_P, min_elev=min_elev, type=type)
-        location_dict[type] = object
+        location_dict[type] = object  # For backwards compatibility, prefer "object" key
+        location_dict["object"] = object
         self.locations_for_access_checking.append(location_dict)
 
     def reset_post_sim_init(self) -> None:
@@ -153,7 +154,7 @@ class AccessSatellite(Satellite):
                 )
                 for new_window in new_windows:
                     self._add_window(
-                        location[location["type"]],
+                        location["object"],
                         new_window,
                         type=location["type"],
                         r_LP_P=location["r_LP_P"],
@@ -271,14 +272,14 @@ class AccessSatellite(Satellite):
             for opportunity in self.opportunities:
                 if (
                     opportunity["type"] == type
-                    and opportunity[type] == object
+                    and opportunity["object"] == object
                     and opportunity["window"][1] == new_window[0]
                 ):
                     opportunity["window"] = (opportunity["window"][0], new_window[1])
                     return
         bisect.insort(
             self.opportunities,
-            {type: object, "window": new_window, "type": type, "r_LP_P": r_LP_P},
+            {"object": object, "window": new_window, "type": type, "r_LP_P": r_LP_P},
             key=lambda x: x["window"][1],
         )
 
@@ -314,12 +315,12 @@ class AccessSatellite(Satellite):
             type = opportunity["type"]
             if (
                 (types is None or type in types)
-                and opportunity[type] not in filter
-                and (check is None or opportunity[type] in check)
+                and opportunity["object"] not in filter
+                and (check is None or opportunity["object"] in check)
             ):
-                if opportunity[type] not in windows:
-                    windows[opportunity[type]] = []
-                windows[opportunity[type]].append(opportunity["window"])
+                if opportunity["object"] not in windows:
+                    windows[opportunity["object"]] = []
+                windows[opportunity["object"]].append(opportunity["window"])
         return windows
 
     def upcoming_opportunities_dict(
@@ -345,12 +346,12 @@ class AccessSatellite(Satellite):
             type = opportunity["type"]
             if (
                 (types is None or type in types)
-                and opportunity[type] not in filter
-                and (check is None or opportunity[type] in check)
+                and opportunity["object"] not in filter
+                and (check is None or opportunity["object"] in check)
             ):
-                if opportunity[type] not in windows:
-                    windows[opportunity[type]] = []
-                windows[opportunity[type]].append(opportunity["window"])
+                if opportunity["object"] not in windows:
+                    windows[opportunity["object"]] = []
+                windows[opportunity["object"]].append(opportunity["window"])
         return windows
 
     def next_opportunities_dict(
@@ -374,11 +375,12 @@ class AccessSatellite(Satellite):
             type = opportunity["type"]
             if (
                 (types is None or type in types)
-                and opportunity[type] not in filter
-                and (check is None or opportunity[type] in check)
+                and opportunity["object"] not in filter
+                and (check is None or opportunity["object"] in check)
             ):
-                if opportunity[type] not in next_windows:
-                    next_windows[opportunity[type]] = opportunity["window"]
+                print(opportunity)
+                if opportunity["object"] not in next_windows:
+                    next_windows[opportunity["object"]] = opportunity["window"]
         return next_windows
 
     def find_next_opportunities(
@@ -417,8 +419,8 @@ class AccessSatellite(Satellite):
                 type = opportunity["type"]
                 if (
                     (types is None or type in types)
-                    and opportunity[type] not in filter
-                    and (check is None or opportunity[type] in check)
+                    and opportunity["object"] not in filter
+                    and (check is None or opportunity["object"] in check)
                 ):
                     next_opportunities.append(opportunity)
 
@@ -494,9 +496,9 @@ class ImagingSatellite(AccessSatellite):
         """
         super().reset_pre_sim_init()
         self.sat_args["bufferNames"] = [
-            loc[loc["type"]].id
+            loc["object"].id
             for loc in self.locations_for_access_checking
-            if hasattr(loc[loc["type"]], "id")
+            if hasattr(loc["object"], "id")
         ]
 
         self.sat_args["transmitterNumBuffers"] = len(self.sat_args["bufferNames"])
@@ -564,7 +566,7 @@ class ImagingSatellite(AccessSatellite):
                 check=self.get_access_check(),
                 filter=self.get_access_filter(),
                 types="target",
-            )[-1]["target"]
+            )[-1]["object"]
         elif isinstance(target_query, Target):
             target = target_query
         elif isinstance(target_query, str):

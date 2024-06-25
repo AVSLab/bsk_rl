@@ -291,7 +291,7 @@ def _target_angle(sat, opp):
 class OpportunityProperties(Observation):
 
     _fn_map = {
-        "priority": lambda sat, opp: opp[opp["type"]].priority,
+        "priority": lambda sat, opp: opp["object"].priority,
         "r_LP_P": lambda sat, opp: opp["r_LP_P"],
         "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time,
         "opportunity_mid": lambda sat, opp: sum(opp["window"]) / 2

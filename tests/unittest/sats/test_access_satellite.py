@@ -33,7 +33,7 @@ class TestAccessSatellite:
             object=target, r_LP_P=[0, 0, 0], min_elev=1.0, type="target"
         )
         assert (
-            dict(target=target, r_LP_P=[0, 0, 0], min_elev=1.0, type="target")
+            dict(object=target, target=target, r_LP_P=[0, 0, 0], min_elev=1.0, type="target")
             in sat.locations_for_access_checking
         )
 
@@ -81,7 +81,7 @@ class TestAccessSatellite:
             ),
         )
         sat.locations_for_access_checking = [
-            dict(target=tgt, type="target", min_elev=1.3, r_LP_P=tgt.r_LP_P)
+            dict(object=tgt, type="target", min_elev=1.3, r_LP_P=tgt.r_LP_P)
         ]
         sat.calculate_additional_windows(100.0)
         assert tgt in sat.opportunities_dict()
@@ -216,8 +216,8 @@ class TestAccessSatellite:
     def test_add_window(self, merge_time, tgt, window, expected_window):
         sat = self.make_sat()
         sat.opportunities = [
-            dict(target=self.tgt1, window=(3.0, 8.0), type="target"),
-            dict(target=self.tgt0, window=(2.0, 10.0), type="target"),
+            dict(object=self.tgt1, window=(3.0, 8.0), type="target"),
+            dict(object=self.tgt0, window=(2.0, 10.0), type="target"),
         ]
         sat._add_window(
             tgt, window, merge_time=merge_time, type="target", r_LP_P=np.zeros(3)
@@ -225,10 +225,10 @@ class TestAccessSatellite:
         assert expected_window in sat.opportunities_dict()[tgt]
 
     opportunities = [
-        dict(downlink="downObj1", window=(10, 20), type="downlink"),
-        dict(target="tgtObj1", window=(20, 30), type="target"),
-        dict(downlink="downObj1", window=(30, 40), type="downlink"),
-        dict(downlink="downObj2", window=(35, 45), type="downlink"),
+        dict(object="downObj1", window=(10, 20), type="downlink"),
+        dict(object="tgtObj1", window=(20, 30), type="target"),
+        dict(object="downObj1", window=(30, 40), type="downlink"),
+        dict(object="downObj2", window=(35, 45), type="downlink"),
     ]
 
     def test_upcoming_opportunities(self):
@@ -339,11 +339,11 @@ class TestImagingSatellite:
         tgt2: [(30.0, 40.0)],
     }
     opportunities = [
-        dict(target=tgt0, window=(0.0, 10.0), type="target"),
-        dict(target=tgt1, window=(10.0, 20.0), type="target"),
-        dict(target=tgt0, window=(20.0, 30.0), type="target"),
-        dict(target=tgt2, window=(30.0, 40.0), type="target"),
-        dict(target=tgt0, window=(40.0, 50.0), type="target"),
+        dict(object=tgt0, window=(0.0, 10.0), type="target"),
+        dict(object=tgt1, window=(10.0, 20.0), type="target"),
+        dict(object=tgt0, window=(20.0, 30.0), type="target"),
+        dict(object=tgt2, window=(30.0, 40.0), type="target"),
+        dict(object=tgt0, window=(40.0, 50.0), type="target"),
     ]
 
     @patch(
@@ -389,7 +389,7 @@ class TestImagingSatellite:
     def test_parse_target_selection(self, query, expected):
         sat = self.make_sat()
         sat.find_next_opportunities = lambda *args, **kwargs: [
-            dict(target=target) for target in self.upcoming_targets[0 : kwargs["n"]]
+            dict(object=target) for target in self.upcoming_targets[0 : kwargs["n"]]
         ]
         sat.data_store = MagicMock()
         sat.data_store.data.known = self.upcoming_targets
