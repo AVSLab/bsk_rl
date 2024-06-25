@@ -2,7 +2,7 @@
 
 import bisect
 import logging
-from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Union, Callable
 
 import numpy as np
 from Basilisk.utilities import macros
@@ -297,26 +297,28 @@ class AccessSatellite(Satellite):
     def opportunities_dict(
         self,
         types: Optional[Union[str, list[str]]] = None,
-        check: Optional[list] = None,
-        filter: list = [],
+        filter: Union[Optional[Callable], list] = None,
     ) -> dict[Any, list[tuple[float, float]]]:
         """Make dictionary of opportunities that maps objects to lists of windows.
 
         Args:
             types: Types of opportunities to include. If None, include all types.
-            check: Objects to include in the dictionary. If None, check all.
-            filter: Objects to exclude from the dictionary.
+            filter: Function that takes an opportunity dictionary and returns a boolean
+                if the opportunity should be included in the output.
         """
         if isinstance(types, str):
             types = [types]
+
+        if isinstance(filter, list):
+            filter_list = filter
+            filter = lambda opportunity: opportunity["object"] not in filter_list
 
         windows = {}
         for opportunity in self.opportunities:
             type = opportunity["type"]
             if (
                 (types is None or type in types)
-                and opportunity["object"] not in filter
-                and (check is None or opportunity["object"] in check)
+                and (filter is None or filter(opportunity))
             ):
                 if opportunity["object"] not in windows:
                     windows[opportunity["object"]] = []
@@ -326,8 +328,7 @@ class AccessSatellite(Satellite):
     def upcoming_opportunities_dict(
         self,
         types: Optional[Union[str, list[str]]] = None,
-        check: Optional[list] = None,
-        filter: list = [],
+        filter: Union[Optional[Callable], list] = None,
     ) -> dict[Any, list[tuple[float, float]]]:
         """Get dictionary of upcoming opportunities.
 
@@ -335,19 +336,22 @@ class AccessSatellite(Satellite):
 
         Args:
             types: Types of opportunities to include. If None, include all types.
-            check: Objects to include in the dictionary. If None, check all.
-            filter: Objects to exclude from the dictionary.
+            filter: Function that takes an opportunity dictionary and returns a boolean
+                if the opportunity should be included in the output.
         """
         if isinstance(types, str):
             types = [types]
+
+        if isinstance(filter, list):
+            filter_list = filter
+            filter = lambda opportunity: opportunity["object"] not in filter_list
 
         windows = {}
         for opportunity in self.upcoming_opportunities:
             type = opportunity["type"]
             if (
                 (types is None or type in types)
-                and opportunity["object"] not in filter
-                and (check is None or opportunity["object"] in check)
+                and (filter is None or filter(opportunity))
             ):
                 if opportunity["object"] not in windows:
                     windows[opportunity["object"]] = []
@@ -357,28 +361,29 @@ class AccessSatellite(Satellite):
     def next_opportunities_dict(
         self,
         types: Optional[Union[str, list[str]]] = None,
-        check: Optional[list] = None,
-        filter: list = [],
+        filter: Union[Optional[Callable], list] = None,
     ) -> dict[Any, tuple[float, float]]:
         """Make dictionary of opportunities that maps objects to the next open windows.
 
         Args:
             types: Types of opportunities to include. If None, include all types.
-            check: Objects to include in the dictionary. If None, check all.
-            filter: Objects to exclude from the dictionary.
+            filter: Function that takes an opportunity dictionary and returns a boolean
+                if the opportunity should be included in the output.
         """
         if isinstance(types, str):
             types = [types]
+
+        if isinstance(filter, list):
+            filter_list = filter
+            filter = lambda opportunity: opportunity["object"] not in filter_list
 
         next_windows = {}
         for opportunity in self.upcoming_opportunities:
             type = opportunity["type"]
             if (
                 (types is None or type in types)
-                and opportunity["object"] not in filter
-                and (check is None or opportunity["object"] in check)
+                and (filter is None or filter(opportunity))
             ):
-                print(opportunity)
                 if opportunity["object"] not in next_windows:
                     next_windows[opportunity["object"]] = opportunity["window"]
         return next_windows
@@ -389,8 +394,7 @@ class AccessSatellite(Satellite):
         pad: bool = True,
         max_lookahead: int = 100,
         types: Optional[Union[str, list[str]]] = None,
-        check: Optional[list] = None,
-        filter: list = [],
+        filter: Union[Optional[Callable], list] = None,
     ) -> list[dict]:
         """Find the n nearest opportunities, sorted by window close time.
 
@@ -400,14 +404,18 @@ class AccessSatellite(Satellite):
                 found is less than n.
             max_lookahead: Maximum times to call calculate_additional_windows.
             types: Types of opportunities to include. If None, include all types.
-            check: Objects to include in the dictionary. If None, check all.
-            filter: Objects to exclude from the dictionary.
+            filter: Function that takes an opportunity dictionary and returns a boolean
+                if the opportunity should be included in the output.
 
         Returns:
             ``n`` nearest opportunities, ordered
         """
         if isinstance(types, str):
             types = [types]
+
+        if isinstance(filter, list):
+            filter_list = filter
+            filter = lambda opportunity: opportunity["object"] not in filter_list
 
         if n == 0:
             return []
@@ -419,8 +427,7 @@ class AccessSatellite(Satellite):
                 type = opportunity["type"]
                 if (
                     (types is None or type in types)
-                    and opportunity["object"] not in filter
-                    and (check is None or opportunity["object"] in check)
+                    and (filter is None or filter(opportunity))
                 ):
                     next_opportunities.append(opportunity)
 
@@ -436,13 +443,6 @@ class AccessSatellite(Satellite):
                 "No opportunities found! Use add_location_for_access_checking to add locations."
             )
         return next_opportunities
-
-    def get_access_check(self):  # TODO isolate to imaging sat
-        """Return a list of objects that should be considered for access checking.
-
-        Defaults to checking all except.
-        """
-        return None
 
     def get_access_filter(self):
         """Return a list of objects that should not be considered for access checking.
@@ -563,7 +563,6 @@ class ImagingSatellite(AccessSatellite):
         if np.issubdtype(type(target_query), np.integer):
             target = self.find_next_opportunities(
                 n=target_query + 1,
-                check=self.get_access_check(),
                 filter=self.get_access_filter(),
                 types="target",
             )[-1]["object"]
@@ -590,7 +589,6 @@ class ImagingSatellite(AccessSatellite):
         self._update_image_event(target)
         next_window = self.next_opportunities_dict(
             types="target",
-            check=self.get_access_check(),
             filter=self.get_access_filter(),
         )[target]
         self.log_info(
