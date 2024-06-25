@@ -303,8 +303,10 @@ class TestImagingSatellite:
     @patch("bsk_rl.sats.Satellite.reset_pre_sim_init")
     def test_reset_pre_sim_init(self, mock_reset):
         sat = self.make_sat()
-        sat.data_store = MagicMock()
-        sat.data_store.data.known = [MagicMock()] * 5
+        sat.reset_overwrite_previous()
+        targets = [MagicMock()] * 5
+        for target in targets:
+            sat.add_location_for_access_checking(target, np.ones(3), 1.0, "target")
         sat.sat_args = {}
         sat.reset_pre_sim_init()
         mock_reset.assert_called_once()

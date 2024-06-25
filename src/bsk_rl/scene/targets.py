@@ -103,11 +103,22 @@ class UniformTargets(Scenario):
             self.n_targets = np.random.randint(self._n_targets[0], self._n_targets[1])
         logger.info(f"Generating {self.n_targets} targets")
         self.regenerate_targets()
+        for satellite in self.satellites:
+            if hasattr(satellite, "add_location_for_access_checking"):
+                for target in self.targets:
+                    satellite.add_location_for_access_checking(
+                        object=target,
+                        r_LP_P=target.r_LP_P,
+                        min_elev=satellite.sat_args_generator[
+                            "imageTargetMinimumElevation"
+                        ],  # Assume not randomized
+                        type="target",
+                    )
 
     def regenerate_targets(self) -> None:
         """Regenerate targets uniformly.
 
-        Override this method (ash demonstrated in :class:`CityTargets`) to generate
+        Override this method (as demonstrated in :class:`CityTargets`) to generate
         other distributions.
         """
         self.targets = []
