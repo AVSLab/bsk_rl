@@ -57,9 +57,9 @@ class TestImagingAndDownlink:
     def test_image_by_name(self):
         # Smoketest
         self.env.reset()
-        target = self.env.unwrapped.satellite.find_next_opportunities(n=10)[9]["target"]
+        target = self.env.unwrapped.satellite.find_next_opportunities(n=10)[9]["object"]
         self.env.step(target)
-        target = self.env.unwrapped.satellite.find_next_opportunities(n=10)[9]["target"]
+        target = self.env.unwrapped.satellite.find_next_opportunities(n=10)[9]["object"]
         self.env.step(target.id)
         assert True
 

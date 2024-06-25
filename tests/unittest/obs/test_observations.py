@@ -144,7 +144,7 @@ class TestOpportunityProperties:
         sat = MagicMock(simulator=MagicMock(sim_time=10.0))
         opp = dict(
             type="target",
-            target=MagicMock(priority=1.0),
+            object=MagicMock(priority=1.0),
             window=[20.0, 30.0],
             r_LP_P=1.0,
         )
@@ -178,13 +178,13 @@ class TestOpportunityProperties:
         ob = obs.OpportunityProperties(
             dict(prop="priority", norm=2.0),
             dict(
-                prop="double_priority", fn=lambda sat, opp: opp["target"].priority * 2.0
+                prop="double_priority", fn=lambda sat, opp: opp["object"].priority * 2.0
             ),
             n_ahead_observe=2,
         )
         ob.satellite = MagicMock()
         ob.satellite.find_next_opportunities.return_value = [
-            {"target": MagicMock(priority=1.0), "type": "target"}
+            {"object": MagicMock(priority=1.0), "type": "target"}
         ] * ob.n_ahead_observe
         assert ob.get_obs() == {
             "target_0": {"priority_normd": 0.5, "double_priority": 2.0},
