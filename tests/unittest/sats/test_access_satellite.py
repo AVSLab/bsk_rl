@@ -18,10 +18,12 @@ from bsk_rl.utils.functional import valid_func_name
 @patch.multiple(sats.AccessSatellite, __abstractmethods__=set())
 class TestAccessSatellite:
     def make_sat(self):
-        return sats.AccessSatellite(
+        sat = sats.AccessSatellite(
             "TestSat",
             sat_args={"imageTargetMinimumElevation": 1},
         )
+        sat.logger = MagicMock()
+        return sat
 
     def test_add_location_for_access_checking(self):
         sat = self.make_sat()
