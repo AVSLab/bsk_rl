@@ -11,6 +11,8 @@ Version 1.0.1
 * Rewarder, communication, scenario, and satellites all have standardized ``reset_overwrite_previous``,
   ``reset_pre_sim_init``, and ``reset_post_sim_init`` methods to all for more complex
   initialization dependencies.
+* Replace ``get_access_filter`` with :class:`~bsk_rl.sats.AccessSatellite.add_access_filter`,
+  which uses boolean functions to determine which opportunity windows to consider.
 
 
 Version 1.0.0

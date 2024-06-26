@@ -33,7 +33,13 @@ class TestAccessSatellite:
             object=target, r_LP_P=[0, 0, 0], min_elev=1.0, type="target"
         )
         assert (
-            dict(object=target, target=target, r_LP_P=[0, 0, 0], min_elev=1.0, type="target")
+            dict(
+                object=target,
+                target=target,
+                r_LP_P=[0, 0, 0],
+                min_elev=1.0,
+                type="target",
+            )
             in sat.locations_for_access_checking
         )
 

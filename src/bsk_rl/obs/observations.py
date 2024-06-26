@@ -396,7 +396,6 @@ class OpportunityProperties(Observation):
         for i, opportunity in enumerate(
             self.satellite.find_next_opportunities(
                 n=self.n_ahead_observe,
-                filter=self.satellite.get_access_filter(),
                 types=self.type,
                 pad=True,
             )
