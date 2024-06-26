@@ -142,12 +142,13 @@ class UniqueImageReward(GlobalReward):
     def create_data_store(self, satellite: "Satellite") -> None:
         """Override the access filter in addition to creating the data store."""
         super().create_data_store(satellite)
-        if hasattr(satellite, "get_access_filter"):
-            satellite.get_access_filter = lambda: satellite.data_store.data.imaged
-        else:
-            logger.warning(
-                f"Satellite {satellite.name} does not have access filter for unique images."
-            )
+
+        def unique_target_filter(opportunity):
+            if opportunity["type"] == "target":
+                return opportunity["object"] not in satellite.data_store.data.imaged
+            return True
+
+        satellite.add_access_filter(unique_target_filter)
 
     def calculate_reward(
         self, new_data_dict: dict[str, UniqueImageData]

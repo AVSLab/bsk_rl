@@ -2,7 +2,7 @@
 
 import bisect
 import logging
-from typing import TYPE_CHECKING, Any, Iterable, Optional, Union, Callable
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
 
 import numpy as np
 from Basilisk.utilities import macros
@@ -53,6 +53,8 @@ class AccessSatellite(Satellite):
         super().__init__(*args, **kwargs)
         self.generation_duration = generation_duration
         self.initial_generation_duration = initial_generation_duration
+        self.access_filter_functions = []
+        self.add_access_filter(lambda opportunity: True)
 
     def reset_overwrite_previous(self) -> None:
         """Overwrite previous opportunities and locations."""
@@ -313,13 +315,13 @@ class AccessSatellite(Satellite):
             filter_list = filter
             filter = lambda opportunity: opportunity["object"] not in filter_list
 
+        if filter is None:
+            filter = self.default_access_filter
+
         windows = {}
         for opportunity in self.opportunities:
             type = opportunity["type"]
-            if (
-                (types is None or type in types)
-                and (filter is None or filter(opportunity))
-            ):
+            if (types is None or type in types) and filter(opportunity):
                 if opportunity["object"] not in windows:
                     windows[opportunity["object"]] = []
                 windows[opportunity["object"]].append(opportunity["window"])
@@ -346,13 +348,13 @@ class AccessSatellite(Satellite):
             filter_list = filter
             filter = lambda opportunity: opportunity["object"] not in filter_list
 
+        if filter is None:
+            filter = self.default_access_filter
+
         windows = {}
         for opportunity in self.upcoming_opportunities:
             type = opportunity["type"]
-            if (
-                (types is None or type in types)
-                and (filter is None or filter(opportunity))
-            ):
+            if (types is None or type in types) and filter(opportunity):
                 if opportunity["object"] not in windows:
                     windows[opportunity["object"]] = []
                 windows[opportunity["object"]].append(opportunity["window"])
@@ -377,13 +379,13 @@ class AccessSatellite(Satellite):
             filter_list = filter
             filter = lambda opportunity: opportunity["object"] not in filter_list
 
+        if filter is None:
+            filter = self.default_access_filter
+
         next_windows = {}
         for opportunity in self.upcoming_opportunities:
             type = opportunity["type"]
-            if (
-                (types is None or type in types)
-                and (filter is None or filter(opportunity))
-            ):
+            if (types is None or type in types) and filter(opportunity):
                 if opportunity["object"] not in next_windows:
                     next_windows[opportunity["object"]] = opportunity["window"]
         return next_windows
@@ -417,6 +419,9 @@ class AccessSatellite(Satellite):
             filter_list = filter
             filter = lambda opportunity: opportunity["object"] not in filter_list
 
+        if filter is None:
+            filter = self.default_access_filter
+
         if n == 0:
             return []
 
@@ -425,10 +430,7 @@ class AccessSatellite(Satellite):
             next_opportunities = []
             for opportunity in upcoming_opportunities:
                 type = opportunity["type"]
-                if (
-                    (types is None or type in types)
-                    and (filter is None or filter(opportunity))
-                ):
+                if (types is None or type in types) and filter(opportunity):
                     next_opportunities.append(opportunity)
 
                 if len(next_opportunities) >= n:
@@ -445,12 +447,43 @@ class AccessSatellite(Satellite):
         return next_opportunities
 
     def get_access_filter(self):
-        """Return a list of objects that should not be considered for access checking.
+        """Deprecated function.
 
-        For example, ground stations that are offline or targets that are no longer
-        interesting.
+        :meta private:
         """
-        return []
+        raise DeprecationWarning(
+            "get_access_filter is deprecated. Use add_access_filter and default_access_filter instead."
+        )
+
+    def add_access_filter(self, access_filter_fn: Callable):
+        """Add an access filter function to the list of access filters.
+
+        Calls to :class:`~AccessSatellite.opportunities_dict`, :class:`~AccessSatellite.find_next_opportunities`,
+        and similar functions will use the boolean AND of all access filter functions,
+        unless otherwise specified.
+
+        Access filters are used by various other aspects of the environment to limit
+        which opportunities are considered based on the satellite's local knowledge of
+        the environment.
+        """
+        self.access_filter_functions.append(access_filter_fn)
+
+    @property
+    def default_access_filter(self):
+        """Generate a default access filter function that combines all access filters.
+
+        :meta private:
+        """
+
+        def access_filter(opportunity):
+            return all(
+                [
+                    access_filter_fn(opportunity)
+                    for access_filter_fn in self.access_filter_functions
+                ]
+            )
+
+        return access_filter
 
 
 class ImagingSatellite(AccessSatellite):
@@ -561,11 +594,9 @@ class ImagingSatellite(AccessSatellite):
             target_query: Target upcoming index, object, or id.
         """
         if np.issubdtype(type(target_query), np.integer):
-            target = self.find_next_opportunities(
-                n=target_query + 1,
-                filter=self.get_access_filter(),
-                types="target",
-            )[-1]["object"]
+            target = self.find_next_opportunities(n=target_query + 1, types="target")[
+                -1
+            ]["object"]
         elif isinstance(target_query, Target):
             target = target_query
         elif isinstance(target_query, str):
@@ -589,7 +620,7 @@ class ImagingSatellite(AccessSatellite):
         self._update_image_event(target)
         next_window = self.next_opportunities_dict(
             types="target",
-            filter=self.get_access_filter(),
+            filter=self.default_access_filter,
         )[target]
         self.log_info(
             f"{target} window enabled: {next_window[0]:.1f} to {next_window[1]:.1f}"
