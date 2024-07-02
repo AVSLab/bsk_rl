@@ -50,7 +50,7 @@ class DataStore(ABC):
         Args:
             satellite: Satellite which data is being stored for.
             initial_data: Initial data to start the store with. Usually comes from
-                :class:`~bsk_rl.scene.Scenario.initial_data`.
+                :class:`~bsk_rl.data.GlobalReward.initial_data`.
         """
         self.satellite = satellite
         self.staged_data = []
@@ -141,6 +141,10 @@ class GlobalReward(ABC, Resetable):
         self.data = self.data_type()
         self.cum_reward = {}
 
+    def initial_data(self, satellite: "Satellite") -> "Data":
+        """Furnish the :class:`~bsk_rl.data.base.DataStore` with initial data."""
+        return self.data_type()
+
     def create_data_store(self, satellite: "Satellite") -> None:
         """Create a data store for a satellite.
 
@@ -148,8 +152,7 @@ class GlobalReward(ABC, Resetable):
             satellite: Satellite to create a data store for.
         """
         satellite.data_store = self.datastore_type(
-            satellite,
-            initial_data=self.scenario.initial_data(satellite, self.data_type),
+            satellite, initial_data=self.initial_data(satellite)
         )
         self.cum_reward[satellite.id] = 0.0
 

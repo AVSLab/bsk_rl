@@ -13,6 +13,8 @@ Version 1.0.1
   initialization dependencies.
 * Replace ``get_access_filter`` with :class:`~bsk_rl.sats.AccessSatellite.add_access_filter`,
   which uses boolean functions to determine which opportunity windows to consider.
+* Changed the initial data generation to be defined in :class:`~bsk_rl.data.GlobalReward` 
+  instead of :class:`~bsk_rl.scene.Scenario`.
 
 
 Version 1.0.0

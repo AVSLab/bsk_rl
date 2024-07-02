@@ -139,6 +139,14 @@ class UniqueImageReward(GlobalReward):
         super().__init__()
         self.reward_fn = reward_fn
 
+    def initial_data(self, satellite: "Satellite") -> "UniqueImageData":
+        """Furnish data to the scenario.
+
+        Currently, it is assumed that all targets are known a priori, so the initial data
+        given to the data store is the list of all targets.
+        """
+        return self.data_type(known=self.scenario.targets)
+
     def create_data_store(self, satellite: "Satellite") -> None:
         """Override the access filter in addition to creating the data store."""
         super().create_data_store(satellite)
