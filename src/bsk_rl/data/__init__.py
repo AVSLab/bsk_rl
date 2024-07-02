@@ -18,8 +18,8 @@ with the :class:`GlobalReward.calculate_reward` method.
 The :class:`~bsk_rl.data.base.DataStore` handles each satellite's local knowledge of the
 scenario and the data it generates. The data store gains data in three ways:
 
-1. On environment reset, the :class:`~bsk_rl.scene.Scenario` calls
-   :class:`~bsk_rl.scene.Scenario.initial_data` to provide the initial knowledge of the
+1. On environment reset, the :class:`~bsk_rl.data.GlobalReward` calls
+   :class:`~bsk_rl.data.GlobalReward.initial_data` to provide the initial knowledge of the
    scenario for each satellite. This may be empty or may contain some a priori knowledge,
    such as a list of targets that are desired to be imaged.
 2. At the end of each step, the result of :class:`~bsk_rl.data.base.DataStore.get_log_state`

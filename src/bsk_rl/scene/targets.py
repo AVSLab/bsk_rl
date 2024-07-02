@@ -129,17 +129,6 @@ class UniformTargets(Scenario):
                 Target(name=f"tgt-{i}", r_LP_P=x, priority=self.priority_distribution())
             )
 
-    def initial_data(self, satellite: "Satellite", data_type: type["Data"]) -> "Data":
-        """Furnish data to the scenario.
-
-        Currently, it is assumed that all targets are known a priori, so the initial data
-        given to the data store is the list of all targets.
-        """
-        try:
-            return data_type(known=self.targets)
-        except TypeError:
-            return data_type()
-
 
 class CityTargets(UniformTargets):
     """Environment with targets distributed around population centers."""

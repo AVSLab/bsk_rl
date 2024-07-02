@@ -27,10 +27,6 @@ class Scenario(ABC, Resetable):
         """
         self.satellites = satellites
 
-    def initial_data(self, satellite: "Satellite", data_type: type["Data"]) -> "Data":
-        """Furnish the :class:`~bsk_rl.data.base.DataStore` with initial data."""
-        return data_type()
-
 
 class UniformNadirScanning(Scenario):
     """Defines a nadir target center at the center of the planet."""
