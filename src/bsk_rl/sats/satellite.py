@@ -90,6 +90,7 @@ class Satellite(ABC, Resetable):
                 will stop the simulation.
         """
         self.name = name
+        self.nonunique_name = False
         self.logger = logging.getLogger(__name__).getChild(self.name)
         if sat_args is None:
             sat_args = self.default_sat_args()
@@ -107,7 +108,10 @@ class Satellite(ABC, Resetable):
     @property
     def id(self) -> str:
         """Unique human-readable identifier."""
-        return f"{self.name}_{id(self)}"
+        if self.nonunique_name:
+            return f"{self.name}_{id(self)}"
+        else:
+            return self.name
 
     def _generate_sat_args(self) -> None:
         """Instantiate sat_args from any randomizers in provided sat_args."""

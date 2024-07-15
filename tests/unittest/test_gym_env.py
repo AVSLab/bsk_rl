@@ -262,6 +262,8 @@ class TestSatelliteTasking:
     )
     def test_init(self):
         mock_sat = Satellite("sat", {})
+        mock_sat.nonunique_name = False
+        mock_sat.name = "sat"
         env = SatelliteTasking(
             satellite=mock_sat,
             world_type=MagicMock(),
@@ -326,6 +328,7 @@ class TestConstellationTasking:
         mock_sat_2 = MagicMock()
         mock_sat_1.sat_args_generator = {}
         mock_sat_2.sat_args_generator = {}
+        mock_sat_1.name = mock_sat_2.name = "SomeSat"
         mock_data = MagicMock(scenario=None)
         env = ConstellationTasking(
             satellites=[mock_sat_1, mock_sat_2],
@@ -333,6 +336,7 @@ class TestConstellationTasking:
             scenario=MagicMock(),
             rewarder=mock_data,
         )
+        assert mock_sat_1.nonunique_name
         env.unwrapped.world_args_generator = {"utc_init": "a long time ago"}
         env.communicator = MagicMock()
         obs, info = env.reset()

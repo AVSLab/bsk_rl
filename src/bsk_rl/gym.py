@@ -89,6 +89,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         if isinstance(satellites, Satellite):
             satellites = [satellites]
         self.satellites = satellites
+        sat_names = [satellite.name for satellite in self.satellites]
+        if len(sat_names) != len(set(sat_names)):
+            for satellite in self.satellites:
+                satellite.nonunique_name = True
         self.simulator: Simulator
 
         if scenario is None:
