@@ -123,8 +123,9 @@ class TestAlivenessChecker:
         d.simulator.sim_time = 0
         d.satellite.info = []
         d.satellite.id = "SAT"
+        d.satellite._is_alive
         assert functional.check_aliveness_checkers(d, log_failure=True) is False
-        d.satellite.log_info.assert_called_with("failed is_living check")
+        d.satellite.log_warning.assert_called_with("failed is_living check")
 
 
 @pytest.mark.parametrize("prop_name,expected", [("prop", True), ("not_a_prop", False)])

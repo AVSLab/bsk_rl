@@ -125,6 +125,7 @@ class Satellite(ABC, Resetable):
         self.info = []
         self.requires_retasking = True
         self._timed_terminal_event_name = None
+        self._is_alive = True
 
     def reset_pre_sim_init(self) -> None:
         """Called during environment reset, before Basilisk simulation initialization."""
@@ -236,9 +237,13 @@ class Satellite(ABC, Resetable):
         Returns:
             is_alive
         """
-        return self.dynamics.is_alive(log_failure=log_failure) and self.fsw.is_alive(
+        if not self._is_alive:
+            return False
+
+        self._is_alive = self.dynamics.is_alive(
             log_failure=log_failure
-        )
+        ) and self.fsw.is_alive(log_failure=log_failure)
+        return self._is_alive
 
     @property
     def _satellite_command(self) -> str:
@@ -267,6 +272,15 @@ class Satellite(ABC, Resetable):
         """
         self.info.append((self.simulator.sim_time, info))
         self.logger.info(f"{info}")
+
+    def log_warning(self, warning: Any) -> None:
+        """Record warning at the current simulation time.
+
+        Args:
+            warning: Warning to log
+        """
+        self.info.append((self.simulator.sim_time, warning))
+        self.logger.warning(f"{warning}")
 
     def update_timed_terminal_event(
         self, t_close: float, info: str = "", extra_actions: list[str] = []

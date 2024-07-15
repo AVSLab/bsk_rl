@@ -64,14 +64,20 @@ class TestSatellite:
     #     assert sat._timed_terminal_event_name is None
 
     @pytest.mark.parametrize(
-        "dyn_state,fsw_state",
-        [(False, False), (False, True), (True, False), (True, True)],
+        "dyn_state,fsw_state,sat_past_is_alive",
+        [
+            (a, b, c)
+            for a in [True, False]
+            for b in [True, False]
+            for c in [True, False]
+        ],
     )
-    def test_is_alive(self, dyn_state, fsw_state):
+    def test_is_alive(self, dyn_state, fsw_state, sat_past_is_alive):
         sat = sats.Satellite(name="TestSat", sat_args={})
+        sat._is_alive = sat_past_is_alive
         sat.dynamics = MagicMock(is_alive=MagicMock(return_value=dyn_state))
         sat.fsw = MagicMock(is_alive=MagicMock(return_value=fsw_state))
-        assert sat.is_alive() == (dyn_state and fsw_state)
+        assert sat.is_alive() == (dyn_state and fsw_state and sat_past_is_alive)
 
     def test_satellite_command(self):
         sat1 = sats.Satellite(name="TestSat", sat_args={})
