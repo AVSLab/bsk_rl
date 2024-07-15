@@ -352,6 +352,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             if action is not None:
                 satellite.requires_retasking = False
                 satellite.set_action(action)
+            if not satellite.is_alive():
+                satellite.requires_retasking = False
             else:
                 if satellite.requires_retasking:
                     logger.warning(
