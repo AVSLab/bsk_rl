@@ -301,10 +301,12 @@ def test_init(mock_init):
 @patch.multiple(sats.ImagingSatellite, __abstractmethods__=set())
 class TestImagingSatellite:
     def make_sat(self):
-        return sats.ImagingSatellite(
+        sat = sats.ImagingSatellite(
             "TestSat",
             sat_args={"imageTargetMinimumElevation": 1},
         )
+        sat.nonunique_name = False
+        return sat
 
     @patch("bsk_rl.sats.Satellite.reset_pre_sim_init")
     def test_reset_pre_sim_init(self, mock_reset):

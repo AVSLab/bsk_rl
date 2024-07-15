@@ -42,6 +42,7 @@ class TestSatellite:
     def test_id(self):
         sat1 = sats.Satellite(name="TestSat", sat_args={})
         sat2 = sats.Satellite(name="TestSat", sat_args={})
+        sat1.nonunique_name = sat2.nonunique_name = True
         assert sat1.id != sat2.id
         assert sat1.id.startswith("TestSat")
 
@@ -75,6 +76,7 @@ class TestSatellite:
     def test_satellite_command(self):
         sat1 = sats.Satellite(name="TestSat", sat_args={})
         sat2 = sats.Satellite(name="TestSat", sat_args={})
+        sat1.nonunique_name = sat2.nonunique_name = True
         self.satellites = [sat1, sat2]
         assert sat1 == eval(sat1._satellite_command)
         assert sat1 != eval(sat2._satellite_command)
