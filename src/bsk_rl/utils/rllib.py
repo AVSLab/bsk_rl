@@ -58,25 +58,35 @@ class EpisodeDataCallbacks(DefaultCallbacks):
         return {}
 
     def on_episode_end(
-        self, *, worker, base_env, policies, episode, env_index, **kwargs
+        self,
+        env=None,
+        metrics_logger=None,
+        **kwargs,
     ) -> None:
         """Call pull_env_metrics and log the results.
 
         :meta private:
         """
-        env = base_env.vector_env.envs[0]  # noqa: F841; how to access the environment
-        env_data = self.pull_env_metrics(env)
-        for k, v in env_data.items():
-            episode.custom_metrics[k] = v
+        if "base_env" in kwargs:  # Old RLlib stack
+            env = kwargs["base_env"].vector_env.envs[0]  # noqa: F841
+            env_data = self.pull_env_metrics(env)
+            for k, v in env_data.items():
+                kwargs["episode"].custom_metrics[k] = v
+        else:  # New RLlib stack
+            env = env.envs[0]
+            env_data = self.pull_env_metrics(env)
+            for k, v in env_data.items():
+                metrics_logger.log_value(k, v)
 
     def on_train_result(self, *, algorithm, result, **kwargs):
         """Log frames per second.
 
         :meta private:
         """
-        result["fps"] = (
-            result["num_env_steps_sampled_this_iter"] / result["time_this_iter_s"]
-        )
+        if "num_env_steps_sampled_this_iter" in result:
+            result["fps"] = (
+                result["num_env_steps_sampled_this_iter"] / result["time_this_iter_s"]
+            )
 
 
 __doc_title__ = "RLlib Utilities"
