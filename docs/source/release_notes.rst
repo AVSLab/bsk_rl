@@ -15,6 +15,8 @@ Version 1.0.1
   which uses boolean functions to determine which opportunity windows to consider.
 * Changed the initial data generation to be defined in :class:`~bsk_rl.data.GlobalReward` 
   instead of :class:`~bsk_rl.scene.Scenario`.
+* Added a new :ref:`examples` script that demonstrates how to include
+  a targets with cloud coverage and a rewarder that accounts for cloud cover.
 
 
 Version 1.0.0
