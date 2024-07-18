@@ -8,3 +8,4 @@ Examples
    satellite_configuration
    rllib_training
    multiagent_envs
+   cloud_environment
