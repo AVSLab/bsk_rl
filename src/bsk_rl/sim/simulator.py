@@ -43,6 +43,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self.satellites = satellites
         self.max_step_duration = max_step_duration
         self.time_limit = time_limit
+        self.logger = logger
 
         self.world: WorldModel
 
@@ -88,13 +89,20 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         Propagates for a duration up to the ``max_step_duration``, stopping if the
         environment time limit is reached or an event is triggered.
         """
-        simulation_time = mc.sec2nano(
-            min(self.sim_time + self.max_step_duration, self.time_limit)
+        if "max_step_duration" in self.eventMap:
+            self.delete_event("max_step_duration")
+
+        self.createNewEvent(
+            "max_step_duration",
+            mc.sec2nano(self.sim_rate),
+            True,
+            [
+                f"self.TotalSim.CurrentNanos * {mc.NANO2SEC} >= {self.sim_time + self.max_step_duration}"
+            ],
+            ["self.logger.info('Max step duration reached')"],
+            terminal=True,
         )
-        logger.info(
-            f"Running simulation at most to {simulation_time*mc.NANO2SEC:.2f} seconds"
-        )
-        self.ConfigureStopTime(simulation_time)
+        self.ConfigureStopTime(mc.sec2nano(min(self.time_limit, 2**31)))
         self.ExecuteSimulation()
 
     def delete_event(self, event_name) -> None:
