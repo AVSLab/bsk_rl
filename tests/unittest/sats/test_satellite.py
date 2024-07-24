@@ -74,10 +74,22 @@ class TestSatellite:
     )
     def test_is_alive(self, dyn_state, fsw_state, sat_past_is_alive):
         sat = sats.Satellite(name="TestSat", sat_args={})
+        if sat_past_is_alive:
+            sat.time_of_death = None
+        else:
+            sat.time_of_death = 5.0
+        sat.simulator = MagicMock(sim_time=10.0)
         sat._is_alive = sat_past_is_alive
         sat.dynamics = MagicMock(is_alive=MagicMock(return_value=dyn_state))
         sat.fsw = MagicMock(is_alive=MagicMock(return_value=fsw_state))
         assert sat.is_alive() == (dyn_state and fsw_state and sat_past_is_alive)
+        if not sat.is_alive():
+            if sat_past_is_alive:
+                assert sat.time_of_death == 10.0
+            else:
+                assert sat.time_of_death == 5.0
+        else:
+            assert sat.time_of_death is None
 
     def test_satellite_command(self):
         sat1 = sats.Satellite(name="TestSat", sat_args={})
