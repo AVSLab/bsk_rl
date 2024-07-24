@@ -17,6 +17,12 @@ Version 1.0.1
   instead of :class:`~bsk_rl.scene.Scenario`.
 * Added a new :ref:`examples` script that demonstrates how to include
   a targets with cloud coverage and a rewarder that accounts for cloud cover.
+* Reformat the info dictionary to be more consistent across environments. All satellites now
+  have a ``requires_retasking`` key, as opposed to a global list of satellites that require retasking.
+  Each satellite also gets ``d_ts`` in its info dictionary. Info and warning messages are no longer
+  saved in the info dict.
+* ``log_info`` and ``log_warning`` are deprecated by :class:`~bsk_rl.sats.Satellite`, in favor of
+  ``logger.info`` and ``logger.warning``.
 
 
 Version 1.0.0

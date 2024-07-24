@@ -622,7 +622,7 @@ class ImagingSatellite(AccessSatellite):
             types="target",
             filter=self.default_access_filter,
         )[target]
-        self.log_info(
+        self.logger.info(
             f"{target} window enabled: {next_window[0]:.1f} to {next_window[1]:.1f}"
         )
         self.update_timed_terminal_event(
@@ -638,6 +638,6 @@ class ImagingSatellite(AccessSatellite):
             target: Selected target
         """
         msg = f"{target} tasked for imaging"
-        self.log_info(msg)
+        self.logger.info(msg)
         self.fsw.action_image(target.r_LP_P, target.id)
         self.enable_target_window(target)

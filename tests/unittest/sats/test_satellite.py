@@ -100,22 +100,6 @@ class TestSatellite:
         assert sat1 != eval(sat2._satellite_command)
         assert sat2 == eval(sat2._satellite_command)
 
-    def test_info_command(self):
-        sat = sats.Satellite(name="TestSat", sat_args={})
-        sat.info = []
-        sat.simulator = MagicMock(sim_time=0.0)
-        self.satellites = [sat]
-        self.sim_time = 0.0
-        eval(sat._info_command("some info"))
-        assert sat.info[0] == (0.0, "some info")
-
-    def test_log_info(self):
-        sat = sats.Satellite(name="TestSat", sat_args={})
-        sat.info = []
-        sat.simulator = MagicMock(sim_time=0.0)
-        sat.log_info("some info")
-        assert sat.info[0] == (0.0, "some info")
-
     def test_update_timed_terminal_event(self):
         pass  # Probably better with integration testing
 

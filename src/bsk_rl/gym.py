@@ -349,7 +349,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 satellite.requires_retasking = False
             else:
                 if satellite.requires_retasking:
-                    satellite.log_warning(f"Requires retasking but received no task.")
+                    satellite.logger.warning(
+                        f"Requires retasking but received no task."
+                    )
 
         previous_time = self.simulator.sim_time  # should these be recorded in simulator
         self.simulator.run()

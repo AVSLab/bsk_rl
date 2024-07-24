@@ -155,7 +155,7 @@ class DiscreteFSWAction(DiscreteAction):
             The name of the activated action.
         """
         assert action == 0
-        self.satellite.log_info(f"{self.name} tasked for {self.duration} seconds")
+        self.satellite.logger.info(f"{self.name} tasked for {self.duration} seconds")
         self.satellite.update_timed_terminal_event(
             self.simulator.sim_time + self.duration, info=f"for {self.fsw_action}"
         )
@@ -285,7 +285,7 @@ class Image(DiscreteAction):
 
         :meta_private:
         """
-        self.satellite.log_info(f"target index {action} tasked")
+        self.satellite.logger.info(f"target index {action} tasked")
         return self.image(action, prev_action_key)
 
     def set_action_override(
