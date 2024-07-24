@@ -121,7 +121,7 @@ def aliveness_checker(func: Callable[..., bool]) -> Callable[..., bool]:
         self = args[0]
         alive = func(*args, **kwargs)
         if not alive and log_failure:
-            self.satellite.log_warning(f"failed {func.__name__} check")
+            self.satellite.logger.warning(f"failed {func.__name__} check")
         return alive
 
     inner.__doc__ = (

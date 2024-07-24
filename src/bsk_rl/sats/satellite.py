@@ -8,6 +8,7 @@ from weakref import proxy
 
 import numpy as np
 from Basilisk.utilities import macros
+from deprecated import deprecated
 from gymnasium import spaces
 
 from bsk_rl.act.actions import select_action_builder
@@ -273,18 +274,24 @@ class Satellite(ABC, Resetable):
         Returns:
             actionList action for simBase.createNewEvent
         """
-        return self._satellite_command + f".log_info('{info}')"
+        return self._satellite_command + f".logger.info('{info}')"
 
+    @deprecated(reason="Use satellite.logger.info instead")
     def log_info(self, info: Any) -> None:
         """Record information at the current simulation time.
+
+        :meta private:
 
         Args:
             info: Information to log
         """
         self.logger.info(f"{info}")
 
+    @deprecated(reason="Use satellite.logger.warning instead")
     def log_warning(self, warning: Any) -> None:
         """Record warning at the current simulation time.
+
+        :meta private:
 
         Args:
             warning: Warning to log
@@ -302,7 +309,7 @@ class Satellite(ABC, Resetable):
             extra_actions: Additional actions to perform at terminal time
         """
         self.disable_timed_terminal_event()
-        self.log_info(f"setting timed terminal event at {t_close:.1f}")
+        self.logger.info(f"setting timed terminal event at {t_close:.1f}")
 
         # Create new timed terminal event
         self._timed_terminal_event_name = valid_func_name(

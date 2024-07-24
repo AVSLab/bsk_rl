@@ -85,7 +85,7 @@ When extending the satellite class, certain convenience methods are available:
 
 * :class:`~Satellite.reset_pre_sim_init` - Called on reset before the simulation is constructed.
 * :class:`~Satellite.reset_post_sim_init` - Called on reset  after the simulation is constructed.
-* :class:`~Satellite.log_info` - Logs a message to ``INFO``, associating it with the satellite.
+* ``logger.info/warning/debug`` - Logs a message to ``INFO``, associating it with the satellite.
 
 Satellite Varieties
 -------------------
