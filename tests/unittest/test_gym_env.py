@@ -102,7 +102,7 @@ class TestGeneralSatelliteTasking:
         assert env._get_obs() == (0, 1, 2)
 
     def test_get_info(self):
-        mock_sats = [MagicMock(info={"sat_index": i}) for i in range(3)]
+        mock_sats = [MagicMock(requires_retasking=True) for i in range(3)]
         env = GeneralSatelliteTasking(
             satellites=mock_sats,
             world_type=MagicMock(),
@@ -110,9 +110,10 @@ class TestGeneralSatelliteTasking:
             rewarder=MagicMock(),
         )
         env.latest_step_duration = 10.0
-        expected = {sat.id: {"sat_index": i} for i, sat in enumerate(mock_sats)}
+        expected = {
+            sat.id: {"requires_retasking": True} for i, sat in enumerate(mock_sats)
+        }
         expected["d_ts"] = 10.0
-        expected["requires_retasking"] = [sat.id for sat in mock_sats]
         assert env._get_info() == expected
 
     def test_action_space(self):
@@ -380,7 +381,7 @@ class TestConstellationTasking:
         MagicMock(return_value=False),
     )
     def test_get_info(self):
-        mock_sats = [MagicMock(info=[("sat_index", i)]) for i in range(3)]
+        mock_sats = [MagicMock(requires_retasking=True) for i in range(3)]
         env = ConstellationTasking(
             satellites=mock_sats,
             world_type=MagicMock(),
@@ -390,11 +391,11 @@ class TestConstellationTasking:
         env.newly_dead = []
         env.latest_step_duration = 10.0
         expected = {
-            sat.id: {"events": [("sat_index", i)]} for i, sat in enumerate(mock_sats)
+            sat.id: {"requires_retasking": True, "d_ts": 10.0}
+            for i, sat in enumerate(mock_sats)
         }
         expected["__common__"] = {
             "d_ts": 10.0,
-            "requires_retasking": [sat.id for sat in mock_sats],
         }
         assert env._get_info() == expected
 

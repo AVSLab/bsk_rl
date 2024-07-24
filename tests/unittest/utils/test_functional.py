@@ -121,7 +121,6 @@ class TestAlivenessChecker:
     def test_dead(self, type):
         d = type()
         d.simulator.sim_time = 0
-        d.satellite.info = []
         d.satellite.id = "SAT"
         d.satellite._is_alive
         assert functional.check_aliveness_checkers(d, log_failure=True) is False

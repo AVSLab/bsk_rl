@@ -285,16 +285,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             tuple: Joint info
         """
         info: dict[str, Any] = {
-            satellite.id: deepcopy(satellite.info) for satellite in self.satellites
+            satellite.id: {"requires_retasking": satellite.requires_retasking}
+            for satellite in self.satellites
         }
         info["d_ts"] = self.latest_step_duration
-        info["requires_retasking"] = [
-            satellite.id
-            for satellite in self.satellites
-            if satellite.requires_retasking and satellite.is_alive()
-        ]
-        if len(info["requires_retasking"]) > 0:
-            logger.info(f"Satellites requiring retasking: {info['requires_retasking']}")
         return info
 
     def _get_reward(self):
@@ -348,7 +342,6 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         if len(actions) != len(self.satellites):
             raise ValueError("There must be the same number of actions and satellites")
         for satellite, action in zip(self.satellites, actions):
-            satellite.info = []  # reset satellite info log
             if action is not None:
                 satellite.requires_retasking = False
                 satellite.set_action(action)
@@ -356,10 +349,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 satellite.requires_retasking = False
             else:
                 if satellite.requires_retasking:
-                    logger.warning(
-                        f"Satellite {satellite.id} requires retasking "
-                        "but received no task."
-                    )
+                    satellite.log_warning(f"Requires retasking but received no task.")
 
         previous_time = self.simulator.sim_time  # should these be recorded in simulator
         self.simulator.run()
@@ -372,6 +362,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.reward_dict = self.rewarder.reward(new_data)
 
         self.communicator.communicate()
+
+        for satellite in self.satellites:
+            if satellite.requires_retasking:
+                satellite.logger.info(f"Satellite {satellite.id} requires retasking")
 
     def step(
         self, actions: MultiSatAct
@@ -454,6 +448,13 @@ class SatelliteTasking(GeneralSatelliteTasking, Generic[SatObs, SatAct]):
 
     def _get_obs(self) -> Any:
         return self.satellite.get_obs()
+
+    def _get_info(self) -> dict[str, Any]:
+        info = super()._get_info()
+        for k, v in info[self.satellite.id].items():
+            info[k] = v
+        del info[self.satellite.id]
+        return info
 
 
 class ConstellationTasking(
@@ -583,12 +584,16 @@ class ConstellationTasking(
         for agent in self.possible_agents:
             if agent in self.previously_dead:
                 del info[agent]
-        for agent in self.agents:
-            info[agent] = {"events": info[agent]}
+
         common = {k: v for k, v in info.items() if k not in self.possible_agents}
         for k in common.keys():
             del info[k]
+
+        for agent in info.keys():
+            for k, v in common.items():
+                info[agent][k] = v
         info["__common__"] = common
+
         return info
 
     def step(
