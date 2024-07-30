@@ -23,6 +23,8 @@ Version 1.0.1
   saved in the info dict.
 * ``log_info`` and ``log_warning`` are deprecated by :class:`~bsk_rl.sats.Satellite`, in favor of
   ``logger.info`` and ``logger.warning``.
+* Add ability to correlate ``sat_args`` between satellites with the ``sat_arg_randomizer``
+  option in :class:`~bsk_rl.GeneralSatelliteTasking`.
 
 
 Version 1.0.0

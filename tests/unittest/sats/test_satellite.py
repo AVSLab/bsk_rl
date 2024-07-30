@@ -47,9 +47,12 @@ class TestSatellite:
         assert sat1.id.startswith("TestSat")
 
     def test_generate_sat_args(self):
-        sat = sats.Satellite(name="TestSat", sat_args={"a": 4, "b": lambda: 5})
-        sat._generate_sat_args()
-        assert sat.sat_args == {"a": 4, "b": 5, "c": 3}
+        sat = sats.Satellite(
+            name="TestSat",
+            sat_args={"a": 4, "b": lambda: 5},
+        )
+        sat.generate_sat_args(a=10)
+        assert sat.sat_args == {"a": 10, "b": 5, "c": 3}
 
     # @patch("bsk_rl.env.utils.orbital.TrajectorySimulator")
     # def test_reset_pre_sim_init(self, trajsim_patch):
@@ -126,7 +129,7 @@ class TestSatellite:
         sat = sats.Satellite(name="TestSat", sat_args=None)
         sat.dyn_type.return_value = mock_dyn
         sat.fsw_type.return_value = mock_fsw
-        sat._generate_sat_args()
+        sat.generate_sat_args()
         sat.set_simulator(mock_sim)
         assert mock_dyn == sat.set_dynamics(1.0)
         assert mock_fsw == sat.set_fsw(1.0)

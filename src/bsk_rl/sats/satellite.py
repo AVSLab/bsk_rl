@@ -114,11 +114,24 @@ class Satellite(ABC, Resetable):
         else:
             return self.name
 
-    def _generate_sat_args(self) -> None:
-        """Instantiate sat_args from any randomizers in provided sat_args."""
+    def generate_sat_args(self, **kwargs) -> None:
+        """Instantiate sat_args from any randomizers in provided sat_args.
+
+        Args:
+            **kwargs: Arguments to override in the default arguments.
+        """
         self.sat_args = {
             k: v if not callable(v) else v() for k, v in self.sat_args_generator.items()
         }
+        for k, v in kwargs.items():
+            if k not in self.sat_args:
+                raise KeyError(f"{k} not a valid key for sat_args")
+            if self.sat_args[k] != v:
+                self.logger.debug(
+                    f"Overwriting {k}={self.sat_args[k]} in sat_args with {v}"
+                )
+            self.sat_args[k] = v
+
         self.logger.debug(f"Satellite initialized with {self.sat_args}")
 
     def reset_overwrite_previous(self) -> None:
@@ -130,7 +143,6 @@ class Satellite(ABC, Resetable):
 
     def reset_pre_sim_init(self) -> None:
         """Called during environment reset, before Basilisk simulation initialization."""
-        self._generate_sat_args()
         self.trajectory = TrajectorySimulator(
             utc_init=self.sat_args["utc_init"],
             rN=self.sat_args["rN"],

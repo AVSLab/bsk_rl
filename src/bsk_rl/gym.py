@@ -5,7 +5,7 @@ import logging
 import os
 from copy import deepcopy
 from time import time_ns
-from typing import Any, Generic, Iterable, Optional, TypeVar, Union
+from typing import Any, Callable, Generic, Iterable, Optional, TypeVar, Union
 
 import numpy as np
 from gymnasium import Env, spaces
@@ -26,6 +26,7 @@ SatObs = TypeVar("SatObs")
 SatAct = TypeVar("SatAct")
 MultiSatObs = tuple[SatObs, ...]
 MultiSatAct = Iterable[SatAct]
+SatArgRandomizer = Callable[[list[Satellite]], dict[Satellite, dict[str, Any]]]
 
 
 class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
@@ -38,6 +39,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         world_type: Optional[type[WorldModel]] = None,
         world_args: Optional[dict[str, Any]] = None,
         communicator: Optional[CommunicationMethod] = None,
+        sat_arg_randomizer: Optional[SatArgRandomizer] = None,
         sim_rate: float = 1.0,
         max_step_duration: float = 1e9,
         failure_penalty: float = -1.0,
@@ -66,6 +68,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             rewarder: Handles recording and rewarding for data collection towards
                 objectives. See :ref:`bsk_rl.data`.
             communicator: Manages communication between satellites. See :ref:`bsk_rl.comm`.
+            sat_arg_randomizer: For correlated randomization of satellites arguments. Should
+                be a function that takes a list of satellites and returns a dictionary that
+                maps satellites to dictionaries of satellite model arguments to be overridden.
             world_type: Type of Basilisk world model to be constructed.
             world_args: Arguments for :class:`~bsk_rl.sim.world.WorldModel` construction.
                 Should be in the form of a dictionary with keys corresponding to the
@@ -94,6 +99,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             for satellite in self.satellites:
                 satellite.nonunique_name = True
         self.simulator: Simulator
+
+        if sat_arg_randomizer is None:
+            sat_arg_randomizer = lambda sats: {}
+        self.sat_arg_randomizer = sat_arg_randomizer
 
         if scenario is None:
             scenario = Scenario()
@@ -223,9 +232,15 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.communicator.reset_overwrite_previous()
         for satellite in self.satellites:
             satellite.reset_overwrite_previous()
+        self.latest_step_duration = 0.0
 
         self._generate_world_args()
-        self.latest_step_duration = 0.0
+        overrides = self.sat_arg_randomizer(self.satellites)
+        for satellite in self.satellites:
+            sat_overrides = overrides.get(satellite, {})
+            satellite.generate_sat_args(
+                utc_init=self.world_args["utc_init"], **sat_overrides
+            )
 
         self.scenario.reset_pre_sim_init()
         self.rewarder.reset_pre_sim_init()
@@ -233,7 +248,6 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         for satellite in self.satellites:
             self.rewarder.create_data_store(satellite)
-            satellite.sat_args_generator["utc_init"] = self.world_args["utc_init"]
             satellite.reset_pre_sim_init()
 
         self.simulator = Simulator(
