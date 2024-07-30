@@ -1,5 +1,6 @@
 """``bsk_rl.utils.orbital``:Utilities for computing orbital events."""
 
+import logging
 from typing import Iterable, Optional
 
 import numpy as np
@@ -15,6 +16,8 @@ from Basilisk.utilities.orbitalMotion import ClassicElements, elem2rv
 from scipy.interpolate import interp1d
 
 bskPath = __path__[0]
+
+logger = logging.getLogger(__name__)
 
 
 def random_orbit(
@@ -180,6 +183,57 @@ def walker_delta(
         oe_all.append(oe)
 
     return oe_all
+
+
+def walker_delta_args(
+    n_planes: int,
+    rel_phasing: float = 0.0,
+    altitude: float = 500,
+    inc: float = 45.0,
+    randomize_true_anomaly=True,
+    randomize_lan=True,
+    **walker_delta_kwargs,
+):
+    """Generate a function to generate a randomly phased Walker-delta constellation.
+
+    The output of this function should be used to set the ``sat_arg_randomizer`` of the
+    environment.
+
+    Args:
+        n_planes: Number of constellation planes.
+        rel_phasing: [deg] Relative phasing between planes. Defaults to 0.0.
+        altitude: [km] Orbit altitude above Earth's surface.
+        inc: [deg] Orbit inclination
+        randomize_true_anomaly: Add a random true anomaly phase shift that is the same
+            for all constellation members on each call.
+        randomize_lan: Add a random LAN phase shift that is the same for all constellation
+            members on each call.
+        walker_delta_kwargs: Additional arguments to pass to :class:`walker_delta`.
+    """
+
+    def walker_delta_arg_setup(satellites):
+        oe_all = walker_delta(
+            n_spacecraft=len(satellites),
+            n_planes=n_planes,
+            altitude=altitude * 1e3,
+            inc=inc,
+            rel_phasing=rel_phasing,
+            **walker_delta_kwargs,
+        )
+
+        if randomize_true_anomaly:
+            f_offset = np.random.uniform(0, 2 * np.pi)
+            for oe in oe_all:
+                oe.f = np.mod(oe.f + f_offset, 2 * np.pi)
+
+        if randomize_lan:
+            Omega_offset = np.random.uniform(0, 2 * np.pi)
+            for oe in oe_all:
+                oe.Omega = np.mod(oe.Omega + Omega_offset, 2 * np.pi)
+
+        return {satellite: {"oe": oe} for satellite, oe in zip(satellites, oe_all)}
+
+    return walker_delta_arg_setup
 
 
 class TrajectorySimulator(SimulationBaseClass.SimBaseClass):

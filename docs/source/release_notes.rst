@@ -24,7 +24,8 @@ Version 1.0.1
 * ``log_info`` and ``log_warning`` are deprecated by :class:`~bsk_rl.sats.Satellite`, in favor of
   ``logger.info`` and ``logger.warning``.
 * Add ability to correlate ``sat_args`` between satellites with the ``sat_arg_randomizer``
-  option in :class:`~bsk_rl.GeneralSatelliteTasking`.
+  option in :class:`~bsk_rl.GeneralSatelliteTasking`.  This is demonstrated in the setup
+  of a constellation in the `multiagent example <examples/multiagent_envs.ipynb>`_.
 
 
 Version 1.0.0
