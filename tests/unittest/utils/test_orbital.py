@@ -53,13 +53,13 @@ class TestWalkerDeltaArgs:
     def test_randomize_ta_and_lan(self):
         sats = [MagicMock(), MagicMock()]
         walker_delta_arg_setup = orbital.walker_delta_args(
-            randomize_true_anomaly=True, randomize_lan=True
+            n_planes=1, randomize_true_anomaly=True, randomize_lan=True
         )
         sat_arg_map = walker_delta_arg_setup(sats)
-        assert sat_arg_map[sats[0]].f == sat_arg_map[sats[1]].f
-        assert sat_arg_map[sats[0]].f != 0
-        assert sat_arg_map[sats[0]].Omega == sat_arg_map[sats[1]].Omega
-        assert sat_arg_map[sats[0]].Omega != 0
+        assert sat_arg_map[sats[0]]["oe"].f == sat_arg_map[sats[1]]["oe"].f
+        assert sat_arg_map[sats[0]]["oe"].f != 0
+        assert sat_arg_map[sats[0]]["oe"].Omega == sat_arg_map[sats[1]]["oe"].Omega
+        assert sat_arg_map[sats[0]]["oe"].Omega != 0
 
     @patch(
         "bsk_rl.utils.orbital.walker_delta",
@@ -68,13 +68,13 @@ class TestWalkerDeltaArgs:
     def test_dont_randomize_ta_and_lan(self):
         sats = [MagicMock(), MagicMock()]
         walker_delta_arg_setup = orbital.walker_delta_args(
-            randomize_true_anomaly=False, randomize_lan=False
+            n_planes=1, randomize_true_anomaly=False, randomize_lan=False
         )
         sat_arg_map = walker_delta_arg_setup(sats)
-        assert sat_arg_map[sats[0]].f == sat_arg_map[sats[1]].f
-        assert sat_arg_map[sats[0]].f == 0
-        assert sat_arg_map[sats[0]].Omega == sat_arg_map[sats[1]].Omega
-        assert sat_arg_map[sats[0]].Omega == 0
+        assert sat_arg_map[sats[0]]["oe"].f == sat_arg_map[sats[1]]["oe"].f
+        assert sat_arg_map[sats[0]]["oe"].f == 0
+        assert sat_arg_map[sats[0]]["oe"].Omega == sat_arg_map[sats[1]]["oe"].Omega
+        assert sat_arg_map[sats[0]]["oe"].Omega == 0
 
 
 class TestRandomEpoch:
