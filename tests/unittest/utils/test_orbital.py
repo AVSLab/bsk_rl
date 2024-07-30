@@ -1,7 +1,9 @@
 import re
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+from Basilisk.utilities.orbitalMotion import ClassicElements
 
 from bsk_rl.utils import orbital
 
@@ -29,6 +31,50 @@ class TestRandomOrbit:
         assert oe.a == 1500000
         assert oe.e == 0.1
         assert np.pi / 2 == oe.i == oe.Omega == oe.omega == oe.f
+
+
+def classic_elements(a=0, e=0, i=0, Omega=0, omega=0, f=0):
+    oe = ClassicElements()
+    oe.a = a
+    oe.e = e
+    oe.i = i
+    oe.Omega = Omega
+    oe.omega = omega
+    oe.f = f
+    return oe
+
+
+class TestWalkerDeltaArgs:
+
+    @patch(
+        "bsk_rl.utils.orbital.walker_delta",
+        MagicMock(return_value=[classic_elements(), classic_elements()]),
+    )
+    def test_randomize_ta_and_lan(self):
+        sats = [MagicMock(), MagicMock()]
+        walker_delta_arg_setup = orbital.walker_delta_args(
+            randomize_true_anomaly=True, randomize_lan=True
+        )
+        sat_arg_map = walker_delta_arg_setup(sats)
+        assert sat_arg_map[sats[0]].f == sat_arg_map[sats[1]].f
+        assert sat_arg_map[sats[0]].f != 0
+        assert sat_arg_map[sats[0]].Omega == sat_arg_map[sats[1]].Omega
+        assert sat_arg_map[sats[0]].Omega != 0
+
+    @patch(
+        "bsk_rl.utils.orbital.walker_delta",
+        MagicMock(return_value=[classic_elements(), classic_elements()]),
+    )
+    def test_dont_randomize_ta_and_lan(self):
+        sats = [MagicMock(), MagicMock()]
+        walker_delta_arg_setup = orbital.walker_delta_args(
+            randomize_true_anomaly=False, randomize_lan=False
+        )
+        sat_arg_map = walker_delta_arg_setup(sats)
+        assert sat_arg_map[sats[0]].f == sat_arg_map[sats[1]].f
+        assert sat_arg_map[sats[0]].f == 0
+        assert sat_arg_map[sats[0]].Omega == sat_arg_map[sats[1]].Omega
+        assert sat_arg_map[sats[0]].Omega == 0
 
 
 class TestRandomEpoch:
