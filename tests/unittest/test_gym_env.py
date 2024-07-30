@@ -82,10 +82,7 @@ class TestGeneralSatelliteTasking:
         env.unwrapped.world_args_generator = {"utc_init": "a long time ago"}
         env.communicator = MagicMock()
         env.reset()
-        assert (
-            mock_sat.sat_args_generator["utc_init"]
-            == env.unwrapped.world_args["utc_init"]
-        )
+        mock_sat.generate_sat_args.assert_called_with(utc_init="a long time ago")
         mock_sim.assert_called_once()
         mock_sat.reset_pre_sim_init.assert_called_once()
         mock_data.create_data_store.assert_called_once_with(mock_sat)

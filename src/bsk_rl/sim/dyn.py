@@ -154,6 +154,11 @@ class DynamicsModel(ABC):
         """Reset whenever a flight software :class:`~bsk_rl.sim.fsw.action` is called."""
         pass
 
+    @default_args(utc_init="this value will be set by the world model")
+    def _utc_init(self, utc_init: float) -> None:
+        """Exists so that utc_init is registered as part of sat_args."""
+        pass
+
     def __del__(self):
         """Log when dynamics are deleted."""
         self.logger.debug("Basilisk dynamics deleted")
