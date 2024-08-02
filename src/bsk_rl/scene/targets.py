@@ -48,10 +48,6 @@ class Target:
             self._id = f"{self.name}_{id(self)}"
             return self._id
 
-    def __hash__(self) -> int:
-        """Hash target by unique id."""
-        return hash((self.id))
-
     def __repr__(self) -> str:
         """Get string representation of target.
 
