@@ -36,7 +36,6 @@ from functools import wraps
 from typing import TYPE_CHECKING, Callable, Iterable, Optional
 from weakref import proxy
 
-import Basilisk.architecture.cMsgCInterfacePy as cMsgPy
 import numpy as np
 from Basilisk.architecture import messaging
 from Basilisk.fswAlgorithms import (
@@ -284,8 +283,8 @@ class BasicFSWModel(FSWModel):
 
     def _set_gateway_msgs(self) -> None:
         """Create C-wrapped gateway messages."""
-        self.attRefMsg = cMsgPy.AttRefMsg_C()
-        self.attGuidMsg = cMsgPy.AttGuidMsg_C()
+        self.attRefMsg = messaging.AttRefMsg_C()
+        self.attGuidMsg = messaging.AttGuidMsg_C()
 
         self._zero_gateway_msgs()
 
@@ -344,7 +343,7 @@ class BasicFSWModel(FSWModel):
                 self.fsw.world.ephemConverter.ephemOutMsgs[self.fsw.world.sun_index]
             )
             self.sunPoint.useBoresightRateDamping = 1
-            cMsgPy.AttGuidMsg_C_addAuthor(
+            messaging.AttGuidMsg_C_addAuthor(
                 self.sunPoint.attGuidOutMsg, self.fsw.attGuidMsg
             )
 
@@ -381,7 +380,7 @@ class BasicFSWModel(FSWModel):
             self.hillPoint.celBodyInMsg.subscribeTo(
                 self.fsw.world.ephemConverter.ephemOutMsgs[self.fsw.world.body_index]
             )
-            cMsgPy.AttRefMsg_C_addAuthor(
+            messaging.AttRefMsg_C_addAuthor(
                 self.hillPoint.attRefOutMsg, self.fsw.attRefMsg
             )
 
@@ -543,7 +542,7 @@ class BasicFSWModel(FSWModel):
                 self.fsw.dynamics.simpleNavObject.attOutMsg
             )
             self.trackingError.attRefInMsg.subscribeTo(self.fsw.attRefMsg)
-            cMsgPy.AttGuidMsg_C_addAuthor(
+            messaging.AttGuidMsg_C_addAuthor(
                 self.trackingError.attGuidOutMsg, self.fsw.attGuidMsg
             )
 
@@ -689,7 +688,7 @@ class ImagingFSWModel(BasicFSWModel):
                 self.fsw.dynamics.imagingTarget.currentGroundStateOutMsg
             )
             self.locPoint.useBoresightRateDamping = 1
-            cMsgPy.AttGuidMsg_C_addAuthor(
+            messaging.AttGuidMsg_C_addAuthor(
                 self.locPoint.attGuidOutMsg, self.fsw.attGuidMsg
             )
 
@@ -832,7 +831,7 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
 
         def reset_for_action(self) -> None:
             """Reset scanning controller."""
-            self.instMsg = cMsgPy.DeviceCmdMsg_C()
+            self.instMsg = messaging.DeviceCmdMsg_C()
             self.instMsg.write(messaging.DeviceCmdMsgPayload())
             self.fsw.dynamics.instrument.nodeStatusInMsg.subscribeTo(self.instMsg)
             return super().reset_for_action()
