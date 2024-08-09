@@ -560,7 +560,7 @@ class BasicDynamicsModel(DynamicsModel):
     @default_args(
         panelArea=2 * 1.0 * 0.5,
         panelEfficiency=0.20,
-        nHat_B=np.array([0, 1, 0]),
+        nHat_B=np.array([0, 0, -1]),
     )
     def setup_solar_panel(
         self,

@@ -26,6 +26,8 @@ Version 1.0.1
 * Add ability to correlate ``sat_args`` between satellites with the ``sat_arg_randomizer``
   option in :class:`~bsk_rl.GeneralSatelliteTasking`.  This is demonstrated in the setup
   of a constellation in the `multiagent example <examples/multiagent_envs.ipynb>`_.
+* The default solar panel normal direction is now the negative z-axis, which is antiparallel
+  to the default instrument direction.
 
 
 Version 1.0.0
