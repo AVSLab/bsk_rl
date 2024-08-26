@@ -75,7 +75,6 @@ target/
 .ipynb_checkpoints
 
 # PDFs and Images
-*.pdf 
 *.jpg
 
 # pyenv
