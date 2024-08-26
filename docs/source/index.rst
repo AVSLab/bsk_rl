@@ -28,6 +28,9 @@ simulation framework, making the simulation environments high-fidelity and compu
 efficient. BSK-RL also includes a collection of utilities and examples 
 for working with these environments.
 
+A whitepaper on the design philosophy behind BSK-RL and an examble use case can be 
+:download:`downloaded here <_static/stephenson_bskrl_2024.pdf>`.
+
 Quickstart
 ----------
 Installation
