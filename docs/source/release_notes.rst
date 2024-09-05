@@ -5,7 +5,8 @@ Development Version
 -------------------
 *Release Date: MMM. DD, YYYY*
 
-* None.
+* Add ability in :class:`~bsk_rl.obs.SatProperties` to define new observations with
+  a custom function.
 
 Version 1.0.1
 -------------
