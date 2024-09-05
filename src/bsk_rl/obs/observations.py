@@ -177,9 +177,7 @@ class Observation(ABC):
 class SatProperties(Observation):
     """Add arbitrary `dynamics` and `fsw` ."""
 
-    def __init__(
-        self, *obs_properties: dict[str, Union[str, float]], name="sat_props"
-    ) -> None:
+    def __init__(self, *obs_properties: dict[str, Any], name="sat_props") -> None:
         """Include properties from ``fsw`` and ``dynamics`` in the observation.
 
         For each desired property, a dictionary specifying the property name and settings
@@ -203,13 +201,14 @@ class SatProperties(Observation):
                 * ``module`` `optional`: Module (dynamics or fsw) that holds the property. Can be inferred if ``None``.
                 * ``norm`` `optional`: Value to normalize property by. Defaults to 1.0.
                 * ``name`` `optional`: Name of the observation element. Defaults to the value of ``prop``.
+                * ``fn`` `optional`: Alternatively, call a function that takes the satellite as an argument.
             name: Name of the observation.
 
         """
         super().__init__(name=name)
         for obs_property in obs_properties:
             for key in obs_property:
-                if key not in ["prop", "module", "norm", "name"]:
+                if key not in ["prop", "module", "norm", "name", "fn"]:
                     raise ValueError(f"Invalid property key: {key}")
             if "norm" not in obs_property:
                 obs_property["norm"] = 1.0
@@ -226,7 +225,7 @@ class SatProperties(Observation):
         :meta private:
         """
         for obs_property in self.obs_properties:
-            if "module" not in obs_property:
+            if "module" not in obs_property and "fn" not in obs_property:
                 for module in ["dynamics", "fsw"]:
                     if hasattr(getattr(self.satellite, module), obs_property["prop"]):
                         obs_property["module"] = module
@@ -242,11 +241,14 @@ class SatProperties(Observation):
         obs = {}
         for obs_property in self.obs_properties:
             prop = obs_property["prop"]
-            module = obs_property["module"]
-            norm = obs_property["norm"]
-            value = getattr(getattr(self.satellite, module), prop)
+            if "fn" in obs_property:
+                value = obs_property["fn"](self.satellite)
+            else:
+                module = obs_property["module"]
+                value = getattr(getattr(self.satellite, module), prop)
             if isinstance(value, list):
                 value = np.array(value)
+            norm = obs_property["norm"]
             obs[obs_property["name"]] = value / norm
         return obs
 
@@ -326,7 +328,7 @@ class OpportunityProperties(Observation):
                 to the the observation. Properties are optionally normalized by some factor.
                 Each observation is a dictionary with the keys:
 
-                * ``name``: Name of the observation element.
+                * ``name`` `optional`: Name of the observation element.
                 * ``fn`` `optional`: Function to calculate property, in the form ``fn(satellite, opportunity)``.
                   If not provided, the key ``prop`` will be used to look up a preset function:
 
@@ -358,6 +360,7 @@ class OpportunityProperties(Observation):
             if "norm" not in prop_spec:
                 prop_spec["norm"] = 1.0
 
+            # Determine observation function
             if "fn" not in prop_spec:
                 try:
                     prop_spec["fn"] = self._fn_map[prop_spec["prop"]]
@@ -366,9 +369,12 @@ class OpportunityProperties(Observation):
                         f"Property prop={prop_spec['prop']} is not predefined and no `fn` was provided."
                     )
             else:
-                if "prop" in prop_spec:
-                    logger.warning("Ignoring `prop` key when `fn` is provided.")
+                if "prop" in prop_spec and prop_spec["prop"] in self._fn_map:
+                    logger.warning(
+                        f"Ignoring default function for `{prop_spec['prop']}` when `fn` is provided."
+                    )
 
+            # Determine best name
             if "name" not in prop_spec:
                 if "prop" in prop_spec:
                     prop_spec["name"] = prop_spec["prop"]

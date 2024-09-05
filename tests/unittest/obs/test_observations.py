@@ -123,6 +123,15 @@ class TestSatProperties:
         ob.satellite = MagicMock(dynamics=MagicMock(hello=6.0))
         assert ob.get_obs() == {"hello_prop": 3.0}
 
+    def test_get_obs_fn(self):
+        mock_fn = MagicMock(return_value=3.0)
+        ob = obs.SatProperties(
+            dict(prop="hello", fn=mock_fn),
+        )
+        ob.satellite = MagicMock()
+        assert ob.get_obs() == {"hello": 3.0}
+        mock_fn.assert_called_once_with(ob.satellite)
+
 
 class TestTime:
     def test_detect_norm(self):
