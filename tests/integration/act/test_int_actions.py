@@ -121,6 +121,7 @@ class TestDesatAction:
                 sat_args=self.DesatSat.default_sat_args(
                     oe=random_orbit,
                     wheelSpeeds=[1000.0, -1000.0, 1000.0],
+                    nHat_B=np.array([0, 1, 0]),
                 ),
             ),
             scenario=UniformTargets(n_targets=0),
