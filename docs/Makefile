@@ -20,9 +20,12 @@ help:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 clean:
+	cp build/doctrees/nbsphinx/README.txt _tmp_README.txt
 	rm -rf "source/examples" "source/api_reference" "build"
-
-
+	mkdir -p "build/doctrees/nbsphinx"
+	cp _tmp_README.txt build/doctrees/nbsphinx/README.txt
+	rm _tmp_README.txt
+	
 view:
 	# works on macOS
 	open build/html/index.html
