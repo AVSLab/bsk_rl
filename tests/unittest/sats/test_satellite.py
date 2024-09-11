@@ -39,13 +39,6 @@ class TestSatellite:
         sat = sats.Satellite(name="TestSat", sat_args=None)
         assert sat.sat_args_generator == {"a": 1, "b": 2, "c": 3}
 
-    def test_id(self):
-        sat1 = sats.Satellite(name="TestSat", sat_args={})
-        sat2 = sats.Satellite(name="TestSat", sat_args={})
-        sat1.nonunique_name = sat2.nonunique_name = True
-        assert sat1.id != sat2.id
-        assert sat1.id.startswith("TestSat")
-
     def test_generate_sat_args(self):
         sat = sats.Satellite(
             name="TestSat",
@@ -95,9 +88,8 @@ class TestSatellite:
             assert sat.time_of_death is None
 
     def test_satellite_command(self):
-        sat1 = sats.Satellite(name="TestSat", sat_args={})
-        sat2 = sats.Satellite(name="TestSat", sat_args={})
-        sat1.nonunique_name = sat2.nonunique_name = True
+        sat1 = sats.Satellite(name="TestSat_1", sat_args={})
+        sat2 = sats.Satellite(name="TestSat_2", sat_args={})
         self.satellites = [sat1, sat2]
         assert sat1 == eval(sat1._satellite_command)
         assert sat1 != eval(sat2._satellite_command)

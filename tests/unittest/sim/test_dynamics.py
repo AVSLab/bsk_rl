@@ -164,8 +164,8 @@ class TestLOSCommDynModel:
         dyn2.scObject = MagicMock()
         dyn2.setup_los_comms(losMaximumRange=-1, priority=1)
         mock_sim.dynamics_list[2] = dyn2
-        assert dyn1.los_comms_ids == [dyn2.satellite.id]
-        assert dyn2.los_comms_ids == [dyn1.satellite.id]
+        assert dyn1.los_comms_ids == [dyn2.satellite.name]
+        assert dyn2.los_comms_ids == [dyn1.satellite.name]
         calls = [
             call(dyn1.task_name, dyn1.losComms, ModelPriority=1),
             call(dyn2.task_name, dyn2.losComms, ModelPriority=1),
@@ -176,9 +176,9 @@ class TestLOSCommDynModel:
         dyn3.scObject = MagicMock()
         dyn3.setup_los_comms(losMaximumRange=-1, priority=1)
         mock_sim.dynamics_list[3] = dyn3
-        assert dyn1.los_comms_ids == [dyn2.satellite.id, dyn3.satellite.id]
-        assert dyn2.los_comms_ids == [dyn1.satellite.id, dyn3.satellite.id]
-        assert dyn3.los_comms_ids == [dyn1.satellite.id, dyn2.satellite.id]
+        assert dyn1.los_comms_ids == [dyn2.satellite.name, dyn3.satellite.name]
+        assert dyn2.los_comms_ids == [dyn1.satellite.name, dyn3.satellite.name]
+        assert dyn3.los_comms_ids == [dyn1.satellite.name, dyn2.satellite.name]
         calls += [call(dyn3.task_name, dyn3.losComms, ModelPriority=1)]
         mock_sim.AddModelToTask.assert_has_calls(calls)
 

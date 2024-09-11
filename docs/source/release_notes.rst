@@ -7,6 +7,11 @@ Development Version
 
 * Add ability in :class:`~bsk_rl.obs.SatProperties` to define new observations with
   a custom function.
+* Add ``deepcopy`` to mutable inputs to the environment so that an environment argument
+  dictionary can be copied without being affected by things that happen in the environment.
+  This fixes compatibility with RLlib 2.33.0+. Note that this means that the satellite
+  object passed to the environment is not the same object as the one used in the environment,
+  as is the case for rewarders and communication objects.
 
 Version 1.0.1
 -------------

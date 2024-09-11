@@ -154,7 +154,7 @@ class GlobalReward(ABC, Resetable):
         satellite.data_store = self.datastore_type(
             satellite, initial_data=self.initial_data(satellite)
         )
-        self.cum_reward[satellite.id] = 0.0
+        self.cum_reward[satellite.name] = 0.0
 
     @abstractmethod  # pragma: no cover
     def calculate_reward(self, new_data_dict: dict[str, Data]) -> dict[str, float]:

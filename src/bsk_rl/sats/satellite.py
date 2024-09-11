@@ -91,7 +91,6 @@ class Satellite(ABC, Resetable):
                 will stop the simulation.
         """
         self.name = name
-        self.nonunique_name = False
         self.logger = logging.getLogger(__name__).getChild(self.name)
         if sat_args is None:
             sat_args = self.default_sat_args()
@@ -107,12 +106,10 @@ class Satellite(ABC, Resetable):
         self.action_builder = select_action_builder(self)
 
     @property
+    @deprecated(reason="Use satellite.name instead")
     def id(self) -> str:
         """Unique human-readable identifier."""
-        if self.nonunique_name:
-            return f"{self.name}_{id(self)}"
-        else:
-            return self.name
+        return self.name
 
     def generate_sat_args(self, **kwargs) -> None:
         """Instantiate sat_args from any randomizers in provided sat_args.
@@ -274,7 +271,7 @@ class Satellite(ABC, Resetable):
         """Generate string that refers to self in simBase."""
         return (
             "[satellite for satellite in self.satellites "
-            + f"if satellite.id=='{self.id}'][0]"
+            + f"if satellite.name=='{self.name}'][0]"
         )
 
     def _info_command(self, info: str) -> str:
@@ -325,7 +322,7 @@ class Satellite(ABC, Resetable):
 
         # Create new timed terminal event
         self._timed_terminal_event_name = valid_func_name(
-            f"timed_terminal_{t_close}_{self.id}"
+            f"timed_terminal_{t_close}_{self.name}"
         )
         self.simulator.createNewEvent(
             self._timed_terminal_event_name,

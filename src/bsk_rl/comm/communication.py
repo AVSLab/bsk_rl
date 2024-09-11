@@ -119,7 +119,7 @@ class LOSCommunication(CommunicationMethod):
                     if sat_1 not in self.los_logs:
                         self.los_logs[sat_1] = {}
 
-                    msg_index = sat_1.dynamics.los_comms_ids.index(sat_2.id)
+                    msg_index = sat_1.dynamics.los_comms_ids.index(sat_2.name)
                     logger = self.los_logs[sat_1][sat_2] = (
                         sat_1.dynamics.losComms.accessOutMsgs[msg_index].recorder()
                     )

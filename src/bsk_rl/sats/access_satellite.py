@@ -546,7 +546,7 @@ class ImagingSatellite(AccessSatellite):
         """
         self._disable_image_event()
 
-        self._image_event_name = valid_func_name(f"image_{self.id}_{target.id}")
+        self._image_event_name = valid_func_name(f"image_{self.name}_{target.id}")
         if self._image_event_name not in self.simulator.eventMap.keys():
             data_names = np.array(
                 list(
@@ -564,7 +564,7 @@ class ImagingSatellite(AccessSatellite):
                 macros.sec2nano(self.fsw.fsw_rate),
                 True,
                 [
-                    f"self.dynamics_list['{self.id}'].storageUnit.storageUnitDataOutMsg.read()"
+                    f"self.dynamics_list['{self.name}'].storageUnit.storageUnitDataOutMsg.read()"
                     + f".storedData[{data_index}] > {current_data_level}"
                 ],
                 [

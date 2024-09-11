@@ -58,7 +58,7 @@ class TestGlobalReward:
         dm.reset_post_sim_init()
         dm.create_data_store(sat)
         assert sat.data_store == "ds"
-        assert sat.id in dm.cum_reward
+        assert sat.name in dm.cum_reward
 
     def test_reward(self):
         dm = GlobalReward()

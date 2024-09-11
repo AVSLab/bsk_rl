@@ -93,11 +93,25 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         if isinstance(satellites, Satellite):
             satellites = [satellites]
-        self.satellites = satellites
-        sat_names = [satellite.name for satellite in self.satellites]
-        if len(sat_names) != len(set(sat_names)):
+        self.satellites = deepcopy(satellites)
+
+        while True:
             for satellite in self.satellites:
-                satellite.nonunique_name = True
+                if [sat.name for sat in self.satellites].count(satellite.name) > 1:
+                    for i, sat_rename in enumerate(
+                        [sat for sat in self.satellites if sat.name == satellite.name]
+                    ):
+                        new_name = f"{sat_rename.name}_{i}"
+                        logger.warning(
+                            f"Renaming satellite {sat_rename.name} to {new_name}"
+                        )
+                        sat_rename.name = new_name
+
+            # Check if all satellite names are unique
+            sat_names = [sat.name for sat in self.satellites]
+            if len(sat_names) == len(set(sat_names)):
+                break
+
         self.simulator: Simulator
 
         if sat_arg_randomizer is None:
@@ -116,9 +130,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             world_args = self.world_type.default_world_args()
         self.world_args_generator = self.world_type.default_world_args(**world_args)
 
-        self.scenario = scenario
+        self.scenario = deepcopy(scenario)
         self.scenario.link_satellites(self.satellites)
-        self.rewarder = rewarder
+        self.rewarder = deepcopy(rewarder)
         self.rewarder.link_scenario(self.scenario)
 
         if communicator is None:
@@ -299,7 +313,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             tuple: Joint info
         """
         info: dict[str, Any] = {
-            satellite.id: {"requires_retasking": satellite.requires_retasking}
+            satellite.name: {"requires_retasking": satellite.requires_retasking}
             for satellite in self.satellites
         }
         info["d_ts"] = self.latest_step_duration
@@ -372,7 +386,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.latest_step_duration = self.simulator.sim_time - previous_time
 
         new_data = {
-            satellite.id: satellite.data_store.update_from_logs()
+            satellite.name: satellite.data_store.update_from_logs()
             for satellite in self.satellites
         }
         self.reward_dict = self.rewarder.reward(new_data)
@@ -381,7 +395,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         for satellite in self.satellites:
             if satellite.requires_retasking:
-                satellite.logger.info(f"Satellite {satellite.id} requires retasking")
+                satellite.logger.info(f"Satellite {satellite.name} requires retasking")
 
     def step(
         self, actions: MultiSatAct
@@ -467,9 +481,9 @@ class SatelliteTasking(GeneralSatelliteTasking, Generic[SatObs, SatAct]):
 
     def _get_info(self) -> dict[str, Any]:
         info = super()._get_info()
-        for k, v in info[self.satellite.id].items():
+        for k, v in info[self.satellite.name].items():
             info[k] = v
-        del info[self.satellite.id]
+        del info[self.satellite.name]
         return info
 
 
@@ -497,7 +511,7 @@ class ConstellationTasking(
         """Agents currently in the environment."""
         truncated = super()._get_truncated()
         return [
-            satellite.id
+            satellite.name
             for satellite in self.satellites
             if (satellite.is_alive() and not truncated)
         ]
@@ -510,7 +524,7 @@ class ConstellationTasking(
     @property
     def possible_agents(self) -> list[AgentID]:
         """Return the list of all possible agents."""
-        return [satellite.id for satellite in self.satellites]
+        return [satellite.name for satellite in self.satellites]
 
     @property
     def max_num_agents(self) -> int:
