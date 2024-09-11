@@ -128,7 +128,7 @@ class FSWModel(ABC):
                     + f"use FSW model of type {self.__class__}"
                 )
 
-        fsw_proc_name = "FSWProcess" + self.satellite.id
+        fsw_proc_name = "FSWProcess" + self.satellite.name
         self.fsw_proc = self.simulator.CreateNewProcess(fsw_proc_name, priority)
         self.fsw_rate = fsw_rate
 
@@ -205,7 +205,7 @@ class Task(ABC):
         """Add task to FSW with a unique name."""
         self.fsw.fsw_proc.addTask(
             self.fsw.simulator.CreateNewTask(
-                self.name + self.fsw.satellite.id, mc.sec2nano(self.fsw.fsw_rate)
+                self.name + self.fsw.satellite.name, mc.sec2nano(self.fsw.fsw_rate)
             ),
             taskPriority=self.priority,
         )
@@ -228,7 +228,7 @@ class Task(ABC):
             priority: Model priority
         """
         self.fsw.simulator.AddModelToTask(
-            self.name + self.fsw.satellite.id,
+            self.name + self.fsw.satellite.name,
             module,
             ModelPriority=priority,
         )
@@ -238,7 +238,7 @@ class Task(ABC):
 
         Disables task by default, can be overridden by subclasses.
         """
-        self.fsw.simulator.disableTask(self.name + self.fsw.satellite.id)
+        self.fsw.simulator.disableTask(self.name + self.fsw.satellite.name)
 
 
 class BasicFSWModel(FSWModel):
@@ -305,7 +305,7 @@ class BasicFSWModel(FSWModel):
     def action_drift(self) -> None:
         """Disable all tasks and do nothing."""
         self.simulator.disableTask(
-            BasicFSWModel.MRPControlTask.name + self.satellite.id
+            BasicFSWModel.MRPControlTask.name + self.satellite.name
         )
 
     class SunPointTask(Task):
@@ -353,7 +353,7 @@ class BasicFSWModel(FSWModel):
     def action_charge(self) -> None:
         """Charge battery by pointing the solar panels at the sun."""
         self.sunPoint.Reset(self.simulator.sim_time_ns)
-        self.simulator.enableTask(self.SunPointTask.name + self.satellite.id)
+        self.simulator.enableTask(self.SunPointTask.name + self.satellite.name)
 
     class NadirPointTask(Task):
         """Task to generate nadir-pointing reference."""
@@ -507,20 +507,20 @@ class BasicFSWModel(FSWModel):
         self.thrDesatControl.Reset(self.simulator.sim_time_ns)
         self.thrDump.Reset(self.simulator.sim_time_ns)
         self.dynamics.thrusterPowerSink.powerStatus = 1
-        self.simulator.enableTask(self.RWDesatTask.name + self.satellite.id)
+        self.simulator.enableTask(self.RWDesatTask.name + self.satellite.name)
         if self.desatAttitude == "sun":
             self.sunPoint.Reset(self.simulator.sim_time_ns)
-            self.simulator.enableTask(self.SunPointTask.name + self.satellite.id)
+            self.simulator.enableTask(self.SunPointTask.name + self.satellite.name)
         elif self.desatAttitude == "nadir":
             self.hillPoint.Reset(self.simulator.sim_time_ns)
             self.simulator.enableTask(
-                BasicFSWModel.NadirPointTask.name + self.satellite.id
+                BasicFSWModel.NadirPointTask.name + self.satellite.name
             )
         elif self.desatAttitude is None:
             pass
         else:
             raise ValueError(f"{self.desatAttitude} not a valid desatAttitude")
-        self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.id)
+        self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.name)
 
     class TrackingErrorTask(Task):
         """Task to convert an attitude reference to guidance."""
@@ -614,7 +614,7 @@ class BasicFSWModel(FSWModel):
 
         def reset_for_action(self) -> None:
             """MRP control is enabled by default for all tasks."""
-            self.fsw.simulator.enableTask(self.name + self.fsw.satellite.id)
+            self.fsw.simulator.enableTask(self.name + self.fsw.satellite.name)
 
 
 class ImagingFSWModel(BasicFSWModel):
@@ -751,7 +751,7 @@ class ImagingFSWModel(BasicFSWModel):
         self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P
         self.dynamics.instrument.nodeDataName = data_name
         self.insControl.imaged = 0
-        self.simulator.enableTask(self.LocPointTask.name + self.satellite.id)
+        self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
 
     @action
     def action_downlink(self) -> None:
@@ -765,9 +765,11 @@ class ImagingFSWModel(BasicFSWModel):
         self.trackingError.Reset(self.simulator.sim_time_ns)
         self.dynamics.transmitter.dataStatus = 1
         self.dynamics.transmitterPowerSink.powerStatus = 1
-        self.simulator.enableTask(BasicFSWModel.NadirPointTask.name + self.satellite.id)
         self.simulator.enableTask(
-            BasicFSWModel.TrackingErrorTask.name + self.satellite.id
+            BasicFSWModel.NadirPointTask.name + self.satellite.name
+        )
+        self.simulator.enableTask(
+            BasicFSWModel.TrackingErrorTask.name + self.satellite.name
         )
 
 
@@ -853,7 +855,7 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
             [0, 0, 0.1]
         )  # All zero causes an error
         self.dynamics.instrument.nodeDataName = "nadir"
-        self.simulator.enableTask(self.LocPointTask.name + self.satellite.id)
+        self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
 
     @action
     def action_image(self, *args, **kwargs) -> None:
@@ -967,7 +969,7 @@ class SteeringFSWModel(BasicFSWModel):
 
         def reset_for_action(self) -> None:
             """Keep MRP control enabled on action calls."""
-            self.fsw.simulator.enableTask(self.name + self.fsw.satellite.id)
+            self.fsw.simulator.enableTask(self.name + self.fsw.satellite.name)
 
 
 class SteeringImagerFSWModel(SteeringFSWModel, ImagingFSWModel):

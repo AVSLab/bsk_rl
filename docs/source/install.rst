@@ -44,7 +44,7 @@ Instructions
        (.venv) $ pytest tests/unittest
        (.venv) $ pytest tests/integration
 
-   The installation can also be verified by running :doc:`examples` from the ``examples``
+   The installation can also be verified by running :doc:`examples/index` from the ``examples``
    directory.
 
 #. To build documentation locally, run:

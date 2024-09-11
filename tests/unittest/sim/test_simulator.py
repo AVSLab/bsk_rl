@@ -22,15 +22,11 @@ class TestSimulator:
         Simulator.ExecuteSimulation = MagicMock()
         Simulator.eventMap = {}
 
-        class MockSat(MagicMock):
-            @property
-            def id(self):
-                return "sat_1"
-
-        sat = MockSat(
+        sat = MagicMock(
             set_dynamics=MagicMock(return_value=self.dyn),
             set_fsw=MagicMock(return_value=self.fsw),
         )
+        sat.name = "sat_1"
         sim = Simulator([sat], world_type=self.MockEnv, world_args={}, **kwargs)
         sim.TotalSim = MagicMock(CurrentNanos=1000000000)
 

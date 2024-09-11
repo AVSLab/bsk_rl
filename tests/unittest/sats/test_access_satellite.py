@@ -305,7 +305,6 @@ class TestImagingSatellite:
             "TestSat",
             sat_args={"imageTargetMinimumElevation": 1},
         )
-        sat.nonunique_name = False
         return sat
 
     @patch("bsk_rl.sats.Satellite.reset_pre_sim_init")
@@ -362,7 +361,7 @@ class TestImagingSatellite:
         sat = self.make_sat()
         sat.name = "Sat"
         tgt = MagicMock(name="tgt")
-        existing_event = valid_func_name(f"image_{sat.id}_{tgt.id}")
+        existing_event = valid_func_name(f"image_{sat.name}_{tgt.id}")
         sat.simulator = MagicMock(
             eventMap={existing_event: MagicMock(eventActive=False)}
         )

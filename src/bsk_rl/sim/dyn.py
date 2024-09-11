@@ -115,10 +115,10 @@ class DynamicsModel(ABC):
                     + f"use dynamics model of type {self.__class__}"
                 )
 
-        dyn_proc_name = "DynamicsProcess" + self.satellite.id
+        dyn_proc_name = "DynamicsProcess" + self.satellite.name
         self.dyn_proc = self.simulator.CreateNewProcess(dyn_proc_name, priority)
         self.dyn_rate = dyn_rate
-        self.task_name = "DynamicsTask" + self.satellite.id
+        self.task_name = "DynamicsTask" + self.satellite.name
         self.dyn_proc.addTask(
             self.simulator.CreateNewTask(self.task_name, macros.sec2nano(self.dyn_rate))
         )
@@ -292,9 +292,9 @@ class BasicDynamicsModel(DynamicsModel):
         height: float,
         sigma_init: Iterable[float],
         omega_init: Iterable[float],
-        oe: Iterable[float],
-        rN: Iterable[float],
-        vN: Iterable[float],
+        oe: Optional[Iterable[float]],
+        rN: Optional[Iterable[float]],
+        vN: Optional[Iterable[float]],
         mu: float,
         priority: int = 2000,
         **kwargs,
@@ -329,7 +329,7 @@ class BasicDynamicsModel(DynamicsModel):
             raise (KeyError("Orbit is overspecified. Provide either (rN, vN) or oe"))
 
         self.scObject = spacecraft.Spacecraft()
-        self.scObject.ModelTag = "sat-" + self.satellite.id
+        self.scObject.ModelTag = "sat-" + self.satellite.name
 
         Ixx = 1.0 / 12.0 * mass * (width**2.0 + depth**2.0)
         Iyy = 1.0 / 12.0 * mass * (depth**2.0 + height**2.0)
@@ -545,7 +545,7 @@ class BasicDynamicsModel(DynamicsModel):
             kwargs: Passed to other setup functions.
         """
         self.thrusterPowerSink = simplePowerSink.SimplePowerSink()
-        self.thrusterPowerSink.ModelTag = "thrustPowerSink" + self.satellite.id
+        self.thrusterPowerSink.ModelTag = "thrustPowerSink" + self.satellite.name
         self.thrusterPowerSink.nodePowerOut = thrusterPowerDraw  # Watts
         self.simulator.AddModelToTask(
             self.task_name, self.thrusterPowerSink, ModelPriority=priority
@@ -584,7 +584,7 @@ class BasicDynamicsModel(DynamicsModel):
             kwargs: Passed to other setup functions.
         """
         self.solarPanel = simpleSolarPanel.SimpleSolarPanel()
-        self.solarPanel.ModelTag = "solarPanel" + self.satellite.id
+        self.solarPanel.ModelTag = "solarPanel" + self.satellite.name
         self.solarPanel.stateInMsg.subscribeTo(self.scObject.scStateOutMsg)
         self.solarPanel.sunEclipseInMsg.subscribeTo(
             self.world.eclipseObject.eclipseOutMsgs[self.eclipse_index]
@@ -653,7 +653,7 @@ class BasicDynamicsModel(DynamicsModel):
         if basePowerDraw > 0:
             self.logger.warning("basePowerDraw should probably be zero or negative.")
         self.basePowerSink = simplePowerSink.SimplePowerSink()
-        self.basePowerSink.ModelTag = "basePowerSink" + self.satellite.id
+        self.basePowerSink.ModelTag = "basePowerSink" + self.satellite.name
         self.basePowerSink.nodePowerOut = basePowerDraw  # Watts
         self.simulator.AddModelToTask(
             self.task_name, self.basePowerSink, ModelPriority=priority
@@ -736,11 +736,11 @@ class LOSCommDynModel(BasicDynamicsModel):
         self.los_comms_ids = []
 
         for sat_dyn in self.simulator.dynamics_list.values():
-            if sat_dyn != self and sat_dyn.satellite.id not in self.los_comms_ids:
+            if sat_dyn != self and sat_dyn.satellite.name not in self.los_comms_ids:
                 self.losComms.addSpacecraftToModel(sat_dyn.scObject.scStateOutMsg)
-                self.los_comms_ids.append(sat_dyn.satellite.id)
+                self.los_comms_ids.append(sat_dyn.satellite.name)
                 sat_dyn.losComms.addSpacecraftToModel(self.scObject.scStateOutMsg)
-                sat_dyn.los_comms_ids.append(self.satellite.id)
+                sat_dyn.los_comms_ids.append(self.satellite.name)
                 if len(sat_dyn.los_comms_ids) == 1:
                     sat_dyn.simulator.AddModelToTask(
                         sat_dyn.task_name, sat_dyn.losComms, ModelPriority=priority
@@ -795,11 +795,11 @@ class ImagingDynModel(BasicDynamicsModel):
             kwargs: Passed to other setup functions.
         """
         self.instrument = simpleInstrument.SimpleInstrument()
-        self.instrument.ModelTag = "instrument" + self.satellite.id
+        self.instrument.ModelTag = "instrument" + self.satellite.name
         self.instrument.nodeBaudRate = (
             instrumentBaudRate / self.dyn_rate
         )  # makes imaging instantaneous
-        self.instrument.nodeDataName = "Instrument" + self.satellite.id
+        self.instrument.nodeDataName = "Instrument" + self.satellite.name
         self.simulator.AddModelToTask(
             self.task_name, self.instrument, ModelPriority=priority
         )
@@ -825,7 +825,7 @@ class ImagingDynModel(BasicDynamicsModel):
         if transmitterBaudRate > 0:
             self.logger.warning("transmitterBaudRate should probably be negative.")
         self.transmitter = spaceToGroundTransmitter.SpaceToGroundTransmitter()
-        self.transmitter.ModelTag = "transmitter" + self.satellite.id
+        self.transmitter.ModelTag = "transmitter" + self.satellite.name
         self.transmitter.nodeBaudRate = transmitterBaudRate  # baud
         # set packet size equal to the size of a single image
         self.transmitter.packetSize = -instrumentBaudRate  # bits
@@ -853,7 +853,7 @@ class ImagingDynModel(BasicDynamicsModel):
                 "instrumentPowerDraw should probably be zero or negative."
             )
         self.instrumentPowerSink = simplePowerSink.SimplePowerSink()
-        self.instrumentPowerSink.ModelTag = "insPowerSink" + self.satellite.id
+        self.instrumentPowerSink.ModelTag = "insPowerSink" + self.satellite.name
         self.instrumentPowerSink.nodePowerOut = instrumentPowerDraw
         self.simulator.AddModelToTask(
             self.task_name, self.instrumentPowerSink, ModelPriority=priority
@@ -879,7 +879,7 @@ class ImagingDynModel(BasicDynamicsModel):
                 "transmitterPowerDraw should probably be zero or negative."
             )
         self.transmitterPowerSink = simplePowerSink.SimplePowerSink()
-        self.transmitterPowerSink.ModelTag = "transPowerSink" + self.satellite.id
+        self.transmitterPowerSink.ModelTag = "transPowerSink" + self.satellite.name
         self.transmitterPowerSink.nodePowerOut = transmitterPowerDraw
         self.simulator.AddModelToTask(
             self.task_name, self.transmitterPowerSink, ModelPriority=priority
@@ -919,7 +919,7 @@ class ImagingDynModel(BasicDynamicsModel):
             kwargs: Passed to other setup functions.
         """
         self.storageUnit = partitionedStorageUnit.PartitionedStorageUnit()
-        self.storageUnit.ModelTag = "storageUnit" + self.satellite.id
+        self.storageUnit.ModelTag = "storageUnit" + self.satellite.name
         self.storageUnit.storageCapacity = dataStorageCapacity  # bits
         self.storageUnit.addDataNodeToModel(self.instrument.nodeDataOutMsg)
         self.storageUnit.addDataNodeToModel(self.transmitter.nodeDataOutMsg)
@@ -1042,9 +1042,9 @@ class ContinuousImagingDynModel(ImagingDynModel):
             kwargs: Passed to other setup functions.
         """
         self.instrument = simpleInstrument.SimpleInstrument()
-        self.instrument.ModelTag = "instrument" + self.satellite.id
+        self.instrument.ModelTag = "instrument" + self.satellite.name
         self.instrument.nodeBaudRate = instrumentBaudRate  # make imaging instantaneous
-        self.instrument.nodeDataName = "Instrument" + self.satellite.id
+        self.instrument.nodeDataName = "Instrument" + self.satellite.name
         self.simulator.AddModelToTask(
             self.task_name, self.instrument, ModelPriority=priority
         )
@@ -1073,7 +1073,7 @@ class ContinuousImagingDynModel(ImagingDynModel):
             kwargs: Passed to other setup functions.
         """
         self.storageUnit = simpleStorageUnit.SimpleStorageUnit()
-        self.storageUnit.ModelTag = "storageUnit" + self.satellite.id
+        self.storageUnit.ModelTag = "storageUnit" + self.satellite.name
         self.storageUnit.storageCapacity = dataStorageCapacity  # bits
         self.storageUnit.addDataNodeToModel(self.instrument.nodeDataOutMsg)
         self.storageUnit.addDataNodeToModel(self.transmitter.nodeDataOutMsg)

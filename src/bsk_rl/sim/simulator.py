@@ -54,8 +54,8 @@ class Simulator(SimulationBaseClass.SimBaseClass):
 
         for satellite in self.satellites:
             satellite.set_simulator(self)
-            self.dynamics_list[satellite.id] = satellite.set_dynamics(self.sim_rate)
-            self.fsw_list[satellite.id] = satellite.set_fsw(self.sim_rate)
+            self.dynamics_list[satellite.name] = satellite.set_dynamics(self.sim_rate)
+            self.fsw_list[satellite.name] = satellite.set_fsw(self.sim_rate)
 
         self.InitializeSimulation()
         self.ConfigureStopTime(0)
