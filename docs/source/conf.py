@@ -40,6 +40,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_rtd_theme",
     "nbsphinx",
+    "sphinx.ext.mathjax",
 ]
 
 templates_path = ["_templates"]
