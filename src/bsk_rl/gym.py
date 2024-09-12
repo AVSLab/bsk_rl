@@ -28,6 +28,8 @@ MultiSatObs = tuple[SatObs, ...]
 MultiSatAct = Iterable[SatAct]
 SatArgRandomizer = Callable[[list[Satellite]], dict[Satellite, dict[str, Any]]]
 
+NO_ACTION = int(2**31) - 1
+
 
 class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
@@ -370,7 +372,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         if len(actions) != len(self.satellites):
             raise ValueError("There must be the same number of actions and satellites")
         for satellite, action in zip(self.satellites, actions):
-            if action is not None:
+            satellite.info = []  # reset satellite info log
+            if action is not None and action != NO_ACTION:
                 satellite.requires_retasking = False
                 satellite.set_action(action)
             if not satellite.is_alive():

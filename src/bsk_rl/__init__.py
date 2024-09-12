@@ -2,7 +2,12 @@ import gymnasium as gym
 from gymnasium.envs.registration import register
 
 from bsk_rl.check_bsk_version import check_bsk_version
-from bsk_rl.gym import ConstellationTasking, GeneralSatelliteTasking, SatelliteTasking
+from bsk_rl.gym import (
+    NO_ACTION,
+    ConstellationTasking,
+    GeneralSatelliteTasking,
+    SatelliteTasking,
+)
 
 __all__ = [
     "GeneralSatelliteTasking",

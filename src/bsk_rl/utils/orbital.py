@@ -500,6 +500,7 @@ __all__ = [
     "lla2ecef",
     "elevation",
     "walker_delta",
+    "walker_delta_args",
     "TrajectorySimulator",
     "rv2HN",
     "rv2omega",

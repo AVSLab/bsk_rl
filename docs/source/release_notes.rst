@@ -13,6 +13,8 @@ Development Version
   object passed to the environment is not the same object as the one used in the environment,
   as is the case for rewarders and communication objects.
 * Add additional observation properties for satellites and opportunities.
+* Add connectors for multiagent semi-MDPs, as demonstrated in a new `single agent <examples/time_discounted_gae.ipynb>`_
+  and `multiagent <examples/async_multiagent_training.ipynb>`_ example.
 
 
 Version 1.0.1
