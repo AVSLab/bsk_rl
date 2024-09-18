@@ -47,6 +47,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         failure_penalty: float = -1.0,
         time_limit: float = float("inf"),
         terminate_on_time_limit: bool = False,
+        generate_obs_retasking_only: bool = False,
         log_level: Union[int, str] = logging.WARNING,
         log_dir: Optional[str] = None,
         render_mode=None,
@@ -86,6 +87,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             time_limit: [s] Time at which to truncate the simulation.
             terminate_on_time_limit: Send terminations signal time_limit instead of just
                 truncation.
+            generate_obs_retasking_only: If True, only generate observations for satellites
+                that require retasking. All other satellites will receive an observation of
+                zeros.
             log_level: Logging level for the environment. Default is ``WARNING``.
             log_dir: Directory to write logs to in addition to the console.
             render_mode: Unused.
@@ -151,6 +155,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.terminate_on_time_limit = terminate_on_time_limit
         self.latest_step_duration = 0.0
         self.render_mode = render_mode
+        self.generate_obs_retasking_only = generate_obs_retasking_only
 
     def _minimum_world_model(self) -> type[WorldModel]:
         """Determine the minimum world model required by the satellites."""
@@ -306,7 +311,18 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         Returns:
             tuple: Joint observation
         """
-        return tuple(satellite.get_obs() for satellite in self.satellites)
+        if self.generate_obs_retasking_only:
+
+            return tuple(
+                (
+                    satellite.get_obs()
+                    if satellite.requires_retasking
+                    else satellite.observation_space.sample() * 0
+                )
+                for satellite in self.satellites
+            )
+        else:
+            return tuple(satellite.get_obs() for satellite in self.satellites)
 
     def _get_info(self) -> dict[str, Any]:
         """Compose satellite info into a single info dict.
@@ -577,11 +593,22 @@ class ConstellationTasking(
 
     def _get_obs(self) -> dict[AgentID, SatObs]:
         """Format the observation per the PettingZoo Parallel API."""
-        return {
-            agent: satellite.get_obs()
-            for agent, satellite in zip(self.possible_agents, self.satellites)
-            if agent not in self.previously_dead
-        }
+        if self.generate_obs_retasking_only:
+            return {
+                agent: (
+                    satellite.get_obs()
+                    if satellite.requires_retasking
+                    else self.observation_space(agent).sample() * 0
+                )
+                for agent, satellite in zip(self.possible_agents, self.satellites)
+                if agent not in self.previously_dead
+            }
+        else:
+            return {
+                agent: satellite.get_obs()
+                for agent, satellite in zip(self.possible_agents, self.satellites)
+                if agent not in self.previously_dead
+            }
 
     def _get_reward(self) -> dict[AgentID, float]:
         """Format the reward per the PettingZoo Parallel API."""

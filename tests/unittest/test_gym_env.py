@@ -127,6 +127,23 @@ class TestGeneralSatelliteTasking:
         )
         assert env._get_obs() == (0, 1, 2)
 
+    def test_get_obs_retasking_only(self):
+        env = GeneralSatelliteTasking(
+            satellites=[
+                MagicMock(
+                    get_obs=MagicMock(return_value=[i + 1]),
+                    observation_space=spaces.Box(-1e9, 1e9, shape=(1,)),
+                    requires_retasking=(i == 1),
+                )
+                for i in range(3)
+            ],
+            world_type=MagicMock(),
+            scenario=MagicMock(),
+            rewarder=MagicMock(),
+            generate_obs_retasking_only=True,
+        )
+        assert env._get_obs() == ([0], [2], [0])
+
     def test_get_info(self):
         mock_sats = [MagicMock(requires_retasking=True) for _ in range(3)]
         for i, sat in enumerate(mock_sats):

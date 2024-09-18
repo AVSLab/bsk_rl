@@ -18,6 +18,8 @@ Development Version
 * Add a ``min_period`` option to :class:`~bsk_rl.comm.CommunicationMethod`.
 * Cache ``agents`` in the :class:`~bsk_rl.ConstellationTasking` environment to improve 
   performance.
+* Add option to ``generate_obs_retasking_only`` to prevent computing observations for
+  satellites that are continuing their current action.
 
 
 
