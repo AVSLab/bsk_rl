@@ -507,17 +507,27 @@ class ConstellationTasking(
     ) -> tuple[MultiSatObs, dict[str, Any]]:
         """Reset the environment and return PettingZoo Parallel API format."""
         self.newly_dead = []
+        self._agents_last_compute_time = None
         return super().reset(seed, options)
 
     @property
     def agents(self) -> list[AgentID]:
         """Agents currently in the environment."""
-        truncated = super()._get_truncated()
-        return [
-            satellite.name
-            for satellite in self.satellites
-            if (satellite.is_alive() and not truncated)
-        ]
+        if (
+            self._agents_last_compute_time is None
+            or self._agents_last_compute_time != self.simulator.sim_time
+        ):
+            truncated = super()._get_truncated()
+            agents = [
+                satellite.name
+                for satellite in self.satellites
+                if (satellite.is_alive() and not truncated)
+            ]
+            self._agents_last_compute_time = self.simulator.sim_time
+            self._agents_cache = agents
+            return agents
+        else:
+            return self._agents_cache
 
     @property
     def num_agents(self) -> int:
