@@ -96,8 +96,12 @@ Satellite Varieties
   interacting with :class:`bsk_rl.scene.Target` objects.
 """
 
-from bsk_rl.sats.access_satellite import AccessSatellite, ImagingSatellite
+from bsk_rl.sats.access_satellite import (
+    AccessSatellite,
+    FireSatellite,
+    ImagingSatellite,
+)
 from bsk_rl.sats.satellite import Satellite
 
 __doc_title__ = "Satellites"
-__all__ = ["Satellite", "AccessSatellite", "ImagingSatellite"]
+__all__ = ["Satellite", "AccessSatellite", "ImagingSatellite", "FireSatellite"]

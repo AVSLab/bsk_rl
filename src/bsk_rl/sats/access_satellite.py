@@ -653,3 +653,10 @@ class ImagingSatellite(AccessSatellite):
         self.logger.info(msg)
         self.fsw.action_image(target.r_LP_P, target.id)
         self.enable_target_window(target)
+
+
+class FireSatellite(ImagingSatellite):
+    def __init__(self, *args, scan_ahead_time, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.scan_ahead_time = scan_ahead_time
+        self.target_types = "fire"
