@@ -16,7 +16,9 @@ from bsk_rl.sim.dyn import LOSCommDynModel
 class TestCommunicationMethod:
     def test_communicate(self):
         mock_sats = [MagicMock(), MagicMock()]
+        mock_sats[0].simulator.sim_time = 0.0
         comms = CommunicationMethod()
+        comms.last_communication_time = 0.0
         comms.link_satellites(mock_sats)
         comms.communication_pairs = MagicMock(
             return_value=[(mock_sats[1], mock_sats[0])]
@@ -31,11 +33,39 @@ class TestCommunicationMethod:
         for sat in mock_sats:
             sat.data_store.update_with_communicated_data.assert_called_once()
 
+    def test_min_period_elapsed(self):
+        mock_sats = [MagicMock(), MagicMock()]
+        comms = CommunicationMethod(min_period=1.0)
+        comms.link_satellites(mock_sats)
+        comms.communication_pairs = MagicMock(
+            return_value=[(mock_sats[1], mock_sats[0])]
+        )
+        comms.last_communication_time = 0.0
+        mock_sats[0].simulator.sim_time = 2.0
+        comms.communicate()
+        for sat in mock_sats:
+            sat.data_store.update_with_communicated_data.assert_called_once()
+
+    def test_min_period_not_elapsed(self):
+        mock_sats = [MagicMock(), MagicMock()]
+        comms = CommunicationMethod(min_period=1.0)
+        comms.link_satellites(mock_sats)
+        comms.communication_pairs = MagicMock(
+            return_value=[(mock_sats[1], mock_sats[0])]
+        )
+        comms.last_communication_time = 0.0
+        mock_sats[0].simulator.sim_time = 0.5
+        comms.communicate()
+        for sat in mock_sats:
+            sat.data_store.update_with_communicated_data.assert_not_called()
+
 
 class TestNoCommunication:
     def test_communicate(self):
         mock_sats = [MagicMock(), MagicMock()]
+        mock_sats[0].simulator.sim_time = 0.0
         comms = NoCommunication()
+        comms.last_communication_time = 0.0
         comms.link_satellites(mock_sats)
         comms.communicate()
         mock_sats[0].data_store.stage_communicated_data.assert_not_called()

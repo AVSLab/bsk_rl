@@ -15,6 +15,8 @@ Development Version
 * Add additional observation properties for satellites and opportunities.
 * Add connectors for multiagent semi-MDPs, as demonstrated in a new `single agent <examples/time_discounted_gae.ipynb>`_
   and `multiagent <examples/async_multiagent_training.ipynb>`_ example.
+* Add a ``min_period`` option to :class:`~bsk_rl.comm.CommunicationMethod`.
+
 
 
 Version 1.0.1
