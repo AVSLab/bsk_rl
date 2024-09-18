@@ -145,14 +145,15 @@ class GlobalReward(ABC, Resetable):
         """Furnish the :class:`~bsk_rl.data.base.DataStore` with initial data."""
         return self.data_type()
 
-    def create_data_store(self, satellite: "Satellite") -> None:
+    def create_data_store(self, satellite: "Satellite", **data_store_kwargs) -> None:
         """Create a data store for a satellite.
 
         Args:
             satellite: Satellite to create a data store for.
+            data_store_kwargs: Additional keyword arguments to pass to the data store
         """
         satellite.data_store = self.datastore_type(
-            satellite, initial_data=self.initial_data(satellite)
+            satellite, initial_data=self.initial_data(satellite), **data_store_kwargs
         )
         self.cum_reward[satellite.name] = 0.0
 
@@ -183,6 +184,10 @@ class GlobalReward(ABC, Resetable):
         reward = self.calculate_reward(new_data_dict)
         for satellite_id, sat_reward in reward.items():
             self.cum_reward[satellite_id] += sat_reward
+
+        for new_data in new_data_dict.values():
+            self.data += new_data
+
         logger.info(f"Data reward: {reward}")
         return reward
 
