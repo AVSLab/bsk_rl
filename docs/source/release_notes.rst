@@ -20,6 +20,10 @@ Development Version
   performance.
 * Add option to ``generate_obs_retasking_only`` to prevent computing observations for
   satellites that are continuing their current action.
+* Allow for :class:`~bsk_rl.sats.ImagingSatellite` to default to a different type of
+  opportunity than ``target``. Also allows for access filters to include an opportunity
+  type.
+* Improve performance of :class:`~bsk_rl.obs.Eclipse` observations by about 95%.
 
 
 
