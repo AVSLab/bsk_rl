@@ -82,7 +82,7 @@ class TestGeneralSatelliteTasking:
         mock_sat = env.satellites[0]
         mock_rewarder = env.rewarder
         env.unwrapped.world_args_generator = {"utc_init": "a long time ago"}
-        env.communicator = MagicMock()
+        env.communicator = MagicMock(last_communication_time=0.0)
         env.reset()
         mock_sat.generate_sat_args.assert_called_with(utc_init="a long time ago")
         mock_sim.assert_called_once()
@@ -196,6 +196,7 @@ class TestGeneralSatelliteTasking:
             satellites=mock_sats,
             world_type=MagicMock(),
             scenario=MagicMock(),
+            communicator=MagicMock(),
             rewarder=MagicMock(
                 reward=MagicMock(return_value={sat.name: 12.5 for sat in mock_sats})
             ),
@@ -234,6 +235,7 @@ class TestGeneralSatelliteTasking:
             satellites=mock_sats,
             world_type=MagicMock(),
             scenario=MagicMock(),
+            communicator=MagicMock(),
             rewarder=MagicMock(
                 reward=MagicMock(return_value={sat.name: 12.5 for sat in mock_sats})
             ),
@@ -261,6 +263,7 @@ class TestGeneralSatelliteTasking:
             satellite=[mock_sat],
             world_type=MagicMock(),
             scenario=MagicMock(),
+            communicator=MagicMock(),
             rewarder=MagicMock(reward=MagicMock(return_value={mock_sat.name: 25.0})),
         )
         env.unwrapped.simulator = MagicMock(sim_time=101.0)
