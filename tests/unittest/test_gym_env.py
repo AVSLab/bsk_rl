@@ -347,15 +347,9 @@ class TestSatelliteTasking:
 
 
 class TestConstellationTasking:
-    @patch(
-        "bsk_rl.gym.Simulator",
-    )
-    @patch(
-        "bsk_rl.ConstellationTasking._get_obs",
-    )
-    @patch(
-        "bsk_rl.ConstellationTasking._get_info",
-    )
+    @patch("bsk_rl.gym.Simulator")
+    @patch("bsk_rl.ConstellationTasking._get_obs")
+    @patch("bsk_rl.ConstellationTasking._get_info")
     def test_reset(self, mock_sim, obs_fn, info_fn):
         mock_sat_1 = MagicMock()
         mock_sat_2 = MagicMock()
@@ -386,6 +380,8 @@ class TestConstellationTasking:
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
+        env._agents_last_compute_time = None
+        env.simulator = MagicMock(sim_time=0.0)
         assert env.agents == [sat.name for sat in env.unwrapped.satellites]
         assert env.num_agents == 3
         assert env.possible_agents == [sat.name for sat in env.unwrapped.satellites]
@@ -402,6 +398,8 @@ class TestConstellationTasking:
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
+        env._agents_last_compute_time = None
+        env.simulator = MagicMock(sim_time=0.0)
         env.newly_dead = []
         assert env._get_obs() == {
             sat.name: i for i, sat in enumerate(env.unwrapped.satellites)
@@ -421,6 +419,8 @@ class TestConstellationTasking:
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
+        env._agents_last_compute_time = None
+        env.simulator = MagicMock(sim_time=0.0)
         env.newly_dead = []
         env.latest_step_duration = 10.0
         expected = {
@@ -478,6 +478,8 @@ class TestConstellationTasking:
             rewarder=MagicMock(),
             failure_penalty=-20.0,
         )
+        env._agents_last_compute_time = None
+        env.simulator = MagicMock(sim_time=0.0)
         env.newly_dead = [sat.name for sat in env.unwrapped.satellites]
         env.reward_dict = {
             sat.name: 10.0 for i, sat in enumerate(env.unwrapped.satellites)
@@ -505,6 +507,8 @@ class TestConstellationTasking:
             terminate_on_time_limit=terminate_on_time_limit,
             time_limit=100,
         )
+        env._agents_last_compute_time = None
+        env.simulator = MagicMock(sim_time=0.0)
         env.unwrapped.simulator = MagicMock(sim_time=101 if timeout else 99)
 
         if not timeout or not terminate_on_time_limit:
@@ -534,6 +538,8 @@ class TestConstellationTasking:
             rewarder=MagicMock(),
             time_limit=100,
         )
+        env._agents_last_compute_time = None
+        env.simulator = MagicMock(sim_time=0.0)
         env.unwrapped.simulator = MagicMock(sim_time=time)
         env.newly_dead = (
             [sat.name for sat in env.unwrapped.satellites] if time >= 100 else []
@@ -569,6 +575,8 @@ class TestConstellationTasking:
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
+        env._agents_last_compute_time = None
+        env.simulator = MagicMock(sim_time=0.0)
         env.unwrapped.satellites[1].is_alive = MagicMock(return_value=False)
         env.unwrapped.satellites[2].is_alive = MagicMock(return_value=False)
         env.newly_dead = [env.unwrapped.satellites[2].name]
@@ -601,11 +609,17 @@ class TestConstellationTasking:
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
+        env._agents_last_compute_time = None
+        env.simulator = MagicMock(sim_time=0.0)
 
         def kill_sat_2():
             env.unwrapped.satellites[2].is_alive.return_value = False
 
-        env._step.side_effect = lambda _: kill_sat_2()
+        def side_effect():
+            kill_sat_2()
+            env.simulator.sim_time += 1.0
+
+        env._step.side_effect = lambda _: side_effect()
         env.unwrapped.satellites[1].is_alive.return_value = False
         env.step(
             {
@@ -613,5 +627,6 @@ class TestConstellationTasking:
                 env.unwrapped.satellites[2].name: 2,
             }
         )
+
         env._step.assert_called_with([0, None, 2])
         assert env.newly_dead == [env.unwrapped.satellites[2].name]
