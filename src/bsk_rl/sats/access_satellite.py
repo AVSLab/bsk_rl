@@ -455,7 +455,9 @@ class AccessSatellite(Satellite):
             "get_access_filter is deprecated. Use add_access_filter and default_access_filter instead."
         )
 
-    def add_access_filter(self, access_filter_fn: Callable):
+    def add_access_filter(
+        self, access_filter_fn: Callable, types: Optional[Union[str, list[str]]] = None
+    ):
         """Add an access filter function to the list of access filters.
 
         Calls to :class:`~AccessSatellite.opportunities_dict`, :class:`~AccessSatellite.find_next_opportunities`,
@@ -466,7 +468,16 @@ class AccessSatellite(Satellite):
         which opportunities are considered based on the satellite's local knowledge of
         the environment.
         """
-        self.access_filter_functions.append(access_filter_fn)
+        if types is not None:
+            if isinstance(types, str):
+                types = [types]
+
+            def access_filter_type_restricted(opportunity):
+                return opportunity["type"] not in types or access_filter_fn(opportunity)
+
+            self.access_filter_functions.append(access_filter_type_restricted)
+        else:
+            self.access_filter_functions.append(access_filter_fn)
 
     @property
     def default_access_filter(self):
@@ -506,6 +517,7 @@ class ImagingSatellite(AccessSatellite):
         self.fsw: ImagingSatellite.fsw_type
         self.dynamics: ImagingSatellite.dyn_type
         self.data_store: "UniqueImageStore"
+        self.target_types = "target"
 
     @property
     def known_targets(self) -> list["Target"]:
@@ -594,9 +606,9 @@ class ImagingSatellite(AccessSatellite):
             target_query: Target upcoming index, object, or id.
         """
         if np.issubdtype(type(target_query), np.integer):
-            target = self.find_next_opportunities(n=target_query + 1, types="target")[
-                -1
-            ]["object"]
+            target = self.find_next_opportunities(
+                n=target_query + 1, types=self.target_types
+            )[-1]["object"]
         elif isinstance(target_query, Target):
             target = target_query
         elif isinstance(target_query, str):
@@ -619,7 +631,7 @@ class ImagingSatellite(AccessSatellite):
         """
         self._update_image_event(target)
         next_window = self.next_opportunities_dict(
-            types="target",
+            types=self.target_types,
             filter=self.default_access_filter,
         )[target]
         self.logger.info(
