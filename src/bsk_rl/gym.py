@@ -263,6 +263,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 utc_init=self.world_args["utc_init"], **sat_overrides
             )
 
+        self.scenario.utc_init = self.world_args["utc_init"]
+
         self.scenario.reset_pre_sim_init()
         self.rewarder.reset_pre_sim_init()
         self.communicator.reset_pre_sim_init()

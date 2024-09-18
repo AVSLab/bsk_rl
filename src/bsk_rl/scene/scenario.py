@@ -18,6 +18,7 @@ class Scenario(ABC, Resetable):
 
     def __init__(self) -> None:
         self.satellites: list["Satellite"]
+        self.utc_init: str
 
     def link_satellites(self, satellites: list["Satellite"]) -> None:
         """Link the environment satellite list to the scenario.
