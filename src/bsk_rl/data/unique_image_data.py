@@ -183,8 +183,6 @@ class UniqueImageReward(GlobalReward):
                         target.priority
                     ) / imaged_targets.count(target)
 
-        for new_data in new_data_dict.values():
-            self.data += new_data
         return reward
 
 

@@ -62,6 +62,7 @@ class TestGlobalReward:
 
     def test_reward(self):
         dm = GlobalReward()
+        dm.reset_overwrite_previous()
         dm.calculate_reward = MagicMock(return_value={"sat": 10.0})
         dm.cum_reward = {"sat": 5.0}
         assert {"sat": 10.0} == dm.reward({"sat": "data"})
