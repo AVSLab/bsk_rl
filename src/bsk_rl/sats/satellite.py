@@ -71,7 +71,7 @@ class Satellite(ABC, Resetable):
     def __init__(
         self,
         name: str,
-        sat_args: Optional[dict[str, Any]],
+        sat_args: Optional[dict[str, Any]] = None,
         obs_type=np.ndarray,
         variable_interval: bool = True,
     ) -> None:
