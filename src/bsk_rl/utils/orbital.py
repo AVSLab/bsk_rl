@@ -459,6 +459,40 @@ def lla2ecef(lat: float, long: float, radius: float):
     )
 
 
+def rv2HN(r_N: np.ndarray, v_N: np.ndarray):
+    """Find the Hill frame rotation matrix from position and velocity.
+
+    Args:
+        r_N: Position vector in the inertial frame
+        v_N: Velocity vector in the inertial frame
+    Returns:
+        Hill frame rotation matrix HN
+    """
+    o_r_N = r_N / np.linalg.norm(r_N)
+    h_N = np.cross(r_N, v_N)
+    o_h_N = h_N / np.linalg.norm(h_N)
+    o_theta_N = np.cross(o_h_N, o_r_N)
+    HN = np.array([o_r_N, o_theta_N, o_h_N])
+    return HN
+
+
+def rv2omega(r_N: np.ndarray, v_N: np.ndarray):
+    """Find the Hill frame rotation rate from position and velocity.
+
+    Args:
+        r_N: Position vector in the inertial frame
+        v_N: Velocity vector in the inertial frame
+    Returns:
+        omega_HN_N: Angular velocity of the Hill frame in the inertial frame
+    """
+    o_r_N = r_N / np.linalg.norm(r_N)
+    h_N = np.cross(r_N, v_N)
+    o_h_N = h_N / np.linalg.norm(h_N)
+    o_theta_N = np.cross(o_h_N, o_r_N)
+    omega_HN_N = o_h_N * np.dot(v_N, o_theta_N) / np.linalg.norm(r_N)
+    return omega_HN_N
+
+
 __doc_title__ = "Orbital"
 __all__ = [
     "random_orbit",
@@ -467,4 +501,6 @@ __all__ = [
     "elevation",
     "walker_delta",
     "TrajectorySimulator",
+    "rv2HN",
+    "rv2omega",
 ]

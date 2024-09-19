@@ -60,6 +60,7 @@ from bsk_rl.utils.functional import (
     check_aliveness_checkers,
     default_args,
 )
+from bsk_rl.utils.orbital import rv2HN
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -633,6 +634,13 @@ class ImagingFSWModel(BasicFSWModel):
         """Instrument pointing direction in the planet frame."""
         c_hat_B = self.locPoint.pHat_B
         return np.matmul(self.dynamics.BP.T, c_hat_B)
+
+    @property
+    def c_hat_H(self):
+        """Instrument pointing direction in the hill frame."""
+        c_hat_B = self.locPoint.pHat_B
+        HN = rv2HN(self.satellite.dynamics.r_BN_N, self.satellite.dynamics.v_BN_N)
+        return HN @ self.satellite.dynamics.BN.T @ c_hat_B
 
     def _make_task_list(self) -> list[Task]:
         return super()._make_task_list() + [self.LocPointTask(self)]

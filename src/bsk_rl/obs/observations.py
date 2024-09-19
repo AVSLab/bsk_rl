@@ -10,6 +10,7 @@ from Basilisk.utilities import orbitalMotion
 from gymnasium import spaces
 
 from bsk_rl.utils.functional import vectorize_nested_dict
+from bsk_rl.utils.orbital import rv2HN
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -290,16 +291,38 @@ def _target_angle(sat, opp):
     return np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.c_hat_P))
 
 
+def _target_angle_rate(sat, opp):
+    r_BN_P = sat.dynamics.v_BN_P
+    v_BN_P = sat.dynamics.v_BN_P
+    r_LP_P = opp["object"].r_LP_P
+    omega_BP_P = sat.dynamics.omega_BP_P
+    omega_CP_ref = (
+        omega_BP_P
+        - np.cross(v_BN_P, r_LP_P - r_BN_P) / np.linalg.norm(r_LP_P - r_BN_P) ** 2
+    )
+    return np.linalg.norm(omega_CP_ref)
+
+
+def _r_LB_H(sat, opp):
+    r_LP_P = opp["object"].r_LP_P
+    r_BN_N = sat.dynamics.r_BN_N
+    r_TB_N = sat.simulator.world.PN.T @ r_LP_P - r_BN_N
+    HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
+    return HN @ r_TB_N
+
+
 class OpportunityProperties(Observation):
 
     _fn_map = {
         "priority": lambda sat, opp: opp["object"].priority,
         "r_LP_P": lambda sat, opp: opp["r_LP_P"],
+        "r_LB_H": _r_LB_H,
         "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time,
         "opportunity_mid": lambda sat, opp: sum(opp["window"]) / 2
         - sat.simulator.sim_time,
         "opportunity_close": lambda sat, opp: opp["window"][1] - sat.simulator.sim_time,
         "target_angle": _target_angle,
+        "target_angle_rate": _target_angle_rate,
     }
 
     def __init__(
@@ -334,10 +357,12 @@ class OpportunityProperties(Observation):
 
                     * ``priority``: Priority of the target.
                     * ``r_LP_P``: Location of the target in the planet-fixed frame.
+                    * ``r_LB_H``: Location of the target in the Hill frame.
                     * ``opportunity_open``: Time until the opportunity opens.
                     * ``opportunity_mid``: Time until the opportunity midpoint.
                     * ``opportunity_close``: Time until the opportunity closes.
                     * ``target_angle``: Angle between the target and the satellite instrument direction.
+                    * ``target_angle_rate``: Rate difference between the target pointing frame and the body frame.
 
                 * ``norm`` `optional`: Value to normalize property by. Defaults to 1.0.
 

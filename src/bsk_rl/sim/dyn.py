@@ -71,7 +71,7 @@ from bsk_rl.utils.functional import (
     check_aliveness_checkers,
     default_args,
 )
-from bsk_rl.utils.orbital import random_orbit
+from bsk_rl.utils.orbital import random_orbit, rv2HN, rv2omega
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -238,6 +238,15 @@ class BasicDynamicsModel(DynamicsModel):
         omega_BN_N = np.matmul(self.BN.T, self.omega_BN_B)
         omega_BP_N = omega_BN_N - self.world.omega_PN_N
         return np.matmul(self.world.PN, omega_BP_N)
+
+    @property
+    def omega_BH_H(self):
+        """Body angular velocity relative to Hill frame in Hill frame [rad/s]."""
+        omega_BN_N = np.matmul(self.BN.T, self.omega_BN_B)
+        omega_HN_N = rv2omega(self.r_BN_N, self.v_BN_N)
+        omega_BH_N = omega_BN_N - omega_HN_N
+        HN = rv2HN(self.r_BN_N, self.v_BN_N)
+        return HN @ omega_BH_N
 
     @property
     def battery_charge(self):

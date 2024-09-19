@@ -177,3 +177,24 @@ class TestTrajectorySimulator:
         assert (ts.r_BN_N(0) != ts.r_BN_N(1)).all()
         ts = orbital.TrajectorySimulator(self.epoch, oe=self.oe, mu=self.mu)
         assert (ts.r_BP_P(0) != ts.r_BP_P(1)).all()
+
+
+class TestFunctions:
+
+    def test_rv2HN(self):
+        r = np.array([1, 0, 0])
+        v = np.array([0, 1, 0])
+        HN = orbital.rv2HN(r, v)
+        assert np.allclose(HN, np.eye(3))
+
+    def test_rv2HN_nonunit(self):
+        r = np.array([1, 0, 0]) * 12345
+        v = np.array([0, 1, 0]) * 678.9
+        HN = orbital.rv2HN(r, v)
+        assert np.allclose(HN, np.eye(3))
+
+    def test_rv2omega(self):
+        r = np.array([1, 0, 0])
+        v = np.array([0, 1, 0])
+        omega = orbital.rv2omega(r, v)
+        assert np.allclose(omega, np.array([0, 0, 1]))

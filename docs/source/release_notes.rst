@@ -12,6 +12,8 @@ Development Version
   This fixes compatibility with RLlib 2.33.0+. Note that this means that the satellite
   object passed to the environment is not the same object as the one used in the environment,
   as is the case for rewarders and communication objects.
+* Add additional observation properties for satellites and opportunities.
+
 
 Version 1.0.1
 -------------
