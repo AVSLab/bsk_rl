@@ -143,7 +143,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         if communicator is None:
             communicator = NoCommunication()
-        self.communicator = communicator
+        self.communicator = deepcopy(communicator)
         self.communicator.link_satellites(self.satellites)
 
         self.sim_rate = sim_rate
