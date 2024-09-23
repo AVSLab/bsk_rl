@@ -29,7 +29,7 @@ dependencies = [
 
 [project.optional-dependencies]
 docs = ["ipykernel", "ipywidgets", "nbdime", "nbsphinx", "sphinx-rtd-theme"]
-rllib = ["dm_tree", "pyarrow", "ray[rllib]", "scikit-image", "typer"]
+rllib = ["dm_tree", "pyarrow", "ray[rllib]", "scikit-image", "torch", "typer"]
 
 [project.scripts]
 finish_install = "bsk_rl.finish_install:pck_install"
