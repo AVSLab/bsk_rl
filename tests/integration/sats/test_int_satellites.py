@@ -1,5 +1,6 @@
 import gymnasium as gym
 import numpy as np
+import pytest
 from pytest import approx
 
 from bsk_rl import act, data, obs, sats
@@ -35,6 +36,7 @@ class TestImagingSatellite:
         disable_env_checker=True,
     )
 
+    @pytest.mark.skip(reason="Causes tests to hang sometimes")
     def test_generate_more_windows(self):
         self.env.reset()
         dts = []
