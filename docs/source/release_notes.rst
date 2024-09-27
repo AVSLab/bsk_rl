@@ -25,6 +25,7 @@ Development Version
   type.
 * Improve performance of :class:`~bsk_rl.obs.Eclipse` observations by about 95%.
 * Logs a warning if the initial battery charge or buffer level is incompatible with its capacity.
+* Optimize communication when all satellites are communicating with each other.
 
 
 

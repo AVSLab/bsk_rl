@@ -15,7 +15,7 @@ from bsk_rl.sim.dyn import LOSCommDynModel
 @patch.multiple(CommunicationMethod, __abstractmethods__=set())
 class TestCommunicationMethod:
     def test_communicate(self):
-        mock_sats = [MagicMock(), MagicMock()]
+        mock_sats = [MagicMock(), MagicMock(), MagicMock()]
         mock_sats[0].simulator.sim_time = 0.0
         comms = CommunicationMethod()
         comms.last_communication_time = 0.0
@@ -34,7 +34,7 @@ class TestCommunicationMethod:
             sat.data_store.update_with_communicated_data.assert_called_once()
 
     def test_min_period_elapsed(self):
-        mock_sats = [MagicMock(), MagicMock()]
+        mock_sats = [MagicMock(), MagicMock(), MagicMock()]
         comms = CommunicationMethod(min_period=1.0)
         comms.link_satellites(mock_sats)
         comms.communication_pairs = MagicMock(
@@ -47,7 +47,7 @@ class TestCommunicationMethod:
             sat.data_store.update_with_communicated_data.assert_called_once()
 
     def test_min_period_not_elapsed(self):
-        mock_sats = [MagicMock(), MagicMock()]
+        mock_sats = [MagicMock(), MagicMock(), MagicMock()]
         comms = CommunicationMethod(min_period=1.0)
         comms.link_satellites(mock_sats)
         comms.communication_pairs = MagicMock(
@@ -58,6 +58,29 @@ class TestCommunicationMethod:
         comms.communicate()
         for sat in mock_sats:
             sat.data_store.update_with_communicated_data.assert_not_called()
+
+    def test_override_communicate_all(self):
+        mock_sats = [MagicMock() for i in range(3)]
+        comms = FreeCommunication()
+        comms.last_communication_time = 0.0
+        mock_sats[0].simulator.sim_time = 1.0
+        comms.link_satellites(mock_sats)
+        comms._communicate_all = MagicMock()
+        comms.communicate()
+        comms._communicate_all.assert_called_once()
+
+    def test_override_communicate_all_nocall(self):
+        mock_sats = [MagicMock() for i in range(3)]
+        comms = CommunicationMethod()
+        comms.communication_pairs = MagicMock(
+            return_value=[(mock_sats[1], mock_sats[0])]
+        )
+        comms.last_communication_time = 0.0
+        mock_sats[0].simulator.sim_time = 1.0
+        comms.link_satellites(mock_sats)
+        comms._communicate_all = MagicMock()
+        comms.communicate()
+        comms._communicate_all.assert_not_called()
 
 
 class TestNoCommunication:
