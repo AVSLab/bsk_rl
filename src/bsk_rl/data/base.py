@@ -29,6 +29,10 @@ class Data(ABC):
         """Define the combination of two units of data."""
         pass
 
+    def __copy__(self) -> "Data":
+        """Create a shallow copy of the data."""
+        return self.__class__() + self
+
 
 class DataStore(ABC):
     """Base class for satellite data logging."""

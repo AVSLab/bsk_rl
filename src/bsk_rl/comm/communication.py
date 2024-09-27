@@ -2,11 +2,13 @@
 
 import logging
 from abc import ABC, abstractmethod
+from copy import copy
 from itertools import combinations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.sparse.csgraph import connected_components
+from scipy.special import comb
 
 from bsk_rl.sim.dyn import LOSCommDynModel
 from bsk_rl.utils.functional import Resetable
@@ -60,17 +62,33 @@ class CommunicationMethod(ABC, Resetable):
             return
 
         communication_pairs = self.communication_pairs()
+
         if len(communication_pairs) > 0:
             logger.info(
                 f"Communicating data between {len(communication_pairs)} pairs of satellites"
             )
 
-        for sat_1, sat_2 in communication_pairs:
-            sat_1.data_store.stage_communicated_data(sat_2.data_store.data)
-            sat_2.data_store.stage_communicated_data(sat_1.data_store.data)
-        for satellite in self.satellites:
-            satellite.data_store.update_with_communicated_data()
+        if len(communication_pairs) == comb(len(self.satellites), 2):
+            self._communicate_all()
+        else:
+            for sat_1, sat_2 in communication_pairs:
+                sat_1.data_store.stage_communicated_data(sat_2.data_store.data)
+                sat_2.data_store.stage_communicated_data(sat_1.data_store.data)
+            for satellite in self.satellites:
+                satellite.data_store.update_with_communicated_data()
+
         self.last_communication_time = self.satellites[0].simulator.sim_time
+
+    def _communicate_all(self):
+        """Optimized communication between all pairs of satellites."""
+        logger.info("Optimizing data communication between all pairs of satellites")
+
+        data_type = self.satellites[0].data_store.data.__class__
+        final_data = data_type()
+        for satellite in self.satellites:
+            final_data += satellite.data_store.data
+        for satellite in self.satellites:
+            satellite.data_store.data = copy(final_data)
 
 
 class NoCommunication(CommunicationMethod):
