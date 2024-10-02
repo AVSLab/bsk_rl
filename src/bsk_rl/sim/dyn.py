@@ -635,7 +635,7 @@ class BasicDynamicsModel(DynamicsModel):
         if storedCharge_Init > batteryStorageCapacity or storedCharge_Init < 0:
             self.logger.warning(
                 f"Battery initial charge {storedCharge_Init} incompatible with its capacity {batteryStorageCapacity}."
-                )
+            )
         self.powerMonitor.storedCharge_Init = storedCharge_Init
         self.powerMonitor.addPowerNodeToModel(self.solarPanel.nodePowerOutMsg)
         self.simulator.AddModelToTask(
@@ -952,6 +952,10 @@ class ImagingDynModel(BasicDynamicsModel):
                 self.storageUnit.addPartition(buffer_name)
 
         if storageInit != 0:
+            if storageInit > dataStorageCapacity or storageInit < 0:
+                self.logger.warning(
+                    f"Initial storage level {storageInit} incompatible with its capacity {dataStorageCapacity}."
+                )
             self.storageUnit.setDataBuffer(["STORED DATA"], [int(storageInit)])
 
         # Add the storage unit to the transmitter
@@ -1091,6 +1095,10 @@ class ContinuousImagingDynModel(ImagingDynModel):
         self.storageUnit.addDataNodeToModel(self.instrument.nodeDataOutMsg)
         self.storageUnit.addDataNodeToModel(self.transmitter.nodeDataOutMsg)
         self.storageUnitValidCheck = storageUnitValidCheck
+        if storageInit > dataStorageCapacity or storageInit < 0:
+            self.logger.warning(
+                f"Initial storage level {storageInit} incompatible with its capacity {dataStorageCapacity}."
+            )
         self.storageUnit.setDataBuffer(storageInit)
 
         # Add the storage unit to the transmitter
