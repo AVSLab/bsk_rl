@@ -632,6 +632,10 @@ class BasicDynamicsModel(DynamicsModel):
         self.powerMonitor = simpleBattery.SimpleBattery()
         self.powerMonitor.ModelTag = "powerMonitor"
         self.powerMonitor.storageCapacity = batteryStorageCapacity
+        if storedCharge_Init > batteryStorageCapacity or storedCharge_Init < 0:
+            self.logger.warning(
+                f"Battery initial charge {storedCharge_Init} incompatible with its capacity {batteryStorageCapacity}."
+                )
         self.powerMonitor.storedCharge_Init = storedCharge_Init
         self.powerMonitor.addPowerNodeToModel(self.solarPanel.nodePowerOutMsg)
         self.simulator.AddModelToTask(
