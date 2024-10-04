@@ -24,6 +24,7 @@ Development Version
   opportunity than ``target``. Also allows for access filters to include an opportunity
   type.
 * Improve performance of :class:`~bsk_rl.obs.Eclipse` observations by about 95%.
+* Logs a warning if the initial battery charge or buffer level is incompatible with its capacity.
 
 
 
