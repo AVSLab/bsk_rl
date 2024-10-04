@@ -136,6 +136,32 @@ class TestBasicDynamicsModel:
         dyn.powerMonitor.storageCapacity = 100.0
         assert dyn.battery_valid() == valid
 
+    @patch("Basilisk.simulation.simpleBattery.SimpleBattery", MagicMock())
+    @pytest.mark.parametrize(
+        "battery_capacity,init_charge,warning",
+        [
+            (100, 50, False),
+            (100, 101, True),
+            (100, 100, False),
+            (100, 0.0, False),
+            (100, -1, True),
+        ],
+    )
+    def test_battery_init_warning(self, battery_capacity, init_charge, warning) -> None:
+
+        dyn = BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
+        dyn.solarPanel = MagicMock()
+        dyn.logger = MagicMock()
+        dyn.setup_battery(
+            batteryStorageCapacity=battery_capacity, storedCharge_Init=init_charge
+        )
+        if warning:
+            dyn.logger.warning.assert_called_with(
+                f"Battery initial charge {init_charge} incompatible with its capacity {battery_capacity}."
+            )
+        else:
+            dyn.logger.warning.assert_not_called()
+
 
 class TestLOSCommDynModel:
     losdyn = module + "LOSCommDynModel."
@@ -253,6 +279,38 @@ class TestImagingDynModel:
         dyn.storageUnit.addPartition.assert_has_calls([call(name) for name in expected])
         dyn.simulator.CreateNewProcess.assert_called_once()
 
+    @patch(
+        "Basilisk.simulation.partitionedStorageUnit.PartitionedStorageUnit", MagicMock()
+    )
+    @pytest.mark.parametrize(
+        "storage_capacity,init_storage,warning",
+        [
+            (100, 50, False),
+            (100, 101, True),
+            (100, 100, False),
+            (100, 0.0, False),
+            (100, -1, True),
+        ],
+    )
+    def test_storage_init_warning(
+        self, storage_capacity, init_storage, warning
+    ) -> None:
+        dyn = ImagingDynModel(MagicMock(simulator=MagicMock()), 1.0)
+        dyn.instrument = MagicMock()
+        dyn.transmitter = MagicMock()
+        dyn.setup_storage_unit(
+            dataStorageCapacity=storage_capacity,
+            storageUnitValidCheck=False,
+            storageInit=init_storage,
+            transmitterNumBuffers=1,
+        )
+        if warning:
+            dyn.logger.warning.assert_called_with(
+                f"Initial storage level {init_storage} incompatible with its capacity {storage_capacity}."
+            )
+        else:
+            dyn.logger.warning.assert_not_called()
+
 
 class TestGroundStationDynModel:
     def test_requires_world(self):
@@ -279,3 +337,32 @@ class TestContinuousImagingDynModel:
         dyn.storageUnit.storageCapacity = 100.0
         assert dyn.storage_level == 50.0
         assert dyn.storage_level_fraction == 0.5
+
+    @patch("Basilisk.simulation.simpleStorageUnit.SimpleStorageUnit", MagicMock())
+    @pytest.mark.parametrize(
+        "storage_capacity,init_storage,warning",
+        [
+            (100, 50, False),
+            (100, 101, True),
+            (100, 100, False),
+            (100, 0.0, False),
+            (100, -1, True),
+        ],
+    )
+    def test_storage_init_warning(
+        self, storage_capacity, init_storage, warning
+    ) -> None:
+        dyn = ContinuousImagingDynModel(MagicMock(simulator=MagicMock()), 1.0)
+        dyn.instrument = MagicMock()
+        dyn.transmitter = MagicMock()
+        dyn.setup_storage_unit(
+            dataStorageCapacity=storage_capacity,
+            storageUnitValidCheck=False,
+            storageInit=init_storage,
+        )
+        if warning:
+            dyn.logger.warning.assert_called_with(
+                f"Initial storage level {init_storage} incompatible with its capacity {storage_capacity}."
+            )
+        else:
+            dyn.logger.warning.assert_not_called()
