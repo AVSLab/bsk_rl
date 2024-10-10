@@ -192,7 +192,8 @@ class GlobalReward(ABC, Resetable):
         for new_data in new_data_dict.values():
             self.data += new_data
 
-        logger.info(f"Data reward: {reward}")
+        nonzero_reward = {k: v for k, v in reward.items() if v != 0}
+        logger.info(f"Data reward: {nonzero_reward}")
         return reward
 
 
