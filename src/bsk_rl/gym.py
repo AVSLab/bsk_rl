@@ -32,7 +32,6 @@ NO_ACTION = int(2**31) - 1
 
 
 class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
-
     def __init__(
         self,
         satellites: Union[Satellite, list[Satellite]],
@@ -314,7 +313,6 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             tuple: Joint observation
         """
         if self.generate_obs_retasking_only:
-
             return tuple(
                 (
                     satellite.get_obs()
@@ -698,9 +696,14 @@ class ConstellationTasking(
         terminated = self._get_terminated()
         truncated = self._get_truncated()
         info = self._get_info()
-        logger.info(f"Step reward: {reward}")
-        logger.info(f"Episode terminated: {terminated}")
-        logger.info(f"Episode truncated: {truncated}")
+        nonzero_reward = {k: v for k, v in reward.items() if v != 0}
+        logger.info(f"Step reward: {nonzero_reward}")
+        if any(terminated.values()):
+            terminated_true = [k for k, v in terminated.items() if v]
+            logger.info(f"Episode terminated: {terminated_true}")
+        if any(truncated.values()):
+            truncated_true = [k for k, v in truncated.items() if v]
+            logger.info(f"Episode truncated: {truncated_true}")
         logger.debug(f"Step info: {info}")
         logger.debug(f"Step observation: {observation}")
         return observation, reward, terminated, truncated, info
