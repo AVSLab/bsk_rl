@@ -1,0 +1,1216 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.sim.fsw &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.sim.fsw</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.sim.fsw</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Basilisk flight software models (FSW) are given in ``bsk_rl.sim.fsw``.</span>
+
+<span class="sd">Flight software models serve as the interface between the operation of the satellite in</span>
+<span class="sd">simulation and the Gymnasium environment. While some FSW models add additional</span>
+<span class="sd">functionality to the satellite, such as imaging instrument control in :class:`ImagingFSWModel`,</span>
+<span class="sd">others replace the default control laws with a more complex algorithms, such as :class:`SteeringFSWModel`</span>
+<span class="sd">vis a vis :class:`BasicFSWModel`.</span>
+
+<span class="sd">Actions</span>
+<span class="sd">-------</span>
+
+<span class="sd">Each FSW model has a number of actions that can be called to task the satellite. These</span>
+<span class="sd">actions are decorated with the :func:`~bsk_rl.sim.fsw.action` decorator, which performs</span>
+<span class="sd">housekeeping tasks before the action is executed. These actions are the primary way to</span>
+<span class="sd">control the satellite simulation from other parts of the Gymnasium environment.</span>
+
+<span class="sd">Properties</span>
+<span class="sd">----------</span>
+
+<span class="sd">The FSW model provides a number of properties for easy access to the satellite state.</span>
+<span class="sd">These can be accessed directly from the dynamics model instance, or in the observation</span>
+<span class="sd">via the :class:`~bsk_rl.obs.SatProperties` observation.</span>
+
+<span class="sd">Aliveness Checking</span>
+<span class="sd">------------------</span>
+
+<span class="sd">Certain functions in the FSW models are decorated with the :func:`~bsk_rl.utils.functional.aliveness_checker`</span>
+<span class="sd">decorator. These functions are called at each step to check if the satellite is still</span>
+<span class="sd">operational, returning true if the satellite is still alive.</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">weakref</span> <span class="kn">import</span> <span class="n">proxy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">Basilisk.architecture</span> <span class="kn">import</span> <span class="n">messaging</span>
+<span class="kn">from</span> <span class="nn">Basilisk.fswAlgorithms</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">attTrackingError</span><span class="p">,</span>
+    <span class="n">hillPoint</span><span class="p">,</span>
+    <span class="n">locationPointing</span><span class="p">,</span>
+    <span class="n">mrpFeedback</span><span class="p">,</span>
+    <span class="n">mrpSteering</span><span class="p">,</span>
+    <span class="n">rateServoFullNonlinear</span><span class="p">,</span>
+    <span class="n">rwMotorTorque</span><span class="p">,</span>
+    <span class="n">scanningInstrumentController</span><span class="p">,</span>
+    <span class="n">simpleInstrumentController</span><span class="p">,</span>
+    <span class="n">thrForceMapping</span><span class="p">,</span>
+    <span class="n">thrMomentumDumping</span><span class="p">,</span>
+    <span class="n">thrMomentumManagement</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">macros</span> <span class="k">as</span> <span class="n">mc</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.sim</span> <span class="kn">import</span> <span class="n">dyn</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.functional</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AbstractClassProperty</span><span class="p">,</span>
+    <span class="n">check_aliveness_checkers</span><span class="p">,</span>
+    <span class="n">default_args</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.orbital</span> <span class="kn">import</span> <span class="n">rv2HN</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.sats</span> <span class="kn">import</span> <span class="n">Satellite</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.sim</span> <span class="kn">import</span> <span class="n">Simulator</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.sim.dyn</span> <span class="kn">import</span> <span class="n">DynamicsModel</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.sim.world</span> <span class="kn">import</span> <span class="n">WorldModel</span>
+
+
+<div class="viewcode-block" id="action">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.action">[docs]</a>
+<span class="k">def</span> <span class="nf">action</span><span class="p">(</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator to reset the satellite software before executing an action.</span>
+
+<span class="sd">    Each time an action is called, the FSW tasks and dynamics models call their</span>
+<span class="sd">    ``reset_for_action`` methods to ensure that the satellite is in a consistent state</span>
+<span class="sd">    before the action is executed.</span>
+
+<span class="sd">    Action functions are typically called by :ref:`bsk_rl.act` to task the satellite.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw_proc</span><span class="o">.</span><span class="n">disableAllTasks</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zero_gateway_msgs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">reset_for_action</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">reset_for_action</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">inner</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;*Decorated with* :class:`~bsk_rl.sim.fsw.action`</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+        <span class="n">func</span><span class="o">.</span><span class="vm">__doc__</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span></div>
+
+
+
+<span class="k">class</span> <span class="nc">FSWModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract Basilisk flight software model.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_requires_dyn</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="s2">&quot;DynamicsModel&quot;</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define minimum :class:`~bsk_rl.sim.dyn.DynamicsModel` for compatibility.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">,</span> <span class="n">fsw_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The abstract base flight software model.</span>
+
+<span class="sd">        One FSWModel is instantiated for each satellite in the environment each time the</span>
+<span class="sd">        environment is reset and new simulator is created.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellite: Satellite modelled by this model</span>
+<span class="sd">            fsw_rate: [s] Rate of FSW simulation.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to task creation functions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span> <span class="o">=</span> <span class="n">satellite</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">required</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_requires_dyn</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">satellite</span><span class="o">.</span><span class="n">dyn_type</span><span class="p">,</span> <span class="n">required</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">satellite</span><span class="o">.</span><span class="n">dyn_type</span><span class="si">}</span><span class="s2"> must be a subclass of </span><span class="si">{</span><span class="n">required</span><span class="si">}</span><span class="s2"> to &quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;use FSW model of type </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="n">fsw_proc_name</span> <span class="o">=</span> <span class="s2">&quot;FSWProcess&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">CreateNewProcess</span><span class="p">(</span><span class="n">fsw_proc_name</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw_rate</span> <span class="o">=</span> <span class="n">fsw_rate</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_task_list</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">create_task</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">_create_module_data</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_messages</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">_setup_fsw_objects</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw_proc</span><span class="o">.</span><span class="n">disableAllTasks</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Simulator&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reference to the episode simulator.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">simulator</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">world</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WorldModel&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reference to the episode world model.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DynamicsModel&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reference to the satellite dynamics model for the episode.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span>
+
+    <span class="k">def</span> <span class="nf">_make_task_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Task&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">_set_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Message setup after task creation.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_failure</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the FSW model has failed any aliveness requirements.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ``True`` if the satellite FSW is still alive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">check_aliveness_checkers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_failure</span><span class="o">=</span><span class="n">log_failure</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log when FSW model is deleted.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Basilisk FSW deleted&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Task</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract class for defining FSW tasks.&quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">AbstractClassProperty</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw</span><span class="p">:</span> <span class="n">FSWModel</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Template class for defining FSW processes.</span>
+
+<span class="sd">        Each FSW process has a task associated with it, which handle certain housekeeping</span>
+<span class="sd">        functions.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fsw: FSW model task contributes to</span>
+<span class="sd">            priority: Task priority</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="p">:</span> <span class="n">FSWModel</span> <span class="o">=</span> <span class="n">proxy</span><span class="p">(</span><span class="n">fsw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span>
+
+    <span class="k">def</span> <span class="nf">create_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add task to FSW with a unique name.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">fsw_proc</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">CreateNewTask</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">fsw_rate</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">taskPriority</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">_create_module_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create module data wrappers.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">_setup_fsw_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize model parameters with satellite arguments.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a model to this task.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            module: Basilisk module</span>
+<span class="sd">            priority: Model priority</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">module</span><span class="p">,</span>
+            <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">reset_for_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Housekeeping for task when a new action is called.</span>
+
+<span class="sd">        Disables task by default, can be overridden by subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">disableTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BasicFSWModel">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel">[docs]</a>
+<span class="k">class</span> <span class="nc">BasicFSWModel</span><span class="p">(</span><span class="n">FSWModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Basic FSW model with minimum necessary Basilisk components.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_requires_dyn</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="s2">&quot;DynamicsModel&quot;</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">dyn</span><span class="o">.</span><span class="n">BasicDynamicsModel</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_make_task_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Task</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">SunPointTask</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">NadirPointTask</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">RWDesatTask</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">TrackingErrorTask</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">MRPControlTask</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_set_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_msgs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_gateway_msgs</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_set_config_msgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_vehicle_config_msg</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_thrusters_config_msg</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_rw_config_msg</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_set_vehicle_config_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the vehicle configuration message.&quot;&quot;&quot;</span>
+        <span class="c1"># Use the same inertia in the FSW algorithm as in the simulation</span>
+        <span class="n">vehicleConfigOut</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">VehicleConfigMsgPayload</span><span class="p">()</span>
+        <span class="n">vehicleConfigOut</span><span class="o">.</span><span class="n">ISCPntB_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">I_mat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vcConfigMsg</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">VehicleConfigMsg</span><span class="p">()</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">vehicleConfigOut</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_thrusters_config_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Import the thrusters configuration information.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrusterConfigMsg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">thrFactory</span><span class="o">.</span><span class="n">getConfigMessage</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_set_rw_config_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Configure RW pyramid exactly as it is in dynamics.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fswRwConfigMsg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">getConfigMessage</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_set_gateway_msgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create C-wrapped gateway messages.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attRefMsg</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">AttRefMsg_C</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attGuidMsg</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">AttGuidMsg_C</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zero_gateway_msgs</span><span class="p">()</span>
+
+        <span class="c1"># connect gateway FSW effector command msgs with the dynamics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="o">.</span><span class="n">rwMotorCmdInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">rwMotorTorqueOutMsg</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">thrusterSet</span><span class="o">.</span><span class="n">cmdsInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDump</span><span class="o">.</span><span class="n">thrusterOnTimeOutMsg</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_zero_gateway_msgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Zero all the FSW gateway message payloads.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attRefMsg</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">messaging</span><span class="o">.</span><span class="n">AttRefMsgPayload</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attGuidMsg</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">messaging</span><span class="o">.</span><span class="n">AttGuidMsgPayload</span><span class="p">())</span>
+
+<div class="viewcode-block" id="BasicFSWModel.action_drift">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.action_drift">[docs]</a>
+    <span class="nd">@action</span>
+    <span class="k">def</span> <span class="nf">action_drift</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Disable all tasks and do nothing.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">disableTask</span><span class="p">(</span>
+            <span class="n">BasicFSWModel</span><span class="o">.</span><span class="n">MRPControlTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicFSWModel.SunPointTask">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.SunPointTask">[docs]</a>
+    <span class="k">class</span> <span class="nc">SunPointTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task to generate sun-pointing reference.&quot;&quot;&quot;</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;sunPointTask&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">99</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: D107</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Task to generate a sun-pointing reference.&quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_create_module_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sunPoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">sunPoint</span> <span class="o">=</span> <span class="n">locationPointing</span><span class="o">.</span><span class="n">locationPointing</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sunPoint</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;sunPoint&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_setup_fsw_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Configure the solar array sun-pointing task.&quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_sun_pointing</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BasicFSWModel.SunPointTask.setup_sun_pointing">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.SunPointTask.setup_sun_pointing">[docs]</a>
+        <span class="k">def</span> <span class="nf">setup_sun_pointing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nHat_B</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Configure the solar array sun-pointing task.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                nHat_B: Solar array normal vector.</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sunPoint</span><span class="o">.</span><span class="n">pHat_B</span> <span class="o">=</span> <span class="n">nHat_B</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sunPoint</span><span class="o">.</span><span class="n">scAttInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">attOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sunPoint</span><span class="o">.</span><span class="n">scTransInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">transOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sunPoint</span><span class="o">.</span><span class="n">celBodyInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">ephemConverter</span><span class="o">.</span><span class="n">ephemOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">sun_index</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sunPoint</span><span class="o">.</span><span class="n">useBoresightRateDamping</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">messaging</span><span class="o">.</span><span class="n">AttGuidMsg_C_addAuthor</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sunPoint</span><span class="o">.</span><span class="n">attGuidOutMsg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sunPoint</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1200</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="BasicFSWModel.action_charge">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.action_charge">[docs]</a>
+    <span class="nd">@action</span>
+    <span class="k">def</span> <span class="nf">action_charge</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Charge battery by pointing the solar panels at the sun.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sunPoint</span><span class="o">.</span><span class="n">Reset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SunPointTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicFSWModel.NadirPointTask">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.NadirPointTask">[docs]</a>
+    <span class="k">class</span> <span class="nc">NadirPointTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task to generate nadir-pointing reference.&quot;&quot;&quot;</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;nadirPointTask&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">98</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: D107</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Task to generate nadir-pointing reference.&quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_create_module_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hillPoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">hillPoint</span> <span class="o">=</span> <span class="n">hillPoint</span><span class="o">.</span><span class="n">hillPoint</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hillPoint</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;hillPoint&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_setup_fsw_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Configure the nadir-pointing task.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hillPoint</span><span class="o">.</span><span class="n">transNavInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">transOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hillPoint</span><span class="o">.</span><span class="n">celBodyInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">ephemConverter</span><span class="o">.</span><span class="n">ephemOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">messaging</span><span class="o">.</span><span class="n">AttRefMsg_C_addAuthor</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hillPoint</span><span class="o">.</span><span class="n">attRefOutMsg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attRefMsg</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hillPoint</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1199</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicFSWModel.RWDesatTask">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.RWDesatTask">[docs]</a>
+    <span class="k">class</span> <span class="nc">RWDesatTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task to desaturate reaction wheels.&quot;&quot;&quot;</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;rwDesatTask&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">97</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: D107</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Task to desaturate reaction wheels using thrusters.&quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_create_module_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Set up momentum dumping and thruster control.&quot;&quot;&quot;</span>
+            <span class="c1"># Momentum dumping configuration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDesatControl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">thrDesatControl</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">thrMomentumManagement</span><span class="o">.</span><span class="n">thrMomentumManagement</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDesatControl</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;thrMomentumManagement&quot;</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDump</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">thrDump</span> <span class="o">=</span> <span class="n">thrMomentumDumping</span><span class="o">.</span><span class="n">thrMomentumDumping</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDump</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;thrDump&quot;</span>
+
+            <span class="c1"># Thruster force mapping configuration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrForceMapping</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">thrForceMapping</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">thrForceMapping</span><span class="o">.</span><span class="n">thrForceMapping</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrForceMapping</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;thrForceMapping&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_setup_fsw_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Set up thrusters and momentum dumping.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_thruster_mapping</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_momentum_dumping</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BasicFSWModel.RWDesatTask.setup_thruster_mapping">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.RWDesatTask.setup_thruster_mapping">[docs]</a>
+        <span class="nd">@default_args</span><span class="p">(</span><span class="n">controlAxes_B</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">thrForceSign</span><span class="o">=+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">setup_thruster_mapping</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">controlAxes_B</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">thrForceSign</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Configure the thruster mapping.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                controlAxes_B: Control unit axes.</span>
+<span class="sd">                thrForceSign: Flag indicating if pos (+1) or negative (-1) thruster</span>
+<span class="sd">                    solutions are found.</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrForceMapping</span><span class="o">.</span><span class="n">cmdTorqueInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">thrDesatControl</span><span class="o">.</span><span class="n">deltaHOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrForceMapping</span><span class="o">.</span><span class="n">thrConfigInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">thrusterConfigMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrForceMapping</span><span class="o">.</span><span class="n">vehConfigInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">vcConfigMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrForceMapping</span><span class="o">.</span><span class="n">controlAxes_B</span> <span class="o">=</span> <span class="n">controlAxes_B</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrForceMapping</span><span class="o">.</span><span class="n">thrForceSign</span> <span class="o">=</span> <span class="n">thrForceSign</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrForceMapping</span><span class="o">.</span><span class="n">angErrThresh</span> <span class="o">=</span> <span class="mf">3.15</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thrForceMapping</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1192</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicFSWModel.RWDesatTask.setup_momentum_dumping">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.RWDesatTask.setup_momentum_dumping">[docs]</a>
+        <span class="nd">@default_args</span><span class="p">(</span>
+            <span class="n">hs_min</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">maxCounterValue</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+            <span class="n">thrMinFireTime</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>
+            <span class="n">desatAttitude</span><span class="o">=</span><span class="s2">&quot;sun&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">def</span> <span class="nf">setup_momentum_dumping</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">hs_min</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">maxCounterValue</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="n">thrMinFireTime</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">desatAttitude</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Configure the momentum dumping algorithm.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                hs_min: [N*m*s] Minimum RW cluster momentum for dumping.</span>
+<span class="sd">                maxCounterValue: Control periods between firing thrusters.</span>
+<span class="sd">                thrMinFireTime: [s] Minimum thruster firing time.</span>
+<span class="sd">                desatAttitude: Direction to point while desaturating:</span>
+
+<span class="sd">                    * ``&quot;sun&quot;`` points panels at sun</span>
+<span class="sd">                    * ``&quot;nadir&quot;`` points instrument nadir</span>
+<span class="sd">                    * ``None`` disables attitude control.</span>
+
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">desatAttitude</span> <span class="o">=</span> <span class="n">desatAttitude</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDesatControl</span><span class="o">.</span><span class="n">hs_min</span> <span class="o">=</span> <span class="n">hs_min</span>  <span class="c1"># Nms</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDesatControl</span><span class="o">.</span><span class="n">rwSpeedsInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="o">.</span><span class="n">rwSpeedOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDesatControl</span><span class="o">.</span><span class="n">rwConfigDataInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">fswRwConfigMsg</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDump</span><span class="o">.</span><span class="n">deltaHInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thrDesatControl</span><span class="o">.</span><span class="n">deltaHOutMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDump</span><span class="o">.</span><span class="n">thrusterImpulseInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">thrForceMapping</span><span class="o">.</span><span class="n">thrForceCmdOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDump</span><span class="o">.</span><span class="n">thrusterConfInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">thrusterConfigMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDump</span><span class="o">.</span><span class="n">maxCounterValue</span> <span class="o">=</span> <span class="n">maxCounterValue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDump</span><span class="o">.</span><span class="n">thrMinFireTime</span> <span class="o">=</span> <span class="n">thrMinFireTime</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thrDesatControl</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1193</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thrDump</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1191</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicFSWModel.RWDesatTask.reset_for_action">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.RWDesatTask.reset_for_action">[docs]</a>
+        <span class="k">def</span> <span class="nf">reset_for_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Disable power draw for thrusters when a new action is selected.&quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_for_action</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">thrusterPowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">0</span></div>
+</div>
+
+
+<div class="viewcode-block" id="BasicFSWModel.action_desat">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.action_desat">[docs]</a>
+    <span class="nd">@action</span>
+    <span class="k">def</span> <span class="nf">action_desat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Charge while desaturating reaction wheels.</span>
+
+<span class="sd">        This action maneuvers the satellite into ``desatAttitude``, turns on the thruster</span>
+<span class="sd">        power sink, and enables the desaturation tasks. This action typically needs to be</span>
+<span class="sd">        called multiple times to fully desaturate the wheels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trackingError</span><span class="o">.</span><span class="n">Reset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrDesatControl</span><span class="o">.</span><span class="n">Reset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrDump</span><span class="o">.</span><span class="n">Reset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">thrusterPowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">RWDesatTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">desatAttitude</span> <span class="o">==</span> <span class="s2">&quot;sun&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sunPoint</span><span class="o">.</span><span class="n">Reset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SunPointTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">desatAttitude</span> <span class="o">==</span> <span class="s2">&quot;nadir&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hillPoint</span><span class="o">.</span><span class="n">Reset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span>
+                <span class="n">BasicFSWModel</span><span class="o">.</span><span class="n">NadirPointTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">desatAttitude</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">desatAttitude</span><span class="si">}</span><span class="s2"> not a valid desatAttitude&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TrackingErrorTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicFSWModel.TrackingErrorTask">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.TrackingErrorTask">[docs]</a>
+    <span class="k">class</span> <span class="nc">TrackingErrorTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task to convert an attitude reference to guidance.&quot;&quot;&quot;</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;trackingErrTask&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: D107</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Task to convert an attitude reference to guidance.&quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_create_module_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trackingError</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">trackingError</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">attTrackingError</span><span class="o">.</span><span class="n">attTrackingError</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trackingError</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;trackingError&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_setup_fsw_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trackingError</span><span class="o">.</span><span class="n">attNavInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">attOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trackingError</span><span class="o">.</span><span class="n">attRefInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attRefMsg</span><span class="p">)</span>
+            <span class="n">messaging</span><span class="o">.</span><span class="n">AttGuidMsg_C_addAuthor</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">trackingError</span><span class="o">.</span><span class="n">attGuidOutMsg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trackingError</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1197</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicFSWModel.MRPControlTask">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.MRPControlTask">[docs]</a>
+    <span class="k">class</span> <span class="nc">MRPControlTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task to control the satellite attitude using reaction wheels.&quot;&quot;&quot;</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;mrpControlTask&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: D107</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Task to control the satellite with reaction wheels.&quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_create_module_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Attitude controller configuration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpFeedbackControl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">mrpFeedbackControl</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">mrpFeedback</span><span class="o">.</span><span class="n">mrpFeedback</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpFeedbackControl</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;mrpFeedbackControl&quot;</span>
+
+            <span class="c1"># add module that maps the Lr control torque into the RW motor torques</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">rwMotorTorque</span> <span class="o">=</span> <span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;rwMotorTorque&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_setup_fsw_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_mrp_feedback_rwa</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_rw_motor_torque</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BasicFSWModel.MRPControlTask.setup_mrp_feedback_rwa">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.MRPControlTask.setup_mrp_feedback_rwa">[docs]</a>
+        <span class="nd">@default_args</span><span class="p">(</span><span class="n">K</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span> <span class="n">Ki</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="mf">35.0</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">setup_mrp_feedback_rwa</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Ki</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">P</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Set the MRP feedback control properties.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                K: Proportional gain.</span>
+<span class="sd">                Ki: Integral gain.</span>
+<span class="sd">                P: Derivative gain.</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpFeedbackControl</span><span class="o">.</span><span class="n">guidInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpFeedbackControl</span><span class="o">.</span><span class="n">vehConfigInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">vcConfigMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpFeedbackControl</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="n">K</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpFeedbackControl</span><span class="o">.</span><span class="n">Ki</span> <span class="o">=</span> <span class="n">Ki</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpFeedbackControl</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="n">P</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpFeedbackControl</span><span class="o">.</span><span class="n">integralLimit</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="mf">2.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mrpFeedbackControl</span><span class="o">.</span><span class="n">Ki</span> <span class="o">*</span> <span class="mf">0.1</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mrpFeedbackControl</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1196</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicFSWModel.MRPControlTask.setup_rw_motor_torque">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.MRPControlTask.setup_rw_motor_torque">[docs]</a>
+        <span class="k">def</span> <span class="nf">setup_rw_motor_torque</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">controlAxes_B</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Set parameters for finding motor torque from the control law.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                controlAxes_B: Control unit axes.</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">rwParamsInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">fswRwConfigMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">vehControlInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mrpFeedbackControl</span><span class="o">.</span><span class="n">cmdTorqueOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">controlAxes_B</span> <span class="o">=</span> <span class="n">controlAxes_B</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1195</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicFSWModel.MRPControlTask.reset_for_action">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.BasicFSWModel.MRPControlTask.reset_for_action">[docs]</a>
+        <span class="k">def</span> <span class="nf">reset_for_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;MRP control is enabled by default for all tasks.&quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+</div>
+</div>
+
+
+
+<div class="viewcode-block" id="ImagingFSWModel">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ImagingFSWModel">[docs]</a>
+<span class="k">class</span> <span class="nc">ImagingFSWModel</span><span class="p">(</span><span class="n">BasicFSWModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extend FSW with instrument pointing and triggering control.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_requires_dyn</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="s2">&quot;DynamicsModel&quot;</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_requires_dyn</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="n">dyn</span><span class="o">.</span><span class="n">ImagingDynModel</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds instrument pointing and triggering control to FSW.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">c_hat_P</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instrument pointing direction in the planet frame.&quot;&quot;&quot;</span>
+        <span class="n">c_hat_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">pHat_B</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">BP</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">c_hat_B</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">c_hat_H</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instrument pointing direction in the hill frame.&quot;&quot;&quot;</span>
+        <span class="n">c_hat_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">pHat_B</span>
+        <span class="n">HN</span> <span class="o">=</span> <span class="n">rv2HN</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">v_BN_N</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">HN</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">BN</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">c_hat_B</span>
+
+    <span class="k">def</span> <span class="nf">_make_task_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Task</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_make_task_list</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">LocPointTask</span><span class="p">(</span><span class="bp">self</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">_set_gateway_msgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_set_gateway_msgs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeStatusInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">deviceCmdOutMsg</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ImagingFSWModel.LocPointTask">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ImagingFSWModel.LocPointTask">[docs]</a>
+    <span class="k">class</span> <span class="nc">LocPointTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task to point at targets and trigger the instrument.&quot;&quot;&quot;</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;locPointTask&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">96</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: D107</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Task to point the instrument at ground targets.&quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_create_module_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Location pointing configuration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">locPoint</span> <span class="o">=</span> <span class="n">locationPointing</span><span class="o">.</span><span class="n">locationPointing</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;locPoint&quot;</span>
+
+            <span class="c1"># SimpleInstrumentController configuration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">insControl</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">simpleInstrumentController</span><span class="o">.</span><span class="n">simpleInstrumentController</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;instrumentController&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_setup_fsw_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_location_pointing</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_instrument_controller</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ImagingFSWModel.LocPointTask.setup_location_pointing">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ImagingFSWModel.LocPointTask.setup_location_pointing">[docs]</a>
+        <span class="nd">@default_args</span><span class="p">(</span><span class="n">inst_pHat_B</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">def</span> <span class="nf">setup_location_pointing</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">inst_pHat_B</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Set the Earth location pointing guidance module.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                inst_pHat_B: Instrument pointing direction.</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">pHat_B</span> <span class="o">=</span> <span class="n">inst_pHat_B</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">scAttInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">attOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">scTransInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">transOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">locationInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">currentGroundStateOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">useBoresightRateDamping</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">messaging</span><span class="o">.</span><span class="n">AttGuidMsg_C_addAuthor</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">attGuidOutMsg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1198</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingFSWModel.LocPointTask.setup_instrument_controller">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ImagingFSWModel.LocPointTask.setup_instrument_controller">[docs]</a>
+        <span class="nd">@default_args</span><span class="p">(</span><span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">setup_instrument_controller</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">imageAttErrorRequirement</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">imageRateErrorRequirement</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Set the instrument controller parameters.</span>
+
+<span class="sd">            The instrument controller is used to take an image when certain relative</span>
+<span class="sd">            attitude requirements are met, along with the access requirements of the</span>
+<span class="sd">            target (i.e. ``imageTargetMinimumElevation`` and ``imageTargetMaximumRange``</span>
+<span class="sd">            as set in :class:`~bsk_rl.sim.dyn.ImagingDynModel.setup_imaging_target`).</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                imageAttErrorRequirement: [MRP norm] Pointing attitude error tolerance</span>
+<span class="sd">                    for imaging.</span>
+<span class="sd">                imageRateErrorRequirement: [rad/s] Rate tolerance for imaging. Disable</span>
+<span class="sd">                    with ``None``.</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">attErrTolerance</span> <span class="o">=</span> <span class="n">imageAttErrorRequirement</span>
+            <span class="k">if</span> <span class="n">imageRateErrorRequirement</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">useRateTolerance</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">rateErrTolerance</span> <span class="o">=</span> <span class="n">imageRateErrorRequirement</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">attGuidInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">locationAccessInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">987</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingFSWModel.LocPointTask.reset_for_action">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ImagingFSWModel.LocPointTask.reset_for_action">[docs]</a>
+        <span class="k">def</span> <span class="nf">reset_for_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Reset pointing controller.&quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">Reset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">Reset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">controllerStatus</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_for_action</span><span class="p">()</span></div>
+</div>
+
+
+<div class="viewcode-block" id="ImagingFSWModel.action_image">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ImagingFSWModel.action_image">[docs]</a>
+    <span class="nd">@action</span>
+    <span class="k">def</span> <span class="nf">action_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r_LP_P</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">data_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Attempt to image a target at a location.</span>
+
+<span class="sd">        This action sets the target attitude to one tracking a ground location. If the</span>
+<span class="sd">        target is within the imaging constraints, an image will be taken and stored in</span>
+<span class="sd">        the data buffer. The instrument power sink will be active as long as the task is</span>
+<span class="sd">        enabled.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            r_LP_P: [m] Planet-fixed planet relative target location.</span>
+<span class="sd">            data_name: Data buffer to store image data to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">controllerStatus</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">r_LP_P_Init</span> <span class="o">=</span> <span class="n">r_LP_P</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataName</span> <span class="o">=</span> <span class="n">data_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">imaged</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LocPointTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingFSWModel.action_downlink">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ImagingFSWModel.action_downlink">[docs]</a>
+    <span class="nd">@action</span>
+    <span class="k">def</span> <span class="nf">action_downlink</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Attempt to downlink data.</span>
+
+<span class="sd">        This action points the satellite nadir and attempts to downlink data. If the</span>
+<span class="sd">        satellite is in range of a ground station, data will be downlinked at the specified</span>
+<span class="sd">        baud rate. The transmitter power sink will be active as long as the task is enabled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hillPoint</span><span class="o">.</span><span class="n">Reset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trackingError</span><span class="o">.</span><span class="n">Reset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">dataStatus</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span>
+            <span class="n">BasicFSWModel</span><span class="o">.</span><span class="n">NadirPointTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span>
+            <span class="n">BasicFSWModel</span><span class="o">.</span><span class="n">TrackingErrorTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ContinuousImagingFSWModel">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ContinuousImagingFSWModel">[docs]</a>
+<span class="k">class</span> <span class="nc">ContinuousImagingFSWModel</span><span class="p">(</span><span class="n">ImagingFSWModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;FSW model for continuous nadir scanning.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;FSW model for continuous nadir scanning.</span>
+
+<span class="sd">        Instead of imaging point targets, this model is used to continuously scan the</span>
+<span class="sd">        ground while pointing nadir.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ContinuousImagingFSWModel.LocPointTask">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ContinuousImagingFSWModel.LocPointTask">[docs]</a>
+    <span class="k">class</span> <span class="nc">LocPointTask</span><span class="p">(</span><span class="n">ImagingFSWModel</span><span class="o">.</span><span class="n">LocPointTask</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task to point nadir and trigger the instrument.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Task to point nadir and trigger the instrument.&quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_create_module_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Location pointing configuration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">locPoint</span> <span class="o">=</span> <span class="n">locationPointing</span><span class="o">.</span><span class="n">locationPointing</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;locPoint&quot;</span>
+
+            <span class="c1"># scanningInstrumentController configuration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">insControl</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">scanningInstrumentController</span><span class="o">.</span><span class="n">scanningInstrumentController</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;instrumentController&quot;</span>
+
+<div class="viewcode-block" id="ContinuousImagingFSWModel.LocPointTask.setup_instrument_controller">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ContinuousImagingFSWModel.LocPointTask.setup_instrument_controller">[docs]</a>
+        <span class="nd">@default_args</span><span class="p">(</span><span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">setup_instrument_controller</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">imageAttErrorRequirement</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">imageRateErrorRequirement</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Set the instrument controller parameters for scanning.</span>
+
+<span class="sd">            As long as these two conditions are met, scanning will occur continuously.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                imageAttErrorRequirement: [MRP norm] Pointing attitude error tolerance</span>
+<span class="sd">                    for imaging.</span>
+<span class="sd">                imageRateErrorRequirement: [rad/s] Rate tolerance for imaging. Disable</span>
+<span class="sd">                    with None.</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">attErrTolerance</span> <span class="o">=</span> <span class="n">imageAttErrorRequirement</span>
+            <span class="k">if</span> <span class="n">imageRateErrorRequirement</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">useRateTolerance</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">rateErrTolerance</span> <span class="o">=</span> <span class="n">imageRateErrorRequirement</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">attGuidInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">accessInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">987</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ContinuousImagingFSWModel.LocPointTask.reset_for_action">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ContinuousImagingFSWModel.LocPointTask.reset_for_action">[docs]</a>
+        <span class="k">def</span> <span class="nf">reset_for_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Reset scanning controller.&quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">instMsg</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">DeviceCmdMsg_C</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">instMsg</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">messaging</span><span class="o">.</span><span class="n">DeviceCmdMsgPayload</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeStatusInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instMsg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_for_action</span><span class="p">()</span></div>
+</div>
+
+
+<div class="viewcode-block" id="ContinuousImagingFSWModel.action_nadir_scan">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ContinuousImagingFSWModel.action_nadir_scan">[docs]</a>
+    <span class="nd">@action</span>
+    <span class="k">def</span> <span class="nf">action_nadir_scan</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Scan nadir.</span>
+
+<span class="sd">        This action points the instrument nadir and continuously adds data to the buffer</span>
+<span class="sd">        as long as attitude requirements are met. The instrument power sink is active</span>
+<span class="sd">        as long as the action is set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeStatusInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">deviceCmdOutMsg</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">controllerStatus</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">r_LP_P_Init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
+        <span class="p">)</span>  <span class="c1"># All zero causes an error</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataName</span> <span class="o">=</span> <span class="s2">&quot;nadir&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LocPointTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ContinuousImagingFSWModel.action_image">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.ContinuousImagingFSWModel.action_image">[docs]</a>
+    <span class="nd">@action</span>
+    <span class="k">def</span> <span class="nf">action_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Disable ``action_image`` from parent class.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Use action_nadir_scan instead&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SteeringFSWModel">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.SteeringFSWModel">[docs]</a>
+<span class="k">class</span> <span class="nc">SteeringFSWModel</span><span class="p">(</span><span class="n">BasicFSWModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;FSW extending MRP control to use MRP steering instead of MRP feedback.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;FSW extending attitude control to use MRP steering instead of MRP feedback.</span>
+
+<span class="sd">        This class replaces the simple attitude feedback control law with a more</span>
+<span class="sd">        sophisticated `MRP steering control law &lt;https://hanspeterschaub.info/basilisk/Documentation/fswAlgorithms/attControl/mrpSteering/mrpSteering.html&gt;`_.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SteeringFSWModel.MRPControlTask">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.SteeringFSWModel.MRPControlTask">[docs]</a>
+    <span class="k">class</span> <span class="nc">MRPControlTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task that uses MRP steering to control reaction wheels.&quot;&quot;&quot;</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;mrpControlTask&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: D107</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Task to control the satellite with reaction wheels.&quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fsw</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_create_module_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Attitude controller configuration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpSteeringControl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">mrpSteeringControl</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">mrpSteering</span><span class="o">.</span><span class="n">mrpSteering</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpSteeringControl</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;mrpSteeringControl&quot;</span>
+
+            <span class="c1"># Rate servo</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">servo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">servo</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">rateServoFullNonlinear</span><span class="o">.</span><span class="n">rateServoFullNonlinear</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;rateServo&quot;</span>
+
+            <span class="c1"># add module that maps the Lr control torque into the RW motor torques</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">rwMotorTorque</span> <span class="o">=</span> <span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;rwMotorTorque&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_setup_fsw_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_mrp_steering_rwa</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_rw_motor_torque</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SteeringFSWModel.MRPControlTask.setup_mrp_steering_rwa">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.SteeringFSWModel.MRPControlTask.setup_mrp_steering_rwa">[docs]</a>
+        <span class="nd">@default_args</span><span class="p">(</span>
+            <span class="n">K1</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">K3</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">omega_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">servo_Ki</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">servo_P</span><span class="o">=</span><span class="mi">150</span>
+        <span class="p">)</span>
+        <span class="k">def</span> <span class="nf">setup_mrp_steering_rwa</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">K1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">K3</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">omega_max</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">servo_Ki</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">servo_P</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Define the control properties.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                K1: MRP steering gain.</span>
+<span class="sd">                K3: MRP steering gain.</span>
+<span class="sd">                omega_max: [rad/s] Maximum targetable spacecraft body rate.</span>
+<span class="sd">                servo_Ki: Servo gain.</span>
+<span class="sd">                servo_P: Servo gain.</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpSteeringControl</span><span class="o">.</span><span class="n">guidInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpSteeringControl</span><span class="o">.</span><span class="n">K1</span> <span class="o">=</span> <span class="n">K1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpSteeringControl</span><span class="o">.</span><span class="n">K3</span> <span class="o">=</span> <span class="n">K3</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpSteeringControl</span><span class="o">.</span><span class="n">omega_max</span> <span class="o">=</span> <span class="n">omega_max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mrpSteeringControl</span><span class="o">.</span><span class="n">ignoreOuterLoopFeedforward</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">Ki</span> <span class="o">=</span> <span class="n">servo_Ki</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="n">servo_P</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">integralLimit</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">Ki</span> <span class="o">*</span> <span class="mf">0.1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">knownTorquePntB_B</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">guidInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">vehConfigInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">vcConfigMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">rwParamsInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">fswRwConfigMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">rwSpeedsInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="o">.</span><span class="n">rwSpeedOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">rateSteeringInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mrpSteeringControl</span><span class="o">.</span><span class="n">rateCmdOutMsg</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mrpSteeringControl</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1196</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1195</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SteeringFSWModel.MRPControlTask.setup_rw_motor_torque">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.SteeringFSWModel.MRPControlTask.setup_rw_motor_torque">[docs]</a>
+        <span class="k">def</span> <span class="nf">setup_rw_motor_torque</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">controlAxes_B</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Define the motor torque from the control law.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                controlAxes_B: Control unit axes.</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">rwParamsInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">fswRwConfigMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">vehControlInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">servo</span><span class="o">.</span><span class="n">cmdTorqueOutMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">controlAxes_B</span> <span class="o">=</span> <span class="n">controlAxes_B</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1194</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SteeringFSWModel.MRPControlTask.reset_for_action">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.SteeringFSWModel.MRPControlTask.reset_for_action">[docs]</a>
+        <span class="k">def</span> <span class="nf">reset_for_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Keep MRP control enabled on action calls.&quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+</div>
+</div>
+
+
+
+<div class="viewcode-block" id="SteeringImagerFSWModel">
+<a class="viewcode-back" href="../../../api_reference/sim/fsw.html#bsk_rl.sim.fsw.SteeringImagerFSWModel">[docs]</a>
+<span class="k">class</span> <span class="nc">SteeringImagerFSWModel</span><span class="p">(</span><span class="n">SteeringFSWModel</span><span class="p">,</span> <span class="n">ImagingFSWModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience type for ImagingFSWModel with MRP steering.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convenience type that combines the imaging FSW model with MRP steering.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">&quot;FSW Sims&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;action&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;BasicFSWModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ImagingFSWModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ContinuousImagingFSWModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SteeringFSWModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SteeringImagerFSWModel&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

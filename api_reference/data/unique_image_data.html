@@ -1,0 +1,311 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unique Images &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Communication" href="../comm/index.html" />
+    <link rel="prev" title="No Data" href="no_data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scene/index.html">Scenario</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Data &amp; Reward</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#reward-system-components">Reward System Components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#reward-system-types">Reward System Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.GlobalReward"><code class="docutils literal notranslate"><span class="pre">GlobalReward</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.NoReward"><code class="docutils literal notranslate"><span class="pre">NoReward</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.UniqueImageReward"><code class="docutils literal notranslate"><span class="pre">UniqueImageReward</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.ScanningTimeReward"><code class="docutils literal notranslate"><span class="pre">ScanningTimeReward</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="base.html">Base Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nadir_data.html">Nadir Scanning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="no_data.html">No Data</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Unique Images</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageReward"><code class="docutils literal notranslate"><span class="pre">UniqueImageReward</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageReward.datastore_type"><code class="docutils literal notranslate"><span class="pre">UniqueImageReward.datastore_type</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageReward.initial_data"><code class="docutils literal notranslate"><span class="pre">UniqueImageReward.initial_data()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageReward.create_data_store"><code class="docutils literal notranslate"><span class="pre">UniqueImageReward.create_data_store()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageReward.calculate_reward"><code class="docutils literal notranslate"><span class="pre">UniqueImageReward.calculate_reward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageStore"><code class="docutils literal notranslate"><span class="pre">UniqueImageStore</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageStore.data_type"><code class="docutils literal notranslate"><span class="pre">UniqueImageStore.data_type</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageStore.get_log_state"><code class="docutils literal notranslate"><span class="pre">UniqueImageStore.get_log_state()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageStore.compare_log_states"><code class="docutils literal notranslate"><span class="pre">UniqueImageStore.compare_log_states()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageData"><code class="docutils literal notranslate"><span class="pre">UniqueImageData</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../comm/index.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim/index.html">Simulation (BSK)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Data &amp; Reward</a></li>
+      <li class="breadcrumb-item active">Unique Images</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_reference/data/unique_image_data.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="unique-images">
+<span id="bsk-rl-data-unique-image-data"></span><h1>Unique Images<a class="headerlink" href="#unique-images" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.data.unique_image_data">Data system for recording unique images of targets.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.data.unique_image_data.UniqueImageReward">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UniqueImageReward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reward_fn:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">UniqueImageReward.&lt;lambda&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/data/unique_image_data.html#UniqueImageReward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.unique_image_data.UniqueImageReward" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#bsk_rl.data.base.GlobalReward" title="bsk_rl.data.base.GlobalReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">GlobalReward</span></code></a></p>
+<p>GlobalReward for rewarding unique images.</p>
+<p>This data system should be used with the <a class="reference internal" href="../sats/index.html#bsk_rl.sats.ImagingSatellite" title="bsk_rl.sats.ImagingSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingSatellite</span></code></a> and
+a scenario that generates targets, such as <a class="reference internal" href="../scene/index.html#bsk_rl.scene.UniformTargets" title="bsk_rl.scene.UniformTargets"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniformTargets</span></code></a> or
+<a class="reference internal" href="../scene/index.html#bsk_rl.scene.CityTargets" title="bsk_rl.scene.CityTargets"><code class="xref py py-class docutils literal notranslate"><span class="pre">CityTargets</span></code></a>.</p>
+<p>The satellites all start with complete knowledge of the targets in the scenario.
+Each target can only give one satellite a reward once; if any satellite has imaged
+a target, reward will never again be given for that target. The satellites filter
+known imaged targets from consideration for imaging to prevent duplicates.
+Communication can transmit information about what targets have been imaged in order
+to prevent reimaging.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scenario</strong> – GlobalReward.scenario</p></li>
+<li><p><strong>reward_fn</strong> (<em>Callable</em>) – Reward as function of priority.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.data.unique_image_data.UniqueImageReward.datastore_type">
+<span class="sig-name descname"><span class="pre">datastore_type</span></span><a class="headerlink" href="#bsk_rl.data.unique_image_data.UniqueImageReward.datastore_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageStore" title="bsk_rl.data.unique_image_data.UniqueImageStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueImageStore</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.unique_image_data.UniqueImageReward.initial_data">
+<span class="sig-name descname"><span class="pre">initial_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><span class="pre">Satellite</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageData" title="bsk_rl.data.unique_image_data.UniqueImageData"><span class="pre">UniqueImageData</span></a></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/unique_image_data.html#UniqueImageReward.initial_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.unique_image_data.UniqueImageReward.initial_data" title="Link to this definition"></a></dt>
+<dd><p>Furnish data to the scenario.</p>
+<p>Currently, it is assumed that all targets are known a priori, so the initial data
+given to the data store is the list of all targets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>satellite</strong> (<a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><em>Satellite</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageData" title="bsk_rl.data.unique_image_data.UniqueImageData">UniqueImageData</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.unique_image_data.UniqueImageReward.create_data_store">
+<span class="sig-name descname"><span class="pre">create_data_store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><span class="pre">Satellite</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/unique_image_data.html#UniqueImageReward.create_data_store"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.unique_image_data.UniqueImageReward.create_data_store" title="Link to this definition"></a></dt>
+<dd><p>Override the access filter in addition to creating the data store.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>satellite</strong> (<a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><em>Satellite</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.unique_image_data.UniqueImageReward.calculate_reward">
+<span class="sig-name descname"><span class="pre">calculate_reward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_data_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageData" title="bsk_rl.data.unique_image_data.UniqueImageData"><span class="pre">UniqueImageData</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/unique_image_data.html#UniqueImageReward.calculate_reward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.unique_image_data.UniqueImageReward.calculate_reward" title="Link to this definition"></a></dt>
+<dd><p>Reward each new unique image once.</p>
+<p>Reward is evaluated based on <code class="docutils literal notranslate"><span class="pre">self.reward_fn(target.priority)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_data_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageData" title="bsk_rl.data.unique_image_data.UniqueImageData"><em>UniqueImageData</em></a><em>]</em>) – Record of new images for each satellite</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Cumulative reward across satellites for one step</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>reward</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.data.unique_image_data.UniqueImageStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UniqueImageStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/data/unique_image_data.html#UniqueImageStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.unique_image_data.UniqueImageStore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#bsk_rl.data.base.DataStore" title="bsk_rl.data.base.DataStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataStore</span></code></a></p>
+<p>DataStore for unique images.</p>
+<p>Detects new images by watching for an increase in data in each target’s corresponding
+buffer.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.data.unique_image_data.UniqueImageStore.data_type">
+<span class="sig-name descname"><span class="pre">data_type</span></span><a class="headerlink" href="#bsk_rl.data.unique_image_data.UniqueImageStore.data_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageData" title="bsk_rl.data.unique_image_data.UniqueImageData"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueImageData</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.unique_image_data.UniqueImageStore.get_log_state">
+<span class="sig-name descname"><span class="pre">get_log_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/unique_image_data.html#UniqueImageStore.get_log_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.unique_image_data.UniqueImageStore.get_log_state" title="Link to this definition"></a></dt>
+<dd><p>Log the instantaneous storage unit state at the end of each step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>storedData from satellite storage unit</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.unique_image_data.UniqueImageStore.compare_log_states">
+<span class="sig-name descname"><span class="pre">compare_log_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#bsk_rl.data.unique_image_data.UniqueImageData" title="bsk_rl.data.unique_image_data.UniqueImageData"><span class="pre">UniqueImageData</span></a></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/unique_image_data.html#UniqueImageStore.compare_log_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.unique_image_data.UniqueImageStore.compare_log_states" title="Link to this definition"></a></dt>
+<dd><p>Check for an increase in logged data to identify new images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_state</strong> (<em>ndarray</em>) – Older storedData from satellite storage unit.</p></li>
+<li><p><strong>new_state</strong> (<em>ndarray</em>) – Newer storedData from satellite storage unit.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Targets imaged at new_state that were unimaged at old_state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.data.unique_image_data.UniqueImageData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UniqueImageData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imaged</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../scene/targets.html#bsk_rl.scene.targets.Target" title="bsk_rl.scene.targets.Target"><span class="pre">Target</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../scene/targets.html#bsk_rl.scene.targets.Target" title="bsk_rl.scene.targets.Target"><span class="pre">Target</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/data/unique_image_data.html#UniqueImageData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.unique_image_data.UniqueImageData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data</span></code></a></p>
+<p>Construct unit of data to record unique images.</p>
+<p>Keeps track of <code class="docutils literal notranslate"><span class="pre">imaged</span></code> targets, a count of <code class="docutils literal notranslate"><span class="pre">duplicates</span></code> (i.e. images that
+were not rewarded due to the target already having been imaged), and all
+<code class="docutils literal notranslate"><span class="pre">known</span></code> targets in the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imaged</strong> (<em>list</em><em>[</em><a class="reference internal" href="../scene/targets.html#bsk_rl.scene.targets.Target" title="bsk_rl.scene.targets.Target"><em>Target</em></a><em>] </em><em>| </em><em>None</em>) – List of targets that are known to be imaged.</p></li>
+<li><p><strong>duplicates</strong> (<em>int</em>) – Count of target imaging duplication.</p></li>
+<li><p><strong>known</strong> (<em>list</em><em>[</em><a class="reference internal" href="../scene/targets.html#bsk_rl.scene.targets.Target" title="bsk_rl.scene.targets.Target"><em>Target</em></a><em>] </em><em>| </em><em>None</em>) – List of targets that are known to exist (imaged and unimaged).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="no_data.html" class="btn btn-neutral float-left" title="No Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../comm/index.html" class="btn btn-neutral float-right" title="Communication" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

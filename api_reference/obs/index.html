@@ -1,0 +1,326 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Observations &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Backend" href="observations.html" />
+    <link rel="prev" title="Satellites" href="../sats/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sats/index.html">Satellites</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Observations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.obs.Observation"><code class="docutils literal notranslate"><span class="pre">Observation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.Observation.reset_post_sim_init"><code class="docutils literal notranslate"><span class="pre">Observation.reset_post_sim_init()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.Observation.get_obs"><code class="docutils literal notranslate"><span class="pre">Observation.get_obs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.obs.SatProperties"><code class="docutils literal notranslate"><span class="pre">SatProperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.obs.Time"><code class="docutils literal notranslate"><span class="pre">Time</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.obs.OpportunityProperties"><code class="docutils literal notranslate"><span class="pre">OpportunityProperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.obs.Eclipse"><code class="docutils literal notranslate"><span class="pre">Eclipse</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="observations.html">Backend</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scene/index.html">Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comm/index.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim/index.html">Simulation (BSK)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+      <li class="breadcrumb-item active">Observations</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_reference/obs/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-bsk_rl.obs">
+<span id="observations"></span><span id="bsk-rl-obs"></span><h1>Observations<a class="headerlink" href="#module-bsk_rl.obs" title="Link to this heading"></a></h1>
+<p>Observations are found at <code class="docutils literal notranslate"><span class="pre">bsk_rl.obs</span></code>.</p>
+<p>Satellite observation types can be used to add information to the observation.
+<a class="reference internal" href="#bsk_rl.obs.Observation" title="bsk_rl.obs.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observation</span></code></a> provides an interface for creating new observation types. To
+configure the observation, set the <code class="docutils literal notranslate"><span class="pre">observation_spec</span></code> attribute of a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Satellite</span></code> subclass. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyObservationSatellite</span><span class="p">(</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">SatProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;r_BN_P&quot;</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s2">&quot;dynamics&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;v_BN_P&quot;</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s2">&quot;dynamics&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7616.5</span><span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;priority&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;r_LP_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">(),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<p>The format of the observation can setting the <code class="docutils literal notranslate"><span class="pre">obs_type</span></code> attribute of the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Satellite</span></code>. The default is <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code>, but
+it can also be set to a human-readable <code class="docutils literal notranslate"><span class="pre">dict</span></code> or a <code class="docutils literal notranslate"><span class="pre">list</span></code>.</p>
+<p>Some commonly used observations are provided:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#bsk_rl.obs.SatProperties" title="bsk_rl.obs.SatProperties"><code class="xref py py-class docutils literal notranslate"><span class="pre">SatProperties</span></code></a> - Add arbitrary <code class="docutils literal notranslate"><span class="pre">dynamics</span></code> and <code class="docutils literal notranslate"><span class="pre">fsw</span></code> properties.</p></li>
+<li><p><a class="reference internal" href="#bsk_rl.obs.Time" title="bsk_rl.obs.Time"><code class="xref py py-class docutils literal notranslate"><span class="pre">Time</span></code></a> - Add simulation time to the observation.</p></li>
+<li><p><a class="reference internal" href="#bsk_rl.obs.OpportunityProperties" title="bsk_rl.obs.OpportunityProperties"><code class="xref py py-class docutils literal notranslate"><span class="pre">OpportunityProperties</span></code></a> - Add information about upcoming targets or other ground access points to the observation.</p></li>
+<li><p><a class="reference internal" href="#bsk_rl.obs.Eclipse" title="bsk_rl.obs.Eclipse"><code class="xref py py-class docutils literal notranslate"><span class="pre">Eclipse</span></code></a> - Add a tuple of the next orbit start and end.</p></li>
+</ul>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.obs.Observation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Observation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'obs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/observations.html#Observation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.Observation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Construct an observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the observation.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.obs.Observation.reset_post_sim_init">
+<span class="sig-name descname"><span class="pre">reset_post_sim_init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/obs/observations.html#Observation.reset_post_sim_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.Observation.reset_post_sim_init" title="Link to this definition"></a></dt>
+<dd><p>Perform any once-per-episode setup.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.obs.Observation.get_obs">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_obs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/obs/observations.html#Observation.get_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.Observation.get_obs" title="Link to this definition"></a></dt>
+<dd><p>Return the observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Any</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.obs.SatProperties">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SatProperties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">obs_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sat_props'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/observations.html#SatProperties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.SatProperties" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.obs.Observation" title="bsk_rl.obs.observations.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observation</span></code></a></p>
+<p>Include properties from <code class="docutils literal notranslate"><span class="pre">fsw</span></code> and <code class="docutils literal notranslate"><span class="pre">dynamics</span></code> in the observation.</p>
+<p>For each desired property, a dictionary specifying the property name and settings
+is passed. For example, to query the position and velocity of the satellite, the
+following would be used:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SatProperties</span><span class="p">(</span>
+    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;r_BN_P&quot;</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s2">&quot;dynamics&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;v_BN_P&quot;</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s2">&quot;dynamics&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7616.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;velocity&quot;</span><span class="p">),</span>
+<span class="p">),</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs_properties</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – <p>Property that can be found in fsw or dynamics that
+are to be appended to the the observation. Properties are optionally
+normalized by some factor. Each observation is a dictionary with the keys:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">prop</span></code>: Name of property in <code class="docutils literal notranslate"><span class="pre">fsw</span></code> and <code class="docutils literal notranslate"><span class="pre">dynamics</span></code> to query</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">module</span></code> <cite>optional</cite>: Module (dynamics or fsw) that holds the property. Can be inferred if <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm</span></code> <cite>optional</cite>: Value to normalize property by. Defaults to 1.0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> <cite>optional</cite>: Name of the observation element. Defaults to the value of <code class="docutils literal notranslate"><span class="pre">prop</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fn</span></code> <cite>optional</cite>: Alternatively, call a function that takes the satellite as an argument.</p></li>
+</ul>
+</p></li>
+<li><p><strong>name</strong> – Name of the observation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.obs.Time">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'time'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/observations.html#Time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.Time" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.obs.Observation" title="bsk_rl.obs.observations.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observation</span></code></a></p>
+<p>Include the simulation time in the observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>norm</strong> – Time to normalize by. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the time is normalized by the simulation time limit.</p></li>
+<li><p><strong>name</strong> – Name of the observation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.obs.OpportunityProperties">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OpportunityProperties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">target_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_ahead_observe</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'target'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/observations.html#OpportunityProperties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.OpportunityProperties" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.obs.Observation" title="bsk_rl.obs.observations.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observation</span></code></a></p>
+<p>Include information about upcoming access opportunities in the observation..</p>
+<p>For each desired property, a dictionary specifying the property name and settings
+is passed. These can include preset properties or arbitrary functions of the satellite
+and opportunity.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">OpportunityProperties</span><span class="p">(</span>
+    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;r_LP_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;double_priority&quot;</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">:</span> <span class="n">opp</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">priority</span> <span class="o">*</span> <span class="mf">2.0</span><span class="p">),</span>
+    <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_properties</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – <p>Property that is a function of the opportunity to be appended
+to the the observation. Properties are optionally normalized by some factor.
+Each observation is a dictionary with the keys:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> <cite>optional</cite>: Name of the observation element.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fn</span></code> <cite>optional</cite>: Function to calculate property, in the form <code class="docutils literal notranslate"><span class="pre">fn(satellite,</span> <span class="pre">opportunity)</span></code>.
+If not provided, the key <code class="docutils literal notranslate"><span class="pre">prop</span></code> will be used to look up a preset function:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">priority</span></code>: Priority of the target.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">r_LP_P</span></code>: Location of the target in the planet-fixed frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">r_LB_H</span></code>: Location of the target in the Hill frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">opportunity_open</span></code>: Time until the opportunity opens.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">opportunity_mid</span></code>: Time until the opportunity midpoint.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">opportunity_close</span></code>: Time until the opportunity closes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_angle</span></code>: Angle between the target and the satellite instrument direction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_angle_rate</span></code>: Rate difference between the target pointing frame and the body frame.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm</span></code> <cite>optional</cite>: Value to normalize property by. Defaults to 1.0.</p></li>
+</ul>
+</p></li>
+<li><p><strong>n_ahead_observe</strong> (<em>int</em>) – Number of upcoming targets to consider.</p></li>
+<li><p><strong>type</strong> – The type of opportunity to consider. Can be <code class="docutils literal notranslate"><span class="pre">target</span></code>, <code class="docutils literal notranslate"><span class="pre">ground_station</span></code>,
+or any other type of opportunity that has been added via
+<a class="reference internal" href="../sats/index.html#bsk_rl.sats.AccessSatellite.add_location_for_access_checking" title="bsk_rl.sats.AccessSatellite.add_location_for_access_checking"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_location_for_access_checking</span></code></a>.</p></li>
+<li><p><strong>name</strong> – Name of the observation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.obs.Eclipse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Eclipse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'eclipse'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/observations.html#Eclipse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.Eclipse" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.obs.Observation" title="bsk_rl.obs.observations.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observation</span></code></a></p>
+<p>Include a tuple of the next eclipse start and end times in the observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>norm</strong> – Value to normalize by.</p></li>
+<li><p><strong>name</strong> – Name of the observation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../sats/index.html" class="btn btn-neutral float-left" title="Satellites" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="observations.html" class="btn btn-neutral float-right" title="Backend" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

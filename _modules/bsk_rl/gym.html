@@ -1,0 +1,860 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.gym &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.gym</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.gym</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Gymnasium and PettingZoo environments for satellite tasking problems.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time_ns</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">gymnasium</span> <span class="kn">import</span> <span class="n">Env</span><span class="p">,</span> <span class="n">spaces</span>
+<span class="kn">from</span> <span class="nn">pettingzoo.utils.env</span> <span class="kn">import</span> <span class="n">AgentID</span><span class="p">,</span> <span class="n">ParallelEnv</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.comm</span> <span class="kn">import</span> <span class="n">CommunicationMethod</span><span class="p">,</span> <span class="n">NoCommunication</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.data</span> <span class="kn">import</span> <span class="n">GlobalReward</span><span class="p">,</span> <span class="n">NoReward</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.sats</span> <span class="kn">import</span> <span class="n">Satellite</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.scene</span> <span class="kn">import</span> <span class="n">Scenario</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.sim</span> <span class="kn">import</span> <span class="n">Simulator</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.sim.world</span> <span class="kn">import</span> <span class="n">WorldModel</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils</span> <span class="kn">import</span> <span class="n">logging_config</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">SatObs</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;SatObs&quot;</span><span class="p">)</span>
+<span class="n">SatAct</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;SatAct&quot;</span><span class="p">)</span>
+<span class="n">MultiSatObs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SatObs</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="n">MultiSatAct</span> <span class="o">=</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SatAct</span><span class="p">]</span>
+<span class="n">SatArgRandomizer</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="n">Satellite</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Satellite</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span>
+
+<span class="n">NO_ACTION</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">31</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+
+<div class="viewcode-block" id="GeneralSatelliteTasking">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.GeneralSatelliteTasking">[docs]</a>
+<span class="k">class</span> <span class="nc">GeneralSatelliteTasking</span><span class="p">(</span><span class="n">Env</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">SatObs</span><span class="p">,</span> <span class="n">SatAct</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">satellites</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Satellite</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Satellite</span><span class="p">]],</span>
+        <span class="n">scenario</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Scenario</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">rewarder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GlobalReward</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">world_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">WorldModel</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">world_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">communicator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CommunicationMethod</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sat_arg_randomizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SatArgRandomizer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sim_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">max_step_duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e9</span><span class="p">,</span>
+        <span class="n">failure_penalty</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">time_limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span>
+        <span class="n">terminate_on_time_limit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">generate_obs_retasking_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">log_level</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+        <span class="n">log_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">render_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A `Gymnasium &lt;https://gymnasium.farama.org&gt;`_ environment adaptable to a wide range satellite tasking problems.</span>
+
+<span class="sd">        These problems involve satellite(s) being tasked to complete tasks and maintain</span>
+<span class="sd">        aliveness. These tasks often include rewards for data collection. The environment</span>
+<span class="sd">        can be configured for any collection of satellites, including heterogenous</span>
+<span class="sd">        constellations. Other configurable aspects are the scenario (e.g.</span>
+<span class="sd">        imaging targets), data collection and recording, and intersatellite</span>
+<span class="sd">        communication of data.</span>
+
+<span class="sd">        The state space is a tuple containing the state of each satellite. Actions are</span>
+<span class="sd">        assigned as a tuple of actions, one per satellite.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellites: Satellite(s) to be simulated. See :ref:`bsk_rl.sats`.</span>
+<span class="sd">            scenario: Environment the satellite is acting in; contains information</span>
+<span class="sd">                about targets, etc. See :ref:`bsk_rl.scene`.</span>
+<span class="sd">            rewarder: Handles recording and rewarding for data collection towards</span>
+<span class="sd">                objectives. See :ref:`bsk_rl.data`.</span>
+<span class="sd">            communicator: Manages communication between satellites. See :ref:`bsk_rl.comm`.</span>
+<span class="sd">            sat_arg_randomizer: For correlated randomization of satellites arguments. Should</span>
+<span class="sd">                be a function that takes a list of satellites and returns a dictionary that</span>
+<span class="sd">                maps satellites to dictionaries of satellite model arguments to be overridden.</span>
+<span class="sd">            world_type: Type of Basilisk world model to be constructed.</span>
+<span class="sd">            world_args: Arguments for :class:`~bsk_rl.sim.world.WorldModel` construction.</span>
+<span class="sd">                Should be in the form of a dictionary with keys corresponding to the</span>
+<span class="sd">                arguments of the constructor and values that are either the desired value</span>
+<span class="sd">                or a function that takes no arguments and returns a randomized value.</span>
+<span class="sd">            sim_rate: [s] Rate for model simulation.</span>
+<span class="sd">            max_step_duration: [s] Maximum time to propagate sim at a step. If</span>
+<span class="sd">                satellites are using variable interval actions, the actual step duration</span>
+<span class="sd">                will be less than or equal to this value.</span>
+<span class="sd">            failure_penalty: Reward for satellite failure. Should be nonpositive.</span>
+<span class="sd">            time_limit: [s] Time at which to truncate the simulation.</span>
+<span class="sd">            terminate_on_time_limit: Send terminations signal time_limit instead of just</span>
+<span class="sd">                truncation.</span>
+<span class="sd">            generate_obs_retasking_only: If True, only generate observations for satellites</span>
+<span class="sd">                that require retasking. All other satellites will receive an observation of</span>
+<span class="sd">                zeros.</span>
+<span class="sd">            log_level: Logging level for the environment. Default is ``WARNING``.</span>
+<span class="sd">            log_dir: Directory to write logs to in addition to the console.</span>
+<span class="sd">            render_mode: Unused.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_configure_logging</span><span class="p">(</span><span class="n">log_level</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">satellites</span><span class="p">,</span> <span class="n">Satellite</span><span class="p">):</span>
+            <span class="n">satellites</span> <span class="o">=</span> <span class="p">[</span><span class="n">satellites</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">satellites</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">[</span><span class="n">sat</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sat_rename</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">sat</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span> <span class="k">if</span> <span class="n">sat</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+                    <span class="p">):</span>
+                        <span class="n">new_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sat_rename</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Renaming satellite </span><span class="si">{</span><span class="n">sat_rename</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">new_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+                        <span class="n">sat_rename</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">new_name</span>
+
+            <span class="c1"># Check if all satellite names are unique</span>
+            <span class="n">sat_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">sat</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sat_names</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">sat_names</span><span class="p">)):</span>
+                <span class="k">break</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="p">:</span> <span class="n">Simulator</span>
+
+        <span class="k">if</span> <span class="n">sat_arg_randomizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sat_arg_randomizer</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">sats</span><span class="p">:</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sat_arg_randomizer</span> <span class="o">=</span> <span class="n">sat_arg_randomizer</span>
+
+        <span class="k">if</span> <span class="n">scenario</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">scenario</span> <span class="o">=</span> <span class="n">Scenario</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">rewarder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rewarder</span> <span class="o">=</span> <span class="n">NoReward</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">world_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">world_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_world_model</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">world_type</span> <span class="o">=</span> <span class="n">world_type</span>
+        <span class="k">if</span> <span class="n">world_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">world_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_type</span><span class="o">.</span><span class="n">default_world_args</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">world_args_generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_type</span><span class="o">.</span><span class="n">default_world_args</span><span class="p">(</span><span class="o">**</span><span class="n">world_args</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">scenario</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">link_satellites</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rewarder</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">rewarder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">link_scenario</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">communicator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">communicator</span> <span class="o">=</span> <span class="n">NoCommunication</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">communicator</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">communicator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">communicator</span><span class="o">.</span><span class="n">link_satellites</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_rate</span> <span class="o">=</span> <span class="n">sim_rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_step_duration</span> <span class="o">=</span> <span class="n">max_step_duration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">failure_penalty</span> <span class="o">=</span> <span class="n">failure_penalty</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure_penalty</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Failure penalty should be nonpositive&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">=</span> <span class="n">time_limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terminate_on_time_limit</span> <span class="o">=</span> <span class="n">terminate_on_time_limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latest_step_duration</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">render_mode</span> <span class="o">=</span> <span class="n">render_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_obs_retasking_only</span> <span class="o">=</span> <span class="n">generate_obs_retasking_only</span>
+
+    <span class="k">def</span> <span class="nf">_minimum_world_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">WorldModel</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine the minimum world model required by the satellites.&quot;&quot;&quot;</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+            <span class="nb">sum</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">satellite</span><span class="o">.</span><span class="n">dyn_type</span><span class="o">.</span><span class="n">_requires_world</span><span class="p">()</span> <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">],</span>
+                <span class="p">[],</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">types</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">types</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">test_type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="nb">issubclass</span><span class="p">(</span><span class="n">test_type</span><span class="p">,</span> <span class="n">other_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">other_type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="n">test_type</span>
+
+        <span class="c1"># Else compose all types into a new class</span>
+        <span class="k">class</span> <span class="nc">MinimumEnv</span><span class="p">(</span><span class="o">*</span><span class="n">types</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">MinimumEnv</span>
+
+    <span class="k">def</span> <span class="nf">_configure_logging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">log_level</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">log_level</span> <span class="o">=</span> <span class="n">log_level</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;bsk_rl&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span>
+
+        <span class="c1"># Ensure each process has its own logger to avoid conflicts when printing</span>
+        <span class="c1"># sim timestamps. Running multiple environments in the same process in</span>
+        <span class="c1"># parallel will cause logging times to be incorrectly reported.</span>
+        <span class="n">warn_new_env</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">handler</span> <span class="ow">in</span> <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">handler</span><span class="o">.</span><span class="n">filters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">proc_id</span> <span class="o">==</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+                <span class="n">warn_new_env</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">ch</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
+        <span class="n">ch</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">logging_config</span><span class="o">.</span><span class="n">SimFormatter</span><span class="p">(</span><span class="n">color_output</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="n">ch</span><span class="o">.</span><span class="n">addFilter</span><span class="p">(</span><span class="n">logging_config</span><span class="o">.</span><span class="n">ContextFilter</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">proc_id</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">warn_new_env</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Creating logger for new env on PID=</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="s2">&quot;Old environments in process may now log times incorrectly.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">log_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">logging_config</span><span class="o">.</span><span class="n">SimFormatter</span><span class="p">(</span><span class="n">color_output</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">addFilter</span><span class="p">(</span><span class="n">logging_config</span><span class="o">.</span><span class="n">ContextFilter</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">proc_id</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_generate_world_args</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate world_args from any randomizers in provided world_args.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">world_args</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_args_generator</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="GeneralSatelliteTasking.reset">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.GeneralSatelliteTasking.reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MultiSatObs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reconstruct the simulator and reset the scenario.</span>
+
+<span class="sd">        Satellite and world arguments get randomized on reset, if :class:`~bsk_rl.GeneralSatelliteTasking` ``.world_args``</span>
+<span class="sd">        or :class:`~bsk_rl.sats.Satellite` ``.sat_args`` includes randomization functions.</span>
+
+<span class="sd">        Certain classes in ``bsk_rl`` have a ``reset_pre_sim_init`` and/or ``reset_post_sim_init``</span>
+<span class="sd">        method. These methods are respectively called before and after the new Basilisk</span>
+<span class="sd">        :class:`~bsk_rl.sim.Simulator` is created. These allow for reset actions that</span>
+<span class="sd">        feed into the underlying simulation and those that are dependent on the underlying</span>
+<span class="sd">        simulation to be performed.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            seed: Gymnasium environment seed.</span>
+<span class="sd">            options: Unused.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            observation, info</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Explicitly delete the Basilisk simulation before creating a new one.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_simulator</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">seed</span> <span class="o">=</span> <span class="n">time_ns</span><span class="p">()</span> <span class="o">%</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resetting environment with seed=</span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">reset_overwrite_previous</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">reset_overwrite_previous</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">communicator</span><span class="o">.</span><span class="n">reset_overwrite_previous</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">reset_overwrite_previous</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latest_step_duration</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_generate_world_args</span><span class="p">()</span>
+        <span class="n">overrides</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sat_arg_randomizer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="n">sat_overrides</span> <span class="o">=</span> <span class="n">overrides</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">satellite</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">generate_sat_args</span><span class="p">(</span>
+                <span class="n">utc_init</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">world_args</span><span class="p">[</span><span class="s2">&quot;utc_init&quot;</span><span class="p">],</span> <span class="o">**</span><span class="n">sat_overrides</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">utc_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_args</span><span class="p">[</span><span class="s2">&quot;utc_init&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">reset_pre_sim_init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">reset_pre_sim_init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">communicator</span><span class="o">.</span><span class="n">reset_pre_sim_init</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">create_data_store</span><span class="p">(</span><span class="n">satellite</span><span class="p">)</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">reset_pre_sim_init</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">Simulator</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world_type</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world_args</span><span class="p">,</span>
+            <span class="n">sim_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sim_rate</span><span class="p">,</span>
+            <span class="n">max_step_duration</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_step_duration</span><span class="p">,</span>
+            <span class="n">time_limit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_limit</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">communicator</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">update_from_logs</span><span class="p">()</span>
+
+        <span class="n">observation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_obs</span><span class="p">()</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_info</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Environment reset&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">observation</span><span class="p">,</span> <span class="n">info</span></div>
+
+
+<div class="viewcode-block" id="GeneralSatelliteTasking.delete_simulator">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.GeneralSatelliteTasking.delete_simulator">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete Basilisk objects.</span>
+
+<span class="sd">        Only the simulator contains strong references to BSK models, so deleting it</span>
+<span class="sd">        will delete all Basilisk objects. Enable debug-level logging to verify that the</span>
+<span class="sd">        simulator, FSW, dynamics, and world models are all deleted on reset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultiSatObs</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compose satellite observations into a single observation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: Joint observation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_obs_retasking_only</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">satellite</span><span class="o">.</span><span class="n">get_obs</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">satellite</span><span class="o">.</span><span class="n">requires_retasking</span>
+                    <span class="k">else</span> <span class="n">satellite</span><span class="o">.</span><span class="n">observation_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span> <span class="o">*</span> <span class="mi">0</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">satellite</span><span class="o">.</span><span class="n">get_obs</span><span class="p">()</span> <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compose satellite info into a single info dict.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: Joint info</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;requires_retasking&quot;</span><span class="p">:</span> <span class="n">satellite</span><span class="o">.</span><span class="n">requires_retasking</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span>
+        <span class="p">}</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;d_ts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">latest_step_duration</span>
+        <span class="k">return</span> <span class="n">info</span>
+
+    <span class="k">def</span> <span class="nf">_get_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a scalar reward for the step.&quot;&quot;&quot;</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reward_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">satellite</span><span class="o">.</span><span class="n">is_alive</span><span class="p">(</span><span class="n">log_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">reward</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure_penalty</span>
+        <span class="k">return</span> <span class="n">reward</span>
+
+    <span class="k">def</span> <span class="nf">_get_terminated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the terminated flag for the step.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">terminate_on_time_limit</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_truncated</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">satellite</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()</span> <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_truncated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the truncated flag for the step.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_limit</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Space</span><span class="p">[</span><span class="n">MultiSatAct</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compose satellite action spaces into a tuple.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Joint action space</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Tuple</span><span class="p">((</span><span class="n">satellite</span><span class="o">.</span><span class="n">action_space</span> <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Space</span><span class="p">[</span><span class="n">MultiSatObs</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compose satellite observation spaces into a tuple.</span>
+
+<span class="sd">        Note: calls ``reset()``, which can be expensive, to determine observation size.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Joint observation space</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calling env.reset() to get observation space&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Tuple</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_space</span> <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">MultiSatAct</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stepping environment with actions: </span><span class="si">{</span><span class="n">actions</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;There must be the same number of actions and satellites&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">satellite</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># reset satellite info log</span>
+            <span class="k">if</span> <span class="n">action</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">action</span> <span class="o">!=</span> <span class="n">NO_ACTION</span><span class="p">:</span>
+                <span class="n">satellite</span><span class="o">.</span><span class="n">requires_retasking</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">satellite</span><span class="o">.</span><span class="n">set_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">satellite</span><span class="o">.</span><span class="n">is_alive</span><span class="p">():</span>
+                <span class="n">satellite</span><span class="o">.</span><span class="n">requires_retasking</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">satellite</span><span class="o">.</span><span class="n">requires_retasking</span><span class="p">:</span>
+                    <span class="n">satellite</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Requires retasking but received no task.&quot;</span>
+                    <span class="p">)</span>
+
+        <span class="n">previous_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>  <span class="c1"># should these be recorded in simulator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latest_step_duration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">-</span> <span class="n">previous_time</span>
+
+        <span class="n">new_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">satellite</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">update_from_logs</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">reward</span><span class="p">(</span><span class="n">new_data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">communicator</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">satellite</span><span class="o">.</span><span class="n">requires_retasking</span><span class="p">:</span>
+                <span class="n">satellite</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Satellite </span><span class="si">{</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> requires retasking&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GeneralSatelliteTasking.step">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.GeneralSatelliteTasking.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">MultiSatAct</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MultiSatObs</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Propagate the simulation, update information, and get rewards.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            actions: Joint action for satellites</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            observation, reward, terminated, truncated, info</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;=== STARTING STEP ===&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+        <span class="n">observation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_obs</span><span class="p">()</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_reward</span><span class="p">()</span>
+        <span class="n">terminated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_terminated</span><span class="p">()</span>
+        <span class="n">truncated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_truncated</span><span class="p">()</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_info</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step reward: </span><span class="si">{</span><span class="n">reward</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Episode terminated: </span><span class="si">{</span><span class="n">terminated</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Episode truncated: </span><span class="si">{</span><span class="n">truncated</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Episode terminated: </span><span class="si">{</span><span class="n">terminated</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Episode truncated: </span><span class="si">{</span><span class="n">truncated</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step info: </span><span class="si">{</span><span class="n">info</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step observation: </span><span class="si">{</span><span class="n">observation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span></div>
+
+
+<div class="viewcode-block" id="GeneralSatelliteTasking.render">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.GeneralSatelliteTasking.render">[docs]</a>
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;No rendering implemented.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="GeneralSatelliteTasking.close">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.GeneralSatelliteTasking.close">[docs]</a>
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Try to cleanly delete everything.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SatelliteTasking">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.SatelliteTasking">[docs]</a>
+<span class="k">class</span> <span class="nc">SatelliteTasking</span><span class="p">(</span><span class="n">GeneralSatelliteTasking</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">SatObs</span><span class="p">,</span> <span class="n">SatAct</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="n">Satellite</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A special case of :class:`GeneralSatelliteTasking` for one satellite.</span>
+
+<span class="sd">        For compatibility with standard training APIs, actions and observations are</span>
+<span class="sd">        directly exposed for the single satellite as opposed to being wrapped in a</span>
+<span class="sd">        tuple.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellite: Satellite to be simulated.</span>
+<span class="sd">            *args: Passed to :class:`GeneralSatelliteTasking`.</span>
+<span class="sd">            **kwargs: Passed to :class:`GeneralSatelliteTasking`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">satellites</span><span class="o">=</span><span class="n">satellite</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;SatelliteTasking must be initialized with a single satellite.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Space</span><span class="p">[</span><span class="n">SatAct</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the single satellite action space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">action_space</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the single satellite observation space.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">observation_space</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_space</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">satellite</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Satellite</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Satellite being tasked.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="SatelliteTasking.step">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.SatelliteTasking.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task the satellite with a single action.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">step</span><span class="p">([</span><span class="n">action</span><span class="p">])</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">get_obs</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_info</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">info</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">del</span> <span class="n">info</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">info</span></div>
+
+
+
+<div class="viewcode-block" id="ConstellationTasking">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.ConstellationTasking">[docs]</a>
+<span class="k">class</span> <span class="nc">ConstellationTasking</span><span class="p">(</span>
+    <span class="n">GeneralSatelliteTasking</span><span class="p">,</span> <span class="n">ParallelEnv</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">SatObs</span><span class="p">,</span> <span class="n">SatAct</span><span class="p">,</span> <span class="n">AgentID</span><span class="p">]</span>
+<span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implements the `PettingZoo &lt;https://pettingzoo.farama.org&gt;`_ parallel API for the :class:`GeneralSatelliteTasking` environment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *args: Passed to :class:`GeneralSatelliteTasking`.</span>
+<span class="sd">            **kwargs: Passed to :class:`GeneralSatelliteTasking`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConstellationTasking.reset">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.ConstellationTasking.reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MultiSatObs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset the environment and return PettingZoo Parallel API format.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newly_dead</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agents_last_compute_time</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">agents</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">AgentID</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Agents currently in the environment.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agents_last_compute_time</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agents_last_compute_time</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+        <span class="p">):</span>
+            <span class="n">truncated</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_truncated</span><span class="p">()</span>
+            <span class="n">agents</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+                <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">satellite</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">truncated</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agents_last_compute_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agents_cache</span> <span class="o">=</span> <span class="n">agents</span>
+            <span class="k">return</span> <span class="n">agents</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agents_cache</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_agents</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of agents currently in the environment.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">possible_agents</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">AgentID</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the list of all possible agents.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_num_agents</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Maximum number of agents possible in the environment.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">previously_dead</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">AgentID</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the list of agents that died at least one step ago.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">newly_dead</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">observation_spaces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the observation space for each agent.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">agent</span><span class="p">:</span> <span class="n">obs_space</span>
+            <span class="k">for</span> <span class="n">agent</span><span class="p">,</span> <span class="n">obs_space</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">,</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">observation_space</span><span class="p">)</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="ConstellationTasking.observation_space">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.ConstellationTasking.observation_space">[docs]</a>
+    <span class="nd">@functools</span><span class="o">.</span><span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">AgentID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Space</span><span class="p">[</span><span class="n">SatObs</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the observation space for a certain agent.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_spaces</span><span class="p">[</span><span class="n">agent</span><span class="p">]</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">action_spaces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Space</span><span class="p">[</span><span class="n">SatAct</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the action space for each agent.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">agent</span><span class="p">:</span> <span class="n">act_space</span>
+            <span class="k">for</span> <span class="n">agent</span><span class="p">,</span> <span class="n">act_space</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">,</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">action_space</span><span class="p">)</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="ConstellationTasking.action_space">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.ConstellationTasking.action_space">[docs]</a>
+    <span class="nd">@functools</span><span class="o">.</span><span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">AgentID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Space</span><span class="p">[</span><span class="n">SatAct</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the action space for a certain agent.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_spaces</span><span class="p">[</span><span class="n">agent</span><span class="p">]</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="n">SatObs</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format the observation per the PettingZoo Parallel API.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_obs_retasking_only</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="n">agent</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">satellite</span><span class="o">.</span><span class="n">get_obs</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">satellite</span><span class="o">.</span><span class="n">requires_retasking</span>
+                    <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span> <span class="o">*</span> <span class="mi">0</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">agent</span><span class="p">,</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">agent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previously_dead</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="n">agent</span><span class="p">:</span> <span class="n">satellite</span><span class="o">.</span><span class="n">get_obs</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">agent</span><span class="p">,</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">agent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previously_dead</span>
+            <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_get_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format the reward per the PettingZoo Parallel API.&quot;&quot;&quot;</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reward_dict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">agent</span><span class="p">,</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">satellite</span><span class="o">.</span><span class="n">is_alive</span><span class="p">():</span>
+                <span class="n">reward</span><span class="p">[</span><span class="n">agent</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure_penalty</span>
+
+        <span class="n">reward_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reward</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">reward_keys</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previously_dead</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">reward</span><span class="p">[</span><span class="n">agent</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">reward</span>
+
+    <span class="k">def</span> <span class="nf">_get_terminated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format terminations per the PettingZoo Parallel API.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">terminate_on_time_limit</span> <span class="ow">and</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_truncated</span><span class="p">():</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="n">agent</span><span class="p">:</span> <span class="kc">True</span>
+                <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span>
+                <span class="k">if</span> <span class="n">agent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previously_dead</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="n">agent</span><span class="p">:</span> <span class="ow">not</span> <span class="n">satellite</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">agent</span><span class="p">,</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">agent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previously_dead</span>
+            <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_get_truncated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format truncations per the PettingZoo Parallel API.&quot;&quot;&quot;</span>
+        <span class="n">truncated</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_truncated</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">agent</span><span class="p">:</span> <span class="n">truncated</span>
+            <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span>
+            <span class="k">if</span> <span class="n">agent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previously_dead</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_get_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format info per the PettingZoo Parallel API.&quot;&quot;&quot;</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_info</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previously_dead</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">info</span><span class="p">[</span><span class="n">agent</span><span class="p">]</span>
+
+        <span class="n">common</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">common</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">del</span> <span class="n">info</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">common</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">info</span><span class="p">[</span><span class="n">agent</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;__common__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">common</span>
+
+        <span class="k">return</span> <span class="n">info</span>
+
+<div class="viewcode-block" id="ConstellationTasking.step">
+<a class="viewcode-back" href="../../api_reference/index.html#bsk_rl.ConstellationTasking.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">actions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="n">SatAct</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="n">SatObs</span><span class="p">],</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">AgentID</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span>
+    <span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Step the environment and return PettingZoo Parallel API format.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;=== STARTING STEP ===&quot;</span><span class="p">)</span>
+
+        <span class="n">previous_alive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span>
+
+        <span class="n">action_vector</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">actions</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">action_vector</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">actions</span><span class="p">[</span><span class="n">agent</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">action_vector</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step</span><span class="p">(</span><span class="n">action_vector</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">newly_dead</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">previous_alive</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">))</span>
+
+        <span class="n">observation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_obs</span><span class="p">()</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_reward</span><span class="p">()</span>
+        <span class="n">terminated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_terminated</span><span class="p">()</span>
+        <span class="n">truncated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_truncated</span><span class="p">()</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_info</span><span class="p">()</span>
+        <span class="n">nonzero_reward</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">reward</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">}</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step reward: </span><span class="si">{</span><span class="n">nonzero_reward</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">terminated</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="n">terminated_true</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">terminated</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Episode terminated: </span><span class="si">{</span><span class="n">terminated_true</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">truncated</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="n">truncated_true</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">truncated</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Episode truncated: </span><span class="si">{</span><span class="n">truncated_true</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step info: </span><span class="si">{</span><span class="n">info</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step observation: </span><span class="si">{</span><span class="n">observation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span></div>
+</div>
+
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

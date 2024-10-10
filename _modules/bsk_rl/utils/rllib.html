@@ -1,0 +1,269 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.utils.rllib &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.utils.rllib</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.utils.rllib</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;A collection of utilities at ``bsk_rl.utils.rllib``.</span>
+
+<span class="sd">* :ref:`bsk_rl.utils.rllib.discounting` - For semi-MDP discounting with GAE.</span>
+<span class="sd">* :ref:`bsk_rl.utils.rllib.callbacks` - For logging data at the end of each episode.</span>
+
+<span class="sd">Two environments are added to the ``ray.tune.registry`` with this import. They are</span>
+<span class="sd">``&quot;SatelliteTasking-RLlib&quot;`` and ``&quot;ConstellationTasking-RLlib&quot;``. These environments</span>
+<span class="sd">are wrapped with the :func:`unpack_config` function to make them compatible with RLlib&#39;s</span>
+<span class="sd">API, and they are wrapped with the :class:`EpisodeDataWrapper` to allow for data logging</span>
+<span class="sd">at the end of each episode during training. These environments can be selected by name</span>
+<span class="sd">when setting ``config.environment(env=&quot;SatelliteTasking-RLlib&quot;)``. Callback functions</span>
+<span class="sd">that are arguments to :class:`EpisodeDataWrapper` can be set in the ``env_config`` dictionary.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">ray.rllib.algorithms.ppo.ppo_catalog</span> <span class="kn">import</span> <span class="n">PPOCatalog</span>
+<span class="kn">from</span> <span class="nn">ray.rllib.core.models.base</span> <span class="kn">import</span> <span class="n">ACTOR</span><span class="p">,</span> <span class="n">ENCODER_OUT</span>
+<span class="kn">from</span> <span class="nn">ray.rllib.env.wrappers.pettingzoo_env</span> <span class="kn">import</span> <span class="n">ParallelPettingZooEnv</span>
+<span class="kn">from</span> <span class="nn">ray.tune.registry</span> <span class="kn">import</span> <span class="n">register_env</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">softmax</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl</span> <span class="kn">import</span> <span class="n">ConstellationTasking</span><span class="p">,</span> <span class="n">GeneralSatelliteTasking</span><span class="p">,</span> <span class="n">SatelliteTasking</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.rllib.callbacks</span> <span class="kn">import</span> <span class="n">EpisodeDataParallelWrapper</span><span class="p">,</span> <span class="n">EpisodeDataWrapper</span>
+
+
+<div class="viewcode-block" id="load_torch_mlp_policy">
+<a class="viewcode-back" href="../../../api_reference/utils/rllib/index.html#bsk_rl.utils.rllib.load_torch_mlp_policy">[docs]</a>
+<span class="k">def</span> <span class="nf">load_torch_mlp_policy</span><span class="p">(</span><span class="n">policy_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">GeneralSatelliteTasking</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a PyTorch policy from a saved model.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        policy_path: The path to the saved model.</span>
+<span class="sd">        env: The environment to load the policy for.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">policy_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">policy_path</span><span class="p">)</span>
+    <span class="n">state_dict</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">policy_path</span> <span class="o">/</span> <span class="s2">&quot;module_state_dir&quot;</span> <span class="o">/</span> <span class="s2">&quot;module_state.pt&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">policy_path</span> <span class="o">/</span> <span class="s2">&quot;rl_module_metadata.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">module_config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)[</span><span class="s2">&quot;module_spec_dict&quot;</span><span class="p">][</span><span class="s2">&quot;module_config&quot;</span><span class="p">]</span>
+        <span class="n">model_config_dict</span> <span class="o">=</span> <span class="n">module_config</span><span class="p">[</span><span class="s2">&quot;model_config_dict&quot;</span><span class="p">]</span>
+
+    <span class="n">cat</span> <span class="o">=</span> <span class="n">PPOCatalog</span><span class="p">(</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span>  <span class="c1"># TODO do this by agent ID</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">action_space</span><span class="p">,</span>
+        <span class="n">model_config_dict</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">encoder</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">build_actor_critic_encoder</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">)</span>
+    <span class="n">pi_head</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">build_pi_head</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">)</span>
+
+    <span class="n">encoder_state_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]):</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;encoder&quot;</span>
+    <span class="p">}</span>
+    <span class="n">encoder</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">encoder_state_dict</span><span class="p">)</span>
+    <span class="n">pi_state_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]):</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;pi&quot;</span>
+    <span class="p">}</span>
+    <span class="n">pi_head</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">pi_state_dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">policy</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">action_logits</span> <span class="o">=</span> <span class="n">pi_head</span><span class="p">(</span>
+            <span class="n">encoder</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">obs</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])))[</span><span class="n">ENCODER_OUT</span><span class="p">][</span><span class="n">ACTOR</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">deterministic</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">action_logits</span><span class="o">.</span><span class="n">argmax</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">action_logits</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
+                <span class="n">p</span><span class="o">=</span><span class="n">softmax</span><span class="p">(</span><span class="n">action_logits</span><span class="o">.</span><span class="n">detach</span><span class="p">())[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">policy</span></div>
+
+
+
+<div class="viewcode-block" id="unpack_config">
+<a class="viewcode-back" href="../../../api_reference/utils/rllib/index.html#bsk_rl.utils.rllib.unpack_config">[docs]</a>
+<span class="k">def</span> <span class="nf">unpack_config</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a wrapped version of an env class that unpacks env_config from Ray into kwargs.</span>
+
+<span class="sd">    Necessary when setting</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        config.environment(</span>
+<span class="sd">            env=unpack_config(SatelliteTasking),</span>
+<span class="sd">            env_config=env_args</span>
+<span class="sd">        )</span>
+
+<span class="sd">    which generates environments that look like</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        SatelliteTasking(**env_args)</span>
+
+<span class="sd">    since RLlib expects the environment to take a dictionary called ``kwargs`` instead</span>
+<span class="sd">    of the actual arguments.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">class</span> <span class="nc">UnpackedEnv</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_config</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">env_config</span><span class="p">)</span>
+
+    <span class="n">UnpackedEnv</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">env</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">_Unpacked&quot;</span>
+
+    <span class="k">return</span> <span class="n">UnpackedEnv</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_satellite_tasking_env_creator</span><span class="p">(</span><span class="n">env_config</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s2">&quot;episode_data_callback&quot;</span> <span class="ow">in</span> <span class="n">env_config</span><span class="p">:</span>
+        <span class="n">episode_data_callback</span> <span class="o">=</span> <span class="n">env_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;episode_data_callback&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">episode_data_callback</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">&quot;satellite_data_callback&quot;</span> <span class="ow">in</span> <span class="n">env_config</span><span class="p">:</span>
+        <span class="n">satellite_data_callback</span> <span class="o">=</span> <span class="n">env_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;satellite_data_callback&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">satellite_data_callback</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">EpisodeDataWrapper</span><span class="p">(</span>
+        <span class="n">SatelliteTasking</span><span class="p">(</span><span class="o">**</span><span class="n">env_config</span><span class="p">),</span>
+        <span class="n">episode_data_callback</span><span class="o">=</span><span class="n">episode_data_callback</span><span class="p">,</span>
+        <span class="n">satellite_data_callback</span><span class="o">=</span><span class="n">satellite_data_callback</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="n">register_env</span><span class="p">(</span><span class="s2">&quot;SatelliteTasking-RLlib&quot;</span><span class="p">,</span> <span class="n">_satellite_tasking_env_creator</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_constellation_tasking_env_creator</span><span class="p">(</span><span class="n">env_config</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s2">&quot;episode_data_callback&quot;</span> <span class="ow">in</span> <span class="n">env_config</span><span class="p">:</span>
+        <span class="n">episode_data_callback</span> <span class="o">=</span> <span class="n">env_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;episode_data_callback&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">episode_data_callback</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">&quot;satellite_data_callback&quot;</span> <span class="ow">in</span> <span class="n">env_config</span><span class="p">:</span>
+        <span class="n">satellite_data_callback</span> <span class="o">=</span> <span class="n">env_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;satellite_data_callback&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">satellite_data_callback</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">ParallelPettingZooEnv</span><span class="p">(</span>
+        <span class="n">EpisodeDataParallelWrapper</span><span class="p">(</span>
+            <span class="n">ConstellationTasking</span><span class="p">(</span><span class="o">**</span><span class="n">env_config</span><span class="p">),</span>
+            <span class="n">episode_data_callback</span><span class="o">=</span><span class="n">episode_data_callback</span><span class="p">,</span>
+            <span class="n">satellite_data_callback</span><span class="o">=</span><span class="n">satellite_data_callback</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="n">register_env</span><span class="p">(</span><span class="s2">&quot;ConstellationTasking-RLlib&quot;</span><span class="p">,</span> <span class="n">_constellation_tasking_env_creator</span><span class="p">)</span>
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">&quot;RLlib Utilities&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;unpack_config&quot;</span><span class="p">,</span> <span class="s2">&quot;load_torch_mlp_policy&quot;</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

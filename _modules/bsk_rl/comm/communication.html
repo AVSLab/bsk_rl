@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.comm.communication &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.comm.communication</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.comm.communication</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Communication of data between satellites.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse.csgraph</span> <span class="kn">import</span> <span class="n">connected_components</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">comb</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.sim.dyn</span> <span class="kn">import</span> <span class="n">LOSCommDynModel</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.functional</span> <span class="kn">import</span> <span class="n">Resetable</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.sats</span> <span class="kn">import</span> <span class="n">Satellite</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CommunicationMethod">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.CommunicationMethod">[docs]</a>
+<span class="k">class</span> <span class="nc">CommunicationMethod</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">Resetable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for defining data sharing between satellites.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_period</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The base communication class.</span>
+
+<span class="sd">        Subclasses implement a way of determining which pairs of satellites share data</span>
+<span class="sd">        at each environment step.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            min_period: Minimum time between evaluation of the communication method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Satellite&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_period</span> <span class="o">=</span> <span class="n">min_period</span>
+
+<div class="viewcode-block" id="CommunicationMethod.reset_overwrite_previous">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.CommunicationMethod.reset_overwrite_previous">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_overwrite_previous</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_communication_time</span> <span class="o">=</span> <span class="mf">0.0</span></div>
+
+
+<div class="viewcode-block" id="CommunicationMethod.link_satellites">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.CommunicationMethod.link_satellites">[docs]</a>
+    <span class="k">def</span> <span class="nf">link_satellites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellites</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Satellite&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Link the environment satellite list to the communication method.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellites: List of satellites to communicate between.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span> <span class="o">=</span> <span class="n">satellites</span></div>
+
+
+<div class="viewcode-block" id="CommunicationMethod.communication_pairs">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.CommunicationMethod.communication_pairs">[docs]</a>
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">communication_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="s2">&quot;Satellite&quot;</span><span class="p">,</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List pairs of satellite that should share data.</span>
+
+<span class="sd">        To define a new communication type, this method must be implemented.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="CommunicationMethod.communicate">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.CommunicationMethod.communicate">[docs]</a>
+    <span class="k">def</span> <span class="nf">communicate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Share data between paired satellites.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_communication_time</span>
+            <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_period</span>
+        <span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="n">communication_pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">communication_pairs</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">communication_pairs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Communicating data between </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">communication_pairs</span><span class="p">)</span><span class="si">}</span><span class="s2"> pairs of satellites&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">communication_pairs</span><span class="p">)</span> <span class="o">==</span> <span class="n">comb</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">),</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_communicate_all</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">sat_1</span><span class="p">,</span> <span class="n">sat_2</span> <span class="ow">in</span> <span class="n">communication_pairs</span><span class="p">:</span>
+                <span class="n">sat_1</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">stage_communicated_data</span><span class="p">(</span><span class="n">sat_2</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">sat_2</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">stage_communicated_data</span><span class="p">(</span><span class="n">sat_1</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+                <span class="n">satellite</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">update_with_communicated_data</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_communication_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_communicate_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Optimized communication between all pairs of satellites.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Optimizing data communication between all pairs of satellites&quot;</span><span class="p">)</span>
+
+        <span class="n">data_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="vm">__class__</span>
+        <span class="n">final_data</span> <span class="o">=</span> <span class="n">data_type</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="n">final_data</span> <span class="o">+=</span> <span class="n">satellite</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">final_data</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="NoCommunication">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.NoCommunication">[docs]</a>
+<span class="k">class</span> <span class="nc">NoCommunication</span><span class="p">(</span><span class="n">CommunicationMethod</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implements no communication between satellites.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implements no communication between satellites.</span>
+
+<span class="sd">        This is the default communication method if no other method is specified. Satellites</span>
+<span class="sd">        will maintain their own :class:`~bsk_rl.data.DataStore` and not share data with others.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="NoCommunication.communication_pairs">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.NoCommunication.communication_pairs">[docs]</a>
+    <span class="k">def</span> <span class="nf">communication_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="s2">&quot;Satellite&quot;</span><span class="p">,</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return no communication pairs.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FreeCommunication">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.FreeCommunication">[docs]</a>
+<span class="k">class</span> <span class="nc">FreeCommunication</span><span class="p">(</span><span class="n">CommunicationMethod</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implements free communication between every satellite at every step.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implements free communication between every satellite at every step..&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FreeCommunication.communication_pairs">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.FreeCommunication.communication_pairs">[docs]</a>
+    <span class="k">def</span> <span class="nf">communication_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="s2">&quot;Satellite&quot;</span><span class="p">,</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all possible communication pairs.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LOSCommunication">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.LOSCommunication">[docs]</a>
+<span class="k">class</span> <span class="nc">LOSCommunication</span><span class="p">(</span><span class="n">CommunicationMethod</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implements communication between satellites with a direct line-of-sight.&quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO only communicate data from before latest LOS time</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implements communication between satellites with a direct line-of-sight.</span>
+
+<span class="sd">        At the end of each step, satellites will communicate with each other if they have a</span>
+<span class="sd">        line-of-sight between them that is not occluded by the Earth.</span>
+
+<span class="sd">        Satellites must have a dynamics model that is a subclass of</span>
+<span class="sd">        :class:`~bsk_rl.sim.dyn.LOSCommDynModel`. to use this communication method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LOSCommunication.link_satellites">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.LOSCommunication.link_satellites">[docs]</a>
+    <span class="k">def</span> <span class="nf">link_satellites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellites</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Satellite&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Link the environment satellite list to the communication method.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellites: List of satellites to communicate between.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">link_satellites</span><span class="p">(</span><span class="n">satellites</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">satellite</span><span class="o">.</span><span class="n">dyn_type</span><span class="p">,</span> <span class="n">LOSCommDynModel</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Satellite dynamics type </span><span class="si">{</span><span class="n">satellite</span><span class="o">.</span><span class="n">dyn_type</span><span class="si">}</span><span class="s2"> must be a subclass &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;of LOSCommDynModel to use LOSCommunication&quot;</span>
+                <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LOSCommunication.reset_post_sim_init">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.LOSCommunication.reset_post_sim_init">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_post_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add loggers to satellites to track line-of-sight communication.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">los_logs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">sat_1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sat_1</span><span class="o">.</span><span class="n">dynamics</span><span class="p">,</span> <span class="n">LOSCommDynModel</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">sat_2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">sat_1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">sat_2</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">sat_1</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">los_logs</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">los_logs</span><span class="p">[</span><span class="n">sat_1</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+                    <span class="n">msg_index</span> <span class="o">=</span> <span class="n">sat_1</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">los_comms_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">sat_2</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                    <span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">los_logs</span><span class="p">[</span><span class="n">sat_1</span><span class="p">][</span><span class="n">sat_2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">sat_1</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="n">msg_index</span><span class="p">]</span><span class="o">.</span><span class="n">recorder</span><span class="p">()</span>
+                    <span class="p">)</span>
+
+                    <span class="n">sat_1</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+                        <span class="n">sat_1</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">586</span>
+                    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LOSCommunication.communication_pairs">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.LOSCommunication.communication_pairs">[docs]</a>
+    <span class="k">def</span> <span class="nf">communication_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="s2">&quot;Satellite&quot;</span><span class="p">,</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return pairs of satellites that have line-of-sight visibility.&quot;&quot;&quot;</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sat_1</span><span class="p">,</span> <span class="n">logs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">los_logs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">sat_2</span><span class="p">,</span> <span class="n">logger</span> <span class="ow">in</span> <span class="n">logs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">hasAccess</span><span class="p">):</span>
+                    <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">sat_1</span><span class="p">,</span> <span class="n">sat_2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pairs</span></div>
+
+
+<div class="viewcode-block" id="LOSCommunication.communicate">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.LOSCommunication.communicate">[docs]</a>
+    <span class="k">def</span> <span class="nf">communicate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear line-of-sight communication logs once communicated.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">sat_1</span><span class="p">,</span> <span class="n">logs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">los_logs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">sat_2</span><span class="p">,</span> <span class="n">logger</span> <span class="ow">in</span> <span class="n">logs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="MultiDegreeCommunication">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.MultiDegreeCommunication">[docs]</a>
+<span class="k">class</span> <span class="nc">MultiDegreeCommunication</span><span class="p">(</span><span class="n">CommunicationMethod</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compose with another type to use multi-degree communications.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compose with another communication type to propagate multi-degree communication.</span>
+
+<span class="sd">        If a communication method allows satellites A and B to communicate and satellites</span>
+<span class="sd">        B and C to communicate, MultiDegreeCommunication will allow satellites A and C to</span>
+<span class="sd">        communicate on the same step as well.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MultiDegreeCommunication.communication_pairs">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.MultiDegreeCommunication.communication_pairs">[docs]</a>
+    <span class="k">def</span> <span class="nf">communication_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="s2">&quot;Satellite&quot;</span><span class="p">,</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return pairs of satellites that are connected by a path of communication through other satellites.&quot;&quot;&quot;</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">sat_1</span><span class="p">,</span> <span class="n">sat_2</span> <span class="ow">in</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">communication_pairs</span><span class="p">():</span>
+            <span class="n">graph</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">sat_1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">sat_2</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">pairs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">n_components</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">connected_components</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_components</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i_sat_1</span><span class="p">,</span> <span class="n">i_sat_2</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">labels</span> <span class="o">==</span> <span class="n">comp</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="n">i_sat_1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="n">i_sat_2</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">pairs</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LOSMultiCommunication">
+<a class="viewcode-back" href="../../../api_reference/comm/index.html#bsk_rl.comm.LOSMultiCommunication">[docs]</a>
+<span class="k">class</span> <span class="nc">LOSMultiCommunication</span><span class="p">(</span><span class="n">MultiDegreeCommunication</span><span class="p">,</span> <span class="n">LOSCommunication</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Multidegree line-of-sight communication.</span>
+
+<span class="sd">    Composes :class:`MultiDegreeCommunication` with :class:`LOSCommunication`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">pass</span></div>
+
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

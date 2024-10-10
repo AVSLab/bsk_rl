@@ -1,0 +1,272 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scenario &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Target Scenarios" href="targets.html" />
+    <link rel="prev" title="Discrete Backend" href="../act/discrete_actions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../act/index.html">Actions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Scenario</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.scene.Scenario"><code class="docutils literal notranslate"><span class="pre">Scenario</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.scene.Scenario.link_satellites"><code class="docutils literal notranslate"><span class="pre">Scenario.link_satellites()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.scene.UniformTargets"><code class="docutils literal notranslate"><span class="pre">UniformTargets</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.scene.UniformTargets.reset_overwrite_previous"><code class="docutils literal notranslate"><span class="pre">UniformTargets.reset_overwrite_previous()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.scene.UniformTargets.reset_pre_sim_init"><code class="docutils literal notranslate"><span class="pre">UniformTargets.reset_pre_sim_init()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.scene.UniformTargets.regenerate_targets"><code class="docutils literal notranslate"><span class="pre">UniformTargets.regenerate_targets()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.scene.CityTargets"><code class="docutils literal notranslate"><span class="pre">CityTargets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.scene.UniformNadirScanning"><code class="docutils literal notranslate"><span class="pre">UniformNadirScanning</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="targets.html">Target Scenarios</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comm/index.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim/index.html">Simulation (BSK)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+      <li class="breadcrumb-item active">Scenario</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_reference/scene/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-bsk_rl.scene">
+<span id="scenario"></span><span id="bsk-rl-scene"></span><h1>Scenario<a class="headerlink" href="#module-bsk_rl.scene" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl.scene</span></code> provides scenarios, or the underlying environment in which the satellite can collect data.</p>
+<p>Scenarios typically correspond to certain type(s) of <a class="reference internal" href="../data/index.html#bsk-rl-data"><span class="std std-ref">Data &amp; Reward</span></a> systems. The
+following scenarios have been implemented:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#bsk_rl.scene.UniformTargets" title="bsk_rl.scene.UniformTargets"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniformTargets</span></code></a>: Uniformly distributed targets to be imaged by an <a class="reference internal" href="../sats/index.html#bsk_rl.sats.ImagingSatellite" title="bsk_rl.sats.ImagingSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingSatellite</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#bsk_rl.scene.CityTargets" title="bsk_rl.scene.CityTargets"><code class="xref py py-class docutils literal notranslate"><span class="pre">CityTargets</span></code></a>: Targets distributed near population centers.</p></li>
+<li><p><a class="reference internal" href="#bsk_rl.scene.UniformNadirScanning" title="bsk_rl.scene.UniformNadirScanning"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniformNadirScanning</span></code></a>: Uniformly desireable data over the surface of the Earth.</p></li>
+</ul>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.scene.Scenario">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Scenario</span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/scenario.html#Scenario"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.Scenario" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code>, <a class="reference internal" href="../utils/functional.html#bsk_rl.utils.functional.Resetable" title="bsk_rl.utils.functional.Resetable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Resetable</span></code></a></p>
+<p>Base scenario class.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.Scenario.link_satellites">
+<span class="sig-name descname"><span class="pre">link_satellites</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellites</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><span class="pre">Satellite</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/scenario.html#Scenario.link_satellites"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.Scenario.link_satellites" title="Link to this definition"></a></dt>
+<dd><p>Link the environment satellite list to the scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>satellites</strong> (<em>list</em><em>[</em><a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><em>Satellite</em></a><em>]</em>) – List of satellites to communicate between.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.scene.UniformTargets">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UniformTargets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n_targets:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">tuple[int,</span> <span class="pre">int],</span> <span class="pre">priority_distribution:</span> <span class="pre">~typing.Callable</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">radius:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;MagicMock</span> <span class="pre">name='mock.orbitalMotion.REQ_EARTH.__mul__()'</span> <span class="pre">id='140642353769264'&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/scene/targets.html#UniformTargets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.UniformTargets" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.scene.Scenario" title="bsk_rl.scene.scenario.Scenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scenario</span></code></a></p>
+<p>An environment with evenly-distributed static targets.</p>
+<p>Can be used with <a class="reference internal" href="../data/index.html#bsk_rl.data.UniqueImageReward" title="bsk_rl.data.UniqueImageReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueImageReward</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_targets</strong> (<em>int</em><em> | </em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – Number of targets to generate. Can also be specified as a range
+<code class="docutils literal notranslate"><span class="pre">(low,</span> <span class="pre">high)</span></code> where the number of targets generated is uniformly selected
+<code class="docutils literal notranslate"><span class="pre">low</span> <span class="pre">≤</span> <span class="pre">n_targets</span> <span class="pre">≤</span> <span class="pre">high</span></code>.</p></li>
+<li><p><strong>priority_distribution</strong> (<em>Callable</em><em> | </em><em>None</em>) – Function for generating target priority. Defaults
+to <code class="docutils literal notranslate"><span class="pre">lambda:</span> <span class="pre">uniform(0,</span> <span class="pre">1)</span></code> if not specified.</p></li>
+<li><p><strong>radius</strong> (<em>float</em>) – [m] Radius to place targets from body center. Defaults to Earth’s
+equatorial radius.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.UniformTargets.reset_overwrite_previous">
+<span class="sig-name descname"><span class="pre">reset_overwrite_previous</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/targets.html#UniformTargets.reset_overwrite_previous"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.UniformTargets.reset_overwrite_previous" title="Link to this definition"></a></dt>
+<dd><p>Overwrite target list from previous episode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.UniformTargets.reset_pre_sim_init">
+<span class="sig-name descname"><span class="pre">reset_pre_sim_init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/targets.html#UniformTargets.reset_pre_sim_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.UniformTargets.reset_pre_sim_init" title="Link to this definition"></a></dt>
+<dd><p>Regenerate target set for new episode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.UniformTargets.regenerate_targets">
+<span class="sig-name descname"><span class="pre">regenerate_targets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/targets.html#UniformTargets.regenerate_targets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.UniformTargets.regenerate_targets" title="Link to this definition"></a></dt>
+<dd><p>Regenerate targets uniformly.</p>
+<p>Override this method (as demonstrated in <a class="reference internal" href="#bsk_rl.scene.CityTargets" title="bsk_rl.scene.CityTargets"><code class="xref py py-class docutils literal notranslate"><span class="pre">CityTargets</span></code></a>) to generate
+other distributions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.scene.CityTargets">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CityTargets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n_targets:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">tuple[int,</span> <span class="pre">int],</span> <span class="pre">n_select_from:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">location_offset:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">priority_distribution:</span> <span class="pre">~typing.Callable</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">radius:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;MagicMock</span> <span class="pre">name='mock.orbitalMotion.REQ_EARTH.__mul__()'</span> <span class="pre">id='140642353769264'&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/scene/targets.html#CityTargets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.CityTargets" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="targets.html#bsk_rl.scene.targets.UniformTargets" title="bsk_rl.scene.targets.UniformTargets"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniformTargets</span></code></a></p>
+<p>Construct environment with static targets around population centers.</p>
+<p>Uses the <a class="reference external" href="https://simplemaps.com/data/world-cities">simplemaps Word Cities Database</a>
+for population center locations. This data is installed by <code class="docutils literal notranslate"><span class="pre">finish_install</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_targets</strong> (<em>int</em><em> | </em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – Number of targets to generate, as a fixed number or a range.</p></li>
+<li><p><strong>n_select_from</strong> (<em>int</em><em> | </em><em>None</em>) – Generate targets from the top <cite>n_select_from</cite> most populous
+cities. Will use all cities in the database if not specified.</p></li>
+<li><p><strong>location_offset</strong> (<em>float</em>) – [m] Offset targets randomly from the city center by up to
+this amount.</p></li>
+<li><p><strong>priority_distribution</strong> (<em>Callable</em><em> | </em><em>None</em>) – Function for generating target priority.</p></li>
+<li><p><strong>radius</strong> (<em>float</em>) – Radius to place targets from body center.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.scene.UniformNadirScanning">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UniformNadirScanning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value_per_second</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/scene/scenario.html#UniformNadirScanning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.UniformNadirScanning" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.scene.Scenario" title="bsk_rl.scene.scenario.Scenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scenario</span></code></a></p>
+<p>Construct uniform data over the surface of the planet.</p>
+<p>Can be used with <a class="reference internal" href="../data/index.html#bsk_rl.data.ScanningTimeReward" title="bsk_rl.data.ScanningTimeReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScanningTimeReward</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value_per_second</strong> (<em>float</em>) – Reward per second for imaging nadir.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../act/discrete_actions.html" class="btn btn-neutral float-left" title="Discrete Backend" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="targets.html" class="btn btn-neutral float-right" title="Target Scenarios" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

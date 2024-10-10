@@ -1,0 +1,13 @@
+.. _bsk_rl.data.no_data:
+.. currentmodule:: bsk_rl.data.no_data
+
+No Data
+=======
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.data.no_data
+   :members:
+   :show-inheritance:
+

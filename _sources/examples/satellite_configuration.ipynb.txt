@@ -1,0 +1,1159 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Satellite Configuration\n",
+    "\n",
+    "[Satellites](../api_reference/sats/index.rst) are the basic unit of agent in the \n",
+    "environment. Four things must be specified in subclasses of `Satellite`:\n",
+    "\n",
+    "* The `observation_spec`, which defines the satellite's [observation](../api_reference/obs/index.rst).\n",
+    "* The `action_spec`, which defines the satellite's [actions](../api_reference/act/index.rst).\n",
+    "* The `dyn_type`,  which selects the underlying [dynamics model](../api_reference/sim/dyn.rst) used in simulation.\n",
+    "* The `fsw_type`,  which selects the underlying [flight software model](../api_reference/sim/fsw.rst).\n",
+    "\n",
+    "A very simple satellite is defined below:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:52.256495Z",
+     "iopub.status.busy": "2024-09-12T21:06:52.256396Z",
+     "iopub.status.idle": "2024-09-12T21:06:53.288744Z",
+     "shell.execute_reply": "2024-09-12T21:06:53.288376Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from bsk_rl import sats, act, obs, scene, data, SatelliteTasking\n",
+    "from bsk_rl.sim import dyn, fsw\n",
+    "import numpy as np\n",
+    "\n",
+    "from Basilisk.architecture import bskLogging\n",
+    "bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)\n",
+    "\n",
+    "\n",
+    "class SimpleSatellite(sats.Satellite):\n",
+    "    observation_spec = [obs.Time()]  # Passed as list of instantiated classes\n",
+    "    action_spec = [act.Drift()]\n",
+    "    dyn_type = dyn.BasicDynamicsModel  # Passed as a type\n",
+    "    fsw_type = fsw.BasicFSWModel"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Setting Satellite Parameters\n",
+    "\n",
+    "Without instantiating the satellite, parameters that can be set in the various models\n",
+    "can be inspected."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:53.290737Z",
+     "iopub.status.busy": "2024-09-12T21:06:53.290555Z",
+     "iopub.status.idle": "2024-09-12T21:06:53.294823Z",
+     "shell.execute_reply": "2024-09-12T21:06:53.294580Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'hs_min': 0.0,\n",
+       " 'maxCounterValue': 4,\n",
+       " 'thrMinFireTime': 0.02,\n",
+       " 'desatAttitude': 'sun',\n",
+       " 'controlAxes_B': [1, 0, 0, 0, 1, 0, 0, 0, 1],\n",
+       " 'thrForceSign': 1,\n",
+       " 'K': 7.0,\n",
+       " 'Ki': -1,\n",
+       " 'P': 35.0,\n",
+       " 'utc_init': 'this value will be set by the world model',\n",
+       " 'batteryStorageCapacity': 288000.0,\n",
+       " 'storedCharge_Init': <function bsk_rl.sim.dyn.BasicDynamicsModel.<lambda>()>,\n",
+       " 'disturbance_vector': None,\n",
+       " 'dragCoeff': 2.2,\n",
+       " 'basePowerDraw': 0.0,\n",
+       " 'wheelSpeeds': <function bsk_rl.sim.dyn.BasicDynamicsModel.<lambda>()>,\n",
+       " 'maxWheelSpeed': inf,\n",
+       " 'u_max': 0.2,\n",
+       " 'rwBasePower': 0.4,\n",
+       " 'rwMechToElecEfficiency': 0.0,\n",
+       " 'rwElecToMechEfficiency': 0.5,\n",
+       " 'panelArea': 1.0,\n",
+       " 'panelEfficiency': 0.2,\n",
+       " 'nHat_B': array([ 0,  0, -1]),\n",
+       " 'mass': 330,\n",
+       " 'width': 1.38,\n",
+       " 'depth': 1.04,\n",
+       " 'height': 1.58,\n",
+       " 'sigma_init': <function bsk_rl.sim.dyn.BasicDynamicsModel.<lambda>()>,\n",
+       " 'omega_init': <function bsk_rl.sim.dyn.BasicDynamicsModel.<lambda>()>,\n",
+       " 'rN': None,\n",
+       " 'vN': None,\n",
+       " 'oe': <function bsk_rl.utils.orbital.random_orbit(i: Optional[float] = 45.0, alt: float = 500, r_body: float = 6371, e: float = 0, Omega: Optional[float] = None, omega: Optional[float] = 0, f: Optional[float] = None) -> Basilisk.utilities.orbitalMotion.ClassicElements>,\n",
+       " 'mu': 398600436000000.0,\n",
+       " 'thrusterPowerDraw': 0.0}"
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "SimpleSatellite.default_sat_args()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "These parameters can be overriden when instantiating the satellite through the `sat_args`\n",
+    "argument. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:53.296293Z",
+     "iopub.status.busy": "2024-09-12T21:06:53.296187Z",
+     "iopub.status.idle": "2024-09-12T21:06:53.298738Z",
+     "shell.execute_reply": "2024-09-12T21:06:53.298469Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "sat = SimpleSatellite(\n",
+    "    name=\"SimpleSat-1\",\n",
+    "    sat_args=dict(\n",
+    "        mass=300,  # Setting a constant value\n",
+    "        dragCoeff=lambda: np.random.uniform(2.0, 2.4),  # Setting a randomized value\n",
+    "    ),\n",
+    ")\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Each time the simulation is reset, all of the function-based randomizers are called."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:53.300102Z",
+     "iopub.status.busy": "2024-09-12T21:06:53.300002Z",
+     "iopub.status.idle": "2024-09-12T21:06:53.302907Z",
+     "shell.execute_reply": "2024-09-12T21:06:53.302685Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'hs_min': 0.0,\n",
+       " 'maxCounterValue': 4,\n",
+       " 'thrMinFireTime': 0.02,\n",
+       " 'desatAttitude': 'sun',\n",
+       " 'controlAxes_B': [1, 0, 0, 0, 1, 0, 0, 0, 1],\n",
+       " 'thrForceSign': 1,\n",
+       " 'K': 7.0,\n",
+       " 'Ki': -1,\n",
+       " 'P': 35.0,\n",
+       " 'utc_init': 'this value will be set by the world model',\n",
+       " 'batteryStorageCapacity': 288000.0,\n",
+       " 'storedCharge_Init': 210686.167470996,\n",
+       " 'disturbance_vector': None,\n",
+       " 'dragCoeff': 2.210046657456083,\n",
+       " 'basePowerDraw': 0.0,\n",
+       " 'wheelSpeeds': array([-816.1821145 , 1283.7058494 ,   43.00611181]),\n",
+       " 'maxWheelSpeed': inf,\n",
+       " 'u_max': 0.2,\n",
+       " 'rwBasePower': 0.4,\n",
+       " 'rwMechToElecEfficiency': 0.0,\n",
+       " 'rwElecToMechEfficiency': 0.5,\n",
+       " 'panelArea': 1.0,\n",
+       " 'panelEfficiency': 0.2,\n",
+       " 'nHat_B': array([ 0,  0, -1]),\n",
+       " 'mass': 300,\n",
+       " 'width': 1.38,\n",
+       " 'depth': 1.04,\n",
+       " 'height': 1.58,\n",
+       " 'sigma_init': array([0.61557672, 0.38195961, 0.15085368]),\n",
+       " 'omega_init': array([ 1.24763170e-05, -2.55555918e-05,  4.82727815e-05]),\n",
+       " 'rN': None,\n",
+       " 'vN': None,\n",
+       " 'oe': <Basilisk.utilities.orbitalMotion.ClassicElements at 0x1075c4e80>,\n",
+       " 'mu': 398600436000000.0,\n",
+       " 'thrusterPowerDraw': 0.0}"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "sat.generate_sat_args()  # Called by the environment on reset()\n",
+    "sat.sat_args"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "As a result, each episode will have different randomized parameters:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:53.304286Z",
+     "iopub.status.busy": "2024-09-12T21:06:53.304182Z",
+     "iopub.status.idle": "2024-09-12T21:06:53.306715Z",
+     "shell.execute_reply": "2024-09-12T21:06:53.306495Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "New value of dragCoeff: 2.0296430408084785\n",
+      "New value of dragCoeff: 2.3594474912160166\n",
+      "New value of dragCoeff: 2.202687725963055\n"
+     ]
+    }
+   ],
+   "source": [
+    "for _ in range(3):\n",
+    "    sat.generate_sat_args()  # Called by the environment on reset()\n",
+    "    print(\"New value of dragCoeff:\", sat.sat_args[\"dragCoeff\"])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## The Observation Specification\n",
+    "\n",
+    "A variety of observation elements are available for satellites. Full documentation\n",
+    "can be [found here](../api_reference/obs/index.rst), but some commonly used elements\n",
+    "are explored below.\n",
+    "\n",
+    "<div class=\"alert alert-info\">\n",
+    "\n",
+    "**Info:** In these examples, `obs_type=dict` is passed to the `Satellite` constructor\n",
+    "so that the observation is human readable. While some RL libraries support dictionary-based\n",
+    "observations, the default return type - the numpy array format - is more typically used.\n",
+    "\n",
+    "</div>\n",
+    "\n",
+    "\n",
+    "### Satellite Properties\n",
+    "\n",
+    "The most common type of observations is introspective; i.e. what is my current state?\n",
+    "Any `@property` in the `dyn_type` or `fsw_type` of the satellite can be accessed using\n",
+    "SatProperties."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:53.308216Z",
+     "iopub.status.busy": "2024-09-12T21:06:53.308066Z",
+     "iopub.status.idle": "2024-09-12T21:06:53.396278Z",
+     "shell.execute_reply": "2024-09-12T21:06:53.395856Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'sat_props': {'wheel_speeds': array([ -57.85337592, -149.13203924, -148.66485193]),\n",
+       "  'battery_charge_fraction': 0.8640781799149756,\n",
+       "  'r_BN_P_normd': array([-0.95867796,  0.19195187,  0.087026  ])}}"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "class SatPropsSatellite(sats.Satellite):\n",
+    "    observation_spec = [\n",
+    "        obs.SatProperties(\n",
+    "            # At a minimum, specify the property to observe\n",
+    "            dict(prop=\"wheel_speeds\"),\n",
+    "            # You can specify the module to use for the observation, but it is not necessary\n",
+    "            # if only one module has for the property\n",
+    "            dict(prop=\"battery_charge_fraction\", module=\"dynamics\"), \n",
+    "            # Properties can be normalized by some constant. This is generally desirable\n",
+    "            # for RL algorithms to keep values around [-1, 1].\n",
+    "            dict(prop=\"r_BN_P\", norm=7e6),\n",
+    "        )\n",
+    "    ]\n",
+    "    action_spec = [act.Drift()]\n",
+    "    dyn_type = dyn.BasicDynamicsModel\n",
+    "    fsw_type = fsw.BasicFSWModel\n",
+    "\n",
+    "env = SatelliteTasking(\n",
+    "    satellite=SatPropsSatellite(\"PropSat-1\", {}, obs_type=dict),\n",
+    "    log_level=\"CRITICAL\",\n",
+    ")\n",
+    "observation, _ = env.reset()\n",
+    "observation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In some cases, you may want to access a bespoke property that is not natively implemented\n",
+    "in a model. To do that, simply extend the model with your desired property."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:53.398281Z",
+     "iopub.status.busy": "2024-09-12T21:06:53.398042Z",
+     "iopub.status.idle": "2024-09-12T21:06:53.557497Z",
+     "shell.execute_reply": "2024-09-12T21:06:53.557173Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'sat_props': {'meaning_of_life': 42.0}}"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "class BespokeFSWModel(fsw.BasicFSWModel):\n",
+    "    @property\n",
+    "    def meaning_of_life(self):\n",
+    "        return 42\n",
+    "    \n",
+    "class BespokeSatPropsSatellite(sats.Satellite):\n",
+    "    observation_spec = [\n",
+    "        obs.SatProperties(dict(prop=\"meaning_of_life\"))\n",
+    "    ]\n",
+    "    action_spec = [act.Drift()]\n",
+    "    dyn_type = dyn.BasicDynamicsModel\n",
+    "    fsw_type = BespokeFSWModel\n",
+    "\n",
+    "env = SatelliteTasking(\n",
+    "    satellite=BespokeSatPropsSatellite(\"BespokeSat-1\", {}, obs_type=dict),\n",
+    "    log_level=\"CRITICAL\",\n",
+    ")\n",
+    "observation, _ = env.reset()\n",
+    "observation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Alternatively, define the property with a function that takes the satellite object as an argument."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:53.559153Z",
+     "iopub.status.busy": "2024-09-12T21:06:53.559033Z",
+     "iopub.status.idle": "2024-09-12T21:06:53.890008Z",
+     "shell.execute_reply": "2024-09-12T21:06:53.889587Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'sat_props': {'meaning_of_life': 42.0}}"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "class CustomSatPropsSatellite(sats.Satellite):\n",
+    "    observation_spec = [\n",
+    "        obs.SatProperties(dict(prop=\"meaning_of_life\", fn=lambda sat: 42))\n",
+    "    ]\n",
+    "    action_spec = [act.Drift()]\n",
+    "    dyn_type = dyn.BasicDynamicsModel\n",
+    "    fsw_type = fsw.BasicFSWModel\n",
+    "\n",
+    "env = SatelliteTasking(\n",
+    "    satellite=CustomSatPropsSatellite(\"BespokeSat-1\", {}, obs_type=dict),\n",
+    "    log_level=\"CRITICAL\",\n",
+    ")\n",
+    "observation, _ = env.reset()\n",
+    "observation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Opportunity Properties\n",
+    "Another common input to the observation is information about upcoming locations that \n",
+    "are being accessed by the satellite. Currently, these include ground stations for\n",
+    "downlink and targets for imaging, but `OpportunityProperties` will work with any\n",
+    "location added by `add_location_for_access_checking`. In these examples, "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:53.892023Z",
+     "iopub.status.busy": "2024-09-12T21:06:53.891828Z",
+     "iopub.status.idle": "2024-09-12T21:06:54.080170Z",
+     "shell.execute_reply": "2024-09-12T21:06:54.079800Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'target': {'target_0': {'priority': 0.2986660083704773,\n",
+       "   'opportunity_open_normd': 0.0,\n",
+       "   'prop_2': array([5153180.64403888,  -47538.05942313, 3758169.82399934])},\n",
+       "  'target_1': {'priority': 0.6410321760315169,\n",
+       "   'opportunity_open_normd': 0.01429045697253311,\n",
+       "   'prop_2': array([4847885.53144301,  810420.93775173, 4064808.35984826])},\n",
+       "  'target_2': {'priority': 0.032083764127623926,\n",
+       "   'opportunity_open_normd': 0.0133455571753603,\n",
+       "   'prop_2': array([4919052.35597872,  885395.17406771, 3962378.85635155])}}}"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "class OppPropsSatellite(sats.ImagingSatellite):\n",
+    "    observation_spec = [\n",
+    "        obs.OpportunityProperties(\n",
+    "            # Properties can be added by some default names\n",
+    "            dict(prop=\"priority\"), \n",
+    "            # They can also be normalized\n",
+    "            dict(prop=\"opportunity_open\", norm=5700.0),\n",
+    "            # Or they can be specified by an arbitrary function\n",
+    "            dict(fn=lambda sat, opp: opp[\"r_LP_P\"] + 42),\n",
+    "            n_ahead_observe=3,\n",
+    "        )\n",
+    "    ]\n",
+    "    action_spec = [act.Drift()]\n",
+    "    dyn_type = dyn.ImagingDynModel\n",
+    "    fsw_type = fsw.ImagingFSWModel\n",
+    "\n",
+    "env = SatelliteTasking(\n",
+    "    satellite=OppPropsSatellite(\"OppSat-1\", {}, obs_type=dict),\n",
+    "    scenario=scene.UniformTargets(1000),\n",
+    "    rewarder=data.UniqueImageReward(),\n",
+    "    log_level=\"CRITICAL\",\n",
+    ")\n",
+    "observation, _ = env.reset()\n",
+    "observation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "\n",
+    "### Navigating the Observation\n",
+    "\n",
+    "Usually, multiple observation types need to be composed to sufficiently represent the\n",
+    "environment for the learning agent. Simply add multiple observations to the observation\n",
+    "specification list to combine them in the observation.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:54.081911Z",
+     "iopub.status.busy": "2024-09-12T21:06:54.081767Z",
+     "iopub.status.idle": "2024-09-12T21:06:54.320037Z",
+     "shell.execute_reply": "2024-09-12T21:06:54.319584Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'eclipse': [990.0000000000001, 3120.0],\n",
+       " 'sat_props': {'battery_charge_fraction': 0.6354758221198867}}"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "class ComposedObsSatellite(sats.Satellite):\n",
+    "    observation_spec = [\n",
+    "        obs.Eclipse(),\n",
+    "        obs.SatProperties(dict(prop=\"battery_charge_fraction\"))\n",
+    "    ]\n",
+    "    action_spec = [act.Drift()]\n",
+    "    dyn_type = dyn.BasicDynamicsModel\n",
+    "    fsw_type = fsw.BasicFSWModel\n",
+    "\n",
+    "env = SatelliteTasking(\n",
+    "    satellite=ComposedObsSatellite(\"PropSat-1\", {}, obs_type=dict),\n",
+    "    log_level=\"CRITICAL\",\n",
+    ")\n",
+    "observation, _ = env.reset()\n",
+    "observation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "\n",
+    "A few useful functions exist for inspecting the observation. The `observation_space`\n",
+    "property of the satellite and the environment return a Gym observation space to describe\n",
+    "the observation. In the single agent `SatelliteTasking` environment, these are the same.\n",
+    "\n",
+    "<div class=\"alert alert-info\">\n",
+    "\n",
+    "**Info:** Here, we return to the `ndarray` default observation type.\n",
+    "\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:54.321895Z",
+     "iopub.status.busy": "2024-09-12T21:06:54.321560Z",
+     "iopub.status.idle": "2024-09-12T21:06:54.624247Z",
+     "shell.execute_reply": "2024-09-12T21:06:54.623924Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(Box(-1e+16, 1e+16, (3,), float64), Box(-1e+16, 1e+16, (3,), float64))"
+      ]
+     },
+     "execution_count": 11,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "env = SatelliteTasking(\n",
+    "    satellite=ComposedObsSatellite(\"PropSat-1\", {}),\n",
+    "    log_level=\"CRITICAL\",\n",
+    ")\n",
+    "(env.observation_space, env.unwrapped.satellite.observation_space)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "\n",
+    "With the flattened-vector type observation, it can be hard for the user to relate\n",
+    "elements to specific observations.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:54.625793Z",
+     "iopub.status.busy": "2024-09-12T21:06:54.625678Z",
+     "iopub.status.idle": "2024-09-12T21:06:55.261355Z",
+     "shell.execute_reply": "2024-09-12T21:06:55.261030Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([4.53000000e+03, 9.00000000e+02, 4.95688246e-01])"
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "observation, _ = env.reset()\n",
+    "observation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The `observation_description` property can help the user understand what elements are \n",
+    "present in the observation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:55.263077Z",
+     "iopub.status.busy": "2024-09-12T21:06:55.262961Z",
+     "iopub.status.idle": "2024-09-12T21:06:55.265307Z",
+     "shell.execute_reply": "2024-09-12T21:06:55.264988Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['eclipse[0]', 'eclipse[1]', 'sat_props.battery_charge_fraction']"
+      ]
+     },
+     "execution_count": 13,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "env.unwrapped.satellite.observation_description"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "\n",
+    "## The Action Specification\n",
+    "\n",
+    "The [action specification](../api_reference/act/index.rst) works similarly to observation\n",
+    "specification. A list of actions is set in the class definition of the satellite."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:55.266913Z",
+     "iopub.status.busy": "2024-09-12T21:06:55.266793Z",
+     "iopub.status.idle": "2024-09-12T21:06:55.864406Z",
+     "shell.execute_reply": "2024-09-12T21:06:55.864113Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,537 \u001b[0m\u001b[m                               \u001b[0m\u001b[93mWARNING    \u001b[0m\u001b[93mCreating logger for new env on PID=96241. Old environments in process may now log times incorrectly.\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,743 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[mResetting environment with seed=2323542144\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,815 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[mEnvironment reset\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,815 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,815 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[maction_charge tasked for 120.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,816 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[msetting timed terminal event at 120.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,823 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[mtimed termination at 120.0 for action_charge\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,823 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[mData reward: {'ActSat-1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,823 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[mSatellite ActSat-1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,824 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,824 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,824 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[maction_desat tasked for 60.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,825 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[msetting timed terminal event at 180.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,829 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[mtimed termination at 180.0 for action_desat\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,829 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[mData reward: {'ActSat-1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,829 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[mSatellite ActSat-1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,830 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,830 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,830 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[maction_charge tasked for 600.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,830 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[msetting timed terminal event at 780.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,862 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<780.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[mtimed termination at 780.0 for action_charge\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,862 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<780.00> \u001b[0m\u001b[mData reward: {'ActSat-1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,862 \u001b[0m\u001b[36msats.satellite.ActSat-1        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<780.00> \u001b[0m\u001b[36mActSat-1: \u001b[0m\u001b[mSatellite ActSat-1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,863 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<780.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    }
+   ],
+   "source": [
+    "class ActionSatellite(sats.Satellite):\n",
+    "    observation_spec = [obs.Time()]\n",
+    "    action_spec = [\n",
+    "        # If action duration is not set, the environment max_step_duration will be used;\n",
+    "        # however, being explicit is always preferable\n",
+    "        act.Charge(duration=120.0),\n",
+    "        act.Desat(duration=60.0),\n",
+    "        # One action can be included multiple time, if different settings are desired\n",
+    "        act.Charge(duration=600.0,),\n",
+    "    ]\n",
+    "    dyn_type = dyn.BasicDynamicsModel\n",
+    "    fsw_type = fsw.BasicFSWModel\n",
+    "\n",
+    "env = SatelliteTasking(\n",
+    "    satellite=ActionSatellite(\"ActSat-1\", {}, obs_type=dict),\n",
+    "    log_level=\"INFO\",\n",
+    ")\n",
+    "env.reset()\n",
+    "\n",
+    "# Try each action; index corresponds to the order of addition\n",
+    "_ =env.step(0)\n",
+    "_ =env.step(1)\n",
+    "_ =env.step(2)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "As with the observations, properties exist to help understand the actions available."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:55.866164Z",
+     "iopub.status.busy": "2024-09-12T21:06:55.865964Z",
+     "iopub.status.idle": "2024-09-12T21:06:55.868323Z",
+     "shell.execute_reply": "2024-09-12T21:06:55.868055Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Discrete(3)"
+      ]
+     },
+     "execution_count": 15,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "env.action_space"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:55.869839Z",
+     "iopub.status.busy": "2024-09-12T21:06:55.869653Z",
+     "iopub.status.idle": "2024-09-12T21:06:55.871880Z",
+     "shell.execute_reply": "2024-09-12T21:06:55.871620Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['action_charge', 'action_desat', 'action_charge']"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "env.unwrapped.satellite.action_description"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Some actions take additional configurations, add multiple actions to the satellite, and/or\n",
+    "have \"special\" features that are useful for manually interacting with the environment. \n",
+    "For example, the imaging action can add an arbitrary number of actions corresponding to\n",
+    "upcoming targets and process the name of a target directly instead of operating by\n",
+    "action index."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:55.873361Z",
+     "iopub.status.busy": "2024-09-12T21:06:55.873191Z",
+     "iopub.status.idle": "2024-09-12T21:06:56.731192Z",
+     "shell.execute_reply": "2024-09-12T21:06:56.730927Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:55,874 \u001b[0m\u001b[m                               \u001b[0m\u001b[93mWARNING    \u001b[0m\u001b[93mCreating logger for new env on PID=96241. Old environments in process may now log times incorrectly.\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,205 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[mResetting environment with seed=2784853144\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,206 \u001b[0m\u001b[mscene.targets                  \u001b[0m\u001b[mINFO       \u001b[0m\u001b[mGenerating 1000 targets\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,728 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[mEnvironment reset\u001b[0m\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "['action_image_0', 'action_image_1', 'action_image_2']"
+      ]
+     },
+     "execution_count": 17,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "class ImageActSatellite(sats.ImagingSatellite):\n",
+    "    observation_spec = [obs.Time()]\n",
+    "    action_spec = [\n",
+    "        # Set the number of upcoming targets to consider\n",
+    "        act.Image(n_ahead_image=3)\n",
+    "    ]\n",
+    "    dyn_type = dyn.ImagingDynModel\n",
+    "    fsw_type = fsw.ImagingFSWModel\n",
+    "\n",
+    "env = SatelliteTasking(\n",
+    "    satellite=ImageActSatellite(\"ActSat-2\", {}),\n",
+    "    scenario=scene.UniformTargets(1000),\n",
+    "    rewarder=data.UniqueImageReward(),\n",
+    "    log_level=\"INFO\",\n",
+    ")\n",
+    "env.reset()\n",
+    "\n",
+    "env.unwrapped.satellite.action_description"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Demonstrating the action overload feature, we task the satellite based on target name.\n",
+    "While this is not part of the official Gym API, we find it useful in certain cases."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:06:56.732864Z",
+     "iopub.status.busy": "2024-09-12T21:06:56.732742Z",
+     "iopub.status.idle": "2024-09-12T21:06:56.859102Z",
+     "shell.execute_reply": "2024-09-12T21:06:56.858785Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,733 \u001b[0m\u001b[36msats.satellite.ActSat-2        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mActSat-2: \u001b[0m\u001b[mFinding opportunity windows from 0.00 to 600.00 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,752 \u001b[0m\u001b[36msats.satellite.ActSat-2        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mActSat-2: \u001b[0m\u001b[mFinding opportunity windows from 600.00 to 1200.00 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,775 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,776 \u001b[0m\u001b[mact.discrete_actions           \u001b[0m\u001b[93mWARNING    \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[93mAction 'Target(tgt-972)' is not an integer. Will attempt to use compatible set_action_override method.\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,776 \u001b[0m\u001b[36msats.satellite.ActSat-2        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mActSat-2: \u001b[0m\u001b[mTarget(tgt-972) tasked for imaging\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,777 \u001b[0m\u001b[36msats.satellite.ActSat-2        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mActSat-2: \u001b[0m\u001b[mTarget(tgt-972) window enabled: 1006.4 to 1137.8\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,777 \u001b[0m\u001b[36msats.satellite.ActSat-2        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mActSat-2: \u001b[0m\u001b[msetting timed terminal event at 1137.8\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,855 \u001b[0m\u001b[36msats.satellite.ActSat-2        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1009.00> \u001b[0m\u001b[36mActSat-2: \u001b[0m\u001b[mimaged Target(tgt-972)\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,856 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1009.00> \u001b[0m\u001b[mData reward: {'ActSat-2': 0.5081424423258969}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,857 \u001b[0m\u001b[36msats.satellite.ActSat-2        \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1009.00> \u001b[0m\u001b[36mActSat-2: \u001b[0m\u001b[mSatellite ActSat-2 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:06:56,857 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1009.00> \u001b[0m\u001b[mStep reward: 0.5081424423258969\u001b[0m\n"
+     ]
+    }
+   ],
+   "source": [
+    "target = env.unwrapped.satellite.find_next_opportunities(n=10)[9][\"object\"]\n",
+    "_ = env.step(target)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv_refactor",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.11"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

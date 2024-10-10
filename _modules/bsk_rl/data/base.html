@@ -1,0 +1,352 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.data.base &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.data.base</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.data.base</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Data logging, management, and reward calculation.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.functional</span> <span class="kn">import</span> <span class="n">Resetable</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.sats</span> <span class="kn">import</span> <span class="n">Satellite</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.scene</span> <span class="kn">import</span> <span class="n">Scenario</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">LogStateType</span> <span class="o">=</span> <span class="n">Any</span>
+
+
+<div class="viewcode-block" id="Data">
+<a class="viewcode-back" href="../../../api_reference/data/base.html#bsk_rl.data.base.Data">[docs]</a>
+<span class="k">class</span> <span class="nc">Data</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for units of satellite data.</span>
+
+<span class="sd">    Only needs to implement the ``__add__`` method, which is used to combine two units</span>
+<span class="sd">    of data. This is used when adding new data from actions or communication to the</span>
+<span class="sd">    data store.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Data&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Data&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define the combination of two units of data.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Data&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a shallow copy of the data.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span></div>
+
+
+
+<div class="viewcode-block" id="DataStore">
+<a class="viewcode-back" href="../../../api_reference/data/base.html#bsk_rl.data.base.DataStore">[docs]</a>
+<span class="k">class</span> <span class="nc">DataStore</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for satellite data logging.&quot;&quot;&quot;</span>
+
+    <span class="n">data_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Data</span><span class="p">]</span>  <span class="c1"># Define the unit of data used by the DataStore</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">,</span> <span class="n">initial_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Data</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Base class for satellite data logging.</span>
+
+<span class="sd">        One DataStore is created for each satellite in the scenario each time the</span>
+<span class="sd">        scenario is reset. The DataStore is responsible for generating data from the</span>
+<span class="sd">        satellite&#39;s environment and actions by comparing the current and previous-step</span>
+<span class="sd">        state from :class:`~DataStore.get_log_state` and returning a unit of data with</span>
+<span class="sd">        :class:`~DataStore.compare_log_states`. These two methods must be implemented</span>
+<span class="sd">        by subclasses.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellite: Satellite which data is being stored for.</span>
+<span class="sd">            initial_data: Initial data to start the store with. Usually comes from</span>
+<span class="sd">                :class:`~bsk_rl.data.GlobalReward.initial_data`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span> <span class="o">=</span> <span class="n">satellite</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">staged_data</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">initial_data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">initial_data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DataStore.get_log_state">
+<a class="viewcode-back" href="../../../api_reference/data/base.html#bsk_rl.data.base.DataStore.get_log_state">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_log_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LogStateType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pull information used in determining current data contribution.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="DataStore.compare_log_states">
+<a class="viewcode-back" href="../../../api_reference/data/base.html#bsk_rl.data.base.DataStore.compare_log_states">[docs]</a>
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">compare_log_states</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">old_state</span><span class="p">:</span> <span class="n">LogStateType</span><span class="p">,</span> <span class="n">new_state</span><span class="p">:</span> <span class="n">LogStateType</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Data&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a unit of data based on previous step and current step logs.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            old_state: A previous result of :class:`~DataStore.get_log_state`.</span>
+<span class="sd">            new_state: A newer result of :class:`~DataStore.get_log_state`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Data: New data generated by the satellite.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="DataStore.update_from_logs">
+<a class="viewcode-back" href="../../../api_reference/data/base.html#bsk_rl.data.base.DataStore.update_from_logs">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_from_logs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Data&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the data store based on collected information.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            New data from the previous step.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;log_state&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_log_state</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span><span class="p">()</span>
+        <span class="n">old_log_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_log_state</span><span class="p">()</span>
+        <span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare_log_states</span><span class="p">(</span><span class="n">old_log_state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">+=</span> <span class="n">new_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_data</span> <span class="o">=</span> <span class="n">new_data</span>
+        <span class="k">return</span> <span class="n">new_data</span></div>
+
+
+<div class="viewcode-block" id="DataStore.stage_communicated_data">
+<a class="viewcode-back" href="../../../api_reference/data/base.html#bsk_rl.data.base.DataStore.stage_communicated_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">stage_communicated_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">external_data</span><span class="p">:</span> <span class="s2">&quot;Data&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare data to be added from another source, but don&#39;t add it yet.</span>
+
+<span class="sd">        Works with :class:`~DataStore.update_with_communicated_data` to add data from</span>
+<span class="sd">        other satellites without erroneously propagating it through other satellites.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            external_data: Data from another satellite to be added</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">staged_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">external_data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DataStore.update_with_communicated_data">
+<a class="viewcode-back" href="../../../api_reference/data/base.html#bsk_rl.data.base.DataStore.update_with_communicated_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_with_communicated_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the data store from staged data.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">staged</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">staged_data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">+=</span> <span class="n">staged</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">staged_data</span> <span class="o">=</span> <span class="p">[]</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="GlobalReward">
+<a class="viewcode-back" href="../../../api_reference/data/index.html#bsk_rl.data.base.GlobalReward">[docs]</a>
+<span class="k">class</span> <span class="nc">GlobalReward</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">Resetable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for simulation-wide data management.&quot;&quot;&quot;</span>
+
+    <span class="n">datastore_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">DataStore</span><span class="p">]</span>  <span class="c1"># type of DataStore managed by the GlobalReward</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Base class for simulation-wide data management and rewarding.</span>
+
+<span class="sd">        The method :class:`calculate_reward` must be overridden by subclasses. Other</span>
+<span class="sd">        methods may be extended as necessary for housekeeping.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="p">:</span> <span class="s2">&quot;Scenario&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datastore_type</span><span class="o">.</span><span class="n">data_type</span>
+
+<div class="viewcode-block" id="GlobalReward.link_scenario">
+<a class="viewcode-back" href="../../../api_reference/data/index.html#bsk_rl.data.base.GlobalReward.link_scenario">[docs]</a>
+    <span class="k">def</span> <span class="nf">link_scenario</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scenario</span><span class="p">:</span> <span class="s2">&quot;Scenario&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Link the data manager to the scenario.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scenario: The scenario that the data manager is being used with.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span> <span class="o">=</span> <span class="n">scenario</span></div>
+
+
+<div class="viewcode-block" id="GlobalReward.reset_overwrite_previous">
+<a class="viewcode-back" href="../../../api_reference/data/index.html#bsk_rl.data.base.GlobalReward.reset_overwrite_previous">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_overwrite_previous</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Overwrite attributes from previous episode.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cum_reward</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+
+<div class="viewcode-block" id="GlobalReward.initial_data">
+<a class="viewcode-back" href="../../../api_reference/data/index.html#bsk_rl.data.base.GlobalReward.initial_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">initial_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Data&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Furnish the :class:`~bsk_rl.data.base.DataStore` with initial data.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GlobalReward.create_data_store">
+<a class="viewcode-back" href="../../../api_reference/data/index.html#bsk_rl.data.base.GlobalReward.create_data_store">[docs]</a>
+    <span class="k">def</span> <span class="nf">create_data_store</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">data_store_kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a data store for a satellite.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellite: Satellite to create a data store for.</span>
+<span class="sd">            data_store_kwargs: Additional keyword arguments to pass to the data store</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">satellite</span><span class="o">.</span><span class="n">data_store</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datastore_type</span><span class="p">(</span>
+            <span class="n">satellite</span><span class="p">,</span> <span class="n">initial_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_data</span><span class="p">(</span><span class="n">satellite</span><span class="p">),</span> <span class="o">**</span><span class="n">data_store_kwargs</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cum_reward</span><span class="p">[</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span></div>
+
+
+<div class="viewcode-block" id="GlobalReward.calculate_reward">
+<a class="viewcode-back" href="../../../api_reference/data/index.html#bsk_rl.data.base.GlobalReward.calculate_reward">[docs]</a>
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">calculate_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_data_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Data</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate step reward based on all satellite data from a step.</span>
+
+<span class="sd">        Returns a dictionary of rewards for each satellite based on the new data</span>
+<span class="sd">        generated by each satellite during the previous step, in the form:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            {&quot;sat-1_id&quot;: 0.23, &quot;sat-2_id&quot;: 0.0, ...}</span>
+
+
+<span class="sd">        Args:</span>
+<span class="sd">            new_data_dict: A dictionary of new data generated by each satellite, in the</span>
+<span class="sd">                form:</span>
+
+<span class="sd">                .. code-block:: python</span>
+
+<span class="sd">                    {&quot;sat-1_id&quot;: data1, &quot;sat-2_id&quot;: data2, ...}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="GlobalReward.reward">
+<a class="viewcode-back" href="../../../api_reference/data/index.html#bsk_rl.data.base.GlobalReward.reward">[docs]</a>
+    <span class="k">def</span> <span class="nf">reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_data_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Data</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Call :class:`calculate_reward` and log cumulative reward.&quot;&quot;&quot;</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_reward</span><span class="p">(</span><span class="n">new_data_dict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">satellite_id</span><span class="p">,</span> <span class="n">sat_reward</span> <span class="ow">in</span> <span class="n">reward</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cum_reward</span><span class="p">[</span><span class="n">satellite_id</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sat_reward</span>
+
+        <span class="k">for</span> <span class="n">new_data</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">+=</span> <span class="n">new_data</span>
+
+        <span class="n">nonzero_reward</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">reward</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">}</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data reward: </span><span class="si">{</span><span class="n">nonzero_reward</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">reward</span></div>
+</div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">&quot;Base Data&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;GlobalReward&quot;</span><span class="p">,</span> <span class="s2">&quot;DataStore&quot;</span><span class="p">,</span> <span class="s2">&quot;Data&quot;</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

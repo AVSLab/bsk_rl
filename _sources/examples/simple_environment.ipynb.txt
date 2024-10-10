@@ -1,0 +1,1083 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Getting Started\n",
+    "This tutorial demonstrates the configuration and use of a simple BSK-RL environment.\n",
+    "BSK-RL and dependencies should already be installed at this point (see [Installation](../install.rst)\n",
+    "if you haven't installed the package yet).\n",
+    "\n",
+    "## Load Modules\n",
+    "In this tutorial, the environment will be created with `gym.make`, so it is necessary to\n",
+    "import the top-level `bsk_rl` module as well as `gym` and `bsk_rl` components."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:07:01.466797Z",
+     "iopub.status.busy": "2024-09-12T21:07:01.466690Z",
+     "iopub.status.idle": "2024-09-12T21:07:02.420758Z",
+     "shell.execute_reply": "2024-09-12T21:07:02.420448Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import gymnasium as gym\n",
+    "import numpy as np\n",
+    "from bsk_rl import act, data, obs, scene, sats\n",
+    "from bsk_rl.sim import dyn, fsw\n",
+    "\n",
+    "from Basilisk.architecture import bskLogging\n",
+    "bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "If no errors were raised, you have a functional installation of `bsk_rl`.\n",
+    "\n",
+    "## Configure the Satellite\n",
+    "[Satellites](../api_reference/sats/index.rst) are configurable agents in the environment.\n",
+    "To make a new environment, start by specifying the [observations](../api_reference/obs/index.rst)\n",
+    "and [actions](../api_reference/act/index.rst) of a satellite type, as well as the underlying\n",
+    "Basilisk [simulation](../api_reference/sim/index.rst) models used by the satellite."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:07:02.422543Z",
+     "iopub.status.busy": "2024-09-12T21:07:02.422388Z",
+     "iopub.status.idle": "2024-09-12T21:07:02.424601Z",
+     "shell.execute_reply": "2024-09-12T21:07:02.424364Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "class MyScanningSatellite(sats.AccessSatellite):\n",
+    "    observation_spec = [\n",
+    "        obs.SatProperties(\n",
+    "            dict(prop=\"storage_level_fraction\"),\n",
+    "            dict(prop=\"battery_charge_fraction\")\n",
+    "        ),\n",
+    "        obs.Eclipse(),\n",
+    "    ]\n",
+    "    action_spec = [\n",
+    "        act.Scan(duration=60.0),  # Scan for 1 minute\n",
+    "        act.Charge(duration=600.0),  # Charge for 10 minutes\n",
+    "    ]\n",
+    "    dyn_type = dyn.ContinuousImagingDynModel\n",
+    "    fsw_type = fsw.ContinuousImagingFSWModel"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Based on this class specification, a list of configurable parameters for the satellite\n",
+    "can be generated."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:07:02.426189Z",
+     "iopub.status.busy": "2024-09-12T21:07:02.426090Z",
+     "iopub.status.idle": "2024-09-12T21:07:02.429754Z",
+     "shell.execute_reply": "2024-09-12T21:07:02.429507Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'hs_min': 0.0,\n",
+       " 'maxCounterValue': 4,\n",
+       " 'thrMinFireTime': 0.02,\n",
+       " 'desatAttitude': 'sun',\n",
+       " 'controlAxes_B': [1, 0, 0, 0, 1, 0, 0, 0, 1],\n",
+       " 'thrForceSign': 1,\n",
+       " 'K': 7.0,\n",
+       " 'Ki': -1,\n",
+       " 'P': 35.0,\n",
+       " 'imageAttErrorRequirement': 0.01,\n",
+       " 'imageRateErrorRequirement': None,\n",
+       " 'inst_pHat_B': [0, 0, 1],\n",
+       " 'utc_init': 'this value will be set by the world model',\n",
+       " 'batteryStorageCapacity': 288000.0,\n",
+       " 'storedCharge_Init': <function bsk_rl.sim.dyn.BasicDynamicsModel.<lambda>()>,\n",
+       " 'disturbance_vector': None,\n",
+       " 'dragCoeff': 2.2,\n",
+       " 'imageTargetMaximumRange': -1,\n",
+       " 'instrumentBaudRate': 8000000.0,\n",
+       " 'instrumentPowerDraw': -30.0,\n",
+       " 'basePowerDraw': 0.0,\n",
+       " 'wheelSpeeds': <function bsk_rl.sim.dyn.BasicDynamicsModel.<lambda>()>,\n",
+       " 'maxWheelSpeed': inf,\n",
+       " 'u_max': 0.2,\n",
+       " 'rwBasePower': 0.4,\n",
+       " 'rwMechToElecEfficiency': 0.0,\n",
+       " 'rwElecToMechEfficiency': 0.5,\n",
+       " 'panelArea': 1.0,\n",
+       " 'panelEfficiency': 0.2,\n",
+       " 'nHat_B': array([ 0,  0, -1]),\n",
+       " 'mass': 330,\n",
+       " 'width': 1.38,\n",
+       " 'depth': 1.04,\n",
+       " 'height': 1.58,\n",
+       " 'sigma_init': <function bsk_rl.sim.dyn.BasicDynamicsModel.<lambda>()>,\n",
+       " 'omega_init': <function bsk_rl.sim.dyn.BasicDynamicsModel.<lambda>()>,\n",
+       " 'rN': None,\n",
+       " 'vN': None,\n",
+       " 'oe': <function bsk_rl.utils.orbital.random_orbit(i: Optional[float] = 45.0, alt: float = 500, r_body: float = 6371, e: float = 0, Omega: Optional[float] = None, omega: Optional[float] = 0, f: Optional[float] = None) -> Basilisk.utilities.orbitalMotion.ClassicElements>,\n",
+       " 'mu': 398600436000000.0,\n",
+       " 'dataStorageCapacity': 160000000.0,\n",
+       " 'storageUnitValidCheck': False,\n",
+       " 'storageInit': 0,\n",
+       " 'thrusterPowerDraw': 0.0,\n",
+       " 'transmitterBaudRate': -8000000.0,\n",
+       " 'transmitterNumBuffers': 100,\n",
+       " 'transmitterPowerDraw': -15.0}"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "MyScanningSatellite.default_sat_args()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "When instantiating a satellite, these parameters can be overriden with a constant or \n",
+    "rerandomized every time the environment is reset using the ``sat_args`` dictionary."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:07:02.431425Z",
+     "iopub.status.busy": "2024-09-12T21:07:02.431324Z",
+     "iopub.status.idle": "2024-09-12T21:07:02.433981Z",
+     "shell.execute_reply": "2024-09-12T21:07:02.433729Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "sat_args = {}\n",
+    "\n",
+    "# Set some parameters as constants\n",
+    "sat_args[\"imageAttErrorRequirement\"] = 0.05\n",
+    "sat_args[\"dataStorageCapacity\"] = 1e10\n",
+    "sat_args[\"instrumentBaudRate\"] = 1e7\n",
+    "sat_args[\"storedCharge_Init\"] = 50000.0\n",
+    "\n",
+    "# Randomize the initial storage level on every reset\n",
+    "sat_args[\"storageInit\"] = lambda: np.random.uniform(0.25, 0.75) * 1e10\n",
+    "\n",
+    "# Make the satellite\n",
+    "sat = MyScanningSatellite(name=\"EO1\", sat_args=sat_args)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Making the Environment\n",
+    "For this example, we will be using the single-agent [SatelliteTasking](../api_reference/index.rst) \n",
+    "environment. Along with passing the satellite that we configured, the environment takes\n",
+    "a [scenario](../api_reference/scene/index.rst), which defines the environment the\n",
+    "satellite is acting in, and a [rewarder](../api_reference/data/index.rst), which defines\n",
+    "how data collected from the scenario is rewarded."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:07:02.435281Z",
+     "iopub.status.busy": "2024-09-12T21:07:02.435175Z",
+     "iopub.status.idle": "2024-09-12T21:07:02.535285Z",
+     "shell.execute_reply": "2024-09-12T21:07:02.534924Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,436 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[mCalling env.reset() to get observation space\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,436 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[mResetting environment with seed=426283552\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,518 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mFinding opportunity windows from 0.00 to 5700.00 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,533 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[mEnvironment reset\u001b[0m\n"
+     ]
+    }
+   ],
+   "source": [
+    "env = gym.make(\n",
+    "    \"SatelliteTasking-v1\",\n",
+    "    satellite=sat,\n",
+    "    scenario=scene.UniformNadirScanning(),\n",
+    "    rewarder=data.ScanningTimeReward(),\n",
+    "    time_limit=5700.0,  # approximately 1 orbit\n",
+    "    log_level=\"INFO\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Interacting with the Environment\n",
+    "\n",
+    "First, the environment is reset."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:07:02.536995Z",
+     "iopub.status.busy": "2024-09-12T21:07:02.536877Z",
+     "iopub.status.idle": "2024-09-12T21:07:02.752667Z",
+     "shell.execute_reply": "2024-09-12T21:07:02.752365Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,602 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[mResetting environment with seed=1\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,738 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mFinding opportunity windows from 0.00 to 5700.00 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,751 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[mEnvironment reset\u001b[0m\n"
+     ]
+    }
+   ],
+   "source": [
+    "observation, info = env.reset(seed=1)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Next, we take the scan action (`action=0`) a few times. This allows for the satellite to\n",
+    "settle its attitude in the nadir pointing mode to satisfy imaging conditions. Note that \n",
+    "the logs show little or no data accumulated in the first two steps as it settles, but\n",
+    "achieves 60 reward (corresponding to 60 seconds of imaging) by the third step."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:07:02.754280Z",
+     "iopub.status.busy": "2024-09-12T21:07:02.754177Z",
+     "iopub.status.idle": "2024-09-12T21:07:02.773341Z",
+     "shell.execute_reply": "2024-09-12T21:07:02.773094Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,754 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,755 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_nadir_scan tasked for 60.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,755 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 60.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,759 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<60.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 60.0 for action_nadir_scan\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,760 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<60.00> \u001b[0m\u001b[mData reward: {'EO1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,760 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<60.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,761 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<60.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,761 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<60.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,761 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<60.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_nadir_scan tasked for 60.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,761 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<60.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 120.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,765 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 120.0 for action_nadir_scan\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,765 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[mData reward: {'EO1': 30.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,766 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,766 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[mStep reward: 30.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,766 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,767 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_nadir_scan tasked for 60.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,767 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<120.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 180.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,770 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 180.0 for action_nadir_scan\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,771 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[mData reward: {'EO1': 60.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,771 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,771 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[mStep reward: 60.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Initial data level: 0.7341307878 (randomized by sat_args)\n",
+      "  Final data level: 0.8241307878\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Initial data level:\", observation[0], \"(randomized by sat_args)\")\n",
+    "for _ in range(3):\n",
+    "    observation, reward, terminated, truncated, info = env.step(action=0)\n",
+    "print(\"  Final data level:\", observation[0])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The observation reflects the increase in stored data. The first element, corresponding\n",
+    "to `storage_level_fraction`, starts at a random value set by the `storageInit` function\n",
+    "in `sat_args` and increases based on the time spent imaging.\n",
+    "\n",
+    "Finally, the charging mode is tasked repeatedly in 10-minute increments until the\n",
+    "environment time limit is reached."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-12T21:07:02.774845Z",
+     "iopub.status.busy": "2024-09-12T21:07:02.774731Z",
+     "iopub.status.idle": "2024-09-12T21:07:03.162922Z",
+     "shell.execute_reply": "2024-09-12T21:07:03.162609Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,775 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,775 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_charge tasked for 600.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,775 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<180.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 780.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,809 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<780.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 780.0 for action_charge\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,810 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<780.00> \u001b[0m\u001b[mData reward: {'EO1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,810 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<780.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,836 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<780.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,837 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<780.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,837 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<780.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_charge tasked for 600.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,837 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<780.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 1380.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,868 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1380.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 1380.0 for action_charge\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,868 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1380.00> \u001b[0m\u001b[mData reward: {'EO1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,869 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1380.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,869 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1380.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,870 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1380.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,870 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1380.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_charge tasked for 600.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,870 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1380.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 1980.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,903 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1980.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 1980.0 for action_charge\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,903 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1980.00> \u001b[0m\u001b[mData reward: {'EO1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,903 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1980.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,904 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1980.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,904 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1980.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,904 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1980.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_charge tasked for 600.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,905 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1980.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 2580.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,937 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<2580.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 2580.0 for action_charge\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,937 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<2580.00> \u001b[0m\u001b[mData reward: {'EO1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,937 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<2580.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,967 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<2580.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Charge level: 0.339 (780.0 seconds)\n",
+      "\tEclipse: start: 5340.0 end: 1800.0\n",
+      "Charge level: 0.337 (1380.0 seconds)\n",
+      "\tEclipse: start: 4740.0 end: 1200.0\n",
+      "Charge level: 0.334 (1980.0 seconds)\n",
+      "\tEclipse: start: 4140.0 end: 600.0\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,968 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<2580.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,968 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<2580.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_charge tasked for 600.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:02,968 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<2580.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 3180.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,002 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3180.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 3180.0 for action_charge\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,002 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3180.00> \u001b[0m\u001b[mData reward: {'EO1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,003 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3180.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,003 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3180.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,003 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3180.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,004 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3180.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_charge tasked for 600.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,004 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3180.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 3780.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,037 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3780.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 3780.0 for action_charge\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,037 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3780.00> \u001b[0m\u001b[mData reward: {'EO1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Charge level: 0.354 (2580.0 seconds)\n",
+      "\tEclipse: start: 3540.0 end: 5670.0\n",
+      "Charge level: 0.942 (3180.0 seconds)\n",
+      "\tEclipse: start: 2940.0 end: 5070.0\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,037 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3780.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,038 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3780.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,038 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3780.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,038 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3780.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_charge tasked for 600.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,039 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<3780.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 4380.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,073 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4380.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 4380.0 for action_charge\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,074 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4380.00> \u001b[0m\u001b[mData reward: {'EO1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,074 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4380.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,075 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4380.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,075 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4380.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,076 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4380.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_charge tasked for 600.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,076 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4380.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 4980.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,111 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4980.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 4980.0 for action_charge\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,111 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4980.00> \u001b[0m\u001b[mData reward: {'EO1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,112 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4980.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,112 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4980.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,113 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4980.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,113 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4980.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_charge tasked for 600.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,113 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<4980.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 5580.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,149 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<5580.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mtimed termination at 5580.0 for action_charge\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,149 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<5580.00> \u001b[0m\u001b[mData reward: {'EO1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,150 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<5580.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[mSatellite EO1 requires retasking\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,150 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<5580.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,151 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<5580.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,151 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<5580.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[maction_charge tasked for 600.0 seconds\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,151 \u001b[0m\u001b[36msats.satellite.EO1             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<5580.00> \u001b[0m\u001b[36mEO1: \u001b[0m\u001b[msetting timed terminal event at 6180.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,159 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<5700.00> \u001b[0m\u001b[mData reward: {'EO1': 0.0}\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,160 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<5700.00> \u001b[0m\u001b[mStep reward: 0.0\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,160 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<5700.00> \u001b[0m\u001b[mEpisode terminated: False\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2024-09-12 15:07:03,161 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<5700.00> \u001b[0m\u001b[mEpisode truncated: True\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Charge level: 1.000 (3780.0 seconds)\n",
+      "\tEclipse: start: 2340.0 end: 4470.0\n",
+      "Charge level: 1.000 (4380.0 seconds)\n",
+      "\tEclipse: start: 1740.0 end: 3870.0\n",
+      "Charge level: 1.000 (4980.0 seconds)\n",
+      "\tEclipse: start: 1140.0 end: 3270.0\n",
+      "Charge level: 1.000 (5580.0 seconds)\n",
+      "\tEclipse: start: 540.0 end: 2670.0\n",
+      "Charge level: 1.000 (5700.0 seconds)\n",
+      "\tEclipse: start: 420.0 end: 2550.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "while not truncated:\n",
+    "    observation, reward, terminated, truncated, info = env.step(action=1)\n",
+    "    print(f\"Charge level: {observation[1]:.3f} ({env.unwrapped.simulator.sim_time:.1f} seconds)\\n\\tEclipse: start: {observation[2]:.1f} end: {observation[3]:.1f}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "It is observed that the battery decrease while the satellite is in eclipse, but once the\n",
+    "satellite is out of eclipse, the battery quickly increases to full charge."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv_refactor",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.11"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

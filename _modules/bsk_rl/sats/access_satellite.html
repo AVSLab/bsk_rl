@@ -1,0 +1,806 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.sats.access_satellite &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.sats.access_satellite</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.sats.access_satellite</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Satellites are the agents in the environment.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">bisect</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">macros</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize_scalar</span><span class="p">,</span> <span class="n">root_scalar</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.sats.satellite</span> <span class="kn">import</span> <span class="n">Satellite</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.scene.targets</span> <span class="kn">import</span> <span class="n">Target</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.sim</span> <span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.functional</span> <span class="kn">import</span> <span class="n">valid_func_name</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.orbital</span> <span class="kn">import</span> <span class="n">elevation</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.data.unique_image_data</span> <span class="kn">import</span> <span class="n">UniqueImageStore</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">SatObs</span> <span class="o">=</span> <span class="n">Any</span>
+<span class="n">SatAct</span> <span class="o">=</span> <span class="n">Any</span>
+
+
+<div class="viewcode-block" id="AccessSatellite">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.AccessSatellite">[docs]</a>
+<span class="k">class</span> <span class="nc">AccessSatellite</span><span class="p">(</span><span class="n">Satellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Satellite that detects access opportunities for ground locations.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">generation_duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">600.0</span><span class="p">,</span>
+        <span class="n">initial_generation_duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Satellite that detects access opportunities for ground locations.</span>
+
+<span class="sd">        This satellite can be used to computes access opportunities for ground locations</span>
+<span class="sd">        such as imaging targets or ground stations. The satellite will calculate upcoming</span>
+<span class="sd">        opportunities for each location and order the opportunities by close time.</span>
+<span class="sd">        Opportunities are calculated based on a per-location minimum elevation angle.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            args: Passed through to :class:`Satellite` constructor.</span>
+<span class="sd">            generation_duration: [s] Duration to calculate additional opportunities for</span>
+<span class="sd">                when the simulation time reaches the current calculation time. If</span>
+<span class="sd">                `None`, generate opportunities for the simulation `time_limit` unless</span>
+<span class="sd">                the simulation is infinite.</span>
+<span class="sd">            initial_generation_duration: [s] Period to calculate opportunities for on</span>
+<span class="sd">                environment reset.</span>
+<span class="sd">            kwargs: Passed through to :class:`Satellite` constructor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generation_duration</span> <span class="o">=</span> <span class="n">generation_duration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_generation_duration</span> <span class="o">=</span> <span class="n">initial_generation_duration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">access_filter_functions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_access_filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">opportunity</span><span class="p">:</span> <span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AccessSatellite.reset_overwrite_previous">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.AccessSatellite.reset_overwrite_previous">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_overwrite_previous</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Overwrite previous opportunities and locations.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_overwrite_previous</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locations_for_access_checking</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="AccessSatellite.add_location_for_access_checking">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.AccessSatellite.add_location_for_access_checking">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_location_for_access_checking</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="nb">object</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">r_LP_P</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">min_elev</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a location to be included in opportunity calculations.</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            The added location will only be considered in future calls to</span>
+<span class="sd">            :class:`~AccessSatellite.calculate_additional_windows`; opportunities are not</span>
+<span class="sd">            computed retroactively.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            object: Object for with to compute opportunities.</span>
+<span class="sd">            r_LP_P: [m] Objects planet-fixed location.</span>
+<span class="sd">            min_elev: [rad] Minimum elevation angle for access.</span>
+<span class="sd">            type: Category of opportunity target provides.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">location_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">r_LP_P</span><span class="o">=</span><span class="n">r_LP_P</span><span class="p">,</span> <span class="n">min_elev</span><span class="o">=</span><span class="n">min_elev</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">)</span>
+        <span class="n">location_dict</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="nb">object</span>  <span class="c1"># For backwards compatibility, prefer &quot;object&quot; key</span>
+        <span class="n">location_dict</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locations_for_access_checking</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">location_dict</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">reset_post_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle initial window calculations for new simulation.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_generation_duration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">==</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">initial_generation_duration</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">initial_generation_duration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">time_limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calculate_additional_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_generation_duration</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AccessSatellite.calculate_additional_windows">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.AccessSatellite.calculate_additional_windows">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_additional_windows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Use a multiroot finding method to evaluate imaging windows for each location.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            duration: Time to calculate windows from end of previous window.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">duration</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Finding opportunity windows from &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> to &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">duration</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds&quot;</span>
+        <span class="p">)</span>
+        <span class="n">calculation_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span>
+        <span class="n">calculation_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="n">duration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_duration</span>
+        <span class="p">)</span>
+        <span class="n">calculation_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_duration</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+            <span class="n">calculation_end</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_duration</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Get discrete times and positions for next trajectory segment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">extend_to</span><span class="p">(</span><span class="n">calculation_end</span><span class="p">)</span>
+        <span class="n">r_BP_P_interp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">r_BP_P</span>
+        <span class="n">window_calc_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span>
+            <span class="n">r_BP_P_interp</span><span class="o">.</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="n">calculation_start</span> <span class="o">-</span> <span class="mf">1e-9</span><span class="p">,</span>
+            <span class="n">r_BP_P_interp</span><span class="o">.</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="n">calculation_end</span> <span class="o">+</span> <span class="mf">1e-9</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># Account for floating point error in window_calculation_time</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">r_BP_P_interp</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">window_calc_span</span><span class="p">]</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">r_BP_P_interp</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">window_calc_span</span><span class="p">]</span>
+
+        <span class="n">r_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">access_dist_thresh_multiplier</span> <span class="o">=</span> <span class="mf">1.1</span>
+        <span class="k">for</span> <span class="n">location</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">locations_for_access_checking</span><span class="p">:</span>
+            <span class="n">alt_est</span> <span class="o">=</span> <span class="n">r_max</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">location</span><span class="p">[</span><span class="s2">&quot;r_LP_P&quot;</span><span class="p">])</span>
+            <span class="n">access_dist_threshold</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">access_dist_thresh_multiplier</span> <span class="o">*</span> <span class="n">alt_est</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">location</span><span class="p">[</span><span class="s2">&quot;min_elev&quot;</span><span class="p">])</span>
+            <span class="p">)</span>
+            <span class="n">candidate_windows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_candidate_windows</span><span class="p">(</span>
+                <span class="n">location</span><span class="p">[</span><span class="s2">&quot;r_LP_P&quot;</span><span class="p">],</span> <span class="n">times</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">access_dist_threshold</span>
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">candidate_window</span> <span class="ow">in</span> <span class="n">candidate_windows</span><span class="p">:</span>
+                <span class="n">roots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_elevation_roots</span><span class="p">(</span>
+                    <span class="n">r_BP_P_interp</span><span class="p">,</span>
+                    <span class="n">location</span><span class="p">[</span><span class="s2">&quot;r_LP_P&quot;</span><span class="p">],</span>
+                    <span class="n">location</span><span class="p">[</span><span class="s2">&quot;min_elev&quot;</span><span class="p">],</span>
+                    <span class="n">candidate_window</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">new_windows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refine_window</span><span class="p">(</span>
+                    <span class="n">roots</span><span class="p">,</span> <span class="n">candidate_window</span><span class="p">,</span> <span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">new_window</span> <span class="ow">in</span> <span class="n">new_windows</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_add_window</span><span class="p">(</span>
+                        <span class="n">location</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">],</span>
+                        <span class="n">new_window</span><span class="p">,</span>
+                        <span class="nb">type</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+                        <span class="n">r_LP_P</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="s2">&quot;r_LP_P&quot;</span><span class="p">],</span>
+                        <span class="n">merge_time</span><span class="o">=</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_calculation_time</span> <span class="o">=</span> <span class="n">calculation_end</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_find_elevation_roots</span><span class="p">(</span>
+        <span class="n">position_interp</span><span class="p">,</span>
+        <span class="n">location</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">min_elev</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">min_duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find times where the elevation is equal to the minimum elevation.</span>
+
+<span class="sd">        Finds exact times where the satellite&#39;s elevation relative to a target is</span>
+<span class="sd">        equal to the minimum elevation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">root_fn</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">elevation</span><span class="p">(</span><span class="n">position_interp</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">location</span><span class="p">)</span> <span class="o">-</span> <span class="n">min_elev</span><span class="p">)</span>
+
+        <span class="n">elev_0</span><span class="p">,</span> <span class="n">elev_1</span> <span class="o">=</span> <span class="n">root_fn</span><span class="p">(</span><span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">root_fn</span><span class="p">(</span><span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">elev_0</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">elev_1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;initial_generation_duration is shorter than the maximum window length; some windows may be neglected.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="n">elev_0</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">elev_1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">root_scalar</span><span class="p">(</span><span class="n">root_fn</span><span class="p">,</span> <span class="n">bracket</span><span class="o">=</span><span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">minimize_scalar</span><span class="p">(</span><span class="n">root_fn</span><span class="p">,</span> <span class="n">bracket</span><span class="o">=</span><span class="n">window</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">fun</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">window_mid</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">r_open</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span><span class="n">root_fn</span><span class="p">,</span> <span class="n">bracket</span><span class="o">=</span><span class="p">(</span><span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">window_mid</span><span class="p">))</span><span class="o">.</span><span class="n">root</span>
+                <span class="n">r_close</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span><span class="n">root_fn</span><span class="p">,</span> <span class="n">bracket</span><span class="o">=</span><span class="p">(</span><span class="n">window_mid</span><span class="p">,</span> <span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">root</span>
+                <span class="k">if</span> <span class="n">r_close</span> <span class="o">-</span> <span class="n">r_open</span> <span class="o">&gt;</span> <span class="n">min_duration</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="n">r_open</span><span class="p">,</span> <span class="n">r_close</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_find_candidate_windows</span><span class="p">(</span>
+        <span class="n">location</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">times</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">positions</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find `times` where a window is plausible.</span>
+
+<span class="sd">        i.e. where a `positions` point is within `threshold` of `location`. Too big of</span>
+<span class="sd">        a dt in times may miss windows or produce bad results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">close_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">positions</span> <span class="o">-</span> <span class="n">location</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">threshold</span>
+        <span class="n">close_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">close_times</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">close_indices</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">close_indices</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">group</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">candidate_windows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+            <span class="n">t_start</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="n">t_end</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">group</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="n">candidate_windows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">candidate_windows</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_refine_window</span><span class="p">(</span>
+        <span class="n">endpoints</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span>
+        <span class="n">candidate_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">computation_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect if an exact window has been truncated by a coarse window.&quot;&quot;&quot;</span>
+        <span class="n">endpoints</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">endpoints</span><span class="p">)</span>
+
+        <span class="c1"># Filter endpoints that are too close</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">endpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">endpoint</span> <span class="o">-</span> <span class="n">endpoints</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">:</span>
+                <span class="n">endpoints</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">endpoints</span> <span class="o">=</span> <span class="p">[</span><span class="n">endpoint</span> <span class="k">for</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="n">endpoints</span> <span class="k">if</span> <span class="n">endpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="c1"># Find pairs</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">endpoints</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">candidate_window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">computation_window</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">endpoints</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">computation_window</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">candidate_window</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">computation_window</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">endpoints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">computation_window</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>  <span class="c1"># Temporary fix for rare issue.</span>
+
+        <span class="n">new_windows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">endpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">endpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]):</span>
+            <span class="n">new_windows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">new_windows</span>
+
+    <span class="k">def</span> <span class="nf">_add_window</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="nb">object</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">new_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">r_LP_P</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">merge_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an opportunity window.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            object: Object to add window for</span>
+<span class="sd">            new_window: New window for target</span>
+<span class="sd">            type: Type of window being added</span>
+<span class="sd">            r_LP_P: Planet-fixed location of object</span>
+<span class="sd">            merge_time: Time at which merges with existing windows will occur. If None,</span>
+<span class="sd">                check all windows for merges.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">new_window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">merge_time</span> <span class="ow">or</span> <span class="n">merge_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">type</span>
+                    <span class="ow">and</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">object</span>
+                    <span class="ow">and</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">new_window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">):</span>
+                    <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_window</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="k">return</span>
+        <span class="n">bisect</span><span class="o">.</span><span class="n">insort</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">,</span>
+            <span class="p">{</span><span class="s2">&quot;object&quot;</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="s2">&quot;window&quot;</span><span class="p">:</span> <span class="n">new_window</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="s2">&quot;r_LP_P&quot;</span><span class="p">:</span> <span class="n">r_LP_P</span><span class="p">},</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">upcoming_opportunities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ordered list of opportunities that have not yet closed.&quot;&quot;&quot;</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">bisect</span><span class="o">.</span><span class="n">bisect_left</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">+</span> <span class="mf">1e-12</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">upcoming</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">[</span><span class="n">start</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="n">upcoming</span>
+
+<div class="viewcode-block" id="AccessSatellite.opportunities_dict">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.AccessSatellite.opportunities_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">opportunities_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make dictionary of opportunities that maps objects to lists of windows.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            types: Types of opportunities to include. If None, include all types.</span>
+<span class="sd">            filter: Function that takes an opportunity dictionary and returns a boolean</span>
+<span class="sd">                if the opportunity should be included in the output.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">filter</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">filter_list</span> <span class="o">=</span> <span class="nb">filter</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">opportunity</span><span class="p">:</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">filter_list</span>
+
+        <span class="k">if</span> <span class="nb">filter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_access_filter</span>
+
+        <span class="n">windows</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opportunities</span><span class="p">:</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">filter</span><span class="p">(</span><span class="n">opportunity</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">windows</span><span class="p">:</span>
+                    <span class="n">windows</span><span class="p">[</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">windows</span><span class="p">[</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">windows</span></div>
+
+
+<div class="viewcode-block" id="AccessSatellite.upcoming_opportunities_dict">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.AccessSatellite.upcoming_opportunities_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">upcoming_opportunities_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get dictionary of upcoming opportunities.</span>
+
+<span class="sd">        Maps objects to lists of windows that have not yet closed.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            types: Types of opportunities to include. If None, include all types.</span>
+<span class="sd">            filter: Function that takes an opportunity dictionary and returns a boolean</span>
+<span class="sd">                if the opportunity should be included in the output.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">filter</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">filter_list</span> <span class="o">=</span> <span class="nb">filter</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">opportunity</span><span class="p">:</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">filter_list</span>
+
+        <span class="k">if</span> <span class="nb">filter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_access_filter</span>
+
+        <span class="n">windows</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">upcoming_opportunities</span><span class="p">:</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">filter</span><span class="p">(</span><span class="n">opportunity</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">windows</span><span class="p">:</span>
+                    <span class="n">windows</span><span class="p">[</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">windows</span><span class="p">[</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">windows</span></div>
+
+
+<div class="viewcode-block" id="AccessSatellite.next_opportunities_dict">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.AccessSatellite.next_opportunities_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">next_opportunities_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make dictionary of opportunities that maps objects to the next open windows.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            types: Types of opportunities to include. If None, include all types.</span>
+<span class="sd">            filter: Function that takes an opportunity dictionary and returns a boolean</span>
+<span class="sd">                if the opportunity should be included in the output.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">filter</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">filter_list</span> <span class="o">=</span> <span class="nb">filter</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">opportunity</span><span class="p">:</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">filter_list</span>
+
+        <span class="k">if</span> <span class="nb">filter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_access_filter</span>
+
+        <span class="n">next_windows</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">upcoming_opportunities</span><span class="p">:</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">filter</span><span class="p">(</span><span class="n">opportunity</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">next_windows</span><span class="p">:</span>
+                    <span class="n">next_windows</span><span class="p">[</span><span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">next_windows</span></div>
+
+
+<div class="viewcode-block" id="AccessSatellite.find_next_opportunities">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.AccessSatellite.find_next_opportunities">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_next_opportunities</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">pad</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">max_lookahead</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find the n nearest opportunities, sorted by window close time.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n: Number of opportunities to attempt to include.</span>
+<span class="sd">            pad: If true, duplicates the last target if the number of opportunities</span>
+<span class="sd">                found is less than n.</span>
+<span class="sd">            max_lookahead: Maximum times to call calculate_additional_windows.</span>
+<span class="sd">            types: Types of opportunities to include. If None, include all types.</span>
+<span class="sd">            filter: Function that takes an opportunity dictionary and returns a boolean</span>
+<span class="sd">                if the opportunity should be included in the output.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ``n`` nearest opportunities, ordered</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">filter</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">filter_list</span> <span class="o">=</span> <span class="nb">filter</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">opportunity</span><span class="p">:</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">filter_list</span>
+
+        <span class="k">if</span> <span class="nb">filter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_access_filter</span>
+
+        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_lookahead</span><span class="p">):</span>
+            <span class="n">upcoming_opportunities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upcoming_opportunities</span>
+            <span class="n">next_opportunities</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="n">upcoming_opportunities</span><span class="p">:</span>
+                <span class="nb">type</span> <span class="o">=</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">filter</span><span class="p">(</span><span class="n">opportunity</span><span class="p">):</span>
+                    <span class="n">next_opportunities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opportunity</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_opportunities</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">next_opportunities</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calculate_additional_windows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation_duration</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pad</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_opportunities</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">next_opportunities</span> <span class="o">+=</span> <span class="p">[</span><span class="n">next_opportunities</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">n</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_opportunities</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;No opportunities found! Use add_location_for_access_checking to add locations.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">next_opportunities</span></div>
+
+
+    <span class="k">def</span> <span class="nf">get_access_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deprecated function.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">DeprecationWarning</span><span class="p">(</span>
+            <span class="s2">&quot;get_access_filter is deprecated. Use add_access_filter and default_access_filter instead.&quot;</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="AccessSatellite.add_access_filter">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.AccessSatellite.add_access_filter">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_access_filter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">access_filter_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an access filter function to the list of access filters.</span>
+
+<span class="sd">        Calls to :class:`~AccessSatellite.opportunities_dict`, :class:`~AccessSatellite.find_next_opportunities`,</span>
+<span class="sd">        and similar functions will use the boolean AND of all access filter functions,</span>
+<span class="sd">        unless otherwise specified.</span>
+
+<span class="sd">        Access filters are used by various other aspects of the environment to limit</span>
+<span class="sd">        which opportunities are considered based on the satellite&#39;s local knowledge of</span>
+<span class="sd">        the environment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">types</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+
+            <span class="k">def</span> <span class="nf">access_filter_type_restricted</span><span class="p">(</span><span class="n">opportunity</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">types</span> <span class="ow">or</span> <span class="n">access_filter_fn</span><span class="p">(</span><span class="n">opportunity</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">access_filter_functions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">access_filter_type_restricted</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">access_filter_functions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">access_filter_fn</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">default_access_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a default access filter function that combines all access filters.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">access_filter</span><span class="p">(</span><span class="n">opportunity</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">access_filter_fn</span><span class="p">(</span><span class="n">opportunity</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">access_filter_fn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">access_filter_functions</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">access_filter</span></div>
+
+
+
+<div class="viewcode-block" id="ImagingSatellite">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.ImagingSatellite">[docs]</a>
+<span class="k">class</span> <span class="nc">ImagingSatellite</span><span class="p">(</span><span class="n">AccessSatellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Satellite with agile imaging capabilities.&quot;&quot;&quot;</span>
+
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">ImagingDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">ImagingFSWModel</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Satellite with agile imaging capabilities.</span>
+
+<span class="sd">        Stop the simulation when a target is imaged or missed so that time is not wasted</span>
+<span class="sd">        on an inaccessible or already imaged target.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="p">:</span> <span class="n">ImagingSatellite</span><span class="o">.</span><span class="n">fsw_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="p">:</span> <span class="n">ImagingSatellite</span><span class="o">.</span><span class="n">dyn_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="p">:</span> <span class="s2">&quot;UniqueImageStore&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_types</span> <span class="o">=</span> <span class="s2">&quot;target&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">known_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Target&quot;</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List of known targets.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">known</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="ImagingSatellite.reset_overwrite_previous">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.ImagingSatellite.reset_overwrite_previous">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_overwrite_previous</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Overwrite statistics about previous episode.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_overwrite_previous</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imaged</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missed</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+    <span class="k">def</span> <span class="nf">reset_pre_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the buffer parameters based on computed windows.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_pre_sim_init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;bufferNames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">loc</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">id</span>
+            <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">locations_for_access_checking</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">loc</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">],</span> <span class="s2">&quot;id&quot;</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;transmitterNumBuffers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;bufferNames&quot;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_update_image_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="s2">&quot;Target&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a simulator event that terminates on imaging.</span>
+
+<span class="sd">        Causes the simulation to stop when a target is imaged.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target: Target expected to be imaged</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_disable_image_event</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span> <span class="o">=</span> <span class="n">valid_func_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;image_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">eventMap</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">data_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">storedDataName</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">data_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data_names</span> <span class="o">==</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">current_data_level</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">storedData</span><span class="p">[</span>
+                    <span class="n">data_index</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">createNewEvent</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span><span class="p">,</span>
+                <span class="n">macros</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">fsw_rate</span><span class="p">),</span>
+                <span class="kc">True</span><span class="p">,</span>
+                <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">&quot;self.dynamics_list[&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;].storageUnit.storageUnitDataOutMsg.read()&quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;.storedData[</span><span class="si">{</span><span class="n">data_index</span><span class="si">}</span><span class="s2">] &gt; </span><span class="si">{</span><span class="n">current_data_level</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_info_command</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;imaged </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_satellite_command</span> <span class="o">+</span> <span class="s2">&quot;.imaged += 1&quot;</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_satellite_command</span> <span class="o">+</span> <span class="s2">&quot;.requires_retasking = True&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="n">terminal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_interval</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">eventMap</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span><span class="p">]</span><span class="o">.</span><span class="n">eventActive</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_disable_image_event</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turn off simulator termination due to this satellite&#39;s imaging checker.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">eventMap</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">delete_event</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_event_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ImagingSatellite.parse_target_selection">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.ImagingSatellite.parse_target_selection">[docs]</a>
+    <span class="k">def</span> <span class="nf">parse_target_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_query</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Target</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Identify a target from a query.</span>
+
+<span class="sd">        Parses an upcoming target index, Target object, or target id.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target_query: Target upcoming index, object, or id.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">target_query</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_next_opportunities</span><span class="p">(</span>
+                <span class="n">n</span><span class="o">=</span><span class="n">target_query</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_types</span>
+            <span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;object&quot;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_query</span><span class="p">,</span> <span class="n">Target</span><span class="p">):</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">target_query</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_query</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">target</span> <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">known_targets</span> <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">target_query</span>
+                <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Target </span><span class="si">{</span><span class="n">target_query</span><span class="si">}</span><span class="s2"> not a known target!&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid target_query! Cannot be a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">target_query</span><span class="p">)</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">target</span></div>
+
+
+<div class="viewcode-block" id="ImagingSatellite.enable_target_window">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.ImagingSatellite.enable_target_window">[docs]</a>
+    <span class="k">def</span> <span class="nf">enable_target_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="s2">&quot;Target&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enable a timed opportunity close event and a successfully imaged event.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target: Target to terminate the step on imaging or when out of range.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_image_event</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="n">next_window</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_opportunities_dict</span><span class="p">(</span>
+            <span class="n">types</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_types</span><span class="p">,</span>
+            <span class="nb">filter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_access_filter</span><span class="p">,</span>
+        <span class="p">)[</span><span class="n">target</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> window enabled: </span><span class="si">{</span><span class="n">next_window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">next_window</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_timed_terminal_event</span><span class="p">(</span>
+            <span class="n">next_window</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">info</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> window&quot;</span><span class="p">,</span>
+            <span class="n">extra_actions</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_satellite_command</span> <span class="o">+</span> <span class="s2">&quot;.missed += 1&quot;</span><span class="p">],</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingSatellite.task_target_for_imaging">
+<a class="viewcode-back" href="../../../api_reference/sats/index.html#bsk_rl.sats.ImagingSatellite.task_target_for_imaging">[docs]</a>
+    <span class="k">def</span> <span class="nf">task_target_for_imaging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="s2">&quot;Target&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task the satellite to image a target.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target: Selected target</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> tasked for imaging&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">action_image</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">r_LP_P</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enable_target_window</span><span class="p">(</span><span class="n">target</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

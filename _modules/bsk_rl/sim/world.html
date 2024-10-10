@@ -1,0 +1,533 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.sim.world &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.sim.world</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.sim.world</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Basilisk world models are given in ``bsk_rl.sim.world``.</span>
+
+<span class="sd">In most cases, the user does not need to specify the world model, as it is inferred from</span>
+<span class="sd">the requirements of the :class:`~bsk_rl.sim.fsw.FSWModel`. However, the user can specify</span>
+<span class="sd">the world model in the :class:`~bsk_rl.GeneralSatelliteTasking` constructor if desired.</span>
+
+<span class="sd">Customization of the world model parameters is via the ``world_args`` parameter in the</span>
+<span class="sd">:class:`~bsk_rl.GeneralSatelliteTasking`. As with ``sat_args``, these parameters are</span>
+<span class="sd">passed as a dictionary of key-value or key-function pairs, with the latter called to</span>
+<span class="sd">generate the value each time the simulation is reset.</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    world_args = dict(</span>
+<span class="sd">        utc_init=&quot;2018 SEP 29 21:00:00.000 (UTC)&quot;,  # set the epoch</span>
+<span class="sd">        scaleHeight=np.random.uniform(7e3, 9e3),  # randomize the atmosphere</span>
+<span class="sd">    )</span>
+
+<span class="sd">In general, ``world_args`` parameter names match those used in Basilisk. See the setup</span>
+<span class="sd">functions for short descriptions of what parameters do and the Basilisk documentation</span>
+<span class="sd">for more detail on their exact model effects.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">weakref</span> <span class="kn">import</span> <span class="n">proxy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">Basilisk</span> <span class="kn">import</span> <span class="n">__path__</span>
+<span class="kn">from</span> <span class="nn">Basilisk.simulation</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">eclipse</span><span class="p">,</span>
+    <span class="n">ephemerisConverter</span><span class="p">,</span>
+    <span class="n">exponentialAtmosphere</span><span class="p">,</span>
+    <span class="n">groundLocation</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">macros</span> <span class="k">as</span> <span class="n">mc</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">orbitalMotion</span><span class="p">,</span> <span class="n">simIncludeGravBody</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.functional</span> <span class="kn">import</span> <span class="n">collect_default_args</span><span class="p">,</span> <span class="n">default_args</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.orbital</span> <span class="kn">import</span> <span class="n">random_epoch</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.sim</span> <span class="kn">import</span> <span class="n">Simulator</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">bsk_path</span> <span class="o">=</span> <span class="n">__path__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="WorldModel">
+<a class="viewcode-back" href="../../../api_reference/sim/world.html#bsk_rl.sim.world.WorldModel">[docs]</a>
+<span class="k">class</span> <span class="nc">WorldModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract Basilisk world model.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="WorldModel.default_world_args">
+<a class="viewcode-back" href="../../../api_reference/sim/world.html#bsk_rl.sim.world.WorldModel.default_world_args">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_world_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compile default arguments for the world model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            **kwargs: Arguments to override in the default arguments.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary of arguments for simulation models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="n">collect_default_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">defaults</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> not a valid key for world_args&quot;</span><span class="p">)</span>
+            <span class="n">defaults</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">return</span> <span class="n">defaults</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">simulator</span><span class="p">:</span> <span class="s2">&quot;Simulator&quot;</span><span class="p">,</span>
+        <span class="n">world_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Abstract Basilisk world model.</span>
+
+<span class="sd">        One WorldModel is instantiated for the environment each time a new simulator</span>
+<span class="sd">        is created.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            simulator: Simulator using this model.</span>
+<span class="sd">            world_rate: Rate of world simulation [s]</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed through to setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="p">:</span> <span class="n">Simulator</span> <span class="o">=</span> <span class="n">proxy</span><span class="p">(</span><span class="n">simulator</span><span class="p">)</span>
+
+        <span class="n">world_proc_name</span> <span class="o">=</span> <span class="s2">&quot;WorldProcess&quot;</span>
+        <span class="n">world_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">CreateNewProcess</span><span class="p">(</span><span class="n">world_proc_name</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+
+        <span class="c1"># Define process name, task name and task time-step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">world_task_name</span> <span class="o">=</span> <span class="s2">&quot;WorldTask&quot;</span>
+        <span class="n">world_proc</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">CreateNewTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world_task_name</span><span class="p">,</span> <span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="n">world_rate</span><span class="p">))</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup_world_objects</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log when world is deleted.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Basilisk world deleted&quot;</span><span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">_setup_world_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Caller for all world objects.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="BasicWorldModel">
+<a class="viewcode-back" href="../../../api_reference/sim/world.html#bsk_rl.sim.world.BasicWorldModel">[docs]</a>
+<span class="k">class</span> <span class="nc">BasicWorldModel</span><span class="p">(</span><span class="n">WorldModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Basic world with minimum necessary Basilisk world components.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Basic world with minimum necessary Basilisk world components.</span>
+
+<span class="sd">        This model includes ephemeris and SPICE-based Earth gravity and dynamics models,</span>
+<span class="sd">        an exponential atmosphere model, and an eclipse model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *args: Passed to superclass.</span>
+<span class="sd">            **kwargs: Passed to superclass.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">PN</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Planet relative to inertial frame rotation matrix.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+            <span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">J20002Pfix</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">omega_PN_N</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Planet angular velocity in inertial frame [rad/s].&quot;&quot;&quot;</span>
+        <span class="n">PNdot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+            <span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">J20002Pfix_dot</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">skew_PN_N</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PN</span><span class="p">),</span> <span class="n">PNdot</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">skew_PN_N</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">skew_PN_N</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">skew_PN_N</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+
+    <span class="k">def</span> <span class="nf">_setup_world_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_gravity_bodies</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_ephem_object</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_atmosphere_density_model</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_eclipse_object</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BasicWorldModel.setup_gravity_bodies">
+<a class="viewcode-back" href="../../../api_reference/sim/world.html#bsk_rl.sim.world.BasicWorldModel.setup_gravity_bodies">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">utc_init</span><span class="o">=</span><span class="n">random_epoch</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_gravity_bodies</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">utc_init</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Specify gravitational models to use in the simulation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            utc_init: UTC datetime string, in the format ``YYYY MMM DD hh:mm:ss.sss (UTC)``</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            **kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span> <span class="o">=</span> <span class="n">simIncludeGravBody</span><span class="o">.</span><span class="n">gravBodyFactory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">createSun</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">createEarth</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sun_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body_index</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">planet</span><span class="o">.</span><span class="n">isCentralBody</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="kc">True</span>  <span class="c1"># ensure this is the central gravitational body</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planet</span><span class="o">.</span><span class="n">useSphericalHarmonicsGravityModel</span><span class="p">(</span>
+            <span class="n">bsk_path</span> <span class="o">+</span> <span class="s2">&quot;/supportData/LocalGravData/GGM03S.txt&quot;</span><span class="p">,</span> <span class="mi">10</span>
+        <span class="p">)</span>
+
+        <span class="c1"># setup Spice interface for some solar system bodies</span>
+        <span class="n">timeInitString</span> <span class="o">=</span> <span class="n">utc_init</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">createSpiceInterface</span><span class="p">(</span>
+            <span class="n">bsk_path</span> <span class="o">+</span> <span class="s2">&quot;/supportData/EphemerisData/&quot;</span><span class="p">,</span> <span class="n">timeInitString</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">zeroBase</span> <span class="o">=</span> <span class="s2">&quot;earth&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world_task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicWorldModel.setup_ephem_object">
+<a class="viewcode-back" href="../../../api_reference/sim/world.html#bsk_rl.sim.world.BasicWorldModel.setup_ephem_object">[docs]</a>
+    <span class="k">def</span> <span class="nf">setup_ephem_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">988</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the ephemeris object to use with the SPICE library.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            **kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ephemConverter</span> <span class="o">=</span> <span class="n">ephemerisConverter</span><span class="o">.</span><span class="n">EphemerisConverter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ephemConverter</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;ephemConverter&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ephemConverter</span><span class="o">.</span><span class="n">addSpiceInputMsg</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sun_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ephemConverter</span><span class="o">.</span><span class="n">addSpiceInputMsg</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world_task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ephemConverter</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicWorldModel.setup_atmosphere_density_model">
+<a class="viewcode-back" href="../../../api_reference/sim/world.html#bsk_rl.sim.world.BasicWorldModel.setup_atmosphere_density_model">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">planetRadius</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span>
+        <span class="n">baseDensity</span><span class="o">=</span><span class="mf">1.22</span><span class="p">,</span>
+        <span class="n">scaleHeight</span><span class="o">=</span><span class="mf">8e3</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_atmosphere_density_model</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">planetRadius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">baseDensity</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">scaleHeight</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the exponential gravity model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            planetRadius: [m] Planet ground radius.</span>
+<span class="sd">            baseDensity: [kg/m^3] Exponential model parameter.</span>
+<span class="sd">            scaleHeight: [m] Exponential model parameter.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            **kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span> <span class="o">=</span> <span class="n">exponentialAtmosphere</span><span class="o">.</span><span class="n">ExponentialAtmosphere</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;expDensity&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">planetRadius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">baseDensity</span> <span class="o">=</span> <span class="n">baseDensity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">scaleHeight</span> <span class="o">=</span> <span class="n">scaleHeight</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">planetPosInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world_task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">densityModel</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicWorldModel.setup_eclipse_object">
+<a class="viewcode-back" href="../../../api_reference/sim/world.html#bsk_rl.sim.world.BasicWorldModel.setup_eclipse_object">[docs]</a>
+    <span class="k">def</span> <span class="nf">setup_eclipse_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">988</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the celestial object that is causing an eclipse message.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Ignored</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eclipseObject</span> <span class="o">=</span> <span class="n">eclipse</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eclipseObject</span><span class="o">.</span><span class="n">addPlanetToModel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eclipseObject</span><span class="o">.</span><span class="n">sunInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sun_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world_task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eclipseObject</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log when world is deleted and unload SPICE.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__del__</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">unloadSpiceKernels</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="GroundStationWorldModel">
+<a class="viewcode-back" href="../../../api_reference/sim/world.html#bsk_rl.sim.world.GroundStationWorldModel">[docs]</a>
+<span class="k">class</span> <span class="nc">GroundStationWorldModel</span><span class="p">(</span><span class="n">BasicWorldModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Model that includes downlink ground stations.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Model that includes downlink ground stations.</span>
+
+<span class="sd">        This model includes the basic world components, as well as ground stations for</span>
+<span class="sd">        downlinking data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *args: Passed to superclass.</span>
+<span class="sd">            **kwargs: Passed to superclass.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_setup_world_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_setup_world_objects</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_ground_locations</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GroundStationWorldModel.setup_ground_locations">
+<a class="viewcode-back" href="../../../api_reference/sim/world.html#bsk_rl.sim.world.GroundStationWorldModel.setup_ground_locations">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">groundStationsData</span><span class="o">=</span><span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Boulder&quot;</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="mf">40.009971</span><span class="p">,</span> <span class="n">long</span><span class="o">=-</span><span class="mf">105.243895</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="mi">1624</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Merritt&quot;</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="mf">28.3181</span><span class="p">,</span> <span class="n">long</span><span class="o">=-</span><span class="mf">80.6660</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="mf">0.9144</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Singapore&quot;</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="mf">1.3521</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="mf">103.8198</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="mi">15</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Weilheim&quot;</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="mf">47.8407</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="mf">11.1421</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="mi">563</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Santiago&quot;</span><span class="p">,</span> <span class="n">lat</span><span class="o">=-</span><span class="mf">33.4489</span><span class="p">,</span> <span class="n">long</span><span class="o">=-</span><span class="mf">70.6693</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="mi">570</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Dongara&quot;</span><span class="p">,</span> <span class="n">lat</span><span class="o">=-</span><span class="mf">29.2452</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="mf">114.9326</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="mi">34</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Hawaii&quot;</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="mf">19.8968</span><span class="p">,</span> <span class="n">long</span><span class="o">=-</span><span class="mf">155.5828</span><span class="p">,</span> <span class="n">elev</span><span class="o">=</span><span class="mi">9</span><span class="p">),</span>
+        <span class="p">],</span>
+        <span class="n">groundLocationPlanetRadius</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span>
+        <span class="n">gsMinimumElevation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mf">10.0</span><span class="p">),</span>
+        <span class="n">gsMaximumRange</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_ground_locations</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">groundStationsData</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]],</span>
+        <span class="n">groundLocationPlanetRadius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">gsMinimumElevation</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">gsMaximumRange</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1399</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Specify the ground locations of interest.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            groundStationsData: List of dictionaries of ground station data. Each dictionary</span>
+<span class="sd">                must include keys for ``lat`` and ``long`` [deg], and may include</span>
+<span class="sd">                ``elev`` [m], ``name``. For example:</span>
+
+<span class="sd">                .. code-block:: python</span>
+
+<span class="sd">                    groundStationsData=[</span>
+<span class="sd">                        dict(name=&quot;Boulder&quot;, lat=40.009971, long=-105.243895, elev=1624),</span>
+<span class="sd">                        dict(lat=28.3181, long=-80.6660),</span>
+<span class="sd">                    ]</span>
+
+<span class="sd">                ``groundLocationPlanetRadius``, ``gsMinimumElevation``, and ``gsMaximumRange``</span>
+<span class="sd">                may also be specified in the dictionary to override the global values</span>
+<span class="sd">                for those parameters for a specific ground station.</span>
+
+<span class="sd">            groundLocationPlanetRadius: [m] Radius of ground locations from center of</span>
+<span class="sd">                planet.</span>
+<span class="sd">            gsMinimumElevation: [rad] Minimum elevation angle from station to satellite</span>
+<span class="sd">                to be able to downlink data.</span>
+<span class="sd">            gsMaximumRange: [m] Maximum range from station to satellite when</span>
+<span class="sd">                downlinking. Set to ``-1`` to disable.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groundStations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groundLocationPlanetRadius</span> <span class="o">=</span> <span class="n">groundLocationPlanetRadius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gsMinimumElevation</span> <span class="o">=</span> <span class="n">gsMinimumElevation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gsMaximumRange</span> <span class="o">=</span> <span class="n">gsMaximumRange</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">groundStationData</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">groundStationsData</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_ground_station</span><span class="p">(</span><span class="o">**</span><span class="n">groundStationData</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="n">priority</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_create_ground_station</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">lat</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">long</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">elev</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">groundLocationPlanetRadius</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">gsMinimumElevation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">gsMaximumRange</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1399</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a ground station with given parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            lat: [deg] Latitude.</span>
+<span class="sd">            long: [deg] Longitude.</span>
+<span class="sd">            elev: [m] Elevation.</span>
+<span class="sd">            name: Ground station identifier.</span>
+<span class="sd">            groundLocationPlanetRadius: [m] Radius of planet.</span>
+<span class="sd">            gsMinimumElevation: [rad] Minimum elevation angle to downlink to ground station.</span>
+<span class="sd">            gsMaximumRange: [m] Maximum range to downlink to ground station. Set to ``-1`` for infinity.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groundStations</span><span class="p">))</span>
+
+        <span class="n">groundStation</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="n">groundStation</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;GroundStation&quot;</span> <span class="o">+</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="n">groundLocationPlanetRadius</span><span class="p">:</span>
+            <span class="n">groundStation</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">groundLocationPlanetRadius</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">groundStation</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groundLocationPlanetRadius</span>
+        <span class="n">groundStation</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">long</span><span class="p">),</span> <span class="n">elev</span><span class="p">)</span>
+        <span class="n">groundStation</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">gsMinimumElevation</span><span class="p">:</span>
+            <span class="n">groundStation</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">gsMinimumElevation</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">groundStation</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsMinimumElevation</span>
+        <span class="k">if</span> <span class="n">gsMaximumRange</span><span class="p">:</span>
+            <span class="n">groundStation</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">gsMaximumRange</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">groundStation</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsMaximumRange</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groundStations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">groundStation</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world_task_name</span><span class="p">,</span> <span class="n">groundStation</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">&quot;World Sims&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;WorldModel&quot;</span><span class="p">,</span> <span class="s2">&quot;BasicWorldModel&quot;</span><span class="p">,</span> <span class="s2">&quot;GroundStationWorldModel&quot;</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

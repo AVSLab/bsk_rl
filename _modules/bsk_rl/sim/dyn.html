@@ -1,0 +1,1423 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.sim.dyn &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.sim.dyn</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.sim.dyn</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Basilisk dynamics models are given in ``bsk_rl.sim.dyn``.</span>
+
+<span class="sd">The dynamics model is the core of the satellite simulation, representing the physical</span>
+<span class="sd">properties of the satellite and its interactions with the environment. The dynamics model</span>
+<span class="sd">can be customized to represent different satellite configurations, actuator models, and</span>
+<span class="sd">instrument models.</span>
+
+<span class="sd">The dynamics model is selected using the ``dyn_type`` class property of the</span>
+<span class="sd">:class:`~bsk_rl.sats.Satellite`. Certain environment elements may require specific</span>
+<span class="sd">dynamics models, such as :class:`~bsk_rl.comm.LOSCommunication` requiring a dynamics</span>
+<span class="sd">model that inherits from :class:`~bsk_rl.sim.dyn.LOSCommDynModel` or :class:`~bsk_rl.sats.ImagingSatellite`</span>
+<span class="sd">requiring a dynamics model that inherits from :class:`~bsk_rl.sim.dyn.ImagingDynModel`.</span>
+
+<span class="sd">Setting Parameters</span>
+<span class="sd">------------------</span>
+
+<span class="sd">Customization of the dynamics model parameters is achieved through the ``sat_args``</span>
+<span class="sd">dictionary passed to the :class:`~bsk_rl.sats.Satellite` constructor. This dictionary is</span>
+<span class="sd">passed on to the dynamics model setup functions, which are called each time the simulator</span>
+<span class="sd">is reset.</span>
+
+<span class="sd">Properties</span>
+<span class="sd">----------</span>
+
+<span class="sd">The dynamics model provides a number of properties for easy access to the satellite state.</span>
+<span class="sd">These can be accessed directly from the dynamics model instance, or in the observation</span>
+<span class="sd">via the :class:`~bsk_rl.obs.SatProperties` observation.</span>
+
+
+<span class="sd">Aliveness Checking</span>
+<span class="sd">------------------</span>
+
+<span class="sd">Certain functions in the dynamics model are decorated with the :func:`~bsk_rl.utils.functional.aliveness_checker`</span>
+<span class="sd">decorator. These functions are called at each step to check if the satellite is still</span>
+<span class="sd">operational, returning true if the satellite is still alive.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">Basilisk.simulation</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ReactionWheelPower</span><span class="p">,</span>
+    <span class="n">extForceTorque</span><span class="p">,</span>
+    <span class="n">facetDragDynamicEffector</span><span class="p">,</span>
+    <span class="n">groundLocation</span><span class="p">,</span>
+    <span class="n">partitionedStorageUnit</span><span class="p">,</span>
+    <span class="n">simpleBattery</span><span class="p">,</span>
+    <span class="n">simpleInstrument</span><span class="p">,</span>
+    <span class="n">simpleNav</span><span class="p">,</span>
+    <span class="n">simplePowerSink</span><span class="p">,</span>
+    <span class="n">simpleSolarPanel</span><span class="p">,</span>
+    <span class="n">simpleStorageUnit</span><span class="p">,</span>
+    <span class="n">spacecraft</span><span class="p">,</span>
+    <span class="n">spacecraftLocation</span><span class="p">,</span>
+    <span class="n">spaceToGroundTransmitter</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">RigidBodyKinematics</span><span class="p">,</span>
+    <span class="n">macros</span><span class="p">,</span>
+    <span class="n">orbitalMotion</span><span class="p">,</span>
+    <span class="n">unitTestSupport</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.sim</span> <span class="kn">import</span> <span class="n">world</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils</span> <span class="kn">import</span> <span class="n">actuator_primitives</span> <span class="k">as</span> <span class="n">aP</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.attitude</span> <span class="kn">import</span> <span class="n">random_tumble</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.functional</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">aliveness_checker</span><span class="p">,</span>
+    <span class="n">check_aliveness_checkers</span><span class="p">,</span>
+    <span class="n">default_args</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.orbital</span> <span class="kn">import</span> <span class="n">random_orbit</span><span class="p">,</span> <span class="n">rv2HN</span><span class="p">,</span> <span class="n">rv2omega</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.sats</span> <span class="kn">import</span> <span class="n">Satellite</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.sim</span> <span class="kn">import</span> <span class="n">Simulator</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.sim.world</span> <span class="kn">import</span> <span class="n">WorldModel</span>
+
+
+<div class="viewcode-block" id="DynamicsModel">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.DynamicsModel">[docs]</a>
+<span class="k">class</span> <span class="nc">DynamicsModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract Basilisk dynamics model.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_requires_world</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="s2">&quot;WorldModel&quot;</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define minimum :class:`~bsk_rl.sim.world.WorldModel` for compatibility.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">satellite</span><span class="p">:</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">,</span>
+        <span class="n">dyn_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The abstract base dynamics model.</span>
+
+<span class="sd">        One DynamicsModel is instantiated for each satellite in the environment each</span>
+<span class="sd">        time the environment is reset and new simulator is created.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellite: Satellite represented by this model.</span>
+<span class="sd">            dyn_rate: [s] Rate of dynamics simulation.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed through to setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span> <span class="o">=</span> <span class="n">satellite</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">required</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_requires_world</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span><span class="p">),</span> <span class="n">required</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span><span class="si">}</span><span class="s2"> must be a subclass of </span><span class="si">{</span><span class="n">required</span><span class="si">}</span><span class="s2"> to &quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;use dynamics model of type </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="n">dyn_proc_name</span> <span class="o">=</span> <span class="s2">&quot;DynamicsProcess&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dyn_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">CreateNewProcess</span><span class="p">(</span><span class="n">dyn_proc_name</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dyn_rate</span> <span class="o">=</span> <span class="n">dyn_rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span> <span class="o">=</span> <span class="s2">&quot;DynamicsTask&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dyn_proc</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">CreateNewTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="n">macros</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dyn_rate</span><span class="p">))</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Initialize all modules and write init one-time messages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="p">:</span> <span class="n">spacecraft</span><span class="o">.</span><span class="n">Spacecraft</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup_dynamics_objects</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Simulator&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reference to the episode simulator.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">simulator</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">world</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WorldModel&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reference to the episode world model.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span>
+
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span> <span class="nf">_setup_dynamics_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Caller for all dynamics object initialization.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="DynamicsModel.is_alive">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.DynamicsModel.is_alive">[docs]</a>
+    <span class="k">def</span> <span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_failure</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the dynamics model has failed any aliveness requirements.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ``True`` if the satellite dynamics are still alive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">check_aliveness_checkers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_failure</span><span class="o">=</span><span class="n">log_failure</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DynamicsModel.reset_for_action">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.DynamicsModel.reset_for_action">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_for_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset whenever a flight software :class:`~bsk_rl.sim.fsw.action` is called.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">utc_init</span><span class="o">=</span><span class="s2">&quot;this value will be set by the world model&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_utc_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">utc_init</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Exists so that utc_init is registered as part of sat_args.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log when dynamics are deleted.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Basilisk dynamics deleted&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BasicDynamicsModel">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel">[docs]</a>
+<span class="k">class</span> <span class="nc">BasicDynamicsModel</span><span class="p">(</span><span class="n">DynamicsModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Basic Dynamics model with minimum necessary Basilisk components.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_requires_world</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="s2">&quot;WorldModel&quot;</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">world</span><span class="o">.</span><span class="n">BasicWorldModel</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A dynamics model with a basic feature set.</span>
+
+<span class="sd">        Includes the following:</span>
+
+<span class="sd">        * Spacecraft hub physical properties</span>
+<span class="sd">        * Gravity</span>
+<span class="sd">        * Constant disturbance torque (defaults to none)</span>
+<span class="sd">        * Aerodynamic drag</span>
+<span class="sd">        * Eclipse checking for power generation</span>
+<span class="sd">        * Reaction wheels</span>
+<span class="sd">        * Momentum desaturation thrusters</span>
+<span class="sd">        * Solar panels, battery, and power system</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *args: Passed to superclass</span>
+<span class="sd">            **kwargs: Passed to superclass</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sigma_BN</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Body attitude MRP relative to inertial frame.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">sigma_BN</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">BN</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Body relative to inertial frame rotation matrix.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RigidBodyKinematics</span><span class="o">.</span><span class="n">MRP2C</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_BN</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">omega_BN_B</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Body rate relative to inertial frame in body frame [rad/s].&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">omega_BN_B</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">BP</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Body relative to planet freame rotation matrix.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BN</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">PN</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">r_BN_N</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Body position relative to inertial origin in inertial frame [m].&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">r_BN_N</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">r_BN_P</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Body position relative to inertial origin in planet frame [m].&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">PN</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_BN_N</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">v_BN_N</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Body velocity relative to inertial origin in inertial frame [m/s].&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">v_BN_N</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">v_BN_P</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Planet-frame derivative of ``r_BN``.&quot;&quot;&quot;</span>
+        <span class="n">omega_NP_P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">PN</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">omega_PN_N</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">PN</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_BN_N</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">omega_NP_P</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_BN_P</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">omega_BP_P</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Body angular velocity relative to planet frame in plant frame [rad/s].&quot;&quot;&quot;</span>
+        <span class="n">omega_BN_N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BN</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_BN_B</span><span class="p">)</span>
+        <span class="n">omega_BP_N</span> <span class="o">=</span> <span class="n">omega_BN_N</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">omega_PN_N</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">PN</span><span class="p">,</span> <span class="n">omega_BP_N</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">omega_BH_H</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Body angular velocity relative to Hill frame in Hill frame [rad/s].&quot;&quot;&quot;</span>
+        <span class="n">omega_BN_N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BN</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_BN_B</span><span class="p">)</span>
+        <span class="n">omega_HN_N</span> <span class="o">=</span> <span class="n">rv2omega</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_BN_N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_BN_N</span><span class="p">)</span>
+        <span class="n">omega_BH_N</span> <span class="o">=</span> <span class="n">omega_BN_N</span> <span class="o">-</span> <span class="n">omega_HN_N</span>
+        <span class="n">HN</span> <span class="o">=</span> <span class="n">rv2HN</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_BN_N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_BN_N</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">HN</span> <span class="o">@</span> <span class="n">omega_BH_N</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">battery_charge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Battery charge [W*s].&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">batPowerOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">storageLevel</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">battery_charge_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Battery charge as a fraction of capacity.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_charge</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">storageCapacity</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">wheel_speeds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wheel speeds [rad/s].&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="o">.</span><span class="n">rwSpeedOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">wheelSpeeds</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">wheel_speeds_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wheel speeds normalized by maximum allowable speed.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheel_speeds</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxWheelSpeed</span> <span class="o">*</span> <span class="n">macros</span><span class="o">.</span><span class="n">rpm2radsec</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_setup_dynamics_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_spacecraft_hub</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_drag_effector</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_reaction_wheel_dyn_effector</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_thruster_dyn_effector</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_simple_nav_object</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_eclipse_object</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_solar_panel</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_battery</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_power_sink</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_reaction_wheel_power</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_thruster_power</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_spacecraft_hub">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_spacecraft_hub">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">mass</span><span class="o">=</span><span class="mi">330</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">1.38</span><span class="p">,</span>
+        <span class="n">depth</span><span class="o">=</span><span class="mf">1.04</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">1.58</span><span class="p">,</span>
+        <span class="n">sigma_init</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">random_tumble</span><span class="p">(</span><span class="n">maxSpinRate</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">omega_init</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">random_tumble</span><span class="p">(</span><span class="n">maxSpinRate</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">rN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">vN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">oe</span><span class="o">=</span><span class="n">random_orbit</span><span class="p">,</span>
+        <span class="n">mu</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">MU_EARTH</span> <span class="o">*</span> <span class="mf">1e9</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_spacecraft_hub</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mass</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">depth</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">height</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">sigma_init</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">omega_init</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">oe</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span>
+        <span class="n">rN</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span>
+        <span class="n">vN</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span>
+        <span class="n">mu</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the spacecraft hub physical properties and state.</span>
+
+<span class="sd">        The hub is assumed to be a uniform-density rectangular prism with the center of</span>
+<span class="sd">        mass at the center.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mass: [kg] Hub mass.</span>
+<span class="sd">            width: [m] Hub width.</span>
+<span class="sd">            depth: [m] Hub depth.</span>
+<span class="sd">            height: [m] Hub height.</span>
+<span class="sd">            sigma_init: Initial attitude MRP.</span>
+<span class="sd">            omega_init: [rad/s] Initial body rate.</span>
+<span class="sd">            oe: Orbital element tuple of (semimajor axis [km], eccentricity, inclination</span>
+<span class="sd">                [rad], ascending node [rad], argument of periapsis [rad], initial true</span>
+<span class="sd">                anomaly [rad]). Either ``oe`` and ``mu`` or ``rN`` and ``vN`` must be</span>
+<span class="sd">                provided, but not both.</span>
+<span class="sd">            mu: Gravitational parameter (used only with ``oe``).</span>
+<span class="sd">            rN: [m] Initial inertial position.</span>
+<span class="sd">            vN: [m/s] Initial inertial velocity.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">rN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">vN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">oe</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">oe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">rN</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">vN</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">oe</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Orbit is overspecified. Provide either (rN, vN) or oe&quot;</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span> <span class="o">=</span> <span class="n">spacecraft</span><span class="o">.</span><span class="n">Spacecraft</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;sat-&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="n">Ixx</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="n">mass</span> <span class="o">*</span> <span class="p">(</span><span class="n">width</span><span class="o">**</span><span class="mf">2.0</span> <span class="o">+</span> <span class="n">depth</span><span class="o">**</span><span class="mf">2.0</span><span class="p">)</span>
+        <span class="n">Iyy</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="n">mass</span> <span class="o">*</span> <span class="p">(</span><span class="n">depth</span><span class="o">**</span><span class="mf">2.0</span> <span class="o">+</span> <span class="n">height</span><span class="o">**</span><span class="mf">2.0</span><span class="p">)</span>
+        <span class="n">Izz</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="n">mass</span> <span class="o">*</span> <span class="p">(</span><span class="n">width</span><span class="o">**</span><span class="mf">2.0</span> <span class="o">+</span> <span class="n">height</span><span class="o">**</span><span class="mf">2.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">I_mat</span> <span class="o">=</span> <span class="p">[</span><span class="n">Ixx</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">Iyy</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">Izz</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">mHub</span> <span class="o">=</span> <span class="n">mass</span>  <span class="c1"># kg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">IHubPntBc_B</span> <span class="o">=</span> <span class="n">unitTestSupport</span><span class="o">.</span><span class="n">np2EigenMatrix3d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">I_mat</span><span class="p">)</span>
+
+        <span class="c1"># Set the initial attitude and position</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">sigma_BNInit</span> <span class="o">=</span> <span class="n">sigma_init</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">omega_BN_BInit</span> <span class="o">=</span> <span class="n">omega_init</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">r_CN_NInit</span> <span class="o">=</span> <span class="n">unitTestSupport</span><span class="o">.</span><span class="n">np2EigenVectorXd</span><span class="p">(</span><span class="n">rN</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">v_CN_NInit</span> <span class="o">=</span> <span class="n">unitTestSupport</span><span class="o">.</span><span class="n">np2EigenVectorXd</span><span class="p">(</span><span class="n">vN</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_gravity_bodies</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_disturbance_torque</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_density_model</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_gravity_bodies">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_gravity_bodies">[docs]</a>
+    <span class="k">def</span> <span class="nf">setup_gravity_bodies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up gravitational bodies from the :class:`~bsk_rl.sim.world.WorldModel` to included in the simulation.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">gravField</span><span class="o">.</span><span class="n">gravBodies</span> <span class="o">=</span> <span class="n">spacecraft</span><span class="o">.</span><span class="n">GravBodyVector</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">gravBodies</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_disturbance_torque">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_disturbance_torque">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">disturbance_vector</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_disturbance_torque</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">disturbance_vector</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up a constant disturbance torque acting on the satellite.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            disturbance_vector: [N*m] Constant disturbance torque in the body frame.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">disturbance_vector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">disturbance_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extForceTorqueObject</span> <span class="o">=</span> <span class="n">extForceTorque</span><span class="o">.</span><span class="n">ExtForceTorque</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extForceTorqueObject</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;DisturbanceTorque&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extForceTorqueObject</span><span class="o">.</span><span class="n">extTorquePntB_B</span> <span class="o">=</span> <span class="n">disturbance_vector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">addDynamicEffector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extForceTorqueObject</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_density_model">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_density_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">setup_density_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the atmospheric density model effector.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_drag_effector">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_drag_effector">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">dragCoeff</span><span class="o">=</span><span class="mf">2.2</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_drag_effector</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">depth</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">height</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">panelArea</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">dragCoeff</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">999</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the satellite drag effector.</span>
+
+<span class="sd">        The drag effector causes aerodynamic forces and torques to act on the satellite.</span>
+<span class="sd">        For purposes of this model, the satellite is assumed to be a rectangular prism</span>
+<span class="sd">        with a solar panel on one end.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            width: [m] Hub width.</span>
+<span class="sd">            depth: [m] Hub depth.</span>
+<span class="sd">            height: [m] Hub height.</span>
+<span class="sd">            panelArea: [m^2] Solar panel surface area.</span>
+<span class="sd">            dragCoeff: Drag coefficient.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span> <span class="o">=</span> <span class="n">facetDragDynamicEffector</span><span class="o">.</span><span class="n">FacetDragDynamicEffector</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;FacetDrag&quot;</span>
+        <span class="c1">#  Set up the geometry of a small satellite, starting w/ bus</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="n">width</span> <span class="o">*</span> <span class="n">depth</span><span class="p">,</span> <span class="n">dragCoeff</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="n">width</span> <span class="o">*</span> <span class="n">depth</span><span class="p">,</span> <span class="n">dragCoeff</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="n">height</span> <span class="o">*</span> <span class="n">width</span><span class="p">,</span> <span class="n">dragCoeff</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">depth</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="n">height</span> <span class="o">*</span> <span class="n">width</span><span class="p">,</span> <span class="n">dragCoeff</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">depth</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="n">height</span> <span class="o">*</span> <span class="n">depth</span><span class="p">,</span> <span class="n">dragCoeff</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="n">height</span> <span class="o">*</span> <span class="n">depth</span><span class="p">,</span> <span class="n">dragCoeff</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Add solar panels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="n">panelArea</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">dragCoeff</span><span class="p">,</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">addFacet</span><span class="p">(</span>
+            <span class="n">panelArea</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">dragCoeff</span><span class="p">,</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="o">.</span><span class="n">atmoDensInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">densityModel</span><span class="o">.</span><span class="n">envOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">addDynamicEffector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dragEffector</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_simple_nav_object">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_simple_nav_object">[docs]</a>
+    <span class="k">def</span> <span class="nf">setup_simple_nav_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1400</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the navigation module.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simpleNavObject</span> <span class="o">=</span> <span class="n">simpleNav</span><span class="o">.</span><span class="n">SimpleNav</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;SimpleNav&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">scStateInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.altitude_valid">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.altitude_valid">[docs]</a>
+    <span class="nd">@aliveness_checker</span>
+    <span class="k">def</span> <span class="nf">altitude_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check that satellite has not deorbited.</span>
+
+<span class="sd">        Checks if altitude is greater than 200km above Earth&#39;s surface.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_BN_N</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">+</span> <span class="mi">200</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e3</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_reaction_wheel_dyn_effector">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_reaction_wheel_dyn_effector">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">wheelSpeeds</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1500</span><span class="p">,</span> <span class="mi">1500</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+        <span class="n">u_max</span><span class="o">=</span><span class="mf">0.200</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_reaction_wheel_dyn_effector</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">wheelSpeeds</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">maxWheelSpeed</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">u_max</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">997</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the reaction wheel state effector parameters.</span>
+
+<span class="sd">        Three reaction wheels modeled on the HR16 wheel are used.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            wheelSpeeds: [rpm] Initial speeds of each wheel.</span>
+<span class="sd">            maxWheelSpeed: [rpm] Failure speed for wheels.</span>
+<span class="sd">            u_max: [N*m] Maximum torque producible by each wheel.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxWheelSpeed</span> <span class="o">=</span> <span class="n">maxWheelSpeed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwFactory</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">aP</span><span class="o">.</span><span class="n">balancedHR16Triad</span><span class="p">(</span>
+            <span class="n">useRandom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">wheelSpeeds</span><span class="o">=</span><span class="n">wheelSpeeds</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">RW</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">RW</span><span class="o">.</span><span class="n">u_max</span> <span class="o">=</span> <span class="n">u_max</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">addToSpacecraft</span><span class="p">(</span>
+            <span class="s2">&quot;ReactionWheels&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.rw_speeds_valid">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.rw_speeds_valid">[docs]</a>
+    <span class="nd">@aliveness_checker</span>
+    <span class="k">def</span> <span class="nf">rw_speeds_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if any wheel speed exceeds the ``maxWheelSpeed``.&quot;&quot;&quot;</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">abs</span><span class="p">(</span><span class="n">speed</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxWheelSpeed</span> <span class="o">*</span> <span class="n">macros</span><span class="o">.</span><span class="n">rpm2radsec</span>
+            <span class="k">for</span> <span class="n">speed</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheel_speeds</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">valid</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_thruster_dyn_effector">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_thruster_dyn_effector">[docs]</a>
+    <span class="k">def</span> <span class="nf">setup_thruster_dyn_effector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">996</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the thruster state effector.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrusterSet</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrFactory</span> <span class="o">=</span> <span class="n">aP</span><span class="o">.</span><span class="n">idealMonarc1Octet</span><span class="p">()</span>
+        <span class="n">thrModelTag</span> <span class="o">=</span> <span class="s2">&quot;ACSThrusterDynamics&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrFactory</span><span class="o">.</span><span class="n">addToSpacecraft</span><span class="p">(</span><span class="n">thrModelTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrusterSet</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrusterSet</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_thruster_power">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_thruster_power">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">thrusterPowerDraw</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_thruster_power</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">thrusterPowerDraw</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">899</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the thruster power draw.</span>
+
+<span class="sd">        When momentum desaturating using wheels, power is consumed at this rate.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            thrusterPowerDraw: [W] Constant power draw desat mode is active.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrusterPowerSink</span> <span class="o">=</span> <span class="n">simplePowerSink</span><span class="o">.</span><span class="n">SimplePowerSink</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrusterPowerSink</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;thrustPowerSink&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrusterPowerSink</span><span class="o">.</span><span class="n">nodePowerOut</span> <span class="o">=</span> <span class="n">thrusterPowerDraw</span>  <span class="c1"># Watts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrusterPowerSink</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thrusterPowerSink</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_eclipse_object">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_eclipse_object">[docs]</a>
+    <span class="k">def</span> <span class="nf">setup_eclipse_object</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add the spacecraft to the eclipse module.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">eclipseObject</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eclipse_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">eclipseObject</span><span class="o">.</span><span class="n">eclipseOutMsgs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_solar_panel">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_solar_panel">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">panelArea</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">panelEfficiency</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span>
+        <span class="n">nHat_B</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_solar_panel</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">panelArea</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">panelEfficiency</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">nHat_B</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">898</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the solar panel parameters for power generation.</span>
+
+<span class="sd">        Power generation takes into account panel size and efficiency, the eclipse</span>
+<span class="sd">        state, and the angle of solar incidence.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            panelArea: [m^2] Solar panel area.</span>
+<span class="sd">            panelEfficiency: Efficiency coefficient of solar to electrical power</span>
+<span class="sd">                conversion.</span>
+<span class="sd">            nHat_B: Body-fixed array normal vector.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span> <span class="o">=</span> <span class="n">simpleSolarPanel</span><span class="o">.</span><span class="n">SimpleSolarPanel</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;solarPanel&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">stateInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">sunEclipseInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">eclipseObject</span><span class="o">.</span><span class="n">eclipseOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">eclipse_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">sunInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">sun_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">setPanelParameters</span><span class="p">(</span>
+            <span class="n">unitTestSupport</span><span class="o">.</span><span class="n">np2EigenVectorXd</span><span class="p">(</span><span class="n">nHat_B</span><span class="p">),</span>
+            <span class="n">panelArea</span><span class="p">,</span>
+            <span class="n">panelEfficiency</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_battery">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_battery">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">80.0</span> <span class="o">*</span> <span class="mf">3600.0</span><span class="p">,</span>
+        <span class="n">storedCharge_Init</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">30.0</span> <span class="o">*</span> <span class="mf">3600.0</span><span class="p">,</span> <span class="mf">70.0</span> <span class="o">*</span> <span class="mf">3600.0</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_battery</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">batteryStorageCapacity</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">storedCharge_Init</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">799</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the battery model parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batteryStorageCapacity: [W*s] Maximum battery charge.</span>
+<span class="sd">            storedCharge_Init: [W*s] Initial battery charge.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span> <span class="o">=</span> <span class="n">simpleBattery</span><span class="o">.</span><span class="n">SimpleBattery</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;powerMonitor&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">storageCapacity</span> <span class="o">=</span> <span class="n">batteryStorageCapacity</span>
+        <span class="k">if</span> <span class="n">storedCharge_Init</span> <span class="o">&gt;</span> <span class="n">batteryStorageCapacity</span> <span class="ow">or</span> <span class="n">storedCharge_Init</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Battery initial charge </span><span class="si">{</span><span class="n">storedCharge_Init</span><span class="si">}</span><span class="s2"> incompatible with its capacity </span><span class="si">{</span><span class="n">batteryStorageCapacity</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">storedCharge_Init</span> <span class="o">=</span> <span class="n">storedCharge_Init</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solarPanel</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.battery_valid">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.battery_valid">[docs]</a>
+    <span class="nd">@aliveness_checker</span>
+    <span class="k">def</span> <span class="nf">battery_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the battery has charge remaining.</span>
+
+<span class="sd">        Note that this check is instantaneous. If a satellite runs out of power during a</span>
+<span class="sd">        environment step but then recharges to have positive power at the end of the step,</span>
+<span class="sd">        the satellite will still be considered alive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_charge</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_power_sink">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_power_sink">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">basePowerDraw</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_power_sink</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">basePowerDraw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">897</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the instrument power sink parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            basePowerDraw: [W] Baseline satellite power draw. Should be negative.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">basePowerDraw</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;basePowerDraw should probably be zero or negative.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basePowerSink</span> <span class="o">=</span> <span class="n">simplePowerSink</span><span class="o">.</span><span class="n">SimplePowerSink</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basePowerSink</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;basePowerSink&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basePowerSink</span><span class="o">.</span><span class="n">nodePowerOut</span> <span class="o">=</span> <span class="n">basePowerDraw</span>  <span class="c1"># Watts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basePowerSink</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basePowerSink</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basePowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="BasicDynamicsModel.setup_reaction_wheel_power">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.BasicDynamicsModel.setup_reaction_wheel_power">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">rwBasePower</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">rwMechToElecEfficiency</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">rwElecToMechEfficiency</span><span class="o">=</span><span class="mf">0.5</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_reaction_wheel_power</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">rwBasePower</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">rwMechToElecEfficiency</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">rwElecToMechEfficiency</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">987</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the reaction wheel power draw.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            rwBasePower: [W] Constant power draw when operational.</span>
+<span class="sd">            rwMechToElecEfficiency: Efficiency factor to convert mechanical power to</span>
+<span class="sd">                electrical power.</span>
+<span class="sd">            rwElecToMechEfficiency: Efficiency factor to convert electrical power to</span>
+<span class="sd">                mechanical power.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwPowerList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i_device</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">getNumOfDevices</span><span class="p">()):</span>
+            <span class="n">powerRW</span> <span class="o">=</span> <span class="n">ReactionWheelPower</span><span class="o">.</span><span class="n">ReactionWheelPower</span><span class="p">()</span>
+            <span class="n">powerRW</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;rwPower&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i_device</span><span class="p">)</span>
+            <span class="n">powerRW</span><span class="o">.</span><span class="n">basePowerNeed</span> <span class="o">=</span> <span class="n">rwBasePower</span>
+            <span class="n">powerRW</span><span class="o">.</span><span class="n">rwStateInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="o">.</span><span class="n">rwOutMsgs</span><span class="p">[</span><span class="n">i_device</span><span class="p">])</span>
+            <span class="n">powerRW</span><span class="o">.</span><span class="n">mechToElecEfficiency</span> <span class="o">=</span> <span class="n">rwMechToElecEfficiency</span>
+            <span class="n">powerRW</span><span class="o">.</span><span class="n">elecToMechEfficiency</span> <span class="o">=</span> <span class="n">rwElecToMechEfficiency</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwPowerList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">powerRW</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="n">powerRW</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="p">(</span><span class="n">priority</span> <span class="o">-</span> <span class="n">i_device</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="n">powerRW</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LOSCommDynModel">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.LOSCommDynModel">[docs]</a>
+<span class="k">class</span> <span class="nc">LOSCommDynModel</span><span class="p">(</span><span class="n">BasicDynamicsModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;For evaluating line-of-sight connections between satellites for communication.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Allow for line-of-sight checking between satellites.</span>
+
+<span class="sd">        Necessary for :class:`~bsk_rl.comm.LOSCommunication` to function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_setup_dynamics_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_setup_dynamics_objects</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_los_comms</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LOSCommDynModel.setup_los_comms">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.LOSCommDynModel.setup_los_comms">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">losMaximumRange</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_los_comms</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">losMaximumRange</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up line-of-sight visibility checking between satellites.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            losMaximumRange: [m] Maximum range for line-of-sight visibility. -1 for unlimited.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span> <span class="o">=</span> <span class="n">spacecraftLocation</span><span class="o">.</span><span class="n">SpacecraftLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;losComms&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">primaryScStateInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">rEquator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">planet</span><span class="o">.</span><span class="n">radEquator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">rPolar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">planet</span><span class="o">.</span><span class="n">radEquator</span> <span class="o">*</span> <span class="mf">0.98</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">losMaximumRange</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">los_comms_ids</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">sat_dyn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">dynamics_list</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">sat_dyn</span> <span class="o">!=</span> <span class="bp">self</span> <span class="ow">and</span> <span class="n">sat_dyn</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">los_comms_ids</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="n">sat_dyn</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">los_comms_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sat_dyn</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">sat_dyn</span><span class="o">.</span><span class="n">losComms</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span>
+                <span class="n">sat_dyn</span><span class="o">.</span><span class="n">los_comms_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sat_dyn</span><span class="o">.</span><span class="n">los_comms_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">sat_dyn</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+                        <span class="n">sat_dyn</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="n">sat_dyn</span><span class="o">.</span><span class="n">losComms</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+                    <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">los_comms_ids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">losComms</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+            <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ImagingDynModel">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ImagingDynModel">[docs]</a>
+<span class="k">class</span> <span class="nc">ImagingDynModel</span><span class="p">(</span><span class="n">BasicDynamicsModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equips the satellite with an instrument, storage unit, and transmitter.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equips the satellite with an instrument, storage unit, and transmitter.</span>
+
+<span class="sd">        This dynamics model is used with :class:`~bsk_rl.sats.ImagingSatellite`. It</span>
+<span class="sd">        provides the satellite with the ability to take images of a point target. To</span>
+<span class="sd">        enable downlink, use :class:`GroundStationDynModel` and :class:`~bsk_rl.sim.world.GroundStationWorldModel`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">storage_level</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Storage level [bits].&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">storageLevel</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">storage_level_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Storage level as a fraction of capacity.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_level</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span>
+
+    <span class="k">def</span> <span class="nf">_setup_dynamics_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_setup_dynamics_objects</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_instrument_power_sink</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_transmitter_power_sink</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_instrument</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_transmitter</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_storage_unit</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_imaging_target</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ImagingDynModel.setup_instrument">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ImagingDynModel.setup_instrument">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">instrumentBaudRate</span><span class="o">=</span><span class="mf">8e6</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_instrument</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instrumentBaudRate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">895</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the instrument data collection model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instrumentBaudRate: [bits] Data generated by an image.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span> <span class="o">=</span> <span class="n">simpleInstrument</span><span class="o">.</span><span class="n">SimpleInstrument</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;instrument&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeBaudRate</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">instrumentBaudRate</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dyn_rate</span>
+        <span class="p">)</span>  <span class="c1"># makes imaging instantaneous</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataName</span> <span class="o">=</span> <span class="s2">&quot;Instrument&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.setup_transmitter">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ImagingDynModel.setup_transmitter">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">transmitterBaudRate</span><span class="o">=-</span><span class="mf">8e6</span><span class="p">,</span> <span class="n">transmitterNumBuffers</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_transmitter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">transmitterBaudRate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">instrumentBaudRate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">transmitterNumBuffers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">798</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the transmitter model for downlinking data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            transmitterBaudRate: [baud] Rate of data downlink. Should be negative.</span>
+<span class="sd">            instrumentBaudRate: [bits] Image size, used to set packet size.</span>
+<span class="sd">            transmitterNumBuffers: Number of transmitter buffers</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">transmitterBaudRate</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;transmitterBaudRate should probably be negative.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">spaceToGroundTransmitter</span><span class="o">.</span><span class="n">SpaceToGroundTransmitter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;transmitter&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">nodeBaudRate</span> <span class="o">=</span> <span class="n">transmitterBaudRate</span>  <span class="c1"># baud</span>
+        <span class="c1"># set packet size equal to the size of a single image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">packetSize</span> <span class="o">=</span> <span class="o">-</span><span class="n">instrumentBaudRate</span>  <span class="c1"># bits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">numBuffers</span> <span class="o">=</span> <span class="n">transmitterNumBuffers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.setup_instrument_power_sink">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ImagingDynModel.setup_instrument_power_sink">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">instrumentPowerDraw</span><span class="o">=-</span><span class="mf">30.0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_instrument_power_sink</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instrumentPowerDraw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">897</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the instrument power sink parameters.</span>
+
+<span class="sd">        The instrument draws power when in an imaging task, representing the power cost</span>
+<span class="sd">        of operating the instrument.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instrumentPowerDraw: [W] Power draw when instrument is enabled.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">instrumentPowerDraw</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;instrumentPowerDraw should probably be zero or negative.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span> <span class="o">=</span> <span class="n">simplePowerSink</span><span class="o">.</span><span class="n">SimplePowerSink</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;insPowerSink&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">nodePowerOut</span> <span class="o">=</span> <span class="n">instrumentPowerDraw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.setup_transmitter_power_sink">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ImagingDynModel.setup_transmitter_power_sink">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">transmitterPowerDraw</span><span class="o">=-</span><span class="mf">15.0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_transmitter_power_sink</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">transmitterPowerDraw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">896</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the transmitter power sink parameters.</span>
+
+<span class="sd">        The transmitter draws power when in a downlink task, representing the power cost</span>
+<span class="sd">        of downlinking data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            transmitterPowerDraw: [W] Power draw when transmitter is enabled.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">transmitterPowerDraw</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;transmitterPowerDraw should probably be zero or negative.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span> <span class="o">=</span> <span class="n">simplePowerSink</span><span class="o">.</span><span class="n">SimplePowerSink</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;transPowerSink&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">nodePowerOut</span> <span class="o">=</span> <span class="n">transmitterPowerDraw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.setup_storage_unit">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ImagingDynModel.setup_storage_unit">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mi">20</span> <span class="o">*</span> <span class="mf">8e6</span><span class="p">,</span>
+        <span class="n">bufferNames</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">storageUnitValidCheck</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">storageInit</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_storage_unit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataStorageCapacity</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">storageUnitValidCheck</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">storageInit</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">transmitterNumBuffers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">bufferNames</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">699</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Configure the storage unit and its buffers.</span>
+
+<span class="sd">        Separate buffers can be used to track imaging of different targets. Often, the</span>
+<span class="sd">        buffer names will be set up by satellite based on the scenario configuration.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataStorageCapacity: [bits] Maximum data that can be stored.</span>
+<span class="sd">            transmitterNumBuffers: Number of unit buffers. Not necessary if ``bufferNames``</span>
+<span class="sd">                are given.</span>
+<span class="sd">            bufferNames: List of buffer names to use. Named by number if ``None``.</span>
+<span class="sd">            storageUnitValidCheck: If ``True``, enforce that the storage level is below</span>
+<span class="sd">                the storage capacity when checking aliveness.</span>
+<span class="sd">            storageInit: [bits] Initial storage level.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span> <span class="o">=</span> <span class="n">partitionedStorageUnit</span><span class="o">.</span><span class="n">PartitionedStorageUnit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;storageUnit&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span> <span class="o">=</span> <span class="n">dataStorageCapacity</span>  <span class="c1"># bits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addDataNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addDataNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">nodeDataOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnitValidCheck</span> <span class="o">=</span> <span class="n">storageUnitValidCheck</span>
+        <span class="c1"># Add all of the targets to the data buffer</span>
+        <span class="k">if</span> <span class="n">bufferNames</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">buffer_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">transmitterNumBuffers</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addPartition</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">buffer_idx</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">transmitterNumBuffers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">transmitterNumBuffers</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span>
+                <span class="n">bufferNames</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;transmitterNumBuffers cannot be different than len(bufferNames).&quot;</span>
+                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">buffer_name</span> <span class="ow">in</span> <span class="n">bufferNames</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addPartition</span><span class="p">(</span><span class="n">buffer_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">storageInit</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">storageInit</span> <span class="o">&gt;</span> <span class="n">dataStorageCapacity</span> <span class="ow">or</span> <span class="n">storageInit</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Initial storage level </span><span class="si">{</span><span class="n">storageInit</span><span class="si">}</span><span class="s2"> incompatible with its capacity </span><span class="si">{</span><span class="n">dataStorageCapacity</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">setDataBuffer</span><span class="p">([</span><span class="s2">&quot;STORED DATA&quot;</span><span class="p">],</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">storageInit</span><span class="p">)])</span>
+
+        <span class="c1"># Add the storage unit to the transmitter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addStorageUnitToTransmitter</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.data_storage_valid">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ImagingDynModel.data_storage_valid">[docs]</a>
+    <span class="nd">@aliveness_checker</span>
+    <span class="k">def</span> <span class="nf">data_storage_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check that the buffer has not run out of space.</span>
+
+<span class="sd">        Only is checked if ``storageUnitValidCheck`` is ``True``; otherwise, a full storage</span>
+<span class="sd">        unit will prevent additional data from being stored but will not cause the satellite</span>
+<span class="sd">        to be considered dead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">storage_check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnitValidCheck</span>
+        <span class="k">if</span> <span class="n">storage_check</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_level</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">storage_level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.setup_imaging_target">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ImagingDynModel.setup_imaging_target">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">groundLocationPlanetRadius</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span>
+        <span class="n">imageTargetMinimumElevation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mf">45.0</span><span class="p">),</span>
+        <span class="n">imageTargetMaximumRange</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_imaging_target</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">groundLocationPlanetRadius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">imageTargetMinimumElevation</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">imageTargetMaximumRange</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a generic imaging target to dynamics.</span>
+
+<span class="sd">        The target must be updated with a particular location when used.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            groundLocationPlanetRadius: [m] Radius of ground locations from center of planet.</span>
+<span class="sd">            imageTargetMinimumElevation: [rad] Minimum elevation angle from target to</span>
+<span class="sd">                satellite when imaging.</span>
+<span class="sd">            imageTargetMaximumRange: [m] Maximum range from target to satellite when</span>
+<span class="sd">                imaging. -1 to disable.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;ImagingTarget&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">groundLocationPlanetRadius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1000.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">imageTargetMinimumElevation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">imageTargetMaximumRange</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">world_task_name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="p">,</span>
+            <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.reset_for_action">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ImagingDynModel.reset_for_action">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_for_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shut off power sinks unless the transmitter or instrument is being used.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_for_action</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">dataStatus</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">0</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ContinuousImagingDynModel">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ContinuousImagingDynModel">[docs]</a>
+<span class="k">class</span> <span class="nc">ContinuousImagingDynModel</span><span class="p">(</span><span class="n">ImagingDynModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equips the satellite for continuous nadir imaging.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Equips the satellite for continuous nadir imaging.</span>
+
+<span class="sd">        Equips satellite with an instrument, storage unit, and transmitter</span>
+<span class="sd">        for continuous nadir imaging. A single data buffer is used for storage, and data</span>
+<span class="sd">        is accumulated continuously while imaging. The imaging target is fixed at the</span>
+<span class="sd">        center of the Earth for nadir imaging.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ContinuousImagingDynModel.setup_instrument">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_instrument">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">instrumentBaudRate</span><span class="o">=</span><span class="mf">8e6</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_instrument</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instrumentBaudRate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">895</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the continuous instrument model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instrumentBaudRate: [baud] Data generation rate step when continuously imaging.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span> <span class="o">=</span> <span class="n">simpleInstrument</span><span class="o">.</span><span class="n">SimpleInstrument</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;instrument&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeBaudRate</span> <span class="o">=</span> <span class="n">instrumentBaudRate</span>  <span class="c1"># make imaging instantaneous</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataName</span> <span class="o">=</span> <span class="s2">&quot;Instrument&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ContinuousImagingDynModel.setup_storage_unit">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_storage_unit">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mi">20</span> <span class="o">*</span> <span class="mf">8e6</span><span class="p">,</span>
+        <span class="n">storageUnitValidCheck</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">storageInit</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_storage_unit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataStorageCapacity</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">storageUnitValidCheck</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">storageInit</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">699</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Configure the storage unit and its buffers.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataStorageCapacity: [bits] Maximum data that can be stored.</span>
+<span class="sd">            storageUnitValidCheck: If True, check that the storage level is below the</span>
+<span class="sd">                storage capacity.</span>
+<span class="sd">            storageInit: [bits] Initial storage level.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span> <span class="o">=</span> <span class="n">simpleStorageUnit</span><span class="o">.</span><span class="n">SimpleStorageUnit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;storageUnit&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span> <span class="o">=</span> <span class="n">dataStorageCapacity</span>  <span class="c1"># bits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addDataNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addDataNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">nodeDataOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnitValidCheck</span> <span class="o">=</span> <span class="n">storageUnitValidCheck</span>
+        <span class="k">if</span> <span class="n">storageInit</span> <span class="o">&gt;</span> <span class="n">dataStorageCapacity</span> <span class="ow">or</span> <span class="n">storageInit</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Initial storage level </span><span class="si">{</span><span class="n">storageInit</span><span class="si">}</span><span class="s2"> incompatible with its capacity </span><span class="si">{</span><span class="n">dataStorageCapacity</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">setDataBuffer</span><span class="p">(</span><span class="n">storageInit</span><span class="p">)</span>
+
+        <span class="c1"># Add the storage unit to the transmitter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addStorageUnitToTransmitter</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ContinuousImagingDynModel.setup_imaging_target">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_imaging_target">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">imageTargetMaximumRange</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_imaging_target</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">imageTargetMaximumRange</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a imaging target at the center of the Earth.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            imageTargetMaximumRange: [m] Maximum range from target to satellite when</span>
+<span class="sd">                imaging. -1 to disable.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">&quot;scanningTarget&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="mf">1e-6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">imageTargetMaximumRange</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">world_task_name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="p">,</span>
+            <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="GroundStationDynModel">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.GroundStationDynModel">[docs]</a>
+<span class="k">class</span> <span class="nc">GroundStationDynModel</span><span class="p">(</span><span class="n">ImagingDynModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Model that connects satellite to world ground stations.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Model that connects satellite to world ground stations.</span>
+
+<span class="sd">        This model enables the use of ground stations defined in :class:`~bsk_rl.sim.world.GroundStationWorldModel`</span>
+<span class="sd">        for data downlink.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_requires_world</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="s2">&quot;WorldModel&quot;</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_requires_world</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="n">world</span><span class="o">.</span><span class="n">GroundStationWorldModel</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_setup_dynamics_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_setup_dynamics_objects</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_ground_station_locations</span><span class="p">()</span>
+
+<div class="viewcode-block" id="GroundStationDynModel.setup_ground_station_locations">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.GroundStationDynModel.setup_ground_station_locations">[docs]</a>
+    <span class="k">def</span> <span class="nf">setup_ground_station_locations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect the transmitter to ground stations.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">groundStation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">groundStations</span><span class="p">:</span>
+            <span class="n">groundStation</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addAccessMsgToTransmitter</span><span class="p">(</span><span class="n">groundStation</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">,</span> <span class="s2">&quot;add_location_for_access_checking&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">add_location_for_access_checking</span><span class="p">(</span>
+                    <span class="nb">object</span><span class="o">=</span><span class="n">groundStation</span><span class="o">.</span><span class="n">ModelTag</span><span class="p">,</span>
+                    <span class="n">r_LP_P</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">groundStation</span><span class="o">.</span><span class="n">r_LP_P_Init</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                    <span class="n">min_elev</span><span class="o">=</span><span class="n">groundStation</span><span class="o">.</span><span class="n">minimumElevation</span><span class="p">,</span>
+                    <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ground_station&quot;</span><span class="p">,</span>
+                <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FullFeaturedDynModel">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn.html#bsk_rl.sim.dyn.FullFeaturedDynModel">[docs]</a>
+<span class="k">class</span> <span class="nc">FullFeaturedDynModel</span><span class="p">(</span><span class="n">GroundStationDynModel</span><span class="p">,</span> <span class="n">LOSCommDynModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience class for a satellite with ground station and line-of-sight comms.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convenience class for an imaging satellite with ground stations and line-of-sight communication.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">&quot;Dynamics Sims&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;DynamicsModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;BasicDynamicsModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;LOSCommDynModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ImagingDynModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ContinuousImagingDynModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;GroundStationDynModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;FullFeaturedDynModel&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

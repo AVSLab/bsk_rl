@@ -1,0 +1,194 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Release Notes &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=292eb321"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Publications" href="publications.html" />
+    <link rel="prev" title="Semi-MDP Discounting in RLlib" href="api_reference/utils/rllib/discounting.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BSK-RL
+              <img src="_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#development-version">Development Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-1-0-1">Version 1.0.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-1-0-0">Version 1.0.0</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Release Notes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/release_notes.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="release-notes">
+<h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading"></a></h1>
+<section id="development-version">
+<h2>Development Version<a class="headerlink" href="#development-version" title="Link to this heading"></a></h2>
+<p><em>Release Date: MMM. DD, YYYY</em></p>
+<ul class="simple">
+<li><p>Add ability in <a class="reference internal" href="api_reference/obs/index.html#bsk_rl.obs.SatProperties" title="bsk_rl.obs.SatProperties"><code class="xref py py-class docutils literal notranslate"><span class="pre">SatProperties</span></code></a> to define new observations with
+a custom function.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">deepcopy</span></code> to mutable inputs to the environment so that an environment argument
+dictionary can be copied without being affected by things that happen in the environment.
+This fixes compatibility with RLlib 2.33.0+. Note that this means that the satellite
+object passed to the environment is not the same object as the one used in the environment,
+as is the case for rewarders and communication objects.</p></li>
+<li><p>Add additional observation properties for satellites and opportunities.</p></li>
+<li><p>Add connectors for multiagent semi-MDPs, as demonstrated in a new <a class="reference internal" href="examples/time_discounted_gae.html"><span class="doc">single agent</span></a>
+and <a class="reference internal" href="examples/async_multiagent_training.html"><span class="doc">multiagent</span></a> example.</p></li>
+<li><p>Add a <code class="docutils literal notranslate"><span class="pre">min_period</span></code> option to <a class="reference internal" href="api_reference/comm/index.html#bsk_rl.comm.CommunicationMethod" title="bsk_rl.comm.CommunicationMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationMethod</span></code></a>.</p></li>
+<li><p>Cache <code class="docutils literal notranslate"><span class="pre">agents</span></code> in the <a class="reference internal" href="api_reference/index.html#bsk_rl.ConstellationTasking" title="bsk_rl.ConstellationTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a> environment to improve
+performance.</p></li>
+<li><p>Add option to <code class="docutils literal notranslate"><span class="pre">generate_obs_retasking_only</span></code> to prevent computing observations for
+satellites that are continuing their current action.</p></li>
+<li><p>Allow for <a class="reference internal" href="api_reference/sats/index.html#bsk_rl.sats.ImagingSatellite" title="bsk_rl.sats.ImagingSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingSatellite</span></code></a> to default to a different type of
+opportunity than <code class="docutils literal notranslate"><span class="pre">target</span></code>. Also allows for access filters to include an opportunity
+type.</p></li>
+<li><p>Improve performance of <a class="reference internal" href="api_reference/obs/index.html#bsk_rl.obs.Eclipse" title="bsk_rl.obs.Eclipse"><code class="xref py py-class docutils literal notranslate"><span class="pre">Eclipse</span></code></a> observations by about 95%.</p></li>
+<li><p>Logs a warning if the initial battery charge or buffer level is incompatible with its capacity.</p></li>
+<li><p>Optimize communication when all satellites are communicating with each other.</p></li>
+</ul>
+</section>
+<section id="version-1-0-1">
+<h2>Version 1.0.1<a class="headerlink" href="#version-1-0-1" title="Link to this heading"></a></h2>
+<p><em>Release Date: Aug. 29, 2024</em></p>
+<ul class="simple">
+<li><p>Change the <a class="reference internal" href="api_reference/index.html#bsk_rl.ConstellationTasking" title="bsk_rl.ConstellationTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a> environment info dictionary to include
+all non-agent information in <code class="docutils literal notranslate"><span class="pre">info['__common__']</span></code>, which is expected by RLlib’s
+multiagent interfaces.</p></li>
+<li><p>Rewarder, communication, scenario, and satellites all have standardized <code class="docutils literal notranslate"><span class="pre">reset_overwrite_previous</span></code>,
+<code class="docutils literal notranslate"><span class="pre">reset_pre_sim_init</span></code>, and <code class="docutils literal notranslate"><span class="pre">reset_post_sim_init</span></code> methods to all for more complex
+initialization dependencies.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">get_access_filter</span></code> with <a class="reference internal" href="api_reference/sats/index.html#bsk_rl.sats.AccessSatellite.add_access_filter" title="bsk_rl.sats.AccessSatellite.add_access_filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">add_access_filter</span></code></a>,
+which uses boolean functions to determine which opportunity windows to consider.</p></li>
+<li><p>Changed the initial data generation to be defined in <a class="reference internal" href="api_reference/data/index.html#bsk_rl.data.GlobalReward" title="bsk_rl.data.GlobalReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">GlobalReward</span></code></a>
+instead of <a class="reference internal" href="api_reference/scene/index.html#bsk_rl.scene.Scenario" title="bsk_rl.scene.Scenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scenario</span></code></a>.</p></li>
+<li><p>Added a new <a class="reference internal" href="examples/index.html#examples"><span class="std std-ref">Examples</span></a> script that demonstrates how to include
+a targets with cloud coverage and a rewarder that accounts for cloud cover.</p></li>
+<li><p>Reformat the info dictionary to be more consistent across environments. All satellites now
+have a <code class="docutils literal notranslate"><span class="pre">requires_retasking</span></code> key, as opposed to a global list of satellites that require retasking.
+Each satellite also gets <code class="docutils literal notranslate"><span class="pre">d_ts</span></code> in its info dictionary. Info and warning messages are no longer
+saved in the info dict.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">log_info</span></code> and <code class="docutils literal notranslate"><span class="pre">log_warning</span></code> are deprecated by <a class="reference internal" href="api_reference/sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">Satellite</span></code></a>, in favor of
+<code class="docutils literal notranslate"><span class="pre">logger.info</span></code> and <code class="docutils literal notranslate"><span class="pre">logger.warning</span></code>.</p></li>
+<li><p>Add ability to correlate <code class="docutils literal notranslate"><span class="pre">sat_args</span></code> between satellites with the <code class="docutils literal notranslate"><span class="pre">sat_arg_randomizer</span></code>
+option in <a class="reference internal" href="api_reference/index.html#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a>.  This is demonstrated in the setup
+of a constellation in the <a class="reference internal" href="examples/multiagent_envs.html"><span class="doc">multiagent example</span></a>.</p></li>
+<li><p>The default solar panel normal direction is now the negative z-axis, which is antiparallel
+to the default instrument direction.</p></li>
+</ul>
+</section>
+<section id="version-1-0-0">
+<h2>Version 1.0.0<a class="headerlink" href="#version-1-0-0" title="Link to this heading"></a></h2>
+<p><em>Release Date: Jun. 12, 2024</em></p>
+<p>First major release of BSK-RL.</p>
+<ul class="simple">
+<li><p>Refactored the repository to prioritize use of the <a class="reference internal" href="api_reference/index.html#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a>
+environment. The general environment is now at the base level of <code class="docutils literal notranslate"><span class="pre">bsk_rl</span></code>.</p></li>
+<li><p>Renamed various elements of the environment for simplicity and clarity. See the
+<a class="reference internal" href="api_reference/index.html#bsk-rl"><span class="std std-ref">API Reference</span></a> for further details.</p></li>
+<li><p>Refactored the satellite <a class="reference internal" href="api_reference/obs/index.html#bsk-rl-obs"><span class="std std-ref">Observations</span></a> and <a class="reference internal" href="api_reference/act/index.html#bsk-rl-act"><span class="std std-ref">Actions</span></a> specification
+to be more clear and avoid conflicting variable names.</p></li>
+<li><p>Rewrote the documentation and added useful <a class="reference internal" href="examples/index.html#examples"><span class="std std-ref">Examples</span></a>.</p></li>
+<li><p>Deprecated one-off environments and training scripts. These are still accessible
+in the <a class="reference external" href="https://github.com/AVSLab/bsk_rl/">git history of the repository</a>.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api_reference/utils/rllib/discounting.html" class="btn btn-neutral float-left" title="Semi-MDP Discounting in RLlib" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="publications.html" class="btn btn-neutral float-right" title="Publications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

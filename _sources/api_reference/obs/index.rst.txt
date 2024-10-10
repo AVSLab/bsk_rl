@@ -1,0 +1,24 @@
+.. _bsk_rl.obs:
+.. currentmodule:: bsk_rl.obs
+
+Observations
+============
+
+
+
+.. automodule:: bsk_rl.obs
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   observations
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+

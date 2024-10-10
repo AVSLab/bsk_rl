@@ -1,0 +1,1066 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloud Environment &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Training with RLlib PPO" href="rllib_training.html" />
+    <link rel="prev" title="Multi-Agent Environments" href="multiagent_envs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#environments">Environments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="simple_environment.html">Getting Started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="satellite_configuration.html">Satellite Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="multiagent_envs.html">Multi-Agent Environments</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Cloud Environment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Load-Modules">Load Modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Configure-the-Satellite">Configure the Satellite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Making-a-Scenario-with-Cloud-Covered-Targets">Making a Scenario with Cloud Covered Targets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Adding-a-Filter-Based-on-Cloud-Coverage-Forecast">Adding a Filter Based on Cloud Coverage Forecast</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Making-a-Rewarder-Considering-Cloud-Coverage">Making a Rewarder Considering Cloud Coverage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Initializing-and-Interacting-with-the-Environment">Initializing and Interacting with the Environment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#training">Training</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Cloud Environment</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/cloud_environment.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Cloud-Environment">
+<h1>Cloud Environment<a class="headerlink" href="#Cloud-Environment" title="Link to this heading"></a></h1>
+<p>This tutorial demonstrates the configuration and use of a simple BSK-RL environment considering cloud coverage. The satellite has to image targets while managing its battery level. Additionally, reward is inversely proportional to the amount of cloud coverage. Still, the satellite cannot observe the true cloud coverage of each target, only its forecast.</p>
+<section id="Load-Modules">
+<h2>Load Modules<a class="headerlink" href="#Load-Modules" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gymnasium</span> <span class="k">as</span> <span class="nn">gym</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">Basilisk.architecture</span> <span class="kn">import</span> <span class="n">bskLogging</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">orbitalMotion</span>
+<span class="kn">from</span> <span class="nn">bsk_rl</span> <span class="kn">import</span> <span class="n">act</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">sats</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.sim</span> <span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span><span class="p">,</span> <span class="n">world</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.utils.orbital</span> <span class="kn">import</span> <span class="n">random_orbit</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.scene.targets</span> <span class="kn">import</span> <span class="n">UniformTargets</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.data.unique_image_data</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">UniqueImageData</span><span class="p">,</span>
+    <span class="n">UniqueImageStore</span><span class="p">,</span>
+    <span class="n">UniqueImageReward</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">bskLogging</span><span class="o">.</span><span class="n">setDefaultLogLevel</span><span class="p">(</span><span class="n">bskLogging</span><span class="o">.</span><span class="n">BSK_WARNING</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Configure-the-Satellite">
+<h2>Configure the Satellite<a class="headerlink" href="#Configure-the-Satellite" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api_reference/obs/index.html"><span class="doc">Observations</span></a>:</p>
+<ul>
+<li><p>SatProperties: Body angular velocity, instrument pointing direction, body position, body velocity, battery charge (properties in <a class="reference internal" href="../api_reference/sim/fsw.html"><span class="doc">flight software model</span></a> or <a class="reference internal" href="../api_reference/sim/dyn.html"><span class="doc">dynamics model</span></a>). Also, customized dynamics property in CustomDynModel below: Angle between the sun and the solar panel.</p></li>
+<li><p>OpportunityProperties: Target’s priority, cloud coverage forecast, and standard deviation of cloud coverage forecast (upcoming 32 targets). Also, time until the opportunity to ground station opens and closes.</p></li>
+<li><p>Time: Simulation time.</p></li>
+<li><p>Eclipse: Next eclipse start and end times.</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="../api_reference/act/index.html"><span class="doc">Actions</span></a>:</p>
+<ul>
+<li><p>Charge: Enter a sun-pointing charging mode for 60 seconds.</p></li>
+<li><p>Image: Image target from upcoming 32 targets</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="../api_reference/sim/dyn.html"><span class="doc">Dynamics model</span></a>: FullFeaturedDynModel is used and a property, angle between sun and solar panel, is added.</p></li>
+<li><p><a class="reference internal" href="../api_reference/sim/fsw.html"><span class="doc">Flight software model</span></a>: SteeringImagerFSWModel is used.</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CustomSatComposed</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">ImagingSatellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;omega_BP_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;c_hat_P&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;r_BN_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;v_BN_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7616.5</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;battery_charge_fraction&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;solar_angle_norm&quot;</span><span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+            <span class="c1"># dict(fn=lambda sat, opp: print(opp)),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;opportunity_open&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;opportunity_close&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ground_station&quot;</span><span class="p">,</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">(),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;priority&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">:</span> <span class="n">opp</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cloud_cover_forecast</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">:</span> <span class="n">opp</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cloud_cover_sigma</span><span class="p">),</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">(),</span>
+    <span class="p">]</span>
+
+    <span class="n">action_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">60.0</span><span class="p">),</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">n_ahead_image</span><span class="o">=</span><span class="mi">32</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="k">class</span> <span class="nc">CustomDynModel</span><span class="p">(</span><span class="n">dyn</span><span class="o">.</span><span class="n">FullFeaturedDynModel</span><span class="p">):</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">solar_angle_norm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="n">sun_vec_N</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">sun_index</span>
+                <span class="p">]</span>
+                <span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">PositionVector</span>
+            <span class="p">)</span>
+            <span class="n">sun_vec_N_hat</span> <span class="o">=</span> <span class="n">sun_vec_N</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">sun_vec_N</span><span class="p">)</span>
+            <span class="n">solar_panel_vec_B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># Not default configuration</span>
+            <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BN</span><span class="p">)</span>
+            <span class="n">solar_panel_vec_N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">solar_panel_vec_B</span><span class="p">)</span>
+            <span class="n">error_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">solar_panel_vec_N</span><span class="p">,</span> <span class="n">sun_vec_N_hat</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="n">error_angle</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">CustomDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">SteeringImagerFSWModel</span>
+</pre></div>
+</div>
+</div>
+<p>When instantiating a satellite, these parameters can be overriden with a constant or rerandomized every time the environment is reset using the <code class="docutils literal notranslate"><span class="pre">sat_args</span></code> dictionary.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataStorageCapacity</span> <span class="o">=</span> <span class="mi">20</span> <span class="o">*</span> <span class="mf">8e6</span> <span class="o">*</span> <span class="mi">100</span>
+<span class="n">sat_args</span> <span class="o">=</span> <span class="n">CustomSatComposed</span><span class="o">.</span><span class="n">default_sat_args</span><span class="p">(</span>
+    <span class="n">oe</span><span class="o">=</span><span class="n">random_orbit</span><span class="p">,</span>
+    <span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">80.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">storedCharge_Init</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">80.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">u_max</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">K1</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">nHat_B</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="n">imageTargetMinimumElevation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">45</span><span class="p">),</span>
+    <span class="n">rwBasePower</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="mi">1500</span><span class="p">,</span>
+    <span class="n">storageInit</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+        <span class="mi">0</span> <span class="o">*</span> <span class="n">dataStorageCapacity</span><span class="p">,</span>
+        <span class="mf">0.01</span> <span class="o">*</span> <span class="n">dataStorageCapacity</span><span class="p">,</span>
+    <span class="p">),</span>  <span class="c1"># Initialize storage use close to zero</span>
+    <span class="n">wheelSpeeds</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span>
+        <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span>
+    <span class="p">),</span>  <span class="c1"># Initialize reaction wheel speeds close to zero</span>
+<span class="p">)</span>
+
+<span class="c1"># Make the satellites</span>
+<span class="n">satellites</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">satellites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">CustomSatComposed</span><span class="p">(</span>
+        <span class="s2">&quot;EO&quot;</span><span class="p">,</span>
+        <span class="n">sat_args</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Making-a-Scenario-with-Cloud-Covered-Targets">
+<h2>Making a Scenario with Cloud Covered Targets<a class="headerlink" href="#Making-a-Scenario-with-Cloud-Covered-Targets" title="Link to this heading"></a></h2>
+<p>Using UniformTargets as a base, attach the following information to each target:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">true_cloud_cover</span></code> represents the true cloud coverage. Information from external sources, such as historical cloud data, can be used here based on each target’s position.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cloud_cover_forecast</span></code> represents the cloud coverage forecast. Forecast from external sources can be plugged in here.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cloud_cover_sigma</span></code> represents the standard deviation of the cloud coverage forecast.</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CloudTargets</span><span class="p">(</span><span class="n">UniformTargets</span><span class="p">):</span>
+    <span class="n">mu_data</span> <span class="o">=</span> <span class="mf">0.6740208166434426</span>
+    <span class="n">sigma_max</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">sigma_min</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+    <span class="k">def</span> <span class="nf">regenerate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">regenerate_targets</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">true_cloud_cover</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu_data</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span>
+            <span class="p">)</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">cloud_cover_sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_max</span><span class="p">)</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">cloud_cover_forecast</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">true_cloud_cover</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">cloud_cover_sigma</span><span class="p">),</span>
+                <span class="mf">0.0</span><span class="p">,</span>
+                <span class="mf">1.0</span><span class="p">,</span>
+            <span class="p">)</span>
+
+
+<span class="n">n_targets</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
+<span class="n">scenario</span> <span class="o">=</span> <span class="n">CloudTargets</span><span class="p">(</span><span class="n">n_targets</span><span class="o">=</span><span class="n">n_targets</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Adding-a-Filter-Based-on-Cloud-Coverage-Forecast">
+<h2>Adding a Filter Based on Cloud Coverage Forecast<a class="headerlink" href="#Adding-a-Filter-Based-on-Cloud-Coverage-Forecast" title="Link to this heading"></a></h2>
+<p>It is possible to add a filter to the satellite using <a class="reference internal" href="../api_reference/sats/index.html"><span class="doc">add_access_filter</span></a> to remove targets with <code class="docutils literal notranslate"><span class="pre">cloud_cover_forecast</span></code> higher than a threshold from the observations.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">cloud_cover_filter</span><span class="p">(</span><span class="n">opportunity</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;target&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">opportunity</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cloud_cover_forecast</span> <span class="o">&lt;</span> <span class="mf">0.2</span> <span class="k">else</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="c1"># Uncomment the following line to add the filter to the satellite</span>
+<span class="c1"># satellites[0].add_access_filter(cloud_cover_filter)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Making-a-Rewarder-Considering-Cloud-Coverage">
+<h2>Making a Rewarder Considering Cloud Coverage<a class="headerlink" href="#Making-a-Rewarder-Considering-Cloud-Coverage" title="Link to this heading"></a></h2>
+<p>A linear reward model is considered, where the reward is proportional to the cloud coverage of the target until a given threshold given by <code class="docutils literal notranslate"><span class="pre">cloud_threshold</span></code>. It has similar settings as the <a class="reference internal" href="../api_reference/data/index.html"><span class="doc">UniqueImageReward</span></a> class, but <code class="docutils literal notranslate"><span class="pre">cloud_covered</span></code> and <code class="docutils literal notranslate"><span class="pre">cloud_free</span></code> information is added. Additionally, the <code class="docutils literal notranslate"><span class="pre">calculate_reward</span></code> function is modified for the linear reward model.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[67]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.scene.targets</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">Target</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">CloudImagePercentData</span><span class="p">(</span><span class="n">UniqueImageData</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataType for unique images of targets.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">imaged</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Target&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">duplicates</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">known</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Target&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cloud_covered</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Target&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cloud_free</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Target&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct unit of data to record unique images.</span>
+
+<span class="sd">        Keeps track of ``imaged`` targets, a count of ``duplicates`` (i.e. images that</span>
+<span class="sd">        were not rewarded due to the target already having been imaged), and all</span>
+<span class="sd">        ``known`` targets in the environment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            imaged: List of targets that are known to be imaged.</span>
+<span class="sd">            duplicates: Count of target imaging duplication.</span>
+<span class="sd">            known: List of targets that are known to exist (imaged and unimaged).</span>
+<span class="sd">            cloud_covered: List of imaged targets that are known to be cloud covered.</span>
+<span class="sd">            cloud_free: List of imaged targets that are known to be cloud free.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">imaged</span><span class="o">=</span><span class="n">imaged</span><span class="p">,</span> <span class="n">duplicates</span><span class="o">=</span><span class="n">duplicates</span><span class="p">,</span> <span class="n">known</span><span class="o">=</span><span class="n">known</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cloud_covered</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cloud_covered</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">cloud_free</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cloud_free</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cloud_covered</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">cloud_covered</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cloud_free</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">cloud_free</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;CloudImagePercentData&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CloudImagePercentData&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Combine two units of data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: Another unit of data to combine with this one.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Combined unit of data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">imaged</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">imaged</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">imaged</span><span class="p">))</span>
+        <span class="n">duplicates</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">duplicates</span>
+            <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">duplicates</span>
+            <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">imaged</span><span class="p">)</span>
+            <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">imaged</span><span class="p">)</span>
+            <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">imaged</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">known</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">known</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">known</span><span class="p">))</span>
+        <span class="n">cloud_covered</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cloud_covered</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">cloud_covered</span><span class="p">))</span>
+        <span class="n">cloud_free</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cloud_free</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">cloud_free</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span>
+            <span class="n">imaged</span><span class="o">=</span><span class="n">imaged</span><span class="p">,</span>
+            <span class="n">duplicates</span><span class="o">=</span><span class="n">duplicates</span><span class="p">,</span>
+            <span class="n">known</span><span class="o">=</span><span class="n">known</span><span class="p">,</span>
+            <span class="n">cloud_covered</span><span class="o">=</span><span class="n">cloud_covered</span><span class="p">,</span>
+            <span class="n">cloud_free</span><span class="o">=</span><span class="n">cloud_free</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">CloudImagePercentDataStore</span><span class="p">(</span><span class="n">UniqueImageStore</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataStore for unique images of targets.&quot;&quot;&quot;</span>
+
+    <span class="n">data_type</span> <span class="o">=</span> <span class="n">CloudImagePercentData</span>
+
+    <span class="k">def</span> <span class="nf">compare_log_states</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">old_state</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">new_state</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CloudImagePercentData</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check for an increase in logged data to identify new images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            old_state: older storedData from satellite storage unit</span>
+<span class="sd">            new_state: newer storedData from satellite storage unit</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: Targets imaged at new_state that were unimaged at old_state</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">update_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">new_state</span> <span class="o">-</span> <span class="n">old_state</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">imaged</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">update_idx</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span>
+            <span class="n">target_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">storedDataName</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span>
+            <span class="n">imaged</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">target</span> <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">known</span> <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">target_id</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="n">cloud_covered</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cloud_free</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cloud_threshold</span> <span class="o">=</span> <span class="mf">0.7</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">imaged</span><span class="p">:</span>
+            <span class="n">cloud_coverage</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">true_cloud_cover</span>
+            <span class="k">if</span> <span class="n">cloud_coverage</span> <span class="o">&gt;</span> <span class="n">cloud_threshold</span><span class="p">:</span>
+                <span class="n">cloud_covered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cloud_free</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">CloudImagePercentData</span><span class="p">(</span>
+            <span class="n">imaged</span><span class="o">=</span><span class="n">imaged</span><span class="p">,</span> <span class="n">cloud_covered</span><span class="o">=</span><span class="n">cloud_covered</span><span class="p">,</span> <span class="n">cloud_free</span><span class="o">=</span><span class="n">cloud_free</span>
+        <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">CloudImagingPercentRewarder</span><span class="p">(</span><span class="n">UniqueImageReward</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DataManager for rewarding unique images.&quot;&quot;&quot;</span>
+
+    <span class="n">datastore_type</span> <span class="o">=</span> <span class="n">CloudImagePercentDataStore</span>
+
+    <span class="k">def</span> <span class="nf">calculate_reward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">new_data_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CloudImagePercentData</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reward new each unique image once using self.reward_fn().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            new_data_dict: Record of new images for each satellite</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            reward: Cumulative reward across satellites for one step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">imaged_targets</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">new_data</span><span class="o">.</span><span class="n">cloud_free</span> <span class="k">for</span> <span class="n">new_data</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()],</span> <span class="p">[]</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">sat_id</span><span class="p">,</span> <span class="n">new_data</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">reward</span><span class="p">[</span><span class="n">sat_id</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">new_data</span><span class="o">.</span><span class="n">cloud_free</span><span class="p">:</span>
+                <span class="n">reward</span><span class="p">[</span><span class="n">sat_id</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_fn</span><span class="p">(</span>
+                    <span class="n">target</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+                    <span class="n">target</span><span class="o">.</span><span class="n">true_cloud_cover</span><span class="p">,</span>
+                    <span class="n">imaged_targets</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">target</span><span class="p">),</span>
+                <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">new_data</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">+=</span> <span class="n">new_data</span>
+        <span class="k">return</span> <span class="n">reward</span>
+
+
+<span class="c1"># Define the reward function as a function of the priority of the target, the cloud cover, and the number of times the target has been imaged</span>
+<span class="k">def</span> <span class="nf">reward_function</span><span class="p">(</span><span class="n">priority</span><span class="p">,</span> <span class="n">cloud_cover</span><span class="p">,</span> <span class="n">count_target</span><span class="p">):</span>
+    <span class="n">cloud_threshold</span> <span class="o">=</span> <span class="mf">0.7</span>
+    <span class="k">return</span> <span class="n">priority</span> <span class="o">/</span> <span class="n">count_target</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">cloud_cover</span> <span class="o">/</span> <span class="n">cloud_threshold</span><span class="p">)</span>
+
+
+<span class="n">rewarder</span> <span class="o">=</span> <span class="n">CloudImagingPercentRewarder</span><span class="p">(</span><span class="n">reward_fn</span><span class="o">=</span><span class="n">reward_function</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Initializing-and-Interacting-with-the-Environment">
+<h2>Initializing and Interacting with the Environment<a class="headerlink" href="#Initializing-and-Interacting-with-the-Environment" title="Link to this heading"></a></h2>
+<p>For this example, we will be using the single-agent <a class="reference internal" href="../api_reference/index.html"><span class="doc">SatelliteTasking</span></a> environment. Along with passing the satellite that we configured, the environment takes a <a class="reference internal" href="../api_reference/scene/index.html"><span class="doc">scenario</span></a>, which defines the environment the satellite is acting in, and a <a class="reference internal" href="../api_reference/data/index.html"><span class="doc">rewarder</span></a>, which defines how data collected from the scenario is rewarded.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[68]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span>
+    <span class="s2">&quot;GeneralSatelliteTasking-v1&quot;</span><span class="p">,</span>
+    <span class="n">satellites</span><span class="o">=</span><span class="n">satellites</span><span class="p">,</span>
+    <span class="n">terminate_on_time_limit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">world_type</span><span class="o">=</span><span class="n">world</span><span class="o">.</span><span class="n">GroundStationWorldModel</span><span class="p">,</span>
+    <span class="n">world_args</span><span class="o">=</span><span class="n">world</span><span class="o">.</span><span class="n">GroundStationWorldModel</span><span class="o">.</span><span class="n">default_world_args</span><span class="p">(),</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scenario</span><span class="p">,</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">rewarder</span><span class="p">,</span>
+    <span class="n">sim_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">max_step_duration</span><span class="o">=</span><span class="mf">300.0</span><span class="p">,</span>
+    <span class="n">time_limit</span><span class="o">=</span><span class="mi">95</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
+    <span class="n">failure_penalty</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="c1"># disable_env_checker=True,  # For debugging</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:42,675 </span>                               <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-intense-fg">Creating logger for new env on PID=46719. Old environments in process may now log times incorrectly.</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:42,677 </span>gym                            INFO       Calling env.reset() to get observation space
+<span class="ansi-black-intense-fg">2024-07-19 09:54:42,678 </span>gym                            INFO       Resetting environment with seed=2966020952
+<span class="ansi-black-intense-fg">2024-07-19 09:54:42,681 </span>scene.targets                  INFO       Generating 9075 targets
+<span class="ansi-black-intense-fg">2024-07-19 09:54:43,147 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Finding opportunity windows from 0.00 to 17100.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:44,142 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:44,143 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Environment reset
+</pre></div></div>
+</div>
+<p>First, reset the environment. It is possible to specify the seed when resetting the environment.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[69]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">observation</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:44,687 </span>gym                            INFO       Resetting environment with seed=1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:44,689 </span>scene.targets                  INFO       Generating 3895 targets
+<span class="ansi-black-intense-fg">2024-07-19 09:54:45,044 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Finding opportunity windows from 0.00 to 17100.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:45,468 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:45,468 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Environment reset
+</pre></div></div>
+</div>
+<p>It is possible to printing out the actions and observations. The composed satellite <a class="reference internal" href="../api_reference/sats/index.html"><span class="doc">action_description</span></a> returns a human-readable action map each satellite has the same action space and similar observation space.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[70]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actions:&quot;</span><span class="p">,</span> <span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">action_description</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;States:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">observation_description</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Using the composed satellite features also provides a human-readable state:</span>
+<span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">:  </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Actions: [&#39;action_charge&#39;, &#39;action_image_0&#39;, &#39;action_image_1&#39;, &#39;action_image_2&#39;, &#39;action_image_3&#39;, &#39;action_image_4&#39;, &#39;action_image_5&#39;, &#39;action_image_6&#39;, &#39;action_image_7&#39;, &#39;action_image_8&#39;, &#39;action_image_9&#39;, &#39;action_image_10&#39;, &#39;action_image_11&#39;, &#39;action_image_12&#39;, &#39;action_image_13&#39;, &#39;action_image_14&#39;, &#39;action_image_15&#39;, &#39;action_image_16&#39;, &#39;action_image_17&#39;, &#39;action_image_18&#39;, &#39;action_image_19&#39;, &#39;action_image_20&#39;, &#39;action_image_21&#39;, &#39;action_image_22&#39;, &#39;action_image_23&#39;, &#39;action_image_24&#39;, &#39;action_image_25&#39;, &#39;action_image_26&#39;, &#39;action_image_27&#39;, &#39;action_image_28&#39;, &#39;action_image_29&#39;, &#39;action_image_30&#39;, &#39;action_image_31&#39;]
+States: [&#39;sat_props.omega_BP_P_normd[0]&#39;, &#39;sat_props.omega_BP_P_normd[1]&#39;, &#39;sat_props.omega_BP_P_normd[2]&#39;, &#39;sat_props.c_hat_P[0]&#39;, &#39;sat_props.c_hat_P[1]&#39;, &#39;sat_props.c_hat_P[2]&#39;, &#39;sat_props.r_BN_P_normd[0]&#39;, &#39;sat_props.r_BN_P_normd[1]&#39;, &#39;sat_props.r_BN_P_normd[2]&#39;, &#39;sat_props.v_BN_P_normd[0]&#39;, &#39;sat_props.v_BN_P_normd[1]&#39;, &#39;sat_props.v_BN_P_normd[2]&#39;, &#39;sat_props.battery_charge_fraction&#39;, &#39;sat_props.solar_angle_norm&#39;, &#39;ground_station.ground_station_0.opportunity_open_normd&#39;, &#39;ground_station.ground_station_0.opportunity_close_normd&#39;, &#39;eclipse[0]&#39;, &#39;eclipse[1]&#39;, &#39;target.target_0.priority&#39;, &#39;target.target_0.prop_1&#39;, &#39;target.target_0.prop_2&#39;, &#39;target.target_1.priority&#39;, &#39;target.target_1.prop_1&#39;, &#39;target.target_1.prop_2&#39;, &#39;target.target_2.priority&#39;, &#39;target.target_2.prop_1&#39;, &#39;target.target_2.prop_2&#39;, &#39;target.target_3.priority&#39;, &#39;target.target_3.prop_1&#39;, &#39;target.target_3.prop_2&#39;, &#39;target.target_4.priority&#39;, &#39;target.target_4.prop_1&#39;, &#39;target.target_4.prop_2&#39;, &#39;target.target_5.priority&#39;, &#39;target.target_5.prop_1&#39;, &#39;target.target_5.prop_2&#39;, &#39;target.target_6.priority&#39;, &#39;target.target_6.prop_1&#39;, &#39;target.target_6.prop_2&#39;, &#39;target.target_7.priority&#39;, &#39;target.target_7.prop_1&#39;, &#39;target.target_7.prop_2&#39;, &#39;target.target_8.priority&#39;, &#39;target.target_8.prop_1&#39;, &#39;target.target_8.prop_2&#39;, &#39;target.target_9.priority&#39;, &#39;target.target_9.prop_1&#39;, &#39;target.target_9.prop_2&#39;, &#39;target.target_10.priority&#39;, &#39;target.target_10.prop_1&#39;, &#39;target.target_10.prop_2&#39;, &#39;target.target_11.priority&#39;, &#39;target.target_11.prop_1&#39;, &#39;target.target_11.prop_2&#39;, &#39;target.target_12.priority&#39;, &#39;target.target_12.prop_1&#39;, &#39;target.target_12.prop_2&#39;, &#39;target.target_13.priority&#39;, &#39;target.target_13.prop_1&#39;, &#39;target.target_13.prop_2&#39;, &#39;target.target_14.priority&#39;, &#39;target.target_14.prop_1&#39;, &#39;target.target_14.prop_2&#39;, &#39;target.target_15.priority&#39;, &#39;target.target_15.prop_1&#39;, &#39;target.target_15.prop_2&#39;, &#39;target.target_16.priority&#39;, &#39;target.target_16.prop_1&#39;, &#39;target.target_16.prop_2&#39;, &#39;target.target_17.priority&#39;, &#39;target.target_17.prop_1&#39;, &#39;target.target_17.prop_2&#39;, &#39;target.target_18.priority&#39;, &#39;target.target_18.prop_1&#39;, &#39;target.target_18.prop_2&#39;, &#39;target.target_19.priority&#39;, &#39;target.target_19.prop_1&#39;, &#39;target.target_19.prop_2&#39;, &#39;target.target_20.priority&#39;, &#39;target.target_20.prop_1&#39;, &#39;target.target_20.prop_2&#39;, &#39;target.target_21.priority&#39;, &#39;target.target_21.prop_1&#39;, &#39;target.target_21.prop_2&#39;, &#39;target.target_22.priority&#39;, &#39;target.target_22.prop_1&#39;, &#39;target.target_22.prop_2&#39;, &#39;target.target_23.priority&#39;, &#39;target.target_23.prop_1&#39;, &#39;target.target_23.prop_2&#39;, &#39;target.target_24.priority&#39;, &#39;target.target_24.prop_1&#39;, &#39;target.target_24.prop_2&#39;, &#39;target.target_25.priority&#39;, &#39;target.target_25.prop_1&#39;, &#39;target.target_25.prop_2&#39;, &#39;target.target_26.priority&#39;, &#39;target.target_26.prop_1&#39;, &#39;target.target_26.prop_2&#39;, &#39;target.target_27.priority&#39;, &#39;target.target_27.prop_1&#39;, &#39;target.target_27.prop_2&#39;, &#39;target.target_28.priority&#39;, &#39;target.target_28.prop_1&#39;, &#39;target.target_28.prop_2&#39;, &#39;target.target_29.priority&#39;, &#39;target.target_29.prop_1&#39;, &#39;target.target_29.prop_2&#39;, &#39;target.target_30.priority&#39;, &#39;target.target_30.prop_1&#39;, &#39;target.target_30.prop_2&#39;, &#39;target.target_31.priority&#39;, &#39;target.target_31.prop_1&#39;, &#39;target.target_31.prop_2&#39;, &#39;time&#39;]
+
+sat_props:  {&#39;omega_BP_P_normd&#39;: array([-0.00024411, -0.00134208, -0.00198803]), &#39;c_hat_P&#39;: array([-0.89544206, -0.168058  , -0.41223784]), &#39;r_BN_P_normd&#39;: array([-0.10657487,  0.75926752,  0.75675204]), &#39;v_BN_P_normd&#39;: array([-0.92573069, -0.21286484,  0.08319995]), &#39;battery_charge_fraction&#39;: 0.41362955348761493, &#39;solar_angle_norm&#39;: 0.36095740527133613}
+ground_station:  {&#39;ground_station_0&#39;: {&#39;opportunity_open_normd&#39;: 0.5239724373284539, &#39;opportunity_close_normd&#39;: 0.5789268531870276}}
+eclipse:  [780.0, 2610.0]
+target:  {&#39;target_0&#39;: {&#39;priority&#39;: 0.35799287916193745, &#39;prop_1&#39;: 0.18732617744449528, &#39;prop_2&#39;: 0.015441775700651368}, &#39;target_1&#39;: {&#39;priority&#39;: 0.7956708188805034, &#39;prop_1&#39;: 0.690268078705084, &#39;prop_2&#39;: 0.029740842575974626}, &#39;target_2&#39;: {&#39;priority&#39;: 0.47724764256917596, &#39;prop_1&#39;: 0.8213303453744604, &#39;prop_2&#39;: 0.01804408674589266}, &#39;target_3&#39;: {&#39;priority&#39;: 0.4338736557976496, &#39;prop_1&#39;: 0.8563272608725011, &#39;prop_2&#39;: 0.047588146360893355}, &#39;target_4&#39;: {&#39;priority&#39;: 0.9814543556395275, &#39;prop_1&#39;: 0.8631604140362873, &#39;prop_2&#39;: 0.011674378986940712}, &#39;target_5&#39;: {&#39;priority&#39;: 0.7942650253959778, &#39;prop_1&#39;: 0.01015316385183474, &#39;prop_2&#39;: 0.03921899469565209}, &#39;target_6&#39;: {&#39;priority&#39;: 0.49338342577868843, &#39;prop_1&#39;: 0.8511665835560023, &#39;prop_2&#39;: 0.046014925256409135}, &#39;target_7&#39;: {&#39;priority&#39;: 0.27089996509965464, &#39;prop_1&#39;: 0.38154306003579114, &#39;prop_2&#39;: 0.04767648650306338}, &#39;target_8&#39;: {&#39;priority&#39;: 0.2826304755357292, &#39;prop_1&#39;: 0.3489789891331716, &#39;prop_2&#39;: 0.026808599843887053}, &#39;target_9&#39;: {&#39;priority&#39;: 0.12389400404867856, &#39;prop_1&#39;: 1.0, &#39;prop_2&#39;: 0.02788337603137992}, &#39;target_10&#39;: {&#39;priority&#39;: 0.9932910043253891, &#39;prop_1&#39;: 0.6950141206369852, &#39;prop_2&#39;: 0.049018265786707635}, &#39;target_11&#39;: {&#39;priority&#39;: 0.7564906195577824, &#39;prop_1&#39;: 0.9983459163643871, &#39;prop_2&#39;: 0.04569404032267256}, &#39;target_12&#39;: {&#39;priority&#39;: 0.7444452092201004, &#39;prop_1&#39;: 0.9681290502720129, &#39;prop_2&#39;: 0.027314330058718944}, &#39;target_13&#39;: {&#39;priority&#39;: 0.2636882604601113, &#39;prop_1&#39;: 0.870778715256736, &#39;prop_2&#39;: 0.04416045334992624}, &#39;target_14&#39;: {&#39;priority&#39;: 0.248310541142008, &#39;prop_1&#39;: 0.7698113181871278, &#39;prop_2&#39;: 0.045298061442644935}, &#39;target_15&#39;: {&#39;priority&#39;: 0.6806511540818309, &#39;prop_1&#39;: 0.9623552940750132, &#39;prop_2&#39;: 0.027072300714261234}, &#39;target_16&#39;: {&#39;priority&#39;: 0.929280452382046, &#39;prop_1&#39;: 0.9828462633169273, &#39;prop_2&#39;: 0.04660416590043983}, &#39;target_17&#39;: {&#39;priority&#39;: 0.7752981170184967, &#39;prop_1&#39;: 0.0, &#39;prop_2&#39;: 0.04314367313238974}, &#39;target_18&#39;: {&#39;priority&#39;: 0.0926971311914182, &#39;prop_1&#39;: 0.10028332438249099, &#39;prop_2&#39;: 0.014675933906358952}, &#39;target_19&#39;: {&#39;priority&#39;: 0.6004457980912233, &#39;prop_1&#39;: 0.9753239499132759, &#39;prop_2&#39;: 0.016639140523782653}, &#39;target_20&#39;: {&#39;priority&#39;: 0.45305636745872835, &#39;prop_1&#39;: 0.4415736864728513, &#39;prop_2&#39;: 0.014438106667803253}, &#39;target_21&#39;: {&#39;priority&#39;: 0.4104504187098065, &#39;prop_1&#39;: 0.42176142091320595, &#39;prop_2&#39;: 0.03738850657711221}, &#39;target_22&#39;: {&#39;priority&#39;: 0.2817738215183342, &#39;prop_1&#39;: 0.5667693622116196, &#39;prop_2&#39;: 0.03294545339082754}, &#39;target_23&#39;: {&#39;priority&#39;: 0.9681156338062515, &#39;prop_1&#39;: 0.6103254893756423, &#39;prop_2&#39;: 0.015276096739788967}, &#39;target_24&#39;: {&#39;priority&#39;: 0.348206804810428, &#39;prop_1&#39;: 0.9792299073625499, &#39;prop_2&#39;: 0.03555376418462278}, &#39;target_25&#39;: {&#39;priority&#39;: 0.8514993239532047, &#39;prop_1&#39;: 0.41851541977900913, &#39;prop_2&#39;: 0.030686176325074865}, &#39;target_26&#39;: {&#39;priority&#39;: 0.39612121845119197, &#39;prop_1&#39;: 0.7450528103733399, &#39;prop_2&#39;: 0.03526315180335297}, &#39;target_27&#39;: {&#39;priority&#39;: 0.1554068368603777, &#39;prop_1&#39;: 0.1837038919814267, &#39;prop_2&#39;: 0.016663514938739393}, &#39;target_28&#39;: {&#39;priority&#39;: 0.8240398029706025, &#39;prop_1&#39;: 0.15539991723335303, &#39;prop_2&#39;: 0.047887479978929316}, &#39;target_29&#39;: {&#39;priority&#39;: 0.9047200828734902, &#39;prop_1&#39;: 0.8111759624117715, &#39;prop_2&#39;: 0.010756586279688403}, &#39;target_30&#39;: {&#39;priority&#39;: 0.6697085145240956, &#39;prop_1&#39;: 0.6700598695572187, &#39;prop_2&#39;: 0.01970058172066188}, &#39;target_31&#39;: {&#39;priority&#39;: 0.2652927373869285, &#39;prop_1&#39;: 0.05396448514325962, &#39;prop_2&#39;: 0.010514918684288953}}
+time:  0.0
+</pre></div></div>
+</div>
+<p>Then, run the simulation until timeout or agent failure.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[71]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+
+    <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Vector with an action for each satellite (we can pass different actions for each satellite)</span>
+        <span class="c1"># Tasking all satellites to charge (tasking None as the first action will raise a warning)</span>
+        <span class="n">action_vector</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># None will continue the last action, but will also raise a warning</span>
+        <span class="n">action_vector</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># Tasking different actions for each satellite</span>
+        <span class="n">action_vector</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Tasking random actions</span>
+        <span class="n">action_vector</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+    <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action_vector</span><span class="p">)</span>
+
+    <span class="c1"># Show the custom normalized observation vector</span>
+    <span class="c1"># print(&quot;\tObservation:&quot;, observation)</span>
+
+    <span class="k">if</span> <span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Episode complete.&quot;</span><span class="p">)</span>
+        <span class="k">break</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,608 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,614 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO: </span>action_charge tasked for 60.0 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,614 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 60.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,627 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Running simulation at most to 300.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,656 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 60.0 for action_charge
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,661 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,664 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,664 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,666 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,666 </span>gym                            <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;60.00&gt; </span><span class="ansi-yellow-intense-fg">Satellite EO requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,667 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span>Running simulation at most to 360.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,771 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;360.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,773 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;360.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,773 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;360.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,774 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;360.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,774 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;360.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 0 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,775 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;360.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1188) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,778 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;360.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1188) window enabled: 326.0 to 375.3
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,778 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;360.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 375.3
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,779 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;360.00&gt; </span>Running simulation at most to 660.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,785 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;375.50&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 375.3 for Target(tgt-1188) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,788 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;375.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,790 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;375.50&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,790 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;375.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,791 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;375.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,791 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;375.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 1 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,791 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;375.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3852) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,795 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;375.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3852) window enabled: 334.4 to 393.9
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,795 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;375.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 393.9
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,795 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;375.50&gt; </span>Running simulation at most to 675.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,804 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;394.00&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 393.9 for Target(tgt-3852) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,806 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;394.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,808 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;394.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,808 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;394.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,809 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;394.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,809 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;394.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 16 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,810 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;394.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-64) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,813 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;394.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-64) window enabled: 641.0 to 707.8
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,813 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;394.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 707.8
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,814 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;394.00&gt; </span>Running simulation at most to 694.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,915 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;642.50&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-64)
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,918 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;642.50&gt; </span>Data reward: {&#39;EO&#39;: 0.3754721142626522}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,920 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;642.50&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,921 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;642.50&gt; </span>Step reward: 0.3754721142626522
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,921 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;642.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,922 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;642.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 23 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,922 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;642.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3463) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,925 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;642.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3463) window enabled: 1316.0 to 1427.9
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,925 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;642.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 1427.9
+<span class="ansi-black-intense-fg">2024-07-19 09:54:47,926 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;642.50&gt; </span>Running simulation at most to 942.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,027 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;942.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,029 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;942.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,030 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;942.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,030 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;942.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 7 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,030 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;942.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3502) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,033 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;942.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3502) window enabled: 1121.6 to 1253.3
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,034 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;942.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 1253.3
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,034 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;942.50&gt; </span>Running simulation at most to 1242.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,090 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1123.00&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-3502)
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,093 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;1123.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,095 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1123.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,095 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1123.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,096 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1123.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,096 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1123.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 8 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,096 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1123.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-601) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,100 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1123.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-601) window enabled: 1259.0 to 1387.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,100 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1123.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 1387.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,100 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;1123.00&gt; </span>Running simulation at most to 1423.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,141 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1260.50&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-601)
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,144 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;1260.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,146 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1260.50&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,146 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1260.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,147 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1260.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,148 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1260.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 28 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,148 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1260.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1375) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,151 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1260.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1375) window enabled: 1937.0 to 2049.4
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,151 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1260.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 2049.4
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,152 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;1260.50&gt; </span>Running simulation at most to 1560.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,362 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;1560.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,364 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1560.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,365 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1560.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,365 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1560.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 30 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,365 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1560.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1612) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,368 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1560.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1612) window enabled: 2331.2 to 2450.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,369 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1560.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 2450.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,369 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;1560.50&gt; </span>Running simulation at most to 1860.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,465 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;1860.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,467 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1860.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,468 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1860.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,468 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1860.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 3 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,468 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1860.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-180) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,472 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1860.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-180) window enabled: 1914.6 to 1964.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,472 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1860.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 1964.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,473 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;1860.50&gt; </span>Running simulation at most to 2160.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,508 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1916.00&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-180)
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,511 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;1916.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0620457304795331}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,513 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1916.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,513 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1916.00&gt; </span>Step reward: 0.0620457304795331
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,514 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1916.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,514 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1916.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 20 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,515 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1916.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3401) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,518 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1916.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3401) window enabled: 2326.6 to 2447.8
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,518 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1916.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 2447.8
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,519 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;1916.00&gt; </span>Running simulation at most to 2216.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,616 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;2216.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,618 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2216.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,619 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2216.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,619 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2216.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 20 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,620 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2216.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3186) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,623 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2216.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3186) window enabled: 2687.4 to 2733.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,623 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2216.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 2733.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,624 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;2216.00&gt; </span>Running simulation at most to 2516.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,721 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;2516.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,723 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2516.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,724 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2516.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,725 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2516.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 1 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,725 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2516.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-791) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,728 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2516.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-791) window enabled: 2436.2 to 2561.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,729 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2516.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 2561.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,729 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;2516.00&gt; </span>Running simulation at most to 2816.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,747 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2562.00&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 2561.6 for Target(tgt-791) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,750 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;2562.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,752 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2562.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,752 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2562.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,753 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2562.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,753 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2562.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 4 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,753 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2562.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2792) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,757 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2562.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2792) window enabled: 2532.4 to 2658.5
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,757 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2562.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 2658.5
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,758 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;2562.00&gt; </span>Running simulation at most to 2862.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,776 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2606.50&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-2792)
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,780 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;2606.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,781 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2606.50&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,782 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2606.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,783 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2606.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,783 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2606.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 28 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,783 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2606.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1293) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,787 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2606.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1293) window enabled: 3271.6 to 3327.9
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,787 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2606.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 3327.9
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,788 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;2606.50&gt; </span>Running simulation at most to 2906.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,895 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;2906.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,897 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2906.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,898 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2906.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,898 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2906.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 0 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,899 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2906.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3342) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,902 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2906.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3342) window enabled: 2842.5 to 2923.2
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,903 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2906.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 2923.2
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,903 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;2906.50&gt; </span>Running simulation at most to 3206.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,910 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2923.50&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 2923.2 for Target(tgt-3342) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,913 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;2923.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,914 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2923.50&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,915 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2923.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,915 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2923.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,916 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2923.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 8 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,916 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2923.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2542) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,919 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2923.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2542) window enabled: 3062.6 to 3175.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,919 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2923.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 3175.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,920 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;2923.50&gt; </span>Running simulation at most to 3223.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,968 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3064.00&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-2542)
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,971 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;3064.00&gt; </span>Data reward: {&#39;EO&#39;: 0.17047349108051557}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,973 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3064.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,974 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3064.00&gt; </span>Step reward: 0.17047349108051557
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,974 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3064.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,975 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3064.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 16 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,975 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3064.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3368) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,978 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3064.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3368) window enabled: 3281.9 to 3394.3
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,979 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3064.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 3394.3
+<span class="ansi-black-intense-fg">2024-07-19 09:54:48,979 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;3064.00&gt; </span>Running simulation at most to 3364.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,049 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3283.00&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-3368)
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,052 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;3283.00&gt; </span>Data reward: {&#39;EO&#39;: 0.5480829099495642}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,054 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3283.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,054 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3283.00&gt; </span>Step reward: 0.5480829099495642
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,055 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3283.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,055 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3283.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 1 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,056 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3283.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3190) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,059 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3283.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3190) window enabled: 3204.3 to 3285.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,060 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3283.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 3285.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,060 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;3283.00&gt; </span>Running simulation at most to 3583.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,063 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3286.00&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 3285.7 for Target(tgt-3190) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,066 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;3286.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,067 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3286.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,068 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3286.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,069 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3286.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,069 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3286.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 26 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,069 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3286.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3658) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,073 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3286.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3658) window enabled: 3671.1 to 3795.2
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,135 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3286.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 3795.2
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,155 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;3286.00&gt; </span>Running simulation at most to 3586.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,304 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;3586.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,305 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3586.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,306 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3586.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,306 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3586.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 11 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,307 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3586.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-530) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,310 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3586.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-530) window enabled: 3700.7 to 3795.3
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,311 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3586.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 3795.3
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,311 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;3586.00&gt; </span>Running simulation at most to 3886.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,349 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3702.00&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-530)
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,353 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;3702.00&gt; </span>Data reward: {&#39;EO&#39;: 0.17160945565918637}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,355 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3702.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,355 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3702.00&gt; </span>Step reward: 0.17160945565918637
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,356 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3702.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,356 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3702.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 23 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,357 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3702.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2787) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,360 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3702.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2787) window enabled: 4338.6 to 4449.4
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,360 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3702.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 4449.4
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,361 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;3702.00&gt; </span>Running simulation at most to 4002.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,456 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;4002.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,458 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4002.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,459 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4002.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,459 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4002.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 8 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,460 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4002.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3589) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,463 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4002.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3589) window enabled: 4207.7 to 4321.5
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,463 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4002.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 4321.5
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,464 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;4002.00&gt; </span>Running simulation at most to 4302.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,529 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4209.00&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-3589)
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,532 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;4209.00&gt; </span>Data reward: {&#39;EO&#39;: 0.15403143413322856}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,534 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4209.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,534 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4209.00&gt; </span>Step reward: 0.15403143413322856
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,535 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4209.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,536 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4209.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 25 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,536 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4209.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1515) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,539 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4209.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1515) window enabled: 4574.8 to 4706.3
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,539 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4209.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 4706.3
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,540 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;4209.00&gt; </span>Running simulation at most to 4509.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,633 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;4509.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,635 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4509.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,636 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4509.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,636 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4509.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 8 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,637 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4509.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3174) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,640 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4509.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3174) window enabled: 4542.1 to 4650.9
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,640 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4509.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 4650.9
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,641 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;4509.00&gt; </span>Running simulation at most to 4809.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,652 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4543.50&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-3174)
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,655 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;4543.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,657 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4543.50&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,657 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4543.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,658 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4543.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,658 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4543.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 3 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,658 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4543.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2210) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,662 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4543.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2210) window enabled: 4516.6 to 4587.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,662 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4543.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 4587.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,663 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;4543.50&gt; </span>Running simulation at most to 4843.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,681 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4587.50&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 4587.1 for Target(tgt-2210) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,685 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;4587.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,687 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4587.50&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,688 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4587.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,688 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4587.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,689 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4587.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 20 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,689 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4587.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3128) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,693 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4587.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3128) window enabled: 5019.4 to 5132.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,693 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4587.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 5132.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,693 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;4587.50&gt; </span>Running simulation at most to 4887.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,808 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;4887.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,809 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4887.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,810 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4887.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,811 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4887.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 6 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,811 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4887.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-220) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,814 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4887.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-220) window enabled: 5029.1 to 5135.4
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,815 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4887.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 5135.4
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,815 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;4887.50&gt; </span>Running simulation at most to 5187.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,894 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5135.50&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 5135.4 for Target(tgt-220) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,897 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;5135.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,899 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5135.50&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,899 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5135.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,900 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5135.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,900 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5135.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 31 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,901 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5135.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2914) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,904 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5135.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2914) window enabled: 5909.0 to 6040.2
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,905 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5135.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 6040.2
+<span class="ansi-black-intense-fg">2024-07-19 09:54:49,905 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;5135.50&gt; </span>Running simulation at most to 5435.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,002 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;5435.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,004 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5435.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,005 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5435.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,006 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5435.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 18 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,006 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5435.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3303) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,010 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5435.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3303) window enabled: 5622.2 to 5736.4
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,011 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5435.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 5736.4
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,011 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;5435.50&gt; </span>Running simulation at most to 5735.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,113 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;5735.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,115 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5735.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,115 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5735.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,116 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5735.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 26 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,116 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5735.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2841) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,120 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5735.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2841) window enabled: 6391.7 to 6521.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,120 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;5735.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 6521.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,120 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;5735.50&gt; </span>Running simulation at most to 6035.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,233 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;6035.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,235 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6035.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,236 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6035.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,236 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6035.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 27 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,237 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6035.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-905) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,240 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6035.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-905) window enabled: 6526.4 to 6598.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,240 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6035.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 6598.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,257 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;6035.50&gt; </span>Running simulation at most to 6335.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,472 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;6335.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,474 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6335.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,475 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6335.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,475 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6335.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 29 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,476 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6335.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-372) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,479 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6335.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-372) window enabled: 6824.9 to 6949.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,480 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6335.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 6949.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,480 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;6335.50&gt; </span>Running simulation at most to 6635.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,594 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;6635.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,596 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6635.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,597 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6635.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,597 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6635.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 15 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,598 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6635.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-225) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,601 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6635.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-225) window enabled: 6896.2 to 7014.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,601 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6635.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 7014.1
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,602 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;6635.50&gt; </span>Running simulation at most to 6935.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,692 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;6935.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,694 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6935.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,695 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6935.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,695 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6935.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 13 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,695 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6935.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2274) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,699 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6935.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2274) window enabled: 7136.7 to 7268.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,699 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;6935.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 7268.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,699 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;6935.50&gt; </span>Running simulation at most to 7235.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,790 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;7235.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,792 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7235.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,793 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7235.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,793 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7235.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 9 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,793 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7235.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1090) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,796 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7235.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1090) window enabled: 7409.2 to 7535.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,796 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7235.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 7535.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,797 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;7235.50&gt; </span>Running simulation at most to 7535.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,890 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;7535.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,892 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7535.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,893 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7535.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,893 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7535.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 7 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,894 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7535.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-61) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,897 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7535.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-61) window enabled: 7502.4 to 7631.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,897 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7535.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 7631.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,898 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;7535.50&gt; </span>Running simulation at most to 7835.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,926 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7631.50&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 7631.0 for Target(tgt-61) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,929 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;7631.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,931 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7631.50&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,932 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7631.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,932 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7631.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,933 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7631.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 1 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,933 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7631.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2115) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,936 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7631.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2115) window enabled: 7549.9 to 7671.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,936 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7631.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 7671.6
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,937 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;7631.50&gt; </span>Running simulation at most to 7931.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,950 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7672.00&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 7671.6 for Target(tgt-2115) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,953 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;7672.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,955 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7672.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,955 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7672.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,956 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7672.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,956 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7672.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 0 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,956 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7672.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2814) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,959 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7672.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-2814) window enabled: 7604.9 to 7683.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,960 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7672.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 7683.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,960 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;7672.00&gt; </span>Running simulation at most to 7972.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,964 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7684.00&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 7683.7 for Target(tgt-2814) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,967 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;7684.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,969 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7684.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,969 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7684.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,969 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7684.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,970 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7684.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 4 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,970 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7684.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1353) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,987 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7684.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1353) window enabled: 7641.8 to 7763.4
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,990 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7684.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 7763.4
+<span class="ansi-black-intense-fg">2024-07-19 09:54:50,991 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;7684.00&gt; </span>Running simulation at most to 7984.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,021 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7763.50&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 7763.4 for Target(tgt-1353) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,024 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;7763.50&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,026 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7763.50&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,026 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7763.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,027 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7763.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,027 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7763.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 0 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,028 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7763.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3760) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,031 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7763.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-3760) window enabled: 7706.4 to 7785.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,031 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7763.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 7785.7
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,032 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;7763.50&gt; </span>Running simulation at most to 8063.50 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,041 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7786.00&gt; </span><span class="ansi-cyan-fg">EO: </span>timed termination at 7785.7 for Target(tgt-3760) window
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,044 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;7786.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,046 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7786.00&gt; </span>Satellites requiring retasking: [&#39;EO&#39;]
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,046 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7786.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,047 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7786.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,047 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7786.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 17 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,047 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7786.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1791) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,050 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7786.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1791) window enabled: 8270.2 to 8394.8
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,050 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;7786.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 8394.8
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,051 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;7786.00&gt; </span>Running simulation at most to 8086.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,147 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;8086.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,149 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;8086.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,150 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;8086.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,150 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;8086.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 26 tasked
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,151 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;8086.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1316) tasked for imaging
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,154 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;8086.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-1316) window enabled: 8623.5 to 8739.8
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,154 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;8086.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 8739.8
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,155 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;8086.00&gt; </span>Running simulation at most to 8386.00 seconds
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,264 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;8386.00&gt; </span>Data reward: {&#39;EO&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,265 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8386.00&gt; </span><span class="ansi-cyan-fg">EO: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span>
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,266 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;8386.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,266 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;8386.00&gt; </span>Episode terminated: True
+<span class="ansi-black-intense-fg">2024-07-19 09:54:51,266 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;8386.00&gt; </span>Episode truncated: False
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Episode complete.
+</pre></div></div>
+</div>
+<p>After the running the simulation, we can check the reward, number of imaged targets that were covered by clouds and that were not covered by clouds (according to the threshold set in the rewarder).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[78]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total reward:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">cum_reward</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Covered by clouds:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">cloud_covered</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Not covered by clouds:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">cloud_free</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Total reward: {&#39;EO&#39;: 1.4817151355646798}
+Covered by clouds: [Target(tgt-3174), Target(tgt-3502), Target(tgt-601), Target(tgt-2792)]
+Not covered by clouds: [Target(tgt-530), Target(tgt-64), Target(tgt-180), Target(tgt-3368), Target(tgt-3589), Target(tgt-2542)]
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="multiagent_envs.html" class="btn btn-neutral float-left" title="Multi-Agent Environments" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rllib_training.html" class="btn btn-neutral float-right" title="Training with RLlib PPO" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

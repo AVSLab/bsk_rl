@@ -1,0 +1,513 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Satellite Configuration" href="satellite_configuration.html" />
+    <link rel="prev" title="Examples" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#environments">Environments</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Load-Modules">Load Modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Configure-the-Satellite">Configure the Satellite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Making-the-Environment">Making the Environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Interacting-with-the-Environment">Interacting with the Environment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="satellite_configuration.html">Satellite Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="multiagent_envs.html">Multi-Agent Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cloud_environment.html">Cloud Environment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#training">Training</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Getting Started</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/simple_environment.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Getting-Started">
+<h1>Getting Started<a class="headerlink" href="#Getting-Started" title="Link to this heading"></a></h1>
+<p>This tutorial demonstrates the configuration and use of a simple BSK-RL environment. BSK-RL and dependencies should already be installed at this point (see <a class="reference internal" href="../install.html"><span class="doc">Installation</span></a> if you haven’t installed the package yet).</p>
+<section id="Load-Modules">
+<h2>Load Modules<a class="headerlink" href="#Load-Modules" title="Link to this heading"></a></h2>
+<p>In this tutorial, the environment will be created with <code class="docutils literal notranslate"><span class="pre">gym.make</span></code>, so it is necessary to import the top-level <code class="docutils literal notranslate"><span class="pre">bsk_rl</span></code> module as well as <code class="docutils literal notranslate"><span class="pre">gym</span></code> and <code class="docutils literal notranslate"><span class="pre">bsk_rl</span></code> components.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gymnasium</span> <span class="k">as</span> <span class="nn">gym</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">bsk_rl</span> <span class="kn">import</span> <span class="n">act</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">scene</span><span class="p">,</span> <span class="n">sats</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.sim</span> <span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+
+<span class="kn">from</span> <span class="nn">Basilisk.architecture</span> <span class="kn">import</span> <span class="n">bskLogging</span>
+<span class="n">bskLogging</span><span class="o">.</span><span class="n">setDefaultLogLevel</span><span class="p">(</span><span class="n">bskLogging</span><span class="o">.</span><span class="n">BSK_WARNING</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<p>If no errors were raised, you have a functional installation of <code class="docutils literal notranslate"><span class="pre">bsk_rl</span></code>.</p>
+</section>
+<section id="Configure-the-Satellite">
+<h2>Configure the Satellite<a class="headerlink" href="#Configure-the-Satellite" title="Link to this heading"></a></h2>
+<p><a class="reference internal" href="../api_reference/sats/index.html"><span class="doc">Satellites</span></a> are configurable agents in the environment. To make a new environment, start by specifying the <a class="reference internal" href="../api_reference/obs/index.html"><span class="doc">observations</span></a> and <a class="reference internal" href="../api_reference/act/index.html"><span class="doc">actions</span></a> of a satellite type, as well as the underlying Basilisk <a class="reference internal" href="../api_reference/sim/index.html"><span class="doc">simulation</span></a> models used by the satellite.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyScanningSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">AccessSatellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;storage_level_fraction&quot;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;battery_charge_fraction&quot;</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">(),</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Scan</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">60.0</span><span class="p">),</span>  <span class="c1"># Scan for 1 minute</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">600.0</span><span class="p">),</span>  <span class="c1"># Charge for 10 minutes</span>
+    <span class="p">]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">ContinuousImagingDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">ContinuousImagingFSWModel</span>
+</pre></div>
+</div>
+</div>
+<p>Based on this class specification, a list of configurable parameters for the satellite can be generated.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">MyScanningSatellite</span><span class="o">.</span><span class="n">default_sat_args</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;hs_min&#39;: 0.0,
+ &#39;maxCounterValue&#39;: 4,
+ &#39;thrMinFireTime&#39;: 0.02,
+ &#39;desatAttitude&#39;: &#39;sun&#39;,
+ &#39;controlAxes_B&#39;: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+ &#39;thrForceSign&#39;: 1,
+ &#39;K&#39;: 7.0,
+ &#39;Ki&#39;: -1,
+ &#39;P&#39;: 35.0,
+ &#39;imageAttErrorRequirement&#39;: 0.01,
+ &#39;imageRateErrorRequirement&#39;: None,
+ &#39;inst_pHat_B&#39;: [0, 0, 1],
+ &#39;utc_init&#39;: &#39;this value will be set by the world model&#39;,
+ &#39;batteryStorageCapacity&#39;: 288000.0,
+ &#39;storedCharge_Init&#39;: &lt;function bsk_rl.sim.dyn.BasicDynamicsModel.&lt;lambda&gt;()&gt;,
+ &#39;disturbance_vector&#39;: None,
+ &#39;dragCoeff&#39;: 2.2,
+ &#39;imageTargetMaximumRange&#39;: -1,
+ &#39;instrumentBaudRate&#39;: 8000000.0,
+ &#39;instrumentPowerDraw&#39;: -30.0,
+ &#39;basePowerDraw&#39;: 0.0,
+ &#39;wheelSpeeds&#39;: &lt;function bsk_rl.sim.dyn.BasicDynamicsModel.&lt;lambda&gt;()&gt;,
+ &#39;maxWheelSpeed&#39;: inf,
+ &#39;u_max&#39;: 0.2,
+ &#39;rwBasePower&#39;: 0.4,
+ &#39;rwMechToElecEfficiency&#39;: 0.0,
+ &#39;rwElecToMechEfficiency&#39;: 0.5,
+ &#39;panelArea&#39;: 1.0,
+ &#39;panelEfficiency&#39;: 0.2,
+ &#39;nHat_B&#39;: array([ 0,  0, -1]),
+ &#39;mass&#39;: 330,
+ &#39;width&#39;: 1.38,
+ &#39;depth&#39;: 1.04,
+ &#39;height&#39;: 1.58,
+ &#39;sigma_init&#39;: &lt;function bsk_rl.sim.dyn.BasicDynamicsModel.&lt;lambda&gt;()&gt;,
+ &#39;omega_init&#39;: &lt;function bsk_rl.sim.dyn.BasicDynamicsModel.&lt;lambda&gt;()&gt;,
+ &#39;rN&#39;: None,
+ &#39;vN&#39;: None,
+ &#39;oe&#39;: &lt;function bsk_rl.utils.orbital.random_orbit(i: Optional[float] = 45.0, alt: float = 500, r_body: float = 6371, e: float = 0, Omega: Optional[float] = None, omega: Optional[float] = 0, f: Optional[float] = None) -&gt; Basilisk.utilities.orbitalMotion.ClassicElements&gt;,
+ &#39;mu&#39;: 398600436000000.0,
+ &#39;dataStorageCapacity&#39;: 160000000.0,
+ &#39;storageUnitValidCheck&#39;: False,
+ &#39;storageInit&#39;: 0,
+ &#39;thrusterPowerDraw&#39;: 0.0,
+ &#39;transmitterBaudRate&#39;: -8000000.0,
+ &#39;transmitterNumBuffers&#39;: 100,
+ &#39;transmitterPowerDraw&#39;: -15.0}
+</pre></div></div>
+</div>
+<p>When instantiating a satellite, these parameters can be overriden with a constant or rerandomized every time the environment is reset using the <code class="docutils literal notranslate"><span class="pre">sat_args</span></code> dictionary.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sat_args</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># Set some parameters as constants</span>
+<span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;imageAttErrorRequirement&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;dataStorageCapacity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e10</span>
+<span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;instrumentBaudRate&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e7</span>
+<span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;storedCharge_Init&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">50000.0</span>
+
+<span class="c1"># Randomize the initial storage level on every reset</span>
+<span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;storageInit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e10</span>
+
+<span class="c1"># Make the satellite</span>
+<span class="n">sat</span> <span class="o">=</span> <span class="n">MyScanningSatellite</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;EO1&quot;</span><span class="p">,</span> <span class="n">sat_args</span><span class="o">=</span><span class="n">sat_args</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Making-the-Environment">
+<h2>Making the Environment<a class="headerlink" href="#Making-the-Environment" title="Link to this heading"></a></h2>
+<p>For this example, we will be using the single-agent <a class="reference internal" href="../api_reference/index.html"><span class="doc">SatelliteTasking</span></a> environment. Along with passing the satellite that we configured, the environment takes a <a class="reference internal" href="../api_reference/scene/index.html"><span class="doc">scenario</span></a>, which defines the environment the satellite is acting in, and a <a class="reference internal" href="../api_reference/data/index.html"><span class="doc">rewarder</span></a>, which defines how data collected from the scenario is rewarded.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span>
+    <span class="s2">&quot;SatelliteTasking-v1&quot;</span><span class="p">,</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">sat</span><span class="p">,</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">UniformNadirScanning</span><span class="p">(),</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">ScanningTimeReward</span><span class="p">(),</span>
+    <span class="n">time_limit</span><span class="o">=</span><span class="mf">5700.0</span><span class="p">,</span>  <span class="c1"># approximately 1 orbit</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,436 </span>gym                            INFO       Calling env.reset() to get observation space
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,436 </span>gym                            INFO       Resetting environment with seed=426283552
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,518 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Finding opportunity windows from 0.00 to 5700.00 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,533 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Environment reset
+</pre></div></div>
+</div>
+</section>
+<section id="Interacting-with-the-Environment">
+<h2>Interacting with the Environment<a class="headerlink" href="#Interacting-with-the-Environment" title="Link to this heading"></a></h2>
+<p>First, the environment is reset.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">observation</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,602 </span>gym                            INFO       Resetting environment with seed=1
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,738 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Finding opportunity windows from 0.00 to 5700.00 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,751 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Environment reset
+</pre></div></div>
+</div>
+<p>Next, we take the scan action (<code class="docutils literal notranslate"><span class="pre">action=0</span></code>) a few times. This allows for the satellite to settle its attitude in the nadir pointing mode to satisfy imaging conditions. Note that the logs show little or no data accumulated in the first two steps as it settles, but achieves 60 reward (corresponding to 60 seconds of imaging) by the third step.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initial data level:&quot;</span><span class="p">,</span> <span class="n">observation</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;(randomized by sat_args)&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Final data level:&quot;</span><span class="p">,</span> <span class="n">observation</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,754 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,755 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_nadir_scan tasked for 60.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,755 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 60.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,759 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 60.0 for action_nadir_scan
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,760 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span>Data reward: {&#39;EO1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,760 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,761 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,761 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,761 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_nadir_scan tasked for 60.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,761 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;60.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 120.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,765 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 120.0 for action_nadir_scan
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,765 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span>Data reward: {&#39;EO1&#39;: 30.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,766 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,766 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span>Step reward: 30.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,766 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,767 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_nadir_scan tasked for 60.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,767 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 180.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,770 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 180.0 for action_nadir_scan
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,771 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span>Data reward: {&#39;EO1&#39;: 60.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,771 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,771 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span>Step reward: 60.0
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Initial data level: 0.7341307878 (randomized by sat_args)
+  Final data level: 0.8241307878
+</pre></div></div>
+</div>
+<p>The observation reflects the increase in stored data. The first element, corresponding to <code class="docutils literal notranslate"><span class="pre">storage_level_fraction</span></code>, starts at a random value set by the <code class="docutils literal notranslate"><span class="pre">storageInit</span></code> function in <code class="docutils literal notranslate"><span class="pre">sat_args</span></code> and increases based on the time spent imaging.</p>
+<p>Finally, the charging mode is tasked repeatedly in 10-minute increments until the environment time limit is reached.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">while</span> <span class="ow">not</span> <span class="n">truncated</span><span class="p">:</span>
+    <span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Charge level: </span><span class="si">{</span><span class="n">observation</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> seconds)</span><span class="se">\n\t</span><span class="s2">Eclipse: start: </span><span class="si">{</span><span class="n">observation</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> end: </span><span class="si">{</span><span class="n">observation</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,775 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,775 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_charge tasked for 600.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,775 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 780.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,809 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;780.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 780.0 for action_charge
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,810 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;780.00&gt; </span>Data reward: {&#39;EO1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,810 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;780.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,836 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;780.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,837 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;780.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,837 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;780.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_charge tasked for 600.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,837 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;780.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 1380.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,868 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;1380.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 1380.0 for action_charge
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,868 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;1380.00&gt; </span>Data reward: {&#39;EO1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,869 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;1380.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,869 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1380.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,870 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1380.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,870 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;1380.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_charge tasked for 600.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,870 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;1380.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 1980.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,903 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;1980.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 1980.0 for action_charge
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,903 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;1980.00&gt; </span>Data reward: {&#39;EO1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,903 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;1980.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,904 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1980.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,904 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1980.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,904 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;1980.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_charge tasked for 600.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,905 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;1980.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 2580.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,937 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;2580.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 2580.0 for action_charge
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,937 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;2580.00&gt; </span>Data reward: {&#39;EO1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,937 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;2580.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,967 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2580.00&gt; </span>Step reward: 0.0
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Charge level: 0.339 (780.0 seconds)
+        Eclipse: start: 5340.0 end: 1800.0
+Charge level: 0.337 (1380.0 seconds)
+        Eclipse: start: 4740.0 end: 1200.0
+Charge level: 0.334 (1980.0 seconds)
+        Eclipse: start: 4140.0 end: 600.0
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,968 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2580.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,968 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;2580.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_charge tasked for 600.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:02,968 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;2580.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 3180.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,002 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;3180.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 3180.0 for action_charge
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,002 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;3180.00&gt; </span>Data reward: {&#39;EO1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,003 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;3180.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,003 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3180.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,003 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3180.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,004 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;3180.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_charge tasked for 600.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,004 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;3180.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 3780.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,037 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;3780.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 3780.0 for action_charge
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,037 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;3780.00&gt; </span>Data reward: {&#39;EO1&#39;: 0.0}
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Charge level: 0.354 (2580.0 seconds)
+        Eclipse: start: 3540.0 end: 5670.0
+Charge level: 0.942 (3180.0 seconds)
+        Eclipse: start: 2940.0 end: 5070.0
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,037 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;3780.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,038 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3780.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,038 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3780.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,038 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;3780.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_charge tasked for 600.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,039 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;3780.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 4380.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,073 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;4380.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 4380.0 for action_charge
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,074 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;4380.00&gt; </span>Data reward: {&#39;EO1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,074 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;4380.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,075 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4380.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,075 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4380.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,076 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;4380.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_charge tasked for 600.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,076 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;4380.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 4980.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,111 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;4980.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 4980.0 for action_charge
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,111 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;4980.00&gt; </span>Data reward: {&#39;EO1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,112 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;4980.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,112 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4980.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,113 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4980.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,113 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;4980.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_charge tasked for 600.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,113 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;4980.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 5580.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,149 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;5580.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>timed termination at 5580.0 for action_charge
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,149 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;5580.00&gt; </span>Data reward: {&#39;EO1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,150 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;5580.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>Satellite EO1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,150 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5580.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,151 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5580.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,151 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;5580.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>action_charge tasked for 600.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,151 </span><span class="ansi-cyan-fg">sats.satellite.EO1             </span>INFO       <span class="ansi-yellow-fg">&lt;5580.00&gt; </span><span class="ansi-cyan-fg">EO1: </span>setting timed terminal event at 6180.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,159 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;5700.00&gt; </span>Data reward: {&#39;EO1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,160 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5700.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,160 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5700.00&gt; </span>Episode terminated: False
+<span class="ansi-black-intense-fg">2024-09-12 15:07:03,161 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5700.00&gt; </span>Episode truncated: True
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Charge level: 1.000 (3780.0 seconds)
+        Eclipse: start: 2340.0 end: 4470.0
+Charge level: 1.000 (4380.0 seconds)
+        Eclipse: start: 1740.0 end: 3870.0
+Charge level: 1.000 (4980.0 seconds)
+        Eclipse: start: 1140.0 end: 3270.0
+Charge level: 1.000 (5580.0 seconds)
+        Eclipse: start: 540.0 end: 2670.0
+Charge level: 1.000 (5700.0 seconds)
+        Eclipse: start: 420.0 end: 2550.0
+</pre></div></div>
+</div>
+<p>It is observed that the battery decrease while the satellite is in eclipse, but once the satellite is out of eclipse, the battery quickly increases to full charge.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="satellite_configuration.html" class="btn btn-neutral float-right" title="Satellite Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

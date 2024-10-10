@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbital &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="RLlib Utilities" href="rllib/index.html" />
+    <link rel="prev" title="Functional" href="functional.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scene/index.html">Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comm/index.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim/index.html">Simulation (BSK)</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Utilities</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="actuator_primitives.html">Actuator Primitives</a></li>
+<li class="toctree-l3"><a class="reference internal" href="attitude.html">Attitude</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functional.html">Functional</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Orbital</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.utils.orbital.random_orbit"><code class="docutils literal notranslate"><span class="pre">random_orbit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.utils.orbital.random_epoch"><code class="docutils literal notranslate"><span class="pre">random_epoch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.utils.orbital.lla2ecef"><code class="docutils literal notranslate"><span class="pre">lla2ecef()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.utils.orbital.elevation"><code class="docutils literal notranslate"><span class="pre">elevation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.utils.orbital.walker_delta"><code class="docutils literal notranslate"><span class="pre">walker_delta()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.utils.orbital.walker_delta_args"><code class="docutils literal notranslate"><span class="pre">walker_delta_args()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.utils.orbital.rv2HN"><code class="docutils literal notranslate"><span class="pre">rv2HN()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.utils.orbital.rv2omega"><code class="docutils literal notranslate"><span class="pre">rv2omega()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rllib/index.html">RLlib Utilities</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Utilities</a></li>
+      <li class="breadcrumb-item active">Orbital</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_reference/utils/orbital.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="orbital">
+<span id="bsk-rl-utils-orbital"></span><h1>Orbital<a class="headerlink" href="#orbital" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.utils.orbital"><code class="docutils literal notranslate"><span class="pre">bsk_rl.utils.orbital</span></code>:Utilities for computing orbital events.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utils.orbital.random_orbit">
+<span class="sig-name descname"><span class="pre">random_orbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">45.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_body</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6371</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Omega</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;MagicMock</span> <span class="pre">name='mock.ClassicElements'</span> <span class="pre">id='140642369159232'&gt;</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/utils/orbital.html#random_orbit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utils.orbital.random_orbit" title="Link to this definition"></a></dt>
+<dd><p>Create a set of orbit elements.</p>
+<p>Parameters are fixed if specified and randomized if <code class="docutils literal notranslate"><span class="pre">None</span></code>. Defaults to a random
+circular orbit at 500 km altitude and 45 deg inclination.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i</strong> (<em>float</em><em> | </em><em>None</em>) – [deg] Inclination, randomized in <code class="docutils literal notranslate"><span class="pre">[-pi,</span> <span class="pre">pi]</span></code>.</p></li>
+<li><p><strong>alt</strong> (<em>float</em>) – [km] Altitude above r_body.</p></li>
+<li><p><strong>r_body</strong> (<em>float</em>) – [km] Body radius.</p></li>
+<li><p><strong>e</strong> (<em>float</em>) – Eccentricity.</p></li>
+<li><p><strong>Omega</strong> (<em>float</em><em> | </em><em>None</em>) – [deg] LAN, randomized in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">2pi]</span></code>.</p></li>
+<li><p><strong>omega</strong> (<em>float</em><em> | </em><em>None</em>) – [deg] Argument of periapsis, randomized in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">2pi]</span></code>.</p></li>
+<li><p><strong>f</strong> (<em>float</em><em> | </em><em>None</em>) – [deg] True anomaly, randomized in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">2pi]</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>orbital elements</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ClassicElements</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utils.orbital.random_epoch">
+<span class="sig-name descname"><span class="pre">random_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2022</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/utils/orbital.html#random_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utils.orbital.random_epoch" title="Link to this definition"></a></dt>
+<dd><p>Generate a random epoch in a year range.</p>
+<p>Date will always be in the first 28 days of the month.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<em>int</em>) – Initial year.</p></li>
+<li><p><strong>end</strong> (<em>int</em>) – Final year.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Epoch in <code class="docutils literal notranslate"><span class="pre">YYYY</span> <span class="pre">MMM</span> <span class="pre">DD</span> <span class="pre">HH:MM:SS.SSS</span> <span class="pre">(UTC)</span></code> format</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utils.orbital.lla2ecef">
+<span class="sig-name descname"><span class="pre">lla2ecef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/utils/orbital.html#lla2ecef"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utils.orbital.lla2ecef" title="Link to this definition"></a></dt>
+<dd><p>Project LLA to Earth Centered, Earth Fixed location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lat</strong> (<em>float</em>) – [deg]</p></li>
+<li><p><strong>long</strong> (<em>float</em>) – [deg]</p></li>
+<li><p><strong>radius</strong> (<em>float</em>) – [any]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utils.orbital.elevation">
+<span class="sig-name descname"><span class="pre">elevation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_sat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/utils/orbital.html#elevation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utils.orbital.elevation" title="Link to this definition"></a></dt>
+<dd><p>Find the elevation angle from a target to a satellite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r_sat</strong> (<em>ndarray</em>) – Satellite position(s).</p></li>
+<li><p><strong>r_target</strong> (<em>ndarray</em>) – Target position.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Elevation angle(s)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utils.orbital.walker_delta">
+<span class="sig-name descname"><span class="pre">walker_delta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_spacecraft</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_planes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_phasing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">altitude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clustersize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clusterspacing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list[&lt;MagicMock</span> <span class="pre">name='mock.orbitalMotion.ClassicElements'</span> <span class="pre">id='140642369162832'&gt;]</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/utils/orbital.html#walker_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utils.orbital.walker_delta" title="Link to this definition"></a></dt>
+<dd><p>Compute the initial orbit conditions of a Walker-delta constellation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_spacecraft</strong> (<em>int</em>) – Number of spacecraft.</p></li>
+<li><p><strong>n_planes</strong> (<em>int</em>) – Number of orbital planes.</p></li>
+<li><p><strong>rel_phasing</strong> (<em>float</em>) – [deg] Relative phasing between planes.</p></li>
+<li><p><strong>altitude</strong> (<em>float</em>) – [m] Altitude above Earth’s surface.</p></li>
+<li><p><strong>inc</strong> (<em>float</em>) – [deg] Inclination.</p></li>
+<li><p><strong>clustersize</strong> (<em>int</em>) – Number of spacecraft in each cluster.</p></li>
+<li><p><strong>clusterspacing</strong> (<em>float</em>) – [deg] Spacing between spacecraft in a cluster.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of orbital elements</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utils.orbital.walker_delta_args">
+<span class="sig-name descname"><span class="pre">walker_delta_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_planes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_phasing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">altitude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">45.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">randomize_true_anomaly</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">randomize_lan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">walker_delta_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/utils/orbital.html#walker_delta_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utils.orbital.walker_delta_args" title="Link to this definition"></a></dt>
+<dd><p>Generate a function to generate a randomly phased Walker-delta constellation.</p>
+<p>The output of this function should be used to set the <code class="docutils literal notranslate"><span class="pre">sat_arg_randomizer</span></code> of the
+environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_planes</strong> (<em>int</em>) – Number of constellation planes.</p></li>
+<li><p><strong>rel_phasing</strong> (<em>float</em>) – [deg] Relative phasing between planes. Defaults to 0.0.</p></li>
+<li><p><strong>altitude</strong> (<em>float</em>) – [km] Orbit altitude above Earth’s surface.</p></li>
+<li><p><strong>inc</strong> (<em>float</em>) – [deg] Orbit inclination</p></li>
+<li><p><strong>randomize_true_anomaly</strong> – Add a random true anomaly phase shift that is the same
+for all constellation members on each call.</p></li>
+<li><p><strong>randomize_lan</strong> – Add a random LAN phase shift that is the same for all constellation
+members on each call.</p></li>
+<li><p><strong>walker_delta_kwargs</strong> – Additional arguments to pass to <a class="reference internal" href="#bsk_rl.utils.orbital.walker_delta" title="bsk_rl.utils.orbital.walker_delta"><code class="xref py py-class docutils literal notranslate"><span class="pre">walker_delta</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utils.orbital.rv2HN">
+<span class="sig-name descname"><span class="pre">rv2HN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/utils/orbital.html#rv2HN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utils.orbital.rv2HN" title="Link to this definition"></a></dt>
+<dd><p>Find the Hill frame rotation matrix from position and velocity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r_N</strong> (<em>ndarray</em>) – Position vector in the inertial frame</p></li>
+<li><p><strong>v_N</strong> (<em>ndarray</em>) – Velocity vector in the inertial frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Hill frame rotation matrix HN</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.utils.orbital.rv2omega">
+<span class="sig-name descname"><span class="pre">rv2omega</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/utils/orbital.html#rv2omega"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.utils.orbital.rv2omega" title="Link to this definition"></a></dt>
+<dd><p>Find the Hill frame rotation rate from position and velocity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r_N</strong> (<em>ndarray</em>) – Position vector in the inertial frame</p></li>
+<li><p><strong>v_N</strong> (<em>ndarray</em>) – Velocity vector in the inertial frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Angular velocity of the Hill frame in the inertial frame</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>omega_HN_N</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="functional.html" class="btn btn-neutral float-left" title="Functional" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rllib/index.html" class="btn btn-neutral float-right" title="RLlib Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

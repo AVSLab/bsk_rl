@@ -1,0 +1,13 @@
+.. _bsk_rl.sim.fsw:
+.. currentmodule:: bsk_rl.sim.fsw
+
+FSW Sims
+========
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.sim.fsw
+   :members:
+   :show-inheritance:
+

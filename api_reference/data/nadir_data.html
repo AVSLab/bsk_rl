@@ -1,0 +1,264 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nadir Scanning &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="No Data" href="no_data.html" />
+    <link rel="prev" title="Base Data" href="base.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scene/index.html">Scenario</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Data &amp; Reward</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#reward-system-components">Reward System Components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#reward-system-types">Reward System Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.GlobalReward"><code class="docutils literal notranslate"><span class="pre">GlobalReward</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.NoReward"><code class="docutils literal notranslate"><span class="pre">NoReward</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.UniqueImageReward"><code class="docutils literal notranslate"><span class="pre">UniqueImageReward</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.ScanningTimeReward"><code class="docutils literal notranslate"><span class="pre">ScanningTimeReward</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="base.html">Base Data</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Nadir Scanning</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTimeReward"><code class="docutils literal notranslate"><span class="pre">ScanningTimeReward</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTimeReward.datastore_type"><code class="docutils literal notranslate"><span class="pre">ScanningTimeReward.datastore_type</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTimeReward.calculate_reward"><code class="docutils literal notranslate"><span class="pre">ScanningTimeReward.calculate_reward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTimeStore"><code class="docutils literal notranslate"><span class="pre">ScanningTimeStore</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTimeStore.data_type"><code class="docutils literal notranslate"><span class="pre">ScanningTimeStore.data_type</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTimeStore.get_log_state"><code class="docutils literal notranslate"><span class="pre">ScanningTimeStore.get_log_state()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTimeStore.compare_log_states"><code class="docutils literal notranslate"><span class="pre">ScanningTimeStore.compare_log_states()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTime"><code class="docutils literal notranslate"><span class="pre">ScanningTime</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="no_data.html">No Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="unique_image_data.html">Unique Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../comm/index.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim/index.html">Simulation (BSK)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Data &amp; Reward</a></li>
+      <li class="breadcrumb-item active">Nadir Scanning</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_reference/data/nadir_data.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="nadir-scanning">
+<span id="bsk-rl-data-nadir-data"></span><h1>Nadir Scanning<a class="headerlink" href="#nadir-scanning" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.data.nadir_data">Data logging and management for nadir scanning.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.data.nadir_data.ScanningTimeReward">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ScanningTimeReward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reward_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/data/nadir_data.html#ScanningTimeReward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.nadir_data.ScanningTimeReward" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#bsk_rl.data.base.GlobalReward" title="bsk_rl.data.base.GlobalReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">GlobalReward</span></code></a></p>
+<p>GlobalReward for rewarding time spent scanning nadir.</p>
+<p>This class should be used with the <a class="reference internal" href="../scene/index.html#bsk_rl.scene.UniformNadirScanning" title="bsk_rl.scene.UniformNadirScanning"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniformNadirScanning</span></code></a>
+scenario and a satellite with <a class="reference internal" href="../sim/fsw.html#bsk_rl.sim.fsw.ContinuousImagingFSWModel" title="bsk_rl.sim.fsw.ContinuousImagingFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContinuousImagingFSWModel</span></code></a>
+and the <a class="reference internal" href="../act/index.html#bsk_rl.act.Scan" title="bsk_rl.act.Scan"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scan</span></code></a> action.</p>
+<p>Time is computed based on the amount of data in the satellite’s buffer. In the
+basic configuration, this is the amount of time that the <a class="reference internal" href="../act/index.html#bsk_rl.act.Scan" title="bsk_rl.act.Scan"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scan</span></code></a>
+action is enabled and pointing thresholds are met. However, if other models are
+used to prevent the accumulation of data, the satellite will not be rewarded for
+those times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reward_fn</strong> (<em>Callable</em><em> | </em><em>None</em>) – Reward as function of time spend pointing nadir. By default,
+is set to the time spent scanning times <code class="docutils literal notranslate"><span class="pre">scenario.value_per_second</span></code>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.data.nadir_data.ScanningTimeReward.datastore_type">
+<span class="sig-name descname"><span class="pre">datastore_type</span></span><a class="headerlink" href="#bsk_rl.data.nadir_data.ScanningTimeReward.datastore_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTimeStore" title="bsk_rl.data.nadir_data.ScanningTimeStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScanningTimeStore</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.nadir_data.ScanningTimeReward.calculate_reward">
+<span class="sig-name descname"><span class="pre">calculate_reward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_data_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTime" title="bsk_rl.data.nadir_data.ScanningTime"><span class="pre">ScanningTime</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/nadir_data.html#ScanningTimeReward.calculate_reward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.nadir_data.ScanningTimeReward.calculate_reward" title="Link to this definition"></a></dt>
+<dd><p>Calculate reward based on <code class="docutils literal notranslate"><span class="pre">reward_fn</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_data_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTime" title="bsk_rl.data.nadir_data.ScanningTime"><em>ScanningTime</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.data.nadir_data.ScanningTimeStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ScanningTimeStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/data/nadir_data.html#ScanningTimeStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.nadir_data.ScanningTimeStore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#bsk_rl.data.base.DataStore" title="bsk_rl.data.base.DataStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataStore</span></code></a></p>
+<p>DataStore for time spent scanning nadir.</p>
+<p>Stores the amount of time spent scanning nadir. Calculates new time spent
+scanning based on baud rate of the instrument and the increase in data stored
+in the buffer.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.data.nadir_data.ScanningTimeStore.data_type">
+<span class="sig-name descname"><span class="pre">data_type</span></span><a class="headerlink" href="#bsk_rl.data.nadir_data.ScanningTimeStore.data_type" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTime" title="bsk_rl.data.nadir_data.ScanningTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScanningTime</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.nadir_data.ScanningTimeStore.get_log_state">
+<span class="sig-name descname"><span class="pre">get_log_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/nadir_data.html#ScanningTimeStore.get_log_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.nadir_data.ScanningTimeStore.get_log_state" title="Link to this definition"></a></dt>
+<dd><p>Return the amount of data currently stored in the storage unit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.nadir_data.ScanningTimeStore.compare_log_states">
+<span class="sig-name descname"><span class="pre">compare_log_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#bsk_rl.data.nadir_data.ScanningTime" title="bsk_rl.data.nadir_data.ScanningTime"><span class="pre">ScanningTime</span></a></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/nadir_data.html#ScanningTimeStore.compare_log_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.nadir_data.ScanningTimeStore.compare_log_states" title="Link to this definition"></a></dt>
+<dd><p>Generate a unit of data based on change in stored data amount.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_state</strong> (<em>float</em>) – Previous amount of data in the storage unit.</p></li>
+<li><p><strong>new_state</strong> (<em>float</em>) – Current amount of data in the storage unit.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data generated</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="base.html#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data">Data</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.data.nadir_data.ScanningTime">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ScanningTime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scanning_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/data/nadir_data.html#ScanningTime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.nadir_data.ScanningTime" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data</span></code></a></p>
+<p>Data for time spent scanning nadir.</p>
+<p>Time spent scanning nadir <code class="docutils literal notranslate"><span class="pre">scanning_time</span></code> is stored in seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scanning_time</strong> (<em>float</em>) – [s] Time spent scanning nadir.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="base.html" class="btn btn-neutral float-left" title="Base Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="no_data.html" class="btn btn-neutral float-right" title="No Data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

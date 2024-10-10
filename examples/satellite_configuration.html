@@ -1,0 +1,756 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Satellite Configuration &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Multi-Agent Environments" href="multiagent_envs.html" />
+    <link rel="prev" title="Getting Started" href="simple_environment.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#environments">Environments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="simple_environment.html">Getting Started</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Satellite Configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Setting-Satellite-Parameters">Setting Satellite Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#The-Observation-Specification">The Observation Specification</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#Satellite-Properties">Satellite Properties</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Opportunity-Properties">Opportunity Properties</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Navigating-the-Observation">Navigating the Observation</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#The-Action-Specification">The Action Specification</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="multiagent_envs.html">Multi-Agent Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cloud_environment.html">Cloud Environment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#training">Training</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Satellite Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/satellite_configuration.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Satellite-Configuration">
+<h1>Satellite Configuration<a class="headerlink" href="#Satellite-Configuration" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../api_reference/sats/index.html"><span class="doc">Satellites</span></a> are the basic unit of agent in the environment. Four things must be specified in subclasses of <code class="docutils literal notranslate"><span class="pre">Satellite</span></code>:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">observation_spec</span></code>, which defines the satellite’s <a class="reference internal" href="../api_reference/obs/index.html"><span class="doc">observation</span></a>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">action_spec</span></code>, which defines the satellite’s <a class="reference internal" href="../api_reference/act/index.html"><span class="doc">actions</span></a>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">dyn_type</span></code>, which selects the underlying <a class="reference internal" href="../api_reference/sim/dyn.html"><span class="doc">dynamics model</span></a> used in simulation.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">fsw_type</span></code>, which selects the underlying <a class="reference internal" href="../api_reference/sim/fsw.html"><span class="doc">flight software model</span></a>.</p></li>
+</ul>
+<p>A very simple satellite is defined below:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bsk_rl</span> <span class="kn">import</span> <span class="n">sats</span><span class="p">,</span> <span class="n">act</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">scene</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">SatelliteTasking</span>
+<span class="kn">from</span> <span class="nn">bsk_rl.sim</span> <span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">Basilisk.architecture</span> <span class="kn">import</span> <span class="n">bskLogging</span>
+<span class="n">bskLogging</span><span class="o">.</span><span class="n">setDefaultLogLevel</span><span class="p">(</span><span class="n">bskLogging</span><span class="o">.</span><span class="n">BSK_WARNING</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">SimpleSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">()]</span>  <span class="c1"># Passed as list of instantiated classes</span>
+    <span class="n">action_spec</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Drift</span><span class="p">()]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">BasicDynamicsModel</span>  <span class="c1"># Passed as a type</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">BasicFSWModel</span>
+</pre></div>
+</div>
+</div>
+<section id="Setting-Satellite-Parameters">
+<h2>Setting Satellite Parameters<a class="headerlink" href="#Setting-Satellite-Parameters" title="Link to this heading"></a></h2>
+<p>Without instantiating the satellite, parameters that can be set in the various models can be inspected.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SimpleSatellite</span><span class="o">.</span><span class="n">default_sat_args</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;hs_min&#39;: 0.0,
+ &#39;maxCounterValue&#39;: 4,
+ &#39;thrMinFireTime&#39;: 0.02,
+ &#39;desatAttitude&#39;: &#39;sun&#39;,
+ &#39;controlAxes_B&#39;: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+ &#39;thrForceSign&#39;: 1,
+ &#39;K&#39;: 7.0,
+ &#39;Ki&#39;: -1,
+ &#39;P&#39;: 35.0,
+ &#39;utc_init&#39;: &#39;this value will be set by the world model&#39;,
+ &#39;batteryStorageCapacity&#39;: 288000.0,
+ &#39;storedCharge_Init&#39;: &lt;function bsk_rl.sim.dyn.BasicDynamicsModel.&lt;lambda&gt;()&gt;,
+ &#39;disturbance_vector&#39;: None,
+ &#39;dragCoeff&#39;: 2.2,
+ &#39;basePowerDraw&#39;: 0.0,
+ &#39;wheelSpeeds&#39;: &lt;function bsk_rl.sim.dyn.BasicDynamicsModel.&lt;lambda&gt;()&gt;,
+ &#39;maxWheelSpeed&#39;: inf,
+ &#39;u_max&#39;: 0.2,
+ &#39;rwBasePower&#39;: 0.4,
+ &#39;rwMechToElecEfficiency&#39;: 0.0,
+ &#39;rwElecToMechEfficiency&#39;: 0.5,
+ &#39;panelArea&#39;: 1.0,
+ &#39;panelEfficiency&#39;: 0.2,
+ &#39;nHat_B&#39;: array([ 0,  0, -1]),
+ &#39;mass&#39;: 330,
+ &#39;width&#39;: 1.38,
+ &#39;depth&#39;: 1.04,
+ &#39;height&#39;: 1.58,
+ &#39;sigma_init&#39;: &lt;function bsk_rl.sim.dyn.BasicDynamicsModel.&lt;lambda&gt;()&gt;,
+ &#39;omega_init&#39;: &lt;function bsk_rl.sim.dyn.BasicDynamicsModel.&lt;lambda&gt;()&gt;,
+ &#39;rN&#39;: None,
+ &#39;vN&#39;: None,
+ &#39;oe&#39;: &lt;function bsk_rl.utils.orbital.random_orbit(i: Optional[float] = 45.0, alt: float = 500, r_body: float = 6371, e: float = 0, Omega: Optional[float] = None, omega: Optional[float] = 0, f: Optional[float] = None) -&gt; Basilisk.utilities.orbitalMotion.ClassicElements&gt;,
+ &#39;mu&#39;: 398600436000000.0,
+ &#39;thrusterPowerDraw&#39;: 0.0}
+</pre></div></div>
+</div>
+<p>These parameters can be overriden when instantiating the satellite through the <code class="docutils literal notranslate"><span class="pre">sat_args</span></code> argument.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sat</span> <span class="o">=</span> <span class="n">SimpleSatellite</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;SimpleSat-1&quot;</span><span class="p">,</span>
+    <span class="n">sat_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">mass</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>  <span class="c1"># Setting a constant value</span>
+        <span class="n">dragCoeff</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">),</span>  <span class="c1"># Setting a randomized value</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<p>Each time the simulation is reset, all of the function-based randomizers are called.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sat</span><span class="o">.</span><span class="n">generate_sat_args</span><span class="p">()</span>  <span class="c1"># Called by the environment on reset()</span>
+<span class="n">sat</span><span class="o">.</span><span class="n">sat_args</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;hs_min&#39;: 0.0,
+ &#39;maxCounterValue&#39;: 4,
+ &#39;thrMinFireTime&#39;: 0.02,
+ &#39;desatAttitude&#39;: &#39;sun&#39;,
+ &#39;controlAxes_B&#39;: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+ &#39;thrForceSign&#39;: 1,
+ &#39;K&#39;: 7.0,
+ &#39;Ki&#39;: -1,
+ &#39;P&#39;: 35.0,
+ &#39;utc_init&#39;: &#39;this value will be set by the world model&#39;,
+ &#39;batteryStorageCapacity&#39;: 288000.0,
+ &#39;storedCharge_Init&#39;: 210686.167470996,
+ &#39;disturbance_vector&#39;: None,
+ &#39;dragCoeff&#39;: 2.210046657456083,
+ &#39;basePowerDraw&#39;: 0.0,
+ &#39;wheelSpeeds&#39;: array([-816.1821145 , 1283.7058494 ,   43.00611181]),
+ &#39;maxWheelSpeed&#39;: inf,
+ &#39;u_max&#39;: 0.2,
+ &#39;rwBasePower&#39;: 0.4,
+ &#39;rwMechToElecEfficiency&#39;: 0.0,
+ &#39;rwElecToMechEfficiency&#39;: 0.5,
+ &#39;panelArea&#39;: 1.0,
+ &#39;panelEfficiency&#39;: 0.2,
+ &#39;nHat_B&#39;: array([ 0,  0, -1]),
+ &#39;mass&#39;: 300,
+ &#39;width&#39;: 1.38,
+ &#39;depth&#39;: 1.04,
+ &#39;height&#39;: 1.58,
+ &#39;sigma_init&#39;: array([0.61557672, 0.38195961, 0.15085368]),
+ &#39;omega_init&#39;: array([ 1.24763170e-05, -2.55555918e-05,  4.82727815e-05]),
+ &#39;rN&#39;: None,
+ &#39;vN&#39;: None,
+ &#39;oe&#39;: &lt;Basilisk.utilities.orbitalMotion.ClassicElements at 0x1075c4e80&gt;,
+ &#39;mu&#39;: 398600436000000.0,
+ &#39;thrusterPowerDraw&#39;: 0.0}
+</pre></div></div>
+</div>
+<p>As a result, each episode will have different randomized parameters:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">sat</span><span class="o">.</span><span class="n">generate_sat_args</span><span class="p">()</span>  <span class="c1"># Called by the environment on reset()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;New value of dragCoeff:&quot;</span><span class="p">,</span> <span class="n">sat</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">&quot;dragCoeff&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+New value of dragCoeff: 2.0296430408084785
+New value of dragCoeff: 2.3594474912160166
+New value of dragCoeff: 2.202687725963055
+</pre></div></div>
+</div>
+</section>
+<section id="The-Observation-Specification">
+<h2>The Observation Specification<a class="headerlink" href="#The-Observation-Specification" title="Link to this heading"></a></h2>
+<p>A variety of observation elements are available for satellites. Full documentation can be <a class="reference internal" href="../api_reference/obs/index.html"><span class="doc">found here</span></a>, but some commonly used elements are explored below.</p>
+<div class="admonition note">
+<p><strong>Info:</strong> In these examples, <code class="docutils literal notranslate"><span class="pre">obs_type=dict</span></code> is passed to the <code class="docutils literal notranslate"><span class="pre">Satellite</span></code> constructor so that the observation is human readable. While some RL libraries support dictionary-based observations, the default return type - the numpy array format - is more typically used.</p>
+</div>
+<section id="Satellite-Properties">
+<h3>Satellite Properties<a class="headerlink" href="#Satellite-Properties" title="Link to this heading"></a></h3>
+<p>The most common type of observations is introspective; i.e. what is my current state? Any <code class="docutils literal notranslate"><span class="pre">&#64;property</span></code> in the <code class="docutils literal notranslate"><span class="pre">dyn_type</span></code> or <code class="docutils literal notranslate"><span class="pre">fsw_type</span></code> of the satellite can be accessed using SatProperties.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SatPropsSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+            <span class="c1"># At a minimum, specify the property to observe</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;wheel_speeds&quot;</span><span class="p">),</span>
+            <span class="c1"># You can specify the module to use for the observation, but it is not necessary</span>
+            <span class="c1"># if only one module has for the property</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;battery_charge_fraction&quot;</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s2">&quot;dynamics&quot;</span><span class="p">),</span>
+            <span class="c1"># Properties can be normalized by some constant. This is generally desirable</span>
+            <span class="c1"># for RL algorithms to keep values around [-1, 1].</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;r_BN_P&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7e6</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Drift</span><span class="p">()]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">BasicDynamicsModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">BasicFSWModel</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">SatPropsSatellite</span><span class="p">(</span><span class="s2">&quot;PropSat-1&quot;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">obs_type</span><span class="o">=</span><span class="nb">dict</span><span class="p">),</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">observation</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="n">observation</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;sat_props&#39;: {&#39;wheel_speeds&#39;: array([ -57.85337592, -149.13203924, -148.66485193]),
+  &#39;battery_charge_fraction&#39;: 0.8640781799149756,
+  &#39;r_BN_P_normd&#39;: array([-0.95867796,  0.19195187,  0.087026  ])}}
+</pre></div></div>
+</div>
+<p>In some cases, you may want to access a bespoke property that is not natively implemented in a model. To do that, simply extend the model with your desired property.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">BespokeFSWModel</span><span class="p">(</span><span class="n">fsw</span><span class="o">.</span><span class="n">BasicFSWModel</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meaning_of_life</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">42</span>
+
+<span class="k">class</span> <span class="nc">BespokeSatPropsSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;meaning_of_life&quot;</span><span class="p">))</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Drift</span><span class="p">()]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">BasicDynamicsModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">BespokeFSWModel</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">BespokeSatPropsSatellite</span><span class="p">(</span><span class="s2">&quot;BespokeSat-1&quot;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">obs_type</span><span class="o">=</span><span class="nb">dict</span><span class="p">),</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">observation</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="n">observation</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;sat_props&#39;: {&#39;meaning_of_life&#39;: 42.0}}
+</pre></div></div>
+</div>
+<p>Alternatively, define the property with a function that takes the satellite object as an argument.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CustomSatPropsSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;meaning_of_life&quot;</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sat</span><span class="p">:</span> <span class="mi">42</span><span class="p">))</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Drift</span><span class="p">()]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">BasicDynamicsModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">BasicFSWModel</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">CustomSatPropsSatellite</span><span class="p">(</span><span class="s2">&quot;BespokeSat-1&quot;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">obs_type</span><span class="o">=</span><span class="nb">dict</span><span class="p">),</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">observation</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="n">observation</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;sat_props&#39;: {&#39;meaning_of_life&#39;: 42.0}}
+</pre></div></div>
+</div>
+</section>
+<section id="Opportunity-Properties">
+<h3>Opportunity Properties<a class="headerlink" href="#Opportunity-Properties" title="Link to this heading"></a></h3>
+<p>Another common input to the observation is information about upcoming locations that are being accessed by the satellite. Currently, these include ground stations for downlink and targets for imaging, but <code class="docutils literal notranslate"><span class="pre">OpportunityProperties</span></code> will work with any location added by <code class="docutils literal notranslate"><span class="pre">add_location_for_access_checking</span></code>. In these examples,</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">OppPropsSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">ImagingSatellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+            <span class="c1"># Properties can be added by some default names</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;priority&quot;</span><span class="p">),</span>
+            <span class="c1"># They can also be normalized</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;opportunity_open&quot;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">5700.0</span><span class="p">),</span>
+            <span class="c1"># Or they can be specified by an arbitrary function</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">:</span> <span class="n">opp</span><span class="p">[</span><span class="s2">&quot;r_LP_P&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">42</span><span class="p">),</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Drift</span><span class="p">()]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">ImagingDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">ImagingFSWModel</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">OppPropsSatellite</span><span class="p">(</span><span class="s2">&quot;OppSat-1&quot;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">obs_type</span><span class="o">=</span><span class="nb">dict</span><span class="p">),</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">UniformTargets</span><span class="p">(</span><span class="mi">1000</span><span class="p">),</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">observation</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="n">observation</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;target&#39;: {&#39;target_0&#39;: {&#39;priority&#39;: 0.2986660083704773,
+   &#39;opportunity_open_normd&#39;: 0.0,
+   &#39;prop_2&#39;: array([5153180.64403888,  -47538.05942313, 3758169.82399934])},
+  &#39;target_1&#39;: {&#39;priority&#39;: 0.6410321760315169,
+   &#39;opportunity_open_normd&#39;: 0.01429045697253311,
+   &#39;prop_2&#39;: array([4847885.53144301,  810420.93775173, 4064808.35984826])},
+  &#39;target_2&#39;: {&#39;priority&#39;: 0.032083764127623926,
+   &#39;opportunity_open_normd&#39;: 0.0133455571753603,
+   &#39;prop_2&#39;: array([4919052.35597872,  885395.17406771, 3962378.85635155])}}}
+</pre></div></div>
+</div>
+</section>
+<section id="Navigating-the-Observation">
+<h3>Navigating the Observation<a class="headerlink" href="#Navigating-the-Observation" title="Link to this heading"></a></h3>
+<p>Usually, multiple observation types need to be composed to sufficiently represent the environment for the learning agent. Simply add multiple observations to the observation specification list to combine them in the observation.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ComposedObsSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">(),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">&quot;battery_charge_fraction&quot;</span><span class="p">))</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Drift</span><span class="p">()]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">BasicDynamicsModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">BasicFSWModel</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">ComposedObsSatellite</span><span class="p">(</span><span class="s2">&quot;PropSat-1&quot;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">obs_type</span><span class="o">=</span><span class="nb">dict</span><span class="p">),</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">observation</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="n">observation</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;eclipse&#39;: [990.0000000000001, 3120.0],
+ &#39;sat_props&#39;: {&#39;battery_charge_fraction&#39;: 0.6354758221198867}}
+</pre></div></div>
+</div>
+<p>A few useful functions exist for inspecting the observation. The <code class="docutils literal notranslate"><span class="pre">observation_space</span></code> property of the satellite and the environment return a Gym observation space to describe the observation. In the single agent <code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code> environment, these are the same.</p>
+<div class="admonition note">
+<p><strong>Info:</strong> Here, we return to the <code class="docutils literal notranslate"><span class="pre">ndarray</span></code> default observation type.</p>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">ComposedObsSatellite</span><span class="p">(</span><span class="s2">&quot;PropSat-1&quot;</span><span class="p">,</span> <span class="p">{}),</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_space</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(Box(-1e+16, 1e+16, (3,), float64), Box(-1e+16, 1e+16, (3,), float64))
+</pre></div></div>
+</div>
+<p>With the flattened-vector type observation, it can be hard for the user to relate elements to specific observations.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">observation</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="n">observation</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([4.53000000e+03, 9.00000000e+02, 4.95688246e-01])
+</pre></div></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">observation_description</span></code> property can help the user understand what elements are present in the observation.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_description</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&#39;eclipse[0]&#39;, &#39;eclipse[1]&#39;, &#39;sat_props.battery_charge_fraction&#39;]
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="The-Action-Specification">
+<h2>The Action Specification<a class="headerlink" href="#The-Action-Specification" title="Link to this heading"></a></h2>
+<p>The <a class="reference internal" href="../api_reference/act/index.html"><span class="doc">action specification</span></a> works similarly to observation specification. A list of actions is set in the class definition of the satellite.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ActionSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">()]</span>
+    <span class="n">action_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="c1"># If action duration is not set, the environment max_step_duration will be used;</span>
+        <span class="c1"># however, being explicit is always preferable</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">120.0</span><span class="p">),</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Desat</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">60.0</span><span class="p">),</span>
+        <span class="c1"># One action can be included multiple time, if different settings are desired</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">600.0</span><span class="p">,),</span>
+    <span class="p">]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">BasicDynamicsModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">BasicFSWModel</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">ActionSatellite</span><span class="p">(</span><span class="s2">&quot;ActSat-1&quot;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">obs_type</span><span class="o">=</span><span class="nb">dict</span><span class="p">),</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="c1"># Try each action; index corresponds to the order of addition</span>
+<span class="n">_</span> <span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,537 </span>                               <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-intense-fg">Creating logger for new env on PID=96241. Old environments in process may now log times incorrectly.</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,743 </span>gym                            INFO       Resetting environment with seed=2323542144
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,815 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Environment reset
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,815 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,815 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>action_charge tasked for 120.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,816 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>setting timed terminal event at 120.0
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,823 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>timed termination at 120.0 for action_charge
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,823 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span>Data reward: {&#39;ActSat-1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,823 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>Satellite ActSat-1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,824 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,824 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,824 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>action_desat tasked for 60.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,825 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;120.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>setting timed terminal event at 180.0
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,829 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>timed termination at 180.0 for action_desat
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,829 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span>Data reward: {&#39;ActSat-1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,829 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>Satellite ActSat-1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,830 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,830 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,830 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>action_charge tasked for 600.0 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,830 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;180.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>setting timed terminal event at 780.0
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,862 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;780.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>timed termination at 780.0 for action_charge
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,862 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;780.00&gt; </span>Data reward: {&#39;ActSat-1&#39;: 0.0}
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,862 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-1        </span>INFO       <span class="ansi-yellow-fg">&lt;780.00&gt; </span><span class="ansi-cyan-fg">ActSat-1: </span>Satellite ActSat-1 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,863 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;780.00&gt; </span>Step reward: 0.0
+</pre></div></div>
+</div>
+<p>As with the observations, properties exist to help understand the actions available.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Discrete(3)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">action_description</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&#39;action_charge&#39;, &#39;action_desat&#39;, &#39;action_charge&#39;]
+</pre></div></div>
+</div>
+<p>Some actions take additional configurations, add multiple actions to the satellite, and/or have “special” features that are useful for manually interacting with the environment. For example, the imaging action can add an arbitrary number of actions corresponding to upcoming targets and process the name of a target directly instead of operating by action index.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ImageActSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">ImagingSatellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">()]</span>
+    <span class="n">action_spec</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="c1"># Set the number of upcoming targets to consider</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">n_ahead_image</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">ImagingDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">ImagingFSWModel</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">ImageActSatellite</span><span class="p">(</span><span class="s2">&quot;ActSat-2&quot;</span><span class="p">,</span> <span class="p">{}),</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">UniformTargets</span><span class="p">(</span><span class="mi">1000</span><span class="p">),</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">action_description</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-09-12 15:06:55,874 </span>                               <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-intense-fg">Creating logger for new env on PID=96241. Old environments in process may now log times incorrectly.</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,205 </span>gym                            INFO       Resetting environment with seed=2784853144
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,206 </span>scene.targets                  INFO       Generating 1000 targets
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,728 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Environment reset
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&#39;action_image_0&#39;, &#39;action_image_1&#39;, &#39;action_image_2&#39;]
+</pre></div></div>
+</div>
+<p>Demonstrating the action overload feature, we task the satellite based on target name. While this is not part of the official Gym API, we find it useful in certain cases.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">target</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">find_next_opportunities</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">)[</span><span class="mi">9</span><span class="p">][</span><span class="s2">&quot;object&quot;</span><span class="p">]</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,733 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-2        </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ActSat-2: </span>Finding opportunity windows from 0.00 to 600.00 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,752 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-2        </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ActSat-2: </span>Finding opportunity windows from 600.00 to 1200.00 seconds
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,775 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,776 </span>act.discrete_actions           <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg">Action &#39;Target(tgt-972)&#39; is not an integer. Will attempt to use compatible set_action_override method.</span>
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,776 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-2        </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ActSat-2: </span>Target(tgt-972) tasked for imaging
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,777 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-2        </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ActSat-2: </span>Target(tgt-972) window enabled: 1006.4 to 1137.8
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,777 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-2        </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ActSat-2: </span>setting timed terminal event at 1137.8
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,855 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-2        </span>INFO       <span class="ansi-yellow-fg">&lt;1009.00&gt; </span><span class="ansi-cyan-fg">ActSat-2: </span>imaged Target(tgt-972)
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,856 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;1009.00&gt; </span>Data reward: {&#39;ActSat-2&#39;: 0.5081424423258969}
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,857 </span><span class="ansi-cyan-fg">sats.satellite.ActSat-2        </span>INFO       <span class="ansi-yellow-fg">&lt;1009.00&gt; </span><span class="ansi-cyan-fg">ActSat-2: </span>Satellite ActSat-2 requires retasking
+<span class="ansi-black-intense-fg">2024-09-12 15:06:56,857 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1009.00&gt; </span>Step reward: 0.5081424423258969
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="simple_environment.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="multiagent_envs.html" class="btn btn-neutral float-right" title="Multi-Agent Environments" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

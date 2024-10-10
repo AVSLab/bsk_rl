@@ -1,0 +1,183 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BSK-RL: Environments for Spacecraft Planning and Scheduling &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=292eb321"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="install.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            BSK-RL
+              <img src="_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">BSK-RL: Environments for Spacecraft Planning and Scheduling</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bsk-rl-environments-for-spacecraft-planning-and-scheduling">
+<h1>BSK-RL: Environments for Spacecraft Planning and Scheduling<a class="headerlink" href="#bsk-rl-environments-for-spacecraft-planning-and-scheduling" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The 1.0.0 release has significant changes from previous versions. See the
+<a class="reference internal" href="release_notes.html"><span class="doc">Release Notes</span></a> for more information.</p>
+</div>
+<p><strong>BSK-RL</strong> (<a class="reference external" href="https://hanspeterschaub.info/basilisk">Basilisk</a> +
+<a class="reference external" href="https://en.wikipedia.org/wiki/Reinforcement_learning">Reinforcement Learning</a>) is a
+Python package for constructing <a class="reference external" href="https://gymnasium.farama.org/index.html">Gymnasium</a>
+environments for spacecraft tasking problems. It is built on top of
+<a class="reference external" href="https://hanspeterschaub.info/basilisk">Basilisk</a>, a modular and fast spacecraft
+simulation framework, making the simulation environments high-fidelity and computationally
+efficient. BSK-RL also includes a collection of utilities and examples
+for working with these environments.</p>
+<p>A whitepaper on the design philosophy behind BSK-RL and an example use case can be
+<a class="reference download internal" download="" href="_downloads/2e2241ae06aa411692efb97e57f7d281/stephenson_bskrl_2024.pdf"><code class="xref download docutils literal notranslate"><span class="pre">downloaded</span> <span class="pre">here</span></code></a>.</p>
+<section id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h2>
+<section id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h3>
+<p>Complete installation instructions and common troubleshooting tips can be found
+<a class="reference internal" href="install.html"><span class="doc">here</span></a>. To install BSK-RL:</p>
+<ol class="arabic">
+<li><p>Install the <a class="reference external" href="https://hanspeterschaub.info/basilisk">Basilisk</a> spacecraft simulation
+framework.</p></li>
+<li><p>Clone BSK-RL.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:AVSLab/bsk_rl.git<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>bsk_rl
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Install BSK-RL in the same virtual environment as Basilisk.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(.venv)</span> <span class="gp">$ </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>finish_install
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Test the installation.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(.venv)</span> <span class="gp">$ </span>pytest<span class="w"> </span>.
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</section>
+<section id="construct-an-environment">
+<h3>Construct an Environment<a class="headerlink" href="#construct-an-environment" title="Link to this heading"></a></h3>
+<p>A quick but comprehensive tutorial can be found at <a class="reference internal" href="examples/simple_environment.html"><span class="doc">Getting Started</span></a>.</p>
+</section>
+</section>
+<section id="acknowledgements">
+<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Link to this heading"></a></h2>
+<p>BSK-RL is developed by the <a class="reference external" href="https://hanspeterschaub.info/AVSlab.html">Autonomous Vehicle Systems (AVS) Lab</a>
+at the University of Colorado Boulder. The AVS Lab is part of the <a class="reference external" href="https://www.colorado.edu/ccar">Colorado Center for Astrodynamics Research (CCAR)</a>
+and the <a class="reference external" href="https://www.colorado.edu/aerospace/">Department of Aerospace Engineering Sciences</a>.</p>
+<p>Development has been supported by NASA Space Technology Graduate Research Opportunity
+(NSTGRO) grants, 80NSSC20K1162 and 80NSSC23K1182. This work has also been supported by
+Air Force Research Lab grant FA9453-22-2-0050.</p>
+<p>Development of this software has utilized the Alpine high performance computing resource
+at the University of Colorado Boulder. Alpine is jointly funded by the University of
+Colorado Boulder, the University of Colorado Anschutz, and Colorado State University.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

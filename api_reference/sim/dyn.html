@@ -1,0 +1,1021 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dynamics Sims &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="FSW Sims" href="fsw.html" />
+    <link rel="prev" title="Simulation (BSK)" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scene/index.html">Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comm/index.html">Communication</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Simulation (BSK)</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Dynamics Sims</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#setting-parameters">Setting Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#properties">Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aliveness-checking">Aliveness Checking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.sim.dyn.DynamicsModel"><code class="docutils literal notranslate"><span class="pre">DynamicsModel</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.DynamicsModel.simulator"><code class="docutils literal notranslate"><span class="pre">DynamicsModel.simulator</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.DynamicsModel.world"><code class="docutils literal notranslate"><span class="pre">DynamicsModel.world</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.DynamicsModel.is_alive"><code class="docutils literal notranslate"><span class="pre">DynamicsModel.is_alive()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.DynamicsModel.reset_for_action"><code class="docutils literal notranslate"><span class="pre">DynamicsModel.reset_for_action()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.sigma_BN"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.sigma_BN</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.BN"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.BN</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.omega_BN_B"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.omega_BN_B</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.BP"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.BP</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.r_BN_N"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.r_BN_N</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.r_BN_P"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.r_BN_P</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.v_BN_N"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.v_BN_N</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.v_BN_P"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.v_BN_P</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.omega_BP_P"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.omega_BP_P</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.omega_BH_H"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.omega_BH_H</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.battery_charge"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.battery_charge</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.battery_charge_fraction"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.battery_charge_fraction</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.wheel_speeds"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.wheel_speeds</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.wheel_speeds_fraction"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.wheel_speeds_fraction</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_spacecraft_hub"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_spacecraft_hub()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_gravity_bodies"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_gravity_bodies()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_disturbance_torque"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_disturbance_torque()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_density_model"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_density_model()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_drag_effector"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_drag_effector()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_simple_nav_object"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_simple_nav_object()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.altitude_valid"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.altitude_valid()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_reaction_wheel_dyn_effector"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_reaction_wheel_dyn_effector()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.rw_speeds_valid"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.rw_speeds_valid()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_thruster_dyn_effector"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_thruster_dyn_effector()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_thruster_power"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_thruster_power()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_eclipse_object"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_eclipse_object()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_solar_panel"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_solar_panel()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_battery"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_battery()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.battery_valid"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.battery_valid()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_power_sink"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_power_sink()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_reaction_wheel_power"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel.setup_reaction_wheel_power()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.sim.dyn.LOSCommDynModel"><code class="docutils literal notranslate"><span class="pre">LOSCommDynModel</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.LOSCommDynModel.setup_los_comms"><code class="docutils literal notranslate"><span class="pre">LOSCommDynModel.setup_los_comms()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel.storage_level"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.storage_level</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel.storage_level_fraction"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.storage_level_fraction</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_instrument"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_instrument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_transmitter"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_transmitter()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_instrument_power_sink"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_instrument_power_sink()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_transmitter_power_sink"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_transmitter_power_sink()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_storage_unit"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_storage_unit()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel.data_storage_valid"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.data_storage_valid()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_imaging_target"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_imaging_target()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel.reset_for_action"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.reset_for_action()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.sim.dyn.ContinuousImagingDynModel"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingDynModel</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_instrument"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingDynModel.setup_instrument()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_storage_unit"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingDynModel.setup_storage_unit()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_imaging_target"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingDynModel.setup_imaging_target()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.sim.dyn.GroundStationDynModel"><code class="docutils literal notranslate"><span class="pre">GroundStationDynModel</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.GroundStationDynModel.setup_ground_station_locations"><code class="docutils literal notranslate"><span class="pre">GroundStationDynModel.setup_ground_station_locations()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.sim.dyn.FullFeaturedDynModel"><code class="docutils literal notranslate"><span class="pre">FullFeaturedDynModel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="fsw.html">FSW Sims</a></li>
+<li class="toctree-l3"><a class="reference internal" href="world.html">World Sims</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Simulation (BSK)</a></li>
+      <li class="breadcrumb-item active">Dynamics Sims</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_reference/sim/dyn.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dynamics-sims">
+<span id="bsk-rl-sim-dyn"></span><h1>Dynamics Sims<a class="headerlink" href="#dynamics-sims" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.sim.dyn">Basilisk dynamics models are given in <code class="docutils literal notranslate"><span class="pre">bsk_rl.sim.dyn</span></code>.</p>
+<p>The dynamics model is the core of the satellite simulation, representing the physical
+properties of the satellite and its interactions with the environment. The dynamics model
+can be customized to represent different satellite configurations, actuator models, and
+instrument models.</p>
+<p>The dynamics model is selected using the <code class="docutils literal notranslate"><span class="pre">dyn_type</span></code> class property of the
+<a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">Satellite</span></code></a>. Certain environment elements may require specific
+dynamics models, such as <a class="reference internal" href="../comm/index.html#bsk_rl.comm.LOSCommunication" title="bsk_rl.comm.LOSCommunication"><code class="xref py py-class docutils literal notranslate"><span class="pre">LOSCommunication</span></code></a> requiring a dynamics
+model that inherits from <a class="reference internal" href="#bsk_rl.sim.dyn.LOSCommDynModel" title="bsk_rl.sim.dyn.LOSCommDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">LOSCommDynModel</span></code></a> or <a class="reference internal" href="../sats/index.html#bsk_rl.sats.ImagingSatellite" title="bsk_rl.sats.ImagingSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingSatellite</span></code></a>
+requiring a dynamics model that inherits from <a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel" title="bsk_rl.sim.dyn.ImagingDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a>.</p>
+<section id="setting-parameters">
+<h2>Setting Parameters<a class="headerlink" href="#setting-parameters" title="Link to this heading"></a></h2>
+<p>Customization of the dynamics model parameters is achieved through the <code class="docutils literal notranslate"><span class="pre">sat_args</span></code>
+dictionary passed to the <a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">Satellite</span></code></a> constructor. This dictionary is
+passed on to the dynamics model setup functions, which are called each time the simulator
+is reset.</p>
+</section>
+<section id="properties">
+<h2>Properties<a class="headerlink" href="#properties" title="Link to this heading"></a></h2>
+<p>The dynamics model provides a number of properties for easy access to the satellite state.
+These can be accessed directly from the dynamics model instance, or in the observation
+via the <a class="reference internal" href="../obs/index.html#bsk_rl.obs.SatProperties" title="bsk_rl.obs.SatProperties"><code class="xref py py-class docutils literal notranslate"><span class="pre">SatProperties</span></code></a> observation.</p>
+</section>
+<section id="aliveness-checking">
+<h2>Aliveness Checking<a class="headerlink" href="#aliveness-checking" title="Link to this heading"></a></h2>
+<p>Certain functions in the dynamics model are decorated with the <a class="reference internal" href="../utils/functional.html#bsk_rl.utils.functional.aliveness_checker" title="bsk_rl.utils.functional.aliveness_checker"><code class="xref py py-func docutils literal notranslate"><span class="pre">aliveness_checker()</span></code></a>
+decorator. These functions are called at each step to check if the satellite is still
+operational, returning true if the satellite is still alive.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.DynamicsModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DynamicsModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dyn_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#DynamicsModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.DynamicsModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>The abstract base dynamics model.</p>
+<p>One DynamicsModel is instantiated for each satellite in the environment each
+time the environment is reset and new simulator is created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite</strong> (<a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><em>Satellite</em></a>) – Satellite represented by this model.</p></li>
+<li><p><strong>dyn_rate</strong> (<em>float</em>) – [s] Rate of dynamics simulation.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed through to setup functions.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.DynamicsModel.simulator">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">simulator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Simulator</span></em><a class="headerlink" href="#bsk_rl.sim.dyn.DynamicsModel.simulator" title="Link to this definition"></a></dt>
+<dd><p>Reference to the episode simulator.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.DynamicsModel.world">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">world</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="world.html#bsk_rl.sim.world.WorldModel" title="bsk_rl.sim.world.WorldModel"><span class="pre">WorldModel</span></a></em><a class="headerlink" href="#bsk_rl.sim.dyn.DynamicsModel.world" title="Link to this definition"></a></dt>
+<dd><p>Reference to the episode world model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.DynamicsModel.is_alive">
+<span class="sig-name descname"><span class="pre">is_alive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#DynamicsModel.is_alive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.DynamicsModel.is_alive" title="Link to this definition"></a></dt>
+<dd><p>Check if the dynamics model has failed any aliveness requirements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the satellite dynamics are still alive.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.DynamicsModel.reset_for_action">
+<span class="sig-name descname"><span class="pre">reset_for_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#DynamicsModel.reset_for_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.DynamicsModel.reset_for_action" title="Link to this definition"></a></dt>
+<dd><p>Reset whenever a flight software <a class="reference internal" href="fsw.html#bsk_rl.sim.fsw.action" title="bsk_rl.sim.fsw.action"><code class="xref py py-class docutils literal notranslate"><span class="pre">action</span></code></a> is called.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BasicDynamicsModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.dyn.DynamicsModel" title="bsk_rl.sim.dyn.DynamicsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">DynamicsModel</span></code></a></p>
+<p>A dynamics model with a basic feature set.</p>
+<p>Includes the following:</p>
+<ul class="simple">
+<li><p>Spacecraft hub physical properties</p></li>
+<li><p>Gravity</p></li>
+<li><p>Constant disturbance torque (defaults to none)</p></li>
+<li><p>Aerodynamic drag</p></li>
+<li><p>Eclipse checking for power generation</p></li>
+<li><p>Reaction wheels</p></li>
+<li><p>Momentum desaturation thrusters</p></li>
+<li><p>Solar panels, battery, and power system</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – Passed to superclass</p></li>
+<li><p><strong>**kwargs</strong> – Passed to superclass</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.sigma_BN">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sigma_BN</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.sigma_BN" title="Link to this definition"></a></dt>
+<dd><p>Body attitude MRP relative to inertial frame.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.BN">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BN</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.BN" title="Link to this definition"></a></dt>
+<dd><p>Body relative to inertial frame rotation matrix.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.omega_BN_B">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">omega_BN_B</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.omega_BN_B" title="Link to this definition"></a></dt>
+<dd><p>Body rate relative to inertial frame in body frame [rad/s].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.BP">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BP</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.BP" title="Link to this definition"></a></dt>
+<dd><p>Body relative to planet freame rotation matrix.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.r_BN_N">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">r_BN_N</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.r_BN_N" title="Link to this definition"></a></dt>
+<dd><p>Body position relative to inertial origin in inertial frame [m].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.r_BN_P">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">r_BN_P</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.r_BN_P" title="Link to this definition"></a></dt>
+<dd><p>Body position relative to inertial origin in planet frame [m].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.v_BN_N">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">v_BN_N</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.v_BN_N" title="Link to this definition"></a></dt>
+<dd><p>Body velocity relative to inertial origin in inertial frame [m/s].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.v_BN_P">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">v_BN_P</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.v_BN_P" title="Link to this definition"></a></dt>
+<dd><p>Planet-frame derivative of <code class="docutils literal notranslate"><span class="pre">r_BN</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.omega_BP_P">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">omega_BP_P</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.omega_BP_P" title="Link to this definition"></a></dt>
+<dd><p>Body angular velocity relative to planet frame in plant frame [rad/s].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.omega_BH_H">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">omega_BH_H</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.omega_BH_H" title="Link to this definition"></a></dt>
+<dd><p>Body angular velocity relative to Hill frame in Hill frame [rad/s].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.battery_charge">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">battery_charge</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.battery_charge" title="Link to this definition"></a></dt>
+<dd><p>Battery charge [W*s].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.battery_charge_fraction">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">battery_charge_fraction</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.battery_charge_fraction" title="Link to this definition"></a></dt>
+<dd><p>Battery charge as a fraction of capacity.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.wheel_speeds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wheel_speeds</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.wheel_speeds" title="Link to this definition"></a></dt>
+<dd><p>Wheel speeds [rad/s].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.wheel_speeds_fraction">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wheel_speeds_fraction</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.wheel_speeds_fraction" title="Link to this definition"></a></dt>
+<dd><p>Wheel speeds normalized by maximum allowable speed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_spacecraft_hub">
+<span class="sig-name descname"><span class="pre">setup_spacecraft_hub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mass</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega_init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oe</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rN</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vN</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_spacecraft_hub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_spacecraft_hub" title="Link to this definition"></a></dt>
+<dd><p>Set up the spacecraft hub physical properties and state.</p>
+<p>The hub is assumed to be a uniform-density rectangular prism with the center of
+mass at the center.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mass</strong> (<em>float</em>) – [kg] Hub mass.</p></li>
+<li><p><strong>width</strong> (<em>float</em>) – [m] Hub width.</p></li>
+<li><p><strong>depth</strong> (<em>float</em>) – [m] Hub depth.</p></li>
+<li><p><strong>height</strong> (<em>float</em>) – [m] Hub height.</p></li>
+<li><p><strong>sigma_init</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) – Initial attitude MRP.</p></li>
+<li><p><strong>omega_init</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) – [rad/s] Initial body rate.</p></li>
+<li><p><strong>oe</strong> (<em>Iterable</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>) – Orbital element tuple of (semimajor axis [km], eccentricity, inclination
+[rad], ascending node [rad], argument of periapsis [rad], initial true
+anomaly [rad]). Either <code class="docutils literal notranslate"><span class="pre">oe</span></code> and <code class="docutils literal notranslate"><span class="pre">mu</span></code> or <code class="docutils literal notranslate"><span class="pre">rN</span></code> and <code class="docutils literal notranslate"><span class="pre">vN</span></code> must be
+provided, but not both.</p></li>
+<li><p><strong>mu</strong> (<em>float</em>) – Gravitational parameter (used only with <code class="docutils literal notranslate"><span class="pre">oe</span></code>).</p></li>
+<li><p><strong>rN</strong> (<em>Iterable</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>) – [m] Initial inertial position.</p></li>
+<li><p><strong>vN</strong> (<em>Iterable</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>) – [m/s] Initial inertial velocity.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_gravity_bodies">
+<span class="sig-name descname"><span class="pre">setup_gravity_bodies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_gravity_bodies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_gravity_bodies" title="Link to this definition"></a></dt>
+<dd><p>Set up gravitational bodies from the <a class="reference internal" href="world.html#bsk_rl.sim.world.WorldModel" title="bsk_rl.sim.world.WorldModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">WorldModel</span></code></a> to included in the simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_disturbance_torque">
+<span class="sig-name descname"><span class="pre">setup_disturbance_torque</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">disturbance_vector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_disturbance_torque"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_disturbance_torque" title="Link to this definition"></a></dt>
+<dd><p>Set up a constant disturbance torque acting on the satellite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>disturbance_vector</strong> (<em>Iterable</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>) – [N*m] Constant disturbance torque in the body frame.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_density_model">
+<span class="sig-name descname"><span class="pre">setup_density_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_density_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_density_model" title="Link to this definition"></a></dt>
+<dd><p>Set up the atmospheric density model effector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_drag_effector">
+<span class="sig-name descname"><span class="pre">setup_drag_effector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">panelArea</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dragCoeff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">999</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_drag_effector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_drag_effector" title="Link to this definition"></a></dt>
+<dd><p>Set up the satellite drag effector.</p>
+<p>The drag effector causes aerodynamic forces and torques to act on the satellite.
+For purposes of this model, the satellite is assumed to be a rectangular prism
+with a solar panel on one end.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> (<em>float</em>) – [m] Hub width.</p></li>
+<li><p><strong>depth</strong> (<em>float</em>) – [m] Hub depth.</p></li>
+<li><p><strong>height</strong> (<em>float</em>) – [m] Hub height.</p></li>
+<li><p><strong>panelArea</strong> (<em>float</em>) – [m^2] Solar panel surface area.</p></li>
+<li><p><strong>dragCoeff</strong> (<em>float</em>) – Drag coefficient.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_simple_nav_object">
+<span class="sig-name descname"><span class="pre">setup_simple_nav_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1400</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_simple_nav_object"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_simple_nav_object" title="Link to this definition"></a></dt>
+<dd><p>Set up the navigation module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.altitude_valid">
+<span class="sig-name descname"><span class="pre">altitude_valid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.altitude_valid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.altitude_valid" title="Link to this definition"></a></dt>
+<dd><p><em>Decorated with</em> <a class="reference internal" href="../utils/functional.html#bsk_rl.utils.functional.aliveness_checker" title="bsk_rl.utils.functional.aliveness_checker"><code class="xref py py-class docutils literal notranslate"><span class="pre">aliveness_checker</span></code></a></p>
+<p>Check that satellite has not deorbited.</p>
+<blockquote>
+<div><p>Checks if altitude is greater than 200km above Earth’s surface.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_reaction_wheel_dyn_effector">
+<span class="sig-name descname"><span class="pre">setup_reaction_wheel_dyn_effector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wheelSpeeds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxWheelSpeed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">997</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_reaction_wheel_dyn_effector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_reaction_wheel_dyn_effector" title="Link to this definition"></a></dt>
+<dd><p>Set the reaction wheel state effector parameters.</p>
+<p>Three reaction wheels modeled on the HR16 wheel are used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wheelSpeeds</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) – [rpm] Initial speeds of each wheel.</p></li>
+<li><p><strong>maxWheelSpeed</strong> (<em>float</em>) – [rpm] Failure speed for wheels.</p></li>
+<li><p><strong>u_max</strong> (<em>float</em>) – [N*m] Maximum torque producible by each wheel.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.rw_speeds_valid">
+<span class="sig-name descname"><span class="pre">rw_speeds_valid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.rw_speeds_valid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.rw_speeds_valid" title="Link to this definition"></a></dt>
+<dd><p><em>Decorated with</em> <a class="reference internal" href="../utils/functional.html#bsk_rl.utils.functional.aliveness_checker" title="bsk_rl.utils.functional.aliveness_checker"><code class="xref py py-class docutils literal notranslate"><span class="pre">aliveness_checker</span></code></a></p>
+<p>Check if any wheel speed exceeds the <code class="docutils literal notranslate"><span class="pre">maxWheelSpeed</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_thruster_dyn_effector">
+<span class="sig-name descname"><span class="pre">setup_thruster_dyn_effector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">996</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_thruster_dyn_effector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_thruster_dyn_effector" title="Link to this definition"></a></dt>
+<dd><p>Set up the thruster state effector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>priority</strong> (<em>int</em>) – Model priority.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_thruster_power">
+<span class="sig-name descname"><span class="pre">setup_thruster_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thrusterPowerDraw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">899</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_thruster_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_thruster_power" title="Link to this definition"></a></dt>
+<dd><p>Set up the thruster power draw.</p>
+<p>When momentum desaturating using wheels, power is consumed at this rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>thrusterPowerDraw</strong> – [W] Constant power draw desat mode is active.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_eclipse_object">
+<span class="sig-name descname"><span class="pre">setup_eclipse_object</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_eclipse_object"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_eclipse_object" title="Link to this definition"></a></dt>
+<dd><p>Add the spacecraft to the eclipse module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_solar_panel">
+<span class="sig-name descname"><span class="pre">setup_solar_panel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">panelArea</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">panelEfficiency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nHat_B</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">898</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_solar_panel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_solar_panel" title="Link to this definition"></a></dt>
+<dd><p>Set the solar panel parameters for power generation.</p>
+<p>Power generation takes into account panel size and efficiency, the eclipse
+state, and the angle of solar incidence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>panelArea</strong> (<em>float</em>) – [m^2] Solar panel area.</p></li>
+<li><p><strong>panelEfficiency</strong> (<em>float</em>) – Efficiency coefficient of solar to electrical power
+conversion.</p></li>
+<li><p><strong>nHat_B</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) – Body-fixed array normal vector.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_battery">
+<span class="sig-name descname"><span class="pre">setup_battery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batteryStorageCapacity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storedCharge_Init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">799</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_battery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_battery" title="Link to this definition"></a></dt>
+<dd><p>Set the battery model parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batteryStorageCapacity</strong> (<em>float</em>) – [W*s] Maximum battery charge.</p></li>
+<li><p><strong>storedCharge_Init</strong> (<em>float</em>) – [W*s] Initial battery charge.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.battery_valid">
+<span class="sig-name descname"><span class="pre">battery_valid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.battery_valid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.battery_valid" title="Link to this definition"></a></dt>
+<dd><p><em>Decorated with</em> <a class="reference internal" href="../utils/functional.html#bsk_rl.utils.functional.aliveness_checker" title="bsk_rl.utils.functional.aliveness_checker"><code class="xref py py-class docutils literal notranslate"><span class="pre">aliveness_checker</span></code></a></p>
+<p>Check if the battery has charge remaining.</p>
+<blockquote>
+<div><p>Note that this check is instantaneous. If a satellite runs out of power during a
+environment step but then recharges to have positive power at the end of the step,
+the satellite will still be considered alive.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_power_sink">
+<span class="sig-name descname"><span class="pre">setup_power_sink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basePowerDraw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">897</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_power_sink"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_power_sink" title="Link to this definition"></a></dt>
+<dd><p>Set the instrument power sink parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>basePowerDraw</strong> (<em>float</em>) – [W] Baseline satellite power draw. Should be negative.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.BasicDynamicsModel.setup_reaction_wheel_power">
+<span class="sig-name descname"><span class="pre">setup_reaction_wheel_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rwBasePower</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rwMechToElecEfficiency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rwElecToMechEfficiency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">987</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#BasicDynamicsModel.setup_reaction_wheel_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.BasicDynamicsModel.setup_reaction_wheel_power" title="Link to this definition"></a></dt>
+<dd><p>Set the reaction wheel power draw.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rwBasePower</strong> (<em>float</em>) – [W] Constant power draw when operational.</p></li>
+<li><p><strong>rwMechToElecEfficiency</strong> (<em>float</em>) – Efficiency factor to convert mechanical power to
+electrical power.</p></li>
+<li><p><strong>rwElecToMechEfficiency</strong> (<em>float</em>) – Efficiency factor to convert electrical power to
+mechanical power.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.LOSCommDynModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LOSCommDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#LOSCommDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.LOSCommDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel" title="bsk_rl.sim.dyn.BasicDynamicsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicDynamicsModel</span></code></a></p>
+<p>Allow for line-of-sight checking between satellites.</p>
+<p>Necessary for <a class="reference internal" href="../comm/index.html#bsk_rl.comm.LOSCommunication" title="bsk_rl.comm.LOSCommunication"><code class="xref py py-class docutils literal notranslate"><span class="pre">LOSCommunication</span></code></a> to function.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.LOSCommDynModel.setup_los_comms">
+<span class="sig-name descname"><span class="pre">setup_los_comms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">losMaximumRange</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#LOSCommDynModel.setup_los_comms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.LOSCommDynModel.setup_los_comms" title="Link to this definition"></a></dt>
+<dd><p>Set up line-of-sight visibility checking between satellites.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>losMaximumRange</strong> (<em>float</em>) – [m] Maximum range for line-of-sight visibility. -1 for unlimited.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ImagingDynModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ImagingDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ImagingDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ImagingDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.dyn.BasicDynamicsModel" title="bsk_rl.sim.dyn.BasicDynamicsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicDynamicsModel</span></code></a></p>
+<p>Equips the satellite with an instrument, storage unit, and transmitter.</p>
+<p>This dynamics model is used with <a class="reference internal" href="../sats/index.html#bsk_rl.sats.ImagingSatellite" title="bsk_rl.sats.ImagingSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingSatellite</span></code></a>. It
+provides the satellite with the ability to take images of a point target. To
+enable downlink, use <a class="reference internal" href="#bsk_rl.sim.dyn.GroundStationDynModel" title="bsk_rl.sim.dyn.GroundStationDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroundStationDynModel</span></code></a> and <a class="reference internal" href="world.html#bsk_rl.sim.world.GroundStationWorldModel" title="bsk_rl.sim.world.GroundStationWorldModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroundStationWorldModel</span></code></a>.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ImagingDynModel.storage_level">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">storage_level</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.ImagingDynModel.storage_level" title="Link to this definition"></a></dt>
+<dd><p>Storage level [bits].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ImagingDynModel.storage_level_fraction">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">storage_level_fraction</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.ImagingDynModel.storage_level_fraction" title="Link to this definition"></a></dt>
+<dd><p>Storage level as a fraction of capacity.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ImagingDynModel.setup_instrument">
+<span class="sig-name descname"><span class="pre">setup_instrument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instrumentBaudRate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">895</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ImagingDynModel.setup_instrument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_instrument" title="Link to this definition"></a></dt>
+<dd><p>Set up the instrument data collection model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instrumentBaudRate</strong> (<em>float</em>) – [bits] Data generated by an image.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ImagingDynModel.setup_transmitter">
+<span class="sig-name descname"><span class="pre">setup_transmitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transmitterBaudRate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrumentBaudRate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmitterNumBuffers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">798</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ImagingDynModel.setup_transmitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_transmitter" title="Link to this definition"></a></dt>
+<dd><p>Set up the transmitter model for downlinking data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transmitterBaudRate</strong> (<em>float</em>) – [baud] Rate of data downlink. Should be negative.</p></li>
+<li><p><strong>instrumentBaudRate</strong> (<em>float</em>) – [bits] Image size, used to set packet size.</p></li>
+<li><p><strong>transmitterNumBuffers</strong> (<em>int</em>) – Number of transmitter buffers</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ImagingDynModel.setup_instrument_power_sink">
+<span class="sig-name descname"><span class="pre">setup_instrument_power_sink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instrumentPowerDraw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">897</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ImagingDynModel.setup_instrument_power_sink"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_instrument_power_sink" title="Link to this definition"></a></dt>
+<dd><p>Set the instrument power sink parameters.</p>
+<p>The instrument draws power when in an imaging task, representing the power cost
+of operating the instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instrumentPowerDraw</strong> (<em>float</em>) – [W] Power draw when instrument is enabled.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ImagingDynModel.setup_transmitter_power_sink">
+<span class="sig-name descname"><span class="pre">setup_transmitter_power_sink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transmitterPowerDraw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">896</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ImagingDynModel.setup_transmitter_power_sink"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_transmitter_power_sink" title="Link to this definition"></a></dt>
+<dd><p>Set the transmitter power sink parameters.</p>
+<p>The transmitter draws power when in a downlink task, representing the power cost
+of downlinking data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transmitterPowerDraw</strong> (<em>float</em>) – [W] Power draw when transmitter is enabled.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ImagingDynModel.setup_storage_unit">
+<span class="sig-name descname"><span class="pre">setup_storage_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataStorageCapacity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageUnitValidCheck</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageInit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmitterNumBuffers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bufferNames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">699</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ImagingDynModel.setup_storage_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_storage_unit" title="Link to this definition"></a></dt>
+<dd><p>Configure the storage unit and its buffers.</p>
+<p>Separate buffers can be used to track imaging of different targets. Often, the
+buffer names will be set up by satellite based on the scenario configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataStorageCapacity</strong> (<em>int</em>) – [bits] Maximum data that can be stored.</p></li>
+<li><p><strong>transmitterNumBuffers</strong> (<em>int</em><em> | </em><em>None</em>) – Number of unit buffers. Not necessary if <code class="docutils literal notranslate"><span class="pre">bufferNames</span></code>
+are given.</p></li>
+<li><p><strong>bufferNames</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – List of buffer names to use. Named by number if <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>storageUnitValidCheck</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, enforce that the storage level is below
+the storage capacity when checking aliveness.</p></li>
+<li><p><strong>storageInit</strong> (<em>int</em>) – [bits] Initial storage level.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ImagingDynModel.data_storage_valid">
+<span class="sig-name descname"><span class="pre">data_storage_valid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ImagingDynModel.data_storage_valid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ImagingDynModel.data_storage_valid" title="Link to this definition"></a></dt>
+<dd><p><em>Decorated with</em> <a class="reference internal" href="../utils/functional.html#bsk_rl.utils.functional.aliveness_checker" title="bsk_rl.utils.functional.aliveness_checker"><code class="xref py py-class docutils literal notranslate"><span class="pre">aliveness_checker</span></code></a></p>
+<p>Check that the buffer has not run out of space.</p>
+<blockquote>
+<div><p>Only is checked if <code class="docutils literal notranslate"><span class="pre">storageUnitValidCheck</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>; otherwise, a full storage
+unit will prevent additional data from being stored but will not cause the satellite
+to be considered dead.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ImagingDynModel.setup_imaging_target">
+<span class="sig-name descname"><span class="pre">setup_imaging_target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">groundLocationPlanetRadius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imageTargetMinimumElevation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imageTargetMaximumRange</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ImagingDynModel.setup_imaging_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ImagingDynModel.setup_imaging_target" title="Link to this definition"></a></dt>
+<dd><p>Add a generic imaging target to dynamics.</p>
+<p>The target must be updated with a particular location when used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>groundLocationPlanetRadius</strong> (<em>float</em>) – [m] Radius of ground locations from center of planet.</p></li>
+<li><p><strong>imageTargetMinimumElevation</strong> (<em>float</em>) – [rad] Minimum elevation angle from target to
+satellite when imaging.</p></li>
+<li><p><strong>imageTargetMaximumRange</strong> (<em>float</em>) – [m] Maximum range from target to satellite when
+imaging. -1 to disable.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ImagingDynModel.reset_for_action">
+<span class="sig-name descname"><span class="pre">reset_for_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ImagingDynModel.reset_for_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ImagingDynModel.reset_for_action" title="Link to this definition"></a></dt>
+<dd><p>Shut off power sinks unless the transmitter or instrument is being used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ContinuousImagingDynModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ContinuousImagingDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ContinuousImagingDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ContinuousImagingDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel" title="bsk_rl.sim.dyn.ImagingDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a></p>
+<p>Equips the satellite for continuous nadir imaging.</p>
+<p>Equips satellite with an instrument, storage unit, and transmitter
+for continuous nadir imaging. A single data buffer is used for storage, and data
+is accumulated continuously while imaging. The imaging target is fixed at the
+center of the Earth for nadir imaging.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_instrument">
+<span class="sig-name descname"><span class="pre">setup_instrument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instrumentBaudRate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">895</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ContinuousImagingDynModel.setup_instrument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_instrument" title="Link to this definition"></a></dt>
+<dd><p>Set up the continuous instrument model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instrumentBaudRate</strong> (<em>float</em>) – [baud] Data generation rate step when continuously imaging.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_storage_unit">
+<span class="sig-name descname"><span class="pre">setup_storage_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataStorageCapacity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageUnitValidCheck</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageInit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">699</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ContinuousImagingDynModel.setup_storage_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_storage_unit" title="Link to this definition"></a></dt>
+<dd><p>Configure the storage unit and its buffers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataStorageCapacity</strong> (<em>int</em>) – [bits] Maximum data that can be stored.</p></li>
+<li><p><strong>storageUnitValidCheck</strong> (<em>bool</em>) – If True, check that the storage level is below the
+storage capacity.</p></li>
+<li><p><strong>storageInit</strong> (<em>int</em>) – [bits] Initial storage level.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_imaging_target">
+<span class="sig-name descname"><span class="pre">setup_imaging_target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imageTargetMaximumRange</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#ContinuousImagingDynModel.setup_imaging_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ContinuousImagingDynModel.setup_imaging_target" title="Link to this definition"></a></dt>
+<dd><p>Add a imaging target at the center of the Earth.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imageTargetMaximumRange</strong> (<em>float</em>) – [m] Maximum range from target to satellite when
+imaging. -1 to disable.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.GroundStationDynModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GroundStationDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#GroundStationDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.GroundStationDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.dyn.ImagingDynModel" title="bsk_rl.sim.dyn.ImagingDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a></p>
+<p>Model that connects satellite to world ground stations.</p>
+<p>This model enables the use of ground stations defined in <a class="reference internal" href="world.html#bsk_rl.sim.world.GroundStationWorldModel" title="bsk_rl.sim.world.GroundStationWorldModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroundStationWorldModel</span></code></a>
+for data downlink.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.GroundStationDynModel.setup_ground_station_locations">
+<span class="sig-name descname"><span class="pre">setup_ground_station_locations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#GroundStationDynModel.setup_ground_station_locations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.GroundStationDynModel.setup_ground_station_locations" title="Link to this definition"></a></dt>
+<dd><p>Connect the transmitter to ground stations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.FullFeaturedDynModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FullFeaturedDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/sim/dyn.html#FullFeaturedDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.FullFeaturedDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.dyn.GroundStationDynModel" title="bsk_rl.sim.dyn.GroundStationDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroundStationDynModel</span></code></a>, <a class="reference internal" href="#bsk_rl.sim.dyn.LOSCommDynModel" title="bsk_rl.sim.dyn.LOSCommDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">LOSCommDynModel</span></code></a></p>
+<p>Convenience class for an imaging satellite with ground stations and line-of-sight communication.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Simulation (BSK)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fsw.html" class="btn btn-neutral float-right" title="FSW Sims" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

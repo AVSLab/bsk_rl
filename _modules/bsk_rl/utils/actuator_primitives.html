@@ -1,0 +1,204 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.utils.actuator_primitives &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.utils.actuator_primitives</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.utils.actuator_primitives</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;``bsk_rl.utils.actuator_primitives``: Preset spacecraft components.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">Basilisk.simulation</span> <span class="kn">import</span> <span class="n">reactionWheelStateEffector</span><span class="p">,</span> <span class="n">thrusterDynamicEffector</span>
+<span class="kn">from</span> <span class="nn">Basilisk.utilities</span> <span class="kn">import</span> <span class="n">simIncludeRW</span><span class="p">,</span> <span class="n">simIncludeThruster</span>
+
+
+<div class="viewcode-block" id="balancedHR16Triad">
+<a class="viewcode-back" href="../../../api_reference/utils/actuator_primitives.html#bsk_rl.utils.actuator_primitives.balancedHR16Triad">[docs]</a>
+<span class="k">def</span> <span class="nf">balancedHR16Triad</span><span class="p">(</span>
+    <span class="n">useRandom</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">randomBounds</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">400</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span>
+    <span class="n">wheelSpeeds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span>
+    <span class="n">reactionWheelStateEffector</span><span class="o">.</span><span class="n">ReactionWheelStateEffector</span><span class="p">,</span>
+    <span class="n">simIncludeRW</span><span class="o">.</span><span class="n">rwFactory</span><span class="p">,</span>
+    <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a set of three HR16 reaction wheels.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        useRandom: Use random values for wheel speeds.</span>
+<span class="sd">        randomBounds: Bounds for random wheel speeds.</span>
+<span class="sd">        wheelSpeeds: Fixed wheel speeds.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple:</span>
+<span class="sd">            * **rwStateEffector**: Reaction wheel state effector instance.</span>
+<span class="sd">            * **rwFactory**: Factory containing defined reaction wheels.</span>
+<span class="sd">            * **wheelSpeeds**: Wheel speeds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rwFactory</span> <span class="o">=</span> <span class="n">simIncludeRW</span><span class="o">.</span><span class="n">rwFactory</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">useRandom</span><span class="p">:</span>
+        <span class="n">wheelSpeeds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">randomBounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">randomBounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="n">rwFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+        <span class="s2">&quot;Honeywell_HR16&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">maxMomentum</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span> <span class="n">Omega</span><span class="o">=</span><span class="n">wheelSpeeds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># RPM</span>
+    <span class="p">)</span>
+    <span class="n">rwFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+        <span class="s2">&quot;Honeywell_HR16&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">maxMomentum</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span> <span class="n">Omega</span><span class="o">=</span><span class="n">wheelSpeeds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># RPM</span>
+    <span class="p">)</span>
+    <span class="n">rwFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+        <span class="s2">&quot;Honeywell_HR16&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">maxMomentum</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span> <span class="n">Omega</span><span class="o">=</span><span class="n">wheelSpeeds</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># RPM</span>
+    <span class="p">)</span>
+
+    <span class="n">rwStateEffector</span> <span class="o">=</span> <span class="n">reactionWheelStateEffector</span><span class="o">.</span><span class="n">ReactionWheelStateEffector</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">rwStateEffector</span><span class="p">,</span> <span class="n">rwFactory</span><span class="p">,</span> <span class="n">wheelSpeeds</span></div>
+
+
+
+<div class="viewcode-block" id="idealMonarc1Octet">
+<a class="viewcode-back" href="../../../api_reference/utils/actuator_primitives.html#bsk_rl.utils.actuator_primitives.idealMonarc1Octet">[docs]</a>
+<span class="k">def</span> <span class="nf">idealMonarc1Octet</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a set of eight ADCS thrusters using MOOG Monarc-1 attributes.</span>
+
+<span class="sd">    Returns a set of thrusters and thrusterFac instance to add thrusters to a</span>
+<span class="sd">    spacecraft.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple:</span>
+<span class="sd">        * **thrusterSet**: Thruster dynamic effector instance.</span>
+<span class="sd">        * **thrusterFac**: Factory containing defined thrusters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">[</span><span class="mf">3.874945160902288e-2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.206182747348013</span><span class="p">,</span> <span class="mf">0.85245</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">3.874945160902288e-2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.206182747348013</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.85245</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">3.8749451609022656e-2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.206182747348013</span><span class="p">,</span> <span class="mf">0.85245</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">3.8749451609022656e-2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.206182747348013</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.85245</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">3.874945160902288e-2</span><span class="p">,</span> <span class="mf">1.206182747348013</span><span class="p">,</span> <span class="mf">0.85245</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">3.874945160902288e-2</span><span class="p">,</span> <span class="mf">1.206182747348013</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.85245</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">3.8749451609022656e-2</span><span class="p">,</span> <span class="mf">1.206182747348013</span><span class="p">,</span> <span class="mf">0.85245</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">3.8749451609022656e-2</span><span class="p">,</span> <span class="mf">1.206182747348013</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.85245</span><span class="p">],</span>
+    <span class="p">]</span>
+
+    <span class="n">direction</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">0.7071067811865476</span><span class="p">,</span> <span class="mf">0.7071067811865475</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">0.7071067811865476</span><span class="p">,</span> <span class="mf">0.7071067811865475</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.7071067811865475</span><span class="p">,</span> <span class="mf">0.7071067811865476</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.7071067811865475</span><span class="p">,</span> <span class="mf">0.7071067811865476</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.7071067811865476</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7071067811865475</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.7071067811865476</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7071067811865475</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">0.7071067811865475</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7071067811865476</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">0.7071067811865475</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7071067811865476</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+    <span class="p">]</span>
+    <span class="n">thrusterSet</span> <span class="o">=</span> <span class="n">thrusterDynamicEffector</span><span class="o">.</span><span class="n">ThrusterDynamicEffector</span><span class="p">()</span>
+    <span class="n">thFactory</span> <span class="o">=</span> <span class="n">simIncludeThruster</span><span class="o">.</span><span class="n">thrusterFactory</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">pos_B</span><span class="p">,</span> <span class="n">dir_B</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">direction</span><span class="p">):</span>
+        <span class="n">thFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;MOOG_Monarc_1&quot;</span><span class="p">,</span> <span class="n">pos_B</span><span class="p">,</span> <span class="n">dir_B</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">thrusterSet</span><span class="p">,</span> <span class="n">thFactory</span></div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">&quot;Actuator Primitives&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;balancedHR16Triad&quot;</span><span class="p">,</span> <span class="s2">&quot;idealMonarc1Octet&quot;</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+.. _bsk_rl.data:
+.. currentmodule:: bsk_rl.data
+
+Data & Reward
+=============
+
+
+
+.. automodule:: bsk_rl.data
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   base
+   nadir_data
+   no_data
+   unique_image_data
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+

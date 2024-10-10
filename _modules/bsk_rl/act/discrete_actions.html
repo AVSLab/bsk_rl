@@ -1,0 +1,460 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.act.discrete_actions &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.act.discrete_actions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.act.discrete_actions</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Discrete actions are indexable by integer.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">gymnasium</span> <span class="kn">import</span> <span class="n">spaces</span>
+
+<span class="kn">from</span> <span class="nn">bsk_rl.act.actions</span> <span class="kn">import</span> <span class="n">Action</span><span class="p">,</span> <span class="n">ActionBuilder</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.sats</span> <span class="kn">import</span> <span class="n">Satellite</span>
+    <span class="kn">from</span> <span class="nn">bsk_rl.scene.targets</span> <span class="kn">import</span> <span class="n">Target</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DiscreteActionBuilder">
+<a class="viewcode-back" href="../../../api_reference/act/discrete_actions.html#bsk_rl.act.discrete_actions.DiscreteActionBuilder">[docs]</a>
+<span class="k">class</span> <span class="nc">DiscreteActionBuilder</span><span class="p">(</span><span class="n">ActionBuilder</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Processes actions for a discrete action space.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellite: Satellite to create actions for.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">satellite</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_action_key</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="DiscreteActionBuilder.reset_post_sim_init">
+<a class="viewcode-back" href="../../../api_reference/act/discrete_actions.html#bsk_rl.act.discrete_actions.DiscreteActionBuilder.reset_post_sim_init">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset_post_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log previous action key.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_action_key</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Discrete action space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">(</span><span class="nb">sum</span><span class="p">([</span><span class="n">act</span><span class="o">.</span><span class="n">n_actions</span> <span class="k">for</span> <span class="n">act</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_spec</span><span class="p">]))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">action_description</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a list of strings corresponding to action names.&quot;&quot;&quot;</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">act</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_spec</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">act</span><span class="o">.</span><span class="n">n_actions</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">actions</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">act</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">n_actions</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="n">actions</span>
+
+<div class="viewcode-block" id="DiscreteActionBuilder.set_action">
+<a class="viewcode-back" href="../../../api_reference/act/discrete_actions.html#bsk_rl.act.discrete_actions.DiscreteActionBuilder.set_action">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the action based on the integer index.</span>
+
+<span class="sd">        If the action is not an integer, the satellite will attempt to call ``set_action_override``</span>
+<span class="sd">        for each action, in order, until one works.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">disable_timed_terminal_event</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Action &#39;</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">&#39; is not an integer. Will attempt to use compatible set_action_override method.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">act</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_spec</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">prev_action_key</span> <span class="o">=</span> <span class="n">act</span><span class="o">.</span><span class="n">set_action_override</span><span class="p">(</span>
+                        <span class="n">action</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prev_action_key</span>
+                    <span class="p">)</span>
+                    <span class="k">return</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Action &#39;</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">&#39; is not an integer and no compatible set_action_override method found.&quot;</span>
+                <span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">act</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_spec</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">+</span> <span class="n">act</span><span class="o">.</span><span class="n">n_actions</span> <span class="o">&gt;</span> <span class="n">action</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">prev_action_key</span> <span class="o">=</span> <span class="n">act</span><span class="o">.</span><span class="n">set_action</span><span class="p">(</span>
+                    <span class="n">action</span> <span class="o">-</span> <span class="n">index</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prev_action_key</span>
+                <span class="p">)</span>
+                <span class="k">return</span>
+            <span class="n">index</span> <span class="o">+=</span> <span class="n">act</span><span class="o">.</span><span class="n">n_actions</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Action index </span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2"> out of range.&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="DiscreteAction">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.DiscreteAction">[docs]</a>
+<span class="k">class</span> <span class="nc">DiscreteAction</span><span class="p">(</span><span class="n">Action</span><span class="p">):</span>
+    <span class="n">builder_type</span> <span class="o">=</span> <span class="n">DiscreteActionBuilder</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;discrete_act&quot;</span><span class="p">,</span> <span class="n">n_actions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Base class for discrete, integer-indexable actions.</span>
+
+<span class="sd">        A discrete action may represent multiple indexed actions of the same type.</span>
+
+<span class="sd">        Optionally, discrete actions may have a ``set_action_override`` function defined.</span>
+<span class="sd">        If the action passed to the satellite is not an integer, the satellite will iterate</span>
+<span class="sd">        over the ``action_spec`` and attempt to call ``set_action_override`` on each action</span>
+<span class="sd">        until one is successful.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Name of the action.</span>
+<span class="sd">            n_actions: Number of actions available.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_actions</span> <span class="o">=</span> <span class="n">n_actions</span>
+
+<div class="viewcode-block" id="DiscreteAction.set_action">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.DiscreteAction.set_action">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">set_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Activate an action by local index.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="DiscreteFSWAction">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.DiscreteFSWAction">[docs]</a>
+<span class="k">class</span> <span class="nc">DiscreteFSWAction</span><span class="p">(</span><span class="n">DiscreteAction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fsw_action</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reset_task</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Discrete action to task a flight software action function.</span>
+
+<span class="sd">        This action executes a function of a :class:`~bsk_rl.env.simulation.fsw.FSWModel`</span>
+<span class="sd">        instance that takes no arguments, typically decorated with ``@action``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fsw_action: Name of the flight software function to task.</span>
+<span class="sd">            name: Name of the action. If not specified, defaults to the ``fsw_action`` name.</span>
+<span class="sd">            duration: Duration of the action in seconds. Defaults to a large value so that</span>
+<span class="sd">                the :class:`~bsk_rl.env.gym_env.GeneralSatelliteTasking` ``max_step_duration``</span>
+<span class="sd">                controls step length.</span>
+<span class="sd">            reset_task: If true, reset the action if the previous action was the same.</span>
+<span class="sd">                Generally, this parameter should be false to ensure realistic, continuous</span>
+<span class="sd">                operation of satellite modes; however, some Basilisk modules may require</span>
+<span class="sd">                frequent resetting for normal operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">fsw_action</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">n_actions</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw_action</span> <span class="o">=</span> <span class="n">fsw_action</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_task</span> <span class="o">=</span> <span class="n">reset_task</span>
+        <span class="k">if</span> <span class="n">duration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="mf">1e9</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="n">duration</span>
+
+<div class="viewcode-block" id="DiscreteFSWAction.set_action">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.DiscreteFSWAction.set_action">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Activate the ``fsw_action`` function.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            action: Should always be ``1``.</span>
+<span class="sd">            prev_action_key: Previous action key.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The name of the activated action.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">action</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> tasked for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">update_timed_terminal_event</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw_action</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_task</span> <span class="ow">or</span> <span class="n">prev_action_key</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw_action</span><span class="p">:</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">fsw</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw_action</span><span class="p">)()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw_action</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Charge">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.Charge">[docs]</a>
+<span class="k">class</span> <span class="nc">Charge</span><span class="p">(</span><span class="n">DiscreteFSWAction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Action to enter a sun-pointing charging mode (:class:`~bsk_rl.env.simulation.fsw.BasicFSWModel.action_charge`).</span>
+
+<span class="sd">        Charging will only occur if the satellite is in sunlight.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Action name.</span>
+<span class="sd">            duration: Time to task action, in seconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fsw_action</span><span class="o">=</span><span class="s2">&quot;action_charge&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Drift">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.Drift">[docs]</a>
+<span class="k">class</span> <span class="nc">Drift</span><span class="p">(</span><span class="n">DiscreteFSWAction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Action to disable all FSW tasks (:class:`~bsk_rl.env.simulation.fsw.BasicFSWModel.action_drift`).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Action name.</span>
+<span class="sd">            duration: Time to task action, in seconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fsw_action</span><span class="o">=</span><span class="s2">&quot;action_drift&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Desat">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.Desat">[docs]</a>
+<span class="k">class</span> <span class="nc">Desat</span><span class="p">(</span><span class="n">DiscreteFSWAction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Action to desaturate reaction wheels (:class:`~bsk_rl.env.simulation.fsw.BasicFSWModel.action_desat`).</span>
+
+<span class="sd">        This action must be called repeatedly to fully desaturate the reaction wheels.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Action name.</span>
+<span class="sd">            duration: Time to task action, in seconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">fsw_action</span><span class="o">=</span><span class="s2">&quot;action_desat&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span> <span class="n">reset_task</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Downlink">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.Downlink">[docs]</a>
+<span class="k">class</span> <span class="nc">Downlink</span><span class="p">(</span><span class="n">DiscreteFSWAction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Action to transmit data from the data buffer (:class:`~bsk_rl.env.simulation.fsw.ImagingFSWModel.action_downlink`).</span>
+
+<span class="sd">        If not in range of a ground station (defined in</span>
+<span class="sd">        :class:`~bsk_rl.env.world.GroundStationWorldModel`), no data will</span>
+<span class="sd">        be downlinked.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Action name.</span>
+<span class="sd">            duration: Time to task action, in seconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fsw_action</span><span class="o">=</span><span class="s2">&quot;action_downlink&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Scan">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.Scan">[docs]</a>
+<span class="k">class</span> <span class="nc">Scan</span><span class="p">(</span><span class="n">DiscreteFSWAction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Action to collect data from a :class:`~bsk_rl.scene.UniformNadirScanning` (:class:`~bsk_rl.sim.fsw.ContinuousImagingFSWModel.action_nadir_scan`).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Action name.</span>
+<span class="sd">            duration: Time to task action, in seconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fsw_action</span><span class="o">=</span><span class="s2">&quot;action_nadir_scan&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Image">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.Image">[docs]</a>
+<span class="k">class</span> <span class="nc">Image</span><span class="p">(</span><span class="n">DiscreteAction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_ahead_image</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;action_image&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Actions to image upcoming target (:class:`~bsk_rl.env.simulation.fsw.ImagingFSWModel.action_image`).</span>
+
+<span class="sd">        Adds ``n_ahead_image`` actions to the action space, corresponding to the next</span>
+<span class="sd">        ``n_ahead_image`` unimaged targets. The action may be unsuccessful if the target</span>
+<span class="sd">        exits the satellite&#39;s field of regard before the satellite settles on the target</span>
+<span class="sd">        and takes an image. The action with stop as soon as the image is successfully</span>
+<span class="sd">        taken, or when the the target exits the field of regard.</span>
+
+<span class="sd">        This action implements a ``set_action_override`` that allows a target to be tasked</span>
+<span class="sd">        based on the target&#39;s ID string or the Target object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Action name.</span>
+<span class="sd">            n_ahead_image: Number of unimaged, along-track targets to consider.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">bsk_rl.sats</span> <span class="kn">import</span> <span class="n">ImagingSatellite</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">:</span> <span class="s2">&quot;ImagingSatellite&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">n_actions</span><span class="o">=</span><span class="n">n_ahead_image</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">image</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;Target&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">prev_action_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Task or retask a satellite for imaging a target.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target: Target to image.</span>
+<span class="sd">            prev_action_key: Previous action key.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">parse_target_selection</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="n">prev_action_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">task_target_for_imaging</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">enable_target_window</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span>
+
+<div class="viewcode-block" id="Image.set_action">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.Image.set_action">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Image a target by local index.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            action: Index of the target to image.</span>
+<span class="sd">            prev_action_key: Previous action key.</span>
+
+<span class="sd">        :meta_private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;target index </span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2"> tasked&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Image.set_action_override">
+<a class="viewcode-back" href="../../../api_reference/act/index.html#bsk_rl.act.discrete_actions.Image.set_action_override">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_action_override</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Target&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">prev_action_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Image a target by target index, Target, or ID.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            action: Target to image in the form of a Target object, target ID, or target index.</span>
+<span class="sd">            prev_action_key: Previous action key.</span>
+
+<span class="sd">        :meta_private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">&quot;Discrete Backend&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DiscreteActionBuilder&quot;</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,508 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Satellites" href="sats/index.html" />
+    <link rel="prev" title="Asynchronous Multiagent Decision Making" href="../examples/async_multiagent_training.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking.reset"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking.reset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking.delete_simulator"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking.delete_simulator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking.action_space"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking.action_space</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking.observation_space"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking.observation_space</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking.step"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking.step()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking.render"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking.render()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking.close"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking.close()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.SatelliteTasking.action_space"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking.action_space</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.SatelliteTasking.observation_space"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking.observation_space</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.SatelliteTasking.satellite"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking.satellite</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.SatelliteTasking.step"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking.step()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.ConstellationTasking.reset"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking.reset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.ConstellationTasking.agents"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking.agents</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.ConstellationTasking.num_agents"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking.num_agents</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.ConstellationTasking.possible_agents"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking.possible_agents</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.ConstellationTasking.max_num_agents"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking.max_num_agents</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.ConstellationTasking.previously_dead"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking.previously_dead</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.ConstellationTasking.observation_spaces"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking.observation_spaces</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.ConstellationTasking.observation_space"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking.observation_space()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.ConstellationTasking.action_spaces"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking.action_spaces</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.ConstellationTasking.action_space"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking.action_space()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bsk_rl.ConstellationTasking.step"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking.step()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scene/index.html">Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comm/index.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim/index.html">Simulation (BSK)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api_reference/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-reference">
+<span id="bsk-rl"></span><h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">bsk_rl</span></code> is a framework for creating satellite tasking reinforcement learning environments.
+Three base environment classes are provided for configuring new environments:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>Environment</strong></p></td>
+<td><p><strong>API</strong></p></td>
+<td><p><strong>Agent Count</strong></p></td>
+<td><p><strong>Purpose</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bsk_rl.SatelliteTasking" title="bsk_rl.SatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></p></td>
+<td><p>Gymnasium</p></td>
+<td><p>1</p></td>
+<td><p>Single-agent training; compatible with most RL libraries.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></p></td>
+<td><p>Gymnasium</p></td>
+<td><p>≥1</p></td>
+<td><p>Multi-agent testing; actions and observations are given in tuples.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bsk_rl.ConstellationTasking" title="bsk_rl.ConstellationTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></p></td>
+<td><p>PettingZoo</p></td>
+<td><p>≥1</p></td>
+<td><p>Multi-agent training; compatible with multiagent RL libraries.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Environments are customized by passing keyword arguments to the environment constructor.
+When using <code class="docutils literal notranslate"><span class="pre">gym.make</span></code>, the syntax looks like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span>
+    <span class="s2">&quot;SatelliteTasking-v1&quot;</span><span class="p">,</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">Satellite</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">UniformTargets</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>In some cases (e.g. the multiprocessed Gymnasium vector environment), it is necessary
+for compatibility to instead register a new environment using the GeneralSatelliteTasking
+class and a kwargs dict.</p>
+<p>See the <a class="reference internal" href="../examples/index.html#examples"><span class="std std-ref">Examples</span></a> for more information on environment configuration arguments.</p>
+<dl class="py class" id="module-bsk_rl">
+<dt class="sig sig-object py" id="bsk_rl.GeneralSatelliteTasking">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GeneralSatelliteTasking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellites</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.satellite.Satellite"><span class="pre">Satellite</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.satellite.Satellite"><span class="pre">Satellite</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenario</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="scene/index.html#bsk_rl.scene.Scenario" title="bsk_rl.scene.scenario.Scenario"><span class="pre">Scenario</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewarder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="data/base.html#bsk_rl.data.base.GlobalReward" title="bsk_rl.data.base.GlobalReward"><span class="pre">GlobalReward</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sim/world.html#bsk_rl.sim.world.WorldModel" title="bsk_rl.sim.world.WorldModel"><span class="pre">WorldModel</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">communicator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="comm/index.html#bsk_rl.comm.CommunicationMethod" title="bsk_rl.comm.communication.CommunicationMethod"><span class="pre">CommunicationMethod</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sat_arg_randomizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.satellite.Satellite"><span class="pre">Satellite</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.satellite.Satellite"><span class="pre">Satellite</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_step_duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failure_penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terminate_on_time_limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_obs_retasking_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bsk_rl/gym.html#GeneralSatelliteTasking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.GeneralSatelliteTasking" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Env</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">SatObs</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">SatAct</span></code>]</p>
+<p>A <a class="reference external" href="https://gymnasium.farama.org">Gymnasium</a> environment adaptable to a wide range satellite tasking problems.</p>
+<p>These problems involve satellite(s) being tasked to complete tasks and maintain
+aliveness. These tasks often include rewards for data collection. The environment
+can be configured for any collection of satellites, including heterogenous
+constellations. Other configurable aspects are the scenario (e.g.
+imaging targets), data collection and recording, and intersatellite
+communication of data.</p>
+<p>The state space is a tuple containing the state of each satellite. Actions are
+assigned as a tuple of actions, one per satellite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellites</strong> (<a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.satellite.Satellite"><em>Satellite</em></a><em> | </em><em>list</em><em>[</em><a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.satellite.Satellite"><em>Satellite</em></a><em>]</em>) – Satellite(s) to be simulated. See <a class="reference internal" href="sats/index.html#bsk-rl-sats"><span class="std std-ref">Satellites</span></a>.</p></li>
+<li><p><strong>scenario</strong> (<a class="reference internal" href="scene/index.html#bsk_rl.scene.Scenario" title="bsk_rl.scene.scenario.Scenario"><em>Scenario</em></a><em> | </em><em>None</em>) – Environment the satellite is acting in; contains information
+about targets, etc. See <a class="reference internal" href="scene/index.html#bsk-rl-scene"><span class="std std-ref">Scenario</span></a>.</p></li>
+<li><p><strong>rewarder</strong> (<a class="reference internal" href="data/base.html#bsk_rl.data.base.GlobalReward" title="bsk_rl.data.base.GlobalReward"><em>GlobalReward</em></a><em> | </em><em>None</em>) – Handles recording and rewarding for data collection towards
+objectives. See <a class="reference internal" href="data/index.html#bsk-rl-data"><span class="std std-ref">Data &amp; Reward</span></a>.</p></li>
+<li><p><strong>communicator</strong> (<a class="reference internal" href="comm/index.html#bsk_rl.comm.CommunicationMethod" title="bsk_rl.comm.communication.CommunicationMethod"><em>CommunicationMethod</em></a><em> | </em><em>None</em>) – Manages communication between satellites. See <a class="reference internal" href="comm/index.html#bsk-rl-comm"><span class="std std-ref">Communication</span></a>.</p></li>
+<li><p><strong>sat_arg_randomizer</strong> (<em>Callable</em><em>[</em><em>[</em><em>list</em><em>[</em><a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.satellite.Satellite"><em>Satellite</em></a><em>]</em><em>]</em><em>, </em><em>dict</em><em>[</em><a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.satellite.Satellite"><em>Satellite</em></a><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>] </em><em>| </em><em>None</em>) – For correlated randomization of satellites arguments. Should
+be a function that takes a list of satellites and returns a dictionary that
+maps satellites to dictionaries of satellite model arguments to be overridden.</p></li>
+<li><p><strong>world_type</strong> (<em>type</em><em>[</em><a class="reference internal" href="sim/world.html#bsk_rl.sim.world.WorldModel" title="bsk_rl.sim.world.WorldModel"><em>WorldModel</em></a><em>] </em><em>| </em><em>None</em>) – Type of Basilisk world model to be constructed.</p></li>
+<li><p><strong>world_args</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Arguments for <a class="reference internal" href="sim/world.html#bsk_rl.sim.world.WorldModel" title="bsk_rl.sim.world.WorldModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">WorldModel</span></code></a> construction.
+Should be in the form of a dictionary with keys corresponding to the
+arguments of the constructor and values that are either the desired value
+or a function that takes no arguments and returns a randomized value.</p></li>
+<li><p><strong>sim_rate</strong> (<em>float</em>) – [s] Rate for model simulation.</p></li>
+<li><p><strong>max_step_duration</strong> (<em>float</em>) – [s] Maximum time to propagate sim at a step. If
+satellites are using variable interval actions, the actual step duration
+will be less than or equal to this value.</p></li>
+<li><p><strong>failure_penalty</strong> (<em>float</em>) – Reward for satellite failure. Should be nonpositive.</p></li>
+<li><p><strong>time_limit</strong> (<em>float</em>) – [s] Time at which to truncate the simulation.</p></li>
+<li><p><strong>terminate_on_time_limit</strong> (<em>bool</em>) – Send terminations signal time_limit instead of just
+truncation.</p></li>
+<li><p><strong>generate_obs_retasking_only</strong> (<em>bool</em>) – If True, only generate observations for satellites
+that require retasking. All other satellites will receive an observation of
+zeros.</p></li>
+<li><p><strong>log_level</strong> (<em>int</em><em> | </em><em>str</em>) – Logging level for the environment. Default is <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>.</p></li>
+<li><p><strong>log_dir</strong> (<em>str</em><em> | </em><em>None</em>) – Directory to write logs to in addition to the console.</p></li>
+<li><p><strong>render_mode</strong> – Unused.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.GeneralSatelliteTasking.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">SatObs</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/bsk_rl/gym.html#GeneralSatelliteTasking.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.GeneralSatelliteTasking.reset" title="Link to this definition"></a></dt>
+<dd><p>Reconstruct the simulator and reset the scenario.</p>
+<p>Satellite and world arguments get randomized on reset, if <a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a> <code class="docutils literal notranslate"><span class="pre">.world_args</span></code>
+or <a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">Satellite</span></code></a> <code class="docutils literal notranslate"><span class="pre">.sat_args</span></code> includes randomization functions.</p>
+<p>Certain classes in <code class="docutils literal notranslate"><span class="pre">bsk_rl</span></code> have a <code class="docutils literal notranslate"><span class="pre">reset_pre_sim_init</span></code> and/or <code class="docutils literal notranslate"><span class="pre">reset_post_sim_init</span></code>
+method. These methods are respectively called before and after the new Basilisk
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Simulator</span></code> is created. These allow for reset actions that
+feed into the underlying simulation and those that are dependent on the underlying
+simulation to be performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>int</em><em> | </em><em>None</em>) – Gymnasium environment seed.</p></li>
+<li><p><strong>options</strong> – Unused.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>observation, info</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[tuple[<em>SatObs</em>, …], dict[str, <em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.GeneralSatelliteTasking.delete_simulator">
+<span class="sig-name descname"><span class="pre">delete_simulator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bsk_rl/gym.html#GeneralSatelliteTasking.delete_simulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.GeneralSatelliteTasking.delete_simulator" title="Link to this definition"></a></dt>
+<dd><p>Delete Basilisk objects.</p>
+<p>Only the simulator contains strong references to BSK models, so deleting it
+will delete all Basilisk objects. Enable debug-level logging to verify that the
+simulator, FSW, dynamics, and world models are all deleted on reset.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.GeneralSatelliteTasking.action_space">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">action_space</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Space</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">SatAct</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.GeneralSatelliteTasking.action_space" title="Link to this definition"></a></dt>
+<dd><p>Compose satellite action spaces into a tuple.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Joint action space</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.GeneralSatelliteTasking.observation_space">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">observation_space</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Space</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">SatObs</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.GeneralSatelliteTasking.observation_space" title="Link to this definition"></a></dt>
+<dd><p>Compose satellite observation spaces into a tuple.</p>
+<p>Note: calls <code class="docutils literal notranslate"><span class="pre">reset()</span></code>, which can be expensive, to determine observation size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Joint observation space</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.GeneralSatelliteTasking.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">SatAct</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">SatObs</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/bsk_rl/gym.html#GeneralSatelliteTasking.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.GeneralSatelliteTasking.step" title="Link to this definition"></a></dt>
+<dd><p>Propagate the simulation, update information, and get rewards.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>actions</strong> (<em>Iterable</em><em>[</em><em>SatAct</em><em>]</em>) – Joint action for satellites</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>observation, reward, terminated, truncated, info</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[tuple[<em>SatObs</em>, …], float, bool, bool, dict[str, <em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.GeneralSatelliteTasking.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/bsk_rl/gym.html#GeneralSatelliteTasking.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.GeneralSatelliteTasking.render" title="Link to this definition"></a></dt>
+<dd><p>No rendering implemented.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.GeneralSatelliteTasking.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/bsk_rl/gym.html#GeneralSatelliteTasking.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.GeneralSatelliteTasking.close" title="Link to this definition"></a></dt>
+<dd><p>Try to cleanly delete everything.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.SatelliteTasking">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SatelliteTasking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.satellite.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bsk_rl/gym.html#SatelliteTasking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.SatelliteTasking" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.gym.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">SatObs</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">SatAct</span></code>]</p>
+<p>A special case of <a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a> for one satellite.</p>
+<p>For compatibility with standard training APIs, actions and observations are
+directly exposed for the single satellite as opposed to being wrapped in a
+tuple.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite</strong> (<a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.satellite.Satellite"><em>Satellite</em></a>) – Satellite to be simulated.</p></li>
+<li><p><strong>*args</strong> – Passed to <a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a>.</p></li>
+<li><p><strong>**kwargs</strong> – Passed to <a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.SatelliteTasking.action_space">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">action_space</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Space</span><span class="p"><span class="pre">[</span></span><span class="pre">SatAct</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.SatelliteTasking.action_space" title="Link to this definition"></a></dt>
+<dd><p>Return the single satellite action space.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.SatelliteTasking.observation_space">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">observation_space</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Box</span></em><a class="headerlink" href="#bsk_rl.SatelliteTasking.observation_space" title="Link to this definition"></a></dt>
+<dd><p>Return the single satellite observation space.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.SatelliteTasking.satellite">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">satellite</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.satellite.Satellite"><span class="pre">Satellite</span></a></em><a class="headerlink" href="#bsk_rl.SatelliteTasking.satellite" title="Link to this definition"></a></dt>
+<dd><p>Satellite being tasked.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.SatelliteTasking.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/bsk_rl/gym.html#SatelliteTasking.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.SatelliteTasking.step" title="Link to this definition"></a></dt>
+<dd><p>Task the satellite with a single action.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[<em>Any</em>, float, bool, bool, dict[str, <em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ConstellationTasking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bsk_rl/gym.html#ConstellationTasking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.ConstellationTasking" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.gym.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelEnv</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">SatObs</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">SatAct</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentID</span></code>]</p>
+<p>Implements the <a class="reference external" href="https://pettingzoo.farama.org">PettingZoo</a> parallel API for the <a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a> environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – Passed to <a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a>.</p></li>
+<li><p><strong>**kwargs</strong> – Passed to <a class="reference internal" href="#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">SatObs</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/bsk_rl/gym.html#ConstellationTasking.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.ConstellationTasking.reset" title="Link to this definition"></a></dt>
+<dd><p>Reset the environment and return PettingZoo Parallel API format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>seed</strong> (<em>int</em><em> | </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[tuple[<em>SatObs</em>, …], dict[str, <em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking.agents">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">agents</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentID</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.ConstellationTasking.agents" title="Link to this definition"></a></dt>
+<dd><p>Agents currently in the environment.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking.num_agents">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_agents</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#bsk_rl.ConstellationTasking.num_agents" title="Link to this definition"></a></dt>
+<dd><p>Number of agents currently in the environment.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking.possible_agents">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">possible_agents</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentID</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.ConstellationTasking.possible_agents" title="Link to this definition"></a></dt>
+<dd><p>Return the list of all possible agents.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking.max_num_agents">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_num_agents</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#bsk_rl.ConstellationTasking.max_num_agents" title="Link to this definition"></a></dt>
+<dd><p>Maximum number of agents possible in the environment.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking.previously_dead">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">previously_dead</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentID</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.ConstellationTasking.previously_dead" title="Link to this definition"></a></dt>
+<dd><p>Return the list of agents that died at least one step ago.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking.observation_spaces">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">observation_spaces</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Box</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.ConstellationTasking.observation_spaces" title="Link to this definition"></a></dt>
+<dd><p>Return the observation space for each agent.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking.observation_space">
+<span class="sig-name descname"><span class="pre">observation_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AgentID</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Space</span><span class="p"><span class="pre">[</span></span><span class="pre">SatObs</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/bsk_rl/gym.html#ConstellationTasking.observation_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.ConstellationTasking.observation_space" title="Link to this definition"></a></dt>
+<dd><p>Return the observation space for a certain agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>agent</strong> (<em>AgentID</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Space</em>[<em>SatObs</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking.action_spaces">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">action_spaces</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Space</span><span class="p"><span class="pre">[</span></span><span class="pre">SatAct</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.ConstellationTasking.action_spaces" title="Link to this definition"></a></dt>
+<dd><p>Return the action space for each agent.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking.action_space">
+<span class="sig-name descname"><span class="pre">action_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AgentID</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Space</span><span class="p"><span class="pre">[</span></span><span class="pre">SatAct</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/bsk_rl/gym.html#ConstellationTasking.action_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.ConstellationTasking.action_space" title="Link to this definition"></a></dt>
+<dd><p>Return the action space for a certain agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>agent</strong> (<em>AgentID</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Space</em>[<em>SatAct</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.ConstellationTasking.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">SatAct</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">SatObs</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/bsk_rl/gym.html#ConstellationTasking.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.ConstellationTasking.step" title="Link to this definition"></a></dt>
+<dd><p>Step the environment and return PettingZoo Parallel API format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>actions</strong> (<em>dict</em><em>[</em><em>AgentID</em><em>, </em><em>SatAct</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[dict[<em>AgentID</em>, <em>SatObs</em>], dict[<em>AgentID</em>, float], dict[<em>AgentID</em>, bool], dict[<em>AgentID</em>, bool], dict[<em>AgentID</em>, dict]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../examples/async_multiagent_training.html" class="btn btn-neutral float-left" title="Asynchronous Multiagent Decision Making" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sats/index.html" class="btn btn-neutral float-right" title="Satellites" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Base Data &mdash; BSK-RL 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Nadir Scanning" href="nadir_data.html" />
+    <link rel="prev" title="Data &amp; Reward" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scene/index.html">Scenario</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Data &amp; Reward</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#reward-system-components">Reward System Components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#reward-system-types">Reward System Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.GlobalReward"><code class="docutils literal notranslate"><span class="pre">GlobalReward</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.NoReward"><code class="docutils literal notranslate"><span class="pre">NoReward</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.UniqueImageReward"><code class="docutils literal notranslate"><span class="pre">UniqueImageReward</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.data.ScanningTimeReward"><code class="docutils literal notranslate"><span class="pre">ScanningTimeReward</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Base Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.data.base.GlobalReward"><code class="docutils literal notranslate"><span class="pre">GlobalReward</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.GlobalReward.datastore_type"><code class="docutils literal notranslate"><span class="pre">GlobalReward.datastore_type</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.GlobalReward.link_scenario"><code class="docutils literal notranslate"><span class="pre">GlobalReward.link_scenario()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.GlobalReward.reset_overwrite_previous"><code class="docutils literal notranslate"><span class="pre">GlobalReward.reset_overwrite_previous()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.GlobalReward.initial_data"><code class="docutils literal notranslate"><span class="pre">GlobalReward.initial_data()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.GlobalReward.create_data_store"><code class="docutils literal notranslate"><span class="pre">GlobalReward.create_data_store()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.GlobalReward.calculate_reward"><code class="docutils literal notranslate"><span class="pre">GlobalReward.calculate_reward()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.GlobalReward.reward"><code class="docutils literal notranslate"><span class="pre">GlobalReward.reward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.data.base.DataStore"><code class="docutils literal notranslate"><span class="pre">DataStore</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.DataStore.data_type"><code class="docutils literal notranslate"><span class="pre">DataStore.data_type</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.DataStore.get_log_state"><code class="docutils literal notranslate"><span class="pre">DataStore.get_log_state()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.DataStore.compare_log_states"><code class="docutils literal notranslate"><span class="pre">DataStore.compare_log_states()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.DataStore.update_from_logs"><code class="docutils literal notranslate"><span class="pre">DataStore.update_from_logs()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.DataStore.stage_communicated_data"><code class="docutils literal notranslate"><span class="pre">DataStore.stage_communicated_data()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.data.base.DataStore.update_with_communicated_data"><code class="docutils literal notranslate"><span class="pre">DataStore.update_with_communicated_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.data.base.Data"><code class="docutils literal notranslate"><span class="pre">Data</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="nadir_data.html">Nadir Scanning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="no_data.html">No Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="unique_image_data.html">Unique Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../comm/index.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim/index.html">Simulation (BSK)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Data &amp; Reward</a></li>
+      <li class="breadcrumb-item active">Base Data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_reference/data/base.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="base-data">
+<span id="bsk-rl-data-base"></span><h1>Base Data<a class="headerlink" href="#base-data" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.data.base">Data logging, management, and reward calculation.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.data.base.GlobalReward">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GlobalReward</span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#GlobalReward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.GlobalReward" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code>, <a class="reference internal" href="../utils/functional.html#bsk_rl.utils.functional.Resetable" title="bsk_rl.utils.functional.Resetable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Resetable</span></code></a></p>
+<p>Base class for simulation-wide data management and rewarding.</p>
+<p>The method <a class="reference internal" href="#bsk_rl.data.base.GlobalReward.calculate_reward" title="bsk_rl.data.base.GlobalReward.calculate_reward"><code class="xref py py-class docutils literal notranslate"><span class="pre">calculate_reward</span></code></a> must be overridden by subclasses. Other
+methods may be extended as necessary for housekeeping.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.data.base.GlobalReward.datastore_type">
+<span class="sig-name descname"><span class="pre">datastore_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#bsk_rl.data.base.DataStore" title="bsk_rl.data.base.DataStore"><span class="pre">DataStore</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.data.base.GlobalReward.datastore_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.base.GlobalReward.link_scenario">
+<span class="sig-name descname"><span class="pre">link_scenario</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenario</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../scene/index.html#bsk_rl.scene.Scenario" title="bsk_rl.scene.Scenario"><span class="pre">Scenario</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#GlobalReward.link_scenario"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.GlobalReward.link_scenario" title="Link to this definition"></a></dt>
+<dd><p>Link the data manager to the scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scenario</strong> (<a class="reference internal" href="../scene/index.html#bsk_rl.scene.Scenario" title="bsk_rl.scene.Scenario"><em>Scenario</em></a>) – The scenario that the data manager is being used with.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.base.GlobalReward.reset_overwrite_previous">
+<span class="sig-name descname"><span class="pre">reset_overwrite_previous</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#GlobalReward.reset_overwrite_previous"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.GlobalReward.reset_overwrite_previous" title="Link to this definition"></a></dt>
+<dd><p>Overwrite attributes from previous episode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.base.GlobalReward.initial_data">
+<span class="sig-name descname"><span class="pre">initial_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><span class="pre">Satellite</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><span class="pre">Data</span></a></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#GlobalReward.initial_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.GlobalReward.initial_data" title="Link to this definition"></a></dt>
+<dd><p>Furnish the <a class="reference internal" href="#bsk_rl.data.base.DataStore" title="bsk_rl.data.base.DataStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataStore</span></code></a> with initial data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>satellite</strong> (<a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><em>Satellite</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data">Data</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.base.GlobalReward.create_data_store">
+<span class="sig-name descname"><span class="pre">create_data_store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data_store_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#GlobalReward.create_data_store"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.GlobalReward.create_data_store" title="Link to this definition"></a></dt>
+<dd><p>Create a data store for a satellite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite</strong> (<a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><em>Satellite</em></a>) – Satellite to create a data store for.</p></li>
+<li><p><strong>data_store_kwargs</strong> – Additional keyword arguments to pass to the data store</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.base.GlobalReward.calculate_reward">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_reward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_data_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><span class="pre">Data</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#GlobalReward.calculate_reward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.GlobalReward.calculate_reward" title="Link to this definition"></a></dt>
+<dd><p>Calculate step reward based on all satellite data from a step.</p>
+<p>Returns a dictionary of rewards for each satellite based on the new data
+generated by each satellite during the previous step, in the form:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;sat-1_id&quot;</span><span class="p">:</span> <span class="mf">0.23</span><span class="p">,</span> <span class="s2">&quot;sat-2_id&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">...</span><span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_data_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><em>Data</em></a><em>]</em>) – <p>A dictionary of new data generated by each satellite, in the
+form:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;sat-1_id&quot;</span><span class="p">:</span> <span class="n">data1</span><span class="p">,</span> <span class="s2">&quot;sat-2_id&quot;</span><span class="p">:</span> <span class="n">data2</span><span class="p">,</span> <span class="o">...</span><span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.base.GlobalReward.reward">
+<span class="sig-name descname"><span class="pre">reward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_data_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><span class="pre">Data</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#GlobalReward.reward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.GlobalReward.reward" title="Link to this definition"></a></dt>
+<dd><p>Call <a class="reference internal" href="#bsk_rl.data.base.GlobalReward.calculate_reward" title="bsk_rl.data.base.GlobalReward.calculate_reward"><code class="xref py py-class docutils literal notranslate"><span class="pre">calculate_reward</span></code></a> and log cumulative reward.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_data_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><em>Data</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.data.base.DataStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><span class="pre">Data</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#DataStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.DataStore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base class for satellite data logging.</p>
+<p>One DataStore is created for each satellite in the scenario each time the
+scenario is reset. The DataStore is responsible for generating data from the
+satellite’s environment and actions by comparing the current and previous-step
+state from <a class="reference internal" href="#bsk_rl.data.base.DataStore.get_log_state" title="bsk_rl.data.base.DataStore.get_log_state"><code class="xref py py-class docutils literal notranslate"><span class="pre">get_log_state</span></code></a> and returning a unit of data with
+<a class="reference internal" href="#bsk_rl.data.base.DataStore.compare_log_states" title="bsk_rl.data.base.DataStore.compare_log_states"><code class="xref py py-class docutils literal notranslate"><span class="pre">compare_log_states</span></code></a>. These two methods must be implemented
+by subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite</strong> (<a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><em>Satellite</em></a>) – Satellite which data is being stored for.</p></li>
+<li><p><strong>initial_data</strong> (<a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><em>Data</em></a><em> | </em><em>None</em>) – Initial data to start the store with. Usually comes from
+<a class="reference internal" href="index.html#bsk_rl.data.GlobalReward.initial_data" title="bsk_rl.data.GlobalReward.initial_data"><code class="xref py py-class docutils literal notranslate"><span class="pre">initial_data</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.data.base.DataStore.data_type">
+<span class="sig-name descname"><span class="pre">data_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><span class="pre">Data</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bsk_rl.data.base.DataStore.data_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.base.DataStore.get_log_state">
+<span class="sig-name descname"><span class="pre">get_log_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#DataStore.get_log_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.DataStore.get_log_state" title="Link to this definition"></a></dt>
+<dd><p>Pull information used in determining current data contribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Any</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.base.DataStore.compare_log_states">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compare_log_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><span class="pre">Data</span></a></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#DataStore.compare_log_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.DataStore.compare_log_states" title="Link to this definition"></a></dt>
+<dd><p>Generate a unit of data based on previous step and current step logs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_state</strong> (<em>Any</em>) – A previous result of <a class="reference internal" href="#bsk_rl.data.base.DataStore.get_log_state" title="bsk_rl.data.base.DataStore.get_log_state"><code class="xref py py-class docutils literal notranslate"><span class="pre">get_log_state</span></code></a>.</p></li>
+<li><p><strong>new_state</strong> (<em>Any</em>) – A newer result of <a class="reference internal" href="#bsk_rl.data.base.DataStore.get_log_state" title="bsk_rl.data.base.DataStore.get_log_state"><code class="xref py py-class docutils literal notranslate"><span class="pre">get_log_state</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New data generated by the satellite.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data">Data</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.base.DataStore.update_from_logs">
+<span class="sig-name descname"><span class="pre">update_from_logs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><span class="pre">Data</span></a></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#DataStore.update_from_logs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.DataStore.update_from_logs" title="Link to this definition"></a></dt>
+<dd><p>Update the data store based on collected information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>New data from the previous step.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><em>Data</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.base.DataStore.stage_communicated_data">
+<span class="sig-name descname"><span class="pre">stage_communicated_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">external_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><span class="pre">Data</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#DataStore.stage_communicated_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.DataStore.stage_communicated_data" title="Link to this definition"></a></dt>
+<dd><p>Prepare data to be added from another source, but don’t add it yet.</p>
+<p>Works with <a class="reference internal" href="#bsk_rl.data.base.DataStore.update_with_communicated_data" title="bsk_rl.data.base.DataStore.update_with_communicated_data"><code class="xref py py-class docutils literal notranslate"><span class="pre">update_with_communicated_data</span></code></a> to add data from
+other satellites without erroneously propagating it through other satellites.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>external_data</strong> (<a class="reference internal" href="#bsk_rl.data.base.Data" title="bsk_rl.data.base.Data"><em>Data</em></a>) – Data from another satellite to be added</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.data.base.DataStore.update_with_communicated_data">
+<span class="sig-name descname"><span class="pre">update_with_communicated_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#DataStore.update_with_communicated_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.DataStore.update_with_communicated_data" title="Link to this definition"></a></dt>
+<dd><p>Update the data store from staged data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.data.base.Data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Data</span></span><a class="reference internal" href="../../_modules/bsk_rl/data/base.html#Data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.data.base.Data" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base class for units of satellite data.</p>
+<p>Only needs to implement the <code class="docutils literal notranslate"><span class="pre">__add__</span></code> method, which is used to combine two units
+of data. This is used when adding new data from actions or communication to the
+data store.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Data &amp; Reward" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nadir_data.html" class="btn btn-neutral float-right" title="Nadir Scanning" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+.. _bsk_rl.data.nadir_data:
+.. currentmodule:: bsk_rl.data.nadir_data
+
+Nadir Scanning
+==============
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.data.nadir_data
+   :members:
+   :show-inheritance:
+
