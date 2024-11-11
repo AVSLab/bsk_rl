@@ -69,23 +69,23 @@ class TestObservationBuilder:
         [
             (
                 np.array([1]),
-                spaces.Box(low=-1e16, high=1e16, shape=(1,), dtype=np.float64),
+                spaces.Box(low=-1e16, high=1e16, shape=(1,), dtype=np.float32),
             ),
             (
                 np.array([1, 2]),
-                spaces.Box(low=-1e16, high=1e16, shape=(2,), dtype=np.float64),
+                spaces.Box(low=-1e16, high=1e16, shape=(2,), dtype=np.float32),
             ),
             (
                 {"a": 1, "b": {"c": 1}},
                 spaces.Dict(
                     {
                         "a": spaces.Box(
-                            low=-1e16, high=1e16, shape=(1,), dtype=np.float64
+                            low=-1e16, high=1e16, shape=(1,), dtype=np.float32
                         ),
                         "b": spaces.Dict(
                             {
                                 "c": spaces.Box(
-                                    low=-1e16, high=1e16, shape=(1,), dtype=np.float64
+                                    low=-1e16, high=1e16, shape=(1,), dtype=np.float32
                                 )
                             }
                         ),

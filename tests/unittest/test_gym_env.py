@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 from gymnasium import spaces
 
@@ -132,7 +133,9 @@ class TestGeneralSatelliteTasking:
             satellites=[
                 MagicMock(
                     get_obs=MagicMock(return_value=[i + 1]),
-                    observation_space=spaces.Box(-1e9, 1e9, shape=(1,)),
+                    observation_space=spaces.Box(
+                        -1e9, 1e9, shape=(1,), dtype=np.float32
+                    ),
                     requires_retasking=(i == 1),
                 )
                 for i in range(3)

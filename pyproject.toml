@@ -15,7 +15,7 @@ requires-python = ">=3.10.0"
 license = { text = "MIT" }
 dependencies = [
     "Deprecated",
-    "gymnasium<1.0.0",
+    "gymnasium",
     "numpy",
     "pandas",
     "pettingzoo",
@@ -29,7 +29,7 @@ dependencies = [
 
 [project.optional-dependencies]
 docs = ["ipykernel", "ipywidgets", "nbdime", "nbsphinx", "sphinx-rtd-theme"]
-rllib = ["dm_tree", "pyarrow", "ray[rllib]", "scikit-image", "torch", "typer"]
+rllib = ["dm_tree", "pyarrow", "ray[rllib]==2.35.0", "scikit-image", "torch", "typer"]
 
 [project.scripts]
 finish_install = "bsk_rl.finish_install:pck_install"

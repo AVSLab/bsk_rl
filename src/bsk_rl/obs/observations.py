@@ -37,18 +37,17 @@ def nested_obs_to_space(obs_dict):
         )
     elif isinstance(obs_dict, list):
         return spaces.Box(
-            low=-1e16, high=1e16, shape=(len(obs_dict),), dtype=np.float64
+            low=-1e16, high=1e16, shape=(len(obs_dict),), dtype=np.float32
         )
     elif isinstance(obs_dict, (float, int)):
-        return spaces.Box(low=-1e16, high=1e16, shape=(1,), dtype=np.float64)
+        return spaces.Box(low=-1e16, high=1e16, shape=(1,), dtype=np.float32)
     elif isinstance(obs_dict, np.ndarray):
-        return spaces.Box(low=-1e16, high=1e16, shape=obs_dict.shape, dtype=np.float64)
+        return spaces.Box(low=-1e16, high=1e16, shape=obs_dict.shape, dtype=np.float32)
     else:
         raise TypeError(f"Cannot convert {obs_dict} to gym space.")
 
 
 class ObservationBuilder:
-
     def __init__(self, satellite: "Satellite", obs_type: type = np.ndarray) -> None:
         """Satellite subclass for composing observations.
 
@@ -312,7 +311,6 @@ def _r_LB_H(sat, opp):
 
 
 class OpportunityProperties(Observation):
-
     _fn_map = {
         "priority": lambda sat, opp: opp["object"].priority,
         "r_LP_P": lambda sat, opp: opp["r_LP_P"],

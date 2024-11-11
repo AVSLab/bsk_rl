@@ -35,7 +35,9 @@ class TestSatelliteTasking:
         assert self.env.action_space == spaces.Discrete(1)
 
     def test_observation_space(self):
-        assert self.env.observation_space == spaces.Box(-1e16, 1e16, (1,))
+        assert self.env.observation_space == spaces.Box(
+            -1e16, 1e16, (1,), dtype=np.float32
+        )
 
     def test_step(self):
         observation, reward, terminated, truncated, info = self.env.step(0)
@@ -124,7 +126,10 @@ class TestGeneralSatelliteTasking:
 
     def test_observation_space(self):
         assert self.env.observation_space == spaces.Tuple(
-            (spaces.Box(-1e16, 1e16, (1,)), spaces.Box(-1e16, 1e16, (1,)))
+            (
+                spaces.Box(-1e16, 1e16, (1,), dtype=np.float32),
+                spaces.Box(-1e16, 1e16, (1,), dtype=np.float32),
+            )
         )
 
     def test_step(self):
