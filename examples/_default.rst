@@ -10,6 +10,8 @@ Environments
    satellite_configuration
    multiagent_envs
    fault_environment
+   communication_action
+   cloud_environment
 
 Earth Observation
 ~~~~~~~~~~~~~~~~~

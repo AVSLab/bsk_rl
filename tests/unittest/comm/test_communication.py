@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from bsk_rl.comm import (
+    BroadcastCommunication,
     CommunicationMethod,
     FreeCommunication,
     LOSCommunication,
@@ -21,12 +22,9 @@ class TestCommunicationMethod:
         comms.last_communication_time = 0.0
         comms.link_satellites(mock_sats)
         comms.communication_pairs = MagicMock(
-            return_value=[(mock_sats[1], mock_sats[0])]
+            return_value=[(mock_sats[0], mock_sats[1])]
         )
         comms.communicate()
-        mock_sats[0].data_store.stage_communicated_data.assert_called_once_with(
-            mock_sats[1].data_store.data
-        )
         mock_sats[1].data_store.stage_communicated_data.assert_called_once_with(
             mock_sats[0].data_store.data
         )
@@ -193,3 +191,48 @@ class TestMultiDegreeCommunication:
 
         assert (mock_sats[0], mock_sats[4]) in pairs
         assert (mock_sats[0], mock_sats[5]) not in pairs
+
+
+class FreeBroadcast(BroadcastCommunication, FreeCommunication):
+    pass
+
+
+class NoBroadcast(BroadcastCommunication, NoCommunication):
+    pass
+
+
+class TestBroadcastCommunication:
+    @pytest.mark.parametrize(
+        "spec1", [[], [None, None], [MagicMock(broadcast_pending=False)]]
+    )
+    @pytest.mark.parametrize("broadcast1", [False, True])
+    @pytest.mark.parametrize(
+        "spec2", [[], [None, None], [MagicMock(broadcast_pending=False)]]
+    )
+    @pytest.mark.parametrize("broadcast2", [False, True])
+    @pytest.mark.parametrize("comm_type", [FreeBroadcast, NoBroadcast])
+    def test_communication_pairs(self, spec1, broadcast1, spec2, broadcast2, comm_type):
+        mock_sats = [MagicMock() for i in range(2)]
+        mock_sats[0].action_builder.action_spec = spec1
+        if broadcast1:
+            mock_sats[0].action_builder.action_spec.append(
+                MagicMock(broadcast_pending=True)
+            )
+        mock_sats[1].action_builder.action_spec = spec2
+        if broadcast2:
+            mock_sats[1].action_builder.action_spec.append(
+                MagicMock(broadcast_pending=True)
+            )
+
+        comms = comm_type()
+        comms.link_satellites(mock_sats)
+        pairs = comms.communication_pairs()
+
+        if comm_type is NoBroadcast:
+            assert len(pairs) == 0
+        else:
+            assert len(pairs) == broadcast1 + broadcast2
+            if broadcast1:
+                assert (mock_sats[0], mock_sats[1]) in pairs
+            if broadcast2:
+                assert (mock_sats[1], mock_sats[0]) in pairs

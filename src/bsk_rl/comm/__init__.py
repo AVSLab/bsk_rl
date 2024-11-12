@@ -47,6 +47,7 @@ Types of Communication
 """
 
 from bsk_rl.comm.communication import (
+    BroadcastCommunication,
     CommunicationMethod,
     FreeCommunication,
     LOSCommunication,
@@ -63,4 +64,5 @@ __all__ = [
     "LOSCommunication",
     "MultiDegreeCommunication",
     "LOSMultiCommunication",
+    "BroadcastCommunication",
 ]

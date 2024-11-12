@@ -4,6 +4,9 @@ Release Notes
 Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
+* Allow communication to be one-way. Adds a :class:`~bsk_rl.act.Broadcast` action
+  that can be used with :class:`~bsk_rl.comm.BroadcastCommunication` to only communicate
+  data when the action has been called.
 
 
 Version 1.2.0
@@ -85,10 +88,6 @@ Version 1.1.0
 * Improve performance of :class:`~bsk_rl.obs.Eclipse` observations by about 95%.
 * Logs a warning if the initial battery charge or buffer level is incompatible with its capacity.
 * Optimize communication when all satellites are communicating with each other.
-* Enable Vizard visualization of the environment by setting the ``vizard_dir`` and ``vizard_settings``
-  options in the environment.
-* Allow for the specification of multiple rewarders in the environment.
-
 
 
 Version 1.0.1

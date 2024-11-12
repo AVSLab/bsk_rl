@@ -3,7 +3,7 @@
 import logging
 from abc import ABC, abstractmethod
 from copy import copy
-from itertools import combinations
+from itertools import permutations
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -47,7 +47,7 @@ class CommunicationMethod(ABC, Resetable):
 
     @abstractmethod  # pragma: no cover
     def communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
-        """List pairs of satellite that should share data.
+        """List pairs of satellite that should share data, in the form (sender, recipient).
 
         To define a new communication type, this method must be implemented.
         """
@@ -65,15 +65,16 @@ class CommunicationMethod(ABC, Resetable):
 
         if len(communication_pairs) > 0:
             logger.info(
-                f"Communicating data between {len(communication_pairs)} pairs of satellites"
+                f"Communicating data in {len(communication_pairs)} direction{'s' if len(communication_pairs) > 1 else ''}."
             )
 
-        if len(communication_pairs) == comb(len(self.satellites), 2):
+        if len(communication_pairs) == 2 * comb(len(self.satellites), 2):
             self._communicate_all()
         else:
-            for sat_1, sat_2 in communication_pairs:
-                sat_1.data_store.stage_communicated_data(sat_2.data_store.data)
-                sat_2.data_store.stage_communicated_data(sat_1.data_store.data)
+            for sat_sender, sat_receiver in communication_pairs:
+                sat_receiver.data_store.stage_communicated_data(
+                    sat_sender.data_store.data
+                )
             for satellite in self.satellites:
                 satellite.data_store.update_with_communicated_data()
 
@@ -116,7 +117,7 @@ class FreeCommunication(CommunicationMethod):
 
     def communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
         """Return all possible communication pairs."""
-        return list(combinations(self.satellites, 2))
+        return list(permutations(self.satellites, 2))
 
 
 class LOSCommunication(CommunicationMethod):
@@ -177,6 +178,7 @@ class LOSCommunication(CommunicationMethod):
             for sat_2, logger in logs.items():
                 if any(logger.hasAccess):
                     pairs.append((sat_1, sat_2))
+                    pairs.append((sat_2, sat_1))
         return pairs
 
     def communicate(self) -> None:
@@ -208,7 +210,7 @@ class MultiDegreeCommunication(CommunicationMethod):
         pairs = []
         n_components, labels = connected_components(graph, directed=False)
         for comp in range(n_components):
-            for i_sat_1, i_sat_2 in combinations(np.where(labels == comp)[0], 2):
+            for i_sat_1, i_sat_2 in permutations(np.where(labels == comp)[0], 2):
                 pairs.append((self.satellites[i_sat_1], self.satellites[i_sat_2]))
         return pairs
 
@@ -220,6 +222,32 @@ class LOSMultiCommunication(MultiDegreeCommunication, LOSCommunication):
     """
 
     pass
+
+
+class BroadcastCommunication(CommunicationMethod):
+    def communication_pairs(self) -> list[tuple["Satellite", "Satellite"]]:
+        """Return pairs of satellites that used broadcast action."""
+        broadcasters = []
+        for satellite in self.satellites:
+            if any(
+                hasattr(act, "broadcast_pending") and act.broadcast_pending
+                for act in satellite.action_builder.action_spec
+            ):
+                broadcasters.append(satellite)
+
+        access_pairs = super().communication_pairs()
+        comm_pairs = [
+            (sat_sender, sat_receiver)
+            for sat_sender, sat_receiver in access_pairs
+            if sat_sender in broadcasters
+        ]
+
+        for satellite in broadcasters:
+            for act in satellite.action_builder.action_spec:
+                if hasattr(act, "broadcast_pending"):
+                    act.broadcast_pending = False
+
+        return comm_pairs
 
 
 __all__ = []

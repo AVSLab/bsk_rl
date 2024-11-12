@@ -307,5 +307,39 @@ class Image(DiscreteAction):
         return self.image(action, prev_action_key)
 
 
+class Broadcast(DiscreteAction):
+    def __init__(
+        self,
+        name: str = "action_broadcast",
+        duration: Optional[float] = None,
+    ):
+        """Action to broadcast data to all satellites in the simulation.
+
+        Should be used with a :class:`~bsk_rl.comm.BroadcastCommunication`-derived
+        communication method to limit communication to broadcasting satellites.
+
+        Args:
+            name: Action name.
+            duration: [s] Time to idle before communicating.
+        """
+        super().__init__(name=name, n_actions=1)
+        if duration is None:
+            duration = 1e9
+        self.duration = duration
+
+    def reset_post_sim_init(self) -> None:
+        """Log previous action key."""
+        super().reset_post_sim_init()
+        self.broadcast_pending = False
+
+    def set_action(self, action: int, prev_action_key=None) -> str:
+        assert action == 0
+        self.broadcast_pending = True
+        self.satellite.update_timed_terminal_event(
+            self.simulator.sim_time + self.duration, info=f"for broadcast"
+        )
+        return self.name
+
+
 __doc_title__ = "Discrete Backend"
 __all__ = ["DiscreteActionBuilder"]

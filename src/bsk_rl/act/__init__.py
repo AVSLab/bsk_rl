@@ -64,6 +64,7 @@ from bsk_rl.act.continuous_actions import (
     ImpulsiveThrustHill,
 )
 from bsk_rl.act.discrete_actions import (
+    Broadcast,
     Charge,
     Desat,
     DiscreteAction,
@@ -85,6 +86,7 @@ __all__ = [
     "Downlink",
     "Image",
     "Scan",
+    "Broadcast",
     "ContinuousAction",
     "ImpulsiveThrust",
     "ImpulsiveThrustHill",
