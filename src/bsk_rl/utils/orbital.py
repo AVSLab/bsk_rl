@@ -1,7 +1,7 @@
 """``bsk_rl.utils.orbital``:Utilities for computing orbital events."""
 
 import logging
-from typing import Iterable, Optional
+from typing import Callable, Iterable, Optional, Tuple, Union
 
 import numpy as np
 from Basilisk import __path__
@@ -12,7 +12,7 @@ from Basilisk.utilities import (
     orbitalMotion,
     simIncludeGravBody,
 )
-from Basilisk.utilities.orbitalMotion import ClassicElements, elem2rv
+from Basilisk.utilities.orbitalMotion import ClassicElements, elem2rv, rv2elem
 from scipy.interpolate import interp1d
 
 bskPath = __path__[0]
@@ -232,6 +232,48 @@ def walker_delta_args(
                 oe.Omega = np.mod(oe.Omega + Omega_offset, 2 * np.pi)
 
         return {satellite: {"oe": oe} for satellite, oe in zip(satellites, oe_all)}
+
+    return walker_delta_arg_setup
+
+
+def relative_to_chief(
+    chief_name: str,
+    chief_orbit: Union[ClassicElements, Callable],
+    deputy_relative_state: dict[str, Union[np.ndarray, Callable]],
+):
+    def walker_delta_arg_setup(satellites):
+        args = {sat: {} for sat in satellites}
+
+        chief = [satellite for satellite in satellites if satellite.name == chief_name][
+            0
+        ]
+        mu = chief.sat_args_generator["mu"]
+
+        if isinstance(chief_orbit, ClassicElements):
+            args[chief]["oe"] = chief_orbit
+        else:
+            args[chief]["oe"] = chief_orbit()
+
+        rc_N, vc_N = elem2rv(mu, args[chief]["oe"])
+
+        for satellite_name, relative_state in deputy_relative_state.items():
+            deputy = [
+                satellite
+                for satellite in satellites
+                if satellite.name == satellite_name
+            ][0]
+
+            if not isinstance(relative_state, list) and not isinstance(
+                relative_state, np.ndarray
+            ):
+                relative_state = relative_state()
+
+            rho_H = relative_state[0:3]
+            rho_deriv_H = relative_state[3:6]
+            rd_N, vd_N = hill2cd(rc_N, vc_N, rho_H, rho_deriv_H)
+            args[deputy]["oe"] = rv2elem(mu, rd_N, vd_N)
+
+        return args
 
     return walker_delta_arg_setup
 
@@ -500,6 +542,38 @@ def rv2omega(r_N: np.ndarray, v_N: np.ndarray):
     o_theta_N = np.cross(o_h_N, o_r_N)
     omega_HN_N = o_h_N * np.dot(v_N, o_theta_N) / np.linalg.norm(r_N)
     return omega_HN_N
+
+
+def cd2hill(
+    rc_N: np.ndarray, vc_N: np.ndarray, rd_N: np.ndarray, vd_N: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
+    h_N = np.cross(rc_N, vc_N)
+    o_h_N = h_N / np.linalg.norm(h_N)
+    ON = rv2HN(rc_N, vc_N)
+
+    f_dot = np.linalg.norm(h_N) / np.linalg.norm(rc_N) ** 2
+    omega_ON_N = f_dot * o_h_N
+
+    rho_H = ON @ (rd_N - rc_N)
+    rho_deriv_H = ON @ (vd_N - vc_N) - np.cross(ON @ omega_ON_N, rho_H)
+
+    return rho_H, rho_deriv_H
+
+
+def hill2cd(
+    rc_N: np.ndarray, vc_N: np.ndarray, rho_H: np.ndarray, rho_deriv_H: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
+    h_N = np.cross(rc_N, vc_N)
+    o_h_N = h_N / np.linalg.norm(h_N)
+    ON = rv2HN(rc_N, vc_N)
+
+    f_dot = np.linalg.norm(h_N) / np.linalg.norm(rc_N) ** 2
+    omega_ON_N = f_dot * o_h_N
+
+    rd_N = rc_N + ON.T @ rho_H
+    vd_N = vc_N + ON.T @ (rho_deriv_H + np.cross(ON @ omega_ON_N, rho_H))
+
+    return rd_N, vd_N
 
 
 __doc_title__ = "Orbital"
