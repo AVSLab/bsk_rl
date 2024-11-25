@@ -70,7 +70,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def action(
-    func: Callable[..., None]
+    func: Callable[..., None],
 ) -> Callable[Callable[..., None], Callable[..., None]]:
     """Decorator to reset the satellite software before executing an action.
 
@@ -988,6 +988,30 @@ class SteeringImagerFSWModel(SteeringFSWModel, ImagingFSWModel):
         super().__init__(*args, **kwargs)
 
 
+class MagicOrbitalManeuverFSWModel(BasicFSWModel):
+    """Model that allows for instantaneous Delta V maneuvers."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Model that allows for instantaneous Delta V maneuvers."""
+        super().__init__(*args, **kwargs)
+
+    @action
+    def action_magic_thrust(self, dv_N: np.ndarray) -> None:
+        """Thrust relative to the inertial frame.
+
+        Args:
+            dv_N: [m/s] Inertial Delta V.
+        """
+        self.dynamics.scObject.dynManager.getStateObject(
+            self.dynamics.scObject.hub.nameOfHubVelocity
+        ).setState(list(np.array(self.dynamics.v_BN_N) + np.array(dv_N)))
+
+        # # Teleporting
+        # self.dynamics.scObject.dynManager.getStateObject(
+        #     self.dynamics.scObject.hub.nameOfHubPosition
+        # ).setState(list(np.array(dv_N)))
+
+
 __doc_title__ = "FSW Sims"
 __all__ = [
     "action",
@@ -996,4 +1020,5 @@ __all__ = [
     "ContinuousImagingFSWModel",
     "SteeringFSWModel",
     "SteeringImagerFSWModel",
+    "MagicOrbitalManeuverFSWModel",
 ]

@@ -30,7 +30,6 @@ def select_action_builder(satellite: "Satellite") -> "ActionBuilder":
 
 
 class ActionBuilder(ABC):
-
     def __init__(self, satellite: "Satellite") -> None:
         """Base class for all action builders.
 
