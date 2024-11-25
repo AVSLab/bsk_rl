@@ -70,6 +70,7 @@ from bsk_rl.utils.functional import (
     aliveness_checker,
     check_aliveness_checkers,
     default_args,
+    valid_func_name,
 )
 from bsk_rl.utils.orbital import random_orbit, rv2HN, rv2omega
 
@@ -1185,6 +1186,60 @@ class FullFeaturedDynModel(GroundStationDynModel, LOSCommDynModel):
         super().__init__(*args, **kwargs)
 
 
+class ConjunctionDynModel(BasicDynamicsModel):
+    """For evaluating conjunctions between satellites."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """For evaluating conjunctions between satellites."""
+        super().__init__(*args, **kwargs)
+        self.conjunctions = []
+
+    def _setup_dynamics_objects(self, **kwargs) -> None:
+        super()._setup_dynamics_objects(**kwargs)
+        self.setup_conjunctions(**kwargs)
+
+    @aliveness_checker
+    def conjunction_valid(self) -> bool:
+        """Check if conjunction has not occured."""
+        return len(self.conjunctions) == 0
+
+    @default_args(conjunction_radius=10)
+    def setup_conjunctions(self, conjunction_radius: float, **kwargs) -> None:
+        """Set up conjunction checking between satellites.
+
+        Args:
+            conjunction_radius: [m] Minimum distance for a conjunction.
+            kwargs: Passed to other setup functions.
+        """
+        self.conjunction_radius = conjunction_radius
+
+        for sat_dyn in self.simulator.dynamics_list.values():
+            if sat_dyn != self and isinstance(sat_dyn, ConjunctionDynModel):
+                self.simulator.createNewEvent(
+                    valid_func_name(
+                        f"conjunction_{self.satellite.name}_{sat_dyn.satellite.name}"
+                    ),
+                    macros.sec2nano(self.simulator.sim_rate),
+                    True,
+                    [
+                        f"np.linalg.norm(np.array({self.satellite._satellite_command}.dynamics.r_BN_N) - np.array({sat_dyn.satellite._satellite_command}.dynamics.r_BN_N))"
+                        + " <= "
+                        + f"{self.satellite._satellite_command}.dynamics.conjunction_radius + {sat_dyn.satellite._satellite_command}.dynamics.conjunction_radius"
+                    ],
+                    [
+                        self.satellite._info_command(
+                            f"collided with {sat_dyn.satellite.name}"
+                        ),
+                        sat_dyn.satellite._info_command(
+                            f"collided with {self.satellite.name}"
+                        ),
+                        f"{self.satellite._satellite_command}.dynamics.conjunctions.append({sat_dyn.satellite._satellite_command})",
+                        f"{sat_dyn.satellite._satellite_command}.dynamics.conjunctions.append({self.satellite._satellite_command})",
+                    ],
+                    terminal=True,
+                )
+
+
 __doc_title__ = "Dynamics Sims"
 __all__ = [
     "DynamicsModel",
@@ -1193,5 +1248,6 @@ __all__ = [
     "ImagingDynModel",
     "ContinuousImagingDynModel",
     "GroundStationDynModel",
+    "ConjunctionDynModel",
     "FullFeaturedDynModel",
 ]
