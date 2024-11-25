@@ -1,7 +1,7 @@
 """``bsk_rl.utils.orbital``:Utilities for computing orbital events."""
 
 import logging
-from typing import Iterable, Optional
+from typing import Callable, Iterable, Optional, Tuple, Union
 
 import numpy as np
 from Basilisk import __path__
@@ -12,7 +12,7 @@ from Basilisk.utilities import (
     orbitalMotion,
     simIncludeGravBody,
 )
-from Basilisk.utilities.orbitalMotion import ClassicElements, elem2rv
+from Basilisk.utilities.orbitalMotion import ClassicElements, elem2rv, rv2elem
 from scipy.interpolate import interp1d
 
 bskPath = __path__[0]
@@ -234,6 +234,61 @@ def walker_delta_args(
         return {satellite: {"oe": oe} for satellite, oe in zip(satellites, oe_all)}
 
     return walker_delta_arg_setup
+
+
+def relative_to_chief(
+    chief_name: str,
+    chief_orbit: Union[ClassicElements, Callable],
+    deputy_relative_state: dict[str, Union[np.ndarray, Callable]],
+):
+    """Generate a function to generate a satellite state relative to another satellite.
+
+    The output of this function should be used to set the ``sat_arg_randomizer`` of the
+    environment.
+
+    Args:
+        chief_name: Name of the chief satellite.
+        chief_orbit: Orbital elements of the chief satellite, or orbit randomizing function.
+        deputy_relative_state: Relative state of the deputy satellites. Should be a dict of
+            deputy names and relative states as 6-element vector (rho_H, rho_dot_H) or
+            function that returns such a vector.
+    """
+
+    def relative_orbit_arg_setup(satellites):
+        args = {sat: {} for sat in satellites}
+
+        chief = [satellite for satellite in satellites if satellite.name == chief_name][
+            0
+        ]
+        mu = chief.sat_args_generator["mu"]
+
+        if isinstance(chief_orbit, ClassicElements):
+            args[chief]["oe"] = chief_orbit
+        else:
+            args[chief]["oe"] = chief_orbit()
+
+        rc_N, vc_N = elem2rv(mu, args[chief]["oe"])
+
+        for satellite_name, relative_state in deputy_relative_state.items():
+            deputy = [
+                satellite
+                for satellite in satellites
+                if satellite.name == satellite_name
+            ][0]
+
+            if not isinstance(relative_state, list) and not isinstance(
+                relative_state, np.ndarray
+            ):
+                relative_state = relative_state()
+
+            rho_H = relative_state[0:3]
+            rho_deriv_H = relative_state[3:6]
+            rd_N, vd_N = hill2cd(rc_N, vc_N, rho_H, rho_deriv_H)
+            args[deputy]["oe"] = rv2elem(mu, rd_N, vd_N)
+
+        return args
+
+    return relative_orbit_arg_setup
 
 
 class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
@@ -502,6 +557,62 @@ def rv2omega(r_N: np.ndarray, v_N: np.ndarray):
     return omega_HN_N
 
 
+def cd2hill(
+    rc_N: np.ndarray, vc_N: np.ndarray, rd_N: np.ndarray, vd_N: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Convert from chief and deputy states to Hill frame relative states.
+
+    Args:
+        rc_N: Inertial position of chief
+        vc_N: Inertial velocity of chief
+        rd_N: Inertial position of deputy
+        vd_N: Inertial velocity of deputy
+
+    Returns:
+        rho_H: Relative position in Hill frame
+        rho_deriv_H: Relative velocity in Hill frame
+    """
+    h_N = np.cross(rc_N, vc_N)
+    o_h_N = h_N / np.linalg.norm(h_N)
+    ON = rv2HN(rc_N, vc_N)
+
+    f_dot = np.linalg.norm(h_N) / np.linalg.norm(rc_N) ** 2
+    omega_ON_N = f_dot * o_h_N
+
+    rho_H = ON @ (rd_N - rc_N)
+    rho_deriv_H = ON @ (vd_N - vc_N) - np.cross(ON @ omega_ON_N, rho_H)
+
+    return rho_H, rho_deriv_H
+
+
+def hill2cd(
+    rc_N: np.ndarray, vc_N: np.ndarray, rho_H: np.ndarray, rho_deriv_H: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Convert from chief and Hill frame relative states to deputy inertial state.
+
+    Args:
+        rc_N: Inertial position of chief
+        vc_N: Inertial velocity of chief
+        rho_H: Relative position in Hill frame
+        rho_deriv_H: Relative velocity in Hill frame
+
+    Returns:
+        rd_N: Inertial position of deputy
+        vd_N: Inertial velocity of deputy
+    """
+    h_N = np.cross(rc_N, vc_N)
+    o_h_N = h_N / np.linalg.norm(h_N)
+    ON = rv2HN(rc_N, vc_N)
+
+    f_dot = np.linalg.norm(h_N) / np.linalg.norm(rc_N) ** 2
+    omega_ON_N = f_dot * o_h_N
+
+    rd_N = rc_N + ON.T @ rho_H
+    vd_N = vc_N + ON.T @ (rho_deriv_H + np.cross(ON @ omega_ON_N, rho_H))
+
+    return rd_N, vd_N
+
+
 __doc_title__ = "Orbital"
 __all__ = [
     "random_orbit",
@@ -510,7 +621,10 @@ __all__ = [
     "elevation",
     "walker_delta",
     "walker_delta_args",
+    "relative_to_chief",
     "TrajectorySimulator",
     "rv2HN",
     "rv2omega",
+    "cd2hill",
+    "hill2cd",
 ]

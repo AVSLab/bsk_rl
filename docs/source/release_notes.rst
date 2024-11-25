@@ -7,6 +7,8 @@ Development - |version|
 * Add an example script where reward is based on the probability of successfully observing targets covered 
   by clouds in the `Cloud Environment with Re-imaging <examples/cloud_environment_with_reimaging.ipynb>`_ example.
 * Add a conjunction checking dynamics model in :class:`~bsk_rl.dynamics.ConjunctionDynModel`.
+* Add utilities for relative motion state setup, :class:`~bsk_rl.utils.orbital.cd2hill`, :class:`~bsk_rl.utils.orbital.hill2cd`,
+  and :class:`~bsk_rl.utils.orbital.relative_to_chief`.
 
 Version 1.1.0
 -------------

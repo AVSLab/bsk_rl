@@ -45,7 +45,6 @@ def classic_elements(a=0, e=0, i=0, Omega=0, omega=0, f=0):
 
 
 class TestWalkerDeltaArgs:
-
     @patch(
         "bsk_rl.utils.orbital.walker_delta",
         MagicMock(return_value=[classic_elements(), classic_elements()]),
@@ -75,6 +74,40 @@ class TestWalkerDeltaArgs:
         assert sat_arg_map[sats[0]]["oe"].f == 0
         assert sat_arg_map[sats[0]]["oe"].Omega == sat_arg_map[sats[1]]["oe"].Omega
         assert sat_arg_map[sats[0]]["oe"].Omega == 0
+
+
+class TestRelativeToChief:
+    def test_relative_to_chief(self):
+        chief_name = "ChiefSat"
+        chief_orbit = classic_elements(a=1)
+        deputy_relative_state = {
+            "DeputySat1": np.zeros(6),
+            "DeputySat2": np.array([1, 0, 0, 0, 0, 0]),
+        }
+
+        relative_orbit_arg_setup = orbital.relative_to_chief(
+            chief_name, chief_orbit, deputy_relative_state
+        )
+
+        satellites = [
+            MagicMock(sat_args_generator=dict(mu=1)),
+            MagicMock(),
+            MagicMock(),
+        ]
+        satellites[0].name = "ChiefSat"
+        satellites[1].name = "DeputySat1"
+        satellites[2].name = "DeputySat2"
+        args = relative_orbit_arg_setup(satellites)
+        assert chief_orbit.a == args[satellites[0]]["oe"].a
+        assert chief_orbit.a == args[satellites[1]]["oe"].a
+        assert chief_orbit.e == args[satellites[0]]["oe"].e
+        assert chief_orbit.e == args[satellites[1]]["oe"].e
+        assert chief_orbit.i == args[satellites[0]]["oe"].i
+        assert chief_orbit.i == args[satellites[1]]["oe"].i
+
+        assert np.isclose(args[satellites[2]]["oe"].a, -1 / 3)
+        assert np.isclose(args[satellites[2]]["oe"].e, 7.0)
+        assert np.isclose(args[satellites[2]]["oe"].i, 0.0)
 
 
 class TestRandomEpoch:
@@ -180,7 +213,6 @@ class TestTrajectorySimulator:
 
 
 class TestFunctions:
-
     def test_rv2HN(self):
         r = np.array([1, 0, 0])
         v = np.array([0, 1, 0])
@@ -198,3 +230,15 @@ class TestFunctions:
         v = np.array([0, 1, 0])
         omega = orbital.rv2omega(r, v)
         assert np.allclose(omega, np.array([0, 0, 1]))
+
+    @pytest.mark.repeat(10)
+    def test_cd_hill(self):
+        rc_N = np.random.rand(3)
+        vc_N = np.random.rand(3)
+        rd_N = np.random.rand(3)
+        vd_N = np.random.rand(3)
+
+        rho_H, rho_deriv_H = orbital.cd2hill(rc_N, vc_N, rd_N, vd_N)
+        rd_N_new, vd_N_new = orbital.hill2cd(rc_N, vc_N, rho_H, rho_deriv_H)
+        assert np.allclose(rd_N, rd_N_new)
+        assert np.allclose(vd_N, vd_N_new)
