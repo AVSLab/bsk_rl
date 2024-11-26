@@ -40,6 +40,14 @@ from bsk_rl.obs.observations import (
     SatProperties,
     Time,
 )
+from bsk_rl.obs.relative_observations import RelativeProperties
 
 __doc_title__ = "Observations"
-__all__ = ["Observation", "SatProperties", "Time", "OpportunityProperties", "Eclipse"]
+__all__ = [
+    "Observation",
+    "SatProperties",
+    "Time",
+    "OpportunityProperties",
+    "Eclipse",
+    "RelativeProperties",
+]

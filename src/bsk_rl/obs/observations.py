@@ -48,7 +48,6 @@ def nested_obs_to_space(obs_dict):
 
 
 class ObservationBuilder:
-
     def __init__(self, satellite: "Satellite", obs_type: type = np.ndarray) -> None:
         """Satellite subclass for composing observations.
 
@@ -312,7 +311,6 @@ def _r_LB_H(sat, opp):
 
 
 class OpportunityProperties(Observation):
-
     _fn_map = {
         "priority": lambda sat, opp: opp["object"].priority,
         "r_LP_P": lambda sat, opp: opp["r_LP_P"],
