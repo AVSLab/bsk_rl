@@ -1,0 +1,146 @@
+"""Data system for recording RSO surface."""
+
+import logging
+from typing import TYPE_CHECKING, Optional
+
+import numpy as np
+
+from bsk_rl.data.base import Data, DataStore, GlobalReward
+from bsk_rl.sats import Satellite
+from bsk_rl.scene.rso_points import RSOPoint
+from bsk_rl.sim.dyn import RSODynModel, RSOImagingDynModel
+
+if TYPE_CHECKING:
+    from bsk_rl.sats import Satellite
+
+logger = logging.getLogger(__name__)
+
+RSO = "rso"
+OBSERVER = "observer"
+
+
+class RSOInspectionData(Data):
+    def __init__(self, point_inspect_status: Optional[dict[RSOPoint, bool]] = None):
+        if point_inspect_status is None:
+            point_inspect_status = {}
+        self.point_inspect_status = point_inspect_status
+
+    def __add__(self, other: "RSOInspectionData"):
+        point_inspect_status = {}
+        point_inspect_status.update(self.point_inspect_status)
+        for point, access in other.point_inspect_status.items():
+            if point not in point_inspect_status:
+                point_inspect_status[point] = access
+            else:
+                point_inspect_status[point] = point_inspect_status[point] or access
+
+        return RSOInspectionData(point_inspect_status)
+
+
+class RSOInspectionDataStore(DataStore):
+    data_type = RSOInspectionData
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.point_access_recorders = []
+        self.storage_recorder = None
+
+        if issubclass(self.satellite.dyn_type, RSOImagingDynModel):
+            self.role = OBSERVER
+        else:
+            self.role = RSO
+
+    def set_storage_recorder(self, recorder):
+        self.storage_recorder = recorder
+        self.satellite.simulator.AddModelToTask(
+            self.satellite.dynamics.task_name, recorder, ModelPriority=1000
+        )
+
+    def add_point_access_recorder(self, recorder):
+        self.point_access_recorders.append(recorder)
+        self.satellite.simulator.AddModelToTask(
+            self.satellite.dynamics.task_name, recorder, ModelPriority=1000
+        )
+
+    def clear_recorders(self):
+        if self.storage_recorder:
+            self.storage_recorder.clear()
+        for recorder in self.point_access_recorders:
+            recorder.clear()
+
+    def get_log_state(self) -> list[list[bool]]:
+        """Log the storage unit state and point access state for all times in the step.
+
+        Returns:
+            todo
+        """
+        if self.role == RSO:
+            return None
+
+        log_len = len(self.storage_recorder.storageLevel)
+        if log_len <= 1:
+            imaging_req = np.zeros(log_len)
+        else:
+            imaging_req = np.diff(self.storage_recorder.storageLevel)
+            imaging_req = np.concatenate((imaging_req, [imaging_req[-1]]))
+
+        inspected_logs = []
+        for recorder in self.point_access_recorders:
+            # inspected = np.logical_and(imaging_req, recorder.hasAccess)
+            inspected = recorder.hasAccess
+            inspected_logs.append(list(inspected))
+
+        self.clear_recorders()
+
+        return inspected_logs
+
+    def compare_log_states(self, _, inspected_logs) -> Data:
+        if self.role == RSO:
+            return RSOInspectionData()
+
+        point_inspect_status = {}
+        for rso_point, log in zip(
+            self.data.point_inspect_status.keys(), inspected_logs
+        ):
+            if any(log):
+                print(log)
+                point_inspect_status[rso_point] = True
+
+        if len(point_inspect_status) > 0:
+            self.satellite.logger.info(
+                f"Inspected {len(point_inspect_status)} points this step"
+            )
+
+        return RSOInspectionData(point_inspect_status)
+
+
+class RSOInspectionReward(GlobalReward):
+    datastore_type = RSOInspectionDataStore
+
+    def reset_post_sim_init(self) -> None:
+        super().reset_post_sim_init()
+
+        for i, observer in enumerate(self.scenario.observers):
+            observer.data_store.set_storage_recorder(
+                observer.dynamics.storageUnit.storageUnitDataOutMsg.recorder()
+            )
+            logger.debug(
+                f"Logging {len(self.scenario.rso.dynamics.rso_points)} access points"
+            )
+            for rso_point_model in self.scenario.rso.dynamics.rso_points:
+                observer.data_store.add_point_access_recorder(
+                    rso_point_model.accessOutMsgs[i].recorder()
+                )
+
+    def initial_data(self, satellite: Satellite) -> Data:
+        if not issubclass(satellite.dyn_type, RSOImagingDynModel):
+            return RSOInspectionData()
+
+        return RSOInspectionData({point: False for point in self.scenario.rso_points})
+
+    def calculate_reward(self, new_data_dict: dict[str, Data]) -> dict[str, float]:
+        return {}  # TODO
+
+
+__doc_title__ = "RSO Inspection"
+__all__ = ["RSOInspectionReward", "RSOInspectionDataStore", "RSOInspectionData"]

@@ -9,6 +9,9 @@ following scenarios have been implemented:
 """
 
 from bsk_rl.scene.scenario import Scenario, UniformNadirScanning
+
+pass  # Other imports must come after Scenario
+from bsk_rl.scene.rso_points import FibonacciSphereRSOPoints, RSOPoints
 from bsk_rl.scene.targets import CityTargets, UniformTargets
 
 __doc_title__ = "Scenario"
@@ -17,4 +20,6 @@ __all__ = [
     "UniformTargets",
     "CityTargets",
     "UniformNadirScanning",
+    "RSOPoints",
+    "FibonacciSphereRSOPoints",
 ]

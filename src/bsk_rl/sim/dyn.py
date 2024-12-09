@@ -1240,6 +1240,54 @@ class ConjunctionDynModel(BasicDynamicsModel):
                 )
 
 
+class RSODynModel(BasicDynamicsModel):
+    """For an RSO with points targets for observation."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Allow for body fixed inspection points to be added to a spacecraft.
+
+        Works with :class:`~bsk_rl.sats.RSOImagingSatellite`.
+        """
+        super().__init__(*args, **kwargs)
+
+    def _setup_dynamics_objects(self, **kwargs) -> None:
+        super()._setup_dynamics_objects(**kwargs)
+        self.rso_points = []
+
+    def add_rso_point(self, r_LB_B, aHat_B, theta, range):
+        rso_point_model = spacecraftLocation.SpacecraftLocation()
+        rso_point_model.primaryScStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
+        rso_point_model.planetInMsg.subscribeTo(
+            self.world.gravFactory.spiceObject.planetStateOutMsgs[self.world.body_index]
+        )
+        rso_point_model.rEquator = self.simulator.world.planet.radEquator
+        rso_point_model.rPolar = self.simulator.world.planet.radEquator * 0.98
+        rso_point_model.r_LB_B = r_LB_B
+        rso_point_model.aHat_B = aHat_B
+        rso_point_model.theta = theta
+        rso_point_model.maximumRange = range
+        self.simulator.AddModelToTask(
+            self.task_name, rso_point_model, ModelPriority=2000
+        )
+
+        self.rso_points.append(rso_point_model)
+        return rso_point_model
+
+
+class RSOImagingDynModel(ContinuousImagingDynModel):
+    """For a satellite observing points on an RSO."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Allow a satellite to observe points in a RSO.
+
+        Works with :class:`~bsk_rl.sats.RSOImagingSatellite`.
+        """
+        super().__init__(*args, **kwargs)
+
+    def add_rso_point(self, rso_point_model):
+        rso_point_model.addSpacecraftToModel(self.scObject.scStateOutMsg)
+
+
 __doc_title__ = "Dynamics Sims"
 __all__ = [
     "DynamicsModel",
@@ -1250,4 +1298,6 @@ __all__ = [
     "GroundStationDynModel",
     "ConjunctionDynModel",
     "FullFeaturedDynModel",
+    "RSODynModel",
+    "RSOImagingDynModel",
 ]

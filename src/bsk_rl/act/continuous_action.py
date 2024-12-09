@@ -2,7 +2,7 @@
 
 import logging
 from abc import abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from gymnasium import spaces
@@ -76,7 +76,13 @@ class ContinuousAction(Action):
 
 
 class MagicThrust(ContinuousAction):
-    def __init__(self, name: str = "thrust_act", max_dv: float = float("inf")) -> None:
+    # TODO set the fsw mode to carry out after action
+    def __init__(
+        self,
+        name: str = "thrust_act",
+        max_dv: float = float("inf"),
+        fsw_action: Optional[str] = None,
+    ) -> None:
         """Instantaneously change the satellite's velocity, and drift for some duration.
 
         TODO: Support specifying frame of thrust.
@@ -87,6 +93,7 @@ class MagicThrust(ContinuousAction):
         """
         super().__init__(name)
         self.max_dv = max_dv
+        self.fsw_action = fsw_action
 
     @property
     def space(self) -> spaces.Box:
@@ -106,10 +113,17 @@ class MagicThrust(ContinuousAction):
     def set_action(self, action: np.ndarray) -> None:
         """Thrust the satellite with a given inertial delta-V and drift for some duration."""
         assert len(action) == 4, "Action must have 4 elements."
+        dv_N = action[0:3]
+        dt = action[3]
+
         self.satellite.log_info(
-            f"Thrusting with inertial dV {action[0:3]} with {action[3]} second drift."
+            f"Thrusting with inertial dV {dv_N} with {dt} second drift."
         )
-        self.satellite.fsw.action_magic_thrust(action[0:3])
+        self.satellite.fsw.action_magic_thrust(dv_N)
         self.satellite.update_timed_terminal_event(
-            self.satellite.simulator.sim_time + action[3]
+            self.satellite.simulator.sim_time + dt
         )
+
+        # Activate the FSW action for the drift period
+        getattr(self.satellite.fsw, self.fsw_action)()
+        self.satellite.log_info(f"FSW action {self.fsw_action} activated.")
