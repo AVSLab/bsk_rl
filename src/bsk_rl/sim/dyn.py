@@ -1252,22 +1252,32 @@ class RSODynModel(BasicDynamicsModel):
 
     def _setup_dynamics_objects(self, **kwargs) -> None:
         super()._setup_dynamics_objects(**kwargs)
+
+        rso_dyn_proc_name = "RSODynProcess"
+        self.rso_dyn_proc = self.simulator.CreateNewProcess(rso_dyn_proc_name, 1)
+        self.rso_task_name = "RSODynTask"
+        self.rso_dyn_proc.addTask(
+            self.simulator.CreateNewTask(
+                self.rso_task_name, macros.sec2nano(self.dyn_rate)
+            )
+        )
+
         self.rso_points = []
 
     def add_rso_point(self, r_LB_B, aHat_B, theta, range):
         rso_point_model = spacecraftLocation.SpacecraftLocation()
         rso_point_model.primaryScStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
-        rso_point_model.planetInMsg.subscribeTo(
-            self.world.gravFactory.spiceObject.planetStateOutMsgs[self.world.body_index]
-        )
-        rso_point_model.rEquator = self.simulator.world.planet.radEquator
-        rso_point_model.rPolar = self.simulator.world.planet.radEquator * 0.98
+        # rso_point_model.planetInMsg.subscribeTo(
+        #     self.world.gravFactory.spiceObject.planetStateOutMsgs[self.world.body_index]
+        # )
+        rso_point_model.rEquator = 1.0  # self.simulator.world.planet.radEquator
+        rso_point_model.rPolar = 1.0  # self.simulator.world.planet.radEquator * 0.98
         rso_point_model.r_LB_B = r_LB_B
         rso_point_model.aHat_B = aHat_B
         rso_point_model.theta = theta
         rso_point_model.maximumRange = range
         self.simulator.AddModelToTask(
-            self.task_name, rso_point_model, ModelPriority=2000
+            self.rso_task_name, rso_point_model, ModelPriority=1
         )
 
         self.rso_points.append(rso_point_model)

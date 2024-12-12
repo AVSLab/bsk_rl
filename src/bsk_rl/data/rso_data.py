@@ -86,9 +86,9 @@ class RSOInspectionDataStore(DataStore):
 
         inspected_logs = []
         for recorder in self.point_access_recorders:
-            # inspected = np.logical_and(imaging_req, recorder.hasAccess)
-            inspected = recorder.hasAccess
-            inspected_logs.append(list(inspected))
+            inspected = np.logical_and(imaging_req, recorder.hasAccess)
+            # inspected = recorder.hasAccess
+            inspected_logs.append(list(np.array(inspected)))
 
         self.clear_recorders()
 
@@ -103,7 +103,6 @@ class RSOInspectionDataStore(DataStore):
             self.data.point_inspect_status.keys(), inspected_logs
         ):
             if any(log):
-                print(log)
                 point_inspect_status[rso_point] = True
 
         if len(point_inspect_status) > 0:

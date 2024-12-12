@@ -7,12 +7,10 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-from Basilisk.utilities import orbitalMotion
 
 from bsk_rl.scene import Scenario
 from bsk_rl.sim.dyn import RSODynModel, RSOImagingDynModel
 from bsk_rl.sim.fsw import RSOImagingFSWModel
-from bsk_rl.utils.orbital import lla2ecef
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.data.base import Data
@@ -40,11 +38,9 @@ class RSOPoints(Scenario):
 
     def reset_pre_sim_init(self) -> None:
         self.rso_points = self.generate_points()
-        return super().reset_pre_sim_init()
 
-    def reset_post_sim_init(self) -> None:
         # Check for RSOs and observers
-        rsos = [sat for sat in self.satellites if isinstance(sat.dynamics, RSODynModel)]
+        rsos = [sat for sat in self.satellites if issubclass(sat.dyn_type, RSODynModel)]
         if len(rsos) == 0:
             logger.warning("No RSODynModel satellites found in scenario.")
             return
@@ -54,12 +50,15 @@ class RSOPoints(Scenario):
         self.observers = [
             sat
             for sat in self.satellites
-            if isinstance(sat.dynamics, RSOImagingDynModel)
+            if issubclass(sat.dyn_type, RSOImagingDynModel)
         ]
         if len(self.observers) == 0:
             logger.warning("No RSOImagingDynModel satellites found in scenario.")
             return
 
+        return super().reset_pre_sim_init()
+
+    def reset_during_sim_init(self) -> None:
         # Add points to dynamics and fsw of RSO
         assert isinstance(self.rso.dynamics, RSODynModel)
         logger.debug("Adding inspection points to RSO and observers")
