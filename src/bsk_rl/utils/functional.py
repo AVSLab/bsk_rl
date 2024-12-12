@@ -200,6 +200,10 @@ class Resetable:
         """Reset before simulator initialization."""
         pass
 
+    def reset_during_sim_init(self) -> None:
+        """Reset after simulator models have been created but before the simulator is initialized."""
+        pass
+
     def reset_post_sim_init(self) -> None:
         """Reset after simulator initialization."""
         pass

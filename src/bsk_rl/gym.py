@@ -281,6 +281,12 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             time_limit=self.time_limit,
         )
 
+        self.scenario.reset_during_sim_init()
+        self.rewarder.reset_during_sim_init()
+        self.communicator.reset_during_sim_init()
+
+        self.simulator.finish_init()
+
         self.scenario.reset_post_sim_init()
         self.rewarder.reset_post_sim_init()
         self.communicator.reset_post_sim_init()
