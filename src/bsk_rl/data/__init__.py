@@ -74,6 +74,19 @@ field of the environment constructor:
         ...
     )
 
+Multiple reward systems can be added to the environment by instead passing an iterable of
+reward systems to the ``data`` field of the environment constructor:
+
+.. code-block:: python
+
+    env = ConstellationTasking(
+        ...,
+        data=(ScanningTimeReward(), SomeOtherReward()),
+        ...
+    )
+
+On the backend, this creates a :class:`~bsk_rl.data.composition.ComposedDataStore` that
+handles the combination of multiple reward systems.
 """
 
 from bsk_rl.data.base import GlobalReward
