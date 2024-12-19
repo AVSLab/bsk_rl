@@ -1,5 +1,4 @@
 name: Commit Checks
-
 on: [pull_request]
 
 jobs:
@@ -37,7 +36,7 @@ jobs:
 
   run-pytest:
     name: Run Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -63,16 +62,18 @@ jobs:
       - name: Pull artifacts
         uses: actions/download-artifact@v4
         with:
-          name: basilisk-wheels_ubuntu-latest_python${{ matrix.python-version }}
+          name: basilisk-wheels_ubuntu-22.04_python${{ matrix.python-version }}
           repository: AVSLab/basilisk
           run-id: ${{ env.RUN_ID }}
           github-token: ${{ github.token }}
       - name: Install Basilisk from wheels
-        run: pip install Basilisk*.whl
+        run: |
+          pip install Basilisk*.whl
+          bskLargeData
       - name: Install BSK-RL
         run: pip install -e '.[all]' && finish_install
       - name: Run pytest
-        run: pytest -v
+        run: pytest -v -ra --tb=long -o log_cli=true -o log_level=DEBUG
 
   check-doc-build:
     name: Test Documentation Build
