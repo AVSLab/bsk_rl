@@ -5,6 +5,7 @@ import pytest
 from gymnasium import spaces
 
 from bsk_rl import ConstellationTasking, GeneralSatelliteTasking, SatelliteTasking
+from bsk_rl.data.composition import ComposedReward
 from bsk_rl.sats import Satellite
 
 
@@ -68,6 +69,18 @@ class TestGeneralSatelliteTasking:
         model = env._minimum_world_model()
         assert issubclass(model, TypeA)
         assert issubclass(model, TypeB)
+
+    def test_multiple_rewarders(self):
+        mock_sat = MagicMock()
+        mock_sat.sat_args_generator = {}
+        mock_rewarder = [MagicMock(scenario=None), MagicMock(scenario=None)]
+        env = GeneralSatelliteTasking(
+            satellites=[mock_sat],
+            world_type=MagicMock(),
+            scenario=MagicMock(),
+            rewarder=mock_rewarder,
+        )
+        assert isinstance(env.rewarder, ComposedReward)
 
     @patch("bsk_rl.gym.Simulator")
     def test_reset(self, mock_sim):

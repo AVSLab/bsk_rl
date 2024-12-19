@@ -28,6 +28,8 @@ Development - |version|
 * Optimize communication when all satellites are communicating with each other.
 * Enable Vizard visualization of the environment by setting the ``vizard_dir`` and ``vizard_settings``
   options in the environment.
+* Allow for the specification of multiple rewarders in the environment.
+
 
 
 Version 1.0.1

@@ -13,6 +13,7 @@ from pettingzoo.utils.env import AgentID, ParallelEnv
 
 from bsk_rl.comm import CommunicationMethod, NoCommunication
 from bsk_rl.data import GlobalReward, NoReward
+from bsk_rl.data.composition import ComposedReward
 from bsk_rl.sats import Satellite
 from bsk_rl.scene import Scenario
 from bsk_rl.sim import Simulator
@@ -36,7 +37,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self,
         satellites: Union[Satellite, list[Satellite]],
         scenario: Optional[Scenario] = None,
-        rewarder: Optional[GlobalReward] = None,
+        rewarder: Optional[Union[GlobalReward, list[GlobalReward]]] = None,
         world_type: Optional[type[WorldModel]] = None,
         world_args: Optional[dict[str, Any]] = None,
         communicator: Optional[CommunicationMethod] = None,
@@ -70,7 +71,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             scenario: Environment the satellite is acting in; contains information
                 about targets, etc. See :ref:`bsk_rl.scene`.
             rewarder: Handles recording and rewarding for data collection towards
-                objectives. See :ref:`bsk_rl.data`.
+                objectives. Can be a single rewarder or a tuple of multiple rewarders.
+                See :ref:`bsk_rl.data`.
             communicator: Manages communication between satellites. See :ref:`bsk_rl.comm`.
             sat_arg_randomizer: For correlated randomization of satellites arguments. Should
                 be a function that takes a list of satellites and returns a dictionary that
@@ -139,8 +141,6 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         if scenario is None:
             scenario = Scenario()
-        if rewarder is None:
-            rewarder = NoReward()
 
         if world_type is None:
             world_type = self._minimum_world_model()
@@ -151,7 +151,16 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         self.scenario = deepcopy(scenario)
         self.scenario.link_satellites(self.satellites)
-        self.rewarder = deepcopy(rewarder)
+
+        rewarder = deepcopy(rewarder)
+        if rewarder is None:
+            rewarder = NoReward()
+        if (
+            isinstance(rewarder, Iterable)
+            and not type(rewarder).__name__ == "MagicMock"
+        ):
+            rewarder = ComposedReward(*rewarder)
+        self.rewarder = rewarder
         self.rewarder.link_scenario(self.scenario)
 
         if communicator is None:
