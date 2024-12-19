@@ -57,6 +57,7 @@ from Basilisk.utilities import macros as mc
 from bsk_rl.sim import dyn
 from bsk_rl.utils.functional import (
     AbstractClassProperty,
+    aliveness_checker,
     check_aliveness_checkers,
     default_args,
 )
@@ -1000,6 +1001,29 @@ class MagicOrbitalManeuverFSWModel(BasicFSWModel):
     def __init__(self, *args, **kwargs) -> None:
         """Model that allows for instantaneous Delta V maneuvers."""
         super().__init__(*args, **kwargs)
+        self.setup_fuel(**kwargs)
+
+    @property
+    def dv_available(self):
+        """Delta-V available for the satellite."""
+        return self._dv_available
+
+    @aliveness_checker
+    def fuel_remaining(self) -> bool:
+        """Check if the satellite has fuel remaining."""
+        return self.dv_available > 0
+
+    @default_args(dv_available_init=100.0)
+    def setup_fuel(self, dv_available_init: float, **kwargs):
+        """Set up available fuel for the satellite.
+
+        # TODO: may adjust names for consistency with modelled fuel take in future.
+
+        Args:
+            dv_available_init: [m/s] Initial fuel level.
+            kwargs: Passed to other setup functions.
+        """
+        self._dv_available = dv_available_init
 
     @action
     def action_magic_thrust(self, dv_N: np.ndarray) -> None:
@@ -1008,14 +1032,16 @@ class MagicOrbitalManeuverFSWModel(BasicFSWModel):
         Args:
             dv_N: [m/s] Inertial Delta V.
         """
+        if np.linalg.norm(dv_N) > self.dv_available:
+            self.satellite.logger.warning(
+                f"Maneuver exceeds available Delta V ({np.linalg.norm(dv_N)}/{self.fuel_remaining} m/s)."
+            )
+
+        self._dv_available -= np.linalg.norm(dv_N)
+
         self.dynamics.scObject.dynManager.getStateObject(
             self.dynamics.scObject.hub.nameOfHubVelocity
         ).setState(list(np.array(self.dynamics.v_BN_N) + np.array(dv_N)))
-
-        # # Teleporting
-        # self.dynamics.scObject.dynManager.getStateObject(
-        #     self.dynamics.scObject.hub.nameOfHubPosition
-        # ).setState(list(np.array(dv_N)))
 
 
 class RSOImagingFSWModel(ContinuousImagingFSWModel):
