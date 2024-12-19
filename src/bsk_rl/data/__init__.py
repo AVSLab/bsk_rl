@@ -90,6 +90,7 @@ handles the combination of multiple reward systems.
 """
 
 from bsk_rl.data.base import GlobalReward
+from bsk_rl.data.fuel_penalty import FuelPenalty
 from bsk_rl.data.nadir_data import ScanningTimeReward
 from bsk_rl.data.no_data import NoReward
 from bsk_rl.data.rso_data import RSOInspectionReward
@@ -102,4 +103,5 @@ __all__ = [
     "UniqueImageReward",
     "ScanningTimeReward",
     "RSOInspectionReward",
+    "FuelPenalty",
 ]
