@@ -87,7 +87,6 @@ class RSOInspectionDataStore(DataStore):
         inspected_logs = []
         for recorder in self.point_access_recorders:
             inspected = np.logical_and(imaging_req, recorder.hasAccess)
-            # inspected = recorder.hasAccess
             inspected_logs.append(list(np.array(inspected)))
 
         self.clear_recorders()
@@ -138,7 +137,19 @@ class RSOInspectionReward(GlobalReward):
         return RSOInspectionData({point: False for point in self.scenario.rso_points})
 
     def calculate_reward(self, new_data_dict: dict[str, Data]) -> dict[str, float]:
-        return {}  # TODO
+        total_points = len(self.scenario.rso_points)
+        reward = {}
+        for satellite_id, data in new_data_dict.items():
+            if len(data.point_inspect_status) == 0:
+                continue
+
+            new_points = 0
+            for point, access in data.point_inspect_status.items():
+                if access and not self.data.point_inspect_status.get(point, False):
+                    new_points += 1
+
+            reward[satellite_id] = new_points / total_points
+        return reward
 
 
 __doc_title__ = "RSO Inspection"

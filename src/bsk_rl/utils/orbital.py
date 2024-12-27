@@ -20,6 +20,16 @@ bskPath = __path__[0]
 logger = logging.getLogger(__name__)
 
 
+def random_unit_vector() -> np.ndarray:
+    """Generate a random unit vector.
+
+    Returns:
+        Random unit vector
+    """
+    vec = np.random.randn(3)
+    return vec / np.linalg.norm(vec)
+
+
 def random_orbit(
     i: Optional[float] = 45.0,
     alt: float = 500,
@@ -578,6 +588,7 @@ def hill2cd(
 
 __doc_title__ = "Orbital"
 __all__ = [
+    "random_unit_vector",
     "random_orbit",
     "random_epoch",
     "lla2ecef",
