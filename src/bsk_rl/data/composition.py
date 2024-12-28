@@ -157,6 +157,12 @@ class ComposedReward(GlobalReward):
         for rewarder in self.rewarders:
             rewarder.reset_pre_sim_init()
 
+    def reset_during_sim_init(self) -> None:
+        """Handle resetting for all rewarders."""
+        super().reset_during_sim_init()
+        for rewarder in self.rewarders:
+            rewarder.reset_during_sim_init()
+
     def reset_post_sim_init(self) -> None:
         """Handle resetting for all rewarders."""
         super().reset_post_sim_init()

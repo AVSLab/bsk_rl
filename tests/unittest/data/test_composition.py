@@ -106,6 +106,7 @@ class TestComposedReward:
         "function",
         [
             "reset_pre_sim_init",
+            "reset_during_sim_init",
             "reset_post_sim_init",
             "reset_overwrite_previous",
         ],
