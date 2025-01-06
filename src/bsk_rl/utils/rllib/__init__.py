@@ -25,6 +25,7 @@ from scipy.special import softmax
 
 from bsk_rl import ConstellationTasking, GeneralSatelliteTasking, SatelliteTasking
 from bsk_rl.utils.rllib.callbacks import EpisodeDataParallelWrapper, EpisodeDataWrapper
+from bsk_rl.utils.wrappers import SanitizeNanParallelWrapper, SanitizeNanWrapper
 
 
 def load_torch_mlp_policy(policy_path: str, env: GeneralSatelliteTasking):
@@ -119,7 +120,7 @@ def _satellite_tasking_env_creator(env_config):
         satellite_data_callback = None
 
     return EpisodeDataWrapper(
-        SatelliteTasking(**env_config),
+        SanitizeNanWrapper(SatelliteTasking(**env_config)),
         episode_data_callback=episode_data_callback,
         satellite_data_callback=satellite_data_callback,
     )
@@ -140,7 +141,7 @@ def _constellation_tasking_env_creator(env_config):
 
     return ParallelPettingZooEnv(
         EpisodeDataParallelWrapper(
-            ConstellationTasking(**env_config),
+            SanitizeNanParallelWrapper(ConstellationTasking(**env_config)),
             episode_data_callback=episode_data_callback,
             satellite_data_callback=satellite_data_callback,
         )
