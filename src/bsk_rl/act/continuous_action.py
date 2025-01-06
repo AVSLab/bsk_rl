@@ -99,8 +99,10 @@ class MagicThrust(ContinuousAction):
     def space(self) -> spaces.Box:
         """Return the action space."""
         return spaces.Box(
-            low=np.array([-self.max_dv, -self.max_dv, -self.max_dv, 0.0]),
-            high=np.array([self.max_dv, self.max_dv, self.max_dv, float("inf")]),
+            low=np.array(
+                [-self.max_dv, -self.max_dv, -self.max_dv, self.simulator.sim_rate]
+            ),
+            high=np.array([self.max_dv, self.max_dv, self.max_dv, 5700.0]),
             shape=(4,),
             dtype=np.float32,
         )

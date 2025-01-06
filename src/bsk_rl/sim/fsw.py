@@ -1002,6 +1002,7 @@ class MagicOrbitalManeuverFSWModel(BasicFSWModel):
         """Model that allows for instantaneous Delta V maneuvers."""
         super().__init__(*args, **kwargs)
         self.setup_fuel(**kwargs)
+        self.thrust_count = 0
 
     @property
     def dv_available(self):
@@ -1034,7 +1035,7 @@ class MagicOrbitalManeuverFSWModel(BasicFSWModel):
         """
         if np.linalg.norm(dv_N) > self.dv_available:
             self.satellite.logger.warning(
-                f"Maneuver exceeds available Delta V ({np.linalg.norm(dv_N)}/{self.fuel_remaining} m/s)."
+                f"Maneuver exceeds available Delta V ({np.linalg.norm(dv_N)}/{self.dv_available} m/s)."
             )
 
         self._dv_available -= np.linalg.norm(dv_N)
@@ -1043,13 +1044,14 @@ class MagicOrbitalManeuverFSWModel(BasicFSWModel):
             self.dynamics.scObject.hub.nameOfHubVelocity
         ).setState(list(np.array(self.dynamics.v_BN_N) + np.array(dv_N)))
 
+        self.thrust_count += 1
+
 
 class RSOImagingFSWModel(ContinuousImagingFSWModel):
     def set_target_rso(self, rso: "Satellite") -> None:
         self.locPoint.scTargetInMsg.subscribeTo(
             rso.dynamics.simpleNavObject.transOutMsg
         )
-        self.logger.info(f"{self.locPoint.scTargetInMsg}")
 
     class LocPointTask(ContinuousImagingFSWModel.LocPointTask):
         """Task to point at the RSO and trigger the instrument."""

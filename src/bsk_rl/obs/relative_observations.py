@@ -5,6 +5,7 @@ from typing import Any
 import numpy as np
 
 from bsk_rl.obs import Observation
+from bsk_rl.utils.orbital import rv2omega
 
 
 def r_DC_N(deputy, chief):
@@ -24,7 +25,8 @@ def r_DC_D(deputy, chief):
 
 def r_DC_Hc(deputy, chief):
     """Relative position of the deputy satellite to the chief satellite in chief Hill frame."""
-    pass
+    HcN = chief.dynamics.HN
+    return HcN @ r_DC_N(deputy, chief)
 
 
 def r_DC_Hd(deputy, chief):
@@ -49,7 +51,9 @@ def v_DC_D(deputy, chief):
 
 def v_DC_Hc(deputy, chief):
     """Relative velocity of the deputy satellite to the chief satellite in chief Hill frame."""
-    pass
+    HcN = chief.dynamics.HN
+    omega_HcN_N = rv2omega(chief.dynamics.r_BN_N, chief.dynamics.v_BN_N)
+    return HcN @ (v_DC_N(deputy, chief) + np.cross(omega_HcN_N, r_DC_N(deputy, chief)))
 
 
 def v_DC_Hd(deputy, chief):
