@@ -81,6 +81,7 @@ class MagicThrust(ContinuousAction):
         self,
         name: str = "thrust_act",
         max_dv: float = float("inf"),
+        max_duration: float = float("inf"),
         fsw_action: Optional[str] = None,
     ) -> None:
         """Instantaneously change the satellite's velocity, and drift for some duration.
@@ -93,6 +94,7 @@ class MagicThrust(ContinuousAction):
         """
         super().__init__(name)
         self.max_dv = max_dv
+        self.max_duration = max_duration
         self.fsw_action = fsw_action
 
     @property
@@ -102,7 +104,7 @@ class MagicThrust(ContinuousAction):
             low=np.array(
                 [-self.max_dv, -self.max_dv, -self.max_dv, self.simulator.sim_rate]
             ),
-            high=np.array([self.max_dv, self.max_dv, self.max_dv, 5700.0]),
+            high=np.array([self.max_dv, self.max_dv, self.max_dv, self.max_duration]),
             shape=(4,),
             dtype=np.float32,
         )
