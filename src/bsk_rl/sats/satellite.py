@@ -14,6 +14,7 @@ from gymnasium import spaces
 from bsk_rl.act.actions import select_action_builder
 from bsk_rl.obs.observations import ObservationBuilder
 from bsk_rl.sim import dyn, fsw
+from bsk_rl.utils import vizard
 from bsk_rl.utils.functional import (
     AbstractClassProperty,
     Resetable,
@@ -137,6 +138,14 @@ class Satellite(ABC, Resetable):
         self._timed_terminal_event_name = None
         self._is_alive = True
         self.time_of_death = None
+
+    @vizard.visualize
+    def create_vizard_data(self, color, vizSupport=None) -> None:
+        """Create a location to store data to be passed to enableUnityVisualization."""
+        self.vizard_color = color
+        self.vizard_data = dict(
+            spriteList=vizSupport.setSprite("SQUARE", color=color),
+        )
 
     def reset_pre_sim_init(self) -> None:
         """Called during environment reset, before Basilisk simulation initialization."""

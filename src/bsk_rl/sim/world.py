@@ -178,7 +178,7 @@ class BasicWorldModel(WorldModel):
         # setup Spice interface for some solar system bodies
         timeInitString = utc_init
         self.gravFactory.createSpiceInterface(
-            bsk_path + "/supportData/EphemerisData/", timeInitString
+            bsk_path + "/supportData/EphemerisData/", timeInitString, epochInMsg=True
         )
         self.gravFactory.spiceObject.zeroBase = "earth"
 

@@ -11,6 +11,7 @@ from scipy.optimize import minimize_scalar, root_scalar
 from bsk_rl.sats.satellite import Satellite
 from bsk_rl.scene.targets import Target
 from bsk_rl.sim import dyn, fsw
+from bsk_rl.utils import vizard
 from bsk_rl.utils.functional import valid_func_name
 from bsk_rl.utils.orbital import elevation
 
@@ -583,6 +584,7 @@ class ImagingSatellite(AccessSatellite):
                     self._info_command(f"imaged {target}"),
                     self._satellite_command + ".imaged += 1",
                     self._satellite_command + ".requires_retasking = True",
+                    self._satellite_command + ".remove_imaging_line()",
                 ],
                 terminal=self.variable_interval,
             )
@@ -640,7 +642,10 @@ class ImagingSatellite(AccessSatellite):
         self.update_timed_terminal_event(
             next_window[1],
             info=f"for {target} window",
-            extra_actions=[self._satellite_command + ".missed += 1"],
+            extra_actions=[
+                self._satellite_command + ".missed += 1",
+                self._satellite_command + ".remove_imaging_line()",
+            ],
         )
 
     def task_target_for_imaging(self, target: "Target"):
@@ -653,3 +658,27 @@ class ImagingSatellite(AccessSatellite):
         self.logger.info(msg)
         self.fsw.action_image(target.r_LP_P, target.id)
         self.enable_target_window(target)
+        self.draw_imaging_line(target)
+
+    @vizard.visualize
+    def draw_imaging_line(
+        self, target: "Target", vizSupport=None, vizInstance=None
+    ) -> None:
+        """Draw a line from the satellite to the target in vizard."""
+        if not hasattr(self, "target_line"):
+            vizSupport.createTargetLine(
+                vizInstance,
+                fromBodyName=self.name,
+                toBodyName=target.name,
+                lineColor=self.vizard_color,
+            )
+            self.target_line = vizSupport.targetLineList[-1]
+        self.target_line.toBodyName = target.name
+        vizSupport.updateTargetLineList(vizInstance)
+
+    @vizard.visualize
+    def remove_imaging_line(self, vizSupport=None, vizInstance=None):
+        """Remove the imaging line from Vizard."""
+        if hasattr(self, "target_line"):
+            self.target_line.toBodyName = self.name
+            vizSupport.updateTargetLineList(vizInstance)

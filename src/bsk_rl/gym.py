@@ -17,7 +17,7 @@ from bsk_rl.sats import Satellite
 from bsk_rl.scene import Scenario
 from bsk_rl.sim import Simulator
 from bsk_rl.sim.world import WorldModel
-from bsk_rl.utils import logging_config
+from bsk_rl.utils import logging_config, vizard
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         generate_obs_retasking_only: bool = False,
         log_level: Union[int, str] = logging.WARNING,
         log_dir: Optional[str] = None,
+        vizard_dir: Optional[str] = None,
+        vizard_settings: Optional[dict[str, Any]] = None,
         render_mode=None,
     ) -> None:
         """A `Gymnasium <https://gymnasium.farama.org>`_ environment adaptable to a wide range satellite tasking problems.
@@ -91,10 +93,22 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 zeros.
             log_level: Logging level for the environment. Default is ``WARNING``.
             log_dir: Directory to write logs to in addition to the console.
+            vizard_dir: Path to save Vizard visualization files. If None, no Vizard-related
+                modules will be imported.
+            vizard_settings: Settings for Vizard visualization. Set in ``vizIstance.settings``.
+                Additionally, the key ``vizard_rate`` can be set to the rate at which Vizard updates.
+                Valid setting can be found `here <https://hanspeterschaub.info/basilisk/Vizard/vizardAdvanced/vizardSettings.html#id1>`_.
             render_mode: Unused.
         """
         self.seed = None
         self._configure_logging(log_level, log_dir)
+        if vizard_dir is not None:
+            vizard.VIZARD_PATH = vizard_dir
+            if vizard_settings is not None:
+                logger.warning(
+                    "Vizard settings provided but Vizard is not enabled. Ignoring settings."
+                )
+        self.vizard_settings = vizard_settings if vizard_settings is not None else {}
 
         if isinstance(satellites, Satellite):
             satellites = [satellites]
@@ -250,8 +264,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.scenario.reset_overwrite_previous()
         self.rewarder.reset_overwrite_previous()
         self.communicator.reset_overwrite_previous()
-        for satellite in self.satellites:
+        for i, satellite in enumerate(self.satellites):
             satellite.reset_overwrite_previous()
+            satellite.create_vizard_data(color=vizard.get_color(i))
         self.latest_step_duration = 0.0
 
         self._generate_world_args()
@@ -280,6 +295,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             max_step_duration=self.max_step_duration,
             time_limit=self.time_limit,
         )
+        self.simulator.setup_vizard(**self.vizard_settings)
 
         self.scenario.reset_during_sim_init()
         self.rewarder.reset_during_sim_init()

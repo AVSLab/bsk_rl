@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Callable, Optional
 import numpy as np
 
 from bsk_rl.data.base import Data, DataStore, GlobalReward
+from bsk_rl.utils import vizard
 
 if TYPE_CHECKING:
     from bsk_rl.sats import Satellite
@@ -106,7 +107,15 @@ class UniqueImageStore(DataStore):
             imaged.append(
                 [target for target in self.data.known if target.id == target_id][0]
             )
+        self.update_target_colors(imaged)
         return UniqueImageData(imaged=imaged)
+
+    @vizard.visualize
+    def update_target_colors(self, targets, vizInstance=None, vizSupport=None):
+        """Update target colors in Vizard."""
+        for location in vizInstance.locations:
+            if location.stationName in [target.name for target in targets]:
+                location.color = vizSupport.toRGBA255(self.satellite.vizard_color)
 
 
 class UniqueImageReward(GlobalReward):

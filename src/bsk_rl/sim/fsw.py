@@ -55,6 +55,7 @@ from Basilisk.fswAlgorithms import (
 from Basilisk.utilities import macros as mc
 
 from bsk_rl.sim import dyn
+from bsk_rl.utils import vizard
 from bsk_rl.utils.functional import (
     AbstractClassProperty,
     check_aliveness_checkers,
@@ -70,7 +71,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def action(
-    func: Callable[..., None]
+    func: Callable[..., None],
 ) -> Callable[Callable[..., None], Callable[..., None]]:
     """Decorator to reset the satellite software before executing an action.
 
@@ -674,6 +675,7 @@ class ImagingFSWModel(BasicFSWModel):
         def _setup_fsw_objects(self, **kwargs) -> None:
             self.setup_location_pointing(**kwargs)
             self.setup_instrument_controller(**kwargs)
+            self.show_sensor()
 
         @default_args(inst_pHat_B=[0, 0, 1])
         def setup_location_pointing(
@@ -733,6 +735,21 @@ class ImagingFSWModel(BasicFSWModel):
             )
 
             self._add_model_to_task(self.insControl, priority=987)
+
+        @vizard.visualize
+        def show_sensor(self, vizInterface=None, vizSupport=None):
+            """Visualize the sensor in Vizard."""
+            genericSensor = vizInterface.GenericSensor()
+            genericSensor.normalVector = self.locPoint.pHat_B
+            genericSensor.r_SB_B = [0.0, 0.0, 0.0]
+            genericSensor.fieldOfView.push_back(4 * self.insControl.attErrTolerance)
+            genericSensor.color = vizInterface.IntVector(
+                vizSupport.toRGBA255(self.fsw.satellite.vizard_color, alpha=0.5)
+            )
+            cmdInMsg = messaging.DeviceCmdMsgReader()
+            cmdInMsg.subscribeTo(self.insControl.deviceCmdOutMsg)
+            genericSensor.genericSensorCmdInMsg = cmdInMsg
+            self.fsw.satellite.vizard_data["genericSensorList"] = [genericSensor]
 
         def reset_for_action(self) -> None:
             """Reset pointing controller."""

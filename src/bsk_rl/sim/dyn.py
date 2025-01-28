@@ -338,7 +338,7 @@ class BasicDynamicsModel(DynamicsModel):
             raise (KeyError("Orbit is overspecified. Provide either (rN, vN) or oe"))
 
         self.scObject = spacecraft.Spacecraft()
-        self.scObject.ModelTag = "sat-" + self.satellite.name
+        self.scObject.ModelTag = self.satellite.name
 
         Ixx = 1.0 / 12.0 * mass * (width**2.0 + depth**2.0)
         Iyy = 1.0 / 12.0 * mass * (depth**2.0 + height**2.0)

@@ -15,6 +15,7 @@ import pandas as pd
 from Basilisk.utilities import orbitalMotion
 
 from bsk_rl.scene import Scenario
+from bsk_rl.utils import vizard
 from bsk_rl.utils.orbital import lla2ecef
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -115,6 +116,27 @@ class UniformTargets(Scenario):
                         type="target",
                     )
 
+    def reset_during_sim_init(self) -> None:
+        """Visualize targets in Vizard on reset."""
+        for target in self.targets:
+            self.visualize_target(target)
+
+    @vizard.visualize
+    def visualize_target(self, target, vizSupport=None, vizInstance=None):
+        """Visualize target in Vizard."""
+        vizSupport.addLocation(
+            vizInstance,
+            stationName=target.name,
+            parentBodyName="earth",
+            r_GP_P=list(target.r_LP_P),
+            fieldOfView=np.arctan(500 / 800),
+            color=vizSupport.toRGBA255("white"),
+            range=1000.0 * 1000,  # meters
+        )
+        vizInstance.settings.showLocationCones = -1
+        vizInstance.settings.showLocationCommLines = -1
+        vizInstance.settings.showLocationLabels = -1
+
     def regenerate_targets(self) -> None:
         """Regenerate targets uniformly.
 
@@ -188,7 +210,7 @@ class CityTargets(UniformTargets):
             location *= self.radius
             self.targets.append(
                 Target(
-                    name=city["city"].replace("'", ""),
+                    name=f"{city['city']}, {city['iso2']}".replace("'", ""),
                     r_LP_P=location,
                     priority=self.priority_distribution(),
                 )

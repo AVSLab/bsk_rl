@@ -93,6 +93,7 @@ class TestCityTargets:
                     "city": f"city{i}",
                     "lat": 0.0,
                     "lng": 0.0,
+                    "iso2": "US",
                 }
             ),
             __len__=lambda self: n_database,
@@ -114,7 +115,7 @@ class TestCityTargets:
         else:
             ct.reset_pre_sim_init()
             assert len(ct.targets) == n_targets
-            possible_names = [f"city{i}" for i in range(5)]
+            possible_names = [f"city{i}, US" for i in range(5)]
             for target in ct.targets:
                 assert target.name in possible_names
 
@@ -132,7 +133,7 @@ class TestCityTargets:
         ct.reset_pre_sim_init()
         assert len(ct.targets) == n_targets
         if isinstance(n_select_from, int):
-            possible_names = [f"city{i}" for i in range(n_select_from)]
+            possible_names = [f"city{i}, US" for i in range(n_select_from)]
             for target in ct.targets:
                 assert target.name in possible_names
 
