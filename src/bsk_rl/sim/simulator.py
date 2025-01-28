@@ -1,10 +1,15 @@
 """Extended Basilisk SimBaseClass for GeneralSatelliteTasking environments."""
 
 import logging
+import os
+from pathlib import Path
+from time import time
 from typing import TYPE_CHECKING, Any
 
 from Basilisk.utilities import SimulationBaseClass
 from Basilisk.utilities import macros as mc
+
+from bsk_rl.utils import vizard
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -59,6 +64,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
 
     def finish_init(self) -> None:
         """Finish simulator initialization."""
+        self.set_vizard_epoch()
         self.InitializeSimulation()
         self.ConfigureStopTime(0)
         self.ExecuteSimulation()
@@ -72,6 +78,44 @@ class Simulator(SimulationBaseClass.SimBaseClass):
     def sim_time(self) -> float:
         """Simulation time in seconds, tied to SimBase integrator."""
         return self.sim_time_ns * mc.NANO2SEC
+
+    @vizard.visualize
+    def setup_vizard(self, vizard_rate=None, vizSupport=None, **vizard_settings):
+        """Setup Vizard for visualization."""
+        save_path = Path(vizard.VIZARD_PATH)
+        if not save_path.exists():
+            os.makedirs(save_path, exist_ok=True)
+
+        viz_proc_name = "VizProcess"
+        viz_proc = self.CreateNewProcess(viz_proc_name, priority=400)
+
+        # Define process name, task name and task time-step
+        viz_task_name = "viz_task_name"
+        if vizard_rate is None:
+            vizard_rate = self.sim_rate
+        viz_proc.addTask(self.CreateNewTask(viz_task_name, mc.sec2nano(vizard_rate)))
+
+        customizers = ["spriteList", "genericSensorList"]
+        list_data = {}
+        for customizer in customizers:
+            list_data[customizer] = [
+                sat.vizard_data.get(customizer, None) for sat in self.satellites
+            ]
+        self.vizInstance = vizSupport.enableUnityVisualization(
+            self,
+            viz_task_name,
+            scList=[sat.dynamics.scObject for sat in self.satellites],
+            **list_data,
+            saveFile=save_path / f"viz_{time()}",
+        )
+        for key, value in vizard_settings.items():
+            setattr(self.vizInstance.settings, key, value)
+        vizard.VIZINSTANCE = self.vizInstance
+
+    @vizard.visualize
+    def set_vizard_epoch(self, vizInstance=None):
+        """Set the Vizard epoch."""
+        vizInstance.epochInMsg.subscribeTo(self.world.gravFactory.epochMsg)
 
     def _set_world(
         self, world_type: type["WorldModel"], world_args: dict[str, Any]
