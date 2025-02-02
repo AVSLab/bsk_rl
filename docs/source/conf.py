@@ -41,6 +41,7 @@ extensions = [
     "sphinx_rtd_theme",
     "nbsphinx",
     "sphinx.ext.mathjax",
+    "sphinxcontrib.youtube",
 ]
 
 templates_path = ["_templates"]
@@ -234,7 +235,6 @@ class PackageCrawler:
             f.write(lines)
 
     def generate_autodoc(self, doc_path, source_file):
-
         # Make header
         short_name = source_file.name.replace(".py", "")
         lines = ""

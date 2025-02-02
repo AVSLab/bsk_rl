@@ -26,7 +26,8 @@ Development Version
 * Improve performance of :class:`~bsk_rl.obs.Eclipse` observations by about 95%.
 * Logs a warning if the initial battery charge or buffer level is incompatible with its capacity.
 * Optimize communication when all satellites are communicating with each other.
-
+* Enable Vizard visualization of the environment by setting the ``vizard_dir`` and ``vizard_settings``
+  options in the environment.
 
 
 Version 1.0.1
