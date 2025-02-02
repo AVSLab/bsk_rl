@@ -133,9 +133,12 @@ class UniformTargets(Scenario):
             color=vizSupport.toRGBA255("white"),
             range=1000.0 * 1000,  # meters
         )
-        vizInstance.settings.showLocationCones = -1
-        vizInstance.settings.showLocationCommLines = -1
-        vizInstance.settings.showLocationLabels = -1
+        if vizInstance.settings.showLocationCones == 0:
+            vizInstance.settings.showLocationCones = -1
+        if vizInstance.settings.showLocationCommLines == 0:
+            vizInstance.settings.showLocationCommLines = -1
+        if vizInstance.settings.showLocationLabels == 0:
+            vizInstance.settings.showLocationLabels = -1
 
     def regenerate_targets(self) -> None:
         """Regenerate targets uniformly.
