@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 
 from bsk_rl import sats
@@ -10,7 +11,9 @@ from bsk_rl.sim.fsw import Task
 @patch("bsk_rl.sats.Satellite.observation_spec", MagicMock())
 @patch("bsk_rl.sats.Satellite.action_spec", [MagicMock()])
 class TestSatellite:
-    sats.Satellite.dyn_type = MagicMock(with_defaults=MagicMock(defaults={"a": 1}))
+    sats.Satellite.dyn_type = MagicMock(
+        with_defaults=MagicMock(defaults={"a": 1, "d": np.array([4, 5])})
+    )
     Task.with_defaults = MagicMock(defaults={"c": 3})
     sats.Satellite.fsw_type = MagicMock(
         with_defaults=MagicMock(defaults={"b": 2}),
@@ -19,33 +22,49 @@ class TestSatellite:
     sats.Satellite.logger = MagicMock()
 
     def test_default_sat_args(self):
-        assert sats.Satellite.default_sat_args() == {"a": 1, "b": 2, "c": 3}
+        np.testing.assert_equal(
+            sats.Satellite.default_sat_args(),
+            {
+                "a": 1,
+                "b": 2,
+                "c": 3,
+                "d": np.array([4, 5]),
+            },
+        )
 
     @pytest.mark.parametrize(
         "overwrite,error", [({"c": 4}, False), ({"not_c": 4}, True)]
     )
     def test_default_sat_args_overwrote(self, overwrite, error):
         if not error:
-            assert sats.Satellite.default_sat_args(**overwrite) == {
-                "a": 1,
-                "b": 2,
-                "c": 4,
-            }
+            np.testing.assert_equal(
+                sats.Satellite.default_sat_args(**overwrite),
+                {
+                    "a": 1,
+                    "b": 2,
+                    "c": 4,
+                    "d": np.array([4, 5]),
+                },
+            )
         else:
             with pytest.raises(KeyError):
                 sats.Satellite.default_sat_args(**overwrite)
 
     def test_init_default(self):
         sat = sats.Satellite(name="TestSat", sat_args=None)
-        assert sat.sat_args_generator == {"a": 1, "b": 2, "c": 3}
+        np.testing.assert_equal(
+            sat.sat_args_generator, {"a": 1, "b": 2, "c": 3, "d": np.array([4, 5])}
+        )
 
     def test_generate_sat_args(self):
         sat = sats.Satellite(
             name="TestSat",
             sat_args={"a": 4, "b": lambda: 5},
         )
-        sat.generate_sat_args(a=10)
-        assert sat.sat_args == {"a": 10, "b": 5, "c": 3}
+        sat.generate_sat_args(a=10, d=np.array([4, 6]))
+        np.testing.assert_equal(
+            sat.sat_args, {"a": 10, "b": 5, "c": 3, "d": np.array([4, 6])}
+        )
 
     # @patch("bsk_rl.env.utils.orbital.TrajectorySimulator")
     # def test_reset_pre_sim_init(self, trajsim_patch):

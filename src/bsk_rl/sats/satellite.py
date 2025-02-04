@@ -124,7 +124,7 @@ class Satellite(ABC, Resetable):
         for k, v in kwargs.items():
             if k not in self.sat_args:
                 raise KeyError(f"{k} not a valid key for sat_args")
-            if self.sat_args[k] != v:
+            if np.any(self.sat_args[k] != v):
                 self.logger.debug(
                     f"Overwriting {k}={self.sat_args[k]} in sat_args with {v}"
                 )
