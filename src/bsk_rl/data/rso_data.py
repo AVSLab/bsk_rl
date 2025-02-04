@@ -115,6 +115,13 @@ class RSOInspectionDataStore(DataStore):
 class RSOInspectionReward(GlobalReward):
     datastore_type = RSOInspectionDataStore
 
+    def __init__(
+        self, inspection_reward_scale: float = 1.0, completion_bonus: float = 0.0
+    ):
+        super().__init__()
+        self.completion_bonus = completion_bonus
+        self.inspection_reward_scale = inspection_reward_scale
+
     def reset_post_sim_init(self) -> None:
         super().reset_post_sim_init()
 
@@ -148,7 +155,12 @@ class RSOInspectionReward(GlobalReward):
                 if access and not self.data.point_inspect_status.get(point, False):
                     new_points += 1
 
-            reward[satellite_id] = new_points / total_points
+            reward[satellite_id] = (
+                new_points / total_points * self.inspection_reward_scale
+            )
+            if sum(data.point_inspect_status.values()) == len(self.scenario.rso_points):
+                logger.info("All points inspected")
+                reward[satellite_id] += self.completion_bonus
         return reward
 
 
