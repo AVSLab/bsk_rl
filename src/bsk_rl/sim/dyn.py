@@ -1144,6 +1144,157 @@ class ContinuousImagingDynModel(ImagingDynModel):
         self.imagingTarget.addSpacecraftToModel(self.scObject.scStateOutMsg)
 
 
+class TargetScDynModel(ContinuousImagingDynModel):
+    # def setup_spacecraft_hub(
+    #     self,
+    #     # mass: float,
+    #     # width: float,
+    #     # depth: float,
+    #     # height: float,
+    #     # sigma_init: Iterable[float],
+    #     # omega_init: Iterable[float],
+    #     oe: Optional[Iterable[float]],
+    #     rN: Optional[Iterable[float]],
+    #     vN: Optional[Iterable[float]],
+    #     mu: float,
+    #     priority: int = 2000,
+    #     **kwargs,
+    # ) -> None:
+    #     """Set up the spacecraft hub physical properties and state.
+    #
+    #     The hub is assumed to be a uniform-density rectangular prism with the center of
+    #     mass at the center.
+    #
+    #     Args:
+    #         mass: [kg] Hub mass.
+    #         width: [m] Hub width.
+    #         depth: [m] Hub depth.
+    #         height: [m] Hub height.
+    #         sigma_init: Initial attitude MRP.
+    #         omega_init: [rad/s] Initial body rate.
+    #         oe: Orbital element tuple of (semimajor axis [km], eccentricity, inclination
+    #             [rad], ascending node [rad], argument of periapsis [rad], initial true
+    #             anomaly [rad]). Either ``oe`` and ``mu`` or ``rN`` and ``vN`` must be
+    #             provided, but not both.
+    #         mu: Gravitational parameter (used only with ``oe``).
+    #         rN: [m] Initial inertial position.
+    #         vN: [m/s] Initial inertial velocity.
+    #         priority: Model priority.
+    #         kwargs: Passed to other setup functions.
+    #     """
+    #     if rN is not None and vN is not None and oe is None:
+    #         pass
+    #     elif oe is not None and rN is None and vN is None:
+    #         rN, vN = orbitalMotion.elem2rv(mu, oe)
+    #     else:
+    #         raise (KeyError("Orbit is overspecified. Provide either (rN, vN) or oe"))
+    #
+    #     self.scObject = spacecraft.Spacecraft()
+    #     self.scObject.ModelTag = "sat-" + self.satellite.name
+    #
+    #     Ixx = 1.0 / 12.0 * mass * (width**2.0 + depth**2.0)
+    #     Iyy = 1.0 / 12.0 * mass * (depth**2.0 + height**2.0)
+    #     Izz = 1.0 / 12.0 * mass * (width**2.0 + height**2.0)
+    #     self.I_mat = [Ixx, 0.0, 0.0, 0.0, Iyy, 0.0, 0.0, 0.0, Izz]
+    #
+    #     self.scObject.hub.mHub = mass  # kg
+    #     self.scObject.hub.IHubPntBc_B = unitTestSupport.np2EigenMatrix3d(self.I_mat)
+    #
+    #     # Set the initial attitude and position
+    #     self.scObject.hub.sigma_BNInit = sigma_init
+    #     self.scObject.hub.omega_BN_BInit = omega_init
+    #     self.scObject.hub.r_CN_NInit = unitTestSupport.np2EigenVectorXd(rN)
+    #     self.scObject.hub.v_CN_NInit = unitTestSupport.np2EigenVectorXd(vN)
+    #
+    #     self.simulator.AddModelToTask(
+    #         self.task_name, self.scObject, ModelPriority=priority
+    #     )
+    #
+    #     self.setup_gravity_bodies()
+    #     self.setup_disturbance_torque(**kwargs)
+    #     self.setup_density_model()
+
+
+    @default_args(imageTargetMaximumRange=-1)
+    def setup_imaging_target(
+        self,
+        imageTargetMaximumRange: float = -1,
+        priority: int = 2000,
+        **kwargs,
+    ) -> None:
+        """Add a imaging target at the center of the Earth.
+
+        Args:
+            imageTargetMaximumRange: [m] Maximum range from target to satellite when
+                imaging. -1 to disable.
+            priority: Model priority.
+            kwargs: Passed to other setup functions.
+        """
+        self.imagingTarget = spacecraft.Spacecraft()  #groundLocation.GroundLocation()
+        self.imagingTarget.ModelTag = "TargetSat"
+        orbitCase = 'GTO'
+        oe = orbitalMotion.ClassicElements()
+        rLEO = 7500. * 1000      # meters
+        rGEO = 42000. * 1000     # meters
+        if orbitCase == 'GEO':
+            oe.a = rGEO
+            oe.e = 0.00001
+            oe.i = 0.0 * macros.D2R
+        elif orbitCase == 'GTO':
+            oe.a = (rLEO + rGEO) / 2.0
+            oe.e = 1.0 - rLEO / oe.a
+            oe.i = 0.0 * macros.D2R
+        else:                   # LEO case, default case 0
+            oe.a = rLEO
+            oe.e = 0.020
+            oe.i = 90 * macros.D2R
+        oe.Omega = 48.2 * macros.D2R
+        oe.omega = 347.8 * macros.D2R
+        # oe.Omega = 0.0 * macros.D2R
+        # oe.omega = 0.0 * macros.D2R
+        oe.f = 85.3 * macros.D2R
+
+        mu = 3.986 * 10**14 #m^3/s^2
+        print('testing the setup_image_target function')
+        rN, vN = orbitalMotion.elem2rv(mu, oe)
+        oe = orbitalMotion.rv2elem(mu, rN, vN)
+
+        # self.setup_gravity_bodies()
+        self.imagingTarget.hub.r_CN_NInit = rN
+        self.imagingTarget.hub.v_CN_NInit = vN
+
+        self.imagingTarget.gravField.gravBodies = spacecraft.GravBodyVector(
+            list(self.world.gravFactory.gravBodies.values()))
+
+        self.targetLocation = spacecraftLocation.SpacecraftLocation()
+        self.targetLocation.ModelTag = "targetLocation"
+        self.targetLocation.planetInMsg.subscribeTo(
+            self.world.gravFactory.spiceObject.planetStateOutMsgs[self.world.body_index]
+        )
+
+        self.targetLocation.primaryScStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
+        # self.targetLocation.scStateInMsgs.subscribeTo(self.imagingTarget.scStateOutMsg)
+        self.targetLocation.addSpacecraftToModel(self.imagingTarget.scStateOutMsg)
+
+
+        self.simpleTargetNav = simpleNav.SimpleNav()
+        self.simpleTargetNav.scStateInMsg.subscribeTo(self.imagingTarget.scStateOutMsg)
+        self.simulator.AddModelToTask(
+            self.task_name, self.simpleTargetNav, ModelPriority=priority
+        )
+        # self.simulator.AddModelToTask(
+        #     self.world.world_task_name,
+        #     self.imagingTarget,
+        #     ModelPriority=priority,
+        # )
+        self.simulator.AddModelToTask(
+            self.task_name, self.imagingTarget, ModelPriority=priority
+        )
+
+    def reset_target_sat(self):
+        #get info from the targets o.e. to generate target sc with correct state parameters
+
+
 class GroundStationDynModel(ImagingDynModel):
     """Model that connects satellite to world ground stations."""
 
