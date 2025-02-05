@@ -891,6 +891,88 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
         raise NotImplementedError("Use action_nadir_scan instead")
 
 
+class ScTargetImagingModel(ContinuousImagingFSWModel):
+
+    class LocPointTask(ImagingFSWModel.LocPointTask):
+
+        @default_args(inst_pHat_B=[0, 0, 1])
+        def setup_location_pointing(
+            self, inst_pHat_B: Iterable[float], **kwargs
+        ) -> None:
+            """Set the Earth location pointing guidance module.
+
+            Args:
+                inst_pHat_B: Instrument pointing direction.
+                kwargs: Passed to other setup functions.
+            """
+            self.locPoint.pHat_B = inst_pHat_B
+            self.locPoint.scAttInMsg.subscribeTo(
+                self.fsw.dynamics.simpleNavObject.attOutMsg
+            )
+            self.locPoint.scTransInMsg.subscribeTo(
+                self.fsw.dynamics.simpleNavObject.transOutMsg
+            )
+            self.locPoint.scTargetInMsg.subscribeTo(
+                self.fsw.dynamics.simpleTargetNav.transOutMsg
+            )
+            self.locPoint.useBoresightRateDamping = 1
+            messaging.AttGuidMsg_C_addAuthor(
+                self.locPoint.attGuidOutMsg, self.fsw.attGuidMsg
+            )
+
+            self._add_model_to_task(self.locPoint, priority=1198)
+
+        @default_args(imageAttErrorRequirement=0.01, imageRateErrorRequirement=None)
+        def setup_instrument_controller(
+            self,
+            imageAttErrorRequirement: float,
+            imageRateErrorRequirement: float,
+            **kwargs,
+        ) -> None:
+            """Set the instrument controller parameters.
+
+            The instrument controller is used to take an image when certain relative
+            attitude requirements are met, along with the access requirements of the
+            target (i.e. ``imageTargetMinimumElevation`` and ``imageTargetMaximumRange``
+            as set in :class:`~bsk_rl.sim.dyn.ImagingDynModel.setup_imaging_target`).
+
+            Args:
+                imageAttErrorRequirement: [MRP norm] Pointing attitude error tolerance
+                    for imaging.
+                imageRateErrorRequirement: [rad/s] Rate tolerance for imaging. Disable
+                    with ``None``.
+                kwargs: Passed to other setup functions.
+            """
+            self.insControl.attErrTolerance = imageAttErrorRequirement
+            if imageRateErrorRequirement is not None:
+                self.insControl.useRateTolerance = 1
+                self.insControl.rateErrTolerance = imageRateErrorRequirement
+            self.insControl.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
+            self.insControl.locationAccessInMsg.subscribeTo(
+                self.fsw.dynamics.targetLocation.accessOutMsgs[-1]
+            )
+
+            self._add_model_to_task(self.insControl, priority=987)
+
+    @action
+    def action_nadir_scan(self) -> None:
+        """Scan nadir.
+
+        This action points the instrument nadir and continuously adds data to the buffer
+        as long as attitude requirements are met. The instrument power sink is active
+        as long as the action is set.
+        """
+        self.dynamics.instrument.nodeStatusInMsg.subscribeTo(
+            self.insControl.deviceCmdOutMsg
+        )
+        self.insControl.controllerStatus = 1
+        self.dynamics.instrumentPowerSink.powerStatus = 1
+        # self.dynamics.imagingTarget.r_LP_P_Init = np.array(
+        #     [0, 0, 0.1]
+        # )  # All zero causes an error
+        self.dynamics.instrument.nodeDataName = "nadir"
+        self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
+
 class SteeringFSWModel(BasicFSWModel):
     """FSW extending MRP control to use MRP steering instead of MRP feedback."""
 
