@@ -11,6 +11,7 @@ import pandas as pd
 from bsk_rl.scene import Scenario
 from bsk_rl.sim.dyn import RSODynModel, RSOImagingDynModel
 from bsk_rl.sim.fsw import RSOImagingFSWModel
+from bsk_rl.utils import vizard
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.data.base import Data
@@ -29,6 +30,9 @@ class RSOPoint:
     def __hash__(self) -> int:
         """Hash target by unique id."""
         return hash(id(self))  # THIS IS ALMOST CERTAINLY A BAD IDEA
+
+    def __str__(self) -> str:
+        return f"RSOPoint_{self.r_PB_B}"
 
 
 class RSOPoints(Scenario):
@@ -72,9 +76,28 @@ class RSOPoints(Scenario):
                 assert isinstance(observer.fsw, RSOImagingFSWModel)
                 observer.dynamics.add_rso_point(rso_point_model)
 
+            self.visualize_rso_point(point)
+
         logger.debug("Targeting RSO with observers")
         for observer in self.observers:
             observer.fsw.set_target_rso(self.rso)
+
+    @vizard.visualize
+    def visualize_rso_point(self, rso_point, vizSupport=None, vizInstance=None):
+        """Visualize target in Vizard."""
+        vizSupport.addLocation(
+            vizInstance,
+            stationName=str(rso_point),
+            parentBodyName=self.rso.name,
+            r_GP_P=list(rso_point.r_PB_B),
+            gHat_P=list(rso_point.n_B),
+            fieldOfView=rso_point.theta_min,
+            color=vizSupport.toRGBA255("tab:red", alpha=0.5),
+            range=float(rso_point.range),
+        )
+        vizInstance.settings.showLocationCones = -1
+        vizInstance.settings.showLocationCommLines = -1
+        vizInstance.settings.showLocationLabels = -1
 
     @abstractmethod
     def generate_points(self) -> list[RSOPoint]:

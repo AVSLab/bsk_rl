@@ -9,6 +9,7 @@ from bsk_rl.data.base import Data, DataStore, GlobalReward
 from bsk_rl.sats import Satellite
 from bsk_rl.scene.rso_points import RSOPoint
 from bsk_rl.sim.dyn import RSODynModel, RSOImagingDynModel
+from bsk_rl.utils import vizard
 
 if TYPE_CHECKING:
     from bsk_rl.sats import Satellite
@@ -104,12 +105,27 @@ class RSOInspectionDataStore(DataStore):
             if any(log):
                 point_inspect_status[rso_point] = True
 
+        self.update_point_colors(
+            [
+                rso_point
+                for rso_point in point_inspect_status
+                if point_inspect_status[rso_point]
+            ]
+        )
+
         if len(point_inspect_status) > 0:
             self.satellite.logger.info(
                 f"Inspected {len(point_inspect_status)} points this step"
             )
 
         return RSOInspectionData(point_inspect_status)
+
+    @vizard.visualize
+    def update_point_colors(self, rso_points, vizInstance=None, vizSupport=None):
+        """Update target colors in Vizard."""
+        for location in vizInstance.locations:
+            if location.stationName in [str(point) for point in rso_points]:
+                location.color = vizSupport.toRGBA255("tab:green", alpha=0.5)
 
 
 class RSOInspectionReward(GlobalReward):
@@ -121,6 +137,10 @@ class RSOInspectionReward(GlobalReward):
         super().__init__()
         self.completion_bonus = completion_bonus
         self.inspection_reward_scale = inspection_reward_scale
+
+    def reset_overwrite_previous(self) -> None:
+        super().reset_overwrite_previous()
+        self.bonus_reward_yielded = False
 
     def reset_post_sim_init(self) -> None:
         super().reset_post_sim_init()
@@ -155,12 +175,22 @@ class RSOInspectionReward(GlobalReward):
                 if access and not self.data.point_inspect_status.get(point, False):
                     new_points += 1
 
+            if new_points > 0:
+                logger.info(f"{satellite_id} inspected {new_points} new points.")
+
             reward[satellite_id] = (
                 new_points / total_points * self.inspection_reward_scale
             )
-            if sum(data.point_inspect_status.values()) == len(self.scenario.rso_points):
-                logger.info("All points inspected")
+        if (
+            sum(self.data.point_inspect_status.values())
+            == len(self.scenario.rso_points)
+            and not self.bonus_reward_yielded
+        ):
+            logger.info("All points inspected! Awarding completion bonus.")
+            for satellite_id in self.cum_reward:
                 reward[satellite_id] += self.completion_bonus
+            self.bonus_reward_yielded = True
+
         return reward
 
 

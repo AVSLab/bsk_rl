@@ -53,7 +53,7 @@ def v_DC_Hc(deputy, chief):
     """Relative velocity of the deputy satellite to the chief satellite in chief Hill frame."""
     HcN = chief.dynamics.HN
     omega_HcN_N = rv2omega(chief.dynamics.r_BN_N, chief.dynamics.v_BN_N)
-    return HcN @ (v_DC_N(deputy, chief) + np.cross(omega_HcN_N, r_DC_N(deputy, chief)))
+    return HcN @ (v_DC_N(deputy, chief) - np.cross(omega_HcN_N, r_DC_N(deputy, chief)))
 
 
 def v_DC_Hd(deputy, chief):
