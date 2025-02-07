@@ -196,6 +196,8 @@ class ComposedReward(GlobalReward):
             initial_data=self.initial_data(satellite),
         )
         self.cum_reward[satellite.name] = 0.0
+        for rewarder in self.rewarders:
+            rewarder.cum_reward[satellite.name] = 0.0
 
     def calculate_reward(
         self, new_data_dict: dict[str, ComposedData]
@@ -220,6 +222,7 @@ class ComposedReward(GlobalReward):
 
                 for sat_id, sat_reward in reward_i.items():
                     reward[sat_id] = reward.get(sat_id, 0.0) + sat_reward
+                    rewarder.cum_reward[sat_id] += sat_reward
         return reward
 
     def reward(self, new_data_dict: dict[str, ComposedData]) -> dict[str, float]:

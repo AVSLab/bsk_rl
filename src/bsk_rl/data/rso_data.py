@@ -166,6 +166,7 @@ class RSOInspectionReward(GlobalReward):
     def calculate_reward(self, new_data_dict: dict[str, Data]) -> dict[str, float]:
         total_points = len(self.scenario.rso_points)
         reward = {}
+        total_new_points = 0
         for satellite_id, data in new_data_dict.items():
             if len(data.point_inspect_status) == 0:
                 continue
@@ -181,14 +182,17 @@ class RSOInspectionReward(GlobalReward):
             reward[satellite_id] = (
                 new_points / total_points * self.inspection_reward_scale
             )
+            total_new_points += new_points
         if (
-            sum(self.data.point_inspect_status.values())
+            sum(self.data.point_inspect_status.values()) + total_new_points
             == len(self.scenario.rso_points)
             and not self.bonus_reward_yielded
         ):
             logger.info("All points inspected! Awarding completion bonus.")
             for satellite_id in self.cum_reward:
-                reward[satellite_id] += self.completion_bonus
+                reward[satellite_id] = (
+                    reward.get(satellite_id, 0.0) + self.completion_bonus
+                )
             self.bonus_reward_yielded = True
 
         return reward
