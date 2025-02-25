@@ -948,30 +948,79 @@ class ScTargetImagingModel(ImagingFSWModel):
                 self.insControl.useRateTolerance = 1
                 self.insControl.rateErrTolerance = imageRateErrorRequirement
             self.insControl.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
+
             self.insControl.locationAccessInMsg.subscribeTo(
                 self.fsw.dynamics.targetLocation.accessOutMsgs[-1]
             )
 
             self._add_model_to_task(self.insControl, priority=987)
 
-    @action
-    def action_nadir_scan(self) -> None:
-        """Scan nadir.
+    # @action
+    # def action_nadir_scan(self) -> None:
+    #     """Scan nadir.
+    #
+    #     This action points the instrument nadir and continuously adds data to the buffer
+    #     as long as attitude requirements are met. The instrument power sink is active
+    #     as long as the action is set.
+    #     """
+    #     self.dynamics.instrument.nodeStatusInMsg.subscribeTo(
+    #         self.insControl.deviceCmdOutMsg
+    #     )
+    #     self.insControl.controllerStatus = 1
+    #     self.dynamics.instrumentPowerSink.powerStatus = 1
+    #     # self.dynamics.imagingTarget.r_LP_P_Init = np.array(
+    #     #     [0, 0, 0.1]
+    #     # )  # All zero causes an error
+    #     self.dynamics.instrument.nodeDataName = "nadir"
+    #     self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
+    #
 
-        This action points the instrument nadir and continuously adds data to the buffer
-        as long as attitude requirements are met. The instrument power sink is active
-        as long as the action is set.
+    # @action
+    # def action_image(self, RSOTarget, data_name: str) -> None:
+    #     """Attempt to image a target.
+    #
+    #     This action sets the target attitude to one tracking an RSO. If the
+    #     target is within the imaging constraints, an image will be taken and stored in
+    #     the data buffer. The instrument power sink will be active as long as the task is
+    #     enabled.
+    #
+    #     Args:
+    #         RSOTarget: Contains the target RSO spacecraft transOutMsg
+    #         data_name: Data buffer to store image data to.
+    #     """
+    #     self.insControl.controllerStatus = 1
+    #     self.dynamics.instrumentPowerSink.powerStatus = 1
+    #     # self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P
+    #     self.locPoint.scTargetInMsg.subscribeto(RSOTarget.simpleTargetNav.transOutMsg)
+    #     self.dynamics.instrument.nodeDataName = RSOTarget.data_name
+    #     self.insControl.imaged = 0
+    #     self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
+
+    @action
+    def action_image_rso_target(self, RSOTarget, data_name: str) -> None:
+        """Attempt to image a target.
+
+        This action sets the target attitude to one tracking an RSO. If the
+        target is within the imaging constraints, an image will be taken and stored in
+        the data buffer. The instrument power sink will be active as long as the task is
+        enabled.
+
+        Args:
+            RSOTarget: Contains the target RSO spacecraft transOutMsg
+            data_name: Data buffer to store image data to.
         """
-        self.dynamics.instrument.nodeStatusInMsg.subscribeTo(
-            self.insControl.deviceCmdOutMsg
-        )
         self.insControl.controllerStatus = 1
         self.dynamics.instrumentPowerSink.powerStatus = 1
-        # self.dynamics.imagingTarget.r_LP_P_Init = np.array(
-        #     [0, 0, 0.1]
-        # )  # All zero causes an error
-        self.dynamics.instrument.nodeDataName = "nadir"
+        # self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P
+        self.locPoint.scTargetInMsg.subscribeto(RSOTarget.simpleTargetNav.transOutMsg)
+
+        self.dynamics.targetLocation.addSpacecraftToModel(RSOTarget.simpleTargetNav.scStateInMsg)   # TODO: check if this is right syntax
+        # self.dyn.targetLocation.scStateInMsgs.subscribeto(RSOTarget.simpleTargetNav.scStateInMsg)   # TODO: check if this is right syntax
+
+        self.dynamics.instrument.nodeDataName = RSOTarget.data_namepo # TODO: DHP fix the naming here
+        self.insControl.imaged = 0
         self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
+
 
 class SteeringFSWModel(BasicFSWModel):
     """FSW extending MRP control to use MRP steering instead of MRP feedback."""
