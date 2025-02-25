@@ -50,6 +50,7 @@ from bsk_rl.act.discrete_actions import (
     Drift,
     Image,
     Scan,
+    ImageRSO,
 )
 
 __doc_title__ = "Actions"
@@ -63,4 +64,5 @@ __all__ = [
     "Downlink",
     "Image",
     "Scan",
+    "ImageRSO",
 ]
