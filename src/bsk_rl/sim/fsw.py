@@ -773,7 +773,7 @@ class ImagingFSWModel(BasicFSWModel):
         """
         self.insControl.controllerStatus = 1
         self.dynamics.instrumentPowerSink.powerStatus = 1
-        self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P
+        self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P #self.locationPoint.scTargetInMsg.subscribeto(ScTarget.simpleTargetNav.transOutMsg)
         self.dynamics.instrument.nodeDataName = data_name
         self.insControl.imaged = 0
         self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
@@ -891,7 +891,7 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
         raise NotImplementedError("Use action_nadir_scan instead")
 
 
-class ScTargetImagingModel(ContinuousImagingFSWModel):
+class ScTargetImagingModel(ImagingFSWModel):
 
     class LocPointTask(ImagingFSWModel.LocPointTask):
 
