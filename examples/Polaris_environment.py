@@ -14,7 +14,7 @@ from bsk_rl.sim import dyn, fsw
 from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 
-class MyScanningSatellite(sats.AccessSatellite):
+class MyScanningSatellite(sats.Satellite):
     observation_spec = [
         obs.SatProperties(
             dict(prop="storage_level_fraction"),
@@ -23,10 +23,10 @@ class MyScanningSatellite(sats.AccessSatellite):
         obs.Eclipse(),
     ]
     action_spec = [
-        act.Scan(duration=60.0),  # Scan for 1 minute
+        act.ImageRSO(50),  # Scan for 1 minute
         act.Charge(duration=600.0),  # Charge for 10 minutes
     ]
-    dyn_type = dyn.TargetScDynModel
+    dyn_type = dyn.ScTargetDynModel
     fsw_type = fsw.ScTargetImagingModel
 
 MyScanningSatellite.default_sat_args()
@@ -43,13 +43,13 @@ sat_args["storedCharge_Init"] = 50000.0
 sat_args["storageInit"] = lambda: np.random.uniform(0.25, 0.75) * 1e10
 
 # Make the satellite
-sat = MyScanningSatellite(name="EO1", sat_args=sat_args)
+sat = MyScanningSatellite(name="SO1", sat_args=sat_args) # SO1 for satellite observer 1
 
 env = gym.make(
     "SatelliteTasking-v1",
     satellite=sat,
-    scenario=scene.UniformNadirScanning(),
-    rewarder=data.ScanningTimeReward(),
+    scenario=scene.RandomSatellites(50),
+    rewarder=data.RSOTargetImageReward(),
     time_limit=5700.0,  # approximately 1 orbit
     log_level="INFO",
     disable_env_checker=True,
