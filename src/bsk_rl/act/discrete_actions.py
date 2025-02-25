@@ -302,5 +302,77 @@ class Image(DiscreteAction):
         return self.image(action, prev_action_key)
 
 
+class ImageRSO(DiscreteAction):
+    def __init__(
+        self,
+        n_ahead_image: int,
+        name: str = "action_imageRSO",
+    ):
+        """Actions to image upcoming target (:class:`~bsk_rl.env.simulation.fsw.ImagingFSWModel.action_image`).
+
+        Adds ``n_ahead_image`` actions to the action space, corresponding to the next
+        ``n_ahead_image`` unimaged targets. The action may be unsuccessful if the target
+        exits the satellite's field of regard before the satellite settles on the target
+        and takes an image. The action with stop as soon as the image is successfully
+        taken, or when the the target exits the field of regard.
+
+        This action implements a ``set_action_override`` that allows a target to be tasked
+        based on the target's ID string or the Target object.
+
+        Args:
+            name: Action name.
+            n_ahead_image: Number of unimaged, along-track targets to consider.
+        """
+        # from bsk_rl.sats import ImagingSatellite
+        #
+        # self.satellite: "ImagingSatellite"
+        super().__init__(name=name, n_actions=n_ahead_image)
+
+    def image_rso(
+        self, target: Union[int, "RSOTarget", str], prev_action_key: Optional[str] = None
+    ) -> str:
+        """Task or retask a satellite for imaging a target.
+
+        Args:
+            target: Target to image.
+            prev_action_key: Previous action key.
+
+        :meta private:
+        """
+        self.satellite.fsw.action_image_rso(target)
+        # target = self.satellite.parse_target_selection(target)
+        # if target.id != prev_action_key:
+        #     self.satellite.task_target_for_imaging(target)
+        # else:
+        #     self.satellite.enable_target_window(target)
+
+        return target.id
+
+    def set_action(self, action: int, prev_action_key: Optional[str] = None) -> str:
+        """Image a target by local index.
+
+        Args:
+            action: Index of the target to image.
+            prev_action_key: Previous action key.
+
+        :meta_private:
+        """
+        new_target = self.satellite.data_store.data.known[action]
+        self.satellite.logger.info(f"target index {action} tasked")
+        return self.image_rso(new_target, prev_action_key)
+
+    # def set_action_override(
+    #     self, action: Union["Target", str], prev_action_key: Optional[str] = None
+    # ) -> str:
+    #     """Image a target by target index, Target, or ID.
+    #
+    #     Args:
+    #         action: Target to image in the form of a Target object, target ID, or target index.
+    #         prev_action_key: Previous action key.
+    #
+    #     :meta_private:
+    #     """
+    #     return self.image(action, prev_action_key)
+
 __doc_title__ = "Discrete Backend"
 __all__ = ["DiscreteActionBuilder"]
