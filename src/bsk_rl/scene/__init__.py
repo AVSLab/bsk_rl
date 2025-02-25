@@ -10,6 +10,7 @@ following scenarios have been implemented:
 
 from bsk_rl.scene.scenario import Scenario, UniformNadirScanning
 from bsk_rl.scene.targets import CityTargets, UniformTargets
+from bsk_rl.scene.rso_targets import RSOTarget, RandomSatellites
 
 __doc_title__ = "Scenario"
 __all__ = [
@@ -17,4 +18,6 @@ __all__ = [
     "UniformTargets",
     "CityTargets",
     "UniformNadirScanning",
+    "RSOTarget",
+    "RandomSatellites"
 ]
