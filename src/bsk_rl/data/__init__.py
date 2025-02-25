@@ -93,6 +93,7 @@ from bsk_rl.data.base import GlobalReward
 from bsk_rl.data.nadir_data import ScanningTimeReward
 from bsk_rl.data.no_data import NoReward
 from bsk_rl.data.unique_image_data import UniqueImageReward
+from bsk_rl.data.rso_targets_data import RSOTargetImageReward
 
 __doc_title__ = "Data & Reward"
 __all__ = [
@@ -100,4 +101,5 @@ __all__ = [
     "NoReward",
     "UniqueImageReward",
     "ScanningTimeReward",
+    "RSOTargetImageReward",
 ]
