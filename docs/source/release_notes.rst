@@ -1,9 +1,9 @@
 Release Notes
 =============
 
-Development Version
--------------------
-*Release Date: MMM. DD, YYYY*
+Development - |version|
+-----------------------
+.. *Release Date: MMM. DD, YYYY*
 
 * Add ability in :class:`~bsk_rl.obs.SatProperties` to define new observations with
   a custom function.

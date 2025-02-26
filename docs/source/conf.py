@@ -22,10 +22,10 @@ from nbdime.utils import read_notebook
 # sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
 now = datetime.datetime.now()
 
-project = "BSK-RL"
+release = metadata.version("bsk_rl")
+project = "BSK-RL v" + release
 copyright = str(now.year) + ", Autonomous Vehicle Systems (AVS) Laboratory"
 author = "Mark Stephenson"
-release = metadata.version("bsk_rl")
 version = "Version " + release
 
 # -- General configuration ---------------------------------------------------
