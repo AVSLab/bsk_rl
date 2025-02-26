@@ -18,9 +18,9 @@ jobs:
       - name: Check Commit Format
         uses: gsactions/commit-message-checker@v2
         with:
-          pattern: 'Issue \#[0-9]+: .+'
+          pattern: '((Issue \#[0-9]+:)|(\[((\#[0-9]+)|(MINOR)|(AUTO))\])) .+'
           checkAllCommitMessages: 'true'
-          error: 'Your first line has to have the format "Issue #XXX: Commit message".'
+          error: 'Your first line has to have the format "Issue #XXX: Commit message" or "[#XXX] Commit Message".'
           excludeDescription: 'true'
           excludeTitle: 'true'
           accessToken: ${{ secrets.GITHUB_TOKEN }}
