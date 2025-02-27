@@ -25,7 +25,7 @@ if [[ $version_line =~ $regex ]]; then
     updated_version=${BASH_REMATCH[1]}$incremented_number
     
     # Update the version in the pyproject.toml file
-    sed -i '' "s/version = \"${BASH_REMATCH[1]}${last_number}\"/version = \"$updated_version\"/" "$file"
+    sed -i "s/version = \"${BASH_REMATCH[1]}${last_number}\"/version = \"$updated_version\"/" "$file"
     
     echo "Version updated to $updated_version in $file"
 else
