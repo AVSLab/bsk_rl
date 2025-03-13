@@ -173,7 +173,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.failure_penalty = failure_penalty
         if self.failure_penalty > 0:
             logger.warn("Failure penalty should be nonpositive")
-        self.time_limit = time_limit
+        self.time_limit_generator = time_limit
         self.terminate_on_time_limit = terminate_on_time_limit
         self.latest_step_duration = 0.0
         self.render_mode = render_mode
@@ -270,6 +270,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         super().reset(seed=self.seed)
         np.random.seed(self.seed)
 
+        if isinstance(self.time_limit_generator, Callable):
+            self.time_limit = self.time_limit_generator()
+        else:
+            self.time_limit = self.time_limit_generator
         self.scenario.reset_overwrite_previous()
         self.rewarder.reset_overwrite_previous()
         self.communicator.reset_overwrite_previous()
