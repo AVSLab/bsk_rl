@@ -196,6 +196,7 @@ class RSOInspectionReward(GlobalReward):
     def reset_overwrite_previous(self) -> None:
         super().reset_overwrite_previous()
         self.bonus_reward_yielded = False
+        self.bonus_reward_time = None
 
     def reset_post_sim_init(self) -> None:
         super().reset_post_sim_init()
@@ -266,7 +267,7 @@ class RSOInspectionReward(GlobalReward):
                     reward.get(satellite_id, 0.0) + self.completion_bonus
                 )
             self.bonus_reward_yielded = True
-
+            self.bonus_reward_time = self.scenario.satellites[0].simulator.sim_time
         return reward
 
 
