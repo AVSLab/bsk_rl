@@ -18,7 +18,8 @@ Development - |version|
   :class:`~bsk_rl.data.DataStore` constructor.
 * Implemented :class:`~bsk_rl.data.ResourceReward` to reward based on the level of a property in the satellite
   multiplied by some coefficient.
-
+* Allow rewarders to mark a satellite as truncated or terminated with the ``is_truncated`` and ``is_terminated``
+  methods.
 
 Version 1.1.0
 -------------

@@ -388,11 +388,16 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         if self.terminate_on_time_limit and self._get_truncated():
             return True
         else:
-            return not all(satellite.is_alive() for satellite in self.satellites)
+            return not all(
+                satellite.is_alive() and not self.rewarder.is_terminated(satellite)
+                for satellite in self.satellites
+            )
 
     def _get_truncated(self) -> bool:
         """Return the truncated flag for the step."""
-        return self.simulator.sim_time >= self.time_limit
+        return (self.simulator.sim_time >= self.time_limit) or any(
+            self.rewarder.is_truncated(satellite) for satellite in self.satellites
+        )
 
     @property
     def action_space(self) -> spaces.Space[MultiSatAct]:
@@ -676,6 +681,7 @@ class ConstellationTasking(
         else:
             return {
                 agent: not satellite.is_alive()
+                or self.rewarder.is_terminated(satellite)
                 for agent, satellite in zip(self.possible_agents, self.satellites)
                 if agent not in self.previously_dead
             }
@@ -684,8 +690,8 @@ class ConstellationTasking(
         """Format truncations per the PettingZoo Parallel API."""
         truncated = super()._get_truncated()
         return {
-            agent: truncated
-            for agent in self.possible_agents
+            agent: truncated or self.rewarder.is_truncated(satellite)
+            for agent, satellite in zip(self.possible_agents, self.satellites)
             if agent not in self.previously_dead
         }
 

@@ -262,7 +262,16 @@ class TestGeneralSatelliteTasking:
     @pytest.mark.parametrize("sat_death", [True, False])
     @pytest.mark.parametrize("timeout", [True, False])
     @pytest.mark.parametrize("terminate_on_time_limit", [True, False])
-    def test_step_stopped(self, sat_death, timeout, terminate_on_time_limit):
+    @pytest.mark.parametrize("rewarder_terminated", [True, False])
+    @pytest.mark.parametrize("rewarder_truncated", [True, False])
+    def test_step_stopped(
+        self,
+        sat_death,
+        timeout,
+        terminate_on_time_limit,
+        rewarder_terminated,
+        rewarder_truncated,
+    ):
         mock_sats = [MagicMock() for _ in range(2)]
         env = GeneralSatelliteTasking(
             satellites=mock_sats,
@@ -270,7 +279,9 @@ class TestGeneralSatelliteTasking:
             scenario=MagicMock(),
             communicator=MagicMock(),
             rewarder=MagicMock(
-                reward=MagicMock(return_value={sat.name: 12.5 for sat in mock_sats})
+                reward=MagicMock(return_value={sat.name: 12.5 for sat in mock_sats}),
+                is_terminated=MagicMock(return_value=rewarder_terminated),
+                is_truncated=MagicMock(return_value=rewarder_truncated),
             ),
             terminate_on_time_limit=terminate_on_time_limit,
         )
@@ -286,8 +297,12 @@ class TestGeneralSatelliteTasking:
 
         _, _, terminated, truncated, _ = env.step((0, 10))
 
-        assert terminated == (sat_death or (timeout and terminate_on_time_limit))
-        assert truncated == timeout
+        assert terminated == (
+            sat_death
+            or ((timeout or rewarder_truncated) and terminate_on_time_limit)
+            or rewarder_terminated
+        )
+        assert truncated == timeout or rewarder_truncated
 
     @patch.multiple(Satellite, __abstractmethods__=set())
     def test_step_retask_needed(self, capfd):
@@ -536,7 +551,10 @@ class TestConstellationTasking:
             satellites=mock_sats,
             world_type=MagicMock(),
             scenario=MagicMock(),
-            rewarder=MagicMock(),
+            rewarder=MagicMock(
+                is_terminated=MagicMock(return_value=False),
+                is_truncated=MagicMock(return_value=False),
+            ),
             terminate_on_time_limit=terminate_on_time_limit,
             time_limit=100,
         )
@@ -568,7 +586,10 @@ class TestConstellationTasking:
             satellites=mock_sats,
             world_type=MagicMock(),
             scenario=MagicMock(),
-            rewarder=MagicMock(),
+            rewarder=MagicMock(
+                is_terminated=MagicMock(return_value=False),
+                is_truncated=MagicMock(return_value=False),
+            ),
             time_limit=100,
         )
         env._agents_last_compute_time = None
