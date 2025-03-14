@@ -270,6 +270,9 @@ class RSOInspectionReward(GlobalReward):
             self.bonus_reward_time = self.scenario.satellites[0].simulator.sim_time
         return reward
 
+    def is_terminated(self, satellite) -> bool:
+        return self.bonus_reward_yielded
+
 
 __doc_title__ = "RSO Inspection"
 __all__ = ["RSOInspectionReward", "RSOInspectionDataStore", "RSOInspectionData"]

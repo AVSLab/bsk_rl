@@ -196,6 +196,14 @@ class GlobalReward(ABC, Resetable):
         logger.info(f"Total reward: {nonzero_reward}")
         return reward
 
+    def is_truncated(self, satellite) -> bool:
+        """Check if the episode is truncated for a satellite."""
+        return False
+
+    def is_terminated(self, satellite) -> bool:
+        """Check if the episode is terminated for a satellite."""
+        return False
+
 
 __doc_title__ = "Base Data"
 __all__ = ["GlobalReward", "DataStore", "Data"]

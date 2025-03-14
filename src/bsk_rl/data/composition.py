@@ -233,6 +233,14 @@ class ComposedReward(GlobalReward):
         self.pass_data()
         return reward
 
+    def is_truncated(self, satellite: Satellite) -> bool:
+        """Check if the episode is truncated by any rewarder."""
+        return any(rewarder.is_truncated(satellite) for rewarder in self.rewarders)
+
+    def is_terminated(self, satellite) -> bool:
+        """Check if the episode is terminated by any rewarder."""
+        return any(rewarder.is_terminated(satellite) for rewarder in self.rewarders)
+
 
 __doc_title__ = "Data Composition"
 __all__ = ["ComposedReward", "ComposedDataStore", "ComposedData"]
