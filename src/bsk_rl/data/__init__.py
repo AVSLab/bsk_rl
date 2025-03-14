@@ -94,6 +94,7 @@ from bsk_rl.data.fuel_penalty import FuelPenalty
 from bsk_rl.data.nadir_data import ScanningTimeReward
 from bsk_rl.data.no_data import NoReward
 from bsk_rl.data.rso_data import RSOInspectionReward
+from bsk_rl.data.time_penalty import TimePenalty
 from bsk_rl.data.unique_image_data import UniqueImageReward
 
 __doc_title__ = "Data & Reward"
@@ -104,4 +105,5 @@ __all__ = [
     "ScanningTimeReward",
     "RSOInspectionReward",
     "FuelPenalty",
+    "TimePenalty",
 ]

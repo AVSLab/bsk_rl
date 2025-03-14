@@ -144,6 +144,8 @@ class ComposedReward(GlobalReward):
 
     def __getattr__(self, name: str):
         """Search for an attribute in the rewarders."""
+        if name == "rewarders":  # Object state not initialized
+            raise AttributeError(name)
         for rewarder in self.rewarders:
             if hasattr(rewarder, name):
                 return getattr(rewarder, name)
