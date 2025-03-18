@@ -700,9 +700,9 @@ class ImagingFSWModel(BasicFSWModel):
             self.locPoint.scTransInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
-            self.locPoint.locationInMsg.subscribeTo(
-                self.fsw.dynamics.imagingTarget.currentGroundStateOutMsg
-            )
+            # self.locPoint.locationInMsg.subscribeTo(
+            #     self.fsw.dynamics.imagingTarget.currentGroundStateOutMsg
+            # )
             self.locPoint.useBoresightRateDamping = 1
             messaging.AttGuidMsg_C_addAuthor(
                 self.locPoint.attGuidOutMsg, self.fsw.attGuidMsg
@@ -1325,9 +1325,14 @@ class ImagingSCFSWModel(ImagingFSWModel):
             self.locPoint.scTransInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
-            self.locPoint.scTargetInMsg.subscribeTo(
+            self.locPoint.scTargetInMsg.subscribeTo(        # TODO: fix this to the target transOutMsg
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
+            # # self.locPoint.scTargetInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.simpleNavObject.transOutMsg)
+            # self.locPoint.scTargetInMsg.subscribeTo(
+            #     self.fsw.dynamics.simpleTargetNav.transOutMsg
+            # )
+
             self.locPoint.useBoresightRateDamping = 1
             messaging.AttGuidMsg_C_addAuthor(
                 self.locPoint.attGuidOutMsg, self.fsw.attGuidMsg
@@ -1392,8 +1397,9 @@ class ImagingSCFSWModel(ImagingFSWModel):
         self.dynamics.instrumentPowerSink.powerStatus = 1
         # self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P
         self.locPoint.scTargetInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.simpleNavObject.transOutMsg)
-        self.dynamics.targetLocation.addSpacecraftToModel(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)  # TODO: check if this is right syntax
-        self.dynamics.simpleNavObject.scStateInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)
+        # self.dynamics.targetLocation.addSpacecraftToModel(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)  # TODO: check if this is right syntax
+        # self.dynamics.simpleNavObject.scStateInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)
+        self.dynamics.simpleTargetNav.scStateInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)
 
 
         if self.dynamics.targetLocation.accessOutMsgs:
