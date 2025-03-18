@@ -52,6 +52,12 @@ from Basilisk.fswAlgorithms import (
     thrMomentumDumping,
     thrMomentumManagement,
 )
+from Basilisk.utilities import (
+    RigidBodyKinematics,
+    macros,
+    orbitalMotion,
+    unitTestSupport,
+)
 from Basilisk.utilities import macros as mc
 
 from bsk_rl.sim import dyn
@@ -890,8 +896,390 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
         """
         raise NotImplementedError("Use action_nadir_scan instead")
 
+class BasicTargetFSWModel(FSWModel):
+    """Basic Target FSW model with minimum necessary Basilisk components."""
 
-class ScTargetImagingModel(ImagingFSWModel):
+    @classmethod
+    def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
+        return [dyn.BasicTargetDynamicsModel]
+
+    def _make_task_list(self) -> list[Task]:
+        return [
+            self.SunPointTask(self),
+            self.NadirPointTask(self),
+            self.RWDesatTask(self),
+            # self.TrackingErrorTask(self),
+            self.MRPControlTask(self),
+        ]
+
+    def _set_messages(self) -> None:
+        self._set_config_msgs()
+        self._set_gateway_msgs()
+        pass
+
+    def _set_config_msgs(self) -> None:
+        self._set_vehicle_config_msg()
+        self._set_thrusters_config_msg()
+        self._set_rw_config_msg()
+        pass
+
+    def _set_vehicle_config_msg(self) -> None:
+        """Set the vehicle configuration message."""
+        # Use the same inertia in the FSW algorithm as in the simulation
+        # pass
+        vehicleConfigOut = messaging.VehicleConfigMsgPayload()
+        vehicleConfigOut.ISCPntB_B = self.dynamics.I_mat
+        self.vcConfigMsg = messaging.VehicleConfigMsg().write(vehicleConfigOut)
+
+    def _set_thrusters_config_msg(self) -> None:
+        """Import the thrusters configuration information."""
+        self.thrusterConfigMsg = self.dynamics.thrFactory.getConfigMessage()
+        pass
+
+    def _set_rw_config_msg(self) -> None:
+        """Configure RW pyramid exactly as it is in dynamics."""
+        self.fswRwConfigMsg = self.dynamics.rwFactory.getConfigMessage()
+        pass
+
+    def _set_gateway_msgs(self) -> None:
+        """Create C-wrapped gateway messages."""
+        self.attRefMsg = messaging.AttRefMsg_C()
+        self.attGuidMsg = messaging.AttGuidMsg_C()
+
+        self._zero_gateway_msgs()
+        #
+        # # connect gateway FSW effector command msgs with the dynamics
+        self.dynamics.rwStateEffector.rwMotorCmdInMsg.subscribeTo(
+            self.rwMotorTorque.rwMotorTorqueOutMsg
+        )
+        self.dynamics.thrusterSet.cmdsInMsg.subscribeTo(
+            self.thrDump.thrusterOnTimeOutMsg
+        )
+        pass
+
+    def _zero_gateway_msgs(self) -> None:
+        """Zero all the FSW gateway message payloads."""
+        self.attRefMsg.write(messaging.AttRefMsgPayload())
+        self.attGuidMsg.write(messaging.AttGuidMsgPayload())
+        pass
+
+    @action
+    def action_drift(self) -> None:
+        """Disable all tasks and do nothing."""
+        self.simulator.disableTask(
+            BasicFSWModel.MRPControlTask.name + self.satellite.name
+        )
+
+    class SunPointTask(Task):
+        """Task to generate sun-pointing reference."""
+
+        name = "sunPointTask"
+
+        def __init__(self, fsw, priority=99) -> None:  # noqa: D107
+            """Task to generate a sun-pointing reference."""
+            super().__init__(fsw, priority)
+
+        def _create_module_data(self) -> None:
+            print('trying to set up BasicTargetFSWModel sunPoint location pointing object')
+            self.sunPoint = self.fsw.sunPoint = locationPointing.locationPointing()
+            self.sunPoint.ModelTag = "sunPoint"
+
+        def _setup_fsw_objects(self, **kwargs) -> None:
+            """Configure the solar array sun-pointing task."""
+            self.setup_sun_pointing(**kwargs)
+
+        def setup_sun_pointing(self, nHat_B: Iterable[float], **kwargs) -> None:
+            """Configure the solar array sun-pointing task.
+
+            Args:
+                nHat_B: Solar array normal vector.
+                kwargs: Passed to other setup functions.
+            """
+            self.sunPoint.pHat_B = nHat_B
+            self.sunPoint.scAttInMsg.subscribeTo(
+                self.fsw.dynamics.simpleNavObject.attOutMsg
+            )
+            self.sunPoint.scTransInMsg.subscribeTo(
+                self.fsw.dynamics.simpleNavObject.transOutMsg
+            )
+            self.sunPoint.celBodyInMsg.subscribeTo(
+                self.fsw.world.ephemConverter.ephemOutMsgs[self.fsw.world.sun_index]
+            )
+            self.sunPoint.useBoresightRateDamping = 1
+            messaging.AttGuidMsg_C_addAuthor(
+                self.sunPoint.attGuidOutMsg, self.fsw.attGuidMsg
+            )
+
+            self._add_model_to_task(self.sunPoint, priority=1200)
+
+    @action
+    def action_charge(self) -> None:
+        """Charge battery by pointing the solar panels at the sun."""
+        self.sunPoint.Reset(self.simulator.sim_time_ns)
+        self.simulator.enableTask(self.SunPointTask.name + self.satellite.name)
+
+    class NadirPointTask(Task):
+        """Task to generate nadir-pointing reference."""
+
+        name = "nadirPointTask"
+
+        def __init__(self, fsw, priority=98) -> None:  # noqa: D107
+            """Task to generate nadir-pointing reference."""
+            super().__init__(fsw, priority)
+
+        def _create_module_data(self) -> None:
+            self.hillPoint = self.fsw.hillPoint = hillPoint.hillPoint()
+            self.hillPoint.ModelTag = "hillPoint"
+
+        def _setup_fsw_objects(self, **kwargs) -> None:
+            """Configure the nadir-pointing task.
+
+            Args:
+                kwargs: Passed to other setup functions.
+            """
+            self.hillPoint.transNavInMsg.subscribeTo(
+                self.fsw.dynamics.simpleNavObject.transOutMsg
+            )
+            self.hillPoint.celBodyInMsg.subscribeTo(
+                self.fsw.world.ephemConverter.ephemOutMsgs[self.fsw.world.body_index]
+            )
+            messaging.AttRefMsg_C_addAuthor(
+                self.hillPoint.attRefOutMsg, self.fsw.attRefMsg
+            )
+
+            self._add_model_to_task(self.hillPoint, priority=1199)
+
+    class RWDesatTask(Task):
+        """Task to desaturate reaction wheels."""
+
+        name = "rwDesatTask"
+
+        def __init__(self, fsw, priority=97) -> None:  # noqa: D107
+            """Task to desaturate reaction wheels using thrusters."""
+            super().__init__(fsw, priority)
+
+        def _create_module_data(self) -> None:
+            """Set up momentum dumping and thruster control."""
+            # Momentum dumping configuration
+            self.thrDesatControl = self.fsw.thrDesatControl = (
+                thrMomentumManagement.thrMomentumManagement()
+            )
+            self.thrDesatControl.ModelTag = "thrMomentumManagement"
+
+            self.thrDump = self.fsw.thrDump = thrMomentumDumping.thrMomentumDumping()
+            self.thrDump.ModelTag = "thrDump"
+
+            # Thruster force mapping configuration
+            self.thrForceMapping = self.fsw.thrForceMapping = (
+                thrForceMapping.thrForceMapping()
+            )
+            self.thrForceMapping.ModelTag = "thrForceMapping"
+
+        def _setup_fsw_objects(self, **kwargs) -> None:
+            """Set up thrusters and momentum dumping.
+
+            Args:
+                kwargs: Passed to other setup functions.
+            """
+            self.setup_thruster_mapping(**kwargs)
+            self.setup_momentum_dumping(**kwargs)
+
+        @default_args(controlAxes_B=[1, 0, 0, 0, 1, 0, 0, 0, 1], thrForceSign=+1)
+        def setup_thruster_mapping(
+            self, controlAxes_B: Iterable[float], thrForceSign: int, **kwargs
+        ) -> None:
+            """Configure the thruster mapping.
+
+            Args:
+                controlAxes_B: Control unit axes.
+                thrForceSign: Flag indicating if pos (+1) or negative (-1) thruster
+                    solutions are found.
+                kwargs: Passed to other setup functions.
+            """
+            self.thrForceMapping.cmdTorqueInMsg.subscribeTo(
+                self.thrDesatControl.deltaHOutMsg
+            )
+            self.thrForceMapping.thrConfigInMsg.subscribeTo(self.fsw.thrusterConfigMsg)
+            self.thrForceMapping.vehConfigInMsg.subscribeTo(self.fsw.vcConfigMsg)
+            self.thrForceMapping.controlAxes_B = controlAxes_B
+            self.thrForceMapping.thrForceSign = thrForceSign
+            self.thrForceMapping.angErrThresh = 3.15
+
+            self._add_model_to_task(self.thrForceMapping, priority=1192)
+
+        @default_args(
+            hs_min=0.0,
+            maxCounterValue=4,
+            thrMinFireTime=0.02,
+            desatAttitude="sun",
+        )
+        def setup_momentum_dumping(
+            self,
+            hs_min: float,
+            maxCounterValue: int,
+            thrMinFireTime: float,
+            desatAttitude: Optional[str],
+            **kwargs,
+        ) -> None:
+            """Configure the momentum dumping algorithm.
+
+            Args:
+                hs_min: [N*m*s] Minimum RW cluster momentum for dumping.
+                maxCounterValue: Control periods between firing thrusters.
+                thrMinFireTime: [s] Minimum thruster firing time.
+                desatAttitude: Direction to point while desaturating:
+
+                    * ``"sun"`` points panels at sun
+                    * ``"nadir"`` points instrument nadir
+                    * ``None`` disables attitude control.
+
+                kwargs: Passed to other setup functions.
+            """
+            self.fsw.desatAttitude = desatAttitude
+            self.thrDesatControl.hs_min = hs_min  # Nms
+            self.thrDesatControl.rwSpeedsInMsg.subscribeTo(
+                self.fsw.dynamics.rwStateEffector.rwSpeedOutMsg
+            )
+            self.thrDesatControl.rwConfigDataInMsg.subscribeTo(self.fsw.fswRwConfigMsg)
+
+            self.thrDump.deltaHInMsg.subscribeTo(self.thrDesatControl.deltaHOutMsg)
+            self.thrDump.thrusterImpulseInMsg.subscribeTo(
+                self.thrForceMapping.thrForceCmdOutMsg
+            )
+            self.thrDump.thrusterConfInMsg.subscribeTo(self.fsw.thrusterConfigMsg)
+            self.thrDump.maxCounterValue = maxCounterValue
+            self.thrDump.thrMinFireTime = thrMinFireTime
+
+            self._add_model_to_task(self.thrDesatControl, priority=1193)
+            self._add_model_to_task(self.thrDump, priority=1191)
+
+        def reset_for_action(self) -> None:
+            """Disable power draw for thrusters when a new action is selected."""
+            super().reset_for_action()
+            self.fsw.dynamics.thrusterPowerSink.powerStatus = 0
+
+    @action
+    def action_desat(self) -> None:
+        """Charge while desaturating reaction wheels.
+
+        This action maneuvers the satellite into ``desatAttitude``, turns on the thruster
+        power sink, and enables the desaturation tasks. This action typically needs to be
+        called multiple times to fully desaturate the wheels.
+        """
+        self.trackingError.Reset(self.simulator.sim_time_ns)
+        self.thrDesatControl.Reset(self.simulator.sim_time_ns)
+        self.thrDump.Reset(self.simulator.sim_time_ns)
+        self.dynamics.thrusterPowerSink.powerStatus = 1
+        self.simulator.enableTask(self.RWDesatTask.name + self.satellite.name)
+        if self.desatAttitude == "sun":
+            self.sunPoint.Reset(self.simulator.sim_time_ns)
+            self.simulator.enableTask(self.SunPointTask.name + self.satellite.name)
+        elif self.desatAttitude == "nadir":
+            self.hillPoint.Reset(self.simulator.sim_time_ns)
+            self.simulator.enableTask(
+                BasicFSWModel.NadirPointTask.name + self.satellite.name
+            )
+        elif self.desatAttitude is None:
+            pass
+        else:
+            raise ValueError(f"{self.desatAttitude} not a valid desatAttitude")
+        self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.name)
+
+    class TrackingErrorTask(Task):
+        """Task to convert an attitude reference to guidance."""
+
+        name = "trackingErrTask"
+
+        def __init__(self, fsw, priority=90) -> None:  # noqa: D107
+            """Task to convert an attitude reference to guidance."""
+            super().__init__(fsw, priority)
+
+        def _create_module_data(self) -> None:
+            self.trackingError = self.fsw.trackingError = (
+                attTrackingError.attTrackingError()
+            )
+            self.trackingError.ModelTag = "trackingError"
+
+        def _setup_fsw_objects(self, **kwargs) -> None:
+            # self.trackingError.attNavInMsg.subscribeTo(
+            #     self.fsw.dynamics.simpleNavObject.attOutMsg
+            # )
+            self.trackingError.attRefInMsg.subscribeTo(self.fsw.attRefMsg)
+            messaging.AttGuidMsg_C_addAuthor(
+                self.trackingError.attGuidOutMsg, self.fsw.attGuidMsg
+            )
+
+            self._add_model_to_task(self.trackingError, priority=1197)
+
+    class MRPControlTask(Task):
+        """Task to control the satellite attitude using reaction wheels."""
+
+        name = "mrpControlTask"
+
+        def __init__(self, fsw, priority=80) -> None:  # noqa: D107
+            """Task to control the satellite with reaction wheels."""
+            super().__init__(fsw, priority)
+
+        def _create_module_data(self) -> None:
+            # Attitude controller configuration
+            self.mrpFeedbackControl = self.fsw.mrpFeedbackControl = (
+                mrpFeedback.mrpFeedback()
+            )
+            self.mrpFeedbackControl.ModelTag = "mrpFeedbackControl"
+
+            # add module that maps the Lr control torque into the RW motor torques
+            self.rwMotorTorque = self.fsw.rwMotorTorque = rwMotorTorque.rwMotorTorque()
+            self.rwMotorTorque.ModelTag = "rwMotorTorque"
+
+        def _setup_fsw_objects(self, **kwargs) -> None:
+            self.setup_mrp_feedback_rwa(**kwargs)
+            self.setup_rw_motor_torque(**kwargs)
+
+        @default_args(K=7.0, Ki=-1, P=35.0)
+        def setup_mrp_feedback_rwa(
+            self, K: float, Ki: float, P: float, **kwargs
+        ) -> None:
+            """Set the MRP feedback control properties.
+
+            Args:
+                K: Proportional gain.
+                Ki: Integral gain.
+                P: Derivative gain.
+                kwargs: Passed to other setup functions.
+            """
+            self.mrpFeedbackControl.guidInMsg.subscribeTo(self.fsw.attGuidMsg)
+            self.mrpFeedbackControl.vehConfigInMsg.subscribeTo(self.fsw.vcConfigMsg)
+            self.mrpFeedbackControl.K = K
+            self.mrpFeedbackControl.Ki = Ki
+            self.mrpFeedbackControl.P = P
+            self.mrpFeedbackControl.integralLimit = (
+                2.0 / self.mrpFeedbackControl.Ki * 0.1
+            )
+
+            self._add_model_to_task(self.mrpFeedbackControl, priority=1196)
+
+        def setup_rw_motor_torque(
+            self, controlAxes_B: Iterable[float], **kwargs
+        ) -> None:
+            """Set parameters for finding motor torque from the control law.
+
+            Args:
+                controlAxes_B: Control unit axes.
+                kwargs: Passed to other setup functions.
+            """
+            self.rwMotorTorque.rwParamsInMsg.subscribeTo(self.fsw.fswRwConfigMsg)
+            self.rwMotorTorque.vehControlInMsg.subscribeTo(
+                self.mrpFeedbackControl.cmdTorqueOutMsg
+            )
+            self.rwMotorTorque.controlAxes_B = controlAxes_B
+
+            self._add_model_to_task(self.rwMotorTorque, priority=1195)
+
+        def reset_for_action(self) -> None:
+            """MRP control is enabled by default for all tasks."""
+            self.fsw.simulator.enableTask(self.name + self.fsw.satellite.name)
+
+class ImagingSCFSWModel(ImagingFSWModel):
 
     class LocPointTask(ImagingFSWModel.LocPointTask):
 
@@ -905,6 +1293,7 @@ class ScTargetImagingModel(ImagingFSWModel):
                 inst_pHat_B: Instrument pointing direction.
                 kwargs: Passed to other setup functions.
             """
+
             self.locPoint.pHat_B = inst_pHat_B
             self.locPoint.scAttInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.attOutMsg
@@ -913,7 +1302,7 @@ class ScTargetImagingModel(ImagingFSWModel):
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
             self.locPoint.scTargetInMsg.subscribeTo(
-                self.fsw.dynamics.simpleTargetNav.transOutMsg
+                self.fsw.dynamics.simpleNavObject.transOutMsg
             )
             self.locPoint.useBoresightRateDamping = 1
             messaging.AttGuidMsg_C_addAuthor(
@@ -949,55 +1338,21 @@ class ScTargetImagingModel(ImagingFSWModel):
                 self.insControl.rateErrTolerance = imageRateErrorRequirement
             self.insControl.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
 
-            self.insControl.locationAccessInMsg.subscribeTo(
-                self.fsw.dynamics.targetLocation.accessOutMsgs[-1]
-            )
 
+            if self.fsw.dynamics.targetLocation.accessOutMsgs:
+                self.insControl.locationAccessInMsg.subscribeTo(
+                    self.fsw.dynamics.targetLocation.accessOutMsgs[-1] # TODO: this should be changed to the id of the target
+                )
+            else:
+                msgData = messaging.AccessMsgPayload() # this is the payload
+                msg = messaging.AccessMsg() # this is the container
+                msg.write(msgData)
+                self.insControl.locationAccessInMsg.subscribeTo(msg)
             self._add_model_to_task(self.insControl, priority=987)
 
-    # @action
-    # def action_nadir_scan(self) -> None:
-    #     """Scan nadir.
-    #
-    #     This action points the instrument nadir and continuously adds data to the buffer
-    #     as long as attitude requirements are met. The instrument power sink is active
-    #     as long as the action is set.
-    #     """
-    #     self.dynamics.instrument.nodeStatusInMsg.subscribeTo(
-    #         self.insControl.deviceCmdOutMsg
-    #     )
-    #     self.insControl.controllerStatus = 1
-    #     self.dynamics.instrumentPowerSink.powerStatus = 1
-    #     # self.dynamics.imagingTarget.r_LP_P_Init = np.array(
-    #     #     [0, 0, 0.1]
-    #     # )  # All zero causes an error
-    #     self.dynamics.instrument.nodeDataName = "nadir"
-    #     self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
-    #
-
-    # @action
-    # def action_image(self, RSOTarget, data_name: str) -> None:
-    #     """Attempt to image a target.
-    #
-    #     This action sets the target attitude to one tracking an RSO. If the
-    #     target is within the imaging constraints, an image will be taken and stored in
-    #     the data buffer. The instrument power sink will be active as long as the task is
-    #     enabled.
-    #
-    #     Args:
-    #         RSOTarget: Contains the target RSO spacecraft transOutMsg
-    #         data_name: Data buffer to store image data to.
-    #     """
-    #     self.insControl.controllerStatus = 1
-    #     self.dynamics.instrumentPowerSink.powerStatus = 1
-    #     # self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P
-    #     self.locPoint.scTargetInMsg.subscribeto(RSOTarget.simpleTargetNav.transOutMsg)
-    #     self.dynamics.instrument.nodeDataName = RSOTarget.data_name
-    #     self.insControl.imaged = 0
-    #     self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
 
     @action
-    def action_image_rso_target(self, RSOTarget, data_name: str) -> None:
+    def action_image_rso_target(self, RSOTarget) -> None:
         """Attempt to image a target.
 
         This action sets the target attitude to one tracking an RSO. If the
@@ -1012,12 +1367,22 @@ class ScTargetImagingModel(ImagingFSWModel):
         self.insControl.controllerStatus = 1
         self.dynamics.instrumentPowerSink.powerStatus = 1
         # self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P
-        self.locPoint.scTargetInMsg.subscribeto(RSOTarget.simpleTargetNav.transOutMsg)
+        self.locPoint.scTargetInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.simpleNavObject.transOutMsg)
+        self.dynamics.targetLocation.addSpacecraftToModel(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)  # TODO: check if this is right syntax
+        self.dynamics.simpleNavObject.scStateInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)
 
-        self.dynamics.targetLocation.addSpacecraftToModel(RSOTarget.simpleTargetNav.scStateInMsg)   # TODO: check if this is right syntax
-        # self.dyn.targetLocation.scStateInMsgs.subscribeto(RSOTarget.simpleTargetNav.scStateInMsg)   # TODO: check if this is right syntax
 
-        self.dynamics.instrument.nodeDataName = RSOTarget.data_namepo # TODO: DHP fix the naming here
+        if self.dynamics.targetLocation.accessOutMsgs:
+            self.insControl.locationAccessInMsg.subscribeTo(
+                self.dynamics.targetLocation.accessOutMsgs[RSOTarget.id]
+            )
+        else:
+            msgData = messaging.AccessMsgPayload() # this is the payload
+            msg = messaging.AccessMsg() # this is the container
+            msg.write(msgData)
+            self.insControl.locationAccessInMsg.subscribeTo(msg)
+
+        self.dynamics.instrument.nodeDataName = RSOTarget.name
         self.insControl.imaged = 0
         self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
 
