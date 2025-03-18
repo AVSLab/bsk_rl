@@ -192,4 +192,4 @@ for key, value in data_dict.items():
     else:
         np.save(os.path.join(data_dir, f"{key}.npy"), np.array(value))
 
-print("Data saved successfully in 'data/' folder.")print("Data saved successfully in 'data/' folder.")
+print("Data saved successfully in 'data/' folder.")
