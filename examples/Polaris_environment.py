@@ -130,20 +130,28 @@ targets = [MyTargetSatellite(name=f"target_0", sat_args=target0)]
 all_sat = [sat] + targets   #oe = lambda: random_orbit(alt=np.random.uniform(1000,2000)))
 
 env = gym.make(
-    "SatelliteTasking-v1",
-    satellite=sat,
-    scenario=scene.RandomSatellites(50),
+    "ConstellationTasking-v1",
+    satellites=all_sat,
+    scenario=scene.RandomSatellites("SS1",n_targets=n_targets),
     rewarder=data.RSOTargetImageReward(),
-    time_limit=5700.0,  # approximately 1 orbit
-    log_level="INFO",
+    time_limit=total_time,
+    log_level="DEBUG",
     disable_env_checker=True,
+    # max_step_duration=700,
 )
 
-observation, info = env.reset(seed=1)
-inspector_sigmaBN = []
-inspector_omegaBN = []
-inspector_r_BN_N = []
-target_r_BN_N = []
+observation, info = env.reset(seed=2)
+
+env.simulator.ShowExecutionOrder()
+# Initialize storage dictionary
+data_dict = {
+    "sim_time": [],
+    "inspector_sigmaBN": [],
+    "inspector_omegaBN": [],
+    "inspector_r_BN_N": [],
+    "currentTarget_r_BN_N": [],
+    "target_r_BN_N": {target.name: [] for target in targets}  # Store per target
+}
 
 print("Initial data level:", observation[0], "(randomized by sat_args)")
 for _ in range(3):
