@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Callable, Optional
 import numpy as np
 
 from bsk_rl.data.base import Data, DataStore, GlobalReward
+from collections import OrderedDict
 
 if TYPE_CHECKING:
     from bsk_rl.sats import Satellite
@@ -36,11 +37,12 @@ class RSOTargetImageData(Data):
         """
         if imaged is None:
             imaged = []
-        self.imaged = list(set(imaged))
+        self.imaged = list(OrderedDict.fromkeys(imaged))  # Preserve order, remove duplicates
         self.duplicates = duplicates + len(imaged) - len(self.imaged)
+
         if known is None:
             known = []
-        self.known = list(set(known))
+        self.known = list(OrderedDict.fromkeys(known))  # Preserve order, remove duplicates
 
     def __add__(self, other: "RSOTargetImageData") -> "RSOTargetImageData":
         """Combine two units of data.
@@ -51,7 +53,7 @@ class RSOTargetImageData(Data):
         Returns:
             Combined unit of data.
         """
-        imaged = list(set(self.imaged + other.imaged))
+        imaged = list(OrderedDict.fromkeys(self.imaged + other.imaged))
         duplicates = (
             self.duplicates
             + other.duplicates
@@ -59,7 +61,7 @@ class RSOTargetImageData(Data):
             + len(other.imaged)
             - len(imaged)
         )
-        known = list(set(self.known + other.known))
+        known = list(OrderedDict.fromkeys(self.known + other.known))
         return self.__class__(imaged=imaged, duplicates=duplicates, known=known)
 
 
