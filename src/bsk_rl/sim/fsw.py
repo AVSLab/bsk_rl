@@ -759,7 +759,7 @@ class ImagingFSWModel(BasicFSWModel):
 
         def reset_for_action(self) -> None:
             """Reset pointing controller."""
-            self.fsw.dynamics.imagingTarget.Reset(self.fsw.simulator.sim_time_ns)
+            # self.fsw.dynamics.imagingTarget.Reset(self.fsw.simulator.sim_time_ns)
             self.locPoint.Reset(self.fsw.simulator.sim_time_ns)
             self.insControl.controllerStatus = 0
             return super().reset_for_action()
