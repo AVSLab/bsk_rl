@@ -712,6 +712,46 @@ class BasicDynamicsModel(DynamicsModel):
             self.powerMonitor.addPowerNodeToModel(powerRW.nodePowerOutMsg)
 
 class BasicTargetDynamicsModel(BasicDynamicsModel):
+    def __init__(
+        self,
+        satellite: "Satellite",
+        dyn_rate: float,
+        priority: int = 250,
+        **kwargs,
+    ) -> None:
+        """The abstract base dynamics model.
+
+        One DynamicsModel is instantiated for each satellite in the environment each
+        time the environment is reset and new simulator is created.
+
+        Args:
+            satellite: Satellite represented by this model.
+            dyn_rate: [s] Rate of dynamics simulation.
+            priority: Model priority.
+            kwargs: Passed through to setup functions.
+        """
+        self.satellite = satellite
+        self.logger = self.satellite.logger.getChild(self.__class__.__name__)
+
+        for required in self._requires_world():
+            if not issubclass(type(self.simulator.world), required):
+                raise TypeError(
+                    f"{self.simulator.world} must be a subclass of {required} to "
+                    + f"use dynamics model of type {self.__class__}"
+                )
+
+        dyn_proc_name = "DynamicsProcess" + self.satellite.name
+        self.dyn_proc = self.simulator.CreateNewProcess(dyn_proc_name, priority)
+        self.dyn_rate = dyn_rate
+        self.task_name = "DynamicsTask" + self.satellite.name
+        self.dyn_proc.addTask(
+            self.simulator.CreateNewTask(self.task_name, macros.sec2nano(self.dyn_rate))
+        )
+
+        # Initialize all modules and write init one-time messages
+        self.scObject: spacecraft.Spacecraft
+        self._setup_dynamics_objects(**kwargs)
+
     @default_args(
         mass=330,
         width=1.38,
