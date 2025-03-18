@@ -177,68 +177,7 @@ class RandomSatellites(Scenario):
 
 
 
-class UniformTargets(Scenario):
-    """Environment with targets distributed uniformly."""
 
-    def __init__(
-        self,
-        n_targets: Union[int, tuple[int, int]],
-        priority_distribution: Optional[Callable] = None,
-        radius: float = orbitalMotion.REQ_EARTH * 1e3,
-    ) -> None:
-        """An environment with evenly-distributed static targets.
 
-        Can be used with :class:`~bsk_rl.data.UniqueImageReward`.
 
-        Args:
-            n_targets: Number of targets to generate. Can also be specified as a range
-                ``(low, high)`` where the number of targets generated is uniformly selected
-                ``low ≤ n_targets ≤ high``.
-            priority_distribution: Function for generating target priority. Defaults
-                to ``lambda: uniform(0, 1)`` if not specified.
-            radius: [m] Radius to place targets from body center. Defaults to Earth's
-                equatorial radius.
-        """
-        self._n_targets = n_targets
-        if priority_distribution is None:
-            priority_distribution = lambda: np.random.rand()  # noqa: E731
-        self.priority_distribution = priority_distribution
-        self.radius = radius
 
-    def reset_overwrite_previous(self) -> None:
-        """Overwrite target list from previous episode."""
-        self.targets = []
-
-    def reset_pre_sim_init(self) -> None:
-        """Regenerate target set for new episode."""
-        if isinstance(self._n_targets, int):
-            self.n_targets = self._n_targets
-        else:
-            self.n_targets = np.random.randint(self._n_targets[0], self._n_targets[1])
-        logger.info(f"Generating {self.n_targets} targets")
-        self.regenerate_targets()
-        for satellite in self.satellites:
-            if hasattr(satellite, "add_location_for_access_checking"):
-                for target in self.targets:
-                    satellite.add_location_for_access_checking(
-                        object=target,
-                        r_LP_P=target.r_LP_P,
-                        min_elev=satellite.sat_args_generator[
-                            "imageTargetMinimumElevation"
-                        ],  # Assume not randomized
-                        type="target",
-                    )
-
-    def regenerate_targets(self) -> None:
-        """Regenerate targets uniformly.
-
-        Override this method (as demonstrated in :class:`CityTargets`) to generate
-        other distributions.
-        """
-        self.targets = []
-        for i in range(self.n_targets):
-            x = np.random.normal(size=3)
-            x *= self.radius / np.linalg.norm(x)
-            self.targets.append(
-                Target(name=f"tgt-{i}", r_LP_P=x, priority=self.priority_distribution())
-            )
