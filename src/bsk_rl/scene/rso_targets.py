@@ -66,12 +66,13 @@ logger = logging.getLogger(__name__)
 class RSOTarget:
     """Creates a target spacecraft with randomized Orbital Elements"""
 
-    def __init__(self, id: int, priority: float, oe):
+    def __init__(self,target_rso, name, id: int, priority: float):
         #set name, priority, initial oe
         self.id = id
-        self.name = f"TargetSat_{id}"
+        # self.name = f"TargetSat_{id}"
+        self.name = name
         self.priority = priority
-        self.oe = oe
+        self.target_spacecraft = target_rso
 
 
 
@@ -90,45 +91,14 @@ class RSOTarget:
     #     """Reference to the episode world model."""
     #     return self.simulator.world
 
-    def add_to_sim(self, simulator):
-        target_rso = spacecraft.Spacecraft()
-        self.spacecraft = target_rso
-
-        # Compute state vectors
-        mu = 3.986 * 10**14    # Gravitational parameter [m^3/s^2]
-        rN, vN = orbitalMotion.elem2rv(mu, self.oe)
-
-
-        print("Testing the reset_during_sim_init function")
-
-        # Initialize spacecraft state
-        target_rso.hub.r_CN_NInit = rN
-        target_rso.hub.v_CN_NInit = vN
-        target_rso.gravField.gravBodies = spacecraft.GravBodyVector(
-            list(simulator.world.gravFactory.gravBodies.values())
-        )
+    def add_to_sim(self, target_rso, simulator):
+        self.target_spacecraft = target_rso
 
         # Set up location tracking
-        targetLocation = spacecraftLocation.SpacecraftLocation()
-        targetLocation.ModelTag = f"targetLocation_{id}"
-        targetLocation.planetInMsg.subscribeTo(
-            simulator.world.gravFactory.spiceObject.planetStateOutMsgs[simulator.world.body_index]
-        )
-        targetLocation.primaryScStateInMsg.subscribeTo(self.spacecraft.scStateOutMsg)
-        # targetLocation.primaryScStateInMsg.subscribeTo(Scenario.satellites[0].scObject.scStateOutMsg)
-
-        targetLocation.addSpacecraftToModel(target_rso.scStateOutMsg)
-        self.targetLocation = targetLocation
 
         # Set up simple navigation
-        simpleTargetNav = simpleNav.SimpleNav()
-        self.simpleNav = simpleTargetNav
 
-        simpleTargetNav.scStateInMsg.subscribeTo(target_rso.scStateOutMsg)
 
-        # Add models to the simulator
-        simulator.AddModelToTask(self.task_name, simpleTargetNav, ModelPriority=self.priority)
-        simulator.AddModelToTask(self.task_name, target_rso, ModelPriority=self.priority)
 
 
 class RandomSatellites(Scenario):
