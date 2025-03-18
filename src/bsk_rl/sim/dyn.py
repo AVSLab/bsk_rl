@@ -1888,6 +1888,7 @@ __doc_title__ = "Dynamics Sims"
 __all__ = [
     "DynamicsModel",
     "BasicDynamicsModel",
+    "BasicTargetDynamicsModel",
     "LOSCommDynModel",
     "ImagingDynModel",
     "ImagingSCDynModel",
