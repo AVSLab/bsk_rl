@@ -343,7 +343,7 @@ class ImageRSO(DiscreteAction):
 
         :meta private:
         """
-        self.satellite.fsw.action_image_rso(target)
+        self.satellite.fsw.action_image_rso_target(target)
         # target = self.satellite.parse_target_selection(target)
         # if target.id != prev_action_key:
         #     self.satellite.task_target_for_imaging(target)
@@ -362,8 +362,13 @@ class ImageRSO(DiscreteAction):
         :meta_private:
         """
         new_target = self.satellite.data_store.data.known[action]
-        self.satellite.logger.info(f"target index {action} tasked")
+        self.satellite.logger.info(f"target index {action} tasked: {new_target.name}")
+        self.satellite.update_timed_terminal_event(
+            self.simulator.sim_time + self.duration, info = "  "
+        )
+
         return self.image_rso(new_target, prev_action_key)
+
 
     # def set_action_override(
     #     self, action: Union["Target", str], prev_action_key: Optional[str] = None
