@@ -1690,6 +1690,10 @@ class ImagingSCDynModel(ImagingDynModel):
         self.targetLocation.primaryScStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
         # self.targetLocation.scStateInMsgs.subscribeTo(self.imagingTarget.scStateOutMsg) #this was commented
 
+        self.simpleTargetNav = simpleNav.SimpleNav()
+        # self.simpleTargetNav.scStateInMsg.subscribeTo(self.imagingTarget.scStateOutMsg)
+
+
 
     def setup_simple_nav_object(self, priority: int = 2000, **kwargs) -> None:
         """Set up the navigation module.
