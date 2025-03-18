@@ -1639,42 +1639,8 @@ class ImagingSCDynModel(ImagingDynModel):
             priority: Model priority.
             kwargs: Passed to other setup functions.
         """
-        # self.imagingTarget = spacecraft.Spacecraft()  #groundLocation.GroundLocation()
-        # self.imagingTarget.ModelTag = "TargetSat"
-        # orbitCase = 'GTO'
-        # oe = orbitalMotion.ClassicElements()
-        # rLEO = 7500. * 1000      # meters
-        # rGEO = 42000. * 1000     # meters
-        # if orbitCase == 'GEO':
-        #     oe.a = rGEO
-        #     oe.e = 0.00001
-        #     oe.i = 0.0 * macros.D2R
-        # elif orbitCase == 'GTO':
-        #     oe.a = (rLEO + rGEO) / 2.0
-        #     oe.e = 1.0 - rLEO / oe.a
-        #     oe.i = 0.0 * macros.D2R
-        # else:                   # LEO case, default case 0
-        #     oe.a = rLEO
-        #     oe.e = 0.020
-        #     oe.i = 90 * macros.D2R
-        # oe.Omega = 48.2 * macros.D2R
-        # oe.omega = 347.8 * macros.D2R
-        # # oe.Omega = 0.0 * macros.D2R
-        # # oe.omega = 0.0 * macros.D2R
-        # oe.f = 85.3 * macros.D2R
-        #
-        # mu = 3.986 * 10**14 #m^3/s^2
-        # print('testing the setup_image_target function')
-        # rN, vN = orbitalMotion.elem2rv(mu, oe)
-        # oe = orbitalMotion.rv2elem(mu, rN, vN)
-        #
-        # # self.setup_gravity_bodies()
-        # self.imagingTarget.hub.r_CN_NInit = rN
-        # self.imagingTarget.hub.v_CN_NInit = vN
-        #
-        # self.imagingTarget.gravField.gravBodies = spacecraft.GravBodyVector(
-        #     list(self.world.gravFactory.gravBodies.values()))
 
+        print('inside ImagingSCDynModel')
         self.targetLocation = spacecraftLocation.SpacecraftLocation()
         self.targetLocation.ModelTag = "targetLocation"
         self.targetLocation.planetInMsg.subscribeTo(
