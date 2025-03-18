@@ -1600,7 +1600,29 @@ class ContinuousImagingDynModel(ImagingDynModel):
         self.imagingTarget.addSpacecraftToModel(self.scObject.scStateOutMsg)
 
 
-class ScTargetDynModel(ImagingDynModel):
+class ImagingSCDynModel(ImagingDynModel):
+    def _setup_dynamics_objects(self, **kwargs) -> None:
+        self.setup_spacecraft_hub(**kwargs)
+        self.setup_drag_effector(**kwargs)
+        self.setup_reaction_wheel_dyn_effector(**kwargs)
+        self.setup_thruster_dyn_effector()
+        self.setup_simple_nav_object()
+        self.setup_eclipse_object()
+        self.setup_solar_panel(**kwargs)
+        self.setup_battery(**kwargs)
+        self.setup_power_sink(**kwargs)
+        self.setup_reaction_wheel_power(**kwargs)
+        self.setup_thruster_power(**kwargs)
+        self.setup_instrument_power_sink(**kwargs)
+        self.setup_transmitter_power_sink(**kwargs)
+        self.setup_imaging_target(**kwargs)
+        self.setup_instrument(**kwargs)
+        self.setup_transmitter(**kwargs)
+        self.setup_storage_unit(**kwargs)
+
+        # super()._setup_dynamics_objects(**kwargs)
+        # self.setup_imaging_target()
+
 
     @default_args(imageTargetMaximumRange=-1)
     def setup_imaging_target(
@@ -1661,14 +1683,98 @@ class ScTargetDynModel(ImagingDynModel):
 
         self.targetLocation.primaryScStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
         # self.targetLocation.scStateInMsgs.subscribeTo(self.imagingTarget.scStateOutMsg) #this was commented
-        # self.targetLocation.addSpacecraftToModel(self.imagingTarget.scStateOutMsg) #this is the correct line
 
 
-        self.simpleTargetNav = simpleNav.SimpleNav()
-        # self.simpleTargetNav.scStateInMsg.subscribeTo(self.imagingTarget.scStateOutMsg)
+    def setup_simple_nav_object(self, priority: int = 2000, **kwargs) -> None:
+        """Set up the navigation module.
+
+        Args:
+            priority: Model priority.
+            kwargs: Passed to other setup functions.
+        """
+        print('inside ImagingSCDynModel\nsetting up simpleTargetNav')
+        self.simpleNavObject = simpleNav.SimpleNav()
+        self.simpleNavObject.ModelTag = "SimpleInspectorNav"
+        self.simpleNavObject.scStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
         self.simulator.AddModelToTask(
-            self.task_name, self.simpleTargetNav, ModelPriority=priority
+            self.task_name, self.simpleNavObject, ModelPriority=priority
         )
+
+
+
+    @default_args(
+        dataStorageCapacity=20 * 8e6,
+        bufferNames=None,
+        storageUnitValidCheck=False,
+        storageInit=0,
+    )
+    def setup_storage_unit(
+        self,
+        dataStorageCapacity: int,
+        storageUnitValidCheck: bool,
+        storageInit: int,
+        transmitterNumBuffers: Optional[int] = None,
+        bufferNames: Optional[Iterable[str]] = None,
+        priority: int = 699,
+        **kwargs,
+    ) -> None:
+        """Configure the storage unit and its buffers.
+
+        Separate buffers can be used to track imaging of different targets. Often, the
+        buffer names will be set up by satellite based on the scenario configuration.
+
+        Args:
+            dataStorageCapacity: [bits] Maximum data that can be stored.
+            transmitterNumBuffers: Number of unit buffers. Not necessary if ``bufferNames``
+                are given.
+            bufferNames: List of buffer names to use. Named by number if ``None``.
+            storageUnitValidCheck: If ``True``, enforce that the storage level is below
+                the storage capacity when checking aliveness.
+            storageInit: [bits] Initial storage level.
+            priority: Model priority.
+            kwargs: Passed to other setup functions.
+        """
+        self.storageUnit = partitionedStorageUnit.PartitionedStorageUnit()
+        self.storageUnit.ModelTag = "storageUnit" + self.satellite.name
+        self.storageUnit.storageCapacity = dataStorageCapacity  # bits
+        self.storageUnit.addDataNodeToModel(self.instrument.nodeDataOutMsg)
+        self.storageUnit.addDataNodeToModel(self.transmitter.nodeDataOutMsg)
+        self.storageUnitValidCheck = storageUnitValidCheck
+        # Add all of the targets to the data buffer
+        if bufferNames is None:
+            for buffer_idx in range(transmitterNumBuffers):
+                self.storageUnit.addPartition(str(buffer_idx))
+        else:
+            if transmitterNumBuffers is not None and transmitterNumBuffers != len(
+                bufferNames
+            ):
+                raise ValueError(
+                    "transmitterNumBuffers cannot be different than len(bufferNames)."
+                )
+            for buffer_name in bufferNames:
+                self.storageUnit.addPartition(buffer_name)
+
+        if storageInit != 0:
+            if storageInit > dataStorageCapacity or storageInit < 0:
+                self.logger.warning(
+                    f"Initial storage level {storageInit} incompatible with its capacity {dataStorageCapacity}."
+                )
+            self.storageUnit.setDataBuffer(["STORED DATA"], [int(storageInit)])
+
+        # Add the storage unit to the transmitter
+        self.transmitter.addStorageUnitToTransmitter(
+            self.storageUnit.storageUnitDataOutMsg
+        )
+
+        self.simulator.AddModelToTask(
+            self.task_name, self.storageUnit, ModelPriority=priority
+        )
+
+        self.inspector_state_recorder = self.scObject.scStateOutMsg.recorder(macros.sec2nano(1.0))
+        self.simulator.AddModelToTask(
+            self.task_name, self.inspector_state_recorder, ModelPriority=priority
+        )
+
 
         # self.simulator.AddModelToTask(
         #     self.task_name, self.imagingTarget, ModelPriority=priority
@@ -1784,6 +1890,7 @@ __all__ = [
     "BasicDynamicsModel",
     "LOSCommDynModel",
     "ImagingDynModel",
+    "ImagingSCDynModel",
     "ContinuousImagingDynModel",
     "GroundStationDynModel",
     "ConjunctionDynModel",
