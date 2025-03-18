@@ -104,7 +104,7 @@ class RSOTarget:
 class RandomSatellites(Scenario):
     """Spacecraft target with associated priority"""
 
-    def __init__(self, n_targets: int) -> None:
+    def __init__(self, ChiefSatellite, n_targets: int) -> None:
         """Spacecraft target with associated priority and location.
 
         Args:
@@ -131,47 +131,33 @@ class RandomSatellites(Scenario):
         # # Initialize all modules and write init one-time messages
         # self.scObject: spacecraft.Spacecraft
         # self._setup_dynamics_objects(**kwargs)
+    def link_satellites(self, satellites: list["Satellite"]) -> None:
+        super().link_satellites(satellites)
+        ChiefSatellite = self.satellites[0].name
+        self.ScanningSat = [satellite for satellite in self.satellites if satellite.name == ChiefSatellite][0]
+        print('reset_pre_sim_init')
+        self.ScanningSat.sat_args_generator["bufferNames"] = [sc.name for sc in self.satellites] # TODO: this is will give an error since it is called before target_spacecrafts gets created
+        self.ScanningSat.sat_args_generator["transmitterNumBuffers"] = len(self.ScanningSat.sat_args_generator["bufferNames"])
 
     def reset_pre_sim_init(self):
-        for sat in self.satellites:
-            sat.sat_args["bufferNames"] = [sc.name for sc in self.target_spacecrafts] # TODO: this is will give an error since it is called before target_spacecrafts gets created
-            sat.sat_args["transmitterNumBuffers"] = len(sat.sat_args["bufferNames"])
+
+
+        for i in range(self.n_targets):
+            target_sc_name = f"TargetSat_{i}"
+            sc = RSOTarget(self.satellites[i+1],target_sc_name,i, 1.0)
+            # sc = RSOTarget(i, priority=self.priority_distribution(), oe) #to be implemented later with priority_distribution
+            self.target_spacecrafts.append(sc)
+
+
     def reset_overwrite_previous(self) -> None:
         self.target_spacecrafts = []
 
 
     def reset_during_sim_init(self):
-
-        rLEO = 7000. * 1000    # Minimum semi-major axis (LEO) in meters
-        rGEO = 42164. * 1000   # Maximum semi-major axis (GEO) in meters
+        print('reset_during_sim_init')
 
         for i in range(self.n_targets):
-
-            target_sc_name = f"TargetSat_{i}"
-
-            oe = orbitalMotion.ClassicElements()
-            oe.a = np.random.uniform(rLEO, rGEO)  # Random semi-major axis between LEO and GEO
-            if oe.a < 1.5*rLEO:
-                oe.e = np.random.uniform(0.0, 0.1)    # Random eccentricity (allowing less elliptical orbits when near LEO)
-            else:
-                oe.e = np.random.uniform(0.0, 0.2)    # Random eccentricity (allowing slightly elliptical orbits)
-            oe.i = np.random.uniform(0, 180) * macros.D2R  # Random inclination up to 180 degrees
-            oe.Omega = np.random.uniform(0, 360) * macros.D2R  # Random RAAN
-            oe.omega = np.random.uniform(0, 360) * macros.D2R  # Random argument of perigee
-            oe.f = np.random.uniform(0, 360) * macros.D2R  # Random true anomaly
-
-            sc = RSOTarget(i, 1.0 ,oe,)
-            # sc = RSOTarget(i, priority=self.priority_distribution(), oe) #to be implemented later with priority_distribution
-            self.target_spacecrafts.append(sc)
-            sc.add_to_sim(self.satellites[0].simulator)
-
-            # self.target_spacecrafts.append(target_sc)  # Store spacecraft reference
-
-
-
-
-
-
+            self.satellites[0].dynamics.targetLocation.addSpacecraftToModel(self.satellites[i+1].dynamics.scObject.scStateOutMsg) # this adds all possible targets to SS.targetLocation
 
 
 
