@@ -307,6 +307,7 @@ class ImageRSO(DiscreteAction):
         self,
         n_ahead_image: int,
         name: str = "action_imageRSO",
+        duration: Optional[float] = None,
     ):
         """Actions to image upcoming target (:class:`~bsk_rl.env.simulation.fsw.ImagingFSWModel.action_image`).
 
@@ -327,6 +328,9 @@ class ImageRSO(DiscreteAction):
         #
         # self.satellite: "ImagingSatellite"
         super().__init__(name=name, n_actions=n_ahead_image)
+        if duration is None:
+            duration = 6000 #1e9
+        self.duration = duration
 
     def image_rso(
         self, target: Union[int, "RSOTarget", str], prev_action_key: Optional[str] = None
