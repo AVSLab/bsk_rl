@@ -1507,6 +1507,7 @@ __all__ = [
     "BasicFSWModel",
     "ImagingFSWModel",
     "ContinuousImagingFSWModel",
+    "BasicTargetFSWModel",
     "SteeringFSWModel",
     "SteeringImagerFSWModel",
 ]
