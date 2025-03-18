@@ -23,13 +23,13 @@ class MyScanningSatellite(sats.Satellite):
         obs.Eclipse(),
     ]
     action_spec = [
-        act.ImageRSO(50),  # Scan for 1 minute
+        act.ImageRSO(n_ahead_image=n_targets,duration=2000),  # Scan for 1 minute
         act.Charge(duration=600.0),  # Charge for 10 minutes
     ]
-    dyn_type = dyn.ScTargetDynModel
-    fsw_type = fsw.ScTargetImagingModel
+    dyn_type = dyn.ImagingSCDynModel
+    fsw_type = fsw.ImagingSCFSWModel
 
-MyScanningSatellite.default_sat_args()
+MyScanningSatellite.default_sat_args() # why is this needed?
 
 sat_args = {}
 
@@ -42,6 +42,17 @@ sat_args["storedCharge_Init"] = 50000.0
 # Randomize the initial storage level on every reset
 sat_args["storageInit"] = lambda: np.random.uniform(0.25, 0.75) * 1e10
 
+
+class MyTargetSatellite(sats.Satellite):
+    observation_spec = [
+        obs.Time(),
+    ]
+    action_spec = [
+        act.Drift(duration=total_time),  # Scan for 1 minute
+        # act.Charge(duration=600.0),  # Charge for 10 minutes
+    ]
+    dyn_type = dyn.BasicTargetDynamicsModel  # Passed as a type
+    fsw_type = fsw.BasicTargetFSWModel
 # Make the satellite
 sat = MyScanningSatellite(name="SO1", sat_args=sat_args) # SO1 for satellite observer 1
 
