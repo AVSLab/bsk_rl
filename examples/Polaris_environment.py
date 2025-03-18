@@ -62,6 +62,7 @@ class MyTargetSatellite(sats.Satellite):
     ]
     dyn_type = dyn.BasicTargetDynamicsModel  # Passed as a type
     fsw_type = fsw.BasicTargetFSWModel
+
 def custom_oe_randomizer():
     rLEO = 7000. * 1000    # Minimum semi-major axis (LEO) in meters
     rGEO = 42164. * 1000   # Maximum semi-major axis (GEO) in meters
@@ -153,34 +154,42 @@ data_dict = {
     "target_r_BN_N": {target.name: [] for target in targets}  # Store per target
 }
 
-print("Initial data level:", observation[0], "(randomized by sat_args)")
-for _ in range(3):
-    observation, reward, terminated, truncated, info = env.step(action=0)
-    inspector_sigmaBN.append(env.satellites[0].dynamics.sigma_BN)
-    inspector_omegaBN.append(env.satellites[0].dynamics.omega_BN_B)
-    inspector_r_BN_N.append(env.satellites[0].dynamics.r_BN_N)
-    target_r_BN_N.append(env.satellites[0].dynamics.simpleTargetNav.transOutMsg.read().r_BN_N)
-print("  Final data level:", observation[0])
+print("Initial data level:", observation, "(randomized by sat_args)")
+for target_id in range(n_targets):
+    simtime = env.simulator.sim_time
+    print('Simulation time: ' + str(simtime) + ' seconds')
 
+    action_dict = {sat.name: target_id}  # Assign the main satellite to observe `target_idx`
+    action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
+    print('current action_dict to be executed', action_dict)
+    observation, reward, terminated, truncated, info = env.step(action=action_dict)
+    print('truncated list: ', truncated)
+    data_dict["sim_time"].append(env.simulator.sim_time)
 
+print("  Final data level:", observation)
 
 while not truncated:
-    observation, reward, terminated, truncated, info = env.step(action=0)
-    inspector_sigmaBN.append(env.satellites[0].dynamics.sigma_BN)
-    inspector_omegaBN.append(env.satellites[0].dynamics.omega_BN_B)
-    inspector_r_BN_N.append(env.satellites[0].dynamics.r_BN_N)
-    target_r_BN_N.append(env.satellites[0].dynamics.simpleTargetNav.transOutMsg.read().r_BN_N)
+    data_dict["sim_time"].append(env.simulator.sim_time)
 
-    print(f"Charge level: {observation[1]:.3f} ({env.unwrapped.simulator.sim_time:.1f} seconds)\n\tEclipse: start: {observation[2]:.1f} end: {observation[3]:.1f}")
+data_dict["inspector_sigmaBN"].append(env.satellites[0].dynamics.inspector_state_recorder.sigma_BN)
+data_dict["inspector_omegaBN"].append(env.satellites[0].dynamics.inspector_state_recorder.omega_BN_B)
+data_dict["inspector_r_BN_N"].append(env.satellites[0].dynamics.inspector_state_recorder.r_BN_N)
+data_dict["currentTarget_r_BN_N"].append(env.satellites[0].dynamics.simpleNavObject.transOutMsg.read().r_BN_N)
 
-print('Inspector sigma BN', inspector_sigmaBN[0], inspector_sigmaBN[-1])
-print('Inspector r_BN_N', inspector_r_BN_N[0], inspector_r_BN_N[-1])
-print('Target r_BN_N', target_r_BN_N[0:10])
+for l in range (len(targets)):
+    data_dict["target_r_BN_N"][targets[l].name].append(env.satellites[l+1].dynamics.target_state_recorder.r_BN_N)
 
-# Convert to numpy arrays and save
-np.save(os.path.join(data_dir, "inspector_sigmaBN.npy"), np.array(inspector_sigmaBN))
-np.save(os.path.join(data_dir, "inspector_omegaBN.npy"), np.array(inspector_omegaBN))
-np.save(os.path.join(data_dir, "inspector_r_BN_N.npy"), np.array(inspector_r_BN_N))
-np.save(os.path.join(data_dir, "target_r_BN_N.npy"), np.array(target_r_BN_N))
 
-print("Data saved successfully in 'data/' folder.")
+
+
+data_dir = "data"
+os.makedirs(data_dir, exist_ok=True)
+
+for key, value in data_dict.items():
+    if isinstance(value, dict):  # Save per-target data separately
+        for target_name, target_data in value.items():
+            np.save(os.path.join(data_dir, f"{key}_{target_name}.npy"), np.array(target_data))
+    else:
+        np.save(os.path.join(data_dir, f"{key}.npy"), np.array(value))
+
+print("Data saved successfully in 'data/' folder.")print("Data saved successfully in 'data/' folder.")
