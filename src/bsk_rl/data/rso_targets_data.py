@@ -100,15 +100,19 @@ class RSOTargetImageStore(DataStore):
         Returns:
             list: Targets imaged at new_state that were unimaged at old_state.
         """
-        update_idx = np.where(new_state - old_state > 0)[0]
-        imaged = []
-        for idx in update_idx:
-            message = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg
-            target_id = message.read().storedDataName[int(idx)]
-            imaged.append(
-                [target for target in self.data.known if target.id == target_id][0]
-            )
-        return RSOTargetImageData(imaged=imaged)
+        if self.satellite.name == "SS1":
+            update_idx = np.where(new_state - old_state > 0)[0]
+            imaged = []
+            for idx in update_idx:
+                message = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg
+                target_id = message.read().storedDataName[int(idx)]
+                imaged.append(
+                    [target for target in self.data.known if target.id == target_id][0]
+                )
+            return RSOTargetImageData(imaged=imaged)
+        else:
+            return RSOTargetImageData(imaged=[])
+
 
 
 class RSOTargetImageReward(GlobalReward):
