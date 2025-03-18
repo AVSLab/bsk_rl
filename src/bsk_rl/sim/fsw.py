@@ -1282,6 +1282,30 @@ class BasicTargetFSWModel(FSWModel):
 class ImagingSCFSWModel(ImagingFSWModel):
 
     class LocPointTask(ImagingFSWModel.LocPointTask):
+        """Task to point at targets and trigger the instrument."""
+
+        name = "locPointTask"
+
+        def __init__(self, fsw, priority=96) -> None:  # noqa: D107
+            """Task to point the instrument at ground targets."""
+            super().__init__(fsw, priority)
+
+        def _create_module_data(self) -> None:
+            # Location pointing configuration
+            self.locPoint = self.fsw.locPoint = locationPointing.locationPointing()
+            self.locPoint.ModelTag = "locPoint"
+
+            # SimpleInstrumentController configuration
+            self.insControl = self.fsw.insControl = (
+                simpleInstrumentController.simpleInstrumentController()
+            )
+            self.insControl.ModelTag = "instrumentController"
+
+            #Adding a recorder for the pointing performance
+            self.pointing_state_recorder = self.fsw.locPoint.attGuidOutMsg.recorder(macros.sec2nano(1.0))
+            self.fsw.simulator.AddModelToTask(
+                self.name+self.fsw.satellite.name, self.pointing_state_recorder, ModelPriority=699
+            )
 
         @default_args(inst_pHat_B=[0, 0, 1])
         def setup_location_pointing(
