@@ -11,7 +11,7 @@ from bsk_rl.act.actions import Action, ActionBuilder
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
-    from bsk_rl.scene.targets import Target
+    from bsk_rl.scene.targets import Target, Strip
 
 logger = logging.getLogger(__name__)
 
@@ -300,6 +300,74 @@ class Image(DiscreteAction):
         :meta_private:
         """
         return self.image(action, prev_action_key)
+    
+class ImageStrip(DiscreteAction):
+    def __init__(
+        self,
+        n_ahead_image: int,
+        name: str = "action_image_strip",
+    ):
+        """Actions to image upcoming strips (:class:`~bsk_rl.env.simulation.fsw.StripImagingFSWModel.action_image_strip`).
+
+        Adds ``n_ahead_image`` actions to the action space, corresponding to the next
+        ``n_ahead_image`` unimaged strips. The action will stop as soon as the duration of the action becomes superior to the expected time needed to image the strip.
+
+        This action implements a ``set_action_override`` that allows a target to be tasked
+        based on the target's ID string or the Target object.
+
+        Args:
+            name: Action name.
+            n_ahead_image: Number of unimaged, along-track targets to consider.
+        """
+        from bsk_rl.sats import StripImagingSatellite
+
+        self.satellite: "StripImagingSatellite"
+        super().__init__(name=name, n_actions=n_ahead_image)
+
+    def image(
+        self, target: Union[int, "Strip", str], prev_action_key: Optional[str] = None
+    ) -> str:
+        """Task or retask a satellite for imaging a target.
+
+        Args:
+            target: Target to image.
+            prev_action_key: Previous action key.
+
+        :meta private:
+        """
+        target = self.satellite.parse_target_selection(target)
+        if target.id != prev_action_key:
+            self.satellite.task_target_for_imaging(target)
+        else:
+            self.satellite.enable_target_window(target)
+
+        return target.id
+
+    def set_action(self, action: int, prev_action_key: Optional[str] = None) -> str:
+        """Image a target by local index.
+
+        Args:
+            action: Index of the target to image.
+            prev_action_key: Previous action key.
+
+        :meta_private:
+        """
+        self.satellite.logger.info(f"target index {action} tasked")
+        return self.image(action, prev_action_key)
+
+    def set_action_override(
+        self, action: Union["Target", str], prev_action_key: Optional[str] = None
+    ) -> str:
+        """Image a target by target index, Target, or ID.
+
+        Args:
+            action: Target to image in the form of a Target object, target ID, or target index.
+            prev_action_key: Previous action key.
+
+        :meta_private:
+        """
+        return self.image(action, prev_action_key)
+
 
 
 __doc_title__ = "Discrete Backend"

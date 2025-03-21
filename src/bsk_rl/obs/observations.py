@@ -438,6 +438,236 @@ class OpportunityProperties(Observation):
             obs[f"{self.name}_{i}"] = props
         return obs
 
+#Computes the position of the start of the strip in the Hill frame
+def _r_LB_H_start(sat, opp):
+    r_LP_P_start = opp["object"].r_LP_P_start
+    r_BN_N = sat.dynamics.r_BN_N
+    r_TB_N = sat.simulator.world.PN.T @ r_LP_P_start - r_BN_N
+    HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
+    return HN @ r_TB_N
+
+#Computes the position of the end of the strip in the Hill frame
+def _r_LB_H_end(sat, opp):
+    r_LP_P_end = opp["object"].r_LP_P_end
+    r_BN_N = sat.dynamics.r_BN_N
+    r_TB_N = sat.simulator.world.PN.T @ r_LP_P_end - r_BN_N
+    HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
+    return HN @ r_TB_N
+
+#Computes the lenght of the strip
+def _strip_length(sat, opp):
+    dot_product = np.dot(opp["object"].r_LP_P_start / np.linalg.norm(opp["object"].r_LP_P_start), opp["object"].r_LP_P_end / np.linalg.norm(opp["object"].r_LP_P_end))
+    theta = np.arccos(np.clip(dot_product, -1.0, 1.0))
+    return theta * orbitalMotion.REQ_EARTH * 1e3
+
+#Duration of the imaging task strip 
+def _duration_task(sat, opp):
+    d_strip = _strip_length(sat, opp)
+    t_strip = d_strip / opp["object"].acquisition_speed 
+    return t_strip
+
+#Computes the angle between the pointing vector and the reference vector to point at the target
+def _pointing_vector_angle(sat, opp):
+    vector_target_spacecraft_P = opp["r_LP_P_start"] - sat.dynamics.r_BN_P
+    vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(
+        vector_target_spacecraft_P
+    )
+    return np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.p_hat_P))
+
+#Assuming that the satellite is now pointing at the target, computes the angle of rotation necessary to have a scanning vector perpendicular to the central line 
+def _scan_line_vector_angle(sat, opp):
+    vector_target_spacecraft_P = opp["r_LP_P_start"] - sat.dynamics.r_BN_P
+    vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(vector_target_spacecraft_P)
+    ##Calculate the ratation matrix for the pointing vector
+    #Step 1 : Compute the axis of rotation
+    axis_rotation = np.cross(sat.fsw.p_hat_P, vector_target_spacecraft_P_hat)
+    axis_norm = np.linalg.norm(axis_rotation)
+    #Step 2 : Consider the special case where the pointing vector is aligned with the target pointing vector 
+    if axis_norm < 1e-6:
+        # Check if the vectors are aligned in the same direction
+        cos_theta = np.dot(sat.fsw.p_hat_P, vector_target_spacecraft_P_hat)
+        if cos_theta > 0.0:
+            R=np.eye(3)  # Identity matrix (no rotation needed)
+        else:
+            # Vectors are anti-parallel; choose an arbitrary orthogonal axis
+            arbitrary_axis = np.array([1, 0, 0]) if abs(sat.fsw.p_hat_P[0]) < 1e-6 else np.array([0, 1, 0])
+            axis = np.cross(sat.fsw.p_hat_P, arbitrary_axis)
+            axis /= np.linalg.norm(axis)  # Normalize the axis
+            theta = np.pi  # 180 degrees
+            # Compute the skew-symmetric matrix of the axis
+            x, y, z = axis
+            K = np.array([
+                [0, -z, y],
+                [z, 0, -x],
+                [-y, x, 0]
+            ])
+            # Compute the rotation matrix for 180 degrees
+            I = np.eye(3)
+            R = I + np.sin(theta) * K + (1 - np.cos(theta)) * np.dot(K, K)
+    #Step 3 : Compute the rotation in the normal case
+    else:
+        cos_theta = np.dot(sat.fsw.p_hat_P, vector_target_spacecraft_P_hat)
+        cos_theta = np.clip(cos_theta, -1.0, 1.0)  # Ensure numerical stability
+        theta = np.arccos(cos_theta)
+        x, y, z = axis
+        K = np.array([
+            [0, -z, y],
+            [z, 0, -x],
+            [-y, x, 0]
+        ])
+        I = np.eye(3)  # Identity matrix
+        R = I + np.sin(theta) * K + (1 - np.cos(theta)) * np.dot(K, K)
+    #Compute the updated scanning line vector after the rotation
+    c_hat_P_updated = R @ sat.fsw.c_hat_P  # Apply the rotation
+    c_hat_P_updated /= np.linalg.norm(c_hat_P_updated)  # Normalize the vector
+
+    #Project the strip direction onto the plane perpendicular to the camera pointing direction
+    pHat_P = sat.fsw.p_hat_P # Camera pointing direction in the body frame
+    centrale_line_vector = (opp["r_LP_P_end"] - opp["r_LP_P_start"]) / np.linalg.norm(opp["r_LP_P_end"] - opp["r_LP_P_start"])  # Central line vector
+    pHat_P = pHat_P / np.linalg.norm(pHat_P)
+    dot_product = np.dot(centrale_line_vector, pHat_P)
+    centrale_line_vector_proj = centrale_line_vector - dot_product * pHat_P
+    centrale_line_vector_proj /= np.linalg.norm(centrale_line_vector_proj)
+    v_perp = np.cross(pHat_P, centrale_line_vector_proj)
+    v_perp /= np.linalg.norm(v_perp)  # Normalize the perpendicular vector
+
+    #Compute the angle between c_hat_P_updated and v_perp
+    dotProd2 = np.dot(c_hat_P_updated, v_perp)
+    dotProd2 = np.clip(dotProd2, -1.0, 1.0)  # Ensure numerical stability
+    angle = np.arccos(dotProd2)
+    return angle
+
+class StripOpportunityProperties(Observation):
+    _fn_map = {
+        "priority": lambda sat, opp: opp["object"].priority, #Priority of the strip
+        "r_LP_P_start": lambda sat, opp: opp["r_LP_P_start"], # Location of the start of the strip in the planet-fixed frame
+        "r_LB_H_start": _r_LB_H_start, # Location of the start of the strip in the Hill frame
+        "r_LP_P_end": lambda sat, opp: opp["r_LP_P_end"], # Location of the end of the strip in the planet-fixed frame
+        "r_LB_H_end": _r_LB_H_end, # Location of the end of the strip in the Hill frame
+        "strip_length": _strip_length, # Length of the strip
+        "pointing_vector_angle": _pointing_vector_angle, # Pointing vector angle
+        "scan_line_vector_angle": _scan_line_vector_angle, # Scan line vector angle (assuming the satellite is pointing at the target)
+        "duration_task": _duration_task, # Duration of the imaging task without the pre-imaging time
+        "pre-imaging_time": lambda sat, opp: opp["pre-imaging_time"], # Pre-imaging time
+        "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time, #Time until the opportunity opens (taking into account the pre-imaging time)
+        "opportunity_close": lambda sat, opp: opp["window"][1] - sat.simulator.sim_time, #Time until the opportunity closes (taking into account the pre-imaging time)
+    }
+
+    def __init__(
+        self,
+        *target_properties: dict[str, Any],
+        n_ahead_observe: int,
+        type="target",
+        name=None,
+    ):
+        """Include information about upcoming access opportunities in the observation..
+
+        For each desired property, a dictionary specifying the property name and settings
+        is passed. These can include preset properties or arbitrary functions of the satellite
+        and opportunity.
+
+        .. code-block:: python
+
+            OpportunityProperties(
+                dict(prop="r_LP_P", norm=REQ_EARTH * 1e3),
+                dict(prop="double_priority", fn=lambda sat, opp: opp["target"].priority * 2.0),
+                n_ahead_observe=16,
+            )
+
+        Args:
+            target_properties: Property that is a function of the opportunity to be appended
+                to the the observation. Properties are optionally normalized by some factor.
+                Each observation is a dictionary with the keys:
+
+                * ``name`` `optional`: Name of the observation element.
+                * ``fn`` `optional`: Function to calculate property, in the form ``fn(satellite, opportunity)``.
+                  If not provided, the key ``prop`` will be used to look up a preset function:
+
+                    * ``priority``: Priority of the target.
+                    * ``r_LP_P``: Location of the target in the planet-fixed frame.
+                    * ``r_LB_H``: Location of the target in the Hill frame.
+                    * ``opportunity_open``: Time until the opportunity opens.
+                    * ``opportunity_mid``: Time until the opportunity midpoint.
+                    * ``opportunity_close``: Time until the opportunity closes.
+                    * ``target_angle``: Angle between the target and the satellite instrument direction.
+                    * ``target_angle_rate``: Rate difference between the target pointing frame and the body frame.
+
+                * ``norm`` `optional`: Value to normalize property by. Defaults to 1.0.
+
+            n_ahead_observe: Number of upcoming targets to consider.
+            type: The type of opportunity to consider. Can be ``target``, ``ground_station``,
+                or any other type of opportunity that has been added via
+                :obj:`~bsk_rl.sats.AccessSatellite.add_location_for_access_checking`.
+            name: Name of the observation.
+        """
+        if name is None:
+            name = type
+        super().__init__(name=name)
+        self.type = type
+        self.target_properties = target_properties
+        for i, prop_spec in enumerate(self.target_properties):
+            for key in prop_spec:
+                if key not in ["fn", "norm", "name", "prop"]:
+                    raise ValueError(f"Invalid property key: {key}")
+
+            if "norm" not in prop_spec:
+                prop_spec["norm"] = 1.0
+
+            # Determine observation function
+            if "fn" not in prop_spec:
+                try:
+                    prop_spec["fn"] = self._fn_map[prop_spec["prop"]]
+                except KeyError:
+                    raise ValueError(
+                        f"Property prop={prop_spec['prop']} is not predefined and no `fn` was provided."
+                    )
+            else:
+                if "prop" in prop_spec and prop_spec["prop"] in self._fn_map:
+                    logger.warning(
+                        f"Ignoring default function for `{prop_spec['prop']}` when `fn` is provided."
+                    )
+
+            # Determine best name
+            if "name" not in prop_spec:
+                if "prop" in prop_spec:
+                    prop_spec["name"] = prop_spec["prop"]
+                else:
+                    prop_spec["name"] = f"prop_{i}"
+
+                if prop_spec["norm"] != 1.0:
+                    prop_spec["name"] += "_normd"
+
+        self.n_ahead_observe = int(n_ahead_observe)
+
+    def get_obs(self):
+        """Iterate over property specs.
+
+        :meta private:
+        """
+        from bsk_rl.sats import AccessSatellite
+
+        if not isinstance(self.satellite, AccessSatellite):
+            logger.warning(
+                "OpportunityProperties observation requires an AccessSatellite"
+            )
+
+        obs = {}
+        for i, opportunity in enumerate(
+            self.satellite.find_next_opportunities(
+                n=self.n_ahead_observe,
+                types=self.type,
+                pad=True,
+            )
+        ):
+            props = {}
+            for prop_spec in self.target_properties:
+                name = prop_spec["name"]
+                norm = prop_spec["norm"]
+                value = prop_spec["fn"](self.satellite, opportunity)
+                props[name] = value / norm
+            obs[f"{self.name}_{i}"] = props
+        return obs
+
 
 class Eclipse(Observation):
     def __init__(self, norm=1.0, name="eclipse"):

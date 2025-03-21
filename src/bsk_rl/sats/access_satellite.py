@@ -9,14 +9,16 @@ from Basilisk.utilities import macros
 from scipy.optimize import minimize_scalar, root_scalar
 
 from bsk_rl.sats.satellite import Satellite
-from bsk_rl.scene.targets import Target
+from bsk_rl.scene.targets import Target, Strip
 from bsk_rl.sim import dyn, fsw
 from bsk_rl.utils import vizard
 from bsk_rl.utils.functional import valid_func_name
 from bsk_rl.utils.orbital import elevation
+from Basilisk.utilities import orbitalMotion
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.data.unique_image_data import UniqueImageStore
+    from bsk_rl.data.unique_strip_image_data import UniqueStripImageStore
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +65,7 @@ class AccessSatellite(Satellite):
         self.opportunities: list[dict] = []
         self.window_calculation_time = 0
         self.locations_for_access_checking: list[dict[str, Any]] = []
+        self.strip_for_access_checking: list[dict[str, Any]] = []
 
     def add_location_for_access_checking(
         self,
@@ -88,6 +91,36 @@ class AccessSatellite(Satellite):
         location_dict[type] = object  # For backwards compatibility, prefer "object" key
         location_dict["object"] = object
         self.locations_for_access_checking.append(location_dict)
+        
+    def add_strip_for_access_checking(
+        self,
+        object: Any,
+        r_LP_P_start: np.ndarray,
+        r_LP_P_end: np.ndarray,
+        acquisition_speed: float,
+        pre_imaging_time: float,
+        min_elev: float,
+        type: str,
+    ) -> None:
+        """Add a strip to be included in opportunity calculations.
+
+        .. warning::
+            The added location will only be considered in future calls to
+            :class:`~AccessSatellite.calculate_additional_strip_windows`; opportunities are not
+            computed retroactively.
+
+        Args:
+            object: Object for with to compute opportunities.
+            r_LP_P_start: [m] Starting point of the strip in the planet-fixed frame
+            r_LP_P_end: [m] Ending point of the strip in the planet-fixed frame
+            acquisition_speed: [m/ns] Speed at which the strip is aquired
+            min_elev: [rad] Minimum elevation angle for access.
+            type: Category of opportunity target provides.
+        """
+        location_dict = dict(r_LP_P_start=r_LP_P_start,r_LP_P_end=r_LP_P_end,acquisition_speed=acquisition_speed,pre_imaging_time=pre_imaging_time,min_elev=min_elev, type=type)
+        location_dict[type] = object  # For backwards compatibility, prefer "object" key
+        location_dict["object"] = object
+        self.strip_for_access_checking.append(location_dict)
 
     def reset_post_sim_init(self) -> None:
         """Handle initial window calculations for new simulation.
@@ -136,34 +169,116 @@ class AccessSatellite(Satellite):
 
         r_max = np.max(np.linalg.norm(positions, axis=-1))
         access_dist_thresh_multiplier = 1.1
-        for location in self.locations_for_access_checking:
-            alt_est = r_max - np.linalg.norm(location["r_LP_P"])
-            access_dist_threshold = (
-                access_dist_thresh_multiplier * alt_est / np.sin(location["min_elev"])
-            )
-            candidate_windows = self._find_candidate_windows(
-                location["r_LP_P"], times, positions, access_dist_threshold
-            )
+        if len(self.locations_for_access_checking) != 0:
+            for location in self.locations_for_access_checking:
+                alt_est = r_max - np.linalg.norm(location["r_LP_P"])
+                access_dist_threshold = (
+                    access_dist_thresh_multiplier * alt_est / np.sin(location["min_elev"])
+                )
+                candidate_windows = self._find_candidate_windows(
+                    location["r_LP_P"], times, positions, access_dist_threshold
+                )
 
-            for candidate_window in candidate_windows:
-                roots = self._find_elevation_roots(
-                    r_BP_P_interp,
-                    location["r_LP_P"],
-                    location["min_elev"],
-                    candidate_window,
-                )
-                new_windows = self._refine_window(
-                    roots, candidate_window, (times[0], times[-1])
-                )
-                for new_window in new_windows:
-                    self._add_window(
-                        location["object"],
-                        new_window,
-                        type=location["type"],
-                        r_LP_P=location["r_LP_P"],
-                        merge_time=times[0],
+                for candidate_window in candidate_windows:
+                    roots = self._find_elevation_roots(
+                        r_BP_P_interp,
+                        location["r_LP_P"],
+                        location["min_elev"],
+                        candidate_window,
                     )
-
+                    new_windows = self._refine_window(
+                        roots, candidate_window, (times[0], times[-1])
+                    )
+                    for new_window in new_windows:
+                        self._add_window(
+                            location["object"],
+                            new_window,
+                            type=location["type"],
+                            r_LP_P=location["r_LP_P"],
+                            merge_time=times[0],
+                            )
+        elif len(self.strip_for_access_checking) != 0:
+            def shift_window(window, shift):
+                """Shift the window by a given time shift."""
+                return (window[0] - shift, window[1] - shift)
+            def intersect_windows(window1, window2):
+                """Calculate the intersection of two windows."""
+                start = max(window1[0], window2[0])
+                end = min(window1[1], window2[1])
+                if start < end:
+                    return (start, end)
+                else:
+                    return None
+            for strip in self.strip_for_access_checking:
+                #Time between two trajectory points
+                dt=times[1]-times[0]
+                #Calculation of the distance between the start and end of the strip 
+                dot_product = np.dot(strip["r_LP_P_start"]/ np.linalg.norm(strip["r_LP_P_start"]),strip["r_LP_P_end"]/ np.linalg.norm(strip["r_LP_P_end"]))
+                theta = np.arccos(np.clip(dot_product, -1.0, 1.0))
+                d_strip=theta*orbitalMotion.REQ_EARTH * 1e3 # lenght of the strip [m]
+                #Calculation of the time to cover the strip
+                t_strip=d_strip/strip["acquisition_speed"]
+                #Calculation of the checking points time on the strip
+                n_points=int(t_strip/dt)+1
+                checking_points_time=(np.arange(0, t_strip , dt).tolist()+[t_strip])
+                #Calculation of the checking points position on the strip by using linear spherical interpolation
+                checking_points_position=[(np.sin((1 - t/t_strip) * theta) / np.sin(theta)) * strip["r_LP_P_start"] + (np.sin(t/t_strip * theta) / np.sin(theta)) * strip["r_LP_P_end"] for t in checking_points_time]
+                #Calculation of the opening windows for each checking point on the strip and then calculating the intersection between all the windows
+                strip_windows=[]
+                for i,pos in enumerate(checking_points_position):
+                    alt_est = r_max - np.linalg.norm(pos)
+                    access_dist_threshold = (
+                        access_dist_thresh_multiplier * alt_est / np.sin(strip["min_elev"])
+                    )
+                    candidate_windows = self._find_candidate_windows(
+                        pos, times, positions, access_dist_threshold
+                    )
+                    new_strip_windows=[]
+                    for candidate_window in candidate_windows:
+                        roots = self._find_elevation_roots(
+                            r_BP_P_interp,
+                            pos,
+                            strip["min_elev"],
+                            candidate_window,
+                        )
+                        new_windows = self._refine_window(
+                            roots, candidate_window, (times[0], times[-1])
+                        )
+                        if i==0:
+                            new_strip_windows=new_strip_windows+new_windows
+                        if i!=0:
+                            for j in strip_windows:
+                                for l in new_windows:
+                                    # Determine the time shift
+                                    if i == len(checking_points_position)-1:
+                                        time_shift = t_strip
+                                    else:
+                                        time_shift = dt * i
+                                    # Shift the window l
+                                    shifted_l = shift_window(l, time_shift)
+            
+                                    # Calculate the intersection
+                                    intersection = intersect_windows(j, shifted_l)
+                                    if intersection is not None:
+                                        new_strip_windows.append(intersection)
+                    if new_strip_windows==[]:
+                        strip_windows=[]
+                        break
+                    strip_windows=new_strip_windows
+                if strip_windows!=[]:
+                    for strip_window in strip_windows:
+                        #Shift the window by the pre-imaging time
+                        strip_window=shift_window(strip_window,strip["pre_imaging_time"])
+                        self._add_window(
+                            strip["object"],
+                            strip_window,
+                            type=strip["type"],
+                            r_LP_P=strip["r_LP_P_start"],
+                            r_LP_P_end=strip["r_LP_P_end"],
+                            acquisition_speed=strip["acquisition_speed"],
+                            pre_imaging_time=strip["pre_imaging_time"],
+                            merge_time=times[0],
+                            )
         self.window_calculation_time = calculation_end
 
     @staticmethod
@@ -259,15 +374,20 @@ class AccessSatellite(Satellite):
         new_window: tuple[float, float],
         type: str,
         r_LP_P: np.ndarray,
+        r_LP_P_end: Optional[np.ndarray] = None,
+        acquisition_speed: Optional[float] = None,
+        pre_imaging_time: Optional[float] = None,
         merge_time: Optional[float] = None,
     ):
         """Add an opportunity window.
 
         Args:
             object: Object to add window for
-            new_window: New window for target
+            new_window: New window for target ( strip or location point)
             type: Type of window being added
-            r_LP_P: Planet-fixed location of object
+            r_LP_P: Planet-fixed location of object (r_LP_P_start for strip)
+            r_LP_P_end : Planet-fixed location of the end of the strip (None for location point)
+            aqui_speed : Acquisition speed of the strip (None for location point)
             merge_time: Time at which merges with existing windows will occur. If None,
                 check all windows for merges.
         """
@@ -280,9 +400,22 @@ class AccessSatellite(Satellite):
                 ):
                     opportunity["window"] = (opportunity["window"][0], new_window[1])
                     return
+        new_opportunity = {
+        "object": object,
+        "window": new_window,
+        "type": type,
+    }
+        if r_LP_P_end is not None:
+            new_opportunity["r_LP_P_start"] = r_LP_P
+            new_opportunity["r_LP_P_end"] = r_LP_P_end
+            new_opportunity["acquisition_speed"] = acquisition_speed
+            new_opportunity["pre_imaging_time"] = pre_imaging_time
+        else:
+            new_opportunity["r_LP_P"] = r_LP_P
+
         bisect.insort(
             self.opportunities,
-            {"object": object, "window": new_window, "type": type, "r_LP_P": r_LP_P},
+            new_opportunity,
             key=lambda x: x["window"][1],
         )
 
@@ -443,7 +576,7 @@ class AccessSatellite(Satellite):
             )
         else:
             raise RuntimeError(
-                "No opportunities found! Use add_location_for_access_checking to add locations."
+                "No opportunities found! Use add_location_for_access_checking or add_strip_for_location_checking to add locations or strips."
             )
         return next_opportunities
 
@@ -682,3 +815,122 @@ class ImagingSatellite(AccessSatellite):
         if hasattr(self, "target_line"):
             self.target_line.toBodyName = self.name
             vizSupport.updateTargetLineList(vizInstance)
+
+class StripImagingSatellite(AccessSatellite):
+    """Satellite with agile imaging capabilities."""
+
+    dyn_type = dyn.StripImagingDynModel
+    fsw_type = fsw.StripImagingFSWModel
+
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Satellite with super-agile strip imaging capabilities.
+
+        Stop the simulation when a strip is imaged 
+        """
+        super().__init__(*args, **kwargs)
+        self.fsw: StripImagingSatellite.fsw_type
+        self.dynamics: StripImagingSatellite.dyn_type
+        self.data_store: "UniqueStripImageStore"
+        self.target_types = "target"
+
+    @property
+    def known_targets(self) -> list["Strip"]:
+        """List of known targets."""
+        try:
+            return self.data_store.data.known
+        except AttributeError:
+            return []
+
+    def reset_overwrite_previous(self) -> None:
+        """Overwrite statistics about previous episode."""
+        super().reset_overwrite_previous()
+        self.imaged = 0
+
+    def reset_pre_sim_init(self) -> None:
+        """Set the buffer parameters based on computed windows.
+
+        :meta private:
+        """
+        super().reset_pre_sim_init()
+        self.sat_args["bufferNames"] = [
+            loc["object"].id
+            for loc in self.locations_for_access_checking
+            if hasattr(loc["object"], "id")
+        ]
+
+        self.sat_args["transmitterNumBuffers"] = len(self.sat_args["bufferNames"])
+
+    def parse_target_selection(self, target_query: Union[int, Strip, str]):
+        """Identify a target from a query.
+
+        Parses an upcoming target index, Target object, or target id.
+
+        Args:
+            target_query: Target upcoming index, object, or id.
+        """
+        if np.issubdtype(type(target_query), np.integer):
+            target = self.find_next_opportunities(
+                n=target_query + 1, types=self.target_types
+            )[-1]["object"]
+        elif isinstance(target_query, Strip):
+            target = target_query
+        elif isinstance(target_query, str):
+            try:
+                target = [
+                    target for target in self.known_targets if target.id == target_query
+                ][0]
+            except IndexError:
+                raise ValueError(f"Target {target_query} not a known target!")
+        else:
+            raise TypeError(f"Invalid target_query! Cannot be a {type(target_query)}!")
+
+        return target
+
+    def enable_target_window(self, target: "Strip"):
+        """Enable closing the imaging action when the strip is expected to be imaged.
+
+        Args:
+            target: Target to terminate the step on imaging.
+        """
+        next_window = self.next_opportunities_dict(
+            types=self.target_types,
+            filter=self.default_access_filter,
+        )[target]
+        self.logger.info(
+            f"{target} starting time imaging window : {next_window[0]:.1f} to {next_window[1]:.1f}"
+        )
+        dot_product = np.dot(target.r_LP_P_start / np.linalg.norm(target.r_LP_P_start), target.r_LP_P_end / np.linalg.norm(target.r_LP_P_end))
+        theta = np.arccos(np.clip(dot_product, -1.0, 1.0))
+        d_strip = theta * orbitalMotion.REQ_EARTH * 1e3  # length of the strip [m]
+        t_strip = d_strip / target.acquisition_speed +target.pre_imaging_time  # Calculation of the time to cover the strip
+        #Get the current time of the simulation in seconds
+        current_time = self.simulator.sim_time
+        #Calculate the expected final time of the imaging action in seconds
+        final_time = current_time + t_strip
+
+        self.logger.info(
+            f"{target} imaging task duration : {t_strip} seconds"
+        )
+
+        self.update_timed_terminal_event(
+            final_time,
+            info=f"for {target} stopping imaging event",
+            extra_actions=[self._satellite_command + ".imaged += 1"],
+        )
+
+    def task_target_for_imaging(self, target: "Strip"):
+        """Task the satellite to image a target.
+
+        Args:
+            target: Selected target
+        """
+        msg = f"{target} tasked for imaging"
+        self.logger.info(msg)
+        self.fsw.action_image_strip(target.r_LP_P_start,target.r_LP_P_end,target.aquisition_speed,target.pre_imaging_time, target.id)
+        self.enable_target_window(target)
+
+

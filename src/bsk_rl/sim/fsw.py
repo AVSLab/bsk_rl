@@ -631,17 +631,17 @@ class ImagingFSWModel(BasicFSWModel):
         super().__init__(*args, **kwargs)
 
     @property
-    def c_hat_P(self):
+    def p_hat_P(self):
         """Instrument pointing direction in the planet frame."""
-        c_hat_B = self.locPoint.pHat_B
-        return np.matmul(self.dynamics.BP.T, c_hat_B)
+        p_hat_B = self.locPoint.pHat_B
+        return np.matmul(self.dynamics.BP.T, p_hat_B)
 
     @property
-    def c_hat_H(self):
+    def p_hat_H(self):
         """Instrument pointing direction in the hill frame."""
-        c_hat_B = self.locPoint.pHat_B
+        p_hat_B = self.locPoint.pHat_B
         HN = rv2HN(self.satellite.dynamics.r_BN_N, self.satellite.dynamics.v_BN_N)
-        return HN @ self.satellite.dynamics.BN.T @ c_hat_B
+        return HN @ self.satellite.dynamics.BN.T @ p_hat_B
 
     def _make_task_list(self) -> list[Task]:
         return super()._make_task_list() + [self.LocPointTask(self)]
@@ -797,6 +797,153 @@ class ImagingFSWModel(BasicFSWModel):
             BasicFSWModel.TrackingErrorTask.name + self.satellite.name
         )
 
+class StripImagingFSWModel(ImagingFSWModel):
+    """FSW model for strip imaging."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """FSW model for strip imaging.
+
+        Instead of imaging point targets, this model is used to image strips
+        """
+        super().__init__(*args, **kwargs)
+
+    @property
+    def c_hat_P(self):
+        """Instrument scanning line vector in the planet frame."""
+        c_hat_B = self.locPoint.cHat_B
+        return np.matmul(self.dynamics.BP.T, c_hat_B)
+    
+    @property
+    def c_hat_H(self):
+        """Instrument pointing direction in the hill frame."""
+        c_hat_B = self.locPoint.cHat_B
+        HN = rv2HN(self.satellite.dynamics.r_BN_N, self.satellite.dynamics.v_BN_N)
+        return HN @ self.satellite.dynamics.BN.T @ c_hat_B
+
+    class LocPointTask(Task):
+        """Task to point at a strip and trigger the instrument."""
+
+        name = "locPointTask"
+
+        def __init__(self, fsw, priority=96) -> None:  # noqa: D107
+            """Task to point the instrument at ground targets."""
+            super().__init__(fsw, priority)
+
+        def _create_module_data(self) -> None:
+            # Location pointing configuration
+            self.locPoint = self.fsw.locPoint = locationPointing.locationPointing()
+            self.locPoint.ModelTag = "locPoint"
+
+            # ScanningInstrumentController configuration
+            self.insControl = self.fsw.insControl = (
+                scanningInstrumentController.scanningInstrumentController()
+            )
+            self.insControl.ModelTag = "instrumentController"
+
+        def _setup_fsw_objects(self, **kwargs) -> None:
+            self.setup_location_pointing(**kwargs)
+            self.setup_instrument_controller(**kwargs)
+
+        @default_args(inst_pHat_B=[0, 0, 1], inst_cHat_B=[0, 1, 0])
+        def setup_location_pointing(
+            self, inst_pHat_B: Iterable[float],inst_cHat_B: Iterable[float], **kwargs
+        ) -> None:
+            """Set the Earth location pointing guidance module.
+
+            Args:
+                inst_pHat_B: Instrument pointing direction.
+                inst_cHat_B: Direction of the rectangular array of aligned photodiodes in the camera 
+                kwargs: Passed to other setup functions.
+            """
+            self.locPoint.pHat_B = inst_pHat_B
+
+            self.locPoint.cHat_B = inst_cHat_B
+
+            self.locPoint.locationstripInMsg.subscribeTo(
+            self.fsw.dynamics.imagingStrip.currentStripStateOutMsg)
+           
+            self.locPoint.scAttInMsg.subscribeTo(
+                self.fsw.dynamics.simpleNavObject.attOutMsg
+            )
+            self.locPoint.scTransInMsg.subscribeTo(
+                self.fsw.dynamics.simpleNavObject.transOutMsg
+            )
+            self.locPoint.useBoresightRateDamping = 1
+            messaging.AttGuidMsg_C_addAuthor(
+                self.locPoint.attGuidOutMsg, self.fsw.attGuidMsg
+            )
+
+            self._add_model_to_task(self.locPoint, priority=1198)
+
+        @default_args(imageAttErrorRequirement=0.01, imageRateErrorRequirement=None)
+        def setup_instrument_controller(
+            self,
+            imageAttErrorRequirement: float,
+            imageRateErrorRequirement: float,
+            **kwargs,
+        ) -> None:
+            """Set the instrument controller parameters for imaging a strip
+
+            As long as these two conditions are met, imaging the strip will occur continuously.
+
+            Args:
+                imageAttErrorRequirement: [MRP norm] Pointing attitude error tolerance
+                    for imaging.
+                imageRateErrorRequirement: [rad/s] Rate tolerance for imaging. Disable
+                    with ``None``.
+                kwargs: Passed to other setup functions.
+            """
+            self.insControl.attErrTolerance = imageAttErrorRequirement
+            if imageRateErrorRequirement is not None:
+                self.insControl.useRateTolerance = 1
+                self.insControl.rateErrTolerance = imageRateErrorRequirement
+            self.insControl.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
+            self.insControl.accessInMsg.subscribeTo(
+                self.fsw.dynamics.imagingStrip.accessOutMsgs[-1]
+            )
+
+            self._add_model_to_task(self.insControl, priority=987)
+
+        def reset_for_action(self) -> None:
+            """Reset pointing controller."""
+            self.fsw.dynamics.imagingStrip.Reset(self.fsw.simulator.sim_time_ns)
+            self.locPoint.Reset(self.fsw.simulator.sim_time_ns)
+            self.insControl.controllerStatus = 0
+            self.instMsg = messaging.DeviceCmdMsg_C()
+            self.instMsg.write(messaging.DeviceCmdMsgPayload())
+            self.fsw.dynamics.instrument.nodeStatusInMsg.subscribeTo(self.instMsg)
+            return super().reset_for_action()
+
+
+    @action
+    def action_image_strip(self, r_LP_P_Start: Iterable[float],r_LP_P_End: Iterable[float],acquisition_speed: float,pre_imaging_time: float, data_name: str) -> None:
+        """Attempt to image a strip at a location.
+        Args:
+            r_LP_P_Start: [m] Ground location of the first point to image on the central line of the strip relative to PCPF
+            r_LP_P_End: [m] Ground location of the last point to image on the central line of the strip relative to PCPF
+            acquisition_speed: [m/s] Acquisition velocity for the strip (need to be converted in m/ns for stripLocation)
+            pre_imaging_time: [s] Pre-imaging time (need to be converted in ns for stripLocation)
+            data_name: Data buffer to store image data to.
+        """
+        self.dynamics.instrument.nodeStatusInMsg.subscribeTo(
+            self.insControl.deviceCmdOutMsg
+        )
+        self.insControl.controllerStatus = 1
+        self.dynamics.instrumentPowerSink.powerStatus = 1
+        self.dynamics.imagingStrip.r_LP_P_Start = r_LP_P_Start
+        self.dynamics.imagingStrip.r_LP_P_End = r_LP_P_End
+        self.dynamics.imagingStrip.acquisition_speed = acquisition_speed / 1e9  # m/s to m/ns
+        self.dynamics.imagingStrip.pre_imaging_time = pre_imaging_time * 1e9 # s to ns
+        self.dynamics.instrument.nodeDataName = data_name
+        self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
+    
+    @action
+    def action_image(self, *args, **kwargs) -> None:
+        """Disable ``action_image`` from parent class.
+
+        :meta private:
+        """
+        raise NotImplementedError("Use action_image_strip instead")
 
 class ContinuousImagingFSWModel(ImagingFSWModel):
     """FSW model for continuous nadir scanning."""
@@ -1004,13 +1151,21 @@ class SteeringImagerFSWModel(SteeringFSWModel, ImagingFSWModel):
         """Convenience type that combines the imaging FSW model with MRP steering."""
         super().__init__(*args, **kwargs)
 
+class SteeringStripImagerFSWModel(SteeringFSWModel, StripImagingFSWModel):
+    """Convenience type for StripImagingFSWModel with MRP steering."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Convenience type that combines the imaging FSW model with MRP steering."""
+        super().__init__(*args, **kwargs)
 
 __doc_title__ = "FSW Sims"
 __all__ = [
     "action",
     "BasicFSWModel",
     "ImagingFSWModel",
+    "StripImagingFSWModel",
     "ContinuousImagingFSWModel",
     "SteeringFSWModel",
     "SteeringImagerFSWModel",
+    "SteeringStripImagerFSWModel",
 ]

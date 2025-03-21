@@ -37,9 +37,10 @@ from bsk_rl.obs.observations import (
     Eclipse,
     Observation,
     OpportunityProperties,
+    StripOpportunityProperties,
     SatProperties,
     Time,
 )
 
 __doc_title__ = "Observations"
-__all__ = ["Observation", "SatProperties", "Time", "OpportunityProperties", "Eclipse"]
+__all__ = ["Observation", "SatProperties", "Time", "OpportunityProperties","StripOpportunityProperties","Eclipse"]

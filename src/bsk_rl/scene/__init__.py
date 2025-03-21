@@ -15,6 +15,7 @@ __doc_title__ = "Scenario"
 __all__ = [
     "Scenario",
     "UniformTargets",
+    "UniformStripTargets",
     "CityTargets",
     "UniformNadirScanning",
 ]

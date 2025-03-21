@@ -49,6 +49,7 @@ from bsk_rl.act.discrete_actions import (
     Downlink,
     Drift,
     Image,
+    ImageStrip,
     Scan,
 )
 
@@ -62,5 +63,6 @@ __all__ = [
     "Desat",
     "Downlink",
     "Image",
+    "ImageStrip",
     "Scan",
 ]
