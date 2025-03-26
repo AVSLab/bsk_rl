@@ -4,6 +4,8 @@ Release Notes
 Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
+* Add an example script where reward is based on the probability of successfully observing targets covered 
+  by clouds in the `Cloud Environment with Re-imaging <examples/cloud_environment_with_reimaging.ipynb>`_ example.
 
 Version 1.1.0
 -------------

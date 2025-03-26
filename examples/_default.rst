@@ -10,6 +10,7 @@ Environments
    satellite_configuration
    multiagent_envs
    cloud_environment
+   cloud_environment_with_reimaging
    aeos
 
 
