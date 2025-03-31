@@ -68,7 +68,7 @@ jobs:
           github-token: ${{ github.token }}
       - name: Install Basilisk from wheels
         run: |
-          pip install Basilisk*.whl
+          pip install *asilisk*.whl
           bskLargeData
       - name: Install BSK-RL
         run: pip install -e '.[all]' && finish_install
