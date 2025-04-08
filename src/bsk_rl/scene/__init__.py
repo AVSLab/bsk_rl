@@ -9,13 +9,15 @@ following scenarios have been implemented:
 """
 
 from bsk_rl.scene.scenario import Scenario, UniformNadirScanning
-from bsk_rl.scene.targets import CityTargets, UniformTargets
+from bsk_rl.scene.targets import CityTargets, UniformTargets, UniformStripTargets
+#, ClusterStripTargets
 
 __doc_title__ = "Scenario"
 __all__ = [
     "Scenario",
     "UniformTargets",
     "UniformStripTargets",
+    #"ClusterStripTargets",
     "CityTargets",
     "UniformNadirScanning",
 ]
