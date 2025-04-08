@@ -906,7 +906,7 @@ class StripImagingSatellite(AccessSatellite):
         dot_product = np.dot(target.r_LP_P_start / np.linalg.norm(target.r_LP_P_start), target.r_LP_P_end / np.linalg.norm(target.r_LP_P_end))
         theta = np.arccos(np.clip(dot_product, -1.0, 1.0))
         d_strip = theta * orbitalMotion.REQ_EARTH * 1e3  # length of the strip [m]
-        t_strip = d_strip / target.acquisition_speed +target.pre_imaging_time  # Calculation of the time to cover the strip
+        t_strip = d_strip / target.aquisition_speed +target.pre_imaging_time  # Calculation of the time to cover the strip
         #Get the current time of the simulation in seconds
         current_time = self.simulator.sim_time
         #Calculate the expected final time of the imaging action in seconds
