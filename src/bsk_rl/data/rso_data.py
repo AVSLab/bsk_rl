@@ -186,12 +186,14 @@ class RSOInspectionReward(GlobalReward):
         completion_bonus: float = 0.0,
         completion_threshold=0.95,
         min_illuminated_for_completion=0.4,
+        min_time_for_completion=5700,
     ):
         super().__init__()
         self.completion_bonus = completion_bonus
         self.inspection_reward_scale = inspection_reward_scale
         self.completion_threshold = completion_threshold
         self.min_illuminated_for_completion = min_illuminated_for_completion
+        self.min_time_for_completion = min_time_for_completion
 
     def reset_overwrite_previous(self) -> None:
         super().reset_overwrite_previous()
@@ -245,8 +247,12 @@ class RSOInspectionReward(GlobalReward):
             total_data += data
 
         # Check for completion bonus
-        min_illuminated_met = total_data.num_points_illuminated > (
-            len(self.scenario.rso_points) * self.min_illuminated_for_completion
+        min_illuminated_met = (
+            total_data.num_points_illuminated
+            > (len(self.scenario.rso_points) * self.min_illuminated_for_completion)
+        ) or (
+            self.scenario.satellites[0].simulator.sim_time
+            > self.min_time_for_completion
         )
 
         imaged_fraction_met = (
