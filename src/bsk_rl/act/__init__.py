@@ -44,6 +44,15 @@ Continuous Actions
 
 Use :class:`ContinuousAction` for actions with a continuous action space. Currently, satellites
 can only have a single continuous action in their ``action_spec``.
+
++----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
+| **Action**                 |**Dimension**| **Description**                                                                                       |
++----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
+| :class:`ImpulsiveThrust`   | 4           | Instantaneously change the satellite's velocity, and drift for some duration.                         |
++----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
+
+
+
 """
 
 from bsk_rl.act.actions import Action
@@ -71,4 +80,5 @@ __all__ = [
     "Image",
     "Scan",
     "ContinuousAction",
+    "ImpulsiveThrust",
 ]

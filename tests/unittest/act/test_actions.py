@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, call, patch
 
+import numpy as np
 import pytest
 from gymnasium import spaces
 
@@ -157,3 +158,39 @@ class TestContinuousActionBuilder:
         act = MagicMock()
         ab.set_action(act)
         ab._action.set_action.assert_called_once_with(act)
+
+
+class TestImpulsiveThrust:
+    @pytest.mark.parametrize("requested,actual", [(0.5, 0.5), (2.0, 1.0)])
+    def test_max_dv(self, requested, actual):
+        impulsive_thrust = act.ImpulsiveThrust(max_dv=1.0)
+        satellite = MagicMock()
+        impulsive_thrust.satellite = satellite
+        satellite.simulator.sim_rate = 5.0
+
+        impulsive_thrust.set_action(np.array([requested, 0.0, 0.0, 100]))
+        assert satellite.fsw.action_impulsive_thrust.call_args[0][0][0] == actual
+
+    def test_fsw_action(self):
+        impulsive_thrust = act.ImpulsiveThrust(fsw_action="some_action")
+        satellite = MagicMock()
+        impulsive_thrust.satellite = satellite
+        satellite.simulator.sim_rate = 5.0
+
+        impulsive_thrust.set_action(np.array([0.5, 0.0, 0.0, 100]))
+        satellite.fsw.some_action.assert_called_once()
+
+    @pytest.mark.parametrize(
+        "start_time, duration_request, actual_end",
+        [(10, 8, 20), (10, 1000, 110), (10, 50, 60)],
+    )
+    def test_duration(self, start_time, duration_request, actual_end):
+        impulsive_thrust = act.ImpulsiveThrust(max_drift_duration=100)
+        satellite = MagicMock()
+        satellite.simulator.sim_rate = 5.0
+        satellite.simulator.sim_time = start_time
+        impulsive_thrust.satellite = satellite
+
+        impulsive_thrust.set_action(np.array([0.0, 0.0, 0.0, duration_request]))
+
+        satellite.update_timed_terminal_event.assert_called_once_with(actual_end)

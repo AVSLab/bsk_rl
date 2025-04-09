@@ -12,6 +12,7 @@ Development - |version|
 * Add a ``dtype`` argument to the environment (or individual satellites) and sets the default
   dtype to ``np.float64``.
 * Add support for continuous action spaces (e.g. for control problems) with :class:`~bsk_rl.act.ContinuousAction`.
+* Add models and action for impulsive thrust and drift with a continuous action space (:class:`~bsk_rl.act.ImpulsiveThrust`).
 
 
 Version 1.1.0
