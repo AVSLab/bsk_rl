@@ -1,9 +1,11 @@
 from unittest.mock import MagicMock, call, patch
 
+import pytest
 from gymnasium import spaces
 
 from bsk_rl import act
 from bsk_rl.act.actions import ActionBuilder
+from bsk_rl.act.continuous_actions import ContinuousActionBuilder
 from bsk_rl.act.discrete_actions import DiscreteActionBuilder
 
 
@@ -132,3 +134,26 @@ class TestImage:
         image.image = MagicMock()
         image.set_action_override("image")
         image.image.assert_called_once_with("image", None)
+
+
+class TestContinuousActionBuilder:
+    def test_action_space(self):
+        action_space = spaces.Box(low=0, high=1, shape=(3,))
+        action = MagicMock(space=action_space)
+        satellite = MagicMock(action_spec=[action])
+        ab = ContinuousActionBuilder(satellite)
+        assert ab.action_space == action_space
+        assert ab._action == action
+
+    def test_too_many_actions(self):
+        satellite = MagicMock(action_spec=[MagicMock(), MagicMock()])
+        with pytest.raises(AssertionError):
+            ContinuousActionBuilder(satellite)
+
+    def test_action(self):
+        action = MagicMock()
+        satellite = MagicMock(action_spec=[action])
+        ab = ContinuousActionBuilder(satellite)
+        act = MagicMock()
+        ab.set_action(act)
+        ab._action.set_action.assert_called_once_with(act)

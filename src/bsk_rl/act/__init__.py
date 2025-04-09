@@ -38,9 +38,16 @@ Use :class:`DiscreteAction` for integer-indexable, discrete actions.
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
 | :class:`Scan`              | 1       | Scan nadir, collecting data when pointing within a threshold.                                         |
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
+
+Continuous Actions
+-------------------
+
+Use :class:`ContinuousAction` for actions with a continuous action space. Currently, satellites
+can only have a single continuous action in their ``action_spec``.
 """
 
 from bsk_rl.act.actions import Action
+from bsk_rl.act.continuous_actions import ContinuousAction, ImpulsiveThrust
 from bsk_rl.act.discrete_actions import (
     Charge,
     Desat,
@@ -63,4 +70,5 @@ __all__ = [
     "Downlink",
     "Image",
     "Scan",
+    "ContinuousAction",
 ]

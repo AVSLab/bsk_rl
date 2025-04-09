@@ -11,6 +11,7 @@ Development - |version|
   and :class:`~bsk_rl.utils.orbital.relative_to_chief`.
 * Add a ``dtype`` argument to the environment (or individual satellites) and sets the default
   dtype to ``np.float64``.
+* Add support for continuous action spaces (e.g. for control problems) with :class:`~bsk_rl.act.ContinuousAction`.
 
 
 Version 1.1.0

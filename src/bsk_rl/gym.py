@@ -427,7 +427,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             raise ValueError("There must be the same number of actions and satellites")
         for satellite, action in zip(self.satellites, actions):
             satellite.info = []  # reset satellite info log
-            if action is not None and action != NO_ACTION:
+            if action is not None and (
+                not isinstance(action, int)
+                or action != NO_ACTION  # TODO improve for non-discrete actions
+            ):
                 satellite.requires_retasking = False
                 satellite.set_action(action)
             if not satellite.is_alive():
