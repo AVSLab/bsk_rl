@@ -858,7 +858,7 @@ class StripImagingSatellite(AccessSatellite):
         super().reset_pre_sim_init()
         self.sat_args["bufferNames"] = [
             loc["object"].id
-            for loc in self.locations_for_access_checking
+            for loc in self.strip_for_access_checking
             if hasattr(loc["object"], "id")
         ]
 

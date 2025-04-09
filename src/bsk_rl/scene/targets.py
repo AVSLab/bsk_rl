@@ -305,7 +305,7 @@ class UniformStripTargets(Scenario):
         logger.info(f"Generating {self.n_targets} targets")
         self.regenerate_targets()
         for satellite in self.satellites:
-            if hasattr(satellite, "add_location_for_access_checking"):
+            if hasattr(satellite, "add_strip_for_access_checking"):
                 for target in self.targets:
                     satellite.add_strip_for_access_checking(
                         object=target,
