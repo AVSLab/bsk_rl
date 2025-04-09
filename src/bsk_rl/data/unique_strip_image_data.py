@@ -117,7 +117,7 @@ class UniqueStripImageStore(DataStore):
             dot_product = np.dot(target.r_LP_P_start / np.linalg.norm(target.r_LP_P_start), target.r_LP_P_end / np.linalg.norm(target.r_LP_P_end))
             theta = np.arccos(np.clip(dot_product, -1.0, 1.0))
             d_strip = theta * orbitalMotion.REQ_EARTH * 1e3  # length of the strip [m]
-            t_strip = d_strip / target.acquisition_speed  # Calculation of the time to cover the strip
+            t_strip = d_strip / target.aquisition_speed  # Calculation of the time to cover the strip
     
             if data_generated_target > 0.95*t_strip: # The strip is considered as imaged if the data buffer-increase is greater than 95% of the data necessary to store the images from the target strip
                 imaged.append(target)
