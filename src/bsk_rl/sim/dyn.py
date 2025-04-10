@@ -1074,7 +1074,7 @@ class StripImagingDynModel(ImagingDynModel):
         )
     @default_args(
         groundLocationPlanetRadius=orbitalMotion.REQ_EARTH * 1e3,
-        imageTargetMinimumElevation=np.radians(45.0),
+        imageTargetMinimumElevation=np.radians(10.0),
         imageTargetMaximumRange=-1,
     )
     def setup_imaging_strip(

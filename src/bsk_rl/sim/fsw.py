@@ -934,6 +934,7 @@ class StripImagingFSWModel(ImagingFSWModel):
         self.dynamics.imagingStrip.r_LP_P_End = r_LP_P_End
         self.dynamics.imagingStrip.acquisition_speed = acquisition_speed / 1e9  # m/s to m/ns
         self.dynamics.imagingStrip.pre_imaging_time = pre_imaging_time * 1e9 # s to ns
+        self.dynamics.imagingStrip.newpstart()
         self.dynamics.instrument.nodeDataName = data_name
         self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
     
@@ -974,7 +975,7 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
             )
             self.insControl.ModelTag = "instrumentController"
 
-        @default_args(imageAttErrorRequirement=0.01, imageRateErrorRequirement=None)
+        @default_args(imageAttErrorRequirement=0.1, imageRateErrorRequirement=None)
         def setup_instrument_controller(
             self,
             imageAttErrorRequirement: float,
