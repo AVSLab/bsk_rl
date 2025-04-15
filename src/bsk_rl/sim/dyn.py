@@ -1704,6 +1704,9 @@ class ImagingSCDynModel(ImagingDynModel):
 
         self.simpleTargetNav = simpleNav.SimpleNav()
         # self.simpleTargetNav.scStateInMsg.subscribeTo(self.imagingTarget.scStateOutMsg)
+        self.simulator.AddModelToTask(
+            self.task_name, self.targetLocation, ModelPriority=priority
+        )
 
 
 
