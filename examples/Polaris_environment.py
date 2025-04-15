@@ -20,8 +20,8 @@ from Basilisk.utilities import (
 from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 
-n_targets = 1
-total_time = 5700 # 5700.0  # approximately 1 orbit
+n_targets = 64
+total_time = n_targets * 300  # 2100 # 5700.0  # approximately 1 orbit
 
 class MyScanningSatellite(sats.Satellite):
     observation_spec = [
@@ -32,7 +32,7 @@ class MyScanningSatellite(sats.Satellite):
         obs.Eclipse(),
     ]
     action_spec = [
-        act.ImageRSO(n_ahead_image=n_targets,duration=2000),  # Scan for 1 minute
+        act.ImageRSO(n_ahead_image=n_targets,duration=300),  # Scan for 1 minute
         act.Charge(duration=600.0),  # Charge for 10 minutes
     ]
     dyn_type = dyn.ImagingSCDynModel
@@ -46,7 +46,7 @@ sat_args = {}
 sat_args["imageAttErrorRequirement"] = 0.05
 sat_args["dataStorageCapacity"] = 1e10
 sat_args["instrumentBaudRate"] = 1e7
-sat_args["storedCharge_Init"] = 50000.0
+sat_args["storedCharge_Init"] = 50000000.0
 
 # Randomize the initial storage level on every reset
 sat_args["storageInit"] = lambda: np.random.uniform(0.25, 0.75) * 1e10
@@ -65,13 +65,16 @@ class MyTargetSatellite(sats.Satellite):
 
 def custom_oe_randomizer():
     rLEO = 7000. * 1000    # Minimum semi-major axis (LEO) in meters
-    rGEO = 42164. * 1000   # Maximum semi-major axis (GEO) in meters
+    rUpperLEO = 1.2 * 7000. * 1000    # Minimum semi-major axis (LEO) in meters
+    # rGEO = 42164. * 1000   # Maximum semi-major axis (GEO) in meters
 
 
     oe = orbitalMotion.ClassicElements()
-    oe.a = np.random.uniform(rLEO, rGEO)  # Random semi-major axis between LEO and GEO
-    if oe.a < 1.5*rLEO:
-        oe.e = np.random.uniform(0.0, 0.1)    # Random eccentricity (allowing less elliptical orbits when near LEO)
+    # oe.a = np.random.uniform(rLEO*5, rGEO)  # Random semi-major axis between LEO and GEO
+    oe.a = np.random.uniform(1.05*rLEO, rUpperLEO)  # Random semi-major axis between LEO and GEO
+
+    if oe.a < 2*rLEO:
+        oe.e = np.random.uniform(0.0, 0.02)    # Random eccentricity (allowing less elliptical orbits when near LEO)
     else:
         oe.e = np.random.uniform(0.0, 0.2)    # Random eccentricity (allowing slightly elliptical orbits)
     oe.i = np.random.uniform(0, 180) * macros.D2R  # Random inclination up to 180 degrees
@@ -84,11 +87,11 @@ def custom_oe_randomizer():
 target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0*900 )
 # Make the satellite
 sat = MyScanningSatellite(name="SS1", sat_args=sat_args) # SO1 for satellite observer 1
-target0 = dict(
-    oe=custom_oe_randomizer,
-    batteryStorageCapacity=80.0 * 3600.0 * 1000,
-    storedCharge_Init=80.0 * 3600.0 * 900
-)
+# target0 = dict(
+#     oe=custom_oe_randomizer,
+#     batteryStorageCapacity=80.0 * 3600.0 * 1000,
+#     storedCharge_Init=80.0 * 3600.0 * 900
+# )
 #
 # target1 = dict(
 #     oe=custom_oe_randomizer,
@@ -124,9 +127,9 @@ target0 = dict(
 
 # targets = [MyTargetSatellite(name=f"target_0", sat_args=target0), MyTargetSatellite(name=f"target_1", sat_args=target1), MyTargetSatellite(name=f"target_2", sat_args=target2), MyTargetSatellite(name=f"target_3", sat_args=target3), MyTargetSatellite(name=f"target_4", sat_args=target4)]
 # targets = [MyTargetSatellite(name=f"target_0", sat_args=target0), MyTargetSatellite(name=f"target_1", sat_args=target1)]
-targets = [MyTargetSatellite(name=f"target_0", sat_args=target0)]
+# targets = [MyTargetSatellite(name=f"target_0", sat_args=target0)]
 
-# targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)] # TODO: this creates the same IC of oe for all targets
+targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)] # TODO: this creates the same IC of oe for all targets
 
 all_sat = [sat] + targets   #oe = lambda: random_orbit(alt=np.random.uniform(1000,2000)))
 
@@ -141,9 +144,10 @@ env = gym.make(
     # max_step_duration=700,
 )
 
-observation, info = env.reset(seed=2)
+observation, info = env.reset(seed=0)
 
-env.simulator.ShowExecutionOrder()
+# env.simulator.ShowExecutionOrder() # to show execution order
+
 # Initialize storage dictionary
 data_dict = {
     "sim_time": [],
@@ -159,12 +163,16 @@ for target_id in range(n_targets):
     simtime = env.simulator.sim_time
     print('Simulation time: ' + str(simtime) + ' seconds')
 
-    action_dict = {sat.name: target_id}  # Assign the main satellite to observe `target_idx`
+    # action_dict = {sat.name: target_id}  # Assign the main satellite to observe `target_idx` # sequentially observing each target
+    action_dict = {sat.name: 0}  # Assign the closest target when the list is sorted by distance
+
     action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
     print('current action_dict to be executed', action_dict)
     observation, reward, terminated, truncated, info = env.step(action=action_dict)
     print('truncated list: ', truncated)
     data_dict["sim_time"].append(env.simulator.sim_time)
+    if any(truncated.values()) or any(terminated.values()):
+        break
 
 print("  Final data level:", observation)
 
