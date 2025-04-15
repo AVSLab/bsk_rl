@@ -422,6 +422,7 @@ class OpportunityProperties(Observation):
             )
 
         obs = {}
+
         for i, opportunity in enumerate(
             self.satellite.find_next_opportunities(
                 n=self.n_ahead_observe,
@@ -438,6 +439,206 @@ class OpportunityProperties(Observation):
             obs[f"{self.name}_{i}"] = props
         return obs
 
+###ADD a class similar to OpportunityProperties and change that loop of find_next_opportunities
+def _target_elevation_angle(sat, opp):
+    vector_target_spacecraft_P = opp["object"].target_spacecraft.dynamics.r_BN_P - sat.dynamics.r_BN_P
+    vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(
+        vector_target_spacecraft_P
+    )
+    return np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.c_hat_P))
+def _angle_to_target(sat, opp):
+    vector_target_spacecraft_P = opp["object"].target_spacecraft.dynamics.r_BN_P - sat.dynamics.r_BN_P
+    vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(
+        vector_target_spacecraft_P
+    )
+    return np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.c_hat_P))
+
+def _target_distance(sat, opp):
+    vector_target_spacecraft_N = opp["object"].target_spacecraft.dynamics.r_BN_P - sat.dynamics.r_BN_N
+    return np.linalg.norm(vector_target_spacecraft_N)
+
+class PolariesScTargetProperties(Observation):
+    _fn_map = {
+        # "priority": lambda sat, opp: opp["object"].priority,
+        "r_BN_N": lambda sat, opp: opp["r_BN_N"],
+        "r_LB_H": _r_LB_H,
+        # "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time,
+        # "opportunity_mid": lambda sat, opp: sum(opp["window"]) / 2
+        # - sat.simulator.sim_time,
+        # "opportunity_close": lambda sat, opp: opp["window"][1] - sat.simulator.sim_time,
+        # "target_angle": _target_angle,
+        # "target_angle_rate": _target_angle_rate,
+        "target_elevation_angle": _target_elevation_angle,
+        "angle_to_target": _angle_to_target,
+        "target_distance": _target_distance,
+    }
+
+    def __init__(
+        self,
+        *target_properties: dict[str, Any],
+        n_ahead_observe: int,
+        type="target",
+        name=None,
+    ):
+        """Include information about upcoming access opportunities in the observation..
+
+        For each desired property, a dictionary specifying the property name and settings
+        is passed. These can include preset properties or arbitrary functions of the satellite
+        and opportunity.
+
+        .. code-block:: python
+
+            OpportunityProperties(
+                dict(prop="r_LP_P", norm=REQ_EARTH * 1e3),
+                dict(prop="double_priority", fn=lambda sat, opp: opp["target"].priority * 2.0),
+                n_ahead_observe=16,
+            )
+
+        Args:
+            target_properties: Property that is a function of the opportunity to be appended
+                to the observation. Properties are optionally normalized by some factor.
+                Each observation is a dictionary with the keys:
+
+                * ``name`` `optional`: Name of the observation element.
+                * ``fn`` `optional`: Function to calculate property, in the form ``fn(satellite, opportunity)``.
+                  If not provided, the key ``prop`` will be used to look up a preset function:
+
+                    * ``priority``: Priority of the target.
+                    * ``r_LP_P``: Location of the target in the planet-fixed frame.
+                    * ``r_LB_H``: Location of the target in the Hill frame.
+                    * ``opportunity_open``: Time until the opportunity opens.
+                    * ``opportunity_mid``: Time until the opportunity midpoint.
+                    * ``opportunity_close``: Time until the opportunity closes.
+                    * ``target_angle``: Angle between the target and the satellite instrument direction.
+                    * ``target_angle_rate``: Rate difference between the target pointing frame and the body frame.
+
+                * ``norm`` `optional`: Value to normalize property by. Defaults to 1.0.
+
+            n_ahead_observe: Number of upcoming targets to consider.
+            type: The type of opportunity to consider. Can be ``target``, ``ground_station``,
+                or any other type of opportunity that has been added via
+                :obj:`~bsk_rl.sats.AccessSatellite.add_location_for_access_checking`.
+            name: Name of the observation.
+        """
+        if name is None:
+            name = type
+        super().__init__(name=name)
+        self.type = type
+        self.target_properties = target_properties
+        for i, prop_spec in enumerate(self.target_properties):
+            for key in prop_spec:
+                if key not in ["fn", "norm", "name", "prop"]:
+                    raise ValueError(f"Invalid property key: {key}")
+
+            if "norm" not in prop_spec:
+                prop_spec["norm"] = 1.0
+
+            # Determine observation function
+            if "fn" not in prop_spec:
+                try:
+                    prop_spec["fn"] = self._fn_map[prop_spec["prop"]]
+                except KeyError:
+                    raise ValueError(
+                        f"Property prop={prop_spec['prop']} is not predefined and no `fn` was provided."
+                    )
+            else:
+                if "prop" in prop_spec and prop_spec["prop"] in self._fn_map:
+                    logger.warning(
+                        f"Ignoring default function for `{prop_spec['prop']}` when `fn` is provided."
+                    )
+
+            # Determine best name
+            if "name" not in prop_spec:
+                if "prop" in prop_spec:
+                    prop_spec["name"] = prop_spec["prop"]
+                else:
+                    prop_spec["name"] = f"prop_{i}"
+
+                if prop_spec["norm"] != 1.0:
+                    prop_spec["name"] += "_normd"
+
+        self.n_ahead_observe = int(n_ahead_observe)
+
+    def get_obs(self):
+        """Iterate over property specs.
+
+        :meta private:
+        """
+        # # old loop
+        # from bsk_rl.sats import AccessSatellite
+        #
+        # if not isinstance(self.satellite, AccessSatellite):
+        #     logger.warning(
+        #         "OpportunityProperties observation requires an AccessSatellite"
+        #     )
+        # obs = {}
+        # for i, opportunity in enumerate(
+        #     self.satellite.find_next_opportunities(
+        #         n=self.n_ahead_observe,
+        #         types=self.type,
+        #         pad=True,
+        #     )
+        # ):
+        #     props = {}
+        #     for prop_spec in self.target_properties:
+        #         name = prop_spec["name"]
+        #         norm = prop_spec["norm"]
+        #         value = prop_spec["fn"](self.satellite, opportunity)
+        #         props[name] = value / norm
+        #     obs[f"{self.name}_{i}"] = props
+
+        # # new loop
+
+        obs = {}
+        sat_pos = np.array(self.satellite.dynamics.r_BN_N)
+        known_targets = self.satellite.data_store.data.known
+
+        # Compute elevation angles for all known targets
+        target_elevations = []
+        for target in known_targets:
+            target_pos = np.array(target.target_spacecraft.dynamics.r_BN_N)
+            los_vector = target_pos - sat_pos
+            los_unit = los_vector / np.linalg.norm(los_vector)
+            zenith = sat_pos / np.linalg.norm(sat_pos)
+            elevation_rad = np.arcsin(np.clip(np.dot(los_unit, zenith), -1.0, 1.0))
+            elevation_deg = np.degrees(elevation_rad)
+            target_elevations.append((target, elevation_deg))
+
+        # Filter targets by elevation
+        visible_targets = [
+            (target, elev) for target, elev in target_elevations
+            if -14.0 <= elev <= 90.0
+        ]
+        visible_targets.sort(key=lambda x: x[1])  # ascending elevation
+
+        # Choose final targets, pad with last if needed
+        if len(visible_targets) > 0:
+            final_targets = [tgt for tgt, _ in visible_targets[:self.n_ahead_observe]]
+            if len(final_targets) < self.n_ahead_observe:
+                final_targets += [final_targets[-1]] * (self.n_ahead_observe - len(final_targets))
+        else:
+            sorted_fallback = sorted(
+                known_targets,
+                key=lambda tgt: np.linalg.norm(
+                    np.array(tgt.target_spacecraft.dynamics.r_BN_N) - sat_pos
+                )
+            )
+            final_targets = sorted_fallback[:self.n_ahead_observe]
+
+        # Gather and normalize observations for selected targets
+        for i, tgt in enumerate(final_targets):
+            opportunity = {"object": tgt, "r_BN_N": np.array(tgt.target_spacecraft.dynamics.r_BN_N)}
+            props = {}
+            for prop_spec in self.target_properties:
+                name = prop_spec["name"]
+                norm = prop_spec["norm"]
+                value = prop_spec["fn"](self.satellite, opportunity)
+                props[name] = value / norm
+            obs[f"{self.name}_{i}"] = props
+
+
+
+        return obs
 
 class Eclipse(Observation):
     def __init__(self, norm=1.0, name="eclipse"):
