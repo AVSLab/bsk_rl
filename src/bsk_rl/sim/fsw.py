@@ -980,7 +980,7 @@ class BasicTargetFSWModel(FSWModel):
             super().__init__(fsw, priority)
 
         def _create_module_data(self) -> None:
-            print('trying to set up BasicTargetFSWModel sunPoint location pointing object')
+            # print('trying to set up BasicTargetFSWModel sunPoint location pointing object')
             self.sunPoint = self.fsw.sunPoint = locationPointing.locationPointing()
             self.sunPoint.ModelTag = "sunPoint"
 
@@ -1379,6 +1379,7 @@ class ImagingSCFSWModel(ImagingFSWModel):
                 self.insControl.locationAccessInMsg.subscribeTo(msg)
             self._add_model_to_task(self.insControl, priority=987)
 
+            # self.current_target_r_BN_N=[] # TODO: DHP this should be set up so that plotting can be done easier!
 
     @action
     def action_image_rso_target(self, RSOTarget) -> None:
@@ -1406,13 +1407,14 @@ class ImagingSCFSWModel(ImagingFSWModel):
             self.insControl.locationAccessInMsg.subscribeTo(
                 self.dynamics.targetLocation.accessOutMsgs[RSOTarget.id]
             )
+            # self.current_target_r_BN_N.append(self.dynamics.targetLocation.accessOutMsgs[RSOTarget.id].read(r_BN_N))
         else:
             msgData = messaging.AccessMsgPayload() # this is the payload
             msg = messaging.AccessMsg() # this is the container
             msg.write(msgData)
             self.insControl.locationAccessInMsg.subscribeTo(msg)
 
-        self.dynamics.instrument.nodeDataName = RSOTarget.name
+        self.dynamics.instrument.nodeDataName = RSOTarget.target_spacecraft.name
         self.insControl.imaged = 0
         self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
 
