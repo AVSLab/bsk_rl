@@ -343,7 +343,7 @@ class ImageRSO(DiscreteAction):
 
         :meta private:
         """
-        self.satellite.fsw.action_image_rso_target(target)
+        self.satellite.fsw.action_image_rso_target(target)  #  TODO: here the data_name of the buffer should also be passsed  add ,target.target_spacecraft.name
         # target = self.satellite.parse_target_selection(target)
         # if target.id != prev_action_key:
         #     self.satellite.task_target_for_imaging(target)
@@ -352,20 +352,92 @@ class ImageRSO(DiscreteAction):
 
         return target.id
 
-    def set_action(self, action: int, prev_action_key: Optional[str] = None) -> str:
-        """Image a target by local index.
+
+    @staticmethod
+    def elevation_angle(sat_pos: np.ndarray, target_pos: np.ndarray) -> float:
+        """
+        Compute the elevation angle of a target relative to the local horizontal
+        of the satellite.
 
         Args:
-            action: Index of the target to image.
+            sat_pos: Position of the satellite in inertial frame.
+            target_pos: Position of the target in inertial frame.
+
+        Returns:
+            Elevation angle in degrees.
+        """
+        los_vector = target_pos - sat_pos
+        los_unit = los_vector / np.linalg.norm(los_vector)
+
+        # Local zenith (up) is aligned with position vector of satellite
+        zenith = sat_pos / np.linalg.norm(sat_pos)
+
+        # Elevation is angle between LOS and local horizontal (i.e., 90 - angle to zenith)
+        cos_angle = np.clip(np.dot(los_unit, zenith), -1.0, 1.0)
+        elevation_rad = np.arcsin(cos_angle)
+        return np.degrees(elevation_rad)
+
+    def set_action(self, action: int, prev_action_key: Optional[str] = None) -> str:
+        """
+        Image a target based on elevation angle from local horizontal.
+
+        Args:
+            action: Index of the target in elevation-filtered list.
             prev_action_key: Previous action key.
 
-        :meta_private:
+        Returns:
+            Action result string.
         """
-        new_target = self.satellite.data_store.data.known[action]
-        self.satellite.logger.info(f"target index {action} tasked: {new_target.name}")
+        scanner_pos = np.array(self.satellite.dynamics.r_BN_N)
+        known_targets = self.satellite.data_store.data.known
+        num_actions = 32
+
+        # Compute elevation angles and pair with targets
+        target_elevations = []
+        for target in known_targets:
+            target_pos = np.array(target.target_spacecraft.dynamics.r_BN_N)
+            elev = self.elevation_angle(scanner_pos, target_pos)
+            target_elevations.append((target, elev))
+
+        # Filter targets with elevation between -14 and 90 degrees
+        visible_targets = [
+            (tgt, elev) for tgt, elev in target_elevations
+            if -14.0 <= elev <= 90.0
+        ]
+
+        # Sort visible targets by ascending elevation (lowest first)
+        visible_targets.sort(key=lambda x: x[1])
+
+        # Select up to 32='num_actions' visible targets, repeating last if fewer
+        if len(visible_targets) == 0:
+            # fallback: select based on default order (by target_id / distance)
+            sorted_targets = sorted(
+                known_targets,
+                key=lambda tgt: np.linalg.norm(
+                    np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos
+                )
+            )
+            final_targets = sorted_targets[:num_actions]
+        else:
+            final_targets = [tgt for tgt, _ in visible_targets[:num_actions]]
+            if len(final_targets) < num_actions:
+                final_targets += [final_targets[-1]] * (num_actions - len(final_targets))
+
+        # Choose the action-th target (ignoring previous one)
+        for i in range(action, len(final_targets)):
+            candidate_target = final_targets[i]
+            if str(candidate_target.id) != str(prev_action_key):
+                new_target = candidate_target
+                break
+        else:
+            new_target = final_targets[action]
+
+        action_satid = new_target.id
+        self.satellite.logger.info(f"target index {action_satid} tasked: {new_target.name}")
         self.satellite.update_timed_terminal_event(
-            self.simulator.sim_time + self.duration, info = "  "
+            self.simulator.sim_time + self.duration, info="  "
         )
+        prev_action_key = action_satid
 
         return self.image_rso(new_target, prev_action_key)
 
