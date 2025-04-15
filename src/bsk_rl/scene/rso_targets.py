@@ -143,7 +143,7 @@ class RandomSatellites(Scenario):
 
 
         for i in range(self.n_targets):
-            target_sc_name = f"TargetSat_{i}"
+            target_sc_name = f"target_{i}" # this name here should match the bufferName so that the data gets added to the buffer !
             sc = RSOTarget(self.satellites[i+1],target_sc_name,i, 1.0)
             # sc = RSOTarget(i, priority=self.priority_distribution(), oe) #to be implemented later with priority_distribution
             self.target_spacecrafts.append(sc)
