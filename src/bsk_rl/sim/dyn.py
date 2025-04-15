@@ -613,8 +613,8 @@ class BasicDynamicsModel(DynamicsModel):
         )
 
     @default_args(
-        batteryStorageCapacity=80.0 * 3600.0,
-        storedCharge_Init=lambda: np.random.uniform(30.0 * 3600.0, 70.0 * 3600.0),
+        batteryStorageCapacity=80000.0 * 3600.0,
+        storedCharge_Init=lambda: np.random.uniform(30.0 * 360000.0, 70.0 * 360000.0),
     )
     def setup_battery(
         self,
@@ -1164,7 +1164,7 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
             self.task_name, self.transmitter, ModelPriority=priority
         )
 
-    @default_args(instrumentPowerDraw=-30.0)
+    @default_args(instrumentPowerDraw=-1.0)
     def setup_instrument_power_sink(
         self, instrumentPowerDraw: float, priority: int = 897, **kwargs
     ) -> None:
