@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING, Iterable, Optional
 import numpy as np
 from Basilisk.simulation import (
     ReactionWheelPower,
+    eclipse,
     extForceTorque,
     facetDragDynamicEffector,
     groundLocation,
@@ -1004,6 +1005,7 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
         self.setup_instrument_power_sink(**kwargs)
         self.setup_transmitter_power_sink(**kwargs)
         self.setup_storage_unit(**kwargs)
+        self.setup_eclipse_object()
 
     def setup_simple_nav_object(self, priority: int = 699):
         # Set up simple navigation for target SC
@@ -1014,8 +1016,18 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
             self.task_name, self.simpleNavObject, ModelPriority=priority
         )
 
-    def setup_eclipse_object(self) -> None:
+    def setup_eclipse_object(self, priority: int =699) -> None:
         """Add the spacecraft to the eclipse module."""
+        # self.targetEclipse = eclipse.Eclipse()
+        # self.targetEclipse.addPlanetToModel(
+        #     self.simulator.world.gravFactory.spiceObject.planetStateOutMsgs[1]
+        # )
+        # self.targetEclipse.sunInMsg.subscribeTo(
+        #     self.simulator.world.gravFactory.spiceObject.planetStateOutMsgs[0]
+        # )
+        # self.simulator.AddModelToTask(
+        #     self.task_name, self.targetEclipse, ModelPriority=priority
+        # )
         self.world.eclipseObject.addSpacecraftToModel(self.scObject.scStateOutMsg)
         self.eclipse_index = len(self.world.eclipseObject.eclipseOutMsgs) - 1
 
@@ -1785,6 +1797,39 @@ class ImagingSCDynModel(ImagingDynModel):
             self.task_name, self.inspector_state_recorder, ModelPriority=priority
         )
 
+
+
+    @default_args(
+        batteryStorageCapacity=10000.0 * 3600.0,
+        storedCharge_Init=lambda: np.random.uniform(30.0 * 3600000.0, 70.0 * 3600000.0),
+    )
+    def setup_battery(
+        self,
+        batteryStorageCapacity: float,
+        storedCharge_Init: float,
+        priority: int = 799,
+        **kwargs,
+    ) -> None:
+        """Set the battery model parameters.
+
+        Args:
+            batteryStorageCapacity: [W*s] Maximum battery charge.
+            storedCharge_Init: [W*s] Initial battery charge.
+            priority: Model priority.
+            kwargs: Passed to other setup functions.
+        """
+        self.powerMonitor = simpleBattery.SimpleBattery()
+        self.powerMonitor.ModelTag = "powerMonitor"
+        self.powerMonitor.storageCapacity = batteryStorageCapacity
+        if storedCharge_Init > batteryStorageCapacity or storedCharge_Init < 0:
+            self.logger.warning(
+                f"Battery initial charge {storedCharge_Init} incompatible with its capacity {batteryStorageCapacity}."
+            )
+        self.powerMonitor.storedCharge_Init = storedCharge_Init
+        self.powerMonitor.addPowerNodeToModel(self.solarPanel.nodePowerOutMsg)
+        self.simulator.AddModelToTask(
+            self.task_name, self.powerMonitor, ModelPriority=priority
+        )
 
         # self.simulator.AddModelToTask(
         #     self.task_name, self.imagingTarget, ModelPriority=priority
