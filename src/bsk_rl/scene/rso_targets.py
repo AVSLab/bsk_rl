@@ -73,6 +73,7 @@ class RSOTarget:
         self.name = name
         self.priority = priority
         self.target_spacecraft = target_rso
+        # self.eclipse_status = self.target_spacecraft.eclispe_index # TODO: fix this DHP
 
 
 
