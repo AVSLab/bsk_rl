@@ -21,6 +21,7 @@ class RSOTargetImageData(Data):
     def __init__(
         self,
         imaged: Optional[list["RSOTarget"]] = None,
+        eclipsed:Optional[list["RSOTarget"]] = None,
         duplicates: int = 0,
         known: Optional[list["RSOTarget"]] = None,
     ) -> None:
@@ -103,12 +104,19 @@ class RSOTargetImageStore(DataStore):
         if self.satellite.name == "SS1":
             update_idx = np.where(new_state - old_state > 0)[0]
             imaged = []
+            eclipsed=[]
             for idx in update_idx:
                 message = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg
                 target_id = message.read().storedDataName[int(idx)]
+                # self.data.imaged.append( # TODO: DHP check if this should be removed or if this replaces the part right below (what about duplicates?)
+                #     [target for target in self.data.known if target.id == target_id][0]
+                # )
                 imaged.append(
-                    [target for target in self.data.known if target.id == target_id][0]
+                    [target for target in self.data.known if target.name == target_id][0]
                 )
+            # eclipse_threshold = 0.6
+            # eclipsed.append([target for target in imaged if target.eclipse_status >= eclipse_threshold]) # this can be used to change reward in case the target is in eclipse
+            # return RSOTargetImageData(imaged=imaged, eclipsed = eclipsed)
             return RSOTargetImageData(imaged=imaged)
         else:
             return RSOTargetImageData(imaged=[])
@@ -174,6 +182,7 @@ class RSOTargetImageReward(GlobalReward):
         for sat_id, new_data in new_data_dict.items():
             reward[sat_id] = 0.0
             for target in new_data.imaged:
+                # if target not in self.data.imaged and target not in self.data.eclipsed:
                 if target not in self.data.imaged:
                     reward[sat_id] += self.reward_fn(
                         target.priority
