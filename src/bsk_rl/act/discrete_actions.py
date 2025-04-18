@@ -356,7 +356,7 @@ class ImageStrip(DiscreteAction):
         return self.image(action, prev_action_key)
 
     def set_action_override(
-        self, action: Union["Target", str], prev_action_key: Optional[str] = None
+        self, action: Union["Strip", str], prev_action_key: Optional[str] = None
     ) -> str:
         """Image a target by target index, Target, or ID.
 

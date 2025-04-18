@@ -875,7 +875,7 @@ class StripImagingFSWModel(ImagingFSWModel):
 
             self._add_model_to_task(self.locPoint, priority=1198)
 
-        @default_args(imageAttErrorRequirement=0.01, imageRateErrorRequirement=None)
+        @default_args(imageAttErrorRequirement=0.1, imageRateErrorRequirement=None)
         def setup_instrument_controller(
             self,
             imageAttErrorRequirement: float,
@@ -934,6 +934,8 @@ class StripImagingFSWModel(ImagingFSWModel):
         self.dynamics.imagingStrip.r_LP_P_End = r_LP_P_End
         self.dynamics.imagingStrip.acquisition_speed = acquisition_speed / 1e9  # m/s to m/ns
         self.dynamics.imagingStrip.pre_imaging_time = pre_imaging_time * 1e9 # s to ns
+        self.dynamics.imagingStrip.OldSimNanos = self.simulator.sim_time_ns
+        self.dynamics.imagingStrip.duration_strip_imaging = 0
         self.dynamics.imagingStrip.newpstart()
         self.dynamics.instrument.nodeDataName = data_name
         self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)

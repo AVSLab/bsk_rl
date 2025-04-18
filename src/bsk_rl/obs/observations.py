@@ -472,6 +472,7 @@ def _pointing_vector_angle(sat, opp):
     vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(
         vector_target_spacecraft_P
     )
+    opp["object"].pre_imaging_time= opp["window"][1] - sat.simulator.sim_time -1
     return np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.p_hat_P))
 
 #Assuming that the satellite is now pointing at the target, computes the angle of rotation necessary to have a scanning vector perpendicular to the central line 

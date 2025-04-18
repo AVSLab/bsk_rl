@@ -986,7 +986,7 @@ class ImagingDynModel(BasicDynamicsModel):
 
     @default_args(
         groundLocationPlanetRadius=orbitalMotion.REQ_EARTH * 1e3,
-        imageTargetMinimumElevation=np.radians(45.0),
+        imageTargetMinimumElevation=np.radians(10.0),
         imageTargetMaximumRange=-1,
     )
     def setup_imaging_target(
@@ -1105,8 +1105,8 @@ class StripImagingDynModel(ImagingDynModel):
         self.imagingStrip.pre_imaging_time = 0.0 # in ns
         self.imagingStrip.specifyLocationStart(0, 0, 0)
         self.imagingStrip.specifyLocationEnd(0, 0, 1000.0)
-        self.imagingStrip.newpstart()
-        self.imagingTarget.planetInMsg.subscribeTo(
+        #self.imagingStrip.newpstart()
+        self.imagingStrip.planetInMsg.subscribeTo(
             self.world.gravFactory.spiceObject.planetStateOutMsgs[self.world.body_index]
         )
         self.imagingTarget.minimumElevation = imageTargetMinimumElevation
