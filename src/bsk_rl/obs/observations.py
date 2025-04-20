@@ -549,7 +549,7 @@ class StripOpportunityProperties(Observation):
         "pointing_vector_angle": _pointing_vector_angle, # Pointing vector angle
         "scan_line_vector_angle": _scan_line_vector_angle, # Scan line vector angle (assuming the satellite is pointing at the target)
         "duration_task": _duration_task, # Duration of the imaging task without the pre-imaging time
-        "pre-imaging_time": lambda sat, opp: opp["pre-imaging_time"], # Pre-imaging time
+        "pre_imaging_time": lambda sat, opp: opp["object"].pre_imaging_time, # Pre-imaging time
         "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time, #Time until the opportunity opens (taking into account the pre-imaging time)
         "opportunity_close": lambda sat, opp: opp["window"][1] - sat.simulator.sim_time, #Time until the opportunity closes (taking into account the pre-imaging time)
     }

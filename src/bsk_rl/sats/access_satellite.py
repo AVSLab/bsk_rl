@@ -32,7 +32,7 @@ class AccessSatellite(Satellite):
     def __init__(
         self,
         *args,
-        generation_duration: float = 600.0,
+        generation_duration: float = 5700.0 * 5.0,
         initial_generation_duration: Optional[float] = None,
         **kwargs,
     ) -> None:
@@ -267,8 +267,6 @@ class AccessSatellite(Satellite):
                     strip_windows=new_strip_windows
                 if strip_windows!=[]:
                     for strip_window in strip_windows:
-                        #Shift the window by the pre-imaging time
-                        strip_window=shift_window(strip_window,strip["pre_imaging_time"])
                         self._add_window(
                             strip["object"],
                             strip_window,
