@@ -130,3 +130,11 @@ src/bsk_rl/_dat/simplemaps_worldcities/
 docs/build/doctrees/*
 !/docs/build/doctrees/nbsphinx
 !/docs/build/doctrees/nbsphinx/*
+*.npy
+*.pdf
+data/*.npy
+output
+plot_animation.py
+animation.gif
+interactive_plot.py
+animation.mp4
