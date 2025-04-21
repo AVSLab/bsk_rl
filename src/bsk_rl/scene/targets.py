@@ -65,7 +65,7 @@ class Target:
 
 class Strip:
     """Ground strip target with associated value."""
-    def __init__(self, name: str, r_LP_P_start: Iterable[float], r_LP_P_end: Iterable[float], priority: float,aquisition_speed: float, pre_imaging_time: float) -> None:
+    def __init__(self, name: str, r_LP_P_start: Iterable[float], r_LP_P_end: Iterable[float], priority: float,aquisition_speed: float, pre_imaging_time: list[float]) -> None:
         """Strip target with name, associated priority, location of the starting point, location of the end point
 
         Args:
@@ -269,7 +269,7 @@ class UniformStripTargets(Scenario):
             priority_distribution: Optional[Callable] = None,
             radius: float = orbitalMotion.REQ_EARTH * 1e3,
             aquisition_speed: float = 3*1e3, #in m/s
-            pre_imaging_time: float = 3*60 #in seconds
+            pre_imaging_time: list[float] = [0,1,2] #in seconds
         ) -> None:
             """An environment with evenly-distributed static targets.
 
