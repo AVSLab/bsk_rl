@@ -29,6 +29,13 @@ class MyScanningSatellite(sats.Satellite):
             dict(prop="storage_level_fraction"),
             dict(prop="battery_charge_fraction")
         ),
+        obs.PolarisScTargetProperties(
+            dict(prop="target_elevation_angle", norm=1.0),
+            dict(prop="rel_pos_vector_r_BR_N", norm = 1596*1000),
+            dict(prop="angle_to_target", norm=1.0),
+            dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
+            n_ahead_observe=32,
+                                       ),
         obs.Eclipse(),
     ]
     action_spec = [
@@ -86,7 +93,7 @@ def custom_oe_randomizer():
 
 target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0*900 )
 # Make the satellite
-sat = MyScanningSatellite(name="SS1", sat_args=sat_args) # SO1 for satellite observer 1
+sat = MyScanningSatellite(name="SS1", sat_args=sat_args, obs_type=dict) # SO1 for satellite observer 1
 # target0 = dict(
 #     oe=custom_oe_randomizer,
 #     batteryStorageCapacity=80.0 * 3600.0 * 1000,
