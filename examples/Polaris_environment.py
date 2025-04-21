@@ -20,7 +20,7 @@ from Basilisk.utilities import (
 from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 
-n_targets = 64
+n_targets = 100
 total_time = n_targets * 300  # 2100 # 5700.0  # approximately 1 orbit
 
 class MyScanningSatellite(sats.Satellite):
@@ -72,7 +72,7 @@ class MyTargetSatellite(sats.Satellite):
 
 def custom_oe_randomizer():
     rLEO = 7000. * 1000    # Minimum semi-major axis (LEO) in meters
-    rUpperLEO = 1.2 * 7000. * 1000    # Minimum semi-major axis (LEO) in meters
+    rUpperLEO = 1.1 * 7000. * 1000    # max semi-major axis  of upper LEO in meters
     # rGEO = 42164. * 1000   # Maximum semi-major axis (GEO) in meters
 
 
