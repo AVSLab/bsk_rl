@@ -440,27 +440,38 @@ class OpportunityProperties(Observation):
         return obs
 
 ###ADD a class similar to OpportunityProperties and change that loop of find_next_opportunities
+def _relative_position(sat, opp):
+    sat_pos = np.array(sat.dynamics.r_BN_N)
+    target_pos = np.array(opp["object"].target_spacecraft.dynamics.r_BN_N)
+    los_vector = target_pos - sat_pos
+    return los_vector
+
 def _target_elevation_angle(sat, opp):
-    vector_target_spacecraft_P = opp["object"].target_spacecraft.dynamics.r_BN_P - sat.dynamics.r_BN_P
-    vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(
-        vector_target_spacecraft_P
-    )
-    return np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.c_hat_P))
+    sat_pos = np.array(sat.dynamics.r_BN_N)
+    target_pos = np.array(opp["object"].target_spacecraft.dynamics.r_BN_N)
+    los_vector = target_pos - sat_pos
+    los_unit = los_vector / np.linalg.norm(los_vector)
+    zenith = sat_pos / np.linalg.norm(sat_pos)
+    elevation_rad = np.arcsin(np.clip(np.dot(los_unit, zenith), -1.0, 1.0))
+    elevation_deg = np.degrees(elevation_rad)
+    return elevation_deg
+
 def _angle_to_target(sat, opp):
     vector_target_spacecraft_P = opp["object"].target_spacecraft.dynamics.r_BN_P - sat.dynamics.r_BN_P
     vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(
         vector_target_spacecraft_P
     )
-    return np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.c_hat_P))
+    return np.degrees(np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.c_hat_P)))
 
 def _target_distance(sat, opp):
     vector_target_spacecraft_N = opp["object"].target_spacecraft.dynamics.r_BN_P - sat.dynamics.r_BN_N
     return np.linalg.norm(vector_target_spacecraft_N)
 
-class PolariesScTargetProperties(Observation):
+class PolarisScTargetProperties(Observation):
     _fn_map = {
         # "priority": lambda sat, opp: opp["object"].priority,
-        "r_BN_N": lambda sat, opp: opp["r_BN_N"],
+        "rel_pos_vector_r_BR_N": _relative_position,
+        "r_BN_N": lambda sat, opp: opp["object"].target_spacecraft.dynamics.r_BN_N,
         "r_LB_H": _r_LB_H,
         # "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time,
         # "opportunity_mid": lambda sat, opp: sum(opp["window"]) / 2
