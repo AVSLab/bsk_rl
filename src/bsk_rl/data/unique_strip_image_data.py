@@ -118,8 +118,11 @@ class UniqueStripImageStore(DataStore):
             theta = np.arccos(np.clip(dot_product, -1.0, 1.0))
             d_strip = theta * orbitalMotion.REQ_EARTH * 1e3  # length of the strip [m]
             t_strip = d_strip / target.aquisition_speed  # Calculation of the time to cover the strip
+
     
-            if data_generated_target > 0.85*t_strip: # The strip is considered as imaged if the data buffer-increase is greater than 95% of the data necessary to store the images from the target strip
+            if data_generated_target > 0.99*t_strip: # The strip is considered as imaged if the data buffer-increase is greater than 95% of the data necessary to store the images from the target strip
+                print(data_generated_target)
+                print(d_strip)
                 imaged.append(target)
             
         return UniqueStripImageData(imaged=imaged)
@@ -198,7 +201,8 @@ class UniqueStripImageReward(GlobalReward):
                     reward[sat_id] += self.reward_fn(
                         target.priority
                     ) / imaged_targets.count(target)
-
+            if reward[sat_id] == 0.0:
+                reward[sat_id] = -0.2
         return reward
 
 

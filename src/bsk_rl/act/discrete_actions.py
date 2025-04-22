@@ -339,7 +339,8 @@ class ImageStrip(DiscreteAction):
         if target.id != prev_action_key:
             self.satellite.task_target_for_imaging(target)
         else:
-            self.satellite.enable_target_window(target)
+            #self.satellite.enable_target_window(target)
+            self.satellite.task_target_for_imaging(target)
 
         return target.id
 
