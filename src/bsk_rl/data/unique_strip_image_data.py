@@ -121,8 +121,6 @@ class UniqueStripImageStore(DataStore):
 
     
             if data_generated_target > 0.99*t_strip: # The strip is considered as imaged if the data buffer-increase is greater than 95% of the data necessary to store the images from the target strip
-                print(data_generated_target)
-                print(d_strip)
                 imaged.append(target)
             
         return UniqueStripImageData(imaged=imaged)

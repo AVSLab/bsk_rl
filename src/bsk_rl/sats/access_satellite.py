@@ -858,6 +858,7 @@ class StripImagingSatellite(AccessSatellite):
         """Overwrite statistics about previous episode."""
         super().reset_overwrite_previous()
         self.imaged = 0
+        self.missed=0
 
     def reset_pre_sim_init(self) -> None:
         """Set the buffer parameters based on computed windows.
@@ -931,7 +932,7 @@ class StripImagingSatellite(AccessSatellite):
         self.update_timed_terminal_event(
             final_time,
             info=f"for {target} stopping imaging event",
-            extra_actions=[self._satellite_command + ".imaged += 1"],
+            extra_actions=[self._satellite_command + ".imaged += 0"],
         )
 
     def task_target_for_imaging(self, target: "Strip"):

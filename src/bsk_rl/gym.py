@@ -463,6 +463,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         observation = self._get_obs()
         reward = self._get_reward()
+        if reward <= 0:
+            self.satellite.missed=self.satellite.missed+1
+        if reward > 0:
+            self.satellite.imaged=self.satellite.imaged+1
         terminated = self._get_terminated()
         truncated = self._get_truncated()
         info = self._get_info()
