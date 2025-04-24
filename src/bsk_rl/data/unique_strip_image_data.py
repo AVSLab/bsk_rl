@@ -200,7 +200,7 @@ class UniqueStripImageReward(GlobalReward):
                         target.priority
                     ) / imaged_targets.count(target)
             if reward[sat_id] == 0.0:
-                reward[sat_id] = -0.2
+                reward[sat_id] = 0.0
         return reward
 
 
