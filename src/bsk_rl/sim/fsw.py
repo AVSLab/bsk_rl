@@ -1370,7 +1370,7 @@ class ImagingSCFSWModel(ImagingFSWModel):
 
             if self.fsw.dynamics.targetLocation.accessOutMsgs:
                 self.insControl.locationAccessInMsg.subscribeTo(
-                    self.fsw.dynamics.targetLocation.accessOutMsgs[-1] # TODO: this should be changed to the id of the target
+                    self.fsw.dynamics.targetLocation.accessOutMsgs[-1] # TODO: this should be changed to the id of the target but this currently still works since I am lenghting this array everytime we choose a new target
                 )
             else:
                 msgData = messaging.AccessMsgPayload() # this is the payload
