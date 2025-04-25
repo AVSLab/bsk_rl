@@ -272,7 +272,7 @@ class UniformStripTargets(Scenario):
             priority_distribution: Optional[Callable] = None,
             radius: float = orbitalMotion.REQ_EARTH * 1e3,
             aquisition_speed: float = 3*1e3, #in m/s
-            pre_imaging_time: list[float] = [0,1,2] #in seconds
+            pre_imaging_time: list[float] = [0,1,2,3,4] #in seconds
         ) -> None:
             """An environment with evenly-distributed static targets.
 
