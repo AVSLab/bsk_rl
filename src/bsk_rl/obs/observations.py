@@ -452,7 +452,7 @@ def _r_LB_H_end(sat, opp):
     r_BN_N = sat.dynamics.r_BN_N
     r_TB_N = sat.simulator.world.PN.T @ r_LP_P_end - r_BN_N
     HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
-    #opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,opp["window"][1] - sat.simulator.sim_time -1]
+    opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,opp["window"][1] - sat.simulator.sim_time -1]
     #opp["object"].pre_imaging_time= [(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2 ]
     #opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),max(0,opp["window"][0] - sat.simulator.sim_time ),max(0,opp["window"][0] - sat.simulator.sim_time )]
     opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),(opp["window"][1] - max(0,opp["window"][0] - sat.simulator.sim_time )- sat.simulator.sim_time)/4+max(0,opp["window"][0] - sat.simulator.sim_time ),(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(opp["window"][1] - max(0,opp["window"][0] - sat.simulator.sim_time )- sat.simulator.sim_time)*3/4+max(0,opp["window"][0] - sat.simulator.sim_time ),opp["window"][1] - sat.simulator.sim_time -1]
@@ -722,7 +722,7 @@ class StripOpportunityProperties(Observation):
                 pad=True,
             )
         ):
-            if i % 5 == 0:
+            if i % 3 == 0:
                 props = {}
                 for prop_spec in self.target_properties:
                     name = prop_spec["name"]

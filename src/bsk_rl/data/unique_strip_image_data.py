@@ -119,7 +119,7 @@ class UniqueStripImageStore(DataStore):
             d_strip = theta * orbitalMotion.REQ_EARTH * 1e3  # length of the strip [m]
             t_strip = d_strip / target.aquisition_speed  # Calculation of the time to cover the strip
 
-    
+
             if data_generated_target > 0.99*t_strip: # The strip is considered as imaged if the data buffer-increase is greater than 95% of the data necessary to store the images from the target strip
                 imaged.append(target)
             
