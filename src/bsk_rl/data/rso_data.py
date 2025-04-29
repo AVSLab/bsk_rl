@@ -155,11 +155,25 @@ class RSOInspectionDataStore(DataStore):
                 point_illuminate_status[rso_point] = True
 
         self.update_point_colors(
+            self.data.point_illuminate_status.keys(),
+            color="gray",
+        )
+        self.update_point_colors(
+            [
+                rso_point
+                for rso_point in point_illuminate_status
+                if point_illuminate_status[rso_point]
+            ],
+            color="yellow",
+        )
+        self.update_point_colors(
             [
                 rso_point
                 for rso_point in point_inspect_status
                 if point_inspect_status[rso_point]
-            ]
+            ],
+            color="chartreuse",
+            permanent=True,
         )
 
         if len(point_inspect_status) > 0:
@@ -170,11 +184,30 @@ class RSOInspectionDataStore(DataStore):
         return RSOInspectionData(point_inspect_status, point_illuminate_status)
 
     @vizard.visualize
-    def update_point_colors(self, rso_points, vizInstance=None, vizSupport=None):
+    def update_point_colors(
+        self,
+        rso_points,
+        color,
+        alpha=0.5,
+        permanent=False,
+        vizInstance=None,
+        vizSupport=None,
+    ):
         """Update target colors in Vizard."""
+        if not hasattr(self, "permanent_point_colors"):
+            self.permanent_point_colors = []
+
         for location in vizInstance.locations:
-            if location.stationName in [str(point) for point in rso_points]:
-                location.color = vizSupport.toRGBA255("tab:green", alpha=0.5)
+            if (
+                location.stationName not in self.permanent_point_colors
+                and location.stationName in [str(point) for point in rso_points]
+            ):
+                if not all(
+                    np.equal(location.color, vizSupport.toRGBA255(color, alpha=alpha))
+                ):
+                    location.color = vizSupport.toRGBA255(color, alpha=alpha)
+                    if permanent:
+                        self.permanent_point_colors.append(location.stationName)
 
 
 class RSOInspectionReward(GlobalReward):
@@ -184,7 +217,7 @@ class RSOInspectionReward(GlobalReward):
         self,
         inspection_reward_scale: float = 1.0,
         completion_bonus: float = 0.0,
-        completion_threshold=0.95,
+        completion_threshold=0.90,
         min_illuminated_for_completion=0.4,
         min_time_for_completion=5700,
     ):
@@ -278,6 +311,13 @@ class RSOInspectionReward(GlobalReward):
 
     def is_terminated(self, satellite) -> bool:
         return self.bonus_reward_yielded
+
+    # @vizard.visualize
+    # def update_point_colors(self, rso_points, vizInstance=None, vizSupport=None):
+    #     """Update target colors in Vizard."""
+    #     for location in vizInstance.locations:
+    #         if location.stationName in [str(point) for point in rso_points]:
+    #             location.color = vizSupport.toRGBA255("tab:green", alpha=0.5)
 
 
 __doc_title__ = "RSO Inspection"

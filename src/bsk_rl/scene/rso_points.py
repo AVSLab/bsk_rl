@@ -3,6 +3,7 @@
 import logging
 from abc import abstractmethod
 from dataclasses import dataclass
+from functools import cache
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -26,11 +27,14 @@ class RSOPoint:
     n_B: np.ndarray
     theta_min: float
     range: float
+    solar_incidence_min: float
+    illumination_eclipse_min: float
 
     def __hash__(self) -> int:
         """Hash target by unique id."""
         return hash(id(self))  # THIS IS ALMOST CERTAINLY A BAD IDEA
 
+    @cache
     def __str__(self) -> str:
         return f"RSOPoint_{self.r_PB_B}"
 
@@ -65,10 +69,19 @@ class RSOPoints(Scenario):
     def reset_during_sim_init(self) -> None:
         # Add points to dynamics and fsw of RSO
         assert isinstance(self.rso.dynamics, RSODynModel)
+
+        for observer in self.observers:
+            self.setup_inspector_camera(observer)
+
         logger.debug("Adding inspection points to RSO and observers")
         for point in self.rso_points:
             rso_point_model = self.rso.dynamics.add_rso_point(
-                point.r_PB_B, point.n_B, point.theta_min, point.range
+                point.r_PB_B,
+                point.n_B,
+                point.theta_min,
+                point.range,
+                point.solar_incidence_min,
+                point.illumination_eclipse_min,
             )
             # Add point to each observer
             for observer in self.observers:
@@ -92,12 +105,27 @@ class RSOPoints(Scenario):
             r_GP_P=list(rso_point.r_PB_B),
             gHat_P=list(rso_point.n_B),
             fieldOfView=rso_point.theta_min,
-            color=vizSupport.toRGBA255("tab:red", alpha=0.5),
+            color=vizSupport.toRGBA255("gray", alpha=0.5),
             range=float(rso_point.range),
         )
         vizInstance.settings.showLocationCones = -1
         vizInstance.settings.showLocationCommLines = -1
         vizInstance.settings.showLocationLabels = -1
+
+    @vizard.visualize
+    def setup_inspector_camera(
+        self, observer, vizSupport=None, vizInstance=None
+    ) -> None:
+        """Visualize camera in Vizard."""
+        vizSupport.createStandardCamera(
+            vizInstance,
+            spacecraftName=observer.name,
+            setMode=0,
+            bodyTarget=self.rso.name,
+            setView=0,
+            fieldOfView=np.radians(10),
+            displayName=observer.name,
+        )
 
     @abstractmethod
     def generate_points(self) -> list[RSOPoint]:
@@ -111,13 +139,15 @@ class FibonacciSphereRSOPoints(RSOPoints):
         radius: float = 1.0,
         theta_min: float = np.radians(45),
         range: float = -1,
-        # incidence_min: float = np.radians(60),  # TODO handle
+        solar_incidence_min: float = np.radians(60),
+        illumination_eclipse_min: float = 0.1,
     ):
         self.n_points = n_points
         self.radius = radius
         self.theta_min = theta_min
         self.range = range
-        # self.incidence_min = incidence_min
+        self.solar_incidence_min = solar_incidence_min
+        self.illumination_eclipse_min = illumination_eclipse_min
 
     def generate_points(self) -> list[RSOPoint]:
         points = []
@@ -139,6 +169,8 @@ class FibonacciSphereRSOPoints(RSOPoints):
                     n_B,
                     self.theta_min,
                     self.range,
+                    self.solar_incidence_min,
+                    self.illumination_eclipse_min,
                 )
             )
 

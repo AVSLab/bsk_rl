@@ -1269,7 +1269,15 @@ class RSODynModel(BasicDynamicsModel):
 
         self.rso_points = []
 
-    def add_rso_point(self, r_LB_B, aHat_B, theta, range):
+    def add_rso_point(
+        self,
+        r_LB_B,
+        aHat_B,
+        theta,
+        range,
+        solar_incidence_min,
+        illumination_eclipse_min,
+    ):
         rso_point_model = spacecraftLocation.SpacecraftLocation()
         rso_point_model.primaryScStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
 
@@ -1289,8 +1297,8 @@ class RSODynModel(BasicDynamicsModel):
         rso_point_model.r_LB_B = r_LB_B
         rso_point_model.aHat_B = aHat_B
         rso_point_model.theta = theta
-        rso_point_model.theta_solar = 0.9 * np.pi / 2
-        rso_point_model.shadow_factor_limit = 0.1
+        rso_point_model.theta_solar = solar_incidence_min
+        rso_point_model.shadow_factor_limit = illumination_eclipse_min
         rso_point_model.maximumRange = range
         self.simulator.AddModelToTask(
             self.rso_task_name, rso_point_model, ModelPriority=1
