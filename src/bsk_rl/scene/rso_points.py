@@ -137,9 +137,9 @@ class FibonacciSphereRSOPoints(RSOPoints):
         self,
         n_points: int = 100,
         radius: float = 1.0,
-        theta_min: float = np.radians(45),
-        range: float = -1,
-        solar_incidence_min: float = np.radians(60),
+        theta_min: float = np.radians(45),  # inspection_angle_max
+        range: float = -1,  # inspection_range_min
+        solar_incidence_min: float = np.radians(60),  # solar_incidence_max
         illumination_eclipse_min: float = 0.1,
     ):
         self.n_points = n_points
