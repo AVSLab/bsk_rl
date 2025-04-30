@@ -121,7 +121,7 @@ class UniqueImageStore(DataStore):
 class UniqueImageReward(GlobalReward):
     """GlobalReward for rewarding unique images."""
 
-    datastore_type = UniqueImageStore
+    data_store_type = UniqueImageStore
 
     def __init__(
         self,

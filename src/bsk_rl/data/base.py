@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from bsk_rl.utils.functional import Resetable
+from deprecated import deprecated
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -121,7 +122,20 @@ class DataStore(ABC):
 class GlobalReward(ABC, Resetable):
     """Base class for simulation-wide data management."""
 
-    datastore_type: type[DataStore]  # type of DataStore managed by the GlobalReward
+    data_store_type: type[DataStore]  # type of DataStore managed by the GlobalReward
+
+    @classmethod
+    @property
+    @deprecated(reason="datastore_type is deprecated, use data_store_type instead")
+    def datastore_type(cls) -> type[DataStore]:
+        """:meta private: Deprecated alias for data_store_type."""
+        return cls.data_store_type
+
+    @deprecated(reason="datastore_type is deprecated, use data_store_type instead")
+    def set_data_type_deprecated(self) -> None:
+        """:meta private: Deprecated alias for data_store_type."""
+        self.data_type = self.datastore_type.data_type
+        self.data_store_type = self.datastore_type
 
     def __init__(self) -> None:
         """Base class for simulation-wide data management and rewarding.
@@ -130,7 +144,11 @@ class GlobalReward(ABC, Resetable):
         methods may be extended as necessary for housekeeping.
         """
         self.scenario: "Scenario"
-        self.data_type = self.datastore_type.data_type
+        try:
+            self.data_type = self.data_store_type.data_type
+        except AttributeError:
+            self.set_data_type_deprecated()
+        self.data_store_kwargs = {}
 
     def link_scenario(self, scenario: "Scenario") -> None:
         """Link the data manager to the scenario.
@@ -149,15 +167,16 @@ class GlobalReward(ABC, Resetable):
         """Furnish the :class:`~bsk_rl.data.base.DataStore` with initial data."""
         return self.data_type()
 
-    def create_data_store(self, satellite: "Satellite", **data_store_kwargs) -> None:
+    def create_data_store(self, satellite: "Satellite") -> None:
         """Create a data store for a satellite.
 
         Args:
             satellite: Satellite to create a data store for.
-            data_store_kwargs: Additional keyword arguments to pass to the data store
         """
-        satellite.data_store = self.datastore_type(
-            satellite, initial_data=self.initial_data(satellite), **data_store_kwargs
+        satellite.data_store = self.data_store_type(
+            satellite,
+            initial_data=self.initial_data(satellite),
+            **self.data_store_kwargs,
         )
         self.cum_reward[satellite.name] = 0.0
 

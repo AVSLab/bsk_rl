@@ -59,51 +59,57 @@ class ComposedDataStore(DataStore):
     data_type = ComposedData
 
     def pass_data(self) -> None:
-        """Pass data to the sub-datastores.
+        """Pass data to the sub-DataStores.
 
         :meta private:
         """
-        for ds, data in zip(self.datastores, self.data.data):
+        for ds, data in zip(self.data_stores, self.data.data):
             ds.data = data
 
     def __init__(
         self,
         satellite: "Satellite",
-        *datastore_types: type[DataStore],
+        *data_store_types: type[DataStore],
         initial_data: Optional[ComposedData] = None,
+        data_store_kwargs: Optional[dict] = None,
     ):
         """DataStore for composed data types.
 
         Args:
             satellite: Satellite which data is being stored for.
-            datastore_types: DataStore types to compose.
+            data_store_types: DataStore types to compose.
             initial_data: Initial data to start the store with. Usually comes from
                 :class:`~bsk_rl.data.GlobalReward.initial_data`.
+            data_store_kwargs: Dictionary mapping data_store types to their kwargs.
         """
         self.data: ComposedData
         super().__init__(satellite, initial_data)
-        self.datastores = tuple([ds(satellite) for ds in datastore_types])
+        if data_store_kwargs is None:
+            data_store_kwargs = {ds: {} for ds in data_store_types}
+        self.data_stores = tuple(
+            [ds(satellite, **data_store_kwargs[ds]) for ds in data_store_types]
+        )
         self.pass_data()
 
     def __getattr__(self, name: str):
-        """Search for an attribute in the datastores."""
-        for datastore in self.datastores:
-            if hasattr(datastore, name):
-                return getattr(datastore, name)
+        """Search for an attribute in the data_stores."""
+        for data_store in self.data_stores:
+            if hasattr(data_store, name):
+                return getattr(data_store, name)
         raise AttributeError(
             f"No DataStore in ComposedDataStore has attribute '{name}'"
         )
 
     def get_log_state(self) -> list:
         """Pull information used in determining current data contribution."""
-        log_states = [ds.get_log_state() for ds in self.datastores]
+        log_states = [ds.get_log_state() for ds in self.data_stores]
         return log_states
 
     def compare_log_states(self, prev_state: list, new_state: list) -> Data:
         """Generate a unit of composed data based on previous step and current step logs."""
         data = [
             ds.compare_log_states(prev, new)
-            for ds, prev, new in zip(self.datastores, prev_state, new_state)
+            for ds, prev, new in zip(self.data_stores, prev_state, new_state)
         ]
         return ComposedData(*data)
 
@@ -120,7 +126,7 @@ class ComposedDataStore(DataStore):
 
 
 class ComposedReward(GlobalReward):
-    datastore_type = ComposedDataStore
+    data_store_type = ComposedDataStore
 
     def pass_data(self) -> Data:
         """Pass data to the sub-rewarders.
@@ -176,18 +182,20 @@ class ComposedReward(GlobalReward):
             rewarder.link_scenario(scenario)
 
     def initial_data(self, satellite: Satellite) -> ComposedData:
-        """Furnsish the datastore with :class:`ComposedData`."""
+        """Furnish the DataStore with :class:`ComposedData`."""
         return ComposedData(
             *[rewarder.initial_data(satellite) for rewarder in self.rewarders]
         )
 
     def create_data_store(self, satellite: Satellite) -> None:
         """Create a :class:`CompositeDataStore` for a satellite."""
-        # TODO support passing kwargs
         satellite.data_store = ComposedDataStore(
             satellite,
-            *[r.datastore_type for r in self.rewarders],
+            *[r.data_store_type for r in self.rewarders],
             initial_data=self.initial_data(satellite),
+            data_store_kwargs={
+                r.data_store_type: r.data_store_kwargs for r in self.rewarders
+            },
         )
         self.cum_reward[satellite.name] = 0.0
         for rewarder in self.rewarders:

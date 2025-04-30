@@ -41,7 +41,7 @@ class TestDataStore:
 @patch.multiple(GlobalReward, __abstractmethods__=set())
 class TestGlobalReward:
     def test_reset(self):
-        GlobalReward.datastore_type = MagicMock()
+        GlobalReward.data_store_type = MagicMock()
         dm = GlobalReward()
         dm.reset_overwrite_previous()
         dm.reset_pre_sim_init()
@@ -50,14 +50,17 @@ class TestGlobalReward:
 
     def test_create_data_store(self):
         sat = MagicMock()
-        GlobalReward.datastore_type = MagicMock(return_value="ds")
+        data_store = MagicMock()
+        GlobalReward.data_store_type = MagicMock(return_value=data_store)
         dm = GlobalReward()
+        dm.data_store_kwargs = dict(hello="world")
         dm.scenario = MagicMock()
         dm.reset_overwrite_previous()
         dm.reset_pre_sim_init()
         dm.reset_post_sim_init()
         dm.create_data_store(sat)
-        assert sat.data_store == "ds"
+        assert sat.data_store == data_store
+        assert GlobalReward.data_store_type.call_args.kwargs["hello"] == "world"
         assert sat.name in dm.cum_reward
 
     def test_reward(self):

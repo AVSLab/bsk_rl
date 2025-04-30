@@ -119,7 +119,9 @@ class TestComposedReward:
             getattr(rewarder, function).assert_called_once()
 
     def test_initial_data(self):
-        rewarder1 = MagicMock(initial_data=MagicMock(return_value=1))
+        rewarder1 = MagicMock(
+            initial_data=MagicMock(return_value=1),
+        )
         rewarder2 = MagicMock(initial_data=MagicMock(return_value=2))
         composed_rewarder = ComposedReward(rewarder1, rewarder2)
         data = composed_rewarder.initial_data("sat")
@@ -129,13 +131,18 @@ class TestComposedReward:
         sat = MagicMock()
         ds1 = MagicMock(get_log_state=MagicMock(return_value=1))
         ds1_type = MagicMock(return_value=ds1)
-        rewarder1 = MagicMock(datastore_type=ds1_type)
+        rewarder1 = MagicMock(
+            data_store_type=ds1_type,
+            data_store_kwargs=dict(hello="world"),
+        )
         ds2 = MagicMock(get_log_state=MagicMock(return_value=2))
         ds2_type = MagicMock(return_value=ds2)
-        rewarder2 = MagicMock(datastore_type=ds2_type)
+        rewarder2 = MagicMock(data_store_type=ds2_type)
         composed_rewarder = ComposedReward(rewarder1, rewarder2)
         composed_rewarder.create_data_store(sat)
-        assert sat.data_store.datastores == (ds1, ds2)
+        assert sat.data_store.data_stores == (ds1, ds2)
+        assert ds1_type.call_args.kwargs["hello"] == "world"
+        assert "hello" not in ds2_type.call_args.kwargs
 
     def test_calculate_reward(self):
         rewarder1 = MagicMock(

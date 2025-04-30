@@ -13,6 +13,9 @@ Development - |version|
   dtype to ``np.float64``.
 * Add support for continuous action spaces (e.g. for control problems) with :class:`~bsk_rl.act.ContinuousAction`.
 * Add models and action for impulsive thrust and drift with a continuous action space (:class:`~bsk_rl.act.ImpulsiveThrust`).
+* Changed inconsistent uses of ``datastore`` to ``data_store``.
+* Added property ``data_store_kwargs`` to :class:`~bsk_rl.data.GlobalReward` that is unpacked in the
+  :class:`~bsk_rl.data.DataStore` constructor.
 
 
 Version 1.1.0

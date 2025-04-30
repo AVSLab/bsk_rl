@@ -70,7 +70,7 @@ class ScanningTimeStore(DataStore):
 class ScanningTimeReward(GlobalReward):
     """GlobalReward for rewarding time spent scanning nadir."""
 
-    datastore_type = ScanningTimeStore  # type of DataStore managed by the GlobalReward
+    data_store_type = ScanningTimeStore  # type of DataStore managed by the GlobalReward
 
     def __init__(
         self,

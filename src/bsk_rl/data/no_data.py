@@ -37,7 +37,7 @@ class NoDataStore(DataStore):
 class NoReward(GlobalReward):
     """GlobalReward for no data."""
 
-    datastore_type = NoDataStore
+    data_store_type = NoDataStore
 
     def __init__(self, *args, **kwargs):
         """Returns zero reward at every step.
