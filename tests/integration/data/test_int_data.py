@@ -1,6 +1,6 @@
 import gymnasium as gym
 
-from bsk_rl import act, data, obs, sats, scene
+from bsk_rl import act, data, obs, sats, scene, sim
 from bsk_rl.data.composition import ComposedReward
 from bsk_rl.utils.orbital import random_orbit
 
@@ -55,3 +55,28 @@ def test_multi_rewarder():
     env.reset()
     for _ in range(10):
         env.step(env.action_space.sample())
+
+
+class DriftSat(sats.Satellite):
+    observation_spec = [obs.Time()]
+    action_spec = [act.Drift(duration=100.0)]
+    dyn_type = sim.dyn.BasicDynamicsModel
+    fsw_type = sim.fsw.BasicFSWModel
+
+
+def test_time_penalty():
+    env = gym.make(
+        "SatelliteTasking-v1",
+        satellite=DriftSat(
+            "DriftSat",
+        ),
+        rewarder=data.ResourceReward(
+            reward_weight=-0.1,
+            resource_fn=lambda sat: sat.simulator.sim_time,
+        ),
+        disable_env_checker=True,
+    )
+
+    env.reset()
+    _, reward, _, _, _ = env.step(0)
+    assert reward == -10.0

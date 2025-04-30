@@ -4,8 +4,9 @@ import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
-from bsk_rl.utils.functional import Resetable
 from deprecated import deprecated
+
+from bsk_rl.utils.functional import Resetable
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite

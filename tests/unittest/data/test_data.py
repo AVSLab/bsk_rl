@@ -7,6 +7,7 @@ from pytest import approx
 from bsk_rl.data.base import Data, DataStore, GlobalReward
 from bsk_rl.data.nadir_data import ScanningTime, ScanningTimeReward, ScanningTimeStore
 from bsk_rl.data.no_data import NoData, NoDataStore, NoReward
+from bsk_rl.data.resource_data import ResourceData, ResourceDataStore, ResourceReward
 from bsk_rl.data.unique_image_data import (
     UniqueImageData,
     UniqueImageReward,
@@ -295,3 +296,61 @@ class TestNadirScanningManager:
             }
         )
         assert reward == {"sat1": 0.5, "sat2": 0.5}
+
+
+class TestResourceData:
+    def test_add_null(self):
+        dat1 = ResourceData()
+        dat2 = ResourceData()
+        dat = dat1 + dat2
+        assert dat.resource_accumulated == 0.0
+
+    def test_add_to_null(self):
+        dat1 = ResourceData(1.0)
+        dat2 = ResourceData()
+        dat = dat1 + dat2
+        assert dat.resource_accumulated == 1.0
+
+    def test_add(self):
+        dat1 = ResourceData(1.0)
+        dat2 = ResourceData(3.0)
+        dat = dat1 + dat2
+        assert dat.resource_accumulated == 4.0
+
+
+class TestResourceDataStore:
+    def test_get_log_state(self):
+        sat = MagicMock()
+        sat.resource_level = 6
+        ds = ResourceDataStore(sat, resource_fn=lambda sat: sat.resource_level)
+        assert ds.get_log_state() == 6.0
+
+    @pytest.mark.repeat(10)
+    def test_compare_log_states(self):
+        before = np.random.randint(0, 10)
+        after = np.random.randint(0, 10)
+        delta = after - before
+        sat = MagicMock()
+        ds = ResourceDataStore(sat)
+        dat = ds.compare_log_states(before, after)
+        assert dat.resource_accumulated == delta
+
+
+class TestResourceReward:
+    def test_calculate_reward(self):
+        dm = ResourceReward(reward_weight=2.0)
+        reward = dm.calculate_reward(
+            {
+                "sat1": ResourceData(1.0),
+                "sat2": ResourceData(-2.0),
+            }
+        )
+        assert reward == {"sat1": 2.0, "sat2": -4.0}
+
+    def test_read_reward(self):
+        dm = ResourceReward(resource_fn=lambda sat: sat.resource_level)
+        dm.reset_overwrite_previous()
+        sat = MagicMock()
+        dm.create_data_store(sat)
+        sat.resource_level = 3.0
+        assert sat.data_store.get_log_state() == 3.0

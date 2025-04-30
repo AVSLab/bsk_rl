@@ -16,6 +16,8 @@ Development - |version|
 * Changed inconsistent uses of ``datastore`` to ``data_store``.
 * Added property ``data_store_kwargs`` to :class:`~bsk_rl.data.GlobalReward` that is unpacked in the
   :class:`~bsk_rl.data.DataStore` constructor.
+* Implemented :class:`~bsk_rl.data.ResourceReward` to reward based on the level of a property in the satellite
+  multiplied by some coefficient.
 
 
 Version 1.1.0

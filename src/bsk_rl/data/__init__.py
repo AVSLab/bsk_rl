@@ -62,6 +62,9 @@ provides a summary of the available reward systems:
 | :class:`ScanningTimeReward` | Returns reward based on time spend in the nadir-pointing scanning mode. | Should be used with the :class:`~bsk_rl.scene.UniformNadirScanning` |
 |                             |                                                                         | scenario.                                                           |
 +-----------------------------+-------------------------------------------------------------------------+---------------------------------------------------------------------+
+| :class:`ResourceReward`     | Returns reward based on the change in an arbitrary resource level       |                                                                     |
+|                             | (e.g. fuel, power, time, etc.).                                         |                                                                     |
++-----------------------------+-------------------------------------------------------------------------+---------------------------------------------------------------------+
 
 To select a reward system to use, pass an instance of :class:`GlobalReward` to the ``data``
 field of the environment constructor:
@@ -92,6 +95,7 @@ handles the combination of multiple reward systems.
 from bsk_rl.data.base import GlobalReward
 from bsk_rl.data.nadir_data import ScanningTimeReward
 from bsk_rl.data.no_data import NoReward
+from bsk_rl.data.resource_data import ResourceReward
 from bsk_rl.data.unique_image_data import UniqueImageReward
 
 __doc_title__ = "Data & Reward"
@@ -100,4 +104,5 @@ __all__ = [
     "NoReward",
     "UniqueImageReward",
     "ScanningTimeReward",
+    "ResourceReward",
 ]
