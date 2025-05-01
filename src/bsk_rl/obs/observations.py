@@ -452,10 +452,21 @@ def _r_LB_H_end(sat, opp):
     r_BN_N = sat.dynamics.r_BN_N
     r_TB_N = sat.simulator.world.PN.T @ r_LP_P_end - r_BN_N
     HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
-    opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,opp["window"][1] - sat.simulator.sim_time -1]
+    start = max(0, opp["window"][0] - sat.simulator.sim_time)
+    end = opp["window"][1] - sat.simulator.sim_time
+    size = len(opp["object"].pre_imaging_time)
+
+    if size == 1:
+        opp["object"].pre_imaging_time = [(start + end) / 2]
+    else:
+        # Divide the interval [start, end - 1] into `size` equally spaced points
+        opp["object"].pre_imaging_time = [
+            start + i * (end - start - 1) / (size - 1) for i in range(size)
+        ]
+    #opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,opp["window"][1] - sat.simulator.sim_time -1]
     #opp["object"].pre_imaging_time= [(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2 ]
     #opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),max(0,opp["window"][0] - sat.simulator.sim_time ),max(0,opp["window"][0] - sat.simulator.sim_time )]
-    opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),(opp["window"][1] - max(0,opp["window"][0] - sat.simulator.sim_time )- sat.simulator.sim_time)/4+max(0,opp["window"][0] - sat.simulator.sim_time ),(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(opp["window"][1] - max(0,opp["window"][0] - sat.simulator.sim_time )- sat.simulator.sim_time)*3/4+max(0,opp["window"][0] - sat.simulator.sim_time ),opp["window"][1] - sat.simulator.sim_time -1]
+    #opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),(opp["window"][1] - max(0,opp["window"][0] - sat.simulator.sim_time )- sat.simulator.sim_time)/4+max(0,opp["window"][0] - sat.simulator.sim_time ),(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(opp["window"][1] - max(0,opp["window"][0] - sat.simulator.sim_time )- sat.simulator.sim_time)*3/4+max(0,opp["window"][0] - sat.simulator.sim_time ),opp["window"][1] - sat.simulator.sim_time -1]
     return HN @ r_TB_N
 
 #Computes the lenght of the strip
@@ -476,14 +487,10 @@ def _pointing_vector_angle(sat, opp):
     vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(
         vector_target_spacecraft_P
     )
-    #opp["object"].pre_imaging_time=[60,60,60]
-    #opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,opp["window"][1] - sat.simulator.sim_time -1]
-    #opp["object"].pre_imaging_time= [(opp["window"][1] - sat.simulator.sim_time-max(0,opp["window"][0] - sat.simulator.sim_time ))*1/4+(max(0,opp["window"][0] - sat.simulator.sim_time )),(opp["window"][1] - sat.simulator.sim_time-max(0,opp["window"][0] - sat.simulator.sim_time ))*1/4+(max(0,opp["window"][0] - sat.simulator.sim_time )),(opp["window"][1] - sat.simulator.sim_time-max(0,opp["window"][0] - sat.simulator.sim_time ))*1/4+(max(0,opp["window"][0] - sat.simulator.sim_time ))]
-    #opp["object"].pre_imaging_time= [(opp["window"][1] - sat.simulator.sim_time-max(0,opp["window"][0] - sat.simulator.sim_time ))*1/4+(max(0,opp["window"][0] - sat.simulator.sim_time )),(opp["window"][1] - sat.simulator.sim_time-max(0,opp["window"][0] - sat.simulator.sim_time ))*2/4+(max(0,opp["window"][0] - sat.simulator.sim_time )),(opp["window"][1] - sat.simulator.sim_time-max(0,opp["window"][0] - sat.simulator.sim_time ))*3/4+(max(0,opp["window"][0] - sat.simulator.sim_time ))]
     return np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.p_hat_P))
 
-#Assuming that the satellite is now pointing at the target, computes the angle of rotation necessary to have a scanning vector perpendicular to the central line 
 
+#Assuming that the satellite is now pointing at the target, computes the angle of rotation necessary to have a scanning vector perpendicular to the central line 
 def _scan_line_vector_angle(sat, opp):
     vector_target_spacecraft_P = opp["r_LP_P_start"] - sat.dynamics.r_BN_P
     vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(vector_target_spacecraft_P)
@@ -620,6 +627,7 @@ class StripOpportunityProperties(Observation):
         self,
         *target_properties: dict[str, Any],
         n_ahead_observe: int,
+        n_pre_imaging: int,
         type="target",
         name=None,
     ):
@@ -668,6 +676,7 @@ class StripOpportunityProperties(Observation):
         super().__init__(name=name)
         self.type = type
         self.target_properties = target_properties
+        self.n_pre_imaging = n_pre_imaging
         for i, prop_spec in enumerate(self.target_properties):
             for key in prop_spec:
                 if key not in ["fn", "norm", "name", "prop"]:
@@ -722,7 +731,7 @@ class StripOpportunityProperties(Observation):
                 pad=True,
             )
         ):
-            if i % 3 == 0:
+            if i % self.n_pre_imaging == 0:
                 props = {}
                 for prop_spec in self.target_properties:
                     name = prop_spec["name"]

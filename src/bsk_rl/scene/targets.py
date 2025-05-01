@@ -269,10 +269,10 @@ class UniformStripTargets(Scenario):
             self,
             n_targets: Union[int, tuple[int, int]],
             length_strip_bounds: tuple[float, float],
+            pre_imaging_time_option: float = 3, #in seconds
             priority_distribution: Optional[Callable] = None,
             radius: float = orbitalMotion.REQ_EARTH * 1e3,
             aquisition_speed: float = 3*1e3, #in m/s
-            pre_imaging_time: list[float] = [0,1,2] #in seconds
         ) -> None:
             """An environment with evenly-distributed static targets.
 
@@ -293,7 +293,8 @@ class UniformStripTargets(Scenario):
             self.radius = radius
             self.length_strip_bounds = length_strip_bounds
             self.aquisition_speed = aquisition_speed
-            self.pre_imaging_time = pre_imaging_time
+            self.pre_imaging_time_option = pre_imaging_time_option
+            self.pre_imaging_time = [0 for i in range(pre_imaging_time_option)]
 
     def reset_overwrite_previous(self) -> None:
         """Overwrite target list from previous episode."""
