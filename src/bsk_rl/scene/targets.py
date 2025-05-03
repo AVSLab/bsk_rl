@@ -355,7 +355,7 @@ class UniformStripTargets(Scenario):
             end_point = np.array([x_end, y_end, z_end])
             # Create the strip target
             self.targets.append(
-                Strip(name=f"strip-{i}", r_LP_P_start=x_start, r_LP_P_end=end_point, priority=random.choice([0.1, 0.5, 1]), aquisition_speed=self.aquisition_speed, pre_imaging_time=self.pre_imaging_time)
+                Strip(name=f"strip-{i}", r_LP_P_start=x_start, r_LP_P_end=end_point, priority=self.priority_distribution(), aquisition_speed=self.aquisition_speed,pre_imaging_time=self.pre_imaging_time)
             )
 
 

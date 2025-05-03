@@ -1109,8 +1109,8 @@ class StripImagingDynModel(ImagingDynModel):
         self.imagingStrip.planetInMsg.subscribeTo(
             self.world.gravFactory.spiceObject.planetStateOutMsgs[self.world.body_index]
         )
-        self.imagingTarget.minimumElevation = imageTargetMinimumElevation
-        self.imagingTarget.maximumRange = imageTargetMaximumRange
+        self.imagingStrip.minimumElevation = imageTargetMinimumElevation
+        self.imagingStrip.maximumRange = imageTargetMaximumRange
 
         self.simulator.AddModelToTask(
             self.world.world_task_name,

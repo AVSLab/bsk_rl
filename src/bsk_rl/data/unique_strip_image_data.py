@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING, Callable, Optional
 
 import numpy as np
+import math
 
 from bsk_rl.data.base import Data, DataStore, GlobalReward
 from Basilisk.utilities import orbitalMotion
@@ -120,9 +121,8 @@ class UniqueStripImageStore(DataStore):
             t_strip = d_strip / target.aquisition_speed  # Calculation of the time to cover the strip
 
 
-            if data_generated_target > 0.99*t_strip: # The strip is considered as imaged if the data buffer-increase is greater than 95% of the data necessary to store the images from the target strip
+            if data_generated_target >= math.floor(0.90 * t_strip * 2) / 2: # The strip is considered as imaged if the data buffer-increase is greater than 95% of the data necessary to store the images from the target strip
                 imaged.append(target)
-            
         return UniqueStripImageData(imaged=imaged)
 
 
