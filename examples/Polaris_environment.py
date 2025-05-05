@@ -20,7 +20,7 @@ from Basilisk.utilities import (
 from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 
-n_targets = 100
+n_targets = 30
 total_time = n_targets * 300  # 2100 # 5700.0  # approximately 1 orbit
 
 class MyScanningSatellite(sats.Satellite):

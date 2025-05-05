@@ -650,6 +650,7 @@ class PolarisScTargetProperties(Observation):
             obs[f"{self.name}_{i}"] = props
 
 
+        print("observations printed: ", obs)
 
         return obs
 
