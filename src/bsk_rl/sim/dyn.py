@@ -1698,6 +1698,8 @@ class ImagingSCDynModel(ImagingDynModel):
         self.targetLocation.planetInMsg.subscribeTo(
             self.world.gravFactory.spiceObject.planetStateOutMsgs[self.world.body_index]
         )
+        self.targetLocation.rEquator = self.simulator.world.planet.radEquator
+        self.targetLocation.rPolar = self.simulator.world.planet.radEquator * 0.98
 
         self.targetLocation.primaryScStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
         # self.targetLocation.scStateInMsgs.subscribeTo(self.imagingTarget.scStateOutMsg) #this was commented
