@@ -472,7 +472,7 @@ class PolarisScTargetProperties(Observation):
         # "priority": lambda sat, opp: opp["object"].priority,
         "rel_pos_vector_r_BR_N": _relative_position,
         "r_BN_N": lambda sat, opp: opp["object"].target_spacecraft.dynamics.r_BN_N,
-        "r_LB_H": _r_LB_H,
+        # "r_LB_H": _r_LB_H,
         # "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time,
         # "opportunity_mid": lambda sat, opp: sum(opp["window"]) / 2
         # - sat.simulator.sim_time,
@@ -635,6 +635,8 @@ class PolarisScTargetProperties(Observation):
                 )
             )
             final_targets = sorted_fallback[:self.n_ahead_observe]
+            if len(final_targets) < self.n_ahead_observe:
+                final_targets += [final_targets[-1]] * (self.n_ahead_observe - len(final_targets))
 
         # Gather and normalize observations for selected targets
         for i, tgt in enumerate(final_targets):
