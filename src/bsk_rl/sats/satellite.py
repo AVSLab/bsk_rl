@@ -74,6 +74,7 @@ class Satellite(ABC, Resetable):
         name: str,
         sat_args: Optional[dict[str, Any]] = None,
         obs_type=np.ndarray,
+        dtype: np.dtype = np.float64,
         variable_interval: bool = True,
     ) -> None:
         """The base satellite agent class.
@@ -87,6 +88,7 @@ class Satellite(ABC, Resetable):
                 arguments and returns a randomized value.
             obs_type: Observation format for the satellite. The :class:`bsk_rl.obs.observations.ObservationBuilder`
                 will convert the observation to this format.
+            dtype: Data type for observation np vectors.
             variable_interval: Whether to stop the simulation at terminal events. If
                 False, only the ``max_step_duration`` setting in :class:`~bsk_rl.GeneralSatelliteTasking`
                 will stop the simulation.
@@ -103,7 +105,9 @@ class Satellite(ABC, Resetable):
         self.requires_retasking: bool
         self.variable_interval = variable_interval
         self._timed_terminal_event_name = None
-        self.observation_builder = ObservationBuilder(self, obs_type=obs_type)
+        self.observation_builder = ObservationBuilder(
+            self, obs_type=obs_type, dtype=dtype
+        )
         self.action_builder = select_action_builder(self)
 
     @property

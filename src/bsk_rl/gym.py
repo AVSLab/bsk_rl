@@ -48,6 +48,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         time_limit: float = float("inf"),
         terminate_on_time_limit: bool = False,
         generate_obs_retasking_only: bool = False,
+        dtype: Optional[np.dtype] = None,
         log_level: Union[int, str] = logging.WARNING,
         log_dir: Optional[str] = None,
         vizard_dir: Optional[str] = None,
@@ -93,6 +94,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             generate_obs_retasking_only: If True, only generate observations for satellites
                 that require retasking. All other satellites will receive an observation of
                 zeros.
+            dtype: Data type for satellite observations. If None, the data type specified
+                in the satellite.
             log_level: Logging level for the environment. Default is ``WARNING``.
             log_dir: Directory to write logs to in addition to the console.
             vizard_dir: Path to save Vizard visualization files. If None, no Vizard-related
@@ -127,6 +130,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                             f"Renaming satellite {sat_rename.name} to {new_name}"
                         )
                         sat_rename.name = new_name
+
+                # Update satellite observation dtypes
+                if dtype is not None:
+                    satellite.observation_builder.dtype = dtype
 
             # Check if all satellite names are unique
             sat_names = [sat.name for sat in self.satellites]

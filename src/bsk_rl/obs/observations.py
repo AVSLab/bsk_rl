@@ -20,11 +20,12 @@ if TYPE_CHECKING:  # pragma: no cover
 logger = logging.getLogger(__name__)
 
 
-def nested_obs_to_space(obs_dict):
+def nested_obs_to_space(obs_dict, dtype):
     """Convert a nested observation dictionary to a gym space.
 
     Args:
         obs_dict: Observation dictionary
+        dtype: Data type for observation np vectors.
 
     Returns:
         gym.Space: Observation space
@@ -33,30 +34,38 @@ def nested_obs_to_space(obs_dict):
     """
     if isinstance(obs_dict, dict):
         return spaces.Dict(
-            {key: nested_obs_to_space(value) for key, value in obs_dict.items()}
+            {
+                key: nested_obs_to_space(value, dtype=dtype)
+                for key, value in obs_dict.items()
+            }
         )
     elif isinstance(obs_dict, list):
-        return spaces.Box(
-            low=-1e16, high=1e16, shape=(len(obs_dict),), dtype=np.float32
-        )
+        return spaces.Box(low=-1e16, high=1e16, shape=(len(obs_dict),), dtype=dtype)
     elif isinstance(obs_dict, (float, int)):
-        return spaces.Box(low=-1e16, high=1e16, shape=(1,), dtype=np.float32)
+        return spaces.Box(low=-1e16, high=1e16, shape=(1,), dtype=dtype)
     elif isinstance(obs_dict, np.ndarray):
-        return spaces.Box(low=-1e16, high=1e16, shape=obs_dict.shape, dtype=np.float32)
+        return spaces.Box(low=-1e16, high=1e16, shape=obs_dict.shape, dtype=dtype)
     else:
         raise TypeError(f"Cannot convert {obs_dict} to gym space.")
 
 
 class ObservationBuilder:
-    def __init__(self, satellite: "Satellite", obs_type: type = np.ndarray) -> None:
+    def __init__(
+        self,
+        satellite: "Satellite",
+        obs_type: type = np.ndarray,
+        dtype: np.dtype = np.float64,
+    ) -> None:
         """Satellite subclass for composing observations.
 
         Args:
             satellite: Satellite to observe
             obs_type: Datatype of satellite's returned observation. Can be ``np.ndarray``
                 (default), ``dict``, or ``list``.
+            dtype: Data type for observation np vectors.
         """
         self.obs_type = obs_type
+        self.dtype = dtype
         self.obs_dict_cache = None
         self.obs_cache_time = 0.0
         self.satellite = satellite
@@ -88,9 +97,12 @@ class ObservationBuilder:
             self.obs_dict_cache is None
             or self.simulator.sim_time != self.obs_cache_time
         ):
-            self.obs_dict_cache = {
-                obs.name: obs.get_obs() for obs in self.observation_spec
-            }
+            self.obs_dict_cache = {}
+            for obs_getter in self.observation_spec:
+                obs = obs_getter.get_obs()
+                if isinstance(obs, np.ndarray):
+                    obs = obs.astype(self.dtype)
+                self.obs_dict_cache[obs_getter.name] = obs
             self.obs_cache_time = self.simulator.sim_time
         return deepcopy(self.obs_dict_cache)
 
@@ -123,7 +135,7 @@ class ObservationBuilder:
     def observation_space(self) -> spaces.Space:
         """Space of the observation."""
         obs = self.get_obs()
-        return nested_obs_to_space(obs)
+        return nested_obs_to_space(obs, dtype=self.dtype)
 
     @property
     def observation_description(self) -> Any:

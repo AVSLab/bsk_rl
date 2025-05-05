@@ -65,18 +65,21 @@ class TestObservationBuilder:
         assert ob.get_obs()[0] == 1
 
     @pytest.mark.parametrize(
-        "observation,space",
+        "observation,dtype,space",
         [
             (
                 np.array([1]),
+                np.float32,
                 spaces.Box(low=-1e16, high=1e16, shape=(1,), dtype=np.float32),
             ),
             (
                 np.array([1, 2]),
-                spaces.Box(low=-1e16, high=1e16, shape=(2,), dtype=np.float32),
+                np.float64,
+                spaces.Box(low=-1e16, high=1e16, shape=(2,), dtype=np.float64),
             ),
             (
                 {"a": 1, "b": {"c": 1}},
+                np.float32,
                 spaces.Dict(
                     {
                         "a": spaces.Box(
@@ -94,8 +97,8 @@ class TestObservationBuilder:
             ),
         ],
     )
-    def test_obs_space(self, observation, space):
-        ob = ObservationBuilder(MagicMock())
+    def test_obs_space(self, observation, dtype, space):
+        ob = ObservationBuilder(MagicMock(), dtype=dtype)
         ob.get_obs = MagicMock(return_value=observation)
         assert ob.observation_space == space
 

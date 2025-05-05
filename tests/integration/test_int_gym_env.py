@@ -25,6 +25,7 @@ class TestSatelliteTasking:
         max_step_duration=10.0,
         time_limit=100.0,
         disable_env_checker=True,
+        dtype=np.float32,
     )
 
     def test_reset(self):
@@ -113,6 +114,7 @@ class TestGeneralSatelliteTasking:
         max_step_duration=10.0,
         time_limit=100.0,
         disable_env_checker=True,
+        dtype=np.float32,
     )
 
     def test_reset(self):
