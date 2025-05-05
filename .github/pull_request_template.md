@@ -27,4 +27,3 @@ Closes #XXX
 - [ ] I have made corresponding changes to the documentation and release notes
 - [ ] My changes generate no new warnings
 - [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] If I changed an example ipynb, I have locally rebuilt the documentation

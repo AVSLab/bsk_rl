@@ -124,9 +124,3 @@ src/bsk_rl/_dat/simplemaps_worldcities/
 /docs/build/*
 /docs/source/api_reference/*
 /docs/source/examples/*
-
-# executed ipynb cache
-!/docs/build/doctrees
-docs/build/doctrees/*
-!/docs/build/doctrees/nbsphinx
-!/docs/build/doctrees/nbsphinx/*

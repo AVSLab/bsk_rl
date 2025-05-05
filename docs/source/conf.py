@@ -16,9 +16,6 @@ import sys
 from importlib import metadata
 from pathlib import Path
 
-from nbdime.diffing.notebooks import diff_notebooks
-from nbdime.utils import read_notebook
-
 # sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
 now = datetime.datetime.now()
 
@@ -288,33 +285,7 @@ class PackageCrawler:
             )
 
         for notebook in nb_paths:
-            nb_cache = (
-                self.nb_cache_dir / self.base_doc_dir / index_path / notebook.name
-            )
-            if (
-                self.nb_cache_dir is not None
-                and nb_cache.is_file()
-                and (
-                    "'source'"
-                    not in diff_notebooks(
-                        read_notebook(notebook.resolve(), on_null="empty"),
-                        read_notebook(nb_cache.resolve(), on_null="empty"),
-                    ).__repr__()
-                )
-                and (
-                    "'source'"
-                    not in diff_notebooks(
-                        read_notebook(nb_cache.resolve(), on_null="empty"),
-                        read_notebook(notebook.resolve(), on_null="empty"),
-                    ).__repr__()
-                )
-            ):
-                shutil.copy(
-                    nb_cache,
-                    self.base_doc_dir / index_path / notebook.name,
-                )
-            else:
-                shutil.copy(notebook, self.base_doc_dir / index_path / notebook.name)
+            shutil.copy(notebook, self.base_doc_dir / index_path / notebook.name)
 
         # Recursively go through all directories in source, documenting what is available.
         for dir_path in sorted(dir_paths):

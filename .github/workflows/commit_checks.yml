@@ -43,35 +43,9 @@ jobs:
         python-version: ["3.10", "3.11"]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: ./.github/actions/install-bsk-rl
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Find artifact run
-        run: |
-          sudo apt-get install jq
-          export RUN_ID=$(
-            curl -L \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/AVSLab/basilisk/actions/runs?status=completed&per_page=100" | 
-            jq -r '.workflow_runs[] | select(.name == "Pull Request Closed") | .id' | 
-            head -n 1
-          )
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-      - name: Pull artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: basilisk-wheels_ubuntu-22.04_python${{ matrix.python-version }}
-          repository: AVSLab/basilisk
-          run-id: ${{ env.RUN_ID }}
-          github-token: ${{ github.token }}
-      - name: Install Basilisk from wheels
-        run: |
-          pip install *asilisk*.whl
-          bskLargeData
-      - name: Install BSK-RL
-        run: pip install -e '.[all]' && finish_install
       - name: Run pytest
         run: pytest -v -ra --tb=long -o log_cli=true -o log_level=DEBUG
 
@@ -80,19 +54,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: pandoc/actions/setup@main
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/install-bsk-rl
         with:
-            python-version: '3.10'     
-      - name: Mock Basilisk
-        run: |
-          cp docs/sitecustomize.py $(python -c 'import site; print(site.getsitepackages()[0])')/sitecustomize.py
-      - name: Install dependencies
-        run: |
-          pip install -e '.[docs,rllib]'
-        # skip finish install steps
+          python-version: 3.11
+          pip-options: all,rllib,docs
       - name: Sphinx build
         run: |
           cd docs
           make html
-          cd ..

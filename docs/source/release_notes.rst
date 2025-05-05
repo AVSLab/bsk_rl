@@ -9,7 +9,8 @@ Development - |version|
 * Add a conjunction checking dynamics model in :class:`~bsk_rl.dynamics.ConjunctionDynModel`.
 * Add utilities for relative motion state setup, :class:`~bsk_rl.utils.orbital.cd2hill`, :class:`~bsk_rl.utils.orbital.hill2cd`,
   and :class:`~bsk_rl.utils.orbital.relative_to_chief`.
-* Add a ``dtype`` argument to the environment (or individual satellites) and sets the default dtype to ``np.float64``.
+* Add a ``dtype`` argument to the environment (or individual satellites) and sets the default
+  dtype to ``np.float64``.
 
 
 Version 1.1.0
