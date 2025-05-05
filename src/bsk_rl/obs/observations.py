@@ -37,12 +37,12 @@ def nested_obs_to_space(obs_dict):
         )
     elif isinstance(obs_dict, list):
         return spaces.Box(
-            low=-1e16, high=1e16, shape=(len(obs_dict),), dtype=np.float32
+            low=-1e16, high=1e16, shape=(len(obs_dict),), dtype=np.float64
         )
     elif isinstance(obs_dict, (float, int)):
-        return spaces.Box(low=-1e16, high=1e16, shape=(1,), dtype=np.float32)
+        return spaces.Box(low=-1e16, high=1e16, shape=(1,), dtype=np.float64)
     elif isinstance(obs_dict, np.ndarray):
-        return spaces.Box(low=-1e16, high=1e16, shape=obs_dict.shape, dtype=np.float32)
+        return spaces.Box(low=-1e16, high=1e16, shape=obs_dict.shape, dtype=np.float64)
     else:
         raise TypeError(f"Cannot convert {obs_dict} to gym space.")
 
