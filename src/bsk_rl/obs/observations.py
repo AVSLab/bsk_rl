@@ -466,6 +466,9 @@ def _angle_to_target(sat, opp):
 def _target_distance(sat, opp):
     vector_target_spacecraft_N = opp["object"].target_spacecraft.dynamics.r_BN_P - sat.dynamics.r_BN_N
     return np.linalg.norm(vector_target_spacecraft_N)
+def _target_id_extracted(sat, opp):
+    id= int((opp["object"].target_spacecraft.id).strip("target_"))
+    return id
 
 class PolarisScTargetProperties(Observation):
     _fn_map = {
@@ -482,6 +485,8 @@ class PolarisScTargetProperties(Observation):
         "target_elevation_angle": _target_elevation_angle,
         "angle_to_target": _angle_to_target,
         "target_distance": _target_distance,
+        "target_id_info": _target_id_extracted,  # lambda sat, opp: int(opp["object"].target_spacecraft.id).strip("target_"),
+
     }
 
     def __init__(
