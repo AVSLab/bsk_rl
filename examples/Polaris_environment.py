@@ -168,7 +168,7 @@ data_dict = {
 }
 
 print("Initial data level:", observation, "(randomized by sat_args)")
-for target_id in range(n_targets):
+for target_id in range(n_targets*2):
     simtime = env.simulator.sim_time
     print('Simulation time: ' + str(simtime) + ' seconds')
 
