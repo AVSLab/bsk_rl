@@ -1,6 +1,7 @@
 import gymnasium as gym
 from requests.packages import target
 import time
+start_time = time.time()
 
 import os
 import numpy as np
@@ -21,7 +22,7 @@ from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 
 n_targets = 100
-n_targets_ahead = 32
+n_targets_ahead = 20
 total_time = n_targets * 300  # 2100 # 5700.0  # approximately 1 orbit
 
 class MyScanningSatellite(sats.Satellite):
@@ -35,7 +36,7 @@ class MyScanningSatellite(sats.Satellite):
             dict(prop="rel_pos_vector_r_BR_N", norm = 1596*1000),
             dict(prop="angle_to_target", norm=1.0),
             dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
-            n_ahead_observe=32,
+            n_ahead_observe=n_targets_ahead,
                                        ),
         obs.Eclipse(),
     ]
@@ -209,3 +210,6 @@ for key, value in data_dict.items():
         np.save(os.path.join(data_dir, f"{key}.npy"), np.array(value))
 
 print("Data saved successfully in 'data/' folder.")
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"Code execution time: {elapsed_time:.4f} seconds")
