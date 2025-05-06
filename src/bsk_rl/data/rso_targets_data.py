@@ -78,6 +78,7 @@ class RSOTargetImageStore(DataStore):
         buffer.
         """
         super().__init__(*args, **kwargs)
+        self.inspection_task_completed = False
 
     def get_log_state(self) -> np.ndarray:
         """Log the instantaneous storage unit state at the end of each step.
@@ -102,6 +103,12 @@ class RSOTargetImageStore(DataStore):
             list: Targets imaged at new_state that were unimaged at old_state.
         """
         if self.satellite.name == "SS1":
+            non_zero_buffers = np.count_nonzero(new_state)
+            if non_zero_buffers >= len(self.satellite.data_store.data.known):
+                if self.inspection_task_completed == None:
+                    self.inspection_task_completed = False
+                self.inspection_task_completed = True
+
             update_idx = np.where(new_state - old_state > 0)[0]
             imaged = []
             eclipsed=[]
@@ -152,6 +159,7 @@ class RSOTargetImageReward(GlobalReward):
         """
         super().__init__()
         self.reward_fn = reward_fn
+        self.inspection_task_completed = False
 
     def initial_data(self, satellite: "Satellite") -> "RSOTargetImageData":
         """Furnish data to the scenario.
@@ -189,6 +197,10 @@ class RSOTargetImageReward(GlobalReward):
                     ) / imaged_targets.count(target)
 
         return reward
+
+    def is_terminated(self) -> bool:
+        return self.inspection_task_completed
+
 
 
 __doc_title__ = "Unique Images"
