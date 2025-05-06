@@ -331,6 +331,7 @@ class ImageRSO(DiscreteAction):
         if duration is None:
             duration = 6000 #1e9
         self.duration = duration
+        self.ever_visible=[]
 
     def image_rso(
         self, target: Union[int, "RSOTarget", str], prev_action_key: Optional[str] = None
@@ -390,7 +391,7 @@ class ImageRSO(DiscreteAction):
         """
         scanner_pos = np.array(self.satellite.dynamics.r_BN_N)
         known_targets = self.satellite.data_store.data.known
-        num_actions = 32
+        num_actions = self.n_actions
 
         # Compute elevation angles and pair with targets
         target_elevations = []
@@ -408,7 +409,12 @@ class ImageRSO(DiscreteAction):
         # Sort visible targets by ascending elevation (lowest first)
         visible_targets.sort(key=lambda x: x[1])
 
-        # Select up to 32='num_actions' visible targets, repeating last if fewer
+        # Update ever_visible with newly seen target IDs
+        for tgt, _ in visible_targets:
+            if tgt.id not in self.ever_visible:
+                self.ever_visible.append(tgt.id)
+
+        # Select up to 'n_actions' visible targets, repeating last if fewer
         if len(visible_targets) == 0:
             # fallback: select based on default order (by target_id / distance)
             sorted_targets = sorted(
@@ -427,6 +433,21 @@ class ImageRSO(DiscreteAction):
 
         for i in range(len(self.simulator.satellites[0].data_store.data.imaged)):
             imaged_ids.append(self.simulator.satellites[0].data_store.data.imaged[i].id)
+
+        # Print the count every 1500 simulation seconds
+        if self.satellite.simulator.sim_time % 1500 == 0:
+            # Sort ever_visible
+            self.ever_visible.sort()
+
+            # Compute never-seen targets
+            all_ids = set(range(len(self.satellite.data_store.data.known)))  # or use self.n_targets if available
+            seen_ids = set(self.ever_visible)
+            never_seen = sorted(list(all_ids - seen_ids))
+
+            print(f"\nSimulation Timestep: {self.satellite.simulator.sim_time}")
+            print(f"Seen targets so far ({len(seen_ids)}): {self.ever_visible}")
+            print(f"Imaged targets: ({len(imaged_ids)}): {sorted(imaged_ids)}")
+            print(f"Never seen targets ({len(never_seen)}): {never_seen}")
 
         # Choose the action-th target (ignoring previous one)
         for i in range(action, len(final_targets)):
