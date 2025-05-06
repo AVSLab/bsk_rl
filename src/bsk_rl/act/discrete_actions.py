@@ -423,9 +423,18 @@ class ImageRSO(DiscreteAction):
             if len(final_targets) < num_actions:
                 final_targets += [final_targets[-1]] * (num_actions - len(final_targets))
 
+        imaged_ids = []
+
+        for i in range(len(self.simulator.satellites[0].data_store.data.imaged)):
+            imaged_ids.append(self.simulator.satellites[0].data_store.data.imaged[i].id)
+
         # Choose the action-th target (ignoring previous one)
         for i in range(action, len(final_targets)):
             candidate_target = final_targets[i]
+            if i ==0:
+                new_target = candidate_target
+            if str(candidate_target.id) in str(imaged_ids):
+                continue
             if str(candidate_target.id) != str(prev_action_key):
                 new_target = candidate_target
                 break
