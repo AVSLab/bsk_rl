@@ -429,8 +429,8 @@ class ImageRSO(DiscreteAction):
             if str(candidate_target.id) != str(prev_action_key):
                 new_target = candidate_target
                 break
-        else:
-            new_target = final_targets[action]
+            else:
+                new_target = final_targets[action]
 
         action_satid = new_target.id
         self.satellite.logger.info(f"target index {action_satid} tasked: {new_target.name}")
