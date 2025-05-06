@@ -25,6 +25,7 @@ jobs:
       - uses: ./.github/actions/install-bsk-rl
         with:
           python-version: 3.11
+          pip-options: all,rllib,docs
       - name: Sphinx build
         run: |
           cd docs
