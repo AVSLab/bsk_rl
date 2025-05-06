@@ -249,8 +249,8 @@ if __name__ == "__main__":
     )
 
     n_targets = 100
-    n_targets_ahead = 32
-    extra_tima_factor = 10
+    n_targets_ahead = 20
+    extra_tima_factor = 1.5
     total_time = extra_tima_factor * n_targets * 300  #I give it 10 times the minimum time to finish
 
     class MyScanningSatellite(sats.Satellite):
@@ -263,7 +263,7 @@ if __name__ == "__main__":
                 dict(prop="target_elevation_angle", norm=1.0),
                 dict(prop="angle_to_target", norm=1.0),
                 dict(prop="target_distance", norm=1.0), #norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
-                n_ahead_observe=32,
+                n_ahead_observe=n_targets_ahead,
                                            ),
             obs.Eclipse(),
         ]
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
     model_name = f"model_{N}"
     n_envs = (
-        get_available_cores() - 5  # leave some extra cores for other processes
+        get_available_cores() - 7  # leave some extra cores for other processes
     )
     output_dir = (
         Path("~/rllib_results").expanduser() / f"Polaris_simulation_{time.time()}"
@@ -378,7 +378,7 @@ if __name__ == "__main__":
     train_model(
         model_name=model_name,
         output_directory=output_dir,
-        checkpoint_frequency=10,
+        checkpoint_frequency=5,
         checkpoints_to_keep=2,
         total_timesteps=20_000_000,
         reload_frequency=300_000,
