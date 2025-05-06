@@ -20,7 +20,8 @@ from Basilisk.utilities import (
 from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 
-n_targets = 30
+n_targets = 32
+n_targets_ahead = 32
 total_time = n_targets * 300  # 2100 # 5700.0  # approximately 1 orbit
 
 class MyScanningSatellite(sats.Satellite):
@@ -39,7 +40,7 @@ class MyScanningSatellite(sats.Satellite):
         obs.Eclipse(),
     ]
     action_spec = [
-        act.ImageRSO(n_ahead_image=n_targets,duration=300),  # Scan for 1 minute
+        act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 1 minute
         act.Charge(duration=600.0),  # Charge for 10 minutes
     ]
     dyn_type = dyn.ImagingSCDynModel

@@ -248,7 +248,8 @@ if __name__ == "__main__":
         orbitalMotion,
     )
 
-    n_targets = 3
+    n_targets = 100
+    n_targets_ahead = 32
     extra_tima_factor = 10
     total_time = extra_tima_factor * n_targets * 300  #I give it 10 times the minimum time to finish
 
@@ -267,7 +268,7 @@ if __name__ == "__main__":
             obs.Eclipse(),
         ]
         action_spec = [
-            act.ImageRSO(n_ahead_image=n_targets,duration=300),  # Scan for 1 minute
+            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 1 minute
             act.Charge(duration=600.0),  # Charge for 10 minutes
         ]
         dyn_type = dyn.ImagingSCDynModel
