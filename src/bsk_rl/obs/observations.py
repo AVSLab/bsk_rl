@@ -311,7 +311,7 @@ class Time(Observation):
 
 
 def _target_angle(sat, opp):
-    vector_target_spacecraft_P = opp["r_LP_P"] - sat.dynamics.r_BN_P
+    vector_target_spacecraft_P = opp["r_LP_P"](sat.simulator.sim_time) - sat.dynamics.r_BN_P
     vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(
         vector_target_spacecraft_P
     )
@@ -321,7 +321,7 @@ def _target_angle(sat, opp):
 def _target_angle_rate(sat, opp):
     r_BN_P = sat.dynamics.v_BN_P
     v_BN_P = sat.dynamics.v_BN_P
-    r_LP_P = opp["object"].r_LP_P
+    r_LP_P = opp["object"].r_LP_P(sat.simulator.sim_time)
     omega_BP_P = sat.dynamics.omega_BP_P
     omega_CP_ref = (
         omega_BP_P
@@ -331,7 +331,7 @@ def _target_angle_rate(sat, opp):
 
 
 def _r_LB_H(sat, opp):
-    r_LP_P = opp["object"].r_LP_P
+    r_LP_P = opp["object"].r_LP_P(sat.simulator.sim_time)
     r_BN_N = sat.dynamics.r_BN_N
     r_TB_N = sat.simulator.world.PN.T @ r_LP_P - r_BN_N
     HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
@@ -341,7 +341,7 @@ def _r_LB_H(sat, opp):
 class OpportunityProperties(Observation):
     _fn_map = {
         "priority": lambda sat, opp: opp["object"].priority,
-        "r_LP_P": lambda sat, opp: opp["r_LP_P"],
+        "r_LP_P": lambda sat, opp: opp["r_LP_P"](sat.simulator.sim_time) if callable(opp["r_LP_P"]) else opp["r_LP_P"],
         "r_LB_H": _r_LB_H,
         "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time,
         "opportunity_mid": lambda sat, opp: sum(opp["window"]) / 2

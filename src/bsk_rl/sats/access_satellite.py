@@ -73,7 +73,7 @@ class AccessSatellite(Satellite):
     def add_location_for_access_checking(
         self,
         object: Any,
-        r_LP_P: np.ndarray,
+        r_LP_P: Union[np.ndarray, Callable[[float], np.ndarray]],
         min_elev: float,
         type: str,
         start_time: float = 0.0,
@@ -147,24 +147,24 @@ class AccessSatellite(Satellite):
         r_max = np.max(np.linalg.norm(positions, axis=-1))
         access_dist_thresh_multiplier = 1.1
         for location in self.locations_for_access_checking:
-            start_idx = max(
-                np.searchsorted(times, location["start_time"], side="right") - 1, 0
-            )
-            times_loc = times[start_idx:]
-            positions_loc = positions[start_idx:]
-
-            alt_est = r_max - np.linalg.norm(location["r_LP_P"])
+            if callable(location["r_LP_P"]):
+                location_positions = np.array([location["r_LP_P"](t) for t in times])
+                location_pos_ref = location["r_LP_P"](times[0])  # For alt_est estimate
+            else:
+                location_positions = np.tile(location["r_LP_P"], (len(times), 1))
+                location_pos_ref = location["r_LP_P"]
+            alt_est = r_max - np.linalg.norm(location_pos_ref)
             access_dist_threshold = (
                 access_dist_thresh_multiplier * alt_est / np.sin(location["min_elev"])
             )
             candidate_windows = self._find_candidate_windows(
-                location["r_LP_P"], times_loc, positions_loc, access_dist_threshold
+                location_positions, times, positions, access_dist_threshold
             )
 
             for candidate_window in candidate_windows:
                 roots = self._find_elevation_roots(
                     r_BP_P_interp,
-                    location["r_LP_P"],
+                    location["r_LP_P"] if callable(location["r_LP_P"]) else lambda t: location["r_LP_P"],
                     location["min_elev"],
                     candidate_window,
                 )
@@ -177,7 +177,7 @@ class AccessSatellite(Satellite):
                         new_window,
                         type=location["type"],
                         r_LP_P=location["r_LP_P"],
-                        merge_time=times_loc[0],
+                        merge_time=times[0],
                     )
 
         self.window_calculation_time = calculation_end
@@ -185,7 +185,7 @@ class AccessSatellite(Satellite):
     @staticmethod
     def _find_elevation_roots(
         position_interp,
-        location: np.ndarray,
+        location: Union[np.ndarray, Callable[[float], np.ndarray]],
         min_elev: float,
         window: tuple[float, float],
         min_duration: float = 0.1,
@@ -197,7 +197,8 @@ class AccessSatellite(Satellite):
         """
 
         def root_fn(t):
-            return -(elevation(position_interp(t), location) - min_elev)
+            loc_pos = location(t)  # now always callable
+            return -(elevation(position_interp(t), loc_pos) - min_elev)
 
         elev_0, elev_1 = root_fn(window[0]), root_fn(window[1])
 
@@ -274,7 +275,7 @@ class AccessSatellite(Satellite):
         object: Any,
         new_window: tuple[float, float],
         type: str,
-        r_LP_P: np.ndarray,
+        r_LP_P: Union[np.ndarray, Callable[[float], np.ndarray]],
         merge_time: Optional[float] = None,
     ):
         """Add an opportunity window.
@@ -287,6 +288,9 @@ class AccessSatellite(Satellite):
             merge_time: Time at which merges with existing windows will occur. If None,
                 check all windows for merges.
         """
+        if not callable(r_LP_P):
+            r_LP_P = lambda t: r_LP_P  # Make it a callable that returns a constant value
+
         if new_window[0] == merge_time or merge_time is None:
             for opportunity in self.opportunities:
                 if (

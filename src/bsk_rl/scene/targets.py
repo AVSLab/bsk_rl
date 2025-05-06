@@ -17,6 +17,7 @@ from Basilisk.utilities import orbitalMotion
 from bsk_rl.scene import Scenario
 from bsk_rl.utils import vizard
 from bsk_rl.utils.orbital import lla2ecef
+from avs_rl_tools.ecef2lla import ecef2lla
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.data.base import Data
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 class Target:
     """Ground target with associated value."""
 
-    def __init__(self, name: str, r_LP_P: Iterable[float], priority: float) -> None:
+    def __init__(self, name: str, r_LP_P: Union[np.ndarray, Callable[[float], np.ndarray]], priority: float):
         """Ground target with associated priority and location.
 
         Args:
@@ -37,8 +38,17 @@ class Target:
             priority: Value metric.
         """
         self.name = name
-        self.r_LP_P = np.array(r_LP_P)
         self.priority = priority
+
+        if callable(r_LP_P):
+            self._r_LP_P_func = r_LP_P
+        else:
+            # Convert static vector to constant function of time
+            const_pos = np.array(r_LP_P)
+            self._r_LP_P_func = lambda t: const_pos
+
+    def r_LP_P(self, t: float) -> np.ndarray:
+        return self._r_LP_P_func(t)
 
     @property
     def id(self) -> str:
@@ -59,7 +69,42 @@ class Target:
         """
         return f"Target({self.name})"
 
+class MovingTarget(Target):
+    def __init__(
+        self,
+        name: str,
+        r_LP_P: Union[Iterable[float], Callable[[float], np.ndarray]],
+        priority: float,
+        radius: float,
+    ):
+        self._initial_pos = np.array(r_LP_P).squeeze()
+        assert self._initial_pos.shape == (3,), f"Initial position shape must be (3,), got {self._initial_pos.shape}"
 
+        self.radius = radius
+        self.speed = np.random.uniform(880, 1120) * 1e3 /3600  # [m/s]
+        self.bearing_angle = np.random.uniform(0, 2 * np.pi)  # [rad]
+
+        # Convert to initial geodetic coordinates once
+        self.lat0, self.lon0, self.alt0 = ecef2lla(*self._initial_pos)
+
+        def position_func(t: float) -> np.ndarray:
+            d = self.speed * t  # Distance traveled [m]
+            delta_lat = np.degrees(np.cos(self.bearing_angle) * d / self.radius)
+            delta_lon = np.degrees(np.sin(self.bearing_angle) * d / (self.radius * np.cos(np.radians(self.lat0))))
+
+            lat = self.lat0 + delta_lat
+            lon = self.lon0 + delta_lon
+
+            position = (
+                np.array([
+                    np.cos(np.radians(lat)) * np.cos(np.radians(lon)),
+                    np.cos(np.radians(lat)) * np.sin(np.radians(lon)),
+                    np.sin(np.radians(lat)),
+                ]) * self.radius
+            )
+            return position.flatten()
+
+        super().__init__(name=name, r_LP_P=position_func, priority=priority)
 class UniformTargets(Scenario):
     """Environment with targets distributed uniformly."""
 
@@ -68,6 +113,7 @@ class UniformTargets(Scenario):
         n_targets: Union[int, tuple[int, int]],
         priority_distribution: Optional[Callable] = None,
         radius: float = orbitalMotion.REQ_EARTH * 1e3,
+        use_moving_targets: bool = False,
     ) -> None:
         """An environment with evenly-distributed static targets.
 
@@ -87,6 +133,7 @@ class UniformTargets(Scenario):
             priority_distribution = lambda: np.random.rand()  # noqa: E731
         self.priority_distribution = priority_distribution
         self.radius = radius
+        self.use_moving_targets = use_moving_targets
 
     def reset_overwrite_previous(self) -> None:
         """Overwrite target list from previous episode."""
@@ -124,7 +171,7 @@ class UniformTargets(Scenario):
             vizInstance,
             stationName=target.name,
             parentBodyName="earth",
-            r_GP_P=list(target.r_LP_P),
+            r_GP_P=list(target.r_LP_P(0.0)),
             fieldOfView=np.arctan(500 / 800),
             color=vizSupport.toRGBA255("white"),
             range=1000.0 * 1000,  # meters
@@ -146,9 +193,15 @@ class UniformTargets(Scenario):
         for i in range(self.n_targets):
             x = np.random.normal(size=3)
             x *= self.radius / np.linalg.norm(x)
-            self.targets.append(
-                Target(name=f"tgt-{i}", r_LP_P=x, priority=self.priority_distribution())
-            )
+            priority = self.priority_distribution()
+            if self.use_moving_targets:
+                self.targets.append(
+                    MovingTarget(name=f"tgt-{i}", r_LP_P=x, priority=priority, radius=self.radius)
+                )
+            else:
+                self.targets.append(
+                    Target(name=f"tgt-{i}", r_LP_P=x, priority=priority)
+                )
 
 
 class CityTargets(UniformTargets):

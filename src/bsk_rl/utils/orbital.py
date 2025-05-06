@@ -171,10 +171,10 @@ def elevation(r_sat: np.ndarray, r_target: np.ndarray) -> np.ndarray:
             / (np.linalg.norm(r_target) * np.linalg.norm(r_sat - r_target, axis=1))
         )
     else:
-        return np.pi / 2 - np.arccos(
-            np.sum(r_target * (r_sat - r_target))
-            / (np.linalg.norm(r_target) * np.linalg.norm(r_sat - r_target))
-        )
+        dot = np.sum(r_target * (r_sat - r_target))
+        norms = np.linalg.norm(r_target) * np.linalg.norm(r_sat - r_target)
+        cos_val = np.clip(dot / norms, -1.0, 1.0)
+        return np.pi / 2 - np.arccos(cos_val)
 
 
 def walker_delta(
