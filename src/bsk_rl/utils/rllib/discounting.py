@@ -9,7 +9,7 @@ See the following examples for how to use these utilities:
   :class:`MakeAddedStepActionValid`, and :class:`CondenseMultiStepActions`).
 """
 
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional
 
 import numpy as np
 from ray.rllib.algorithms.ppo.ppo_learner import PPOLearner
@@ -116,7 +116,7 @@ class MakeAddedStepActionValid(ConnectorV2):
             ):
                 last_action = NO_ACTION
                 for action in reversed(episode.actions):
-                    if last_action == NO_ACTION:
+                    if isinstance(action, int) and last_action == NO_ACTION:
                         last_action = action
                     else:
                         break
@@ -233,12 +233,15 @@ def compute_value_targets_time_discounted(
     step_durations,
     gamma: float,
     lambda_: float,
+    reward_time: Literal["step_start", "step_end"] = "step_end",
 ):
     """Computes value function (vf) targets given vf predictions and rewards.
 
     Note that advantages can then easily be computed via the formula:
     advantages = targets - vf_predictions
     """
+    assert reward_time in ["step_start", "step_end"]
+
     # Shift step durations to associate with previous timestep
     # delta_t->t+1 comes with t+1's info, but should be used with t
     step_durations = np.concatenate((step_durations[1:], [step_durations[-1]]))
@@ -247,10 +250,15 @@ def compute_value_targets_time_discounted(
     orig_values = flat_values = values * (1.0 - terminateds)
 
     flat_values = np.append(flat_values, 0.0)
-    # intermediates = rewards + gamma * (1 - lambda_) * flat_values[1:]
-    # intermediates = rewards + gamma**step_durations * (1 - lambda_) * flat_values[1:]
-    intermediates = gamma**step_durations * (rewards + (1 - lambda_) * flat_values[1:])
-    continues = 1.0 - terminateds
+    if reward_time == "step_start":
+        intermediates = (
+            rewards + gamma**step_durations * (1 - lambda_) * flat_values[1:]
+        )
+    elif reward_time == "step_end":
+        intermediates = gamma**step_durations * (
+            rewards + (1 - lambda_) * flat_values[1:]
+        )
+        continues = 1.0 - terminateds
 
     Rs = []
     last = flat_values[-1]
@@ -333,6 +341,7 @@ class TimeDiscountedGAEPPOLearner(PPOLearner):
             )
 
             # Compute value targets.
+            reward_time = self.config.learner_config_dict.get("reward_time", "step_end")
             module_value_targets = compute_value_targets_time_discounted(
                 values=module_vf_preds,
                 rewards=unpad_data_if_necessary(
@@ -358,6 +367,7 @@ class TimeDiscountedGAEPPOLearner(PPOLearner):
                 ),
                 gamma=self.config.gamma,
                 lambda_=self.config.lambda_,
+                reward_time=reward_time,
             )
 
             # Remove the extra timesteps again from vf_preds and value targets. Now that

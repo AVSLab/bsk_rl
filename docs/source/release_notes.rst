@@ -23,6 +23,9 @@ Development - |version|
 * Added example script for using curriculum learning with RLlib in
   `Curriculum Learning <examples/curriculum_learning.ipynb>`_ example.
 * Updated the list of `publications <publications.rst>`_
+* Added the option to compute value with sMDP rewards at the start of the step in the
+  RLlib configuration.
+
 
 Version 1.1.0
 -------------
