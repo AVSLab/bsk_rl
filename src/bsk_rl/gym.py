@@ -45,7 +45,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         sim_rate: float = 1.0,
         max_step_duration: float = 1e9,
         failure_penalty: float = -1.0,
-        time_limit: float = float("inf"),
+        time_limit: Union[float, Callable] = float("inf"),
         terminate_on_time_limit: bool = False,
         generate_obs_retasking_only: bool = False,
         dtype: Optional[np.dtype] = None,
@@ -88,7 +88,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 satellites are using variable interval actions, the actual step duration
                 will be less than or equal to this value.
             failure_penalty: Reward for satellite failure. Should be nonpositive.
-            time_limit: [s] Time at which to truncate the simulation.
+            time_limit: [s] Time at which to truncate the simulation. Can also be a function
+                that takes no arguments and returns a float. This function will be called
+                every time the environment is reset to randomize the time limit.
             terminate_on_time_limit: Send terminations signal time_limit instead of just
                 truncation.
             generate_obs_retasking_only: If True, only generate observations for satellites
@@ -180,7 +182,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.failure_penalty = failure_penalty
         if self.failure_penalty > 0:
             logger.warn("Failure penalty should be nonpositive")
-        self.time_limit = time_limit
+        if callable(time_limit):
+            self.time_limit_generator = time_limit
+        else:
+            self.time_limit_generator = lambda: time_limit
         self.terminate_on_time_limit = terminate_on_time_limit
         self.latest_step_duration = 0.0
         self.render_mode = render_mode
@@ -244,6 +249,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             for k, v in self.world_args_generator.items()
         }
 
+    def _randomize_time_limit(self) -> None:
+        self.time_limit = self.time_limit_generator()
+
     def reset(
         self,
         seed: Optional[int] = None,
@@ -276,6 +284,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.seed = seed
         super().reset(seed=self.seed)
         np.random.seed(self.seed)
+
+        self._randomize_time_limit()
 
         self.scenario.reset_overwrite_previous()
         self.rewarder.reset_overwrite_previous()

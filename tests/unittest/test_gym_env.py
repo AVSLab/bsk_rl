@@ -234,6 +234,7 @@ class TestGeneralSatelliteTasking:
                 reward=MagicMock(return_value={sat.name: 12.5 for sat in mock_sats})
             ),
         )
+        env._randomize_time_limit()
         mock_sats = env.satellites
         env.unwrapped.simulator = MagicMock(sim_time=101.0)
         _, reward, _, _, info = env.step((0, 10))
@@ -314,6 +315,7 @@ class TestGeneralSatelliteTasking:
             communicator=MagicMock(),
             rewarder=MagicMock(reward=MagicMock(return_value={mock_sat.name: 25.0})),
         )
+        env._randomize_time_limit()
         env.unwrapped.simulator = MagicMock(sim_time=101.0)
         env.step(None)
         assert mock_sat.requires_retasking
@@ -558,6 +560,7 @@ class TestConstellationTasking:
             terminate_on_time_limit=terminate_on_time_limit,
             time_limit=100,
         )
+        env._randomize_time_limit()
         env._agents_last_compute_time = None
         env.simulator = MagicMock(sim_time=0.0)
         env.unwrapped.simulator = MagicMock(sim_time=101 if timeout else 99)
@@ -592,6 +595,7 @@ class TestConstellationTasking:
             ),
             time_limit=100,
         )
+        env._randomize_time_limit()
         env._agents_last_compute_time = None
         env.simulator = MagicMock(sim_time=0.0)
         env.unwrapped.simulator = MagicMock(sim_time=time)
@@ -602,6 +606,28 @@ class TestConstellationTasking:
             env.unwrapped.satellites[0].name: time >= 100,
             env.unwrapped.satellites[1].name: time >= 100,
             env.unwrapped.satellites[2].name: time >= 100,
+        }
+
+    def test_time_limit_generator(self):
+        mock_sats = [MagicMock() for _ in range(3)]
+        for i, sat in enumerate(mock_sats):
+            sat.name = f"sat{i}"
+        env = ConstellationTasking(
+            satellites=mock_sats,
+            world_type=MagicMock(),
+            scenario=MagicMock(),
+            rewarder=MagicMock(),
+            time_limit=lambda: np.random.uniform(10, 20),
+        )
+        env._randomize_time_limit()
+        env._agents_last_compute_time = None
+        env.simulator = MagicMock(sim_time=0.0)
+        env.unwrapped.simulator = MagicMock(sim_time=100.0)
+        env.newly_dead = [sat.name for sat in env.unwrapped.satellites]
+        assert env._get_truncated() == {
+            env.unwrapped.satellites[0].name: True,
+            env.unwrapped.satellites[1].name: True,
+            env.unwrapped.satellites[2].name: True,
         }
 
     def test_close(self):

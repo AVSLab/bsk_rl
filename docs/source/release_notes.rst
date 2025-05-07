@@ -26,6 +26,7 @@ Development - |version|
 * Added the option to compute value with sMDP rewards at the start of the step in the
   RLlib configuration.
 * Add the ability to observe remaining time in :class:`~bsk_rl.obs.Time`.
+* Allow for the ``time_limit`` to be randomized.
 
 
 Version 1.1.0
