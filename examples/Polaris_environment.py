@@ -22,6 +22,8 @@ from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 
 
+save_data = True #set to False to avoid saving data
+
 n_targets = 200
 n_targets_ahead = 40
 total_time = n_targets * 300  # 2100 # 5700.0  # approximately 1 orbit
@@ -201,18 +203,20 @@ for l in range (len(targets)):
 
 
 
+if save_data:
+    data_dir = "data"
+    os.makedirs(data_dir, exist_ok=True)
 
-data_dir = "data"
-os.makedirs(data_dir, exist_ok=True)
+    for key, value in data_dict.items():
+        if isinstance(value, dict):  # Save per-target data separately
+            for target_name, target_data in value.items():
+                np.save(os.path.join(data_dir, f"{key}_{target_name}.npy"), np.array(target_data))
+        else:
+            np.save(os.path.join(data_dir, f"{key}.npy"), np.array(value))
 
-for key, value in data_dict.items():
-    if isinstance(value, dict):  # Save per-target data separately
-        for target_name, target_data in value.items():
-            np.save(os.path.join(data_dir, f"{key}_{target_name}.npy"), np.array(target_data))
-    else:
-        np.save(os.path.join(data_dir, f"{key}.npy"), np.array(value))
-
-print("Data saved successfully in 'data/' folder.")
+    print("Data saved successfully in 'data/' folder.")
+else:
+    print("Not saving data")
 end_time = time.time()
 elapsed_time = end_time - start_time
 print(f"Code execution time: {elapsed_time:.4f} seconds")
