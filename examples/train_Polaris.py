@@ -215,16 +215,11 @@ def env_metrics_callback(env):
 def sat_metrics_callback(env, satellite):
     data = {}
 
-    # # Reaction wheel torque info
-    # if hasattr(satellite.fsw, "rw_motor_torque"):
-    #     rw_torque = satellite.fsw.rw_motor_torque  # Should be a list or ndarray
-    #     data["rw_motor_torque"] = np.array(rw_torque).tolist()
-    # else:
-    #     data["rw_motor_torque"] = None  # In case the field is missing
-
-    # Optional: include satellite name for clarity
-    data["satellite_name"] = satellite.name
-
+    if satellite.name == 'SS1':
+        data["satellite_name"] = satellite.name
+        data["RW"] = satellite.dynamics.wheel_speeds
+        data["battery_charge_fraction"] = satellite.dynamics.battery_charge_fraction
+        data["storage_level_fraction"] = satellite.dynamics.storage_level_fraction
     return data
 
 
@@ -264,7 +259,7 @@ if __name__ == "__main__":
                 dict(prop="angle_to_target", norm=1.0),
                 dict(prop="rel_pos_vector_r_BR_N", norm = 1596*1000),
                 dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
-                dict(prop="target_id_info", norm=1.0),
+                # dict(prop="target_id_info", norm=1.0),
                 dict(prop="target_imaged",  norm=1.0),
                 n_ahead_observe=n_targets_ahead,
                                            ),
@@ -335,7 +330,7 @@ if __name__ == "__main__":
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
     model_name = f"model_{N}"
     n_envs = (
-        get_available_cores() - 6  # leave some extra cores for other processes
+        get_available_cores() - 7  # leave some extra cores for other processes
     )
     output_dir = (
         Path("~/rllib_results").expanduser() / f"Polaris_simulation_{time.time()}"
@@ -386,6 +381,6 @@ if __name__ == "__main__":
         total_timesteps=20_000_000,
         reload_frequency=300_000,
         n_envs=n_envs,
-        temp_dir="/scratch/alpine/dahu1128/tmp",
+        # temp_dir="/scratch/alpine/dahu1128/tmp",
         **job_args,
     )
