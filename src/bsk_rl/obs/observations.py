@@ -657,7 +657,7 @@ class PolarisScTargetProperties(Observation):
                 )
             )
             final_targets = sorted_fallback[:self.n_ahead_observe]
-            if len(final_targets) < self.n_ahead_observe:
+            if len(final_targets) < self.n_ahead_observe: # to treat cases with less than n_action targets
                 final_targets += [final_targets[-1]] * (self.n_ahead_observe - len(final_targets))
 
         # Gather and normalize observations for selected targets
@@ -670,10 +670,6 @@ class PolarisScTargetProperties(Observation):
                 value = prop_spec["fn"](self.satellite, opportunity)
                 props[name] = value / norm
             obs[f"{self.name}_{i}"] = props
-
-
-        print("observations printed: ", obs)
-
         return obs
 
 class Eclipse(Observation):

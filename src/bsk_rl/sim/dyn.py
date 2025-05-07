@@ -1805,7 +1805,7 @@ class ImagingSCDynModel(ImagingDynModel):
 
 
     @default_args(
-        batteryStorageCapacity=1000000.0 * 3600.0,
+        batteryStorageCapacity=100000.0 * 3600.0,
         storedCharge_Init=lambda: np.random.uniform(30.0 * 3600000.0, 70.0 * 3600000.0),
     )
     def setup_battery(
