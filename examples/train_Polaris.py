@@ -206,7 +206,7 @@ def env_metrics_callback(env):
 
     # Compute time *not* imaging a new target
     total_imaging_time = num_imaged * 300  # Each successful image takes 300s
-    idle_time = max(0, episode_duration - total_imaging_time)
+    idle_time = episode_duration - total_imaging_time
     num_unproductive_actions = idle_time / 300
     data["unproductive_action_count"] = int(round(num_unproductive_actions))
 
