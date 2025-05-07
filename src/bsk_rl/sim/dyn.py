@@ -213,6 +213,11 @@ class BasicDynamicsModel(DynamicsModel):
         return np.matmul(self.BN, self.world.PN.T)
 
     @property
+    def HN(self):
+        """Hill frame relative to inertial frame rotation matrix."""
+        return rv2HN(self.r_BN_N, self.v_BN_N)
+
+    @property
     def r_BN_N(self):
         """Body position relative to inertial origin in inertial frame [m]."""
         return self.scObject.scStateOutMsg.read().r_BN_N

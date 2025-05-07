@@ -27,6 +27,7 @@ Development - |version|
   RLlib configuration.
 * Add the ability to observe remaining time in :class:`~bsk_rl.obs.Time`.
 * Allow for the ``time_limit`` to be randomized.
+* Added observation for arbitrary relative states between two satellites in :class:`~bsk_rl.obs.RelativeProperties`.
 
 
 Version 1.1.0

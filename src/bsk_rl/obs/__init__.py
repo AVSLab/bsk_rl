@@ -28,6 +28,7 @@ it can also be set to a human-readable ``dict`` or a ``list``.
 Some commonly used observations are provided:
 
 * :class:`SatProperties` - Add arbitrary ``dynamics`` and ``fsw`` properties.
+* :class:`RelativeProperties` - Add arbitrary properties relative to some other satellite.
 * :class:`Time` - Add simulation time to the observation.
 * :class:`OpportunityProperties` - Add information about upcoming targets or other ground access points to the observation.
 * :class:`Eclipse` - Add a tuple of the next orbit start and end.
@@ -40,6 +41,14 @@ from bsk_rl.obs.observations import (
     SatProperties,
     Time,
 )
+from bsk_rl.obs.relative_observations import RelativeProperties
 
 __doc_title__ = "Observations"
-__all__ = ["Observation", "SatProperties", "Time", "OpportunityProperties", "Eclipse"]
+__all__ = [
+    "Observation",
+    "SatProperties",
+    "RelativeProperties",
+    "Time",
+    "OpportunityProperties",
+    "Eclipse",
+]
