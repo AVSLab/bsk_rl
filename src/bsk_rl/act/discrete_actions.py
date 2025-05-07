@@ -429,38 +429,41 @@ class ImageRSO(DiscreteAction):
             if len(final_targets) < num_actions:
                 final_targets += [final_targets[-1]] * (num_actions - len(final_targets))
 
-        imaged_ids = []
 
-        for i in range(len(self.simulator.satellites[0].data_store.data.imaged)):
-            imaged_ids.append(self.simulator.satellites[0].data_store.data.imaged[i].id)
+        new_target = final_targets[action] #initializing to avoid UnboundLocalError: cannot access local variable 'new_target' where it is not associated with a value
 
-        # Print the count every 1500 simulation seconds
-        if self.satellite.simulator.sim_time % 1500 == 0:
-            # Sort ever_visible
-            self.ever_visible.sort()
+        run_heuristic_policy = False
+        if run_heuristic_policy:
+            imaged_ids = []
 
-            # Compute never-seen targets
-            all_ids = set(range(len(self.satellite.data_store.data.known)))  # or use self.n_targets if available
-            seen_ids = set(self.ever_visible)
-            never_seen = sorted(list(all_ids - seen_ids))
+            for i in range(len(self.simulator.satellites[0].data_store.data.imaged)):
+                imaged_ids.append(self.simulator.satellites[0].data_store.data.imaged[i].id)
 
-            print(f"\nSimulation Timestep: {self.satellite.simulator.sim_time}")
-            print(f"Seen targets so far ({len(seen_ids)}): {self.ever_visible}")
-            print(f"Imaged targets: ({len(imaged_ids)}): {sorted(imaged_ids)}")
-            print(f"Never seen targets ({len(never_seen)}): {never_seen}")
+            # Print the count every 1500 simulation seconds
+            if self.satellite.simulator.sim_time % 1500 < 0.1:
+                # Sort ever_visible
+                self.ever_visible.sort()
 
-        # Choose the action-th target (ignoring previous one)
-        for i in range(action, len(final_targets)):
-            candidate_target = final_targets[i]
-            if i ==0:
-                new_target = candidate_target
-            if str(candidate_target.id) in str(imaged_ids):
-                continue
-            if str(candidate_target.id) != str(prev_action_key):
-                new_target = candidate_target
-                break
-            else:
-                new_target = final_targets[action]
+                # Compute never-seen targets
+                all_ids = set(range(len(self.satellite.data_store.data.known)))  # or use self.n_targets if available
+                seen_ids = set(self.ever_visible)
+                never_seen = sorted(list(all_ids - seen_ids))
+
+                print(f"\nSimulation Timestep: {self.satellite.simulator.sim_time}")
+                print(f"Seen targets so far ({len(seen_ids)}): {self.ever_visible}")
+                print(f"Imaged targets: ({len(imaged_ids)}): {sorted(imaged_ids)}")
+                print(f"Never seen targets ({len(never_seen)}): {never_seen}")
+
+            for i in range(0, len(final_targets)):
+                candidate_target = final_targets[i]
+                if i ==0:
+                    new_target = candidate_target
+                if candidate_target.id in sorted(imaged_ids):
+                    continue
+                else:
+                    new_target = candidate_target
+                    break
+
 
         action_satid = new_target.id
         self.satellite.logger.info(f"target index {action_satid} tasked: {new_target.name}")
