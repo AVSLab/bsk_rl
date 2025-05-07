@@ -262,7 +262,10 @@ if __name__ == "__main__":
             obs.PolarisScTargetProperties(
                 dict(prop="target_elevation_angle", norm=1.0),
                 dict(prop="angle_to_target", norm=1.0),
-                dict(prop="target_distance", norm=1.0), #norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
+                dict(prop="rel_pos_vector_r_BR_N", norm = 1596*1000),
+                dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
+                dict(prop="target_id_info", norm=1.0),
+                dict(prop="target_imaged",  norm=1.0),
                 n_ahead_observe=n_targets_ahead,
                                            ),
             obs.Eclipse(),
@@ -332,7 +335,7 @@ if __name__ == "__main__":
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
     model_name = f"model_{N}"
     n_envs = (
-        get_available_cores() - 7  # leave some extra cores for other processes
+        get_available_cores() - 6  # leave some extra cores for other processes
     )
     output_dir = (
         Path("~/rllib_results").expanduser() / f"Polaris_simulation_{time.time()}"
@@ -379,10 +382,10 @@ if __name__ == "__main__":
         model_name=model_name,
         output_directory=output_dir,
         checkpoint_frequency=5,
-        checkpoints_to_keep=2,
+        checkpoints_to_keep=3,
         total_timesteps=20_000_000,
         reload_frequency=300_000,
         n_envs=n_envs,
-        # temp_dir="/scratch/alpine/mast9128/tmp",
+        temp_dir="/scratch/alpine/dahu1128/tmp",
         **job_args,
     )
