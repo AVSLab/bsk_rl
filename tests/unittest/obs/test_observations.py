@@ -144,10 +144,16 @@ class TestTime:
         assert ob.get_obs() == 0.1
 
     def test_manual_norm(self):
-        ob = obs.Time(100.0)
+        ob = obs.Time(norm=100.0)
         ob.simulator = MagicMock(sim_time=10.0, time_limit=300.0)
         ob.reset_post_sim_init()
         assert ob.get_obs() == 0.1
+
+    def test_time_remaining(self):
+        ob = obs.Time(observe_time_remaining=True)
+        ob.simulator = MagicMock(sim_time=10.0, time_limit=100.0)
+        ob.reset_post_sim_init()
+        assert ob.get_obs() == 0.9
 
 
 class TestOpportunityProperties:

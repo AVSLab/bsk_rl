@@ -266,15 +266,17 @@ class SatProperties(Observation):
 
 
 class Time(Observation):
-    def __init__(self, norm=None, name="time"):
+    def __init__(self, norm=None, name="time", observe_time_remaining=False):
         """Include the simulation time in the observation.
 
         Args:
             norm: Time to normalize by. If ``None``, the time is normalized by the simulation time limit.
             name: Name of the observation.
+            observe_time_remaining: If ``True``, return the time remaining until the simulation time limit.
         """
         super().__init__(name=name)
         self.norm = norm
+        self.return_time_remaining = observe_time_remaining
 
     def reset_post_sim_init(self) -> None:
         """Autodetect normalization time.
@@ -291,7 +293,10 @@ class Time(Observation):
 
         :meta private:
         """
-        return self.simulator.sim_time / self._norm
+        if self.return_time_remaining:
+            return (self.simulator.time_limit - self.simulator.sim_time) / self._norm
+        else:
+            return self.simulator.sim_time / self._norm
 
 
 def _target_angle(sat, opp):
