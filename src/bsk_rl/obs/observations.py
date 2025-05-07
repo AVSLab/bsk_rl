@@ -470,6 +470,22 @@ def _target_id_extracted(sat, opp):
     id= int((opp["object"].target_spacecraft.id).strip("target_"))
     return id
 
+def _target_imaged(sat, opp):
+    imaged = 0
+    if len(sat.data_store.data.imaged[0:]) != 0:
+        imaged_ids = []
+
+        for i in range(len(sat.simulator.satellites[0].data_store.data.imaged)):
+            imaged_ids.append(sat.simulator.satellites[0].data_store.data.imaged[i].id)
+        if int((opp["object"].target_spacecraft.id).strip("target_")) in sorted(imaged_ids):
+            imaged = 1
+        # print('sat.data_store.data.imaged[int((opp["object"].target_spacecraft.id).strip("target_"))]', sat.data_store.data.imaged[int((opp["object"].target_spacecraft.id).strip("target_"))])
+        #  sat.data_store.data.imaged[int((opp["object"].target_spacecraft.id).strip("target_"))]
+    else:
+        imaged = 0
+
+    return imaged
+
 class PolarisScTargetProperties(Observation):
     _fn_map = {
         # "priority": lambda sat, opp: opp["object"].priority,
@@ -486,6 +502,7 @@ class PolarisScTargetProperties(Observation):
         "angle_to_target": _angle_to_target,
         "target_distance": _target_distance,
         "target_id_info": _target_id_extracted,  # lambda sat, opp: int(opp["object"].target_spacecraft.id).strip("target_"),
+        "target_imaged": _target_imaged,
 
     }
 
