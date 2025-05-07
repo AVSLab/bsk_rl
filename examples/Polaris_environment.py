@@ -21,8 +21,9 @@ from Basilisk.utilities import (
 from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 
-n_targets = 100
-n_targets_ahead = 20
+
+n_targets = 200
+n_targets_ahead = 40
 total_time = n_targets * 300  # 2100 # 5700.0  # approximately 1 orbit
 
 class MyScanningSatellite(sats.Satellite):
@@ -37,6 +38,7 @@ class MyScanningSatellite(sats.Satellite):
             dict(prop="angle_to_target", norm=1.0),
             dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
             dict(prop="target_id_info", norm=1.0),
+            dict(prop="target_imaged",  norm=1.0),
             n_ahead_observe=n_targets_ahead,
                                        ),
         obs.Eclipse(),
