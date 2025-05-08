@@ -22,4 +22,5 @@ Training
    rllib_training
    time_discounted_gae
    async_multiagent_training
+   curriculum_learning
 

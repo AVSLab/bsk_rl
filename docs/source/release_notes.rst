@@ -20,6 +20,9 @@ Development - |version|
   multiplied by some coefficient.
 * Allow rewarders to mark a satellite as truncated or terminated with the ``is_truncated`` and ``is_terminated``
   methods.
+* Added example script for using curriculum learning with RLlib in
+  `Curriculum Learning <examples/curriculum_learning.ipynb>`_ example.
+
 
 Version 1.1.0
 -------------
