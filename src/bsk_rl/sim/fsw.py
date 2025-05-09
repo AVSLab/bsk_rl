@@ -980,7 +980,6 @@ class BasicTargetFSWModel(FSWModel):
             super().__init__(fsw, priority)
 
         def _create_module_data(self) -> None:
-            # print('trying to set up BasicTargetFSWModel sunPoint location pointing object')
             self.sunPoint = self.fsw.sunPoint = locationPointing.locationPointing()
             self.sunPoint.ModelTag = "sunPoint"
 

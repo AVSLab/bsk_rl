@@ -136,13 +136,10 @@ class RandomSatellites(Scenario):
         super().link_satellites(satellites)
         ChiefSatellite = self.satellites[0].name
         self.ScanningSat = [satellite for satellite in self.satellites if satellite.name == ChiefSatellite][0]
-        print('reset_pre_sim_init')
         self.ScanningSat.sat_args_generator["bufferNames"] = [sc.name for sc in self.satellites] # TODO: this is will give an error since it is called before target_spacecrafts gets created
         self.ScanningSat.sat_args_generator["transmitterNumBuffers"] = len(self.ScanningSat.sat_args_generator["bufferNames"])
 
     def reset_pre_sim_init(self):
-
-
         for i in range(self.n_targets):
             target_sc_name = f"target_{i}" # this name here should match the bufferName so that the data gets added to the buffer !
             sc = RSOTarget(self.satellites[i+1],target_sc_name,i, 1.0)
@@ -155,8 +152,6 @@ class RandomSatellites(Scenario):
 
 
     def reset_during_sim_init(self):
-        print('reset_during_sim_init')
-
         for i in range(self.n_targets):
             self.satellites[0].dynamics.targetLocation.addSpacecraftToModel(self.satellites[i+1].dynamics.scObject.scStateOutMsg) # this adds all possible targets to SS.targetLocation
 

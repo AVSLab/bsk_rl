@@ -345,11 +345,7 @@ class ImageRSO(DiscreteAction):
         :meta private:
         """
         self.satellite.fsw.action_image_rso_target(target)  #  TODO: here the data_name of the buffer should also be passsed  add ,target.target_spacecraft.name
-        # target = self.satellite.parse_target_selection(target)
-        # if target.id != prev_action_key:
-        #     self.satellite.task_target_for_imaging(target)
-        # else:
-        #     self.satellite.enable_target_window(target)
+
 
         return target.id
 
@@ -474,19 +470,6 @@ class ImageRSO(DiscreteAction):
 
         return self.image_rso(new_target, prev_action_key)
 
-
-    # def set_action_override(
-    #     self, action: Union["Target", str], prev_action_key: Optional[str] = None
-    # ) -> str:
-    #     """Image a target by target index, Target, or ID.
-    #
-    #     Args:
-    #         action: Target to image in the form of a Target object, target ID, or target index.
-    #         prev_action_key: Previous action key.
-    #
-    #     :meta_private:
-    #     """
-    #     return self.image(action, prev_action_key)
 
 __doc_title__ = "Discrete Backend"
 __all__ = ["DiscreteActionBuilder"]

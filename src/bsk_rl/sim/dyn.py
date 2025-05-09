@@ -1692,7 +1692,6 @@ class ImagingSCDynModel(ImagingDynModel):
             kwargs: Passed to other setup functions.
         """
 
-        print('inside ImagingSCDynModel')
         self.targetLocation = spacecraftLocation.SpacecraftLocation()
         self.targetLocation.ModelTag = "targetLocation"
         self.targetLocation.planetInMsg.subscribeTo(
@@ -1719,7 +1718,6 @@ class ImagingSCDynModel(ImagingDynModel):
             priority: Model priority.
             kwargs: Passed to other setup functions.
         """
-        print('inside ImagingSCDynModel\nsetting up simpleTargetNav')
         self.simpleNavObject = simpleNav.SimpleNav()
         self.simpleNavObject.ModelTag = "SimpleInspectorNav"
         self.simpleNavObject.scStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
