@@ -24,9 +24,9 @@ bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 
 save_data = True #set to False to avoid saving data
 
-n_targets = 200
-n_targets_ahead = 40
-total_time = n_targets * 300  # 2100 # 5700.0  # approximately 1 orbit
+n_targets = 100
+n_targets_ahead = 20
+total_time = n_targets * 450  # 2100 # 5700.0  # approximately 1 orbit
 
 class MyScanningSatellite(sats.Satellite):
     observation_spec = [
