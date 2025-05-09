@@ -22,7 +22,7 @@ Development - |version|
   methods.
 * Added example script for using curriculum learning with RLlib in
   `Curriculum Learning <examples/curriculum_learning.ipynb>`_ example.
-
+* Updated the list of `publications <publications.rst>`_
 
 Version 1.1.0
 -------------
