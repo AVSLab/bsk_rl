@@ -104,12 +104,12 @@ class RSOTargetImageStore(DataStore):
         """
         if self.satellite.name == "SS1":
             # Check if all n_targets have non-zero buffer levels
-            non_zero_buffers = np.count_nonzero(new_state)
-            if non_zero_buffers >= len(self.satellite.data_store.data.known):
+            self.non_zero_buffers = np.count_nonzero(new_state)
+            if self.non_zero_buffers >= len(self.satellite.data_store.data.known):
                 if self.inspection_task_completed == None:
                     self.inspection_task_completed = False
                 self.inspection_task_completed = True
-            print('Targets imaged:'+str(non_zero_buffers-1))
+            print('Targets imaged:'+str(self.non_zero_buffers))
 
 
             update_idx = np.where(new_state - old_state > 0)[0]
