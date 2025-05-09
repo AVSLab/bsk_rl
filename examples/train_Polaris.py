@@ -363,7 +363,7 @@ if __name__ == "__main__":
             terminate_on_time_limit=[True],
             generate_obs_retasking_only=[False],  # For last step
             episode_data_callback=[env_metrics_callback],
-            # satellite_data_callback=[sat_metrics_callback],
+            satellite_data_callback=[sat_metrics_callback],
         ),
     )
 
