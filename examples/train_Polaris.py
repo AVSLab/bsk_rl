@@ -244,7 +244,7 @@ if __name__ == "__main__":
     )
 
     n_targets = 100
-    n_targets_ahead = 20
+    n_targets_ahead = 10
     extra_tima_factor = 1.5
     total_time = extra_tima_factor * n_targets * 300  #I give it 10 times the minimum time to finish
 
@@ -330,7 +330,7 @@ if __name__ == "__main__":
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
     model_name = f"model_{N}"
     n_envs = (
-        get_available_cores() - 7  # leave some extra cores for other processes
+        get_available_cores() - 6  # leave some extra cores for other processes
     )
     output_dir = (
         Path("~/rllib_results").expanduser() / f"Polaris_simulation_{time.time()}"
@@ -370,7 +370,7 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params.txt", "w") as file:
+    with open(output_dir / f"{model_name}_params_may8th.txt", "w") as file:
         yaml.dump(sanitize_np(job_args), file)
 
     train_model(
