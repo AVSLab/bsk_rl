@@ -228,6 +228,15 @@ def sat_metrics_callback(env, satellite):
 
         data["battery_charge_fraction"] = satellite.dynamics.battery_charge_fraction
         data["storage_level_fraction"] = satellite.dynamics.storage_level_fraction
+    else:
+        data["RW_norm"] = 0
+        data["RW1"] = 0
+        data["RW2"] = 0
+        data["RW3"] = 0
+
+        data["battery_charge_fraction"] = 0
+        data["storage_level_fraction"] = 0
+
     return data
 
 
@@ -332,7 +341,7 @@ if __name__ == "__main__":
     sat = MyScanningSatellite(name="SS1", sat_args=sat_args) # SO1 for satellite observer 1
 
 
-    targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)] # TODO: this creates the same IC of oe for all targets
+    targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)]
 
     all_sat = [sat] + targets
 
