@@ -214,10 +214,18 @@ def env_metrics_callback(env):
 
 def sat_metrics_callback(env, satellite):
     data = {}
-
+    print('if satellite.name == SS1', satellite.name == 'SS1')
     if satellite.name == 'SS1':
-        data["satellite_name"] = satellite.name
-        data["RW"] = satellite.dynamics.wheel_speeds
+        print('satellite.name', satellite.name)
+        print('np.linalg.norm(satellite.dynamics.wheel_speeds)', np.linalg.norm(satellite.dynamics.wheel_speeds))
+        print('satellite.dynamics.wheel_speeds', satellite.dynamics.wheel_speeds)
+        print('satellite.dynamics.battery_charge_fraction', satellite.dynamics.battery_charge_fraction)
+        print('satellite.dynamics.storage_level_fraction', satellite.dynamics.storage_level_fraction)
+        data["RW_norm"] = np.linalg.norm(satellite.dynamics.wheel_speeds)
+        data["RW1"] = satellite.dynamics.wheel_speeds[0]
+        data["RW2"] = satellite.dynamics.wheel_speeds[1]
+        data["RW3"] = satellite.dynamics.wheel_speeds[2]
+
         data["battery_charge_fraction"] = satellite.dynamics.battery_charge_fraction
         data["storage_level_fraction"] = satellite.dynamics.storage_level_fraction
     return data
@@ -268,6 +276,7 @@ if __name__ == "__main__":
         action_spec = [
             act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 1 minute
             act.Charge(duration=600.0),  # Charge for 10 minutes
+            act.Desat(duration=150) # Desat for 2.5 minutes
         ]
         dyn_type = dyn.ImagingSCDynModel
         fsw_type = fsw.ImagingSCFSWModel
@@ -333,7 +342,7 @@ if __name__ == "__main__":
         get_available_cores() - 6  # leave some extra cores for other processes
     )
     output_dir = (
-        Path("~/rllib_results").expanduser() / f"Polaris_simulation_{time.time()}"
+        Path("~/rllib_results").expanduser() / f"battery_Polaris_simulation_{time.time()}"
     )
     output_dir = Path(output_dir)
 
@@ -370,7 +379,7 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params_may8th.txt", "w") as file:
+    with open(output_dir / f"{model_name}_params_may13th.txt", "w") as file:
         yaml.dump(sanitize_np(job_args), file)
 
     train_model(
