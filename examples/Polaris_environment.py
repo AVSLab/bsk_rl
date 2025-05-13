@@ -11,7 +11,7 @@ data_dir = "data"
 os.makedirs(data_dir, exist_ok=True)
 
 from bsk_rl import act, data, obs, scene, sats, utils
-from bsk_rl.sim import dyn, fsw
+from bsk_rl.sim import dyn, fsw, world
 
 from Basilisk.utilities import (
     macros,
@@ -152,6 +152,7 @@ env = gym.make(
     satellites=all_sat,
     scenario=scene.RandomSatellites("SS1",n_targets=n_targets),
     rewarder=data.RSOTargetImageReward(),
+    world_type=world.GroundStationWorldModel,
     time_limit=total_time,
     log_level="DEBUG",
     disable_env_checker=True,

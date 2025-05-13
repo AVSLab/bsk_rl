@@ -1006,6 +1006,25 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
         self.setup_transmitter_power_sink(**kwargs)
         self.setup_storage_unit(**kwargs)
         self.setup_eclipse_object()
+        self.setup_ground_station_locations()
+
+    @classmethod
+    def _requires_world(cls) -> list[type["WorldModel"]]:
+        return super()._requires_world() + [world.GroundStationWorldModel]
+
+    def setup_ground_station_locations(self) -> None:
+        """Connect the transmitter to ground stations."""
+        for groundStation in self.world.groundStations:
+            groundStation.addSpacecraftToModel(self.scObject.scStateOutMsg)
+            self.transmitter.addAccessMsgToTransmitter(groundStation.accessOutMsgs[-1])
+
+            if hasattr(self.satellite, "add_location_for_access_checking"):
+                self.satellite.add_location_for_access_checking(
+                    object=groundStation.ModelTag,
+                    r_LP_P=np.array(groundStation.r_LP_P_Init).flatten(),
+                    min_elev=groundStation.minimumElevation,
+                    type="ground_station",
+                )
 
     def setup_simple_nav_object(self, priority: int = 699):
         # Set up simple navigation for target SC
@@ -1671,9 +1690,25 @@ class ImagingSCDynModel(ImagingDynModel):
         self.setup_instrument(**kwargs)
         self.setup_transmitter(**kwargs)
         self.setup_storage_unit(**kwargs)
+        self.setup_ground_station_locations()
 
-        # super()._setup_dynamics_objects(**kwargs)
-        # self.setup_imaging_target()
+    @classmethod
+    def _requires_world(cls) -> list[type["WorldModel"]]:
+        return super()._requires_world() + [world.GroundStationWorldModel]
+
+    def setup_ground_station_locations(self) -> None:
+        """Connect the transmitter to ground stations."""
+        for groundStation in self.world.groundStations:
+            groundStation.addSpacecraftToModel(self.scObject.scStateOutMsg)
+            self.transmitter.addAccessMsgToTransmitter(groundStation.accessOutMsgs[-1])
+
+            if hasattr(self.satellite, "add_location_for_access_checking"):
+                self.satellite.add_location_for_access_checking(
+                    object=groundStation.ModelTag,
+                    r_LP_P=np.array(groundStation.r_LP_P_Init).flatten(),
+                    min_elev=groundStation.minimumElevation,
+                    type="ground_station",
+                )
 
 
     @default_args(imageTargetMaximumRange=-1)
