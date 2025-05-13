@@ -452,17 +452,17 @@ def _r_LB_H_end(sat, opp):
     r_BN_N = sat.dynamics.r_BN_N
     r_TB_N = sat.simulator.world.PN.T @ r_LP_P_end - r_BN_N
     HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
-    start = max(0, opp["window"][0] - sat.simulator.sim_time)
-    end = opp["window"][1] - sat.simulator.sim_time
-    size = len(opp["object"].pre_imaging_time)
+    # start = max(0, opp["window"][0] - sat.simulator.sim_time)
+    # end = opp["window"][1] - sat.simulator.sim_time
+    # size = len(opp["object"].pre_imaging_time)
 
-    if size == 1:
-        opp["object"].pre_imaging_time = [(start + end) / 2]
-    else:
-        # Divide the interval [start, end - 1] into `size` equally spaced points
-        opp["object"].pre_imaging_time = [
-            start + i * (end - start - 1) / (size - 1) for i in range(size)
-        ]
+    # if size == 1:
+    #     opp["object"].pre_imaging_time = [(start + end) / 2]
+    # else:
+    #     # Divide the interval [start, end - 1] into `size` equally spaced points
+    #     opp["object"].pre_imaging_time = [
+    #         start + i * (end - start - 1) / (size - 1) for i in range(size)
+    #     ]
     #opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,opp["window"][1] - sat.simulator.sim_time -1]
     #opp["object"].pre_imaging_time= [(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2 ]
     #opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),max(0,opp["window"][0] - sat.simulator.sim_time ),max(0,opp["window"][0] - sat.simulator.sim_time )]
@@ -604,6 +604,31 @@ def _compute_total_attitude_error(sat, opp):
     trace_R = np.trace(R_error)
     angle = np.arccos(np.clip((trace_R - 1) / 2.0, -1.0, 1.0))
 
+    start = max(0, opp["window"][0] - sat.simulator.sim_time)
+    end = opp["window"][1] - sat.simulator.sim_time
+    size = len(opp["object"].pre_imaging_time)
+
+    if size == 1:
+        # Calculate pre-imaging time using the formula
+        y = max(0, 66.98 * angle/np.pi - 3.61)
+        # Apply min and max bounds
+        y = max(start, min(y, end))
+        opp["object"].pre_imaging_time = [y]
+
+    else:
+        # Upper bound of 70 seconds
+        upper_bound = 70
+        # Determine the effective end for dividing the interval
+        effective_end = min(upper_bound, end)
+
+        if start > upper_bound:
+            # All values are set to start if start > 70
+            opp["object"].pre_imaging_time = [start] * size
+        else:
+            # Divide the interval [min, effective_end] into `size` equally spaced points
+            opp["object"].pre_imaging_time = [
+                start + i * (effective_end - start) / (size - 1) for i in range(size)
+            ]
     return angle 
 
 class StripOpportunityProperties(Observation):
