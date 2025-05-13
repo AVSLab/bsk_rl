@@ -24,8 +24,8 @@ bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 
 save_data = True #set to False to avoid saving data
 
-n_targets = 100
-n_targets_ahead = 20
+n_targets = 200
+n_targets_ahead = 10
 total_time = n_targets * 450  # 2100 # 5700.0  # approximately 1 orbit
 
 class MyScanningSatellite(sats.Satellite):
@@ -46,8 +46,8 @@ class MyScanningSatellite(sats.Satellite):
         obs.Eclipse(),
     ]
     action_spec = [
-        act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 1 minute
-        act.Charge(duration=600.0),  # Charge for 10 minutes
+        act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 5 minute
+        act.Charge(duration=300.0),  # Charge for 5 minutes
     ]
     dyn_type = dyn.ImagingSCDynModel
     fsw_type = fsw.ImagingSCFSWModel
@@ -60,7 +60,7 @@ sat_args = {}
 sat_args["imageAttErrorRequirement"] = 0.05
 sat_args["dataStorageCapacity"] = 1e10
 sat_args["instrumentBaudRate"] = 1e7
-sat_args["storedCharge_Init"] = 50000000.0
+# sat_args["storedCharge_Init"] = 50000000.0
 
 # Randomize the initial storage level on every reset
 sat_args["storageInit"] = lambda: np.random.uniform(0., 0.0) * 1e10  # 0.25, 0.75) * 1e10
