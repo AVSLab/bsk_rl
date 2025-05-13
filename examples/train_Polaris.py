@@ -269,7 +269,9 @@ if __name__ == "__main__":
         observation_spec = [
             obs.SatProperties(
                 dict(prop="storage_level_fraction"),
-                dict(prop="battery_charge_fraction")
+                dict(prop="battery_charge_fraction"),
+                dict(prop="wheel_speeds_fraction"),
+
             ),
             obs.PolarisScTargetProperties(
                 dict(prop="target_elevation_angle", norm=1.0),
