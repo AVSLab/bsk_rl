@@ -280,7 +280,7 @@ if __name__ == "__main__":
     sat_args["imageAttErrorRequirement"] = 0.05
     sat_args["dataStorageCapacity"] = 1e10
     sat_args["instrumentBaudRate"] = 1e7
-    sat_args["storedCharge_Init"] = 50000000.0
+    # sat_args["storedCharge_Init"] = 50000000.0
 
     # Randomize the initial storage level on every reset
     sat_args["storageInit"] = lambda: np.random.uniform(0.25, 0.75) * 1e10
