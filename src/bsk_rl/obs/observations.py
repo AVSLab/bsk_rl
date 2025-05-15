@@ -610,25 +610,33 @@ def _compute_total_attitude_error(sat, opp):
 
     if size == 1:
         # Calculate pre-imaging time using the formula
-        y = max(0, 66.98 * angle/np.pi - 3.61)
+        y =60
+        #= max(0, 66.98 * angle/np.pi - 3.61)
         # Apply min and max bounds
-        y = max(start, min(y, end))
+        #y = max(start, min(y, end))
         opp["object"].pre_imaging_time = [y]
-
+    elif size == 2:
+        # Calculate pre-imaging time using the formula
+        # y =70
+        #= max(0, 66.98 * angle/np.pi - 3.61)
+        # Apply min and max bounds
+        #y = max(start, min(y, end))
+        opp["object"].pre_imaging_time = [20,60]
     else:
         # Upper bound of 70 seconds
-        upper_bound = 70
-        # Determine the effective end for dividing the interval
-        effective_end = min(upper_bound, end)
+        upper_bound = 60
+        opp["object"].pre_imaging_time = [i * upper_bound / (size - 1) for i in range(size)]
+        # # Determine the effective end for dividing the interval
+        # effective_end = min(upper_bound, end)
 
-        if start > upper_bound:
-            # All values are set to start if start > 70
-            opp["object"].pre_imaging_time = [start] * size
-        else:
-            # Divide the interval [min, effective_end] into `size` equally spaced points
-            opp["object"].pre_imaging_time = [
-                start + i * (effective_end - start) / (size - 1) for i in range(size)
-            ]
+        # if start > upper_bound:
+        #     # All values are set to start if start > 70
+        #     opp["object"].pre_imaging_time = [start] * size
+        # else:
+        #     # Divide the interval [min, effective_end] into `size` equally spaced points
+        #     opp["object"].pre_imaging_time = [
+        #         start + i * (effective_end - start) / (size - 1) for i in range(size)
+        #     ]
     return angle 
 
 class StripOpportunityProperties(Observation):
