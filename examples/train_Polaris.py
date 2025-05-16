@@ -298,13 +298,34 @@ if __name__ == "__main__":
 
     # Set some parameters as constants
     sat_args["imageAttErrorRequirement"] = 0.05
-    sat_args["dataStorageCapacity"] = 1e10
+    # sat_args["dataStorageCapacity"] = 1e10
     sat_args["instrumentBaudRate"] = 1e7
-    # sat_args["storedCharge_Init"] = 50000000.0
 
     # Randomize the initial storage level on every reset
-    sat_args["storageInit"] = lambda: np.random.uniform(0.25, 0.75) * 1e10
+    # sat_args["storageInit"] = lambda: np.random.uniform(0., 0.0) * 1e10  # 0.25, 0.75) * 1e10
 
+    # Storage
+    sat_args["dataStorageCapacity"] = 5000 * 8e6  # bits
+    sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.8) * 5000 * 8e6
+    sat_args["instrumentBaudRate"] = 0.5 * 8e6
+    sat_args["transmitterBaudRate"] = -50 * 8e6
+
+    # Power
+    sat_args["batteryStorageCapacity"] = 500 * 3600  # W*s
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.3, 1.0) * 500 * 3600
+    sat_args["basePowerDraw"] = -10.0  # W
+    sat_args["instrumentPowerDraw"] = -30.0  # W
+    sat_args["transmitterPowerDraw"] = -25.0  # W
+    sat_args["thrusterPowerDraw"] = -80.0  # W
+    sat_args["panelArea"] = 0.25  # m^2
+
+    # Attitude
+    # sat_args["imageAttErrorRequirement"] = 0.1
+    # sat_args["imageRateErrorRequirement"] = 0.1
+    sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.0001, size=3)  # N*m
+    sat_args["maxWheelSpeed"] = 6000.0  # RPM
+    sat_args["wheelSpeeds"] = lambda: np.random.uniform(-3000, 3000, 3)
+    sat_args["desatAttitude"] = "nadir"
 
     class MyTargetSatellite(sats.Satellite):
         observation_spec = [
@@ -390,7 +411,7 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params_may13th.txt", "w") as file:
+    with open(output_dir / f"{model_name}_params_may15th.txt", "w") as file:
         yaml.dump(sanitize_np(job_args), file)
 
     train_model(
@@ -401,6 +422,6 @@ if __name__ == "__main__":
         total_timesteps=20_000_000,
         reload_frequency=300_000,
         n_envs=n_envs,
-        # temp_dir="/scratch/alpine/dahu1128/tmp",
+        temp_dir="/scratch/alpine/dahu1128/tmp",
         **job_args,
     )
