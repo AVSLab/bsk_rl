@@ -753,6 +753,16 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
         self.scObject: spacecraft.Spacecraft
         self._setup_dynamics_objects(**kwargs)
 
+    def _setup_dynamics_objects(self, **kwargs) -> None:
+        super()._setup_dynamics_objects(**kwargs)
+        self.setup_instrument(**kwargs)
+        self.setup_transmitter(**kwargs)
+        self.setup_instrument_power_sink(**kwargs)
+        self.setup_transmitter_power_sink(**kwargs)
+        self.setup_storage_unit(**kwargs)
+        self.setup_eclipse_object()
+        self.setup_ground_station_locations()
+
     @default_args(
         mass=330,
         width=1.38,
@@ -997,16 +1007,6 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
         self.simulator.AddModelToTask(
             self.task_name, self.storageUnit, ModelPriority=priority
         )
-
-    def _setup_dynamics_objects(self, **kwargs) -> None:
-        super()._setup_dynamics_objects(**kwargs)
-        self.setup_instrument(**kwargs)
-        self.setup_transmitter(**kwargs)
-        self.setup_instrument_power_sink(**kwargs)
-        self.setup_transmitter_power_sink(**kwargs)
-        self.setup_storage_unit(**kwargs)
-        self.setup_eclipse_object()
-        self.setup_ground_station_locations()
 
     @classmethod
     def _requires_world(cls) -> list[type["WorldModel"]]:
@@ -1838,8 +1838,8 @@ class ImagingSCDynModel(ImagingDynModel):
 
 
     @default_args(
-        batteryStorageCapacity=80000.0 * 3600.0,
-        storedCharge_Init=lambda: np.random.uniform(30.0 * 360000.0, 70.0 * 360000.0),
+        batteryStorageCapacity=8000.0 * 3600.0, #80000.0 * 3600.0, # reduce the battery size to necessitate more charging actions
+        storedCharge_Init=lambda: np.random.uniform(3000.0 * 3600.0, 7000.0 * 3600.0),
     )
     def setup_battery(
         self,
