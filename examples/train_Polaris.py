@@ -285,9 +285,10 @@ if __name__ == "__main__":
             obs.Eclipse(),
         ]
         action_spec = [
-            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 1 minute
+            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 5 minute
             act.Charge(duration=600.0),  # Charge for 10 minutes
-            act.Desat(duration=150) # Desat for 2.5 minutes
+            act.Desat(duration=150), # Desat for 2.5 minutes
+            act.Downlink(duration=180), # Downlink for 3 minutes
         ]
         dyn_type = dyn.ImagingSCDynModel
         fsw_type = fsw.ImagingSCFSWModel
@@ -298,26 +299,23 @@ if __name__ == "__main__":
 
     # Set some parameters as constants
     sat_args["imageAttErrorRequirement"] = 0.05
-    # sat_args["dataStorageCapacity"] = 1e10
-    sat_args["instrumentBaudRate"] = 1e7
 
     # Randomize the initial storage level on every reset
     # sat_args["storageInit"] = lambda: np.random.uniform(0., 0.0) * 1e10  # 0.25, 0.75) * 1e10
 
     # Storage
-    sat_args["dataStorageCapacity"] = 5000 * 8e6  # bits
-    sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.8) * 5000 * 8e6
+    sat_args["dataStorageCapacity"] = 50 * 8e6  # bits
+    sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.5) * 50 * 8e6
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
     sat_args["transmitterBaudRate"] = -50 * 8e6
 
     # Power
-    sat_args["batteryStorageCapacity"] = 500 * 3600  # W*s
-    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.3, 1.0) * 500 * 3600
+    sat_args["batteryStorageCapacity"] = 1000 * 3600  # W*s
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.3, 1.0) * 1000 * 3600
     sat_args["basePowerDraw"] = -10.0  # W
     sat_args["instrumentPowerDraw"] = -30.0  # W
     sat_args["transmitterPowerDraw"] = -25.0  # W
     sat_args["thrusterPowerDraw"] = -80.0  # W
-    sat_args["panelArea"] = 0.25  # m^2
 
     # Attitude
     # sat_args["imageAttErrorRequirement"] = 0.1
@@ -374,7 +372,7 @@ if __name__ == "__main__":
         get_available_cores() - 6  # leave some extra cores for other processes
     )
     output_dir = (
-        Path("~/rllib_results").expanduser() / f"battery_Polaris_simulation_{time.time()}"
+        Path("~/rllib_results").expanduser() / f"small_battery_data_Polaris_simulation_{time.time()}"
     )
     output_dir = Path(output_dir)
 
@@ -400,7 +398,7 @@ if __name__ == "__main__":
             scenario=[scene.RandomSatellites("SS1",n_targets=n_targets)],
             rewarder=[data.RSOTargetImageReward()],
             time_limit=[total_time],
-            failure_penalty=[-1.0],
+            failure_penalty=[-100.0], # TODO: potentially increase this so it does not die on the very end
             terminate_on_time_limit=[True],
             generate_obs_retasking_only=[False],  # For last step
             episode_data_callback=[env_metrics_callback],
@@ -411,7 +409,7 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params_may15th.txt", "w") as file:
+    with open(output_dir / f"{model_name}_params_may23rd.txt", "w") as file:
         yaml.dump(sanitize_np(job_args), file)
 
     train_model(
@@ -422,6 +420,6 @@ if __name__ == "__main__":
         total_timesteps=20_000_000,
         reload_frequency=300_000,
         n_envs=n_envs,
-        temp_dir="/scratch/alpine/dahu1128/tmp",
+        # temp_dir="/scratch/alpine/dahu1128/tmp",
         **job_args,
     )
