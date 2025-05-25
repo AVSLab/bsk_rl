@@ -11,6 +11,8 @@ from gymnasium import spaces
 
 from bsk_rl.utils.functional import vectorize_nested_dict
 from bsk_rl.utils.orbital import rv2HN
+import matplotlib.pyplot as plt
+from scipy.spatial.transform import Rotation as R
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -291,7 +293,7 @@ def _target_angle(sat, opp):
 
 
 def _target_angle_rate(sat, opp):
-    r_BN_P = sat.dynamics.v_BN_P
+    r_BN_P = sat.dynamics.r_BN_P
     v_BN_P = sat.dynamics.v_BN_P
     r_LP_P = opp["object"].r_LP_P
     omega_BP_P = sat.dynamics.omega_BP_P
@@ -452,21 +454,6 @@ def _r_LB_H_end(sat, opp):
     r_BN_N = sat.dynamics.r_BN_N
     r_TB_N = sat.simulator.world.PN.T @ r_LP_P_end - r_BN_N
     HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
-    # start = max(0, opp["window"][0] - sat.simulator.sim_time)
-    # end = opp["window"][1] - sat.simulator.sim_time
-    # size = len(opp["object"].pre_imaging_time)
-
-    # if size == 1:
-    #     opp["object"].pre_imaging_time = [(start + end) / 2]
-    # else:
-    #     # Divide the interval [start, end - 1] into `size` equally spaced points
-    #     opp["object"].pre_imaging_time = [
-    #         start + i * (end - start - 1) / (size - 1) for i in range(size)
-    #     ]
-    #opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,opp["window"][1] - sat.simulator.sim_time -1]
-    #opp["object"].pre_imaging_time= [(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2 ]
-    #opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),max(0,opp["window"][0] - sat.simulator.sim_time ),max(0,opp["window"][0] - sat.simulator.sim_time )]
-    #opp["object"].pre_imaging_time= [max(0,opp["window"][0] - sat.simulator.sim_time ),(opp["window"][1] - max(0,opp["window"][0] - sat.simulator.sim_time )- sat.simulator.sim_time)/4+max(0,opp["window"][0] - sat.simulator.sim_time ),(max(0,opp["window"][0] - sat.simulator.sim_time )+opp["window"][1] - sat.simulator.sim_time)/2,(opp["window"][1] - max(0,opp["window"][0] - sat.simulator.sim_time )- sat.simulator.sim_time)*3/4+max(0,opp["window"][0] - sat.simulator.sim_time ),opp["window"][1] - sat.simulator.sim_time -1]
     return HN @ r_TB_N
 
 #Computes the lenght of the strip
@@ -481,76 +468,7 @@ def _duration_task(sat, opp):
     t_strip = d_strip / opp["object"].acquisition_speed 
     return t_strip
 
-#Computes the angle between the pointing vector and the reference vector to point at the target
-def _pointing_vector_angle(sat, opp):
-    vector_target_spacecraft_P = opp["r_LP_P_start"] - sat.dynamics.r_BN_P
-    vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(
-        vector_target_spacecraft_P
-    )
-    return np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.p_hat_P))
-
-
-#Assuming that the satellite is now pointing at the target, computes the angle of rotation necessary to have a scanning vector perpendicular to the central line 
-def _scan_line_vector_angle(sat, opp):
-    vector_target_spacecraft_P = opp["r_LP_P_start"] - sat.dynamics.r_BN_P
-    vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(vector_target_spacecraft_P)
-
-    # Compute the axis of rotation
-    axis_rotation = np.cross(sat.fsw.p_hat_P, vector_target_spacecraft_P_hat)
-    axis_norm = np.linalg.norm(axis_rotation)
-
-    # Handle special case: aligned or anti-aligned vectors
-    if axis_norm < 1e-6:
-        cos_theta = np.dot(sat.fsw.p_hat_P, vector_target_spacecraft_P_hat)
-        if cos_theta > 0.0:
-            R = np.eye(3)
-        else:
-            arbitrary_axis = np.array([1, 0, 0]) if abs(sat.fsw.p_hat_P[0]) < 1e-6 else np.array([0, 1, 0])
-            axis = np.cross(sat.fsw.p_hat_P, arbitrary_axis)
-            axis /= np.linalg.norm(axis)
-            x, y, z = axis
-            K = np.array([
-                [0, -z, y],
-                [z, 0, -x],
-                [-y, x, 0]
-            ])
-            R = np.eye(3) + np.sin(np.pi) * K + (1 - np.cos(np.pi)) * np.dot(K, K)
-    else:
-        axis = axis_rotation / axis_norm
-        x, y, z = axis
-        cos_theta = np.dot(sat.fsw.p_hat_P, vector_target_spacecraft_P_hat)
-        cos_theta = np.clip(cos_theta, -1.0, 1.0)
-        theta = np.arccos(cos_theta)
-        K = np.array([
-            [0, -z, y],
-            [z, 0, -x],
-            [-y, x, 0]
-        ])
-        R = np.eye(3) + np.sin(theta) * K + (1 - np.cos(theta)) * np.dot(K, K)
-
-    # Rotate the scan vector
-    c_hat_P_updated = R @ sat.fsw.c_hat_P
-    c_hat_P_updated /= np.linalg.norm(c_hat_P_updated)
-
-    # Project the central line vector onto the camera plane
-    centrale_line_vector = opp["r_LP_P_end"] - opp["r_LP_P_start"]
-    centrale_line_vector /= np.linalg.norm(centrale_line_vector)
-
-    pHat_P = sat.fsw.p_hat_P / np.linalg.norm(sat.fsw.p_hat_P)
-    dot_product = np.dot(centrale_line_vector, pHat_P)
-    centrale_line_vector_proj = centrale_line_vector - dot_product * pHat_P
-    centrale_line_vector_proj /= np.linalg.norm(centrale_line_vector_proj)
-
-    v_perp = np.cross(pHat_P, centrale_line_vector_proj)
-    v_perp /= np.linalg.norm(v_perp)
-
-    # Compute the angle
-    dotProd2 = np.dot(c_hat_P_updated, v_perp)
-    dotProd2 = np.clip(dotProd2, -1.0, 1.0)
-    angle = np.arccos(dotProd2)
-
-    return angle
-
+#Compute the principal rotation in the planet fixed frame at time t and update the possible pre-imaging times
 def _compute_total_attitude_error(sat, opp):
     """
     Computes the total attitude error (in radians) between the current
@@ -569,13 +487,9 @@ def _compute_total_attitude_error(sat, opp):
     vec_to_target = opp["r_LP_P_start"] - sat.dynamics.r_BN_P
     vec_to_target_hat = vec_to_target / np.linalg.norm(vec_to_target)
 
-    # Step 2: Central line vector (in plane)
+    # Step 2: Central line vector (assumption Earth is flat)
     central_line = opp["r_LP_P_end"] - opp["r_LP_P_start"]
     central_line /= np.linalg.norm(central_line)
-
-    # Step 3: Desired orientation (after both corrections)
-    # a. p_hat_P should align with vec_to_target_hat
-    # b. c_hat_P should align with perpendicular direction in the camera plane
 
     # Compute scan direction in desired frame
     p_hat_desired = vec_to_target_hat
@@ -604,41 +518,82 @@ def _compute_total_attitude_error(sat, opp):
     trace_R = np.trace(R_error)
     angle = np.arccos(np.clip((trace_R - 1) / 2.0, -1.0, 1.0))
 
-    start = max(0, opp["window"][0] - sat.simulator.sim_time)
-    end = opp["window"][1] - sat.simulator.sim_time
     size = len(opp["object"].pre_imaging_time)
-
+    #Pre-imaging time options 
     if size == 1:
-        # Calculate pre-imaging time using the formula
         y =60
-        #= max(0, 66.98 * angle/np.pi - 3.61)
-        # Apply min and max bounds
-        #y = max(start, min(y, end))
         opp["object"].pre_imaging_time = [y]
     elif size == 2:
-        # Calculate pre-imaging time using the formula
-        # y =70
-        #= max(0, 66.98 * angle/np.pi - 3.61)
-        # Apply min and max bounds
-        #y = max(start, min(y, end))
         opp["object"].pre_imaging_time = [20,60]
     else:
-        # Upper bound of 70 seconds
         upper_bound = 60
         opp["object"].pre_imaging_time = [i * upper_bound / (size - 1) for i in range(size)]
-        # # Determine the effective end for dividing the interval
-        # effective_end = min(upper_bound, end)
-
-        # if start > upper_bound:
-        #     # All values are set to start if start > 70
-        #     opp["object"].pre_imaging_time = [start] * size
-        # else:
-        #     # Divide the interval [min, effective_end] into `size` equally spaced points
-        #     opp["object"].pre_imaging_time = [
-        #         start + i * (effective_end - start) / (size - 1) for i in range(size)
-        #     ]
     return angle 
 
+# #Compute the norm of the attitude error rate
+def _compute_attitude_error_rate(sat, opp, dt=0.0005):
+    def compute_R_desired(r_LP_P_start, r_LP_P_end, r_BN_P):
+        p_hat = r_LP_P_start - r_BN_P
+        p_hat /= np.linalg.norm(p_hat)
+
+        scan_vec = r_LP_P_end - r_LP_P_start
+        scan_vec /= np.linalg.norm(scan_vec)
+
+        scan_proj = scan_vec - np.dot(scan_vec, p_hat) * p_hat
+        norm_proj = np.linalg.norm(scan_proj)
+
+        eps = 1e-8
+        if norm_proj < eps:
+            tmp = np.array([1.0, 0.0, 0.0]) if abs(p_hat[0]) < 0.9 else np.array([0.0, 1.0, 0.0])
+            scan_proj = tmp - np.dot(tmp, p_hat) * p_hat
+            scan_proj /= np.linalg.norm(scan_proj)
+        else:
+            scan_proj /= norm_proj
+
+        c_hat = np.cross(p_hat, scan_proj)
+        c_hat /= np.linalg.norm(c_hat)
+        d_hat = np.cross(c_hat, p_hat)
+
+        R = np.column_stack((c_hat, d_hat, p_hat))
+        # Re-orthonormalize with QR for numerical stability
+        Q, _ = np.linalg.qr(R)
+        return Q
+
+    # Initial and advanced positions
+    r_BN_P = sat.dynamics.r_BN_P
+    v_BN_P = sat.dynamics.v_BN_P
+
+    r_LP_P_start = opp["r_LP_P_start"]
+    r_LP_P_end = opp["r_LP_P_end"]
+
+    scan_dir = r_LP_P_end - r_LP_P_start
+    scan_dir /= np.linalg.norm(scan_dir)
+    v_target = scan_dir * 3000.0
+
+    r_LP_P_start_t1 = r_LP_P_start + v_target * dt
+    r_BN_P_t1 = r_BN_P + v_BN_P * dt
+
+    R1 = compute_R_desired(r_LP_P_start, r_LP_P_end, r_BN_P)
+    R2 = compute_R_desired(r_LP_P_start_t1, r_LP_P_end, r_BN_P_t1)
+
+    # More stable angular velocity extraction
+    R_rel = R2 @ R1.T
+    angle = np.arccos(np.clip((np.trace(R_rel) - 1) / 2.0, -1.0, 1.0))
+
+    if angle < 1e-6:
+        omega_desired = np.zeros(3)
+    else:
+        skew_sym = (R_rel - R_rel.T) / (2 * np.sin(angle))
+        axis = np.array([
+            skew_sym[2, 1],
+            skew_sym[0, 2],
+            skew_sym[1, 0]
+        ])
+        omega_desired = (angle / dt) * axis
+
+    omega_actual = sat.dynamics.omega_BP_P
+    omega_error = omega_actual - omega_desired
+    return np.linalg.norm(omega_error)
 class StripOpportunityProperties(Observation):
     _fn_map = {
         "priority": lambda sat, opp: opp["object"].priority, #Priority of the strip
@@ -647,9 +602,10 @@ class StripOpportunityProperties(Observation):
         "r_LP_P_end": lambda sat, opp: opp["r_LP_P_end"], # Location of the end of the strip in the planet-fixed frame
         "r_LB_H_end": _r_LB_H_end, # Location of the end of the strip in the Hill frame
         "strip_length": _strip_length, # Length of the strip
-        "pointing_vector_angle": _pointing_vector_angle, # Pointing vector angle
-        "scan_line_vector_angle": _scan_line_vector_angle, # Scan line vector angle (assuming the satellite is pointing at the target)
-        "attitude_error": _compute_total_attitude_error, # Scan line vector angle (assuming the satellite is pointing at the target)
+        "attitude_error": _compute_total_attitude_error, # Norm of the principal rotation
+        "attitude_error_rate": _compute_attitude_error_rate,
+        # "attitude_error_rate_ref": _attitude_rate_ref,
+        # "attitude_error_rate_ref_2": _attitude_rate_ref_2,
         "duration_task": _duration_task, # Duration of the imaging task without the pre-imaging time
         "pre_imaging_time": lambda sat, opp: np.array(opp["object"].pre_imaging_time), # Pre-imaging time vector 
         "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time, #Time until the opportunity opens (taking into account the pre-imaging time)
