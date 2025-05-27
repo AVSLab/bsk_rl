@@ -66,6 +66,16 @@ class FuelPenalty(GlobalReward):
         """
         super().__init__()
         self.penalty_weight = penalty_weight
+        self._penalty_weight = penalty_weight
+
+    def reset_pre_sim_init(self):
+        if isinstance(self._penalty_weight, Callable):
+            self.penalty_weight = self._penalty_weight()
+        else:
+            self.penalty_weight = self._penalty_weight
+
+        for sat in self.scenario.satellites:
+            sat.penalty_weight = self.penalty_weight
 
     def calculate_reward(self, new_data_dict: dict[str, FuelData]) -> dict[str, float]:
         penalty = {
