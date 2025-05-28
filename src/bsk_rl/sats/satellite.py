@@ -282,10 +282,7 @@ class Satellite(ABC, Resetable):
     @property
     def _satellite_command(self) -> str:
         """Generate string that refers to self in simBase."""
-        return (
-            "[satellite for satellite in self.satellites "
-            + f"if satellite.name=='{self.name}'][0]"
-        )
+        return f"self.get_satellite('{self.name}')"
 
     def _info_command(self, info: str) -> str:
         """Generate command to log to info from an event.

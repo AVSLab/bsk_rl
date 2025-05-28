@@ -158,3 +158,66 @@ class TestConjunctionDynModel:
             assert sat1.dynamics.conjunctions == []
             assert sat2.dynamics.conjunctions == []
             assert sat3.dynamics.conjunctions == []
+
+
+class TestMaxRangeDynModel:
+    @pytest.mark.parametrize(
+        "rN1,rN2,max_range_violation",
+        [
+            ([1e8, 0, 0], [1e8 + 10, 0, 0], False),
+            ([1e8, 0, 0], [1e8 + 200, 0, 0], True),
+            ([0, 1e8, 0], [1e8, 0, 0], True),
+        ],
+    )
+    def test_max_range(self, rN1, rN2, max_range_violation):
+        class ChiefSat(sats.Satellite):
+            fsw_type = fsw.BasicFSWModel
+            dyn_type = dyn.BasicDynamicsModel
+            observation_spec = [obs.Time()]
+            action_spec = [act.Drift()]
+
+        class DeputySat(sats.Satellite):
+            fsw_type = fsw.BasicFSWModel
+            dyn_type = dyn.MaxRangeDynModel
+            observation_spec = [obs.Time()]
+            action_spec = [act.Drift()]
+
+        env = gym.make(
+            "ConstellationTasking-v1",
+            satellites=[
+                ChiefSat(
+                    "Chief",
+                    sat_args=dict(
+                        rN=rN1,
+                        vN=[0, 0, 0],
+                        oe=None,
+                    ),
+                ),
+                DeputySat(
+                    "Deputy",
+                    sat_args=dict(
+                        rN=rN2,
+                        vN=[0, 0, 0],
+                        oe=None,
+                        chief_name="Chief",
+                        max_range_radius=100,
+                    ),
+                ),
+            ],
+            sim_rate=1.0,
+            time_limit=100.0,
+            max_step_duration=1e9,
+            disable_env_checker=True,
+        )
+
+        env.reset()
+
+        env.step(dict(Chief=0, Deputy=0))
+
+        sat1 = env.unwrapped.satellites[0]
+        sat2 = env.unwrapped.satellites[1]
+
+        if max_range_violation:
+            assert sat2.dynamics.out_of_ranges == [sat1]
+        else:
+            assert sat2.dynamics.out_of_ranges == []

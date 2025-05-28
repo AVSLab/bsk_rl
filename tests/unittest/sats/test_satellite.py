@@ -1,9 +1,11 @@
+from functools import partial
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 
 from bsk_rl import sats
+from bsk_rl.sim import Simulator
 from bsk_rl.sim.fsw import Task
 
 
@@ -110,6 +112,7 @@ class TestSatellite:
         sat1 = sats.Satellite(name="TestSat_1", sat_args={})
         sat2 = sats.Satellite(name="TestSat_2", sat_args={})
         self.satellites = [sat1, sat2]
+        self.get_satellite = partial(Simulator.get_satellite, self)
         assert sat1 == eval(sat1._satellite_command)
         assert sat1 != eval(sat2._satellite_command)
         assert sat2 == eval(sat2._satellite_command)

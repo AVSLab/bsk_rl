@@ -1256,6 +1256,65 @@ class ConjunctionDynModel(BasicDynamicsModel):
                 )
 
 
+class MaxRangeDynModel(BasicDynamicsModel):
+    """For evaluating a maximum range limitation between satellites."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Model that checks for maximum range violations between satellites.
+
+        The simulation is terminated at the time of separation and a range_valid failure is reported.
+        """
+        super().__init__(*args, **kwargs)
+        self.out_of_ranges = []
+
+    def _setup_dynamics_objects(self, **kwargs) -> None:
+        super()._setup_dynamics_objects(**kwargs)
+        self.setup_range(**kwargs)
+
+    @aliveness_checker
+    def range_valid(self) -> bool:
+        """Check if conjunction has not occurred."""
+        return len(self.out_of_ranges) == 0
+
+    @default_args(max_range_radius=5000, chief_name=None)
+    def setup_range(self, max_range_radius: float, chief_name: str, **kwargs) -> None:
+        """Set up maximum distance checking relative to a chief satellite.
+
+        Args:
+            max_range_radius: [m] Maximum allowed range from the chief satellite.
+            chief_name: Chief satellite to check range against.
+            kwargs: Passed to other setup functions.
+        """
+        self.max_range_radius = max_range_radius
+        self.chief_name = chief_name
+
+        if self.chief_name is None:
+            self.logger.warning(
+                "No chief satellite specified for maximum range checking. "
+                "Range checking is disabled."
+            )
+            return
+
+        self.simulator.createNewEvent(
+            valid_func_name(f"range_{self.satellite.name}_{self.chief_name}"),
+            macros.sec2nano(self.simulator.sim_rate),
+            True,
+            [
+                f"np.linalg.norm(np.array({self.satellite._satellite_command}.dynamics.r_BN_N)"
+                + f"- np.array(self.get_satellite('{self.chief_name}').dynamics.r_BN_N))"
+                + " >= "
+                + f"{self.satellite._satellite_command}.dynamics.max_range_radius"
+            ],
+            [
+                self.satellite._info_command(
+                    f"Exceeded maximum range of {max_range_radius} m from {self.chief_name}"
+                ),
+                f"{self.satellite._satellite_command}.dynamics.out_of_ranges.append(self.get_satellite('{self.chief_name}'))",
+            ],
+            terminal=True,
+        )
+
+
 __doc_title__ = "Dynamics Sims"
 __all__ = [
     "DynamicsModel",
@@ -1265,5 +1324,6 @@ __all__ = [
     "ContinuousImagingDynModel",
     "GroundStationDynModel",
     "ConjunctionDynModel",
+    "MaxRangeDynModel",
     "FullFeaturedDynModel",
 ]

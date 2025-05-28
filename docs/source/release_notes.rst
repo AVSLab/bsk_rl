@@ -29,6 +29,8 @@ Development - |version|
 * Allow for the ``time_limit`` to be randomized.
 * Added observation for arbitrary relative states between two satellites in :class:`~bsk_rl.obs.RelativeProperties`.
 * Allow for the ``transmitterPacketSize`` to be specified. The default sets it to the instrument's baud rate.
+* Add a maximum range checking dynamics model in :class:`~bsk_rl.dynamics.MaxRangeDynModel`. Useful for keeping an agent
+  in the vicinity of a target early in training.
 
 
 Version 1.1.0

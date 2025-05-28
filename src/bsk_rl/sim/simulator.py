@@ -162,6 +162,20 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self.eventList.remove(event)
         del self.eventMap[event_name]
 
+    def get_satellite(self, name: str) -> "Satellite":
+        """Get a satellite by name.
+
+        Args:
+            name: Name of the satellite to retrieve.
+
+        Returns:
+            The satellite object with the specified name.
+        """
+        for sat in self.satellites:
+            if sat.name == name:
+                return sat
+        raise ValueError(f"Satellite with name '{name}' not found.")
+
     def __del__(self):
         """Log when simulator is deleted."""
         logger.debug("Basilisk simulator deleted")
