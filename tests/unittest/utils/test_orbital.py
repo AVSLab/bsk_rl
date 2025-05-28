@@ -205,11 +205,17 @@ class TestTrajectorySimulator:
 
     def test_interpolators(self):
         # Weak tests, could be better
+        print("Test 1")
         ts = orbital.TrajectorySimulator(self.epoch, oe=self.oe, mu=self.mu)
+        print("Test 2")
         assert (ts.r_BN_N(0) == ts.rN_init).all()
+        print("Test 3")
         assert (ts.r_BN_N(0) != ts.r_BN_N(1)).all()
+        print("Test 4")
         ts = orbital.TrajectorySimulator(self.epoch, oe=self.oe, mu=self.mu)
+        print("Test 5")
         assert (ts.r_BP_P(0) != ts.r_BP_P(1)).all()
+        print("Test 6")
 
 
 class TestFunctions:
