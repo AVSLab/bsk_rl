@@ -402,7 +402,7 @@ if __name__ == "__main__":
             rewarder=[data.RSOTargetImageReward()],
             time_limit=[total_time],
             failure_penalty=[-100.0], # TODO: potentially increase this so it does not die on the very end
-            terminate_on_time_limit=[True],
+            terminate_on_time_limit=[False],
             generate_obs_retasking_only=[False],  # For last step
             episode_data_callback=[env_metrics_callback],
             satellite_data_callback=[sat_metrics_callback],
