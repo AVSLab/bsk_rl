@@ -465,7 +465,7 @@ def _strip_length(sat, opp):
 #Duration of the imaging task strip 
 def _duration_task(sat, opp):
     d_strip = _strip_length(sat, opp)
-    t_strip = d_strip / opp["object"].acquisition_speed 
+    t_strip = d_strip / opp["object"].aquisition_speed 
     return t_strip
 
 #Compute the principal rotation in the planet fixed frame at time t and update the possible pre-imaging times
@@ -518,16 +518,35 @@ def _compute_total_attitude_error(sat, opp):
     trace_R = np.trace(R_error)
     angle = np.arccos(np.clip((trace_R - 1) / 2.0, -1.0, 1.0))
 
-    size = len(opp["object"].pre_imaging_time)
-    #Pre-imaging time options 
-    if size == 1:
-        y =60
-        opp["object"].pre_imaging_time = [y]
-    elif size == 2:
-        opp["object"].pre_imaging_time = [20,60]
-    else:
-        upper_bound = 60
-        opp["object"].pre_imaging_time = [i * upper_bound / (size - 1) for i in range(size)]
+    s = len(opp["object"].pre_imaging_time)
+    m = opp["object"].pre_imaging_time[-1]
+    if (s, m) == (1, 60):
+        opp["object"].pre_imaging_time = [60]
+    elif (s, m) == (2, 60):
+        opp["object"].pre_imaging_time = [20, 60]
+    elif (s, m) == (4, 60):
+        opp["object"].pre_imaging_time = [0, 20, 40, 60]
+    elif (s, m) == (7, 60):
+        opp["object"].pre_imaging_time = [0, 10, 20, 30, 40, 50, 60]
+    
+    elif (s, m) == (1, 100):
+        opp["object"].pre_imaging_time = [100]
+    elif (s, m) == (3, 100):
+        opp["object"].pre_imaging_time = [20, 60, 100]
+    elif (s, m) == (6, 100):
+        opp["object"].pre_imaging_time = [0, 20, 40, 60, 80, 100]
+    elif (s, m) == (11, 100):
+        opp["object"].pre_imaging_time = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    
+    elif (s, m) == (1, 140):
+        opp["object"].pre_imaging_time = [140]
+    elif (s, m) == (4, 140):
+        opp["object"].pre_imaging_time = [20, 60, 100, 140]
+    elif (s, m) == (8, 140):
+        opp["object"].pre_imaging_time = [0, 20, 40, 60, 80, 100, 120, 140]
+    elif (s, m) == (15, 140):
+        opp["object"].pre_imaging_time = [i * 10 for i in range(15)] + [140]
+
     return angle 
 
 # #Compute the norm of the attitude error rate
