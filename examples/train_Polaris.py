@@ -302,26 +302,23 @@ if __name__ == "__main__":
     # MyScanningSatellite.default_sat_args() # why is this needed?
 
     sat_args = {}
-
     # Set some parameters as constants
-    sat_args["imageAttErrorRequirement"] = 0.05
-
-    # Randomize the initial storage level on every reset
-    # sat_args["storageInit"] = lambda: np.random.uniform(0., 0.0) * 1e10  # 0.25, 0.75) * 1e10
+    sat_args["imageAttErrorRequirement"] = 0.01
 
     # Storage
     sat_args["dataStorageCapacity"] = 50 * 8e6  # bits
-    sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.5) * 50 * 8e6
+    sat_args["storageInit"] = lambda: np.random.uniform(0.6, 0.8) * 50 * 8e6
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
-    sat_args["transmitterBaudRate"] = -50 * 8e6
+    sat_args["transmitterBaudRate"] = -5 * 8e6
 
     # Power
-    sat_args["batteryStorageCapacity"] = 1000 * 3600  # W*s
-    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.3, 1.0) * 1000 * 3600
+    sat_args["batteryStorageCapacity"] = 500 * 3600  # W*s
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.4, 0.6) * 500 * 3600
     sat_args["basePowerDraw"] = -10.0  # W
     sat_args["instrumentPowerDraw"] = -30.0  # W
     sat_args["transmitterPowerDraw"] = -25.0  # W
     sat_args["thrusterPowerDraw"] = -80.0  # W
+    # sat_args["panelArea"] = 0.25  # m^2
 
     # Attitude
     # sat_args["imageAttErrorRequirement"] = 0.1
