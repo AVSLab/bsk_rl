@@ -1153,7 +1153,7 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
             self.task_name, self.instrument, ModelPriority=priority
         )
 
-    @default_args(transmitterBaudRate=-8e6, transmitterNumBuffers=100)
+    @default_args(transmitterBaudRate=-8e6, transmitterNumBuffers=1)
     def setup_transmitter(
         self,
         transmitterBaudRate: float,
@@ -1687,8 +1687,8 @@ class ImagingSCDynModel(ImagingDynModel):
         self.setup_instrument_power_sink(**kwargs)
         self.setup_transmitter_power_sink(**kwargs)
         self.setup_imaging_target(**kwargs)
-        self.setup_instrument(**kwargs)
         self.setup_transmitter(**kwargs)
+        self.setup_instrument(**kwargs)
         self.setup_storage_unit(**kwargs)
         self.setup_ground_station_locations()
 

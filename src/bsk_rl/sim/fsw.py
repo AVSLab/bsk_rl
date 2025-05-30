@@ -1300,11 +1300,11 @@ class ImagingSCFSWModel(ImagingFSWModel):
             )
             self.insControl.ModelTag = "instrumentController"
 
-            #Adding a recorder for the pointing performance
-            self.pointing_state_recorder = self.fsw.locPoint.attGuidOutMsg.recorder(macros.sec2nano(1.0))
-            self.fsw.simulator.AddModelToTask(
-                self.name+self.fsw.satellite.name, self.pointing_state_recorder, ModelPriority=699
-            )
+            # #Adding a recorder for the pointing performance
+            # self.pointing_state_recorder = self.fsw.locPoint.attGuidOutMsg.recorder(macros.sec2nano(1.0))
+            # self.fsw.simulator.AddModelToTask(
+            #     self.name+self.fsw.satellite.name, self.pointing_state_recorder, ModelPriority=699
+            # )
 
         @default_args(inst_pHat_B=[0, 0, 1])
         def setup_location_pointing(
