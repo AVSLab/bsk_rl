@@ -108,8 +108,8 @@ class RSOTargetImageStore(DataStore):
             if self.non_zero_buffers >= len(self.satellite.data_store.data.known):
                 if self.inspection_task_completed == None:
                     self.inspection_task_completed = False
-                self.inspection_task_completed = True
-            print('Targets imaged:'+str(self.non_zero_buffers))
+                # self.inspection_task_completed = True
+            print('Targets imaged:'+str(self.non_zero_buffers-1))
 
 
             update_idx = np.where(new_state - old_state > 0)[0]
@@ -192,17 +192,28 @@ class RSOTargetImageReward(GlobalReward):
         )
         for sat_id, new_data in new_data_dict.items():
             reward[sat_id] = 0.0
+            if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.2:
+                reward[sat_id] += -10
+            elif sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.3:
+                reward[sat_id] += -5
+            if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.storage_level_fraction > .991:
+                reward[sat_id] += -5
+            if sat_id == 'SS1':
+                print('total accumulated rewards SS1: '+str(self.cum_reward['SS1']))
+
             for target in new_data.imaged:
                 # if target not in self.data.imaged and target not in self.data.eclipsed:
                 if target not in self.data.imaged:
+                # if target not in self.data.imaged and self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[1+target.id].read().shadowFactor < 0.3: # TODO: check Polaris reminder notes: this has a 50% chance of being wrong since there are 201 eclipse objects... allsats + targets
                     reward[sat_id] += self.reward_fn(
                         target.priority
                     ) / imaged_targets.count(target)
 
+
         return reward
 
-    def is_terminated(self) -> bool:
-        return self.inspection_task_completed
+    # def is_terminated(self) -> bool:
+    #     return self.inspection_task_completed
 
 
 
