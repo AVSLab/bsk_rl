@@ -76,10 +76,9 @@ class MovingTarget(Target):
         r_LP_P: Union[Iterable[float], Callable[[float], np.ndarray]],
         priority: float,
         radius: float,
+        noise: bool = False,
     ):
         self._initial_pos = np.array(r_LP_P).squeeze()
-        assert self._initial_pos.shape == (3,), f"Initial position shape must be (3,), got {self._initial_pos.shape}"
-
         self.radius = radius
         self.speed = np.random.uniform(880, 1120) * 1e3 /3600  # [m/s]
         self.bearing_angle = np.random.uniform(0, 2 * np.pi)  # [rad]
@@ -95,14 +94,33 @@ class MovingTarget(Target):
             lat = self.lat0 + delta_lat
             lon = self.lon0 + delta_lon
 
-            position = (
-                np.array([
-                    np.cos(np.radians(lat)) * np.cos(np.radians(lon)),
-                    np.cos(np.radians(lat)) * np.sin(np.radians(lon)),
-                    np.sin(np.radians(lat)),
-                ]) * self.radius
-            )
-            return position.flatten()
+            return lla2ecef(lat, lon, self.radius).flatten()
+
+        self.r_LP_P = position_func
+        self.r_LP_P_obs = position_func
+
+        if noise:
+            def noisy_position_func(t: float) -> np.ndarray:
+                d = self.speed * t
+                delta_lat_nom = np.degrees(np.cos(self.bearing_angle) * d / radius)
+                delta_lon_nom = np.degrees(np.sin(self.bearing_angle) * d / (radius * np.cos(np.radians(self.lat0))))
+
+                time_gap = max(np.random.normal(70, 50), 0)
+                noise_distance = self.speed * time_gap
+                noise_bearing_angle = np.random.uniform(0, 2 * np.pi)
+
+                lat = self.lat0 + delta_lat_nom
+
+                delta_lat_noise = np.degrees(np.cos(noise_bearing_angle) * noise_distance / radius)
+                delta_lon_noise = np.degrees(np.sin(noise_bearing_angle) * noise_distance / (radius * np.cos(np.radians(lat))))
+
+                lat += delta_lat_noise
+                lon = self.lon0 + delta_lon_nom + delta_lon_noise
+                return lla2ecef(lat, lon, radius).flatten()
+
+            self.r_LP_P_obs = noisy_position_func
+        else:
+            self.r_LP_P_obs = position_func
 
         super().__init__(name=name, r_LP_P=position_func, priority=priority)
 class UniformTargets(Scenario):
@@ -114,6 +132,7 @@ class UniformTargets(Scenario):
         priority_distribution: Optional[Callable] = None,
         radius: float = orbitalMotion.REQ_EARTH * 1e3,
         use_moving_targets: bool = False,
+        noise: bool = False,
     ) -> None:
         """An environment with evenly-distributed static targets.
 
@@ -134,6 +153,7 @@ class UniformTargets(Scenario):
         self.priority_distribution = priority_distribution
         self.radius = radius
         self.use_moving_targets = use_moving_targets
+        self.noise = noise
 
     def reset_overwrite_previous(self) -> None:
         """Overwrite target list from previous episode."""
@@ -196,7 +216,7 @@ class UniformTargets(Scenario):
             priority = self.priority_distribution()
             if self.use_moving_targets:
                 self.targets.append(
-                    MovingTarget(name=f"tgt-{i}", r_LP_P=x, priority=priority, radius=self.radius)
+                    MovingTarget(name=f"tgt-{i}", r_LP_P=x, priority=priority, radius=self.radius, noise=self.noise)
                 )
             else:
                 self.targets.append(
