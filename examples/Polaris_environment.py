@@ -28,7 +28,7 @@ n_targets = 100
 n_targets_ahead = 10
 total_time = n_targets * 450  # 2100 # 5700.0  # approximately 1 orbit
 
-class MyScanningSatellite(sats.Satellite):
+class MyScanningSatellite(sats.AccessSatellite):
     observation_spec = [
         obs.SatProperties(
             dict(prop="storage_level_fraction"),
@@ -45,34 +45,42 @@ class MyScanningSatellite(sats.Satellite):
             n_ahead_observe=n_targets_ahead,
                                        ),
         obs.Eclipse(),
+        obs.OpportunityProperties(
+            dict(prop="opportunity_open", norm = 5700.0),
+            dict(prop="opportunity_close", norm = 5700.0),
+            type="ground_station",
+            n_ahead_observe=5,
+        )
     ]
     action_spec = [
         act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 5 minute
         act.Charge(duration=300.0),  # Charge for 5 minutes
+        act.Downlink(duration=180.0), # Downlink for 3 min
+        act.Desat(duration=150), # Desat for 2.5 min
 
     ]
     dyn_type = dyn.ImagingSCDynModel
     fsw_type = fsw.ImagingSCFSWModel
 
-MyScanningSatellite.default_sat_args() # why is this needed?
+# MyScanningSatellite.default_sat_args() # why is this needed?
 
 sat_args = {}
 
 # Set some parameters as constants
-sat_args["imageAttErrorRequirement"] = 0.05
+sat_args["imageAttErrorRequirement"] = 0.01
 
 # Randomize the initial storage level on every reset
 # sat_args["storageInit"] = lambda: np.random.uniform(0., 0.0) * 1e10  # 0.25, 0.75) * 1e10
 
 # Storage
 sat_args["dataStorageCapacity"] = 50 * 8e6  # bits
-sat_args["storageInit"] = lambda: np.random.uniform(0.8, 0.8) * 50 * 8e6
+sat_args["storageInit"] = lambda: np.random.uniform(0.6, 0.8) * 50 * 8e6
 sat_args["instrumentBaudRate"] = 0.5 * 8e6
-sat_args["transmitterBaudRate"] = -50 * 8e6
+sat_args["transmitterBaudRate"] = -5 * 8e6
 
 # Power
 sat_args["batteryStorageCapacity"] = 500 * 3600  # W*s
-sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.3, 1.0) * 500 * 3600
+sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.3, 0.7) * 500 * 3600
 sat_args["basePowerDraw"] = -10.0  # W
 sat_args["instrumentPowerDraw"] = -30.0  # W
 sat_args["transmitterPowerDraw"] = -25.0  # W
@@ -177,7 +185,7 @@ env = gym.make(
     rewarder=data.RSOTargetImageReward(),
     world_type=world.GroundStationWorldModel,
     time_limit=total_time,
-    log_level="DEBUG",
+    log_level="ERROR",
     disable_env_checker=True,
     # max_step_duration=700,
 )
@@ -197,16 +205,31 @@ data_dict = {
 }
 
 print("Initial data level:", observation, "(randomized by sat_args)")
-for target_id in range(n_targets*2):
+last_downlink_time = 0
+critical_storage_level = 0.95 # only task downlink if available storage_fraction is less than 0.05
+critical_battery_level = 0.3
+for target_id in range(n_targets*4 *100 ):
     simtime = env.simulator.sim_time
-    print('Simulation time: ' + str(simtime) + ' seconds')
+    print('\n SIMULATION TIME: ' + str(simtime) + ' seconds')
 
     # action_dict = {sat.name: target_id}  # Assign the main satellite to observe `target_idx` # sequentially observing each target
     action_dict = {sat.name: 0}  # Assign the closest target when the list is sorted by distance
+    if env.satellites[0].dynamics.storage_level_fraction > critical_storage_level:  # downlink if storage is more than 0.95
+    #if simtime - last_downlink_time > 3000:
+        print('tasking DONWLINKING now: at t=',simtime)
+        action_dict = {sat.name: 11} # tasking downlink
+        last_downlink_time = simtime
 
+    if env.satellites[0].dynamics.battery_charge_fraction < critical_battery_level:  # charge if battery is less than 0.05
+        print('tasking CHARGING now: at t=',simtime)
+        action_dict = {sat.name: 10} # tasking charging
     action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
     print('current action_dict to be executed', action_dict)
     observation, reward, terminated, truncated, info = env.step(action=action_dict)
+    print("storage_level", env.satellites[0].dynamics.storage_level)
+    print("dynamics.storage_level_fraction", env.satellites[0].dynamics.storage_level_fraction)
+    print("dynamics.battery_charge_fraction", env.satellites[0].dynamics.battery_charge_fraction)
+
     print('truncated list: ', truncated)
     data_dict["sim_time"].append(env.simulator.sim_time)
     if any(truncated.values()) or any(terminated.values()):

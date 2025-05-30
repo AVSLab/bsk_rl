@@ -265,30 +265,36 @@ if __name__ == "__main__":
     extra_tima_factor = 1.5
     total_time = extra_tima_factor * n_targets * 300  #I give it 10 times the minimum time to finish
 
-    class MyScanningSatellite(sats.Satellite):
+    class MyScanningSatellite(sats.AccessSatellite):
         observation_spec = [
             obs.SatProperties(
                 dict(prop="storage_level_fraction"),
                 dict(prop="battery_charge_fraction"),
                 dict(prop="wheel_speeds_fraction"),
-
             ),
             obs.PolarisScTargetProperties(
                 dict(prop="target_elevation_angle", norm=1.0),
-                dict(prop="angle_to_target", norm=1.0),
                 dict(prop="rel_pos_vector_r_BR_N", norm = 1596*1000),
+                dict(prop="angle_to_target", norm=1.0),
                 dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
-                # dict(prop="target_id_info", norm=1.0),
+                dict(prop="target_id_info", norm=1.0),
                 dict(prop="target_imaged",  norm=1.0),
                 n_ahead_observe=n_targets_ahead,
                                            ),
             obs.Eclipse(),
+            obs.OpportunityProperties(
+                dict(prop="opportunity_open", norm = 5700.0),
+                dict(prop="opportunity_close", norm = 5700.0),
+                type="ground_station",
+                n_ahead_observe=5,
+            )
         ]
         action_spec = [
             act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 5 minute
-            act.Charge(duration=600.0),  # Charge for 10 minutes
-            act.Desat(duration=150), # Desat for 2.5 minutes
-            act.Downlink(duration=180), # Downlink for 3 minutes
+            act.Charge(duration=300.0),  # Charge for 5 minutes
+            act.Downlink(duration=180.0), # Downlink for 3 min
+            act.Desat(duration=150), # Desat for 2.5 min
+
         ]
         dyn_type = dyn.ImagingSCDynModel
         fsw_type = fsw.ImagingSCFSWModel
