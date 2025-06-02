@@ -214,7 +214,7 @@ def env_metrics_callback(env):
 
 def sat_metrics_callback(env, satellite):
     data = {}
-    print('if satellite.name == SS1', satellite.name == 'SS1')
+    # print('if satellite.name == SS1', satellite.name == 'SS1')
     if satellite.name == 'SS1':
         print('satellite.name', satellite.name)
         print('np.linalg.norm(satellite.dynamics.wheel_speeds)', np.linalg.norm(satellite.dynamics.wheel_speeds))
@@ -323,7 +323,7 @@ if __name__ == "__main__":
     # Attitude
     # sat_args["imageAttErrorRequirement"] = 0.1
     # sat_args["imageRateErrorRequirement"] = 0.1
-    sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.0001, size=3)  # N*m
+    sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.000000, size=3)  # N*m
     sat_args["maxWheelSpeed"] = 6000.0  # RPM
     sat_args["wheelSpeeds"] = lambda: np.random.uniform(-3000, 3000, 3)
     sat_args["desatAttitude"] = "nadir"
@@ -370,12 +370,12 @@ if __name__ == "__main__":
     all_sat = [sat] + targets
 
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
-    model_name = f"model_{N}"
+    model_name = f"new_penalties_small_battery_storage_model_{N}"
     n_envs = (
         get_available_cores() - 6  # leave some extra cores for other processes
     )
     output_dir = (
-        Path("~/rllib_results").expanduser() / f"small_battery_data_Polaris_simulation_{time.time()}"
+        Path("~/rllib_results").expanduser() / f"new_penalties_small_battery_storage_Polaris_simulation_{time.time()}"
     )
     output_dir = Path(output_dir)
 
@@ -412,7 +412,7 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params_may23rd.txt", "w") as file:
+    with open(output_dir / f"{model_name}_params_may29th.txt", "w") as file:
         yaml.dump(sanitize_np(job_args), file)
 
     train_model(
