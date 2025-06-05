@@ -28,6 +28,7 @@ Development - |version|
 * Add the ability to observe remaining time in :class:`~bsk_rl.obs.Time`.
 * Allow for the ``time_limit`` to be randomized.
 * Added observation for arbitrary relative states between two satellites in :class:`~bsk_rl.obs.RelativeProperties`.
+* Allow for the ``transmitterPacketSize`` to be specified. The default sets it to the instrument's baud rate.
 
 
 Version 1.1.0
