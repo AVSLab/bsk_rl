@@ -823,12 +823,15 @@ class ImagingDynModel(BasicDynamicsModel):
             self.task_name, self.instrument, ModelPriority=priority
         )
 
-    @default_args(transmitterBaudRate=-8e6, transmitterNumBuffers=100)
+    @default_args(
+        transmitterBaudRate=-8e6, transmitterNumBuffers=100, transmitterPacketSize=None
+    )
     def setup_transmitter(
         self,
         transmitterBaudRate: float,
         instrumentBaudRate: float,
         transmitterNumBuffers: int,
+        transmitterPacketSize: Optional[float] = None,
         priority: int = 798,
         **kwargs,
     ) -> None:
@@ -836,8 +839,9 @@ class ImagingDynModel(BasicDynamicsModel):
 
         Args:
             transmitterBaudRate: [baud] Rate of data downlink. Should be negative.
-            instrumentBaudRate: [bits] Image size, used to set packet size.
+            instrumentBaudRate: [bits] Image size, used to set packet size if ``transmitterPacketSize`` is not specified.
             transmitterNumBuffers: Number of transmitter buffers
+            transmitterPacketSize: [bits] Minimum data amount to be downlinked for a partition. If ``None``, set as ``instrumentBaudRate``.
             priority: Model priority.
             kwargs: Passed to other setup functions.
         """
@@ -846,8 +850,11 @@ class ImagingDynModel(BasicDynamicsModel):
         self.transmitter = spaceToGroundTransmitter.SpaceToGroundTransmitter()
         self.transmitter.ModelTag = "transmitter" + self.satellite.name
         self.transmitter.nodeBaudRate = transmitterBaudRate  # baud
-        # set packet size equal to the size of a single image
-        self.transmitter.packetSize = -instrumentBaudRate  # bits
+        if transmitterPacketSize is None:
+            # set packet size equal to the size of a single image
+            self.transmitter.packetSize = -instrumentBaudRate  # bits
+        else:
+            self.transmitter.packetSize = transmitterPacketSize  # bits
         self.transmitter.numBuffers = transmitterNumBuffers
         self.simulator.AddModelToTask(
             self.task_name, self.transmitter, ModelPriority=priority
