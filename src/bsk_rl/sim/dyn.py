@@ -1298,7 +1298,7 @@ class RSODynModel(BasicDynamicsModel):
         rso_point_model.aHat_B = aHat_B
         rso_point_model.theta = theta
         rso_point_model.theta_solar = solar_incidence_min
-        rso_point_model.shadow_factor_limit = illumination_eclipse_min
+        rso_point_model.min_shadow_factor = illumination_eclipse_min
         rso_point_model.maximumRange = range
         self.simulator.AddModelToTask(
             self.rso_task_name, rso_point_model, ModelPriority=1

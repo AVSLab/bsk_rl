@@ -85,24 +85,16 @@ class RSOInspectionDataStore(DataStore):
             self.satellite.dynamics.task_name, recorder, ModelPriority=1000
         )
 
-    def add_point_access_recorder(self, recorder, illumination_recorder):
+    def add_point_access_recorder(self, recorder):
         self.point_access_recorders.append(recorder)
-        self.illumination_recorders.append(illumination_recorder)
         self.satellite.simulator.AddModelToTask(
             self.satellite.dynamics.task_name, recorder, ModelPriority=1000
-        )
-        self.satellite.simulator.AddModelToTask(
-            self.satellite.dynamics.task_name,
-            illumination_recorder,
-            ModelPriority=1000,
         )
 
     def clear_recorders(self):
         if self.storage_recorder:
             self.storage_recorder.clear()
         for recorder in self.point_access_recorders:
-            recorder.clear()
-        for recorder in self.illumination_recorders:
             recorder.clear()
 
     def get_log_state(self) -> list[list[bool]]:
@@ -127,8 +119,8 @@ class RSOInspectionDataStore(DataStore):
             inspected_logs.append(list(np.array(inspected)))
 
         illuminated_logs = []
-        for recorder in self.illumination_recorders:
-            illuminated_logs.append(list(np.array(recorder.hasAccess)))
+        for recorder in self.point_access_recorders:
+            illuminated_logs.append(list(np.array(recorder.hasIllumination)))
 
         self.clear_recorders()
 
@@ -246,7 +238,6 @@ class RSOInspectionReward(GlobalReward):
             for rso_point_model in self.scenario.rso.dynamics.rso_points:
                 observer.data_store.add_point_access_recorder(
                     rso_point_model.accessOutMsgs[i].recorder(),
-                    rso_point_model.illuminationOutMsgs[i].recorder(),
                 )
 
     def initial_data(self, satellite: Satellite) -> Data:
