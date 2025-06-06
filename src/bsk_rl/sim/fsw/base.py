@@ -1,35 +1,4 @@
-"""Basilisk flight software models (FSW) are given in ``bsk_rl.sim.fsw``.
-
-Flight software models serve as the interface between the operation of the satellite in
-simulation and the Gymnasium environment. While some FSW models add additional
-functionality to the satellite, such as imaging instrument control in :class:`ImagingFSWModel`,
-others replace the default control laws with a more complex algorithms, such as :class:`SteeringFSWModel`
-vis a vis :class:`BasicFSWModel`.
-
-Actions
--------
-
-Each FSW model has a number of actions that can be called to task the satellite. These
-actions are decorated with the :func:`~bsk_rl.sim.fsw.action` decorator, which performs
-housekeeping tasks before the action is executed. These actions are the primary way to
-control the satellite simulation from other parts of the Gymnasium environment.
-
-Properties
-----------
-
-The FSW model provides a number of properties for easy access to the satellite state.
-These can be accessed directly from the dynamics model instance, or in the observation
-via the :class:`~bsk_rl.obs.SatProperties` observation.
-
-Aliveness Checking
-------------------
-
-Certain functions in the FSW models are decorated with the :func:`~bsk_rl.utils.functional.aliveness_checker`
-decorator. These functions are called at each step to check if the satellite is still
-operational, returning true if the satellite is still alive.
-
-
-"""
+"""Basic FSW model for BSK-RL."""
 
 from abc import ABC, abstractmethod
 from functools import wraps
@@ -46,8 +15,6 @@ from Basilisk.fswAlgorithms import (
     mrpSteering,
     rateServoFullNonlinear,
     rwMotorTorque,
-    scanningInstrumentController,
-    simpleInstrumentController,
     thrForceMapping,
     thrMomentumDumping,
     thrMomentumManagement,
@@ -55,14 +22,11 @@ from Basilisk.fswAlgorithms import (
 from Basilisk.utilities import macros as mc
 
 from bsk_rl.sim import dyn
-from bsk_rl.utils import vizard
 from bsk_rl.utils.functional import (
     AbstractClassProperty,
-    aliveness_checker,
     check_aliveness_checkers,
     default_args,
 )
-from bsk_rl.utils.orbital import rv2HN
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -620,278 +584,6 @@ class BasicFSWModel(FSWModel):
             self.fsw.simulator.enableTask(self.name + self.fsw.satellite.name)
 
 
-class ImagingFSWModel(BasicFSWModel):
-    """Extend FSW with instrument pointing and triggering control."""
-
-    @classmethod
-    def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
-        return super()._requires_dyn() + [dyn.ImagingDynModel]
-
-    def __init__(self, *args, **kwargs) -> None:
-        """Adds instrument pointing and triggering control to FSW."""
-        super().__init__(*args, **kwargs)
-
-    @property
-    def c_hat_P(self):
-        """Instrument pointing direction in the planet frame."""
-        c_hat_B = self.locPoint.pHat_B
-        return np.matmul(self.dynamics.BP.T, c_hat_B)
-
-    @property
-    def c_hat_H(self):
-        """Instrument pointing direction in the hill frame."""
-        c_hat_B = self.locPoint.pHat_B
-        HN = rv2HN(self.satellite.dynamics.r_BN_N, self.satellite.dynamics.v_BN_N)
-        return HN @ self.satellite.dynamics.BN.T @ c_hat_B
-
-    def _make_task_list(self) -> list[Task]:
-        return super()._make_task_list() + [self.LocPointTask(self)]
-
-    def _set_gateway_msgs(self) -> None:
-        super()._set_gateway_msgs()
-        self.dynamics.instrument.nodeStatusInMsg.subscribeTo(
-            self.insControl.deviceCmdOutMsg
-        )
-
-    class LocPointTask(Task):
-        """Task to point at targets and trigger the instrument."""
-
-        name = "locPointTask"
-
-        def __init__(self, fsw, priority=96) -> None:  # noqa: D107
-            """Task to point the instrument at ground targets."""
-            super().__init__(fsw, priority)
-
-        def _create_module_data(self) -> None:
-            # Location pointing configuration
-            self.locPoint = self.fsw.locPoint = locationPointing.locationPointing()
-            self.locPoint.ModelTag = "locPoint"
-
-            # SimpleInstrumentController configuration
-            self.insControl = self.fsw.insControl = (
-                simpleInstrumentController.simpleInstrumentController()
-            )
-            self.insControl.ModelTag = "instrumentController"
-
-        def _setup_fsw_objects(self, **kwargs) -> None:
-            self.setup_location_pointing(**kwargs)
-            self.setup_instrument_controller(**kwargs)
-            self.show_sensor()
-
-        @default_args(inst_pHat_B=[0, 0, 1])
-        def setup_location_pointing(
-            self, inst_pHat_B: Iterable[float], **kwargs
-        ) -> None:
-            """Set the Earth location pointing guidance module.
-
-            Args:
-                inst_pHat_B: Instrument pointing direction.
-                kwargs: Passed to other setup functions.
-            """
-            self.locPoint.pHat_B = inst_pHat_B
-            self.locPoint.scAttInMsg.subscribeTo(
-                self.fsw.dynamics.simpleNavObject.attOutMsg
-            )
-            self.locPoint.scTransInMsg.subscribeTo(
-                self.fsw.dynamics.simpleNavObject.transOutMsg
-            )
-            self.locPoint.locationInMsg.subscribeTo(
-                self.fsw.dynamics.imagingTarget.currentGroundStateOutMsg
-            )
-            self.locPoint.useBoresightRateDamping = 1
-            messaging.AttGuidMsg_C_addAuthor(
-                self.locPoint.attGuidOutMsg, self.fsw.attGuidMsg
-            )
-
-            self._add_model_to_task(self.locPoint, priority=1198)
-
-        @default_args(imageAttErrorRequirement=0.01, imageRateErrorRequirement=None)
-        def setup_instrument_controller(
-            self,
-            imageAttErrorRequirement: float,
-            imageRateErrorRequirement: float,
-            **kwargs,
-        ) -> None:
-            """Set the instrument controller parameters.
-
-            The instrument controller is used to take an image when certain relative
-            attitude requirements are met, along with the access requirements of the
-            target (i.e. ``imageTargetMinimumElevation`` and ``imageTargetMaximumRange``
-            as set in :class:`~bsk_rl.sim.dyn.ImagingDynModel.setup_imaging_target`).
-
-            Args:
-                imageAttErrorRequirement: [MRP norm] Pointing attitude error tolerance
-                    for imaging.
-                imageRateErrorRequirement: [rad/s] Rate tolerance for imaging. Disable
-                    with ``None``.
-                kwargs: Passed to other setup functions.
-            """
-            self.insControl.attErrTolerance = imageAttErrorRequirement
-            if imageRateErrorRequirement is not None:
-                self.insControl.useRateTolerance = 1
-                self.insControl.rateErrTolerance = imageRateErrorRequirement
-            self.insControl.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
-            self.insControl.locationAccessInMsg.subscribeTo(
-                self.fsw.dynamics.imagingTarget.accessOutMsgs[-1]
-            )
-
-            self._add_model_to_task(self.insControl, priority=987)
-
-        @vizard.visualize
-        def show_sensor(self, vizInterface=None, vizSupport=None):
-            """Visualize the sensor in Vizard."""
-            genericSensor = vizInterface.GenericSensor()
-            genericSensor.normalVector = self.locPoint.pHat_B
-            genericSensor.r_SB_B = [0.0, 0.0, 0.0]
-            genericSensor.fieldOfView.push_back(4 * self.insControl.attErrTolerance)
-            genericSensor.color = vizInterface.IntVector(
-                vizSupport.toRGBA255(self.fsw.satellite.vizard_color, alpha=0.5)
-            )
-            cmdInMsg = messaging.DeviceCmdMsgReader()
-            cmdInMsg.subscribeTo(self.insControl.deviceCmdOutMsg)
-            genericSensor.genericSensorCmdInMsg = cmdInMsg
-            self.fsw.satellite.vizard_data["genericSensorList"] = [genericSensor]
-
-        def reset_for_action(self) -> None:
-            """Reset pointing controller."""
-            self.fsw.dynamics.imagingTarget.Reset(self.fsw.simulator.sim_time_ns)
-            self.locPoint.Reset(self.fsw.simulator.sim_time_ns)
-            self.insControl.controllerStatus = 0
-            return super().reset_for_action()
-
-    @action
-    def action_image(self, r_LP_P: Iterable[float], data_name: str) -> None:
-        """Attempt to image a target at a location.
-
-        This action sets the target attitude to one tracking a ground location. If the
-        target is within the imaging constraints, an image will be taken and stored in
-        the data buffer. The instrument power sink will be active as long as the task is
-        enabled.
-
-        Args:
-            r_LP_P: [m] Planet-fixed planet relative target location.
-            data_name: Data buffer to store image data to.
-        """
-        self.insControl.controllerStatus = 1
-        self.dynamics.instrumentPowerSink.powerStatus = 1
-        self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P
-        self.dynamics.instrument.nodeDataName = data_name
-        self.insControl.imaged = 0
-        self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
-
-    @action
-    def action_downlink(self) -> None:
-        """Attempt to downlink data.
-
-        This action points the satellite nadir and attempts to downlink data. If the
-        satellite is in range of a ground station, data will be downlinked at the specified
-        baud rate. The transmitter power sink will be active as long as the task is enabled.
-        """
-        self.hillPoint.Reset(self.simulator.sim_time_ns)
-        self.trackingError.Reset(self.simulator.sim_time_ns)
-        self.dynamics.transmitter.dataStatus = 1
-        self.dynamics.transmitterPowerSink.powerStatus = 1
-        self.simulator.enableTask(
-            BasicFSWModel.NadirPointTask.name + self.satellite.name
-        )
-        self.simulator.enableTask(
-            BasicFSWModel.TrackingErrorTask.name + self.satellite.name
-        )
-
-
-class ContinuousImagingFSWModel(ImagingFSWModel):
-    """FSW model for continuous nadir scanning."""
-
-    def __init__(self, *args, **kwargs) -> None:
-        """FSW model for continuous nadir scanning.
-
-        Instead of imaging point targets, this model is used to continuously scan the
-        ground while pointing nadir.
-        """
-        super().__init__(*args, **kwargs)
-
-    class LocPointTask(ImagingFSWModel.LocPointTask):
-        """Task to point nadir and trigger the instrument."""
-
-        def __init__(self, *args, **kwargs) -> None:
-            """Task to point nadir and trigger the instrument."""
-            super().__init__(*args, **kwargs)
-
-        def _create_module_data(self) -> None:
-            # Location pointing configuration
-            self.locPoint = self.fsw.locPoint = locationPointing.locationPointing()
-            self.locPoint.ModelTag = "locPoint"
-
-            # scanningInstrumentController configuration
-            self.insControl = self.fsw.insControl = (
-                scanningInstrumentController.scanningInstrumentController()
-            )
-            self.insControl.ModelTag = "instrumentController"
-
-        @default_args(imageAttErrorRequirement=0.01, imageRateErrorRequirement=None)
-        def setup_instrument_controller(
-            self,
-            imageAttErrorRequirement: float,
-            imageRateErrorRequirement: float,
-            **kwargs,
-        ) -> None:
-            """Set the instrument controller parameters for scanning.
-
-            As long as these two conditions are met, scanning will occur continuously.
-
-            Args:
-                imageAttErrorRequirement: [MRP norm] Pointing attitude error tolerance
-                    for imaging.
-                imageRateErrorRequirement: [rad/s] Rate tolerance for imaging. Disable
-                    with None.
-                kwargs: Passed to other setup functions.
-            """
-            self.insControl.attErrTolerance = imageAttErrorRequirement
-            if imageRateErrorRequirement is not None:
-                self.insControl.useRateTolerance = 1
-                self.insControl.rateErrTolerance = imageRateErrorRequirement
-            self.insControl.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
-            self.insControl.accessInMsg.subscribeTo(
-                self.fsw.dynamics.imagingTarget.accessOutMsgs[-1]
-            )
-
-            self._add_model_to_task(self.insControl, priority=987)
-
-        def reset_for_action(self) -> None:
-            """Reset scanning controller."""
-            self.instMsg = messaging.DeviceCmdMsg_C()
-            self.instMsg.write(messaging.DeviceCmdMsgPayload())
-            self.fsw.dynamics.instrument.nodeStatusInMsg.subscribeTo(self.instMsg)
-            return super().reset_for_action()
-
-    @action
-    def action_nadir_scan(self) -> None:
-        """Scan nadir.
-
-        This action points the instrument nadir and continuously adds data to the buffer
-        as long as attitude requirements are met. The instrument power sink is active
-        as long as the action is set.
-        """
-        self.dynamics.instrument.nodeStatusInMsg.subscribeTo(
-            self.insControl.deviceCmdOutMsg
-        )
-        self.insControl.controllerStatus = 1
-        self.dynamics.instrumentPowerSink.powerStatus = 1
-        self.dynamics.imagingTarget.r_LP_P_Init = np.array(
-            [0, 0, 0.1]
-        )  # All zero causes an error
-        self.dynamics.instrument.nodeDataName = "nadir"
-        self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
-
-    @action
-    def action_image(self, *args, **kwargs) -> None:
-        """Disable ``action_image`` from parent class.
-
-        :meta private:
-        """
-        raise NotImplementedError("Use action_nadir_scan instead")
-
-
 class SteeringFSWModel(BasicFSWModel):
     """FSW extending MRP control to use MRP steering instead of MRP feedback."""
 
@@ -998,73 +690,11 @@ class SteeringFSWModel(BasicFSWModel):
             self.fsw.simulator.enableTask(self.name + self.fsw.satellite.name)
 
 
-class SteeringImagerFSWModel(SteeringFSWModel, ImagingFSWModel):
-    """Convenience type for ImagingFSWModel with MRP steering."""
-
-    def __init__(self, *args, **kwargs) -> None:
-        """Convenience type that combines the imaging FSW model with MRP steering."""
-        super().__init__(*args, **kwargs)
-
-
-class MagicOrbitalManeuverFSWModel(BasicFSWModel):
-    """Model that allows for instantaneous Delta V maneuvers."""
-
-    def __init__(self, *args, **kwargs) -> None:
-        """Model that allows for instantaneous Delta V maneuvers."""
-        super().__init__(*args, **kwargs)
-        self.setup_fuel(**kwargs)
-        self.thrust_count = 0
-
-    @property
-    def dv_available(self):
-        """Delta-V available for the satellite."""
-        return self._dv_available
-
-    @aliveness_checker
-    def fuel_remaining(self) -> bool:
-        """Check if the satellite has fuel remaining."""
-        return self.dv_available > 1e-8
-
-    @default_args(dv_available_init=100.0)
-    def setup_fuel(self, dv_available_init: float, **kwargs):
-        """Set up available fuel for the satellite.
-
-        Args:
-            dv_available_init: [m/s] Initial fuel level.
-            kwargs: Passed to other setup functions.
-        """
-        # TODO: may adjust names for consistency with modelled fuel take in future.
-        self._dv_available = dv_available_init
-
-    @action
-    def action_impulsive_thrust(self, dv_N: np.ndarray) -> None:
-        """Thrust relative to the inertial frame.
-
-        Args:
-            dv_N: [m/s] Inertial Delta V.
-        """
-        if np.linalg.norm(dv_N) > self.dv_available:
-            self.satellite.logger.warning(
-                f"Maneuver exceeds available Delta V ({np.linalg.norm(dv_N)}/{self.dv_available} m/s)."
-            )
-            dv_N = dv_N / np.linalg.norm(dv_N) * self.dv_available
-
-        self._dv_available -= np.linalg.norm(dv_N)
-
-        self.dynamics.scObject.dynManager.getStateObject(
-            self.dynamics.scObject.hub.nameOfHubVelocity
-        ).setState(list(np.array(self.dynamics.v_BN_N) + np.array(dv_N)))
-
-        self.thrust_count += 1
-
-
-__doc_title__ = "FSW Sims"
+__doc_title__ = "FSW Base"
 __all__ = [
     "action",
+    "FSWModel",
+    "Task",
     "BasicFSWModel",
-    "ImagingFSWModel",
-    "ContinuousImagingFSWModel",
     "SteeringFSWModel",
-    "SteeringImagerFSWModel",
-    "MagicOrbitalManeuverFSWModel",
 ]

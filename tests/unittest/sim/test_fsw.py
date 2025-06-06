@@ -34,7 +34,7 @@ class TestFSWModel:
         assert sat.simulator.world == fsw.world
         assert sat.dynamics == fsw.dynamics
 
-    @patch(module + "check_aliveness_checkers", MagicMock(return_value=True))
+    @patch(module + "base.check_aliveness_checkers", MagicMock(return_value=True))
     def test_is_alive(self):
         fsw = FSWModel(MagicMock(), 1.0)
         assert fsw.is_alive()
