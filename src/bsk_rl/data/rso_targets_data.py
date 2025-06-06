@@ -193,11 +193,11 @@ class RSOTargetImageReward(GlobalReward):
         for sat_id, new_data in new_data_dict.items():
             reward[sat_id] = 0.0
             if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.2:
-                reward[sat_id] += -10
+                reward[sat_id] += -5
             elif sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.3:
                 reward[sat_id] += -5
             if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.storage_level_fraction > .991:
-                reward[sat_id] += -5
+                reward[sat_id] += -10
             if sat_id == 'SS1':
                 print('total accumulated rewards SS1: '+str(self.cum_reward['SS1']))
 
