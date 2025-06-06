@@ -49,6 +49,7 @@ from bsk_rl.sim.dyn.relative_motion import (
     LOSCommDynModel,
     MaxRangeDynModel,
 )
+from bsk_rl.sim.dyn.rso_inspection import RSODynModel, RSOInspectorDynModel
 
 
 class FullFeaturedDynModel(GroundStationDynModel, LOSCommDynModel):
@@ -73,4 +74,6 @@ __all__ = [
     "ConjunctionDynModel",
     "MaxRangeDynModel",
     "FullFeaturedDynModel",
+    "RSODynModel",
+    "RSOInspectorDynModel",
 ]
