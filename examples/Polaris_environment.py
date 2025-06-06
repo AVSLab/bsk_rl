@@ -92,7 +92,7 @@ sat_args["thrusterPowerDraw"] = -80.0  # W
 # sat_args["imageRateErrorRequirement"] = 0.1
 sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.0001, size=3)  # N*m
 sat_args["maxWheelSpeed"] = 6000.0  # RPM
-sat_args["wheelSpeeds"] = lambda: np.random.uniform(-3000, 3000, 3)
+sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
 sat_args["desatAttitude"] = "nadir"
 
 
@@ -229,6 +229,8 @@ for target_id in range(n_targets*4 *100 ):
     print("storage_level", env.satellites[0].dynamics.storage_level)
     print("dynamics.storage_level_fraction", env.satellites[0].dynamics.storage_level_fraction)
     print("dynamics.battery_charge_fraction", env.satellites[0].dynamics.battery_charge_fraction)
+    print("env.satellites[0].dynamics.wheel_speeds_fraction", env.satellites[0].dynamics.wheel_speeds_fraction)
+
 
     print('truncated list: ', truncated)
     data_dict["sim_time"].append(env.simulator.sim_time)
