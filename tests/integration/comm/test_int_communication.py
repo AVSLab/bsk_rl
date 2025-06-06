@@ -8,7 +8,7 @@ from bsk_rl.comm import (
     NoCommunication,
 )
 from bsk_rl.scene import UniformTargets
-from bsk_rl.sim.dyn import FullFeaturedDynModel
+from bsk_rl.sim import dyn
 from bsk_rl.utils.orbital import walker_delta
 
 oes_visible = walker_delta(
@@ -30,6 +30,10 @@ oes_eclipsed = walker_delta(
     clustersize=3,  # Cluster all 3 satellites together
     clusterspacing=60,  # Space satellites by a true anomaly of 30 degrees
 )
+
+
+class FullFeaturedDynModel(dyn.GroundStationDynModel, dyn.LOSCommDynModel):
+    pass
 
 
 class FullFeaturedSatellite(sats.ImagingSatellite):

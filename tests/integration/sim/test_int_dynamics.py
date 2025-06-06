@@ -6,6 +6,10 @@ from bsk_rl.sim import dyn, fsw
 from bsk_rl.utils.orbital import random_orbit
 
 
+class FullFeaturedDynModel(dyn.GroundStationDynModel, dyn.LOSCommDynModel):
+    pass
+
+
 class TestImagingDynModelStorage:
     @pytest.mark.parametrize(
         "storage_capacity, initial_storage",
@@ -58,7 +62,7 @@ class TestImagingDynModelStorage:
     )
     def test_storageInit_downlink(self, storage_capacity, initial_storage):
         class ImageSat(sats.ImagingSatellite):
-            dyn_type = dyn.FullFeaturedDynModel
+            dyn_type = FullFeaturedDynModel
             fsw_type = fsw.ImagingFSWModel
             observation_spec = [obs.Time()]
             action_spec = [act.Downlink()]

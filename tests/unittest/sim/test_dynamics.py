@@ -26,7 +26,7 @@ class TestDynamicsModel:
         assert sat.simulator.world == dyn.world
         dyn.reset_for_action()
 
-    @patch(module + "check_aliveness_checkers", MagicMock(return_value=True))
+    @patch(module + "base.check_aliveness_checkers", MagicMock(return_value=True))
     def test_is_alive(self):
         dyn = DynamicsModel(MagicMock(), 1.0)
         assert dyn.is_alive()
@@ -148,7 +148,6 @@ class TestBasicDynamicsModel:
         ],
     )
     def test_battery_init_warning(self, battery_capacity, init_charge, warning) -> None:
-
         dyn = BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
         dyn.solarPanel = MagicMock()
         dyn.logger = MagicMock()
@@ -176,7 +175,7 @@ class TestLOSCommDynModel:
 
     @patch(losdyn + "_requires_world", MagicMock(return_value=[]))
     @patch(losdyn + "_setup_dynamics_objects", MagicMock())
-    @patch(module + "spacecraftLocation", MagicMock())
+    @patch(module + "relative_motion.spacecraftLocation", MagicMock())
     def test_setup_los_comms(self):
         mock_sim = MagicMock()
         dyn1 = LOSCommDynModel(MagicMock(simulator=mock_sim), 1.0)
@@ -226,6 +225,10 @@ def test_setup_objects(*args):
         setter.assert_called_once()
 
 
+class FullFeaturedDynModel(GroundStationDynModel, LOSCommDynModel):
+    pass
+
+
 @patch(imdyn + "_requires_world", MagicMock(return_value=[]))
 @patch(imdyn + "_setup_dynamics_objects", MagicMock())
 class TestImagingDynModel:
@@ -256,7 +259,7 @@ class TestImagingDynModel:
         dyn.storageUnit.storageCapacity = 100.0
         assert dyn.data_storage_valid() == valid
 
-    @patch(module + "partitionedStorageUnit", MagicMock())
+    @patch(module + "ground_imaging.partitionedStorageUnit", MagicMock())
     @pytest.mark.parametrize(
         "buffers,names,expected",
         [
