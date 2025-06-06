@@ -211,6 +211,68 @@ class BasicDynamicsModel(DynamicsModel):
         HN = rv2HN(self.r_BN_N, self.v_BN_N)
         return HN @ omega_BH_N
 
+    def _compute_oes(self):
+        if not hasattr(self, "_oe_cache_time") or (
+            self._oe_cache_time != getattr(self.simulator, "time", None)
+        ):
+            self._oe_cache = orbitalMotion.rv2elem(
+                mu=self.mu, rVec=np.array(self.r_BN_N), vVec=np.array(self.v_BN_N)
+            )
+            self._oe_cache_time = getattr(self.simulator, "time", None)
+        return self._oe_cache
+
+    @property
+    def semi_major_axis(self):
+        """Semimajor axis of the satellite's orbit [km]."""
+        return self._compute_oes().a
+
+    @property
+    def eccentricity(self):
+        """Eccentricity of the satellite's orbit [-]."""
+        return self._compute_oes().e
+
+    @property
+    def inclination(self):
+        """Inclination of the satellite's orbit [rad]."""
+        return self._compute_oes().i
+
+    @property
+    def ascending_node(self):
+        """Longitude of ascending node of the satellite's orbit [rad]."""
+        return self._compute_oes().AN
+
+    @property
+    def argument_of_periapsis(self):
+        """Argument of periapsis of the satellite's orbit [rad]."""
+        return self._compute_oes().AP
+
+    @property
+    def true_anomaly(self):
+        """True anomaly of the satellite's orbit [rad]."""
+        return self._compute_oes().f
+
+    @property
+    def beta_angle(self):
+        """Beta angle of the satellite's orbit, between 0 and 2pi [rad].
+
+        The angle between the angular momentum vector and the sun direction vector.
+        """
+        r_BN_N = self.dynamics.r_BN_N
+        v_BN_N = self.dynamics.v_BN_N
+        h_N = np.cross(r_BN_N, v_BN_N)
+        r_SN_N = (
+            self.simulator.world.gravFactory.spiceObject.planetStateOutMsgs[
+                self.simulator.world.sun_index
+            ]
+            .read()
+            .PositionVector
+        )
+
+        beta = np.arccos(
+            np.dot(h_N, r_SN_N) / (np.linalg.norm(h_N) * np.linalg.norm(r_SN_N))
+        )
+        return beta
+
     @property
     def battery_charge(self):
         """Battery charge [W*s]."""
@@ -293,6 +355,7 @@ class BasicDynamicsModel(DynamicsModel):
             priority: Model priority.
             kwargs: Passed to other setup functions.
         """
+        self.mu = mu
         if rN is not None and vN is not None and oe is None:
             pass
         elif oe is not None and rN is None and vN is None:

@@ -31,6 +31,7 @@ Development - |version|
 * Allow for the ``transmitterPacketSize`` to be specified. The default sets it to the instrument's baud rate.
 * Add a maximum range checking dynamics model in :class:`~bsk_rl.dynamics.MaxRangeDynModel`. Useful for keeping an agent
   in the vicinity of a target early in training.
+* Add properties in spacecraft dynamics for orbital element observations.
 
 
 Version 1.1.0

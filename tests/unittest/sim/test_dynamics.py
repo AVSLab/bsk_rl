@@ -13,6 +13,7 @@ from bsk_rl.sim.dyn import (
     ImagingDynModel,
     LOSCommDynModel,
 )
+from bsk_rl.sim.dyn import base as dyn_module
 
 module = "bsk_rl.sim.dyn."
 
@@ -78,6 +79,56 @@ class TestBasicDynamicsModel:
         assert (dyn.v_BN_N == np.zeros(3)).all()
         assert (dyn.v_BN_P == np.zeros(3)).all()
         assert (dyn.omega_BP_P == np.zeros(3)).all()
+
+    def test_orbit_properties(self):
+        with patch.object(dyn_module, "orbitalMotion") as mocked:
+            mocked.rv2elem = MagicMock(
+                return_value=MagicMock(a=1.0, e=2.0, i=3.0, AN=4.0, AP=5.0, f=6.0)
+            )
+            dyn = BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
+            dyn.mu = 1
+            dyn.scObject = MagicMock()
+            dyn.scObject.scStateOutMsg.read.return_value = MagicMock(
+                r_BN_N=[1, 2, 3], v_BN_N=[4, 5, 6]
+            )
+            dyn.simulator.time = 0.0
+
+            # Check that call to rv2elem happens only once
+            assert dyn.semi_major_axis == 1.0
+            mocked.rv2elem.assert_called_once()
+            assert dyn.eccentricity == 2.0
+            assert dyn.inclination == 3.0
+            assert dyn.ascending_node == 4.0
+            assert dyn.argument_of_periapsis == 5.0
+            assert dyn.true_anomaly == 6.0
+            mocked.rv2elem.assert_called_once()
+
+    def test_orbit_properties_no_cache_update(self):
+        with patch.object(dyn_module, "orbitalMotion") as mocked:
+            mocked.rv2elem = MagicMock(return_value=MagicMock(a=1.0))
+            dyn = BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
+            dyn.mu = 1
+            dyn.scObject = MagicMock()
+            dyn.scObject.scStateOutMsg.read.return_value = MagicMock()
+            dyn.simulator.time = 0.0
+
+            assert dyn.semi_major_axis == 1.0
+            mocked.rv2elem = MagicMock(return_value=MagicMock(a=2.0))
+            assert dyn.semi_major_axis == 1.0
+
+    def test_orbit_properties_cache_update(self):
+        with patch.object(dyn_module, "orbitalMotion") as mocked:
+            mocked.rv2elem = MagicMock(return_value=MagicMock(a=1.0))
+            dyn = BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
+            dyn.mu = 1
+            dyn.scObject = MagicMock()
+            dyn.scObject.scStateOutMsg.read.return_value = MagicMock()
+            dyn.simulator.time = 0.0
+
+            assert dyn.semi_major_axis == 1.0
+            dyn.simulator.time = 1.0
+            mocked.rv2elem = MagicMock(return_value=MagicMock(a=2.0))
+            assert dyn.semi_major_axis == 2.0
 
     def test_battery_properties(self):
         dyn = BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)

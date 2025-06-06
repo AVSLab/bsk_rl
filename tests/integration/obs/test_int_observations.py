@@ -62,6 +62,7 @@ class TestSatProperties:
             obs.SatProperties(
                 dict(prop="r_BN_N", module="dynamics"),
                 dict(prop="r_BN_N", norm=7000.0 * 1e3),
+                dict(prop="inclination", module="dynamics", norm=np.pi / 180),
             ),
         ]
         action_spec = [act.Drift()]
@@ -71,7 +72,7 @@ class TestSatProperties:
         satellite=SatPropertiesSat(
             "Sputnik",
             sat_args=SatPropertiesSat.default_sat_args(
-                oe=random_orbit(r_body=7000, alt=0)
+                oe=random_orbit(r_body=7000, alt=0, i=45)
             ),
         ),
         scenario=UniformTargets(n_targets=0),
@@ -86,6 +87,9 @@ class TestSatProperties:
         observation, info = self.env.reset()
         assert np.linalg.norm(observation[0:3]) == approx(7000.0 * 1e3)
         assert np.linalg.norm(observation[3:6]) == approx(1.0)
+        assert observation[6] == approx(45)
+        observation, reward, terminated, truncated, info = self.env.step(0)
+        assert observation[6] == approx(45)
 
 
 class TestTime:
