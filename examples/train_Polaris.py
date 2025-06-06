@@ -204,11 +204,25 @@ def env_metrics_callback(env):
     episode_duration = env.simulator.sim_time
     data["episode_duration_sec"] = episode_duration
 
+    aliveness = env.satellites[0].dynamics.is_alive()
+    data["number of alive cases"] = aliveness
+
+    battery_valid = env.satellites[0].dynamics.battery_valid()
+    data["battery_valid"] = battery_valid
+
+    rw_valid = env.satellites[0].dynamics.rw_speeds_valid()
+    data["rw_valid"] = rw_valid
+
     # Compute time *not* imaging a new target
     total_imaging_time = num_imaged * 300  # Each successful image takes 300s
     idle_time = episode_duration - total_imaging_time
     num_unproductive_actions = idle_time / 300
-    data["unproductive_action_count"] = int(round(num_unproductive_actions))
+    data["non-imaging_action_count"] = int(round(num_unproductive_actions))
+
+    # Compute time *not* imaging a new target
+    total_imaging_time = num_imaged * 300  # Each successful image takes 300s
+    non_imaging_time = episode_duration - total_imaging_time
+    data["non-imaging_time"] = int(round(non_imaging_time))
 
     return data
 
@@ -307,7 +321,7 @@ if __name__ == "__main__":
 
     # Storage
     sat_args["dataStorageCapacity"] = 50 * 8e6  # bits
-    sat_args["storageInit"] = lambda: np.random.uniform(0.6, 0.8) * 50 * 8e6
+    sat_args["storageInit"] = lambda: np.random.uniform(0.4, 0.6) * 50 * 8e6
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
     sat_args["transmitterBaudRate"] = -5 * 8e6
 
@@ -325,7 +339,7 @@ if __name__ == "__main__":
     # sat_args["imageRateErrorRequirement"] = 0.1
     sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.000000, size=3)  # N*m
     sat_args["maxWheelSpeed"] = 6000.0  # RPM
-    sat_args["wheelSpeeds"] = lambda: np.random.uniform(-3000, 3000, 3)
+    sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
     sat_args["desatAttitude"] = "nadir"
 
     class MyTargetSatellite(sats.Satellite):
@@ -370,12 +384,12 @@ if __name__ == "__main__":
     all_sat = [sat] + targets
 
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
-    model_name = f"new_penalties_small_battery_storage_model_{N}"
+    model_name = f"model_{N}"
     n_envs = (
         get_available_cores() - 6  # leave some extra cores for other processes
     )
     output_dir = (
-        Path("~/rllib_results").expanduser() / f"new_penalties_small_battery_storage_Polaris_simulation_{time.time()}"
+        Path("~/rllib_results").expanduser() / f"new_penalties_small_battery_storage_Polaris_simulation_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
     )
     output_dir = Path(output_dir)
 
@@ -401,7 +415,7 @@ if __name__ == "__main__":
             scenario=[scene.RandomSatellites("SS1",n_targets=n_targets)],
             rewarder=[data.RSOTargetImageReward()],
             time_limit=[total_time],
-            failure_penalty=[-100.0], # TODO: potentially increase this so it does not die on the very end
+            failure_penalty=[-100.0],
             terminate_on_time_limit=[False],
             generate_obs_retasking_only=[False],  # For last step
             episode_data_callback=[env_metrics_callback],
@@ -412,7 +426,7 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params_may29th.txt", "w") as file:
+    with open(output_dir / f"{model_name}_params_june3rd.txt", "w") as file: # update this when running on cluster
         yaml.dump(sanitize_np(job_args), file)
 
     train_model(
@@ -423,6 +437,6 @@ if __name__ == "__main__":
         total_timesteps=20_000_000,
         reload_frequency=300_000,
         n_envs=n_envs,
-        # temp_dir="/scratch/alpine/dahu1128/tmp",
+        # temp_dir="/scratch/alpine/dahu1128/tmp", # uncomment this when running on cluster
         **job_args,
     )
