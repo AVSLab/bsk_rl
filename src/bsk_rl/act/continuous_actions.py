@@ -154,3 +154,33 @@ class ImpulsiveThrust(ContinuousAction):
         if self.fsw_action is not None:
             getattr(self.satellite.fsw, self.fsw_action)()
             self.satellite.log_info(f"FSW action {self.fsw_action} activated.")
+
+
+class ImpulsiveThrustHill(ImpulsiveThrust):
+    def __init__(self, chief_name, *args, **kwargs):
+        """Impulsive thrusts in the Hill frame.
+
+        Args:
+            chief_name: Chief to use for Hill frame.
+            *args: Passed to ``ImpulsiveThrust``.
+            **kwargs: Passed to ``ImpulsiveThrust``.
+        """
+        self.chief_name = chief_name
+        super().__init__(*args, **kwargs)
+
+    def reset_post_sim_init(self) -> None:
+        """Connect to the chief satellite.
+
+        :meta private:
+        """
+        self.chief = self.satellite.simulator.get_satellite(self.chief_name)
+
+    def set_action(self, action: np.ndarray) -> None:
+        """Activate the action by setting the continuous value."""
+        dv_H = action[0:3]
+        dt = action[3]
+
+        NH = self.chief.dynamics.HN.T
+        dv_N = NH @ dv_H
+
+        super().set_action(np.concatenate((dv_N, [dt])))

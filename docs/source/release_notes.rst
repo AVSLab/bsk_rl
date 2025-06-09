@@ -37,7 +37,7 @@ Development - |version|
   does not return a reward for a satellite.
 * Allow for per-episode randomization of :class:`ResourceReward` weights and observation
   of those weights with :class:`ResourceRewardWeight`.
-
+* Add :class:`ImpulsiveThrustHill` for impulsive thrust in the Hill frame.
 
 Version 1.1.0
 -------------

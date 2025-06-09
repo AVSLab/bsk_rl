@@ -45,18 +45,24 @@ Continuous Actions
 Use :class:`ContinuousAction` for actions with a continuous action space. Currently, satellites
 can only have a single continuous action in their ``action_spec``.
 
-+----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
-| **Action**                 |**Dimension**| **Description**                                                                                       |
-+----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
-| :class:`ImpulsiveThrust`   | 4           | Instantaneously change the satellite's velocity, and drift for some duration.                         |
-+----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
++-----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
+| **Action**                  |**Dimension**| **Description**                                                                                       |
++-----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
+| :class:`ImpulsiveThrust`    | 4           | Instantaneously change the satellite's velocity, and drift for some duration.                         |
++-----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
+| :class:`ImpulsiveThrustHill`| 4           | Like :class:`ImpulsiveThrust`, but specified in the Hill frame of another satellite.                  |
++-----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
 
 
 
 """
 
 from bsk_rl.act.actions import Action
-from bsk_rl.act.continuous_actions import ContinuousAction, ImpulsiveThrust
+from bsk_rl.act.continuous_actions import (
+    ContinuousAction,
+    ImpulsiveThrust,
+    ImpulsiveThrustHill,
+)
 from bsk_rl.act.discrete_actions import (
     Charge,
     Desat,
@@ -81,4 +87,5 @@ __all__ = [
     "Scan",
     "ContinuousAction",
     "ImpulsiveThrust",
+    "ImpulsiveThrustHill",
 ]
