@@ -20,6 +20,16 @@ bskPath = __path__[0]
 logger = logging.getLogger(__name__)
 
 
+def random_unit_vector() -> np.ndarray:
+    """Generate a random unit vector.
+
+    Returns:
+        Random unit vector
+    """
+    vec = np.random.randn(3)
+    return vec / np.linalg.norm(vec)
+
+
 def random_orbit(
     i: Optional[float] = None,
     a: Optional[float] = 6371 + 500,
@@ -654,6 +664,23 @@ def hill2cd(
     return rd_N, vd_N
 
 
+def fibonacci_sphere(n_points):
+    """Generate points on a sphere using the Fibonacci sphere method.
+
+    Args:
+        n_points: Number of points to generate on the sphere.
+    """
+    # https://gist.github.com/Seanmatthews/a51ac697db1a4f58a6bca7996d75f68c
+    ga = (3 - np.sqrt(5)) * np.pi  # golden angle
+    theta = ga * np.arange(n_points)
+    z = np.linspace(1 / n_points - 1, 1 - 1 / n_points, n_points)
+    radius = np.sqrt(1 - z * z)
+    y = radius * np.sin(theta)
+    x = radius * np.cos(theta)
+
+    return np.vstack((x, y, z)).T
+
+
 __doc_title__ = "Orbital"
 __all__ = [
     "random_orbit",
@@ -669,4 +696,5 @@ __all__ = [
     "rv2omega",
     "cd2hill",
     "hill2cd",
+    "fibonacci_sphere",
 ]
