@@ -163,6 +163,8 @@ class RSOTargetImageReward(GlobalReward):
         super().__init__()
         self.reward_fn = reward_fn
         self.inspection_task_completed = False
+        self.downlink_bonus = 1
+        self.imaging_bonus = 0
 
     def initial_data(self, satellite: "Satellite") -> "RSOTargetImageData":
         """Furnish data to the scenario.
@@ -186,10 +188,18 @@ class RSOTargetImageReward(GlobalReward):
         Returns:
             reward: Cumulative reward across satellites for one step
         """
+        if not hasattr(self, "old_state"):
+            self.old_state = np.zeros_like(
+                self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedData
+            )
         reward = {}
         imaged_targets = sum(
             [new_data.imaged for new_data in new_data_dict.values()], []
         )
+
+        new_state = np.array(self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedData)
+        downlinked_targets = [int(i) for i in np.where(new_state - self.old_state < 0)[0]] # keep track of downlinked targets
+
         for sat_id, new_data in new_data_dict.items():
             reward[sat_id] = 0.0
             if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.2:
@@ -198,17 +208,38 @@ class RSOTargetImageReward(GlobalReward):
                 reward[sat_id] += -5
             if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.storage_level_fraction > .991:
                 reward[sat_id] += -10
-            if sat_id == 'SS1':
-                print('total accumulated rewards SS1: '+str(self.cum_reward['SS1']))
 
             for target in new_data.imaged:
                 # if target not in self.data.imaged and target not in self.data.eclipsed:
                 if target not in self.data.imaged:
                 # if target not in self.data.imaged and self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[1+target.id].read().shadowFactor < 0.3: # TODO: check Polaris reminder notes: this has a 50% chance of being wrong since there are 201 eclipse objects... allsats + targets
                     reward[sat_id] += self.reward_fn(
-                        target.priority
+                        target.priority * self.imaging_bonus
                     ) / imaged_targets.count(target)
 
+            if sat_id == 'SS1':
+                if len(downlinked_targets) > 0:
+                    for idx in downlinked_targets:
+                        # Do something with downlinked index
+                        target_name = self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedDataName[idx]
+                        target = next((t for t in self.scenario.target_spacecrafts if t.name == target_name), None)
+                        if target is not None:
+                            reward[sat_id] += self.reward_fn(target.priority * self.downlink_bonus)
+
+
+                if len(downlinked_targets) > 0:
+                    downlinked_names = [
+                        self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedDataName[idx]
+                        for idx in downlinked_targets
+                    ]
+                    print("Downlinked target names:", downlinked_names)
+                # else:
+                #     print("No targets downlinked this step.")
+                print('total accumulated rewards SS1: '+str(self.cum_reward['SS1']))
+                print('Targets imaged:'+str(len(self.scenario.satellites[0].data_store.data.imaged)))
+
+
+        self.old_state = np.array(self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedData)
 
         return reward
 
