@@ -320,8 +320,8 @@ if __name__ == "__main__":
     sat_args["imageAttErrorRequirement"] = 0.01
 
     # Storage
-    sat_args["dataStorageCapacity"] = 50 * 8e6  # bits
-    sat_args["storageInit"] = lambda: np.random.uniform(0.4, 0.6) * 50 * 8e6
+    sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 # bits
+    sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
     sat_args["transmitterBaudRate"] = -5 * 8e6
 
@@ -426,7 +426,7 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params_june3rd.txt", "w") as file: # update this when running on cluster
+    with open(output_dir / f"{model_name}_params_june10.txt", "w") as file: # update this when running on cluster
         yaml.dump(sanitize_np(job_args), file)
 
     train_model(

@@ -73,8 +73,8 @@ sat_args["imageAttErrorRequirement"] = 0.01
 # sat_args["storageInit"] = lambda: np.random.uniform(0., 0.0) * 1e10  # 0.25, 0.75) * 1e10
 
 # Storage
-sat_args["dataStorageCapacity"] = 50 * 8e6  # bits
-sat_args["storageInit"] = lambda: np.random.uniform(0.6, 0.8) * 50 * 8e6
+sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 # bits
+sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
 sat_args["instrumentBaudRate"] = 0.5 * 8e6
 sat_args["transmitterBaudRate"] = -5 * 8e6
 
