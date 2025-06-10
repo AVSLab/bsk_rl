@@ -65,6 +65,10 @@ provides a summary of the available reward systems:
 | :class:`ResourceReward`     | Returns reward based on the change in an arbitrary resource level       |                                                                     |
 |                             | (e.g. fuel, power, time, etc.).                                         |                                                                     |
 +-----------------------------+-------------------------------------------------------------------------+---------------------------------------------------------------------+
+| :class:`RSOInspectionReward`| Returns reward based on inspection percentage of an RSO                 | Works with :class:`RSOPoints` scenario.                             |
++-----------------------------+-------------------------------------------------------------------------+---------------------------------------------------------------------+
+
+
 
 To select a reward system to use, pass an instance of :class:`GlobalReward` to the ``data``
 field of the environment constructor:
@@ -96,6 +100,7 @@ from bsk_rl.data.base import GlobalReward
 from bsk_rl.data.nadir_data import ScanningTimeReward
 from bsk_rl.data.no_data import NoReward
 from bsk_rl.data.resource_data import ResourceReward
+from bsk_rl.data.rso_inspection import RSOInspectionReward
 from bsk_rl.data.unique_image_data import UniqueImageReward
 
 __doc_title__ = "Data & Reward"
@@ -105,4 +110,5 @@ __all__ = [
     "UniqueImageReward",
     "ScanningTimeReward",
     "ResourceReward",
+    "RSOInspectionReward",
 ]

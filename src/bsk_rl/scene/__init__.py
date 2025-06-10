@@ -12,6 +12,7 @@ For RSO Inspection tasks, the following scenario has been implemented:
 
 * :class:`SphericalRSO`: A RSO with spherical points and radial normals.
 
+These RSO scenarios can be used with :class:`RSOInspectionReward`.
 """
 
 from bsk_rl.scene.rso_points import RSOPoints, SphericalRSO
