@@ -339,6 +339,20 @@ class TestResourceDataStore:
 class TestResourceReward:
     def test_calculate_reward(self):
         dm = ResourceReward(reward_weight=2.0)
+        dm.reset_overwrite_previous()
+        dm.reset_pre_sim_init()
+        reward = dm.calculate_reward(
+            {
+                "sat1": ResourceData(1.0),
+                "sat2": ResourceData(-2.0),
+            }
+        )
+        assert reward == {"sat1": 2.0, "sat2": -4.0}
+
+    def test_calculate_random_reward(self):
+        dm = ResourceReward(reward_weight=lambda: 2.0)
+        dm.reset_overwrite_previous()
+        dm.reset_pre_sim_init()
         reward = dm.calculate_reward(
             {
                 "sat1": ResourceData(1.0),
@@ -350,6 +364,7 @@ class TestResourceReward:
     def test_read_reward(self):
         dm = ResourceReward(resource_fn=lambda sat: sat.resource_level)
         dm.reset_overwrite_previous()
+        dm.reset_pre_sim_init()
         sat = MagicMock()
         dm.create_data_store(sat)
         sat.resource_level = 3.0

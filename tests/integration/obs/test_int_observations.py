@@ -212,3 +212,37 @@ class TestGroundStationProperties:
     def test_ground_station_state(self):
         observation, info = self.env.reset()
         assert sum(observation) > 0  # Check that there are downlink opportunities
+
+
+class TestResourceRewardWeight:
+    class ResourceSat(sats.ImagingSatellite):
+        dyn_type = dyn.ImagingDynModel
+        fsw_type = fsw.ImagingFSWModel
+        observation_spec = [obs.ResourceRewardWeight()]
+        action_spec = [act.Drift()]
+
+    env = gym.make(
+        "SatelliteTasking-v1",
+        satellite=ResourceSat(
+            "ResourceSat",
+            obs_type=dict,
+        ),
+        scenario=UniformTargets(n_targets=0),
+        rewarder=(
+            data.ResourceReward(
+                resource_fn=lambda sat: sat.simulator.sim_time, reward_weight=0.1
+            ),
+            data.ResourceReward(
+                resource_fn=lambda sat: sat.simulator.sim_time, reward_weight=1.0
+            ),
+        ),
+        sim_rate=1.0,
+        max_step_duration=10.0,
+        disable_env_checker=True,
+    )
+
+    def test_resource_reward_weight(self):
+        observation, info = self.env.reset()
+        observation, reward, terminated, truncated, info = self.env.step(0)
+        assert reward == 1.0 + 10.0
+        assert (observation["resource_reward_weight"] == [0.1, 1.0]).all()

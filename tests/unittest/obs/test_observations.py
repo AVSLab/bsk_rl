@@ -221,3 +221,11 @@ class TestEclipse:
         ob.satellite = MagicMock()
         ob.satellite.trajectory.next_eclipse.return_value = (20.0, 30.0)
         assert ob.get_obs() == [0.1, 0.2]
+
+
+class TestResourceRewardWeight:
+    def test_obs(self):
+        ob = obs.ResourceRewardWeight()
+        ob.reset_overwrite_previous()
+        ob.weight_vector.append(1.0)
+        assert ob.get_obs() == [1.0]

@@ -310,6 +310,8 @@ class TestImagingSatellite:
     @patch("bsk_rl.sats.Satellite.reset_pre_sim_init")
     def test_reset_pre_sim_init(self, mock_reset):
         sat = self.make_sat()
+        sat.observation_builder = MagicMock()
+        sat.action_builder = MagicMock()
         sat.reset_overwrite_previous()
         targets = [MagicMock()] * 5
         for target in targets:

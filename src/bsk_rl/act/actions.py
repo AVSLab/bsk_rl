@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
-from bsk_rl.utils.functional import AbstractClassProperty
+from bsk_rl.utils.functional import AbstractClassProperty, Resetable
 
 if TYPE_CHECKING:  # pragma: no cover
     from gymnasium import spaces
@@ -29,7 +29,7 @@ def select_action_builder(satellite: "Satellite") -> "ActionBuilder":
         raise NotImplementedError("Heterogenous action builders not supported.")
 
 
-class ActionBuilder(ABC):
+class ActionBuilder(ABC, Resetable):
 
     def __init__(self, satellite: "Satellite") -> None:
         """Base class for all action builders.
@@ -42,6 +42,21 @@ class ActionBuilder(ABC):
         self.action_spec = deepcopy(self.satellite.action_spec)
         for act in self.action_spec:
             act.link_satellite(self.satellite)
+
+    def reset_overwrite_previous(self) -> None:
+        """Perform any once-per-episode setup."""
+        for act in self.action_spec:
+            act.reset_overwrite_previous()
+
+    def reset_pre_sim_init(self) -> None:
+        """Perform any once-per-episode setup."""
+        for act in self.action_spec:
+            act.reset_pre_sim_init()
+
+    def reset_during_sim_init(self) -> None:
+        """Perform any once-per-episode setup."""
+        for act in self.action_spec:
+            act.reset_during_sim_init()
 
     def reset_post_sim_init(self) -> None:
         """Perform any once-per-episode setup."""
@@ -68,7 +83,7 @@ class ActionBuilder(ABC):
         pass
 
 
-class Action(ABC):
+class Action(ABC, Resetable):
     builder_type: type[ActionBuilder] = AbstractClassProperty()  #: :meta private:
 
     def __init__(self, name: str = "act") -> None:
@@ -100,10 +115,6 @@ class Action(ABC):
         :meta private:
         """
         self.simulator = simulator  # already a proxy
-
-    def reset_post_sim_init(self) -> None:  # pragma: no cover
-        """Perform any once-per-episode setup."""
-        pass
 
     @abstractmethod
     def set_action(self, action: Any) -> None:  # pragma: no cover

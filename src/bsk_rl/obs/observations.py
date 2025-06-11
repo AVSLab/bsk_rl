@@ -3,13 +3,12 @@
 import logging
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Callable, Optional, Union
+from typing import TYPE_CHECKING, Any, Union
 
 import numpy as np
-from Basilisk.utilities import orbitalMotion
 from gymnasium import spaces
 
-from bsk_rl.utils.functional import vectorize_nested_dict
+from bsk_rl.utils.functional import Resetable, vectorize_nested_dict
 from bsk_rl.utils.orbital import rv2HN
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -49,7 +48,7 @@ def nested_obs_to_space(obs_dict, dtype):
         raise TypeError(f"Cannot convert {obs_dict} to gym space.")
 
 
-class ObservationBuilder:
+class ObservationBuilder(Resetable):
     def __init__(
         self,
         satellite: "Satellite",
@@ -79,6 +78,21 @@ class ObservationBuilder:
             else:
                 name_counts[obs.name] = 1
             obs.link_satellite(self.satellite)
+
+    def reset_overwrite_previous(self) -> None:
+        """Perform any once-per-episode setup."""
+        for obs in self.observation_spec:
+            obs.reset_overwrite_previous()
+
+    def reset_pre_sim_init(self) -> None:
+        """Perform any once-per-episode setup."""
+        for obs in self.observation_spec:
+            obs.reset_pre_sim_init()
+
+    def reset_during_sim_init(self) -> None:
+        """Perform any once-per-episode setup."""
+        for obs in self.observation_spec:
+            obs.reset_during_sim_init()
 
     def reset_post_sim_init(self) -> None:
         """Perform any once-per-episode setup."""
@@ -143,7 +157,7 @@ class ObservationBuilder:
         return self.obs_array_keys()
 
 
-class Observation(ABC):
+class Observation(ABC, Resetable):
     """Base observations class."""
 
     def __init__(self, name: str = "obs") -> None:
@@ -175,10 +189,6 @@ class Observation(ABC):
         :meta private:
         """
         self.simulator = simulator  # already a proxy
-
-    def reset_post_sim_init(self) -> None:  # pragma: no cover
-        """Perform any once-per-episode setup."""
-        pass
 
     @abstractmethod  # pragma: no cover
     def get_obs(self) -> Any:
@@ -479,6 +489,31 @@ class Eclipse(Observation):
             (eclipse_start - self.simulator.sim_time) / self.norm,
             (eclipse_end - self.simulator.sim_time) / self.norm,
         ]
+
+
+class ResourceRewardWeight(Observation):
+    """Observation for the weight of any :class:`ResourceReward`."""
+
+    def __init__(
+        self, name="resource_reward_weight", norm: Union[float, np.ndarray] = 1.0
+    ):
+        """Include the resource reward weight in the observation.
+
+        Args:
+            name: Name of the observation.
+            norm: Value to normalize the resource reward weight by. If a vector, it should
+                be the same length as the number of resource rewards in the environment.
+        """
+        super().__init__(name=name)
+        self.norm = norm
+
+    def reset_overwrite_previous(self) -> None:  # pragma: no cover
+        """Prepare weights to be saved by rewarders."""
+        self.weight_vector = []
+
+    def get_obs(self) -> float:
+        """Return the resource reward weight."""
+        return np.array(self.weight_vector) / self.norm
 
 
 __doc_title__ = "Backend"

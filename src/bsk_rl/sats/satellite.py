@@ -142,6 +142,8 @@ class Satellite(ABC, Resetable):
         self._timed_terminal_event_name = None
         self._is_alive = True
         self.time_of_death = None
+        self.observation_builder.reset_overwrite_previous()
+        self.action_builder.reset_overwrite_previous()
 
     @vizard.visualize
     def create_vizard_data(self, color, vizSupport=None) -> None:
@@ -160,6 +162,8 @@ class Satellite(ABC, Resetable):
             oe=self.sat_args["oe"],
             mu=self.sat_args["mu"],
         )
+        self.observation_builder.reset_pre_sim_init()
+        self.action_builder.reset_pre_sim_init()
 
     def set_simulator(self, simulator: "Simulator"):
         """Set the simulator for models.
@@ -202,6 +206,12 @@ class Satellite(ABC, Resetable):
         fsw = self.fsw_type(self, fsw_rate, **self.sat_args)
         self.fsw = proxy(fsw)
         return fsw
+
+    def reset_during_sim_init(self) -> None:
+        """Called during environment reset, during Basilisk simulation initialization."""
+        self.observation_builder.reset_during_sim_init()
+        self.action_builder.reset_during_sim_init()
+        return super().reset_during_sim_init()
 
     def reset_post_sim_init(self) -> None:
         """Called during environment reset, after Basilisk simulation initialization."""

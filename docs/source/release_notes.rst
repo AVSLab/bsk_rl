@@ -35,6 +35,8 @@ Development - |version|
 * Add properties in spacecraft dynamics for orbital element observations.
 * Fix an issue with failure penalties in the PettingZoo environment when the rewarder
   does not return a reward for a satellite.
+* Allow for per-episode randomization of :class:`ResourceReward` weights and observation
+  of those weights with :class:`ResourceRewardWeight`.
 
 
 Version 1.1.0

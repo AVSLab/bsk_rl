@@ -32,12 +32,14 @@ Some commonly used observations are provided:
 * :class:`Time` - Add simulation time to the observation.
 * :class:`OpportunityProperties` - Add information about upcoming targets or other ground access points to the observation.
 * :class:`Eclipse` - Add a tuple of the next orbit start and end.
+* :class:`ResourceRewardWeight` - Reports the weights of any randomized :class:`ResourceReward`.
 """
 
 from bsk_rl.obs.observations import (
     Eclipse,
     Observation,
     OpportunityProperties,
+    ResourceRewardWeight,
     SatProperties,
     Time,
 )
@@ -51,4 +53,5 @@ __all__ = [
     "Time",
     "OpportunityProperties",
     "Eclipse",
+    "ResourceRewardWeight",
 ]
