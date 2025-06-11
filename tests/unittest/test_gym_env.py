@@ -538,6 +538,30 @@ class TestConstellationTasking:
             sat.name: -10.0 for i, sat in enumerate(env.unwrapped.satellites)
         }
 
+    @patch(
+        "bsk_rl.GeneralSatelliteTasking._get_truncated",
+        MagicMock(return_value=False),
+    )
+    def test_get_reward_missing_sat(self):
+        env = ConstellationTasking(
+            satellites=[
+                MagicMock(is_alive=MagicMock(return_value=False)) for i in range(3)
+            ],
+            world_type=MagicMock(),
+            scenario=MagicMock(),
+            rewarder=MagicMock(),
+            failure_penalty=-20.0,
+        )
+        env._agents_last_compute_time = None
+        env.simulator = MagicMock(sim_time=0.0)
+        env.newly_dead = [sat.name for sat in env.unwrapped.satellites]
+        env.reward_dict = {env.unwrapped.satellites[0].name: 10.0}
+        assert env._get_reward() == {
+            env.unwrapped.satellites[0].name: -10.0,
+            env.unwrapped.satellites[1].name: -20.0,
+            env.unwrapped.satellites[2].name: -20.0,
+        }
+
     @pytest.mark.parametrize("timeout", [False, True])
     @pytest.mark.parametrize("terminate_on_time_limit", [False, True])
     def test_get_terminated(self, timeout, terminate_on_time_limit):

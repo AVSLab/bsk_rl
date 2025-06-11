@@ -671,7 +671,10 @@ class ConstellationTasking(
         reward = deepcopy(self.reward_dict)
         for agent, satellite in zip(self.possible_agents, self.satellites):
             if not satellite.is_alive():
-                reward[agent] += self.failure_penalty
+                if agent in reward:
+                    reward[agent] += self.failure_penalty
+                else:
+                    reward[agent] = self.failure_penalty
 
         reward_keys = list(reward.keys())
         for agent in reward_keys:

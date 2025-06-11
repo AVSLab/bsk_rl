@@ -33,6 +33,8 @@ Development - |version|
 * Add a maximum range checking dynamics model in :class:`MaxRangeDynModel`. Useful for keeping an agent
   in the vicinity of a target early in training.
 * Add properties in spacecraft dynamics for orbital element observations.
+* Fix an issue with failure penalties in the PettingZoo environment when the rewarder
+  does not return a reward for a satellite.
 
 
 Version 1.1.0
