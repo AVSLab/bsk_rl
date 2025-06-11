@@ -14,10 +14,22 @@ Environments
    simple_environment
    satellite_configuration
    multiagent_envs
+
+Earth Observation
+~~~~~~~~~~~~~~~~~
+.. toctree::
+   :maxdepth: 1
+
    cloud_environment
    cloud_environment_with_reimaging
    aeos
 
+RSO Inspection
+~~~~~~~~~~~~~~
+.. toctree::
+   :maxdepth: 1
+
+   rso_inspection
 
 Training
 --------

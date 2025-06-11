@@ -239,12 +239,12 @@ class BasicDynamicsModel(DynamicsModel):
     @property
     def ascending_node(self):
         """Longitude of ascending node of the satellite's orbit [rad]."""
-        return self._compute_oes().AN
+        return self._compute_oes().Omega
 
     @property
     def argument_of_periapsis(self):
         """Argument of periapsis of the satellite's orbit [rad]."""
-        return self._compute_oes().AP
+        return self._compute_oes().omega
 
     @property
     def true_anomaly(self):
@@ -257,8 +257,8 @@ class BasicDynamicsModel(DynamicsModel):
 
         The angle between the angular momentum vector and the sun direction vector.
         """
-        r_BN_N = self.dynamics.r_BN_N
-        v_BN_N = self.dynamics.v_BN_N
+        r_BN_N = self.r_BN_N
+        v_BN_N = self.v_BN_N
         h_N = np.cross(r_BN_N, v_BN_N)
         r_SN_N = (
             self.simulator.world.gravFactory.spiceObject.planetStateOutMsgs[

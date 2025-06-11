@@ -83,7 +83,7 @@ class TestBasicDynamicsModel:
     def test_orbit_properties(self):
         with patch.object(dyn_module, "orbitalMotion") as mocked:
             mocked.rv2elem = MagicMock(
-                return_value=MagicMock(a=1.0, e=2.0, i=3.0, AN=4.0, AP=5.0, f=6.0)
+                return_value=MagicMock(a=1.0, e=2.0, i=3.0, Omega=4.0, omega=5.0, f=6.0)
             )
             dyn = BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
             dyn.mu = 1
