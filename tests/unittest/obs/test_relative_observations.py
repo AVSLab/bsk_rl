@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from bsk_rl.obs import RelativeProperties
+from bsk_rl.obs.relative_observations import rso_imaged_regions
 
 
 class TestRelativeProperties:
@@ -51,3 +52,47 @@ class TestRelativeProperties:
         ob.satellite = deputy
         ob.chief = chief
         assert ob.get_obs() == {"prop": 3.0}
+
+
+class TestRSOImagedRegions:
+    def test_one_region(self):
+        servicer = MagicMock()
+        servicer.data_store.data.point_inspect_status = {
+            MagicMock(r_PB_B=np.array([1, 0, 0])): True,
+            MagicMock(r_PB_B=np.array([1, 0, 0])): False,
+        }
+        chief = MagicMock()
+        obs = rso_imaged_regions(
+            servicer, chief, region_centers=np.array([[1, 0, 0]]), frame="chief_body"
+        )
+        assert np.allclose(obs, [0.5])
+
+    def test_two_regions(self):
+        servicer = MagicMock()
+        servicer.data_store.data.point_inspect_status = {
+            MagicMock(r_PB_B=np.array([1, 0, 0])): True,
+            MagicMock(r_PB_B=np.array([0.9, 0.1, 0])): False,
+            MagicMock(r_PB_B=np.array([-0.9, 0, 0.3])): True,
+        }
+        chief = MagicMock()
+        obs = rso_imaged_regions(
+            servicer,
+            chief,
+            region_centers=np.array([[1, 0, 0], [-1, 0, 0]]),
+            frame="chief_body",
+        )
+        assert np.allclose(obs, [0.5, 1.0])
+
+    def test_equally_close_regions(self):
+        servicer = MagicMock()
+        servicer.data_store.data.point_inspect_status = {
+            MagicMock(r_PB_B=np.array([0, 0, 0])): True,
+        }
+        chief = MagicMock()
+        obs = rso_imaged_regions(
+            servicer,
+            chief,
+            region_centers=np.array([[1, 0, 0], [-1, 0, 0]]),
+            frame="chief_body",
+        )
+        assert np.allclose(obs, [1.0, 0.0])

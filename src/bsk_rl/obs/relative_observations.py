@@ -3,9 +3,10 @@
 from typing import Any
 
 import numpy as np
+from Basilisk.utilities.RigidBodyKinematics import MRP2C
 
 from bsk_rl.obs import Observation
-from bsk_rl.utils.orbital import rv2omega
+from bsk_rl.utils.orbital import rv2HN, rv2omega
 
 
 def r_DC_N(deputy, chief):
@@ -84,6 +85,53 @@ def sigma_HdHc(deputy, chief):
 # TODO Could probably make some thing that generates these and other relative properties
 # (i.e. whether to use body or hill frame for each sat, what
 # frame to express in)
+
+
+def rso_imaged_regions(
+    servicer,
+    chief,
+    region_centers=np.array(
+        [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+    ),
+    frame="chief_hill",
+):
+    """For use with the RSO tasking scenario.
+
+    Returns the fraction of regions imaged by the servicer, where regions are defined by
+    the inspection points closest to each region center.
+
+    Args:
+        servicer: The servicer satellite.
+        chief: The chief satellite.
+        region_centers: The centers of the regions to return inspection metrics for.
+            It may be useful to set this as :class:`fibonacci_sphere` points.
+        frame: The frame to use for the region centers. Can be ``chief_hill`` or
+            ``chief_body``.
+    """
+    assert frame in ["chief_hill", "chief_body"]
+    point_inspect_status = servicer.data_store.data.point_inspect_status
+
+    region_centers_C = []
+    for region_center in region_centers:
+        if frame == "chief_hill":
+            HN = rv2HN(chief.dynamics.r_BN_N, chief.dynamics.v_BN_N)
+            CN = MRP2C(chief.dynamics.sigma_BN)
+            region_center_C = CN @ HN.T @ region_center
+        elif frame == "chief_body":
+            region_center_C = region_center
+
+        region_centers_C.append(region_center_C)
+
+    imaged = np.zeros(len(region_centers))
+    total = np.zeros(len(region_centers))
+    for point, inspected in point_inspect_status.items():
+        # find the closest region center
+        i_closest = np.argmin(np.linalg.norm(region_centers_C - point.r_PB_B, axis=1))
+        total[i_closest] += 1
+        if inspected:
+            imaged[i_closest] += 1
+
+    return imaged / np.maximum(total, 1)
 
 
 class RelativeProperties(Observation):
@@ -185,4 +233,5 @@ __all__ = [
     "sigma_DHc",
     "sigma_HdC",
     "sigma_HdHc",
+    "rso_imaged_regions",
 ]
