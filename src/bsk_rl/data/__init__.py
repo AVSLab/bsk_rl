@@ -55,7 +55,7 @@ provides a summary of the available reward systems:
 | :class:`NoReward`           | Returns zero reward for every agent at every step.                      |                                                                     |
 +-----------------------------+-------------------------------------------------------------------------+---------------------------------------------------------------------+
 | :class:`UniqueImageReward`  | Returns reward corresponding to target priority the                     | Should be used with :class:`~bsk_rl.sats.ImagingSatellite` and a    |
-|                             | first time a target is imaged by any agent. Causes                      | :class:`~bsk_rl.scene.Target`-based scenario.                       |
+|                             | first time a target is imaged by any agent. Causes                      | :class:`~bsk_rl.scene.targets.Target`-based scenario.               |
 |                             | satellites to filter targets that are known to have                     |                                                                     |
 |                             | been imaged already.                                                    |                                                                     |
 +-----------------------------+-------------------------------------------------------------------------+---------------------------------------------------------------------+

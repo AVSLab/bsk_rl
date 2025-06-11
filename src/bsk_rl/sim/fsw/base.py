@@ -31,7 +31,7 @@ from bsk_rl.utils.functional import (
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
     from bsk_rl.sim import Simulator
-    from bsk_rl.sim.dyn import DynamicsModel
+    from bsk_rl.sim.dyn.base import DynamicsModel
     from bsk_rl.sim.world import WorldModel
 
 
@@ -68,7 +68,7 @@ class FSWModel(ABC):
 
     @classmethod
     def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
-        """Define minimum :class:`~bsk_rl.sim.dyn.DynamicsModel` for compatibility."""
+        """Define minimum :class:`DynamicsModel` for compatibility."""
         return []
 
     def __init__(

@@ -3,7 +3,7 @@
 Satellite observation types can be used to add information to the observation.
 :class:`Observation` provides an interface for creating new observation types. To
 configure the observation, set the ``observation_spec`` attribute of a
-:class:`~bsk_rl.env.scenario.satellites.Satellite` subclass. For example:
+:class:`~bsk_rl.sats.Satellite` subclass. For example:
 
 .. code-block:: python
 
@@ -22,7 +22,7 @@ configure the observation, set the ``observation_spec`` attribute of a
         ]
 
 The format of the observation can setting the ``obs_type`` attribute of the
-:class:`~bsk_rl.env.scenario.satellites.Satellite`. The default is ``np.ndarray``, but
+:class:`~bsk_rl.sats.Satellite`. The default is ``np.ndarray``, but
 it can also be set to a human-readable ``dict`` or a ``list``.
 
 Some commonly used observations are provided:

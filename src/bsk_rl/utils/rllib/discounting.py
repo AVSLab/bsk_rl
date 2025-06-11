@@ -434,4 +434,5 @@ __all__ = [
     "CondenseMultiStepActions",
     "TimeDiscountedGAEPPOTorchLearner",
     "TimeDiscountedGAEPPOTfLearner",
+    "TimeDiscountedGAEPPOLearner",
 ]

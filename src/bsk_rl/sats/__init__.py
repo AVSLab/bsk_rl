@@ -93,7 +93,7 @@ Satellite Varieties
   access to a ground location based on elevation angle. Can return ordered lists of
   upcoming opportunities.
 * :class:`ImagingSatellite` - Extends :class:`AccessSatellite` to provide methods for
-  interacting with :class:`bsk_rl.scene.Target` objects.
+  interacting with :class:`bsk_rl.scene.targets.Target` objects.
 """
 
 from bsk_rl.sats.access_satellite import AccessSatellite, ImagingSatellite

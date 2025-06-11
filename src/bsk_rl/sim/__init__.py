@@ -7,11 +7,11 @@ The simulation is divided into three categories of Basilisk models:
   and ground station locations. While the world model can be specified in the :class:`~bsk_rl.GeneralSatelliteTasking`
   constructor, it is generally automatically inferred from the satellite requirements.
 * :ref:`bsk_rl.sim.dyn`, representing the dynamics model for each satellite. This is
-  specified on a per-satellite basis by the :class:`~bsk_rl.Satellite` type definition.
+  specified on a per-satellite basis by the :class:`~bsk_rl.sats.Satellite` type definition.
   The dynamics model captures the properties of the satellite, such as physical configurations,
   actuators models, instrument models, the power system, and storage resources.
 * :ref:`bsk_rl.sim.fsw`, representing the flight software models for each satellite. As
-  with flight software, this specified by the :class:`~bsk_rl.Satellite`. The flight
+  with flight software, this specified by the :class:`~bsk_rl.sats.Satellite`. The flight
   software model represents the low-level algorithms used for actuator and instrument
   control.
 
@@ -21,7 +21,7 @@ other parts of ``bsk_rl`` controlling the flight software models. This hierarchy
 contributes to the realism of the simulation, as the satellite is being controlled
 through its flight software.
 
-The :class:`~bsk_rl.Simulator` is the main class for the simulation environment,
+The :class:`~bsk_rl.sim.Simulator` is the main class for the simulation environment,
 subclassing from the `Basilisk SimBaseClass <http://hanspeterschaub.info/basilisk/Documentation/utilities/SimulationBaseClass.html?highlight=simbaseclass#SimulationBaseClass.SimBaseClass>`_.
 At each environment reset, the simulator and the associated flight software, dynamics,
 and world models are deleted and reconstructed, generating a fresh Basilisk simulation.

@@ -13,11 +13,6 @@ BSK-RL: Environments for Spacecraft Planning and Scheduling
     GitHub <https://github.com/AVSLab/bsk_rl/>
 
 
-.. warning::
-    
-    The 1.0.0 release has significant changes from previous versions. See the 
-    :doc:`Release Notes <release_notes>` for more information.
-
 
 **BSK-RL** (`Basilisk <https://hanspeterschaub.info/basilisk>`_ + 
 `Reinforcement Learning <https://en.wikipedia.org/wiki/Reinforcement_learning>`_) is a 

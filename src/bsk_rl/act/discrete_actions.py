@@ -121,14 +121,14 @@ class DiscreteFSWAction(DiscreteAction):
     ):
         """Discrete action to task a flight software action function.
 
-        This action executes a function of a :class:`~bsk_rl.env.simulation.fsw.FSWModel`
+        This action executes a function of a :class:`~bsk_rl.sim.fsw.FSWModel`
         instance that takes no arguments, typically decorated with ``@action``.
 
         Args:
             fsw_action: Name of the flight software function to task.
             name: Name of the action. If not specified, defaults to the ``fsw_action`` name.
             duration: Duration of the action in seconds. Defaults to a large value so that
-                the :class:`~bsk_rl.env.gym_env.GeneralSatelliteTasking` ``max_step_duration``
+                the :class:`~bsk_rl.GeneralSatelliteTasking` ``max_step_duration``
                 controls step length.
             reset_task: If true, reset the action if the previous action was the same.
                 Generally, this parameter should be false to ensure realistic, continuous
@@ -168,7 +168,7 @@ class DiscreteFSWAction(DiscreteAction):
 
 class Charge(DiscreteFSWAction):
     def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
-        """Action to enter a sun-pointing charging mode (:class:`~bsk_rl.env.simulation.fsw.BasicFSWModel.action_charge`).
+        """Action to enter a sun-pointing charging mode (:class:`~bsk_rl.sim.fsw.BasicFSWModel.action_charge`).
 
         Charging will only occur if the satellite is in sunlight.
 
@@ -181,7 +181,7 @@ class Charge(DiscreteFSWAction):
 
 class Drift(DiscreteFSWAction):
     def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
-        """Action to disable all FSW tasks (:class:`~bsk_rl.env.simulation.fsw.BasicFSWModel.action_drift`).
+        """Action to disable all FSW tasks (:class:`~bsk_rl.sim.fsw.BasicFSWModel.action_drift`).
 
         Args:
             name: Action name.
@@ -192,7 +192,7 @@ class Drift(DiscreteFSWAction):
 
 class Desat(DiscreteFSWAction):
     def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
-        """Action to desaturate reaction wheels (:class:`~bsk_rl.env.simulation.fsw.BasicFSWModel.action_desat`).
+        """Action to desaturate reaction wheels (:class:`~bsk_rl.sim.fsw.BasicFSWModel.action_desat`).
 
         This action must be called repeatedly to fully desaturate the reaction wheels.
 
@@ -207,10 +207,10 @@ class Desat(DiscreteFSWAction):
 
 class Downlink(DiscreteFSWAction):
     def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
-        """Action to transmit data from the data buffer (:class:`~bsk_rl.env.simulation.fsw.ImagingFSWModel.action_downlink`).
+        """Action to transmit data from the data buffer (:class:`~bsk_rl.sim.fsw.ImagingFSWModel.action_downlink`).
 
         If not in range of a ground station (defined in
-        :class:`~bsk_rl.env.world.GroundStationWorldModel`), no data will
+        :class:`~bsk_rl.sim.world.GroundStationWorldModel`), no data will
         be downlinked.
 
         Args:
@@ -237,7 +237,7 @@ class Image(DiscreteAction):
         n_ahead_image: int,
         name: str = "action_image",
     ):
-        """Actions to image upcoming target (:class:`~bsk_rl.env.simulation.fsw.ImagingFSWModel.action_image`).
+        """Actions to image upcoming target (:class:`~bsk_rl.sim.fsw.ImagingFSWModel.action_image`).
 
         Adds ``n_ahead_image`` actions to the action space, corresponding to the next
         ``n_ahead_image`` unimaged targets. The action may be unsuccessful if the target

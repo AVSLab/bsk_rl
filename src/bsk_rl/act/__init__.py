@@ -1,6 +1,6 @@
 """Actions ``bsk_rl.act`` can be used to add actions to an agent.
 
-To configure the observation, set the ``action_spec`` attribute of a :class:`~bsk_rl.env.scenario.satellites.Satellite`
+To configure the observation, set the ``action_spec`` attribute of a :class:`~bsk_rl.sats.Satellite`
 subclass. For example:
 
 .. code-block:: python
@@ -24,7 +24,7 @@ Use :class:`DiscreteAction` for integer-indexable, discrete actions.
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
 | **Action**                 |**Count**| **Description**                                                                                       |
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
-| :class:`DiscreteFSWAction` | 1       | Call an arbitrary ``@action`` decorated function in the :class:`~bsk_rl.env.simulation.fsw.FSWModel`. |
+| :class:`DiscreteFSWAction` | 1       | Call an arbitrary ``@action`` decorated function in the :class:`~bsk_rl.sim.fsw.FSWModel`.            |
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
 | :class:`Charge`            | 1       | Point the solar panels at the sun.                                                                    |
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+

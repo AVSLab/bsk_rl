@@ -1,6 +1,11 @@
 Examples
 ========
 
+.. warning::
+
+   Example notebook builds are currently not available due to a Basilisk/SPICE issue. Please
+   check back later.
+
 Environments
 ------------
 .. toctree::

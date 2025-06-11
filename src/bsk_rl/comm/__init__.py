@@ -10,7 +10,7 @@ improve decision-making.
 Communication works by sharing data between satellites, updating each other's local
 knowledge of the scenario. After each environment step,
 :class:`CommunicationMethod.communication_pairs` is evaluated to determine which pairs
-of satellites should share data. Then, each local :class:`~bsk_rl.data.DataStore` is
+of satellites should share data. Then, each local :class:`~bsk_rl.data.base.DataStore` is
 updated with the other satellite's data.
 
 Configuration

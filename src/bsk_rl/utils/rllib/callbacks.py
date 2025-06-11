@@ -78,7 +78,7 @@ class MultiagentEpisodeDataCallbacks(DefaultCallbacks):
     def __init__(self, *args, **kwargs):
         """Log information at the end of each episode.
 
-        Make a subclass of ``MultiagentEpisodeDataCallbacks`` and override
+        Make a subclass of :class:`MultiagentEpisodeDataCallbacks` and override
         ``pull_env_metrics`` and ``pull_sat_metrics`` to log environment-specific
         information at the end of each episode. Satellite metrics are logged per-satellite
         and as a mean across all satellites.
@@ -175,6 +175,7 @@ class EpisodeDataLogger:
     """Base class for logging data at the end of each episode."""
 
     def __init__(self, episode_data_callback=None, satellite_data_callback=None):
+        """Initialize the episode data logger."""
         if episode_data_callback is None:
             episode_data_callback = lambda _: {}
         self.episode_data_callback = episode_data_callback
@@ -186,9 +187,11 @@ class EpisodeDataLogger:
         self.satellites: list["Satellite"]
 
     def set_metrics_logger(self, metrics_logger):
+        """Set the metrics logger for this environment."""
         self.metrics_logger = metrics_logger
 
     def log_data_on_reset(self):
+        """Log data at the end of each episode before resetting the environment."""
         if self.metrics_logger is not None:
             episode_data = self.episode_data_callback(self)
             for k, v in episode_data.items():
@@ -277,6 +280,7 @@ class EpisodeDataParallelWrapper(EpisodeDataLogger, BaseParallelWrapper):
 
 __doc_title__ = "RLlib Callbacks"
 __all__ = [
+    "EpisodeDataLogger",
     "EpisodeDataWrapper",
     "EpisodeDataParallelWrapper",
     "WrappedEpisodeDataCallbacks",

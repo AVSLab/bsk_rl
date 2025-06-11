@@ -98,7 +98,7 @@ class NoCommunication(CommunicationMethod):
         """Implements no communication between satellites.
 
         This is the default communication method if no other method is specified. Satellites
-        will maintain their own :class:`~bsk_rl.data.DataStore` and not share data with others.
+        will maintain their own :class:`~bsk_rl.data.base.DataStore` and not share data with others.
         """
         super().__init__(*args, **kwargs)
 
