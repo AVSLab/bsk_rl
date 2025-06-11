@@ -38,6 +38,9 @@ Development - |version|
 * Allow for per-episode randomization of :class:`ResourceReward` weights and observation
   of those weights with :class:`ResourceRewardWeight`.
 * Add :class:`ImpulsiveThrustHill` for impulsive thrust in the Hill frame.
+* Separate :class:`random_circular_orbit` and :class:`random_orbit` to avoid misleading
+  altitude argument.
+
 
 Version 1.1.0
 -------------

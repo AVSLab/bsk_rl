@@ -28,17 +28,13 @@ class TestRelProperties:
             RelPropertiesSat(
                 "Deputy",
                 sat_args=dict(
-                    oe=random_orbit(
-                        i=1.0, alt=1000.0, e=0.0, Omega=0.0, omega=0.0, f=0.0
-                    )
+                    oe=random_orbit(i=1.0, a=7000.0, e=0.0, Omega=0.0, omega=0.0, f=0.0)
                 ),
             ),
             BasicSat(
                 "Chief",
                 sat_args=dict(
-                    oe=random_orbit(
-                        i=1.0, alt=1100.0, e=0.0, Omega=0.0, omega=0.0, f=0.0
-                    )
+                    oe=random_orbit(i=1.0, a=7100.0, e=0.0, Omega=0.0, omega=0.0, f=0.0)
                 ),
             ),
         ],

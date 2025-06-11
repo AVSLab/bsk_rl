@@ -1,3 +1,5 @@
+from functools import partial
+
 import gymnasium as gym
 import numpy as np
 from pytest import approx
@@ -5,7 +7,7 @@ from pytest import approx
 from bsk_rl import act, data, obs, sats
 from bsk_rl.scene import UniformNadirScanning, UniformTargets
 from bsk_rl.sim import dyn, fsw
-from bsk_rl.utils.orbital import random_orbit
+from bsk_rl.utils.orbital import random_circular_orbit, random_orbit
 
 #########################
 # Composed Action Tests #
@@ -86,7 +88,7 @@ class TestChargingAction:
             "Charger",
             sat_args=ChargeSat.default_sat_args(
                 # High, inclined orbit makes eclipse unlikely
-                oe=random_orbit(alt=50000, i=90),
+                oe=random_orbit(a=50000, i=90),
                 batteryStorageCapacity=500_000,
                 storedCharge_Init=250_000,
             ),
@@ -119,7 +121,7 @@ class TestDesatAction:
             satellite=self.DesatSat(
                 "Ellite",
                 sat_args=self.DesatSat.default_sat_args(
-                    oe=random_orbit,
+                    oe=partial(random_circular_orbit, i=45),
                     wheelSpeeds=[1000.0, -1000.0, 1000.0],
                     nHat_B=np.array([0, 1, 0]),
                 ),

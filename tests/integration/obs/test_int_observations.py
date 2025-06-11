@@ -71,9 +71,7 @@ class TestSatProperties:
         "SatelliteTasking-v1",
         satellite=SatPropertiesSat(
             "Sputnik",
-            sat_args=SatPropertiesSat.default_sat_args(
-                oe=random_orbit(r_body=7000, alt=0, i=45)
-            ),
+            sat_args=SatPropertiesSat.default_sat_args(oe=random_orbit(a=7000, i=45)),
         ),
         scenario=UniformTargets(n_targets=0),
         rewarder=data.NoReward(),

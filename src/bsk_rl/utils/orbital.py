@@ -21,33 +21,48 @@ logger = logging.getLogger(__name__)
 
 
 def random_orbit(
-    i: Optional[float] = 45.0,
-    alt: float = 500,
-    r_body: float = 6371,
+    i: Optional[float] = None,
+    a: Optional[float] = 6371 + 500,
     e: float = 0,
     Omega: Optional[float] = None,
-    omega: Optional[float] = 0,
+    omega: Optional[float] = None,
     f: Optional[float] = None,
+    alt: float = None,
+    r_body: float = 6371,
 ) -> ClassicElements:
     """Create a set of orbit elements.
 
     Parameters are fixed if specified and randomized if ``None``. Defaults to a random
-    circular orbit at 500 km altitude and 45 deg inclination.
+    circular orbit at 500 km altitude.
 
     Args:
         i: [deg] Inclination, randomized in ``[-pi, pi]``.
-        alt: [km] Altitude above r_body.
-        r_body: [km] Body radius.
+        a: [km] Semi-major axis.
         e: Eccentricity.
         Omega: [deg] LAN, randomized in ``[0, 2pi]``.
         omega: [deg] Argument of periapsis, randomized in ``[0, 2pi]``.
         f: [deg] True anomaly, randomized in ``[0, 2pi]``.
+        alt: [km] (deprecated) Altitude above r_body.
+        r_body: [km] (deprecated) Body radius.
 
     Returns:
         ClassicElements: orbital elements
     """
+    if alt is not None:
+        logger.warning(
+            "Ignoring a, e, and omega and using alt and r_body to generate a circular orbit."
+            "random_circular_orbit is preferred for this use case."
+        )
+        return random_circular_orbit(
+            i=i,
+            alt=alt,
+            r_body=r_body,
+            Omega=Omega,
+            f=f,
+        )
+
     oe = ClassicElements()
-    oe.a = (r_body + alt) * 1e3
+    oe.a = a * 1e3
     oe.e = e
     oe.i = np.radians(i) if i is not None else np.random.uniform(-np.pi, np.pi)
     oe.Omega = (
@@ -58,6 +73,32 @@ def random_orbit(
     )
     oe.f = np.radians(f) if f is not None else np.random.uniform(0, 2 * np.pi)
     return oe
+
+
+def random_circular_orbit(
+    i: Optional[float] = None,
+    alt: float = 500,
+    r_body: float = 6371,
+    Omega: Optional[float] = None,
+    f: Optional[float] = None,
+):
+    """Create a set of orbit elements for a circular orbit.
+
+    Parameters are fixed if specified and randomized if ``None``.
+
+    Args:
+        i: [deg] Inclination, randomized in ``[-pi, pi]``.
+        alt: [km] Altitude above r_body.
+        r_body: [km] Body radius, defaults to Earth's radius.
+        Omega: [deg] LAN, randomized in ``[0, 2pi]``.
+        f: [deg] True anomaly, randomized in ``[0, 2pi]``.
+
+    """
+    omega = 0
+    e = 0
+    a = r_body + alt
+
+    return random_orbit(i=i, a=a, e=e, Omega=Omega, omega=omega, f=f)
 
 
 def random_epoch(start: int = 2000, end: int = 2022):
@@ -616,6 +657,7 @@ def hill2cd(
 __doc_title__ = "Orbital"
 __all__ = [
     "random_orbit",
+    "random_circular_orbit",
     "random_epoch",
     "lla2ecef",
     "elevation",

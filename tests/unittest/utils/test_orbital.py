@@ -17,6 +17,13 @@ class TestRandomOrbit:
         assert 0 <= oe.omega <= 2 * np.pi
         assert 0 <= oe.f <= 2 * np.pi
 
+    @pytest.mark.repeat(10)
+    def test_random_circular_orbit(self):
+        oe = orbital.random_circular_orbit(i=None, Omega=None, f=None)
+        assert -np.pi <= oe.i <= np.pi
+        assert 0 <= oe.Omega <= 2 * np.pi
+        assert 0 <= oe.f <= 2 * np.pi
+
     def test_repeatable(self):
         np.random.seed(0)
         oe1 = orbital.random_orbit()
@@ -25,9 +32,7 @@ class TestRandomOrbit:
         assert oe1.f == oe2.f
 
     def test_units(self):
-        oe = orbital.random_orbit(
-            i=90.0, alt=500, r_body=1000, e=0.1, Omega=90.0, omega=90.0, f=90.0
-        )
+        oe = orbital.random_orbit(i=90.0, a=1500, e=0.1, Omega=90.0, omega=90.0, f=90.0)
         assert oe.a == 1500000
         assert oe.e == 0.1
         assert np.pi / 2 == oe.i == oe.Omega == oe.omega == oe.f
@@ -198,7 +203,7 @@ class TestTrajectorySimulator:
     def test_no_eclipse(self):
         ts = orbital.TrajectorySimulator(
             self.epoch,
-            oe=orbital.random_orbit(alt=50000, i=90.0, omega=0, Omega=0, f=45.0),
+            oe=orbital.random_orbit(a=50000, i=90.0, omega=0, Omega=0, f=45.0),
             mu=self.mu,
         )
         assert ts.next_eclipse(0, max_tries=3) == (1.0, 1.0)
