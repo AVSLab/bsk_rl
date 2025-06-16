@@ -137,8 +137,7 @@ class ImpulsiveThrust(ContinuousAction):
         )
         if dt != dt_desired:
             self.satellite.logger.warning(
-                f"Requested drift duration {dt_desired} out of range. "
-                f"Clamping to {dt}."
+                f"Requested drift duration {dt_desired} out of range. Clamping to {dt}."
             )
 
         self.satellite.logger.info(
@@ -153,7 +152,7 @@ class ImpulsiveThrust(ContinuousAction):
         # TODO: should wait until action_impulsive_thrust is done if not immediate
         if self.fsw_action is not None:
             getattr(self.satellite.fsw, self.fsw_action)()
-            self.satellite.log_info(f"FSW action {self.fsw_action} activated.")
+            self.satellite.logger.info(f"FSW action {self.fsw_action} activated.")
 
 
 class ImpulsiveThrustHill(ImpulsiveThrust):
