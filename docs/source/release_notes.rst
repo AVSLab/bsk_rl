@@ -30,16 +30,20 @@ Development - |version|
 * Allow for the ``time_limit`` to be randomized.
 * Added observation for arbitrary relative states between two satellites in :class:`~bsk_rl.obs.RelativeProperties`.
 * Allow for the ``transmitterPacketSize`` to be specified. The default sets it to the instrument's baud rate.
-* Add a maximum range checking dynamics model in :class:`MaxRangeDynModel`. Useful for keeping an agent
+* Add a maximum range checking dynamics model in :class:`~bsk_rl.sim.dyn.MaxRangeDynModel`. Useful for keeping an agent
   in the vicinity of a target early in training.
 * Add properties in spacecraft dynamics for orbital element observations.
 * Fix an issue with failure penalties in the PettingZoo environment when the rewarder
   does not return a reward for a satellite.
-* Allow for per-episode randomization of :class:`ResourceReward` weights and observation
-  of those weights with :class:`ResourceRewardWeight`.
-* Add :class:`ImpulsiveThrustHill` for impulsive thrust in the Hill frame.
-* Separate :class:`random_circular_orbit` and :class:`random_orbit` to avoid misleading
+* Allow for per-episode randomization of :class:`~bsk_rl.data.ResourceReward` weights and observation
+  of those weights with :class:`~bsk_rl.obs.ResourceRewardWeight`.
+* Add :class:`~bsk_rl.act.ImpulsiveThrustHill` for impulsive thrust in the Hill frame.
+* Separate :class:`~bsk_rl.utils.orbital.random_circular_orbit` and :class:`~bsk_rl.utils.orbital.random_orbit` to avoid misleading
   altitude argument.
+* Introduce a new RSO inspection environment, primarily consisting of :class:`~bsk_rl.data.RSOInspectionReward`,
+  :class:`~bsk_rl.scene.RSOPoints`, :class:`~bsk_rl.sim.fsw.RSOInspectorFSWModel`, and
+  :class:`~bsk_rl.sim.dyn.RSODynModel`. An example environment setup is described in the
+  `RSO Inspection <examples/rso_inspection.ipynb>`_ example.
 
 
 Version 1.1.0
