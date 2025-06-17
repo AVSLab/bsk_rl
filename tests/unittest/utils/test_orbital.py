@@ -208,7 +208,6 @@ class TestTrajectorySimulator:
         )
         assert ts.next_eclipse(0, max_tries=3) == (1.0, 1.0)
 
-    @pytest.mark.skip(reason="Test is failing on GitHub. Under investigation.")
     def test_interpolators(self):
         # Weak tests, could be better
         ts = orbital.TrajectorySimulator(self.epoch, oe=self.oe, mu=self.mu)

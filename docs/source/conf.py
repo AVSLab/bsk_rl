@@ -54,9 +54,7 @@ autodoc_default_options = {
     "undoc-members": None,
 }
 autodoc_typehints = "both"
-nbsphinx_execute = (
-    "never"  # 6-11-2025: Temporarily disabling nbsphinx account for Basilisk issues
-)
+# nbsphinx_execute = "never"
 nbsphinx_allow_errors = False
 
 
