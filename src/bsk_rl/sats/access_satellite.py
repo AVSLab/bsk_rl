@@ -625,11 +625,15 @@ class ImagingSatellite(AccessSatellite):
 
         return target
 
-    def enable_target_window(self, target: "Target"):
+    def enable_target_window(
+        self, target: "Target", max_duration: Optional[float] = None
+    ):
         """Enable a timed opportunity close event and a successfully imaged event.
 
         Args:
             target: Target to terminate the step on imaging or when out of range.
+            max_duration: [s] Maximum duration to wait for imaging. If None, use the default
+                behavior.
         """
         self._update_image_event(target)
         next_window = self.next_opportunities_dict(
@@ -639,8 +643,10 @@ class ImagingSatellite(AccessSatellite):
         self.logger.info(
             f"{target} window enabled: {next_window[0]:.1f} to {next_window[1]:.1f}"
         )
+        if max_duration is None:
+            max_duration = 1e9
         self.update_timed_terminal_event(
-            next_window[1],
+            min(next_window[1], self.simulator.sim_time + max_duration),
             info=f"for {target} window",
             extra_actions=[
                 self._satellite_command + ".missed += 1",
@@ -648,16 +654,20 @@ class ImagingSatellite(AccessSatellite):
             ],
         )
 
-    def task_target_for_imaging(self, target: "Target"):
+    def task_target_for_imaging(
+        self, target: "Target", max_duration: Optional[float] = None
+    ):
         """Task the satellite to image a target.
 
         Args:
             target: Selected target
+            max_duration: [s] Maximum duration to wait for imaging. If None, wait until
+                the end of the target's access window.
         """
         msg = f"{target} tasked for imaging"
         self.logger.info(msg)
         self.fsw.action_image(target.r_LP_P, target.id)
-        self.enable_target_window(target)
+        self.enable_target_window(target, max_duration=max_duration)
         self.draw_imaging_line(target)
 
     @vizard.visualize

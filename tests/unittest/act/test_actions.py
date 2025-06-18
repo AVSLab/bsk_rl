@@ -111,7 +111,9 @@ class TestImage:
         image.satellite = MagicMock()
         image.satellite.parse_target_selection.return_value = self.target
         out = image.image(5, None)
-        image.satellite.task_target_for_imaging.assert_called_once_with(self.target)
+        image.satellite.task_target_for_imaging.assert_called_once_with(
+            self.target, max_duration=None
+        )
         assert out == "target_1"
 
     def test_image_retask(self):
@@ -119,7 +121,19 @@ class TestImage:
         image.satellite = MagicMock()
         image.satellite.parse_target_selection.return_value = self.target
         out = image.image(5, "target_1")
-        image.satellite.enable_target_window.assert_called_once_with(self.target)
+        image.satellite.enable_target_window.assert_called_once_with(
+            self.target, max_duration=None
+        )
+        assert out == "target_1"
+
+    def test_image_max_duration(self):
+        image = act.Image(n_ahead_image=10, max_duration=100.0)
+        image.satellite = MagicMock()
+        image.satellite.parse_target_selection.return_value = self.target
+        out = image.image(5, None)
+        image.satellite.task_target_for_imaging.assert_called_once_with(
+            self.target, max_duration=100.0
+        )
         assert out == "target_1"
 
     def test_set_action(self):

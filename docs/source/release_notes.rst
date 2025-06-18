@@ -44,6 +44,7 @@ Development - |version|
   :class:`~bsk_rl.scene.RSOPoints`, :class:`~bsk_rl.sim.fsw.RSOInspectorFSWModel`, and
   :class:`~bsk_rl.sim.dyn.RSODynModel`. An example environment setup is described in the
   `RSO Inspection <examples/rso_inspection.ipynb>`_ example.
+* Add a maximum duration option to :class:`~bsk_rl.act.Image`.
 
 
 Version 1.1.0

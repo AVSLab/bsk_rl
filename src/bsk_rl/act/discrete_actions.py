@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 class DiscreteActionBuilder(ActionBuilder):
-
     def __init__(self, satellite: "Satellite") -> None:
         """Processes actions for a discrete action space.
 
@@ -235,6 +234,7 @@ class Image(DiscreteAction):
     def __init__(
         self,
         n_ahead_image: int,
+        max_duration: Optional[float] = None,
         name: str = "action_image",
     ):
         """Actions to image upcoming target (:class:`~bsk_rl.sim.fsw.ImagingFSWModel.action_image`).
@@ -249,12 +249,15 @@ class Image(DiscreteAction):
         based on the target's ID string or the Target object.
 
         Args:
-            name: Action name.
             n_ahead_image: Number of unimaged, along-track targets to consider.
+            max_duration: Maximum time to task the action, in seconds. If ``None``, tasks until
+                the end of the next opportunity.
+            name: Action name.
         """
         from bsk_rl.sats import ImagingSatellite
 
         self.satellite: "ImagingSatellite"
+        self.max_duration = max_duration
         super().__init__(name=name, n_actions=n_ahead_image)
 
     def image(
@@ -270,9 +273,11 @@ class Image(DiscreteAction):
         """
         target = self.satellite.parse_target_selection(target)
         if target.id != prev_action_key:
-            self.satellite.task_target_for_imaging(target)
+            self.satellite.task_target_for_imaging(
+                target, max_duration=self.max_duration
+            )
         else:
-            self.satellite.enable_target_window(target)
+            self.satellite.enable_target_window(target, max_duration=self.max_duration)
 
         return target.id
 

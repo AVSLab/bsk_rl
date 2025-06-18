@@ -86,7 +86,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             sim_rate: [s] Rate for model simulation.
             max_step_duration: [s] Maximum time to propagate sim at a step. If
                 satellites are using variable interval actions, the actual step duration
-                will be less than or equal to this value.
+                will be less than or equal to this value. It is preferable to set durations
+                in the actions themselves.
             failure_penalty: Reward for satellite failure. Should be nonpositive.
             time_limit: [s] Time at which to truncate the simulation. Can also be a function
                 that takes no arguments and returns a float. This function will be called
