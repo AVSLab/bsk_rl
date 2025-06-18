@@ -258,7 +258,7 @@ def compute_value_targets_time_discounted(
         intermediates = gamma**step_durations * (
             rewards + (1 - lambda_) * flat_values[1:]
         )
-        continues = 1.0 - terminateds
+    continues = 1.0 - terminateds
 
     Rs = []
     last = flat_values[-1]
