@@ -54,6 +54,10 @@ class ComposedData(Data):
                 return getattr(data, name)
         raise AttributeError(f"No Data in ComposedData has attribute '{name}'")
 
+    def __repr__(self) -> str:
+        """String representation of the ComposedData."""
+        return f"ComposedData({', '.join(repr(d) for d in self.data)})"
+
 
 class ComposedDataStore(DataStore):
     data_type = ComposedData

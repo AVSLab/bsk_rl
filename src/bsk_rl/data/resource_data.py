@@ -33,6 +33,10 @@ class ResourceData(Data):
         total_resource = self.resource_accumulated + other.resource_accumulated
         return ResourceData(total_resource)
 
+    def __repr__(self) -> str:
+        """String representation of the ResourceData."""
+        return f"ResourceData(resource_accumulated={self.resource_accumulated})"
+
 
 class ResourceDataStore(DataStore):
     data_type = ResourceData

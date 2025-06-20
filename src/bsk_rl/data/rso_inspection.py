@@ -71,6 +71,13 @@ class RSOInspectionData(Data):
         """Number of points illuminated."""
         return sum(self.point_illuminate_status.values())
 
+    def __repr__(self) -> str:
+        """String representation of the RSOInspectionData."""
+        return (
+            f"RSOInspectionData(inspected={self.num_points_inspected}, "
+            f"num_points_illuminated={self.num_points_illuminated})"
+        )
+
 
 class RSOInspectionDataStore(DataStore):
     data_type = RSOInspectionData
@@ -287,9 +294,6 @@ class RSOInspectionReward(GlobalReward):
         reward = {}
         total_data = self.data_type() + self.data
         for satellite_id, data in new_data_dict.items():
-            if len(data.point_inspect_status) == 0:
-                continue
-
             new_points = 0
             for point, access in data.point_inspect_status.items():
                 if access and not self.data.point_inspect_status.get(point, False):
@@ -304,6 +308,9 @@ class RSOInspectionReward(GlobalReward):
             total_data += data
 
         # Check for completion bonus
+        logger.info(
+            f"Inspected/Illuminated/Total: {total_data.num_points_inspected}/{total_data.num_points_illuminated}/{total_points}"
+        )
         min_illuminated_met = (
             total_data.num_points_illuminated
             >= (len(self.scenario.rso_points) * self.min_illuminated_for_completion)

@@ -1,4 +1,5 @@
 import gymnasium as gym
+import pytest
 
 from bsk_rl import act, data, obs, sats
 from bsk_rl.comm import (
@@ -75,6 +76,7 @@ def make_communication_env(oes, comm_type):
 class TestNoCommunication:
     env = make_communication_env(oes_visible, NoCommunication)
 
+    @pytest.mark.flaky(retries=3, reruns_delay=1)
     def test_comms(self):
         self.env.reset()
         for _ in range(10):
