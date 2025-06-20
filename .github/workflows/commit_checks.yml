@@ -47,7 +47,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Run pytest
-        run: pytest -v -ra --tb=long -o log_cli=true -o log_level=DEBUG
+        run: pytest -v -s -ra --tb=long -o log_cli=true -o log_level=DEBUG
 
   check-doc-build:
     name: Test Documentation Build

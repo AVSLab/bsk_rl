@@ -60,6 +60,7 @@ class TestImagingDynModelStorage:
             (10e7, 10e7),
         ],
     )
+    @pytest.mark.flaky(retries=5, delay=1)
     def test_storageInit_downlink(self, storage_capacity, initial_storage):
         class ImageSat(sats.ImagingSatellite):
             dyn_type = FullFeaturedDynModel

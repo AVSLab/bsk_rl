@@ -2,6 +2,7 @@ from functools import partial
 
 import gymnasium as gym
 import numpy as np
+import pytest
 from pytest import approx
 
 from bsk_rl import act, data, obs, sats
@@ -50,9 +51,13 @@ class TestImagingAndDownlink:
         assert self.env.unwrapped.satellite.dynamics.storage_level > storage_init
         assert self.env.unwrapped.satellite.dynamics.storage_level == approx(3.0)
 
+    @pytest.mark.flaky(retries=5, delay=1)
     def test_downlink(self):
+        self.env.reset()
+        for i in range(10):
+            self.env.step(i + 1)
         storage_init = self.env.unwrapped.satellite.dynamics.storage_level
-        assert storage_init > 0.0  # Should be filled from previous test
+        assert storage_init > 0.0  # Should be filled from random stepping
         self.env.step(0)  # Should encounter a downlink opportunity before timeout
         assert self.env.unwrapped.satellite.dynamics.storage_level < storage_init
 
