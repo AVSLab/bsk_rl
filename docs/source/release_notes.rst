@@ -40,6 +40,7 @@ Development - |version|
 * Add :class:`~bsk_rl.act.ImpulsiveThrustHill` for impulsive thrust in the Hill frame.
 * Separate :class:`~bsk_rl.utils.orbital.random_circular_orbit` and :class:`~bsk_rl.utils.orbital.random_orbit` to avoid misleading
   altitude argument.
+* Add fault modeling example script using four reaction wheels in the `Fault Environment <examples/fault_environment.ipynb>`_ example.
 * Introduce a new RSO inspection environment, primarily consisting of :class:`~bsk_rl.data.RSOInspectionReward`,
   :class:`~bsk_rl.scene.RSOPoints`, :class:`~bsk_rl.sim.fsw.RSOInspectorFSWModel`, and
   :class:`~bsk_rl.sim.dyn.RSODynModel`. An example environment setup is described in the

@@ -9,6 +9,7 @@ Environments
    simple_environment
    satellite_configuration
    multiagent_envs
+   fault_environment
 
 Earth Observation
 ~~~~~~~~~~~~~~~~~
