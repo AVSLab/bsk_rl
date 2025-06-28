@@ -76,11 +76,11 @@ sat_args["imageAttErrorRequirement"] = 0.01
 sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 # bits
 sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
 sat_args["instrumentBaudRate"] = 0.5 * 8e6
-sat_args["transmitterBaudRate"] = -5 * 8e6
+sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
 # Power
 sat_args["batteryStorageCapacity"] = 500 * 3600  # W*s
-sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.3, 0.7) * 500 * 3600
+sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.4, 0.6) * 500 * 3600
 sat_args["basePowerDraw"] = -10.0  # W
 sat_args["instrumentPowerDraw"] = -30.0  # W
 sat_args["transmitterPowerDraw"] = -25.0  # W
@@ -90,7 +90,7 @@ sat_args["thrusterPowerDraw"] = -80.0  # W
 # Attitude
 # sat_args["imageAttErrorRequirement"] = 0.1
 # sat_args["imageRateErrorRequirement"] = 0.1
-sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.0001, size=3)  # N*m
+sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.001, size=3)  # N*m
 sat_args["maxWheelSpeed"] = 6000.0  # RPM
 sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
 sat_args["desatAttitude"] = "nadir"
@@ -224,7 +224,7 @@ for target_id in range(n_targets*4 *100 ):
         print('tasking CHARGING now: at t=',simtime)
         action_dict = {sat.name: 10} # tasking charging
     action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
-    print('current action_dict to be executed', action_dict)
+    # print('current action_dict to be executed', action_dict)
     observation, reward, terminated, truncated, info = env.step(action=action_dict)
     print("storage_level", env.satellites[0].dynamics.storage_level)
     print("dynamics.storage_level_fraction", env.satellites[0].dynamics.storage_level_fraction)
@@ -232,7 +232,7 @@ for target_id in range(n_targets*4 *100 ):
     print("env.satellites[0].dynamics.wheel_speeds_fraction", env.satellites[0].dynamics.wheel_speeds_fraction)
 
 
-    print('truncated list: ', truncated)
+    # print('truncated list: ', truncated)
     data_dict["sim_time"].append(env.simulator.sim_time)
     if any(truncated.values()) or any(terminated.values()):
         break

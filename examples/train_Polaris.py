@@ -122,7 +122,7 @@ def train_model(
             # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
             # CondenseMultiStepActions(),
         ),
-        learner_class=TimeDiscountedGAEPPOTorchLearner,
+        # learner_class=TimeDiscountedGAEPPOTorchLearner, # this causes a problem with learning to charge due to discounting each second
         learner_config_dict=dict(reward_time="step_start"),
     )
     config.logger_config = dict(
@@ -193,6 +193,8 @@ def train_model(
 
         iter += 1
 
+imaging_duration = 300
+
 def env_metrics_callback(env):
     data = {}
 
@@ -214,13 +216,13 @@ def env_metrics_callback(env):
     data["rw_valid"] = rw_valid
 
     # Compute time *not* imaging a new target
-    total_imaging_time = num_imaged * 300  # Each successful image takes 300s
+    total_imaging_time = num_imaged * imaging_duration  # Each successful image takes 300s
     idle_time = episode_duration - total_imaging_time
-    num_unproductive_actions = idle_time / 300
+    num_unproductive_actions = idle_time / imaging_duration
     data["non-imaging_action_count"] = int(round(num_unproductive_actions))
 
     # Compute time *not* imaging a new target
-    total_imaging_time = num_imaged * 300  # Each successful image takes 300s
+    total_imaging_time = num_imaged * imaging_duration  # Each successful image takes 300s
     non_imaging_time = episode_duration - total_imaging_time
     data["non-imaging_time"] = int(round(non_imaging_time))
 
@@ -277,7 +279,8 @@ if __name__ == "__main__":
     n_targets = 100
     n_targets_ahead = 10
     extra_tima_factor = 1.5
-    total_time = extra_tima_factor * n_targets * 300  #I give it 10 times the minimum time to finish
+    imaging_duration = 300
+    total_time = extra_tima_factor * n_targets * imaging_duration  #I give it 10 times the minimum time to finish
 
     class MyScanningSatellite(sats.AccessSatellite):
         observation_spec = [
@@ -304,7 +307,7 @@ if __name__ == "__main__":
             )
         ]
         action_spec = [
-            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 5 minute
+            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
             act.Charge(duration=300.0),  # Charge for 5 minutes
             act.Downlink(duration=180.0), # Downlink for 3 min
             act.Desat(duration=150), # Desat for 2.5 min
@@ -323,7 +326,7 @@ if __name__ == "__main__":
     sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 # bits
     sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
-    sat_args["transmitterBaudRate"] = -5 * 8e6
+    sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
     # Power
     sat_args["batteryStorageCapacity"] = 500 * 3600  # W*s
@@ -337,7 +340,7 @@ if __name__ == "__main__":
     # Attitude
     # sat_args["imageAttErrorRequirement"] = 0.1
     # sat_args["imageRateErrorRequirement"] = 0.1
-    sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.000000, size=3)  # N*m
+    sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.002, size=3)  # N*m
     sat_args["maxWheelSpeed"] = 6000.0  # RPM
     sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
     sat_args["desatAttitude"] = "nadir"
@@ -384,12 +387,12 @@ if __name__ == "__main__":
     all_sat = [sat] + targets
 
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
-    model_name = f"model_{N}"
+    model_name = f"lowBaudRate_1e-5lr_002torque_imaging_reward_new_penalties_smallest_storage_{N}"
     n_envs = (
         get_available_cores() - 6  # leave some extra cores for other processes
     )
     output_dir = (
-        Path("~/rllib_results").expanduser() / f"new_penalties_small_battery_storage_Polaris_simulation_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+        Path("~/rllib_results").expanduser() / f"june19_lowBaudRate_1e-5lr_002torque_imaging_reward_new_penalties_smallest_storage_Polaris_simulation_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
     )
     output_dir = Path(output_dir)
 
@@ -426,7 +429,7 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params_june10.txt", "w") as file: # update this when running on cluster
+    with open(output_dir / f"{model_name}_params_june19.txt", "w") as file: # update this when running on cluster
         yaml.dump(sanitize_np(job_args), file)
 
     train_model(
