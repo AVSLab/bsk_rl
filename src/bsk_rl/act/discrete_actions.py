@@ -374,9 +374,10 @@ class ImageRSO(DiscreteAction):
         elevation_rad = np.arcsin(cos_angle)
         return np.degrees(elevation_rad)
 
+
     def set_action(self, action: int, prev_action_key: Optional[str] = None) -> str:
         """
-        Image a target based on elevation angle from local horizontal.
+        Image an unimaged target based on elevation angle from local horizontal.
 
         Args:
             action: Index of the target in elevation-filtered list.
@@ -392,115 +393,89 @@ class ImageRSO(DiscreteAction):
         imaged_ids = {tgt.id for tgt in imaged_targets}
         unimaged_targets = [tgt for tgt in known_targets if tgt.id not in imaged_ids]
 
-        # Compute elevation angles for known targets
+        # Always update ever_visible with currently visible targets
+        for target in known_targets:
+            target_pos = np.array(target.target_spacecraft.dynamics.r_BN_N)
+            elev = self.elevation_angle(scanner_pos, target_pos)
+            if -14.0 <= elev <= 90.0:
+                if target.id not in self.ever_visible:
+                    self.ever_visible.append(target.id)
+
+        # Compute elevation angles for unimaged targets
         target_elevations = []
         for target in unimaged_targets:
             target_pos = np.array(target.target_spacecraft.dynamics.r_BN_N)
             los_vector = target_pos - scanner_pos
             los_unit = los_vector / np.linalg.norm(los_vector)
 
-            # Local zenith (up) is aligned with position vector of satellite
             zenith = scanner_pos / np.linalg.norm(scanner_pos)
-
-            # Elevation is angle between LOS and local horizontal (i.e., 90 - angle to zenith)
             cos_angle = np.clip(np.dot(los_unit, zenith), -1.0, 1.0)
             elevation_rad = np.arcsin(cos_angle)
             elev = np.degrees(elevation_rad)
-            # elev = self.elevation_angle(scanner_pos, target_pos)
             target_elevations.append((target, elev))
 
-        # Identify visible & unimaged targets in elevation range
         visible_unimaged_targets = [
             (tgt, elev) for tgt, elev in target_elevations
             if -14.0 <= elev <= 90.0 and tgt.id not in imaged_ids
         ]
 
-        # Sort visible_unimaged by elevation
         visible_unimaged_targets.sort(key=lambda x: x[1])
 
-        num_actions=self.n_actions
+        num_actions = self.n_actions
         final_targets = [tgt for tgt, _ in visible_unimaged_targets[:num_actions]]
 
-        # If not enough, fill with closest unimaged (even if not visible)
         if len(final_targets) < num_actions:
             remaining = num_actions - len(final_targets)
-
-            # Find unimaged targets not already selected
             selected_ids = {tgt.id for tgt in final_targets}
             remaining_unimaged = [tgt for tgt in unimaged_targets if tgt.id not in selected_ids]
-
-            # Sort remaining unimaged by distance to scanner
             remaining_unimaged.sort(
                 key=lambda tgt: np.linalg.norm(np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos)
             )
-
             final_targets += remaining_unimaged[:remaining]
 
-        # Ensure final_targets has exactly n_actions entries
-        # If still fewer (e.g., fewer total unimaged than n_actions), repeat last
         if len(final_targets) < num_actions:
-            if len(final_targets)<1:
+            if len(final_targets) < 1:
                 print("no new targets available!")
             try:
                 final_targets += [final_targets[-1]] * (num_actions - len(final_targets))
             except IndexError:
-                print('All targets imaged... No-unimaged targets remaining')
+                print('All targets imaged... No unimaged targets remaining')
                 sorted_fallback = sorted(
-                known_targets,
-                key=lambda tgt: np.linalg.norm(
-                    np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos
+                    known_targets,
+                    key=lambda tgt: np.linalg.norm(
+                        np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos
+                    )
                 )
-            )
                 final_targets = sorted_fallback[:self.n_actions]
                 self.simulator.terminate = True
 
-        new_target = final_targets[action] #initializing to avoid UnboundLocalError: cannot access local variable 'new_target' where it is not associated with a value
+        new_target = final_targets[action]
 
-        print_status = False
+
+        print_status = True
         if print_status:
-            # Print the count every 1500 simulation seconds
-            frequency_to_print = 1
-            if round(self.satellite.simulator.sim_time,9) % (frequency_to_print*300) < 0.1:
-                current_target_elevations=[]
-                # Sort ever_visible
-                currently_visible_ids=[]
+            frequency_to_print = 0.1
+            if round(self.satellite.simulator.sim_time, 9) % (frequency_to_print * 300) < 0.1:
+                currently_visible_ids = []
                 for target in known_targets:
                     target_pos = np.array(target.target_spacecraft.dynamics.r_BN_N)
                     elev = self.elevation_angle(scanner_pos, target_pos)
-                    current_target_elevations.append((target, elev))
-
-                # Filter targets with elevation between -14 and 90 degrees
-                currently_visible_targets = [
-                    (tgt, elev) for tgt, elev in current_target_elevations
-                    if -14.0 <= elev <= 90.0
-                ]
-
-                # Sort visible targets by ascending elevation (lowest first)
-                currently_visible_targets.sort(key=lambda x: x[1])
-
-                # Update currently_visible_ids with currently seen target IDs
-                for tgt, _ in currently_visible_targets:
-                    currently_visible_ids.append(tgt.id)
-                    if tgt.id not in self.ever_visible:
-                        self.ever_visible.append(tgt.id)
-                self.ever_visible.sort()
+                    if -14.0 <= elev <= 90.0:
+                        currently_visible_ids.append(target.id)
 
                 currently_visible_ids.sort()
 
-
-                # Compute never-seen targets
-                all_ids = set(range(len(self.satellite.data_store.data.known)))  # or use self.n_targets if available
+                all_ids = set(range(len(known_targets)))
                 seen_ids = set(self.ever_visible)
-                unimaged_ids = all_ids - set(imaged_ids)
+                unimaged_ids = all_ids - imaged_ids
                 never_seen = sorted(list(all_ids - seen_ids))
 
                 print(f"\nSimulation Timestep: {self.satellite.simulator.sim_time}")
-                print(f"Seen targets so far ({len(seen_ids)}): {self.ever_visible}")
+                print(f"Seen targets so far ({len(seen_ids)}): {sorted(seen_ids)}")
                 print(f"Currently seen targets ({len(currently_visible_ids)}): {currently_visible_ids}")
                 print(f"Imaged targets: ({len(imaged_ids)}): {sorted(imaged_ids)}")
                 print(f"Unimaged targets: ({len(unimaged_ids)}): {sorted(unimaged_ids)}")
                 print(f"Never seen targets ({len(never_seen)}): {never_seen} \n")
-
         run_heuristic_policy = False
         if run_heuristic_policy:
             imaged_ids = []
