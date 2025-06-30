@@ -760,7 +760,6 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
         self.setup_instrument_power_sink(**kwargs)
         self.setup_transmitter_power_sink(**kwargs)
         self.setup_storage_unit(**kwargs)
-        self.setup_eclipse_object()
         self.setup_ground_station_locations()
 
     @default_args(
@@ -1035,20 +1034,6 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
             self.task_name, self.simpleNavObject, ModelPriority=priority
         )
 
-    def setup_eclipse_object(self, priority: int =699) -> None:
-        """Add the spacecraft to the eclipse module."""
-        # self.targetEclipse = eclipse.Eclipse()
-        # self.targetEclipse.addPlanetToModel(
-        #     self.simulator.world.gravFactory.spiceObject.planetStateOutMsgs[1]
-        # )
-        # self.targetEclipse.sunInMsg.subscribeTo(
-        #     self.simulator.world.gravFactory.spiceObject.planetStateOutMsgs[0]
-        # )
-        # self.simulator.AddModelToTask(
-        #     self.task_name, self.targetEclipse, ModelPriority=priority
-        # )
-        self.world.eclipseObject.addSpacecraftToModel(self.scObject.scStateOutMsg)
-        self.eclipse_index = len(self.world.eclipseObject.eclipseOutMsgs) - 1
 
     @default_args(
         panelArea=2 * 1.0 * 0.5,

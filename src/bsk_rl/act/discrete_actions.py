@@ -431,7 +431,7 @@ class ImageRSO(DiscreteAction):
             remaining_unimaged.sort(
                 key=lambda tgt: np.linalg.norm(np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos)
             )
-            final_targets += remaining_unimaged[:remaining]
+            final_targets += remaining_unimaged[:remaining] # padding the array with the closest unimaged targets
 
         if len(final_targets) < num_actions:
             if len(final_targets) < 1:

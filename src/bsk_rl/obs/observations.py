@@ -485,6 +485,9 @@ def _target_imaged(sat, opp):
         imaged = 0
 
     return imaged
+def _target_shadowFactor(sat, opp):
+    return sat.simulator.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[opp["object"].target_spacecraft.dynamics.eclipse_index].read().shadowFactor
+
 
 class PolarisScTargetProperties(Observation):
     _fn_map = {
@@ -503,6 +506,7 @@ class PolarisScTargetProperties(Observation):
         "target_distance": _target_distance,
         "target_id_info": _target_id_extracted,  # lambda sat, opp: int(opp["object"].target_spacecraft.id).strip("target_"),
         "target_imaged": _target_imaged,
+        "target_shadowFactor": _target_shadowFactor,
 
     }
 
@@ -626,71 +630,55 @@ class PolarisScTargetProperties(Observation):
         known_targets = self.satellite.data_store.data.known
         imaged_targets = self.satellite.data_store.data.imaged
 
-        # Convert to sets of IDs for comparison
         imaged_ids = {tgt.id for tgt in imaged_targets}
-        known_ids = {tgt.id for tgt in known_targets}
-
-        # Create list of unimaged targets
         unimaged_targets = [tgt for tgt in known_targets if tgt.id not in imaged_ids]
 
-        # Compute elevation angles for known targets
+
+        # Compute elevation angles for unimaged targets
         target_elevations = []
         for target in unimaged_targets:
             target_pos = np.array(target.target_spacecraft.dynamics.r_BN_N)
             los_vector = target_pos - scanner_pos
             los_unit = los_vector / np.linalg.norm(los_vector)
 
-            # Local zenith (up) is aligned with position vector of satellite
             zenith = scanner_pos / np.linalg.norm(scanner_pos)
-
-            # Elevation is angle between LOS and local horizontal (i.e., 90 - angle to zenith)
             cos_angle = np.clip(np.dot(los_unit, zenith), -1.0, 1.0)
             elevation_rad = np.arcsin(cos_angle)
             elev = np.degrees(elevation_rad)
-            # elev = self.elevation_angle(scanner_pos, target_pos)
             target_elevations.append((target, elev))
 
-        # Identify visible & unimaged targets in elevation range
         visible_unimaged_targets = [
             (tgt, elev) for tgt, elev in target_elevations
             if -14.0 <= elev <= 90.0 and tgt.id not in imaged_ids
         ]
 
-        # Sort visible_unimaged by elevation
         visible_unimaged_targets.sort(key=lambda x: x[1])
-        num_actions=self.n_ahead_observe
+
+        num_actions = self.n_ahead_observe
         final_targets = [tgt for tgt, _ in visible_unimaged_targets[:num_actions]]
 
-        # If not enough, fill with closest unimaged (even if not visible)
         if len(final_targets) < num_actions:
             remaining = num_actions - len(final_targets)
-
-            # Find unimaged targets not already selected
             selected_ids = {tgt.id for tgt in final_targets}
             remaining_unimaged = [tgt for tgt in unimaged_targets if tgt.id not in selected_ids]
-
-            # Sort remaining unimaged by distance to scanner
             remaining_unimaged.sort(
                 key=lambda tgt: np.linalg.norm(np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos)
             )
+            final_targets += remaining_unimaged[:remaining] # padding the array with the closest unimaged targets
 
-            final_targets += remaining_unimaged[:remaining]
-
-        # Ensure final_targets has exactly n_actions entries
-        # If still fewer (e.g., fewer total unimaged than n_actions), repeat last
         if len(final_targets) < num_actions:
-            if len(final_targets)<1:
+            if len(final_targets) < 1:
                 print("no new targets available!")
             try:
                 final_targets += [final_targets[-1]] * (num_actions - len(final_targets))
             except IndexError:
-                print('All targets imaged... No-unimaged targets remaining')
+                print('All targets imaged... No unimaged targets remaining')
                 sorted_fallback = sorted(
-                known_targets,
-                key=lambda tgt: np.linalg.norm(
-                    np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos
+                    known_targets,
+                    key=lambda tgt: np.linalg.norm(
+                        np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos
+                    )
                 )
-            )
                 final_targets = sorted_fallback[:self.n_ahead_observe]
                 self.simulator.terminate = True
 

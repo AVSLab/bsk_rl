@@ -42,9 +42,10 @@ class MyScanningSatellite(sats.AccessSatellite):
             dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
             dict(prop="target_id_info", norm=1.0),
             dict(prop="target_imaged",  norm=1.0),
+            dict(prop="target_shadowFactor", norm=1.0),
             n_ahead_observe=n_targets_ahead,
                                        ),
-        obs.Eclipse(),
+        obs.Eclipse(norm=5700.0),
         obs.OpportunityProperties(
             dict(prop="opportunity_open", norm = 5700.0),
             dict(prop="opportunity_close", norm = 5700.0),

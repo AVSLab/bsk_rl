@@ -79,6 +79,7 @@ class RSOTargetImageStore(DataStore):
         """
         super().__init__(*args, **kwargs)
         self.inspection_task_completed = False
+        self.eclipse_threshold_for_imaging = 0.5
 
     def get_log_state(self) -> np.ndarray:
         """Log the instantaneous storage unit state at the end of each step.
@@ -109,8 +110,6 @@ class RSOTargetImageStore(DataStore):
                 if self.inspection_task_completed == None:
                     self.inspection_task_completed = False
                 # self.inspection_task_completed = True
-            print('Targets imaged:'+str(self.non_zero_buffers-1))
-
 
             update_idx = np.where(new_state - old_state > 0)[0]
             imaged = []
@@ -118,12 +117,14 @@ class RSOTargetImageStore(DataStore):
             for idx in update_idx:
                 message = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg
                 target_id = message.read().storedDataName[int(idx)]
-                # self.data.imaged.append( # TODO: DHP check if this should be removed or if this replaces the part right below (what about duplicates?)
-                #     [target for target in self.data.known if target.id == target_id][0]
+                # imaged.append(
+                #     [target for target in self.data.known if target.name == target_id and self.satellite.dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor < self.eclipse_threshold_for_imaging][0]
                 # )
-                imaged.append(
-                    [target for target in self.data.known if target.name == target_id][0]
-                )
+
+                for target in self.data.known:
+                    if target.name == target_id:
+                        if self.satellite.dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor > self.eclipse_threshold_for_imaging:
+                            imaged.append(target)
             # eclipse_threshold = 0.6
             # eclipsed.append([target for target in imaged if target.eclipse_status >= eclipse_threshold]) # this can be used to change reward in case the target is in eclipse
             # return RSOTargetImageData(imaged=imaged, eclipsed = eclipsed)
@@ -165,6 +166,7 @@ class RSOTargetImageReward(GlobalReward):
         self.inspection_task_completed = False
         self.downlink_bonus = 1
         self.imaging_bonus = 0
+        self.eclipse_threshold_for_reward = 0.5
 
     def initial_data(self, satellite: "Satellite") -> "RSOTargetImageData":
         """Furnish data to the scenario.
@@ -200,6 +202,19 @@ class RSOTargetImageReward(GlobalReward):
         new_state = np.array(self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedData)
         downlinked_targets = [int(i) for i in np.where(new_state - self.old_state < 0)[0]] # keep track of downlinked targets
 
+
+
+        if len(downlinked_targets) > 0:
+            downlinked_names = [
+                self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedDataName[idx]
+                for idx in downlinked_targets
+            ]
+            print("Downlinked target names:", downlinked_names)
+        # else:
+        #     print("No targets downlinked this step.")
+            print('total accumulated rewards SS1: '+str(self.cum_reward['SS1']))
+            print('Targets imaged:'+str(len(self.scenario.satellites[0].data_store.data.imaged)))
+
         for sat_id, new_data in new_data_dict.items():
             reward[sat_id] = 0.0
             if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.2:
@@ -209,34 +224,40 @@ class RSOTargetImageReward(GlobalReward):
             if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.storage_level_fraction > .991:
                 reward[sat_id] += -10
 
+            # Adding Downlink Reward
+            if len(downlinked_targets) > 0:
+                for idx in downlinked_targets:
+                    # Do something with downlinked index
+                    target_name = self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedDataName[idx]
+                    target = next((t for t in self.scenario.target_spacecrafts if t.name == target_name), None)
+                    if target is not None:
+                        reward[sat_id] += self.reward_fn(target.priority * self.downlink_bonus)
+
+            # Adding Imaging Reward
             for target in new_data.imaged:
-                # if target not in self.data.imaged and target not in self.data.eclipsed:
-                if target not in self.data.imaged:
-                # if target not in self.data.imaged and self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[1+target.id].read().shadowFactor < 0.3: # TODO: check Polaris reminder notes: this has a 50% chance of being wrong since there are 201 eclipse objects... allsats + targets
+                # if target not in self.data.imaged:
+                if target not in self.data.imaged and self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor > self.eclipse_threshold_for_reward:
                     reward[sat_id] += self.reward_fn(
-                        target.priority * self.imaging_bonus
+                        # target.priority * self.imaging_bonus  # this gives full reward as long as the shadowFactor was smaller than the eclipse_threshold_for_reward
+                        target.priority * self.imaging_bonus * (self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor-self.eclipse_threshold_for_reward)/(self.eclipse_threshold_for_reward)  # this reward gives linearly scaled returns based on the actual value
                     ) / imaged_targets.count(target)
 
-            if sat_id == 'SS1':
-                if len(downlinked_targets) > 0:
-                    for idx in downlinked_targets:
-                        # Do something with downlinked index
-                        target_name = self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedDataName[idx]
-                        target = next((t for t in self.scenario.target_spacecrafts if t.name == target_name), None)
-                        if target is not None:
-                            reward[sat_id] += self.reward_fn(target.priority * self.downlink_bonus)
+                if sat_id == 'SS1':
+                    print('length of eclipseOutMsgs: '+str(len(self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs)))
+                    if target is not None:
+                        shadow_factors = [ self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[i + target.id].read().shadowFactor     for i in range(len(self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs)-100)]
+                        # Check for non-binary shadow factors
+                        non_binary_indices = [i for i, val in enumerate(shadow_factors) if val != 0.0 and val != 1.0]
+
+                        # Print results
+                        if non_binary_indices:
+                            print("Non-binary shadowFactors found at indices:", non_binary_indices)
+                            for i in non_binary_indices:
+                                print(f"Index {i}: shadowFactor = {shadow_factors[i]}")
+                        # else:
+                        #     print("All shadowFactors are either 0.0 or 1.0")
 
 
-                if len(downlinked_targets) > 0:
-                    downlinked_names = [
-                        self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedDataName[idx]
-                        for idx in downlinked_targets
-                    ]
-                    print("Downlinked target names:", downlinked_names)
-                # else:
-                #     print("No targets downlinked this step.")
-                print('total accumulated rewards SS1: '+str(self.cum_reward['SS1']))
-                print('Targets imaged:'+str(len(self.scenario.satellites[0].data_store.data.imaged)))
 
 
         self.old_state = np.array(self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedData)
