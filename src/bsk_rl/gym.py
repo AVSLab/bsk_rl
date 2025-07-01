@@ -251,7 +251,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         }
 
     def _randomize_time_limit(self) -> None:
-        self.time_limit = self.time_limit_generator()
+        time_limit = self.time_limit_generator()
+        time_limit = np.ceil(time_limit / self.sim_rate) * self.sim_rate
+        self.time_limit = time_limit
 
     def reset(
         self,
