@@ -95,9 +95,12 @@ class TestGeneralSatelliteTasking:
         )
         mock_sat = env.satellites[0]
         mock_rewarder = env.rewarder
+        mock_rewarder.data = 0
+        mock_sat.data_store.data = 100
         env.unwrapped.world_args_generator = {"utc_init": "a long time ago"}
         env.communicator = MagicMock(last_communication_time=0.0)
         env.reset()
+        assert mock_rewarder.data == 100
         mock_sat.generate_sat_args.assert_called_with(utc_init="a long time ago")
         mock_sim.assert_called_once()
         mock_sat.reset_pre_sim_init.assert_called_once()

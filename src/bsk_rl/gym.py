@@ -312,6 +312,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         for satellite in self.satellites:
             self.rewarder.create_data_store(satellite)
+            self.rewarder.data += satellite.data_store.data
             satellite.reset_pre_sim_init()
 
         self.simulator = Simulator(
