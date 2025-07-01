@@ -755,6 +755,15 @@ class ConstellationTasking(
 
         self.newly_dead = list(set(previous_alive) - set(self.agents))
 
+        for satellite in self.newly_dead:
+            for attr in [
+                "_timed_terminal_event_name",
+                "_image_event_name",
+            ]:
+                event_name = getattr(satellite, attr, None)
+                if event_name is not None:
+                    self.simulator.delete_event(event_name)
+
         observation = self._get_obs()
         reward = self._get_reward()
         terminated = self._get_terminated()
