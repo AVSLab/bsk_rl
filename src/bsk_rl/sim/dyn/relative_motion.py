@@ -1,5 +1,6 @@
 """Dynamics models concerning the relative motion of spacecraft."""
 
+import numpy as np
 from Basilisk.simulation import spacecraftLocation
 from Basilisk.utilities import macros
 
@@ -93,28 +94,40 @@ class ConjunctionDynModel(BasicDynamicsModel):
 
         for sat_dyn in self.simulator.dynamics_list.values():
             if sat_dyn != self and isinstance(sat_dyn, ConjunctionDynModel):
+
+                def condition(sim, sat_dyn=sat_dyn):
+                    distance = np.linalg.norm(
+                        np.array(self.satellite.dynamics.r_BN_N)
+                        - np.array(sat_dyn.satellite.dynamics.r_BN_N)
+                    )
+                    keepout = (
+                        self.satellite.dynamics.conjunction_radius
+                        + sat_dyn.satellite.dynamics.conjunction_radius
+                    )
+                    return distance <= keepout
+
+                def side_effect(sim):
+                    self.satellite.logger.info(
+                        f"collided with {sat_dyn.satellite.name}"
+                    )
+                    sat_dyn.satellite.logger.info(
+                        f"collided with {self.satellite.name}"
+                    )
+                    self.satellite.dynamics.conjunctions.append(sat_dyn.satellite)
+                    sat_dyn.satellite.dynamics.conjunctions.append(self.satellite)
+                    if sim.sim_time == 0:
+                        self.satellite.logger.warning(
+                            "Collision occurred at t=0, may incorrectly report failure type"
+                        )
+
                 self.simulator.createNewEvent(
                     valid_func_name(
                         f"conjunction_{self.satellite.name}_{sat_dyn.satellite.name}"
                     ),
                     macros.sec2nano(self.simulator.sim_rate),
                     True,
-                    [
-                        f"np.linalg.norm(np.array({self.satellite._satellite_command}.dynamics.r_BN_N) - np.array({sat_dyn.satellite._satellite_command}.dynamics.r_BN_N))"
-                        + " <= "
-                        + f"{self.satellite._satellite_command}.dynamics.conjunction_radius + {sat_dyn.satellite._satellite_command}.dynamics.conjunction_radius"
-                    ],
-                    [
-                        self.satellite._info_command(
-                            f"collided with {sat_dyn.satellite.name}"
-                        ),
-                        sat_dyn.satellite._info_command(
-                            f"collided with {self.satellite.name}"
-                        ),
-                        f"{self.satellite._satellite_command}.dynamics.conjunctions.append({sat_dyn.satellite._satellite_command})",
-                        f"{sat_dyn.satellite._satellite_command}.dynamics.conjunctions.append({self.satellite._satellite_command})",
-                        f"[{self.satellite._satellite_command}.logger.warning('Collision occurred at t=0, may incorrectly report failure type') if self.sim_time == 0 else None]",
-                    ],
+                    conditionFunction=condition,
+                    actionFunction=side_effect,
                     terminal=True,
                 )
 
@@ -158,22 +171,27 @@ class MaxRangeDynModel(BasicDynamicsModel):
             )
             return
 
+        self.chief = self.simulator.get_satellite(self.chief_name)
+
+        def condition(sim):
+            distance = np.linalg.norm(
+                np.array(self.satellite.dynamics.r_BN_N)
+                - np.array(self.chief.dynamics.r_BN_N)
+            )
+            return distance >= self.max_range_radius
+
+        def side_effect(sim):
+            self.satellite.logger.info(
+                f"Exceeded maximum range of {max_range_radius} m from {self.chief_name}"
+            )
+            self.out_of_ranges.append(self.chief)
+
         self.simulator.createNewEvent(
             valid_func_name(f"range_{self.satellite.name}_{self.chief_name}"),
             macros.sec2nano(self.simulator.sim_rate),
             True,
-            [
-                f"np.linalg.norm(np.array({self.satellite._satellite_command}.dynamics.r_BN_N)"
-                + f"- np.array(self.get_satellite('{self.chief_name}').dynamics.r_BN_N))"
-                + " >= "
-                + f"{self.satellite._satellite_command}.dynamics.max_range_radius"
-            ],
-            [
-                self.satellite._info_command(
-                    f"Exceeded maximum range of {max_range_radius} m from {self.chief_name}"
-                ),
-                f"{self.satellite._satellite_command}.dynamics.out_of_ranges.append(self.get_satellite('{self.chief_name}'))",
-            ],
+            conditionFunction=condition,
+            actionFunction=side_effect,
             terminal=True,
         )
 

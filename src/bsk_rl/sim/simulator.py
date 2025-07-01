@@ -138,14 +138,14 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         if "max_step_duration" in self.eventMap:
             self.delete_event("max_step_duration")
 
+        step_end_time = self.sim_time + self.max_step_duration
+
         self.createNewEvent(
             "max_step_duration",
             mc.sec2nano(self.sim_rate),
             True,
-            [
-                f"self.TotalSim.CurrentNanos * {mc.NANO2SEC} >= {self.sim_time + self.max_step_duration}"
-            ],
-            ["self.logger.info('Max step duration reached')"],
+            conditionFunction=lambda sim: sim.sim_time >= step_end_time,
+            actionFunction=lambda sim: sim.logger.info("Max step duration reached"),
             terminal=True,
         )
         self.ConfigureStopTime(mc.sec2nano(min(self.time_limit, 2**31)))

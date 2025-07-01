@@ -572,20 +572,22 @@ class ImagingSatellite(AccessSatellite):
                     data_index
                 ]
             )
+
+            def side_effect(sim):
+                self.logger.info(f"imaged {target}")
+                self.imaged += 1
+                self.requires_retasking = True
+                self.remove_imaging_line()
+
             self.simulator.createNewEvent(
                 self._image_event_name,
                 macros.sec2nano(self.fsw.fsw_rate),
                 True,
-                [
-                    f"self.dynamics_list['{self.name}'].storageUnit.storageUnitDataOutMsg.read()"
-                    + f".storedData[{data_index}] > {current_data_level}"
-                ],
-                [
-                    self._info_command(f"imaged {target}"),
-                    self._satellite_command + ".imaged += 1",
-                    self._satellite_command + ".requires_retasking = True",
-                    self._satellite_command + ".remove_imaging_line()",
-                ],
+                conditionFunction=lambda sim: self.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData[
+                    data_index
+                ]
+                > current_data_level,
+                actionFunction=side_effect,
                 terminal=self.variable_interval,
             )
         else:
@@ -645,13 +647,16 @@ class ImagingSatellite(AccessSatellite):
         )
         if max_duration is None:
             max_duration = 1e9
+
+        def side_effect(sim):
+            if np.isclose(sim.sim_time, next_window[1], atol=1e-9):
+                self.missed += 1
+            self.remove_imaging_line()
+
         self.update_timed_terminal_event(
             min(next_window[1], self.simulator.sim_time + max_duration),
             info=f"for {target} window",
-            extra_actions=[
-                self._satellite_command + ".missed += 1",
-                self._satellite_command + ".remove_imaging_line()",
-            ],
+            extra_actions=side_effect,
         )
 
     def task_target_for_imaging(

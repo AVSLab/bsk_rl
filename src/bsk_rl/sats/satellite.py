@@ -3,7 +3,7 @@
 import inspect
 import logging
 from abc import ABC
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, Union
 from weakref import proxy
 
 import numpy as np
@@ -328,7 +328,10 @@ class Satellite(ABC, Resetable):
         self.logger.warning(f"{warning}")
 
     def update_timed_terminal_event(
-        self, t_close: float, info: str = "", extra_actions: list[str] = []
+        self,
+        t_close: float,
+        info: str = "",
+        extra_actions: Optional[Union[list[str], callable]] = None,
     ) -> None:
         """Create a simulator event that stops the simulation a certain time.
 
@@ -344,16 +347,23 @@ class Satellite(ABC, Resetable):
         self._timed_terminal_event_name = valid_func_name(
             f"timed_terminal_{t_close}_{self.name}"
         )
+
+        def side_effect(sim):
+            self.logger.info(f"timed termination at {t_close:.1f} " + info)
+            self.requires_retasking = True
+            if extra_actions is not None:
+                if callable(extra_actions):
+                    extra_actions(sim)
+                elif isinstance(extra_actions, list):
+                    for action in extra_actions:
+                        exec(action, {"self": sim})
+
         self.simulator.createNewEvent(
             self._timed_terminal_event_name,
             macros.sec2nano(self.simulator.sim_rate),
             True,
-            [f"self.TotalSim.CurrentNanos * {macros.NANO2SEC} >= {t_close}"],
-            [
-                self._info_command(f"timed termination at {t_close:.1f} " + info),
-                self._satellite_command + ".requires_retasking = True",
-            ]
-            + extra_actions,
+            conditionFunction=lambda sim: sim.sim_time >= t_close,
+            actionFunction=side_effect,
             terminal=self.variable_interval,
         )
         self.simulator.eventMap[self._timed_terminal_event_name].eventActive = True
