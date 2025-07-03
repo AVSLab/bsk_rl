@@ -47,6 +47,8 @@ Development - |version|
   `RSO Inspection <examples/rso_inspection.ipynb>`_ example.
 * Add a maximum duration option to :class:`~bsk_rl.act.Image`.
 * Fix a bug where a satellite's initial data was never added to the rewarder.
+* Fix a bug where using multiple of the same rewarder would cause some settings to be 
+  overwritten.
 
 
 Version 1.1.0

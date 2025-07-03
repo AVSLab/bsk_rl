@@ -75,7 +75,7 @@ class ComposedDataStore(DataStore):
         satellite: "Satellite",
         *data_store_types: type[DataStore],
         initial_data: Optional[ComposedData] = None,
-        data_store_kwargs: Optional[dict] = None,
+        data_store_kwargs: Optional[list] = None,
     ):
         """DataStore for composed data types.
 
@@ -84,14 +84,21 @@ class ComposedDataStore(DataStore):
             data_store_types: DataStore types to compose.
             initial_data: Initial data to start the store with. Usually comes from
                 :class:`~bsk_rl.data.GlobalReward.initial_data`.
-            data_store_kwargs: Dictionary mapping data_store types to their kwargs.
+            data_store_kwargs: List of data_store kwargs matching data_store_types.
         """
         self.data: ComposedData
         super().__init__(satellite, initial_data)
         if data_store_kwargs is None:
-            data_store_kwargs = {ds: {} for ds in data_store_types}
+            data_store_kwargs = [{} for _ in data_store_types]
+
+        if len(data_store_types) != len(data_store_kwargs):
+            raise ValueError(
+                "data_store_types and data_store_kwargs must have the same length."
+            )
+
         self.data_stores = tuple(
-            [ds(satellite, **data_store_kwargs[ds]) for ds in data_store_types]
+            ds(satellite, **kwargs)
+            for ds, kwargs in zip(data_store_types, data_store_kwargs)
         )
         self.pass_data()
 
@@ -197,9 +204,7 @@ class ComposedReward(GlobalReward):
             satellite,
             *[r.data_store_type for r in self.rewarders],
             initial_data=self.initial_data(satellite),
-            data_store_kwargs={
-                r.data_store_type: r.data_store_kwargs for r in self.rewarders
-            },
+            data_store_kwargs=[r.data_store_kwargs for r in self.rewarders],
         )
         self.cum_reward[satellite.name] = 0.0
         for rewarder in self.rewarders:
