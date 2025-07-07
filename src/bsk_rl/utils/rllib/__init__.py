@@ -12,66 +12,61 @@ when setting ``config.environment(env="SatelliteTasking-RLlib")``. Callback func
 that are arguments to :class:`EpisodeDataWrapper` can be set in the ``env_config`` dictionary.
 """
 
-import json
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 import torch
-from ray.rllib.algorithms.ppo.ppo_catalog import PPOCatalog
-from ray.rllib.core.models.base import ACTOR, ENCODER_OUT
+from ray.rllib.core.columns import Columns
+from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.rllib.env.wrappers.pettingzoo_env import ParallelPettingZooEnv
+from ray.rllib.utils.numpy import convert_to_numpy
+from ray.rllib.utils.spaces.space_utils import unsquash_action
 from ray.tune.registry import register_env
-from scipy.special import softmax
 
 from bsk_rl import ConstellationTasking, GeneralSatelliteTasking, SatelliteTasking
 from bsk_rl.utils.rllib.callbacks import EpisodeDataParallelWrapper, EpisodeDataWrapper
 
 
-def load_torch_mlp_policy(policy_path: str, env: GeneralSatelliteTasking):
+def load_torch_mlp_policy(
+    policy_path: Path, policy_name: str = "default_agent"
+) -> Callable:
     """Load a PyTorch policy from a saved model.
 
     Args:
-        policy_path: The path to the saved model.
-        env: The environment to load the policy for.
+        policy_path: Path to the directory containing the policy checkpoint.
+        policy_name: Name of the policy to load from the checkpoint.
     """
-    policy_path = Path(policy_path)
-    state_dict = torch.load(policy_path / "module_state_dir" / "module_state.pt")
-    with open(policy_path / "rl_module_metadata.json") as f:
-        module_config = json.load(f)["module_spec_dict"]["module_config"]
-        model_config_dict = module_config["model_config_dict"]
-
-    cat = PPOCatalog(
-        env.satellites[0].observation_space,  # TODO do this by agent ID
-        env.satellites[0].action_space,
-        model_config_dict,
+    rl_module = RLModule.from_checkpoint(
+        Path(policy_path) / "learner_group" / "learner" / "rl_module" / policy_name
     )
-    encoder = cat.build_actor_critic_encoder("torch")
-    pi_head = cat.build_pi_head("torch")
+    cat = rl_module.config.get_catalog()
+    action_dist_cls = cat.get_action_dist_cls(framework="torch")
 
-    encoder_state_dict = {
-        ".".join(k.split(".")[1:]): torch.from_numpy(v)
-        for k, v in state_dict.items()
-        if k.split(".")[0] == "encoder"
-    }
-    encoder.load_state_dict(encoder_state_dict)
-    pi_state_dict = {
-        ".".join(k.split(".")[1:]): torch.from_numpy(v)
-        for k, v in state_dict.items()
-        if k.split(".")[0] == "pi"
-    }
-    pi_head.load_state_dict(pi_state_dict)
+    def policy(obs: list[float], deterministic: bool = True) -> np.ndarray:
+        """Policy function that takes observations and returns actions.
 
-    def policy(obs, deterministic=True):
-        action_logits = pi_head(
-            encoder(dict(obs=torch.from_numpy(obs[None, :])))[ENCODER_OUT][ACTOR]
+        Args:
+            obs: Observation vector.
+            deterministic: If True, use loc for action selection; otherwise, sample from the action distribution.
+        """
+        obs = np.array(obs, dtype=np.float32)
+        action_dist_params = rl_module.forward_inference(
+            dict(obs=torch.tensor(obs)[None, :])
         )
+        action_dist = action_dist_cls.from_logits(
+            action_dist_params[Columns.ACTION_DIST_INPUTS]
+        )
+
         if deterministic:
-            return action_logits.argmax().item()
+            action_squashed = action_dist.to_deterministic().sample()
         else:
-            return np.random.choice(
-                np.arange(0, len(action_logits[0])),
-                p=softmax(action_logits.detach())[0, :],
-            )
+            action_squashed = action_dist.sample()
+
+        action_squashed = convert_to_numpy(action_squashed[0])
+        action = unsquash_action(action_squashed, rl_module.config.action_space)
+
+        return action
 
     return policy
 
