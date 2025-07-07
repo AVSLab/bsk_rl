@@ -9,6 +9,7 @@ See the following examples for how to use these utilities:
   :class:`MakeAddedStepActionValid`, and :class:`CondenseMultiStepActions`).
 """
 
+from logging import getLogger
 from typing import Any, List, Literal, Optional
 
 import numpy as np
@@ -28,6 +29,9 @@ from ray.rllib.utils.postprocessing.zero_padding import unpad_data_if_necessary
 from ray.rllib.utils.typing import EpisodeType
 
 from bsk_rl import NO_ACTION
+from bsk_rl.gym import is_no_action, no_action_like
+
+logger = getLogger(__name__)
 
 
 class ContinuePreviousAction(ConnectorV2):
@@ -64,7 +68,55 @@ class ContinuePreviousAction(ConnectorV2):
                         return data
                     else:
                         id_tuple = id_tuples[0]
-                data[Columns.ACTIONS][id_tuple][0] = NO_ACTION
+
+                data[Columns.ACTIONS][id_tuple][0] = (
+                    data[Columns.ACTIONS][id_tuple][0] * 0 + NO_ACTION
+                )
+
+        return data
+
+
+class ContinuePreviousActionAppended(ConnectorV2):
+    def __init__(self, *args, **kwargs):
+        """Override actions with ``NO_ACTION`` on connector pass if the agent does not require retasking.
+
+        This additional connector must be appended after NormalizeAndClipActions in continuous
+        action spaces. For example:
+
+        .. code-block:: python
+
+            # Append extra connector to the pipeline
+            old_connector_builder = config.build_module_to_env_connector
+
+            def new_connector_builder(env):
+                pipeline = old_connector_builder(env)
+                after = pipeline.insert_after(
+                    "NormalizeAndClipActions", ContinuePreviousActionAppended()
+                )
+                return pipeline
+
+            config.build_module_to_env_connector = new_connector_builder
+
+        """
+        super().__init__(*args, **kwargs)
+
+    def __call__(
+        self,
+        *,
+        data: Optional[Any],
+        episodes: List[EpisodeType],
+        **_,
+    ) -> Any:
+        """Override actions with ``NO_ACTION`` on connector pass.
+
+        :meta private:
+        """
+        for id_tuple in data[Columns.ACTIONS_FOR_ENV].keys():
+            if is_no_action(data[Columns.ACTIONS][id_tuple][0]):
+                data[Columns.ACTIONS_FOR_ENV][id_tuple][0] = no_action_like(
+                    data[Columns.ACTIONS_FOR_ENV][id_tuple][0]
+                )
+
         return data
 
 
@@ -114,16 +166,9 @@ class MakeAddedStepActionValid(ConnectorV2):
             for episode in self.single_agent_episode_iterator(
                 episodes, agents_that_stepped_only=False
             ):
-                last_action = NO_ACTION
-                for action in reversed(episode.actions):
-                    if isinstance(action, int) and last_action == NO_ACTION:
-                        last_action = action
-                    else:
-                        break
-                if last_action == NO_ACTION:
-                    last_action = 0
-                episode.actions[-1] = last_action
-
+                # Arbitrary filler, will be deleted by remove_last_ts_from_episodes_and_restore_truncateds
+                if is_no_action(episode.actions[-1]):
+                    episode.actions[-1] = episode._action_space.sample()
                 episode.validate()
 
         return data
@@ -148,12 +193,9 @@ class CondenseMultiStepActions(ConnectorV2):
         for episode in self.single_agent_episode_iterator(
             episodes, agents_that_stepped_only=False
         ):
-            if NO_ACTION not in episode.actions:
-                continue
-
             action_idx = list(
                 np.argwhere(
-                    [action != NO_ACTION for action in episode.actions.data]
+                    [not is_no_action(action) for action in episode.actions.data]
                 ).flatten()
             )
             obs_idx = action_idx.copy()
@@ -162,7 +204,7 @@ class CondenseMultiStepActions(ConnectorV2):
             lookback = episode.actions.data[: episode.actions.lookback]
             new_lookback = episode.actions.lookback
             for action in lookback:
-                if action == NO_ACTION:
+                if is_no_action(action):
                     new_lookback -= 1
                 else:
                     break

@@ -32,6 +32,24 @@ SatArgRandomizer = Callable[[list[Satellite]], dict[Satellite, dict[str, Any]]]
 NO_ACTION = int(2**31) - 1
 
 
+def is_no_action(action):
+    """Check if the action is a no-action placeholder."""
+    if action is None:
+        return True
+    if isinstance(action, (int, np.integer)) and action == NO_ACTION:
+        return True
+    if isinstance(action, Iterable) and np.allclose(action, NO_ACTION):
+        return True
+    return False
+
+
+def no_action_like(action):
+    """Generate an action that is the same type and shape as the no-action placeholder."""
+    if isinstance(action, (int, np.integer)):
+        return NO_ACTION
+    return action * 0 + NO_ACTION  # Aggressively try to convert while retaining type
+
+
 class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
     def __init__(
         self,
@@ -446,10 +464,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             raise ValueError("There must be the same number of actions and satellites")
         for satellite, action in zip(self.satellites, actions):
             satellite.info = []  # reset satellite info log
-            if action is not None and (
-                not isinstance(action, int)
-                or action != NO_ACTION  # TODO improve for non-discrete actions
-            ):
+
+            if not is_no_action(action):
                 satellite.requires_retasking = False
                 satellite.set_action(action)
             if not satellite.is_alive():
