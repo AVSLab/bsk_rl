@@ -38,7 +38,7 @@ def is_no_action(action):
         return True
     if isinstance(action, (int, np.integer)) and action == NO_ACTION:
         return True
-    if isinstance(action, Iterable) and np.allclose(action, NO_ACTION):
+    if isinstance(action, (np.ndarray, list, tuple)) and np.allclose(action, NO_ACTION):
         return True
     return False
 
@@ -140,6 +140,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             satellites = [satellites]
         self.satellites = deepcopy(satellites)
 
+        self.dtype = dtype
         while True:
             for satellite in self.satellites:
                 if [sat.name for sat in self.satellites].count(satellite.name) > 1:
@@ -153,8 +154,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                         sat_rename.name = new_name
 
                 # Update satellite observation dtypes
-                if dtype is not None:
-                    satellite.observation_builder.dtype = dtype
+                if self.dtype is not None:
+                    satellite.observation_builder.dtype = self.dtype
 
             # Check if all satellite names are unique
             sat_names = [sat.name for sat in self.satellites]
@@ -229,6 +230,20 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             pass
 
         return MinimumEnv
+
+    def get_satellite(self, name: str) -> "Satellite":
+        """Get a satellite by name.
+
+        Args:
+            name: Name of the satellite to retrieve.
+
+        Returns:
+            The satellite object with the specified name.
+        """
+        for sat in self.satellites:
+            if sat.name == name:
+                return sat
+        raise ValueError(f"Satellite with name '{name}' not found.")
 
     def _configure_logging(self, log_level, log_dir=None):
         if isinstance(log_level, str):
@@ -585,14 +600,55 @@ class SatelliteTasking(GeneralSatelliteTasking, Generic[SatObs, SatAct]):
 class ConstellationTasking(
     GeneralSatelliteTasking, ParallelEnv, Generic[SatObs, SatAct, AgentID]
 ):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        *args,
+        meta_agent_groupings: Optional[dict[AgentID, list[str]]] = None,
+        only_retask_idle_meta_agent_members: bool = False,
+        **kwargs,
+    ) -> None:
         """Implements the `PettingZoo <https://pettingzoo.farama.org>`_ parallel API for the :class:`GeneralSatelliteTasking` environment.
 
         Args:
             *args: Passed to :class:`GeneralSatelliteTasking`.
+            meta_agent_groupings: A dictionary mapping agent names to lists of satellite names.
+            only_retask_idle_meta_agent_members: If True, only satellites in a meta agent
+                that require retasking will receive actions. Other actions in the meta
+                agent output will be ignored. This may also be useful to control in the
+                training pipeline.
             **kwargs: Passed to :class:`GeneralSatelliteTasking`.
         """
         super().__init__(*args, **kwargs)
+
+        self.only_retask_idle_meta_agent_members = only_retask_idle_meta_agent_members
+
+        if meta_agent_groupings is None:
+            meta_agent_groupings = {}
+
+        sats_in_meta_agents = sum(meta_agent_groupings.values(), [])
+        for sat in self.satellites:
+            if sat.name not in sats_in_meta_agents:
+                meta_agent_groupings[sat.name] = [sat.name]
+
+        self.meta_agent_groupings: dict[AgentID, list[Satellite]] = {
+            name: [self.get_satellite(member) for member in members]
+            for name, members in meta_agent_groupings.items()
+        }
+
+    def _validate_meta_agent_groupings(self):
+        """Validate that meta agent groupings consist of similar action spaces."""
+        for name, members in self.meta_agent_groupings.items():
+            if len(members) == 0:
+                raise ValueError(f"Meta agent '{name}' has no members.")
+            action_space_type = type(members[0].action_space)
+            for member in members:
+                assert isinstance(member.action_space, action_space_type), (
+                    f"Meta agent '{name}' has members with different action space types."
+                )
+                assert isinstance(member.observation_space, spaces.Box), (
+                    f"Only Box observation spaces are supported for meta agents, "
+                    f"but member '{member.name}' has {type(member.observation_space)}."
+                )
 
     def reset(
         self, seed: int | None = None, options=None
@@ -611,9 +667,10 @@ class ConstellationTasking(
         ):
             truncated = super()._get_truncated()
             agents = [
-                satellite.name
-                for satellite in self.satellites
-                if (satellite.is_alive() and not truncated)
+                agent
+                for agent, satellites in self.meta_agent_groupings.items()
+                if all(satellite.is_alive() for satellite in satellites)
+                and not truncated
             ]
             self._agents_last_compute_time = self.simulator.sim_time
             self._agents_cache = agents
@@ -629,7 +686,7 @@ class ConstellationTasking(
     @property
     def possible_agents(self) -> list[AgentID]:
         """Return the list of all possible agents."""
-        return [satellite.name for satellite in self.satellites]
+        return list(self.meta_agent_groupings.keys())
 
     @property
     def max_num_agents(self) -> int:
@@ -644,10 +701,28 @@ class ConstellationTasking(
     @property
     def observation_spaces(self) -> dict[AgentID, spaces.Box]:
         """Return the observation space for each agent."""
-        return {
-            agent: obs_space
-            for agent, obs_space in zip(self.possible_agents, super().observation_space)
-        }
+        super().observation_space
+        self._validate_meta_agent_groupings()
+
+        obs_spaces = {}
+        for agent, satellites in self.meta_agent_groupings.items():
+            if len(satellites) == 1:
+                obs_spaces[agent] = satellites[0].observation_space
+            else:
+                obs_spaces[agent] = spaces.Box(
+                    low=np.concatenate(
+                        [sat.observation_space.low for sat in satellites]
+                    ),
+                    high=np.concatenate(
+                        [sat.observation_space.high for sat in satellites]
+                    ),
+                    dtype=(
+                        self.dtype
+                        if self.dtype
+                        else satellites[0].observation_space.dtype
+                    ),
+                )
+        return obs_spaces
 
     @functools.lru_cache(maxsize=None)
     def observation_space(self, agent: AgentID) -> spaces.Space[SatObs]:
@@ -657,44 +732,80 @@ class ConstellationTasking(
     @property
     def action_spaces(self) -> dict[AgentID, spaces.Space[SatAct]]:
         """Return the action space for each agent."""
-        return {
-            agent: act_space
-            for agent, act_space in zip(self.possible_agents, super().action_space)
-        }
+        act_spaces = {}
+        for agent, satellites in self.meta_agent_groupings.items():
+            if len(satellites) == 1:
+                act_spaces[agent] = satellites[0].action_space
+            else:
+                if isinstance(satellites[0].action_space, spaces.Discrete):
+                    act_spaces[agent] = spaces.MultiDiscrete(
+                        [sat.action_space.n for sat in satellites]
+                    )
+                elif isinstance(satellites[0].action_space, spaces.Box):
+                    low = np.concatenate([sat.action_space.low for sat in satellites])
+                    high = np.concatenate([sat.action_space.high for sat in satellites])
+                    act_spaces[agent] = spaces.Box(
+                        low=low,
+                        high=high,
+                        dtype=(
+                            self.dtype
+                            if self.dtype
+                            else satellites[0].action_space.dtype
+                        ),
+                    )
+        return act_spaces
 
     @functools.lru_cache(maxsize=None)
     def action_space(self, agent: AgentID) -> spaces.Space[SatAct]:
         """Return the action space for a certain agent."""
         return self.action_spaces[agent]
 
+    def _requires_retasking(self, agent: AgentID) -> bool:
+        """Check if the agent requires retasking."""
+        return any(
+            satellite.requires_retasking
+            for satellite in self.meta_agent_groupings[agent]
+        )
+
     def _get_obs(self) -> dict[AgentID, SatObs]:
         """Format the observation per the PettingZoo Parallel API."""
-        if self.generate_obs_retasking_only:
-            return {
-                agent: (
-                    satellite.get_obs()
-                    if satellite.requires_retasking
-                    else self.observation_space(agent).sample() * 0
-                )
-                for agent, satellite in zip(self.possible_agents, self.satellites)
-                if agent not in self.previously_dead
-            }
-        else:
-            return {
-                agent: satellite.get_obs()
-                for agent, satellite in zip(self.possible_agents, self.satellites)
-                if agent not in self.previously_dead
-            }
+        obs = {}
+        for agent, satellites in self.meta_agent_groupings.items():
+            # Don't generate observations for agents that are dead
+            if agent in self.previously_dead:
+                continue
+
+            if self.generate_obs_retasking_only and not self._requires_retasking(agent):
+                agent_obs = [
+                    satellite.observation_space.sample() * 0 for satellite in satellites
+                ]
+            else:
+                agent_obs = [satellite.get_obs() for satellite in satellites]
+
+            if len(agent_obs) == 1:
+                obs[agent] = agent_obs[0]
+            else:
+                obs[agent] = np.concatenate(agent_obs)
+
+        return obs
 
     def _get_reward(self) -> dict[AgentID, float]:
         """Format the reward per the PettingZoo Parallel API."""
-        reward = deepcopy(self.reward_dict)
-        for agent, satellite in zip(self.possible_agents, self.satellites):
+        satellite_rewards = {
+            self.get_satellite(name): reward
+            for name, reward in self.reward_dict.items()
+        }
+        for satellite in self.satellites:
             if not satellite.is_alive():
-                if agent in reward:
-                    reward[agent] += self.failure_penalty
+                if satellite in satellite_rewards:
+                    satellite_rewards[satellite] += self.failure_penalty
                 else:
-                    reward[agent] = self.failure_penalty
+                    satellite_rewards[satellite] = self.failure_penalty
+
+        reward = {
+            agent: sum(satellite_rewards[sat] for sat in sats)
+            for agent, sats in self.meta_agent_groupings.items()
+        }
 
         reward_keys = list(reward.keys())
         for agent in reward_keys:
@@ -713,9 +824,11 @@ class ConstellationTasking(
             }
         else:
             return {
-                agent: not satellite.is_alive()
-                or self.rewarder.is_terminated(satellite)
-                for agent, satellite in zip(self.possible_agents, self.satellites)
+                agent: any(
+                    not sat.is_alive() or self.rewarder.is_terminated(sat)
+                    for sat in satellites
+                )
+                for agent, satellites in self.meta_agent_groupings.items()
                 if agent not in self.previously_dead
             }
 
@@ -723,28 +836,74 @@ class ConstellationTasking(
         """Format truncations per the PettingZoo Parallel API."""
         truncated = super()._get_truncated()
         return {
-            agent: truncated or self.rewarder.is_truncated(satellite)
-            for agent, satellite in zip(self.possible_agents, self.satellites)
+            agent: truncated
+            or any(self.rewarder.is_truncated(sat) for sat in satellites)
+            for agent, satellites in self.meta_agent_groupings.items()
             if agent not in self.previously_dead
         }
 
     def _get_info(self) -> dict[AgentID, dict]:
         """Format info per the PettingZoo Parallel API."""
-        info = super()._get_info()
-        for agent in self.possible_agents:
-            if agent in self.previously_dead:
-                del info[agent]
+        info_per_sat = super()._get_info()
 
-        common = {k: v for k, v in info.items() if k not in self.possible_agents}
-        for k in common.keys():
-            del info[k]
+        # Group info by agent
+        info = {}
+        for agent, satellites in self.meta_agent_groupings.items():
+            if agent not in self.previously_dead:
+                info[agent] = {
+                    "requires_retasking": any(
+                        info_per_sat[sat.name]["requires_retasking"]
+                        for sat in satellites
+                    )
+                }
+                if len(satellites) > 1:
+                    for satellite in satellites:
+                        info[agent][satellite.name] = info_per_sat[satellite.name]
 
+        # Identify common info
+        common = {
+            k: v
+            for k, v in info_per_sat.items()
+            if k not in [sat.name for sat in self.satellites]
+        }
+
+        # Pass common info to all agents and to __common__
         for agent in info.keys():
             for k, v in common.items():
                 info[agent][k] = v
         info["__common__"] = common
 
         return info
+
+    def _decompose_meta_action(
+        self, agent: AgentID, action: SatAct
+    ) -> dict[Satellite, SatAct]:
+        """Decompose a meta agent action into satellite actions."""
+        sat_to_action_map = {}
+        i = 0
+        for satellite in self.meta_agent_groupings[agent]:
+            action_len = satellite.action_space.shape
+            if len(action_len) == 0:
+                action_len = 1
+            else:
+                action_len = action_len[0]
+
+            if isinstance(action, (list, tuple, np.ndarray)):
+                if (
+                    not self.only_retask_idle_meta_agent_members
+                    or satellite.requires_retasking
+                ):
+                    if action_len == 1:
+                        sat_to_action_map[satellite] = action[i]
+                    else:
+                        sat_to_action_map[satellite] = action[i : i + action_len]
+                else:
+                    sat_to_action_map[satellite] = None
+                i += action_len
+            else:
+                sat_to_action_map[satellite] = action
+
+        return sat_to_action_map
 
     def step(
         self,
@@ -761,24 +920,31 @@ class ConstellationTasking(
 
         previous_alive = self.agents
 
+        sat_to_action_map = {}
+        for agent, action in actions.items():
+            if len(self.meta_agent_groupings[agent]) > 1:
+                logger.info(f"Decomposing action for meta agent {agent}")
+            sat_to_action_map.update(self._decompose_meta_action(agent, action))
+
         action_vector = []
-        for agent in self.possible_agents:
-            if agent in actions.keys():
-                action_vector.append(actions[agent])
+        for satellite in self.satellites:
+            if satellite in sat_to_action_map:
+                action_vector.append(sat_to_action_map[satellite])
             else:
                 action_vector.append(None)
         self._step(action_vector)
 
         self.newly_dead = list(set(previous_alive) - set(self.agents))
 
-        for satellite in self.newly_dead:
-            for attr in [
-                "_timed_terminal_event_name",
-                "_image_event_name",
-            ]:
-                event_name = getattr(satellite, attr, None)
-                if event_name is not None:
-                    self.simulator.delete_event(event_name)
+        for agent in self.newly_dead:
+            for satellite in self.meta_agent_groupings[agent]:
+                for attr in [
+                    "_timed_terminal_event_name",
+                    "_image_event_name",
+                ]:
+                    event_name = getattr(satellite, attr, None)
+                    if event_name is not None:
+                        self.simulator.delete_event(event_name)
 
         observation = self._get_obs()
         reward = self._get_reward()

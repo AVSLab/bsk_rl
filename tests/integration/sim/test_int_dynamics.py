@@ -149,7 +149,7 @@ class TestConjunctionDynModel:
 
         env.reset()
 
-        env.step(dict(Collision1=0, Collision2=0, Collision3=0))
+        env.step(dict(Collision1=0, Collision2=0, NoCollision3=0))
 
         sat1 = env.unwrapped.satellites[0]
         sat2 = env.unwrapped.satellites[1]

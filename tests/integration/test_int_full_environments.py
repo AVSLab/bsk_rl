@@ -71,6 +71,44 @@ parallel_env = ConstellationTasking(
     time_limit=5700.0,
 )
 
+parallel_meta_env = ConstellationTasking(
+    satellites=[
+        FullFeaturedSatellite(
+            "Sentinel-2A",
+            sat_args=FullFeaturedSatellite.default_sat_args(
+                oe=random_orbit,
+                imageAttErrorRequirement=0.01,
+                imageRateErrorRequirement=0.01,
+            ),
+        ),
+        FullFeaturedSatellite(
+            "Sentinel-2B",
+            sat_args=FullFeaturedSatellite.default_sat_args(
+                oe=random_orbit,
+                imageAttErrorRequirement=0.01,
+                imageRateErrorRequirement=0.01,
+            ),
+        ),
+        FullFeaturedSatellite(
+            "Sentinel-2C",
+            sat_args=FullFeaturedSatellite.default_sat_args(
+                oe=random_orbit,
+                imageAttErrorRequirement=0.01,
+                imageRateErrorRequirement=0.01,
+            ),
+        ),
+    ],
+    scenario=scene.UniformTargets(n_targets=1000),
+    rewarder=data.UniqueImageReward(),
+    sim_rate=0.5,
+    max_step_duration=1e9,
+    time_limit=5700.0,
+    meta_agent_groupings={
+        "DoubleSat": ["Sentinel-2A", "Sentinel-2C"],
+        "SingleSat": ["Sentinel-2B"],
+    },
+)
+
 
 @pytest.mark.parametrize("env", [multi_env])
 def test_reproducibility(env):
@@ -100,11 +138,12 @@ def test_reproducibility(env):
 
 
 @pytest.mark.repeat(5)
-def test_parallel_api():
+@pytest.mark.parametrize("env", [parallel_env, parallel_meta_env])
+def test_parallel_api(env):
     with pytest.warns(UserWarning):
         # expect an erroneous warning about the info dict due to our additional info
         try:
-            parallel_api_test(parallel_env)
+            parallel_api_test(env)
         except AssertionError as e:
             if "agent cannot be revived once dead" in str(e):
                 warn(f"'{e}' is a known issue (#59)")

@@ -503,7 +503,8 @@ class TestConstellationTasking:
     def test_obs_spaces(self):
         env = ConstellationTasking(
             satellites=[
-                MagicMock(observation_space=spaces.Discrete(i + 1)) for i in range(3)
+                MagicMock(observation_space=spaces.Box(low=0, high=i + 1, shape=(1,)))
+                for i in range(3)
             ],
             world_type=MagicMock(),
             scenario=MagicMock(),
@@ -512,9 +513,9 @@ class TestConstellationTasking:
         env.unwrapped.simulator = MagicMock()
         env.reset = MagicMock()
         assert env.observation_spaces == {
-            env.unwrapped.satellites[0].name: spaces.Discrete(1),
-            env.unwrapped.satellites[1].name: spaces.Discrete(2),
-            env.unwrapped.satellites[2].name: spaces.Discrete(3),
+            env.unwrapped.satellites[0].name: spaces.Box(low=0, high=1, shape=(1,)),
+            env.unwrapped.satellites[1].name: spaces.Box(low=0, high=2, shape=(1,)),
+            env.unwrapped.satellites[2].name: spaces.Box(low=0, high=3, shape=(1,)),
         }
 
     @patch(
