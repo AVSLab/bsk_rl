@@ -452,7 +452,7 @@ class ImageRSO(DiscreteAction):
         new_target = final_targets[action]
 
 
-        print_status = True
+        print_status = False
         if print_status:
             frequency_to_print = 0.1
             if round(self.satellite.simulator.sim_time, 9) % (frequency_to_print * 300) < 0.1:
@@ -464,6 +464,13 @@ class ImageRSO(DiscreteAction):
                         currently_visible_ids.append(target.id)
 
                 currently_visible_ids.sort()
+                currently_visible_ids_eclipsed=[]
+                currently_visible_ids_eclipsed_elevation=[]
+                visible_unimaged_targets.sort(key=lambda x: x[0].id)
+                for target, elev in visible_unimaged_targets:
+                    if self.satellite.dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor < self.satellite.dynamics.eclipse_threshold_for_imaging:
+                        currently_visible_ids_eclipsed.append(target.id)
+                        currently_visible_ids_eclipsed_elevation.append(elev)
 
                 all_ids = set(range(len(known_targets)))
                 seen_ids = set(self.ever_visible)
@@ -472,7 +479,9 @@ class ImageRSO(DiscreteAction):
 
                 print(f"\nSimulation Timestep: {self.satellite.simulator.sim_time}")
                 print(f"Seen targets so far ({len(seen_ids)}): {sorted(seen_ids)}")
-                print(f"Currently seen targets ({len(currently_visible_ids)}): {currently_visible_ids}")
+                print(f"Currently Visible targets ({len(currently_visible_ids)}): {currently_visible_ids}")
+                if len(currently_visible_ids_eclipsed) != 0:
+                    print(f"Currently Visible but Eclipse targets ({len(currently_visible_ids_eclipsed)}): {currently_visible_ids_eclipsed}")
                 print(f"Imaged targets: ({len(imaged_ids)}): {sorted(imaged_ids)}")
                 print(f"Unimaged targets: ({len(unimaged_ids)}): {sorted(unimaged_ids)}")
                 print(f"Never seen targets ({len(never_seen)}): {never_seen} \n")
