@@ -93,9 +93,6 @@ sat_args = {}
 # Set some parameters as constants
 sat_args["imageAttErrorRequirement"] = 0.01
 
-# Randomize the initial storage level on every reset
-# sat_args["storageInit"] = lambda: np.random.uniform(0., 0.0) * 1e10  # 0.25, 0.75) * 1e10
-
 # Storage
 sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 # bits
 sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
@@ -112,14 +109,16 @@ sat_args["thrusterPowerDraw"] = -80.0  # W
 # sat_args["panelArea"] = 0.25  # m^2
 
 # Attitude
-# sat_args["imageAttErrorRequirement"] = 0.1
-# sat_args["imageRateErrorRequirement"] = 0.1
 sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.005, size=3)  # N*m
 sat_args["maxWheelSpeed"] = 6000.0  # RPM
 sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
 sat_args["desatAttitude"] = "nadir"
 
-
+# reward bonuses and eclipse thresholds
+sat_args["downlink_bonus"] = 0.6
+sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
+sat_args["eclipse_threshold_for_imaging"] = 0.5
+sat_args["eclipse_threshold_for_reward"] = sat_args["eclipse_threshold_for_imaging"]
 
 class MyTargetSatellite(sats.Satellite):
     observation_spec = [
@@ -204,6 +203,8 @@ action_counts = defaultdict(int)
 downlink_reward_policy = "/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1750741069.7033312/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_0"
 downlink_reward_policy_shorter_imaging ="/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_shorter_imaging_5e-6lr_downlink_reward_penalties_smallest_storage_0"
 # imaging_reward_policy = ""
+
+# downlink_reward_with_eclipse_policy = "/Users/dahu1128/rllib_results/june29rllib_results/june29_lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1751336442.6073096/lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_0"
 policy_path = downlink_reward_policy_shorter_imaging
 policy = Policy(policy_path)
 

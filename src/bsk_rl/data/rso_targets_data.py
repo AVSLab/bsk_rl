@@ -123,7 +123,7 @@ class RSOTargetImageStore(DataStore):
 
                 for target in self.data.known:
                     if target.name == target_id:
-                        if self.satellite.dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor > self.eclipse_threshold_for_imaging:
+                        if self.satellite.dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor > self.satellite.dynamics.eclipse_threshold_for_imaging:
                             imaged.append(target)
             # eclipse_threshold = 0.6
             # eclipsed.append([target for target in imaged if target.eclipse_status >= eclipse_threshold]) # this can be used to change reward in case the target is in eclipse
@@ -164,8 +164,8 @@ class RSOTargetImageReward(GlobalReward):
         super().__init__()
         self.reward_fn = reward_fn
         self.inspection_task_completed = False
-        self.downlink_bonus = 1
-        self.imaging_bonus = 0
+        self.downlink_bonus = 0.5
+        self.imaging_bonus = 0.5
         self.eclipse_threshold_for_reward = 0.5
 
     def initial_data(self, satellite: "Satellite") -> "RSOTargetImageData":
@@ -231,15 +231,15 @@ class RSOTargetImageReward(GlobalReward):
                     target_name = self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedDataName[idx]
                     target = next((t for t in self.scenario.target_spacecrafts if t.name == target_name), None)
                     if target is not None:
-                        reward[sat_id] += self.reward_fn(target.priority * self.downlink_bonus)
+                        reward[sat_id] += self.reward_fn(target.priority * self.scenario.satellites[0].dynamics.downlink_bonus)
 
             # Adding Imaging Reward
             for target in new_data.imaged:
                 # if target not in self.data.imaged:
-                if target not in self.data.imaged and self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor > self.eclipse_threshold_for_reward:
+                if target not in self.data.imaged and self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor > self.scenario.satellites[0].dynamics.eclipse_threshold_for_reward:
                     reward[sat_id] += self.reward_fn(
-                        # target.priority * self.imaging_bonus  # this gives full reward as long as the shadowFactor was smaller than the eclipse_threshold_for_reward
-                        target.priority * self.imaging_bonus * (self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor-self.eclipse_threshold_for_reward)/(self.eclipse_threshold_for_reward)  # this reward gives linearly scaled returns based on the actual value
+                        # target.priority * self.scenario.satellites[0].dynamics.imaging_bonus  # this gives full reward as long as the shadowFactor was smaller than the eclipse_threshold_for_reward
+                        target.priority * self.scenario.satellites[0].dynamics.imaging_bonus * (self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor-self.scenario.satellites[0].dynamics.eclipse_threshold_for_reward)/(self.scenario.satellites[0].dynamics.eclipse_threshold_for_reward)  # this reward gives linearly scaled returns based on the actual value
                     ) / imaged_targets.count(target)
 
                 if sat_id == 'SS1':

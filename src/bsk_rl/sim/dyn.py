@@ -1676,6 +1676,8 @@ class ImagingSCDynModel(ImagingDynModel):
         self.setup_instrument(**kwargs)
         self.setup_storage_unit(**kwargs)
         self.setup_ground_station_locations()
+        self.setup_reward_factors(**kwargs)
+        self.setup_eclipse_threshold(**kwargs)
 
     @classmethod
     def _requires_world(cls) -> list[type["WorldModel"]]:
@@ -1745,7 +1747,28 @@ class ImagingSCDynModel(ImagingDynModel):
             self.task_name, self.simpleNavObject, ModelPriority=priority
         )
 
+    @default_args(imaging_bonus=0.0, downlink_bonus=1.0)
+    def setup_reward_factors(self, imaging_bonus: float, downlink_bonus: float, priority: int = 2000, **kwargs) -> None:
+        """Set up the reward bonus factors.
 
+        Args:
+            imaging_bonus: percentage of priority rewarded when target is imaged
+            downlink_bonus: percentage of priority rewarded when target is downlinked
+        """
+        self.imaging_bonus = imaging_bonus
+        self.downlink_bonus = downlink_bonus
+
+
+    @default_args(eclipse_threshold_for_reward=0.5, eclipse_threshold_for_imaging=0.5)
+    def setup_eclipse_threshold(self, eclipse_threshold_for_reward: float, eclipse_threshold_for_imaging: float, priority: int = 2000, **kwargs) -> None:
+        """Set up eclipse thresholds for imaging and rewarding
+
+        Args:
+            eclipse_threshold_for_imaging: minimum shadowFactor value of the target for it to be added to the [imaged] list
+            eclipse_threshold_for_reward: minimum shadowFactor value of target for agent to be rewarded
+        """
+        self.eclipse_threshold_for_imaging = eclipse_threshold_for_imaging
+        self.eclipse_threshold_for_reward = eclipse_threshold_for_reward
 
     @default_args(
         dataStorageCapacity=20 * 8e6,
