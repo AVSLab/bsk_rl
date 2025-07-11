@@ -174,7 +174,8 @@ class TestMaxRangeDynModel:
             ([0, 1e8, 0], [1e8, 0, 0], True),
         ],
     )
-    def test_max_range(self, rN1, rN2, max_range_violation):
+    @pytest.mark.parametrize("fail_chief", [True, False])
+    def test_max_range(self, rN1, rN2, max_range_violation, fail_chief):
         class ChiefSat(sats.Satellite):
             fsw_type = fsw.BasicFSWModel
             dyn_type = dyn.BasicDynamicsModel
@@ -206,6 +207,7 @@ class TestMaxRangeDynModel:
                         oe=None,
                         chief_name="Chief",
                         max_range_radius=100,
+                        enforce_range_on_chief=fail_chief,
                     ),
                 ),
             ],
@@ -217,12 +219,19 @@ class TestMaxRangeDynModel:
 
         env.reset()
 
-        env.step(dict(Chief=0, Deputy=0))
+        _, _, terminated, _, _ = env.step(dict(Chief=0, Deputy=0))
 
         sat1 = env.unwrapped.satellites[0]
         sat2 = env.unwrapped.satellites[1]
 
         if max_range_violation:
             assert sat2.dynamics.out_of_ranges == [sat1]
+            assert terminated["Deputy"]
+            if fail_chief:
+                assert terminated["Chief"]
+            else:
+                assert not terminated["Chief"]
         else:
             assert sat2.dynamics.out_of_ranges == []
+            assert not terminated["Chief"]
+            assert not terminated["Deputy"]

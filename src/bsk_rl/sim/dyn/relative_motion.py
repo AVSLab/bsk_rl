@@ -1,5 +1,7 @@
 """Dynamics models concerning the relative motion of spacecraft."""
 
+import types
+
 import numpy as np
 from Basilisk.simulation import spacecraftLocation
 from Basilisk.utilities import macros
@@ -152,13 +154,21 @@ class MaxRangeDynModel(BasicDynamicsModel):
         """Check if conjunction has not occurred."""
         return len(self.out_of_ranges) == 0
 
-    @default_args(max_range_radius=5000, chief_name=None)
-    def setup_range(self, max_range_radius: float, chief_name: str, **kwargs) -> None:
+    @default_args(max_range_radius=5000, chief_name=None, enforce_range_on_chief=False)
+    def setup_range(
+        self,
+        max_range_radius: float,
+        chief_name: str,
+        enforce_range_on_chief: bool,
+        **kwargs,
+    ) -> None:
         """Set up maximum distance checking relative to a chief satellite.
 
         Args:
             max_range_radius: [m] Maximum allowed range from the chief satellite.
             chief_name: Chief satellite to check range against.
+            enforce_range_on_chief: If True, the chief will also die if the range is
+                violated by this satellite.
             kwargs: Passed to other setup functions.
         """
         self.max_range_radius = max_range_radius
@@ -173,6 +183,20 @@ class MaxRangeDynModel(BasicDynamicsModel):
 
         self.chief = self.simulator.get_satellite(self.chief_name)
 
+        # Add range check to chief if required
+        if enforce_range_on_chief:
+
+            @aliveness_checker
+            def range_valid(self, deputy=self):
+                return deputy.range_valid()
+
+            setattr(
+                self.chief.dynamics,
+                valid_func_name(f"range_valid_{self.satellite.name}"),
+                types.MethodType(range_valid, self.chief.dynamics),
+            )
+
+        # Add event to check for max range violation
         def condition(sim):
             distance = np.linalg.norm(
                 np.array(self.satellite.dynamics.r_BN_N)

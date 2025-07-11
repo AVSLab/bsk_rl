@@ -51,6 +51,8 @@ Development - |version|
   overwritten.
 * Add the ability to define metaagents that concatenate satellite action and observation
   spaces in the environment.
+* Add the ability to have the chief also terminate if a deputy violates a maximum range
+  constraint in :class:`~bsk_rl.sim.dyn.MaxRangeDynModel`.
 
 
 Version 1.1.0
