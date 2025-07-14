@@ -65,7 +65,7 @@ class ContinuePreviousAction(ConnectorV2):
                         if id_tuple[1] == sa_episode.agent_id
                     ]
                     if len(id_tuples) == 0:
-                        return data
+                        continue
                     else:
                         id_tuple = id_tuples[0]
 
