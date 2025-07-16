@@ -37,11 +37,10 @@ class MyScanningSatellite(sats.AccessSatellite):
         ),
         obs.PolarisScTargetProperties(
             dict(prop="target_elevation_angle", norm=1.0),
-            dict(prop="rel_pos_vector_r_BR_N", norm = 1596*1000),
+            dict(prop="rel_pos_vector_r_BR_H", norm = 1596*1000),
+            # dict(prop="r_BR_H", norm = 1596*1000),
             dict(prop="angle_to_target", norm=1.0),
             dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
-            dict(prop="target_id_info", norm=1.0),
-            dict(prop="target_imaged",  norm=1.0),
             dict(prop="target_shadowFactor", norm=1.0),
             n_ahead_observe=n_targets_ahead,
                                        ),

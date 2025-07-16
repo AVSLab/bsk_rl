@@ -346,7 +346,6 @@ class ImageRSO(DiscreteAction):
         """
         self.satellite.fsw.action_image_rso_target(target)  #  TODO: here the data_name of the buffer should also be passsed  add ,target.target_spacecraft.name
 
-
         return target.id
 
 
@@ -397,7 +396,7 @@ class ImageRSO(DiscreteAction):
         for target in known_targets:
             target_pos = np.array(target.target_spacecraft.dynamics.r_BN_N)
             elev = self.elevation_angle(scanner_pos, target_pos)
-            if -14.0 <= elev <= 90.0:
+            if -21.0 <= elev <= 90.0:
                 if target.id not in self.ever_visible:
                     self.ever_visible.append(target.id)
 
@@ -416,7 +415,7 @@ class ImageRSO(DiscreteAction):
 
         visible_unimaged_targets = [
             (tgt, elev) for tgt, elev in target_elevations
-            if -14.0 <= elev <= 90.0 and tgt.id not in imaged_ids
+            if -21.0 <= elev <= 90.0 and tgt.id not in imaged_ids
         ]
 
         visible_unimaged_targets.sort(key=lambda x: x[1])
@@ -460,7 +459,7 @@ class ImageRSO(DiscreteAction):
                 for target in known_targets:
                     target_pos = np.array(target.target_spacecraft.dynamics.r_BN_N)
                     elev = self.elevation_angle(scanner_pos, target_pos)
-                    if -14.0 <= elev <= 90.0:
+                    if -21.0 <= elev <= 90.0:
                         currently_visible_ids.append(target.id)
 
                 currently_visible_ids.sort()

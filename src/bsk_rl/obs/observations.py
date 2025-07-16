@@ -446,6 +446,18 @@ def _relative_position(sat, opp):
     los_vector = target_pos - sat_pos
     return los_vector
 
+def _relative_position_H(sat, opp):
+    sat_pos = np.array(sat.dynamics.r_BN_N)
+    target_pos = np.array(opp["object"].target_spacecraft.dynamics.r_BN_N)
+    los_vector = target_pos - sat_pos
+    HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
+    return HN @ los_vector
+
+def _r_BN_H(sat, opp):
+    r_BN_N = opp["object"].target_spacecraft.dynamics.r_BN_N,
+    HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
+    return HN @ r_BN_N
+
 def _target_elevation_angle(sat, opp):
     sat_pos = np.array(sat.dynamics.r_BN_N)
     target_pos = np.array(opp["object"].target_spacecraft.dynamics.r_BN_N)
@@ -493,7 +505,9 @@ class PolarisScTargetProperties(Observation):
     _fn_map = {
         # "priority": lambda sat, opp: opp["object"].priority,
         "rel_pos_vector_r_BR_N": _relative_position,
+        "rel_pos_vector_r_BR_H": _relative_position_H,
         "r_BN_N": lambda sat, opp: opp["object"].target_spacecraft.dynamics.r_BN_N,
+        "r_BN_H": _r_BN_H,
         # "r_LB_H": _r_LB_H,
         # "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time,
         # "opportunity_mid": lambda sat, opp: sum(opp["window"]) / 2
@@ -649,7 +663,7 @@ class PolarisScTargetProperties(Observation):
 
         visible_unimaged_targets = [
             (tgt, elev) for tgt, elev in target_elevations
-            if -14.0 <= elev <= 90.0 and tgt.id not in imaged_ids
+            if -21.0 <= elev <= 90.0 and tgt.id not in imaged_ids
         ]
 
         visible_unimaged_targets.sort(key=lambda x: x[1])
