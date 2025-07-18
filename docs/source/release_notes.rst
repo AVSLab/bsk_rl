@@ -49,6 +49,8 @@ Development - |version|
 * Fix a bug where a satellite's initial data was never added to the rewarder.
 * Fix a bug where using multiple of the same rewarder would cause some settings to be 
   overwritten.
+* Add the ability to define metaagents that concatenate satellite action and observation
+  spaces in the environment.
 
 
 Version 1.1.0
