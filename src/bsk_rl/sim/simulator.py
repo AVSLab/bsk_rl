@@ -66,8 +66,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         """Finish simulator initialization."""
         self.set_vizard_epoch()
         self.InitializeSimulation()
-        self.ConfigureStopTime(0)
-        self.ExecuteSimulation()
+        self.TotalSim.StepUntilStop(0, -1)
 
     @property
     def sim_time_ns(self) -> int:
