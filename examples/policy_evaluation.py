@@ -50,34 +50,161 @@ save_data = False #set to False to avoid saving data
 
 n_targets = 100
 n_targets_ahead = 10
-total_time = n_targets * 450  # 2100 # 5700.0  # approximately 1 orbit
+imaging_duration = 300
+total_time = n_targets * 300  # 2100 # 5700.0  # approximately 1 orbit
+# obs_v = 1.1
+obs_v =2
+
+# loading the policy
+# downlink_reward_policy = "/Users/dahu1128/rllib_results/june12rllib_results/lowBaudRate_5e-6lr_downlink_reward_penalties_smallest_storage_Polaris_simulation_1749771784.4956822/lowBaudRate_5e-6lr_downlink_reward_penalties_smallest_storage_0/"
+downlink_reward_policy = "/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1750741069.7033312/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_0"
+downlink_reward_policy_shorter_imaging ="/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_shorter_imaging_5e-6lr_downlink_reward_penalties_smallest_storage_0"
+# imaging_reward_policy = ""
+# July 22nd
+balance00100_reward_policy_obs1_gamma99 = "/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv1_1e-5lr_0.1cp_gamma99_0d100i_1753189664.120498/july22_obsv1_1e-5lr_0.1cp_gamma99_0d100i_job_%a-%j.out_0"
+balance00100_reward_policy_obs1_gamma995 = "/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv1_1e-5lr_0.1cp_gamma995_0d100i_1753184464.3957765/july22_obsv1_1e-5lr_0.1cp_gamma995_0d100i_job_%a-%j.out_0"
+balance00100_reward_policy_obs1_gamma9995 = "/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv1_1e-5lr_0.1cp_gamma9995_0d100i_1753252554.210772/july22_obsv1_1e-5lr_0.1cp_gamma9995_0d100i_job_%a-%j.out_0"
+balance00100_reward_policy_obs1_gamma99995 = "/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv1_1e-5lr_0.1cp_gamma99995_0d100i_1753189664.1202838/july22_obsv1_1e-5lr_0.1cp_gamma99995_0d100i_job_%a-%j.out_0"
+
+balance00100_reward_policy_obs2_gamma99 = "/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv2_1e-5lr_0.1cp_gamma99_0d100i_1753349618.6042557/july22_obsv2_1e-5lr_0.1cp_gamma99_0d100i_job_%a-%j.out_0"
+balance00100_reward_policy_obs2_gamma995 = '/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv2_1e-5lr_0.1cp_gamma995_0d100i_1753350273.3467767/july22_obsv2_1e-5lr_0.1cp_gamma995_0d100i_job_%a-%j.out_0'
+balance00100_reward_policy_obs2_gamma9995 = '/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv2_1e-5lr_0.1cp_gamma9995_0d100i_1753504923.8221972/july22_obsv2_1e-5lr_0.1cp_gamma9995_0d100i_job_%a-%j.out_0'
+balance00100_reward_policy_obs2_gamma99995 = '/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv2_1e-5lr_0.1cp_gamma99995_0d100i_1753349618.6116135/july22_obsv2_1e-5lr_0.1cp_gamma99995_0d100i_job_%a-%j.out_0'
+
+
+
+# July 16th
+balance7525_reward_policy_obs2 = "/Users/dahu1128/rllib_results/july_results/july16rllib_results/july16_1e-5lr_002torque_75d25i_reward_new_penalties_smallest_storage_Polaris_simulation_1752742415.630985/1e-5lr_002torque_75d25i_reward_new_penalties_smallest_storage_0"
+balance5050_reward_policy_obs15 = "/Users/dahu1128/rllib_results/july_results/july5rllib_results/july5_1e-5lr_0005torque_50d50i_reward_new_penalties_smallest_storage_Polaris_simulation_1751885868.6929862/1e-5lr_0005torque_50d50i_reward_new_penalties_smallest_storage_0"
+balance5050_reward_policy_obs2 ="/Users/dahu1128/rllib_results/july_results/july16rllib_results/july16_1e-5lr_002torque_50d50i_reward_new_penalties_smallest_storage_Polaris_simulation_1752838082.5491006/1e-5lr_002torque_50d50i_reward_new_penalties_smallest_storage_0"
+# downlink_reward_with_eclipse_policy = "/Users/dahu1128/rllib_results/june29rllib_results/june29_lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1751336442.6073096/lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_0"
+
+# july10th
+cluster_6040policy_obs11 = "/Users/dahu1128/rllib_results/july_results/july10rllib_results/july10_1e-5lr_002torque_60d40i_reward_new_penalties_smallest_storage_Polaris_simulation_1752241793.6701877/1e-5lr_002torque_60d40i_reward_new_penalties_smallest_storage_0"
+
+# July 5th
+cluster_5050policy_5e6lr_obs11 = "/Users/dahu1128/rllib_results/july_results/july5rllib_results/july5_5e-6lr_0005torque_50d50i_reward_new_penalties_smallest_storage_Polaris_simulation_1751892467.767332/5e-6lr_0005torque_50d50i_reward_new_penalties_smallest_storage_0"
+cluster_5050policy_5e5lr_obs11 ="/Users/dahu1128/rllib_results/july_results/july5rllib_results/july5_5e-5lr_0005torque_50d50i_reward_new_penalties_smallest_storage_Polaris_simulation_1751887414.367687/5e-5lr_0005torque_50d50i_reward_new_penalties_smallest_storage_0"
+
+# June 28th
+cluster_1000_policy_v1_obs1 = "/Users/dahu1128/rllib_results/june_results/june29rllib_results/june29_lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1751349196.029947/lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_0"
+cluster_1000_policy_v2_obs1 = "/Users/dahu1128/rllib_results/june_results/june29rllib_results/june29_lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1751336442.6073096/lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_0"
+
+# June 23rd
+cluster_1000_policy_v2_obs1_wGAE ="/Users/dahu1128/rllib_results/june_results/june23rllib_results/lowBaudRate_5e-6lr_001torque_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1750740679.4746056/lowBaudRate_5e-6lr_001torque_downlink_reward_new_penalties_smallest_storage_0"
+
+policy_path = balance00100_reward_policy_obs2_gamma99
+
+# Define all known policy paths with associated obs values
+policy_obs_map = {
+    "balance00100_reward_policy_obs1_gamma99": 1,
+    "balance00100_reward_policy_obs1_gamma995": 1,
+    "balance00100_reward_policy_obs1_gamma9995": 1,
+    "balance00100_reward_policy_obs1_gamma99995": 1,
+    "balance00100_reward_policy_obs2_gamma99": 2,
+    "balance00100_reward_policy_obs2_gamma995": 2,
+    "balance00100_reward_policy_obs2_gamma9995": 2,
+    "balance00100_reward_policy_obs2_gamma99995": 2,
+    "cluster_5050policy_obs2": 2,
+    "cluster_7525policy_obs2": 2,
+    "cluster_9010policy_obs2": 2,
+    "cluster_6040policy_obs11": 1.1,
+    "cluster_5050policy_5e6lr_obs11": 1.1,
+    "cluster_5050policy_5e5lr_obs11": 1.1,
+    "cluster_1000_policy_v1_obs1": 1.1,
+    "cluster_1000_policy_v2_obs1": 1.1,
+    "cluster_1000_policy_v2_obs1_wGAE": 1,
+    "downlink_reward_policy": 1,
+    "downlink_reward_policy_shorter_imaging": 1,
+    "cluster_policy": 1,
+}
+
+# Compare policy_path to known variables
+for name, val in list(globals().items()):
+    if isinstance(val, str) and val == policy_path and name in policy_obs_map:
+        policy_name = name
+        obs_v = policy_obs_map[name]
+        break
+
+# Load policy
+policy = Policy(policy_path)
+
 
 class MyScanningSatellite(sats.AccessSatellite):
-    observation_spec = [
-        obs.SatProperties(
-            dict(prop="storage_level_fraction"),
-            dict(prop="battery_charge_fraction"),
-            dict(prop="wheel_speeds_fraction"),
-        ),
-        obs.PolarisScTargetProperties(
-            dict(prop="target_elevation_angle", norm=1.0),
-            dict(prop="rel_pos_vector_r_BR_N", norm = 1596*1000),
-            dict(prop="angle_to_target", norm=1.0),
-            dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
-            dict(prop="target_id_info", norm=1.0),
-            dict(prop="target_imaged",  norm=1.0),
-            n_ahead_observe=n_targets_ahead,
-                                       ),
-        obs.Eclipse(),
-        obs.OpportunityProperties(
-            dict(prop="opportunity_open", norm = 5700.0),
-            dict(prop="opportunity_close", norm = 5700.0),
-            type="ground_station",
-            n_ahead_observe=5,
-        )
-    ]
+    if obs_v==1:
+        observation_spec = [
+            obs.SatProperties(
+                dict(prop="storage_level_fraction"),
+                dict(prop="battery_charge_fraction"),
+                dict(prop="wheel_speeds_fraction"),
+            ),
+            obs.PolarisScTargetProperties(
+                dict(prop="target_elevation_angle", norm=1.0),
+                dict(prop="rel_pos_vector_r_BR_N", norm = 1596*1000),
+                dict(prop="angle_to_target", norm=1.0),
+                dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
+                dict(prop="target_id_info", norm=1.0),
+                dict(prop="target_imaged",  norm=1.0),
+                n_ahead_observe=n_targets_ahead,
+                                           ),
+            obs.Eclipse(),
+            obs.OpportunityProperties(
+                dict(prop="opportunity_open", norm = 5700.0),
+                dict(prop="opportunity_close", norm = 5700.0),
+                type="ground_station",
+                n_ahead_observe=5,
+            )
+        ]
+    elif obs_v==1.1:
+        observation_spec = [
+            obs.SatProperties(
+                dict(prop="storage_level_fraction"),
+                dict(prop="battery_charge_fraction"),
+                dict(prop="wheel_speeds_fraction"),
+            ),
+            obs.PolarisScTargetProperties(
+                dict(prop="target_elevation_angle", norm=1.0),
+                dict(prop="rel_pos_vector_r_BR_N", norm = 1596*1000),
+                dict(prop="angle_to_target", norm=1.0),
+                dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
+                dict(prop="target_id_info", norm=1.0),
+                dict(prop="target_imaged",  norm=1.0),
+                dict(prop="target_shadowFactor", norm=1.0),
+                n_ahead_observe=n_targets_ahead,
+                                           ),
+            obs.Eclipse(),
+            obs.OpportunityProperties(
+                dict(prop="opportunity_open", norm = 5700.0),
+                dict(prop="opportunity_close", norm = 5700.0),
+                type="ground_station",
+                n_ahead_observe=5,
+            )
+        ]
+    elif obs_v==2:
+        observation_spec = [
+            obs.SatProperties(
+                dict(prop="storage_level_fraction"),
+                dict(prop="battery_charge_fraction"),
+                dict(prop="wheel_speeds_fraction"),
+            ),
+            obs.PolarisScTargetProperties(
+                dict(prop="target_elevation_angle", norm=1.0),
+                dict(prop="rel_pos_vector_r_BR_H", norm = 1596*1000),
+                dict(prop="angle_to_target", norm=1.0),
+                dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
+                dict(prop="target_shadowFactor", norm=1.0),
+                n_ahead_observe=n_targets_ahead,
+                                           ),
+            obs.Eclipse(),
+            obs.OpportunityProperties(
+                dict(prop="opportunity_open", norm = 5700.0),
+                dict(prop="opportunity_close", norm = 5700.0),
+                type="ground_station",
+                n_ahead_observe=5,
+            )
+        ]
     action_spec = [
-        act.ImageRSO(n_ahead_image=n_targets_ahead,duration=180),  # Scan for 5 minute
+        act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
         act.Charge(duration=300.0),  # Charge for 5 minutes
         act.Downlink(duration=180.0), # Downlink for 3 min
         act.Desat(duration=150), # Desat for 2.5 min
@@ -101,7 +228,7 @@ sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
 # Power
 sat_args["batteryStorageCapacity"] = 500 * 3600  # W*s
-sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.3, 0.7) * 500 * 3600
+sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.4, 0.6) * 500 * 3600
 sat_args["basePowerDraw"] = -10.0  # W
 sat_args["instrumentPowerDraw"] = -30.0  # W
 sat_args["transmitterPowerDraw"] = -25.0  # W
@@ -109,13 +236,13 @@ sat_args["thrusterPowerDraw"] = -80.0  # W
 # sat_args["panelArea"] = 0.25  # m^2
 
 # Attitude
-sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.005, size=3)  # N*m
+sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.000, size=3)  # N*m
 sat_args["maxWheelSpeed"] = 6000.0  # RPM
 sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
 sat_args["desatAttitude"] = "nadir"
 
 # reward bonuses and eclipse thresholds
-sat_args["downlink_bonus"] = 0.6
+sat_args["downlink_bonus"] = 0.0
 sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
 sat_args["eclipse_threshold_for_imaging"] = 0.5
 sat_args["eclipse_threshold_for_reward"] = sat_args["eclipse_threshold_for_imaging"]
@@ -168,12 +295,12 @@ env = gym.make(
     rewarder=data.RSOTargetImageReward(),
     world_type=world.GroundStationWorldModel,
     time_limit=total_time,
-    log_level="ERROR",
+    log_level="ERROR", #ERROR or DEBUG
     disable_env_checker=True,
     # max_step_duration=700,
 )
-
-observation, info = env.reset(seed=5)
+seed_number=2
+observation, info = env.reset(seed=seed_number) #5
 
 # env.simulator.ShowExecutionOrder() # to show execution order
 
@@ -198,34 +325,38 @@ critical_battery_level = 0.3 # always task charging if battery is below 0.3
 # storing the actions taken by the agent
 action_counts = defaultdict(int)
 
-# loading the policy
-# downlink_reward_policy = "/Users/dahu1128/rllib_results/june12rllib_results/lowBaudRate_5e-6lr_downlink_reward_penalties_smallest_storage_Polaris_simulation_1749771784.4956822/lowBaudRate_5e-6lr_downlink_reward_penalties_smallest_storage_0/"
-downlink_reward_policy = "/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1750741069.7033312/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_0"
-downlink_reward_policy_shorter_imaging ="/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_shorter_imaging_5e-6lr_downlink_reward_penalties_smallest_storage_0"
-# imaging_reward_policy = ""
 
-# downlink_reward_with_eclipse_policy = "/Users/dahu1128/rllib_results/june29rllib_results/june29_lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1751336442.6073096/lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_0"
-policy_path = downlink_reward_policy_shorter_imaging
-policy = Policy(policy_path)
-
-
+# # Tracking structures
+# charging_battery_levels = []
+# downlink_storage_levels = []
+# charging_eclipse_flags = []
+# downlink_eclipse_flags = []
+# imaging_logs = []
+SS1_reward=0
+act_random=False
 for target_id in range(n_targets*6 *100 ):
     simtime = env.simulator.sim_time
     print('\n SIMULATION TIME: ' + str(simtime) + ' seconds')
     # Use policy to determine action
-    obs_for_policy = flatten_to_single_ndarray(observation[sat.name]) # This is a dict (as your env uses `obs_type=dict`)
+    # obs_for_policy = flatten_to_single_ndarray(observation[sat.name]) # This is a dict (as your env uses `obs_type=dict`)
     # obs_flat = flatten_to_single_ndarray(env.observation_spaces[sat.name], observation[sat.name])
 
-    policy_action = policy.act(obs_for_policy)
-
+    # policy_action = policy.act(obs_for_policy)
+    policy_action = policy.act(observation[sat.name])
     if isinstance(policy_action, np.ndarray):  # Handle vector action output (if needed)
         policy_action = policy_action.item()  # or do appropriate conversion if the policy returns a torch tensor
 
-    action_counts[policy_action] += 1
+
 
     # action_dict = {sat.name: target_id}  # Assign the main satellite to observe `target_idx` # sequentially observing each target
     action_dict = {sat.name: 0}  # Assign the closest target when the list is sorted by distance
     action_dict = {sat.name: policy_action}  # Assign the closest target when the list is sorted by distance
+    if act_random:
+        random_action = np.random.randint(0,13)
+        action_dict = {sat.name: random_action}
+        action_counts[random_action] += 1
+    else:
+        action_counts[policy_action] += 1
     if policy_action == 11:
         print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.satellites[0].dynamics.storage_level_fraction))
     elif policy_action == 10:
@@ -233,7 +364,7 @@ for target_id in range(n_targets*6 *100 ):
     elif policy_action == 12:
         print('tasking DESAT now: at t=',simtime," and wheel_speeds --> "+str(env.satellites[0].dynamics.wheel_speeds_fraction))
 
-    if use_shield == False:
+    if use_shield == True:
         if env.satellites[0].dynamics.storage_level_fraction > critical_storage_level:  # downlink if storage is more than 0.95
         #if simtime - last_downlink_time > 3000:
             print('tasking DOWNLINKING now: at t=',simtime)
@@ -244,8 +375,9 @@ for target_id in range(n_targets*6 *100 ):
             print('tasking CHARGING now: at t=',simtime)
             action_dict = {sat.name: 10} # tasking charging
     action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
-    print('current action_dict to be executed', action_dict)
+    print('current action_dict to be executed', action_dict['SS1'])
     observation, reward, terminated, truncated, info = env.step(action=action_dict)
+    SS1_reward+=reward['SS1']
     print("storage_level", env.satellites[0].dynamics.storage_level)
     print("dynamics.storage_level_fraction", env.satellites[0].dynamics.storage_level_fraction)
     print("dynamics.battery_charge_fraction", env.satellites[0].dynamics.battery_charge_fraction)
@@ -258,6 +390,9 @@ for target_id in range(n_targets*6 *100 ):
         break
 
 print("  Final data level:", observation)
+print(f"final reward for SS1 {SS1_reward} should be the same as {env.env.rewarder.cum_reward['SS1']}")
+print(f"and number of imaged targets {len(env.env.satellites[0].data_store.data.imaged)} out of those useful images were: {len(env.env.rewarder.imaged_illuminated)}")
+print(f"Total downlinked {env.env.rewarder.total_downlinks} out of those useful downlinks were: {env.env.rewarder.useful_downlinks}")
 
 while not truncated:
     data_dict["sim_time"].append(env.simulator.sim_time)
@@ -288,7 +423,7 @@ plt.ylabel("Number of Times Action Was Taken")
 plt.xticks(rotation=45)
 plt.grid(True, axis='y', linestyle='--', alpha=0.6)
 plt.tight_layout()
-plt.savefig("action_count_distribution.pdf")  # Save as PDF
+plt.savefig(f"random{act_random}_seed{seed_number}_{policy_name}_action_count_distribution.pdf")  # Save as PDF
 # plt.savefig("extended_time_action_count_distribution.pdf")  # Save as PDF
 
 plt.show()
@@ -301,12 +436,15 @@ plt.ylabel("Percentage of Total Actions (%)")
 plt.xticks(rotation=45)
 plt.grid(True, axis='y', linestyle='--', alpha=0.6)
 plt.tight_layout()
-plt.savefig("action_percentage_distribution.pdf")  # Save as PDF
+plt.savefig(f"random{act_random}_seed{seed_number}_{policy_name}_action_percentage_distribution.pdf")  # Save as PDF
 # plt.savefig("extended_time_action_percentage_distribution.pdf")  # Save as PDF
 plt.show()
 
 # Compute total target-imaging and non-target-imaging actions
 target_imaging_count = sum(counts[i] for i in range(10))     # Actions 0–9
+charge_action_count = counts[10]
+downlink_action_count = counts[11]
+desat_action_count = counts[12]
 non_target_count = sum(counts[i] for i in range(10, 13))     # Actions 10–12
 
 # Compute percentages
@@ -317,6 +455,9 @@ non_target_pct = 100 * non_target_count / total_actions
 print("\n=== Imaging vs Non-Imaging Summary ===")
 print(f"Target Imaging Actions (0–9): {target_imaging_count} ({target_imaging_pct:.2f}%)")
 print(f"Other Actions (10–12):        {non_target_count} ({non_target_pct:.2f}%)")
+print(f"Downlink actions: {downlink_action_count}")
+print(f"Charge actions: {charge_action_count}")
+print(f"Desat actions: {desat_action_count}")
 print("======================================\n")
 
 
