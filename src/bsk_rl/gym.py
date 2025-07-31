@@ -402,7 +402,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 (
                     satellite.get_obs()
                     if satellite.requires_retasking
-                    else satellite.observation_space.sample() * 0
+                    else satellite.observation_space.low * 0
                 )
                 for satellite in self.satellites
             )
@@ -777,7 +777,7 @@ class ConstellationTasking(
 
             if self.generate_obs_retasking_only and not self._requires_retasking(agent):
                 agent_obs = [
-                    satellite.observation_space.sample() * 0 for satellite in satellites
+                    satellite.observation_space.low * 0 for satellite in satellites
                 ]
             else:
                 agent_obs = [satellite.get_obs() for satellite in satellites]

@@ -32,6 +32,7 @@ class AccessSatellite(Satellite):
         *args,
         generation_duration: float = 600.0,
         initial_generation_duration: Optional[float] = None,
+        max_generation_duration_beyond_initial: Optional[float] = float("inf"),
         **kwargs,
     ) -> None:
         """Satellite that detects access opportunities for ground locations.
@@ -49,11 +50,16 @@ class AccessSatellite(Satellite):
                 the simulation is infinite.
             initial_generation_duration: [s] Period to calculate opportunities for on
                 environment reset.
+            max_generation_duration_beyond_initial: [s] Maximum time to calculate opportunities
+                beyond the initial generation duration.
             kwargs: Passed through to :class:`Satellite` constructor.
         """
         super().__init__(*args, **kwargs)
         self.generation_duration = generation_duration
         self.initial_generation_duration = initial_generation_duration
+        self.max_generation_duration_beyond_initial = (
+            max_generation_duration_beyond_initial
+        )
         self.access_filter_functions = []
         self.add_access_filter(lambda opportunity: True)
 
@@ -111,17 +117,18 @@ class AccessSatellite(Satellite):
         if duration <= 0:
             return
 
-        self.logger.info(
-            "Finding opportunity windows from "
-            f"{self.window_calculation_time:.2f} to "
-            f"{self.window_calculation_time + duration:.2f} seconds"
-        )
         calculation_start = self.window_calculation_time
         calculation_end = self.window_calculation_time + max(
             duration, self.trajectory.dt * 2, self.generation_duration
         )
         calculation_end = self.generation_duration * np.ceil(
             calculation_end / self.generation_duration
+        )
+
+        self.logger.info(
+            "Finding opportunity windows from "
+            f"{calculation_start:.2f} to "
+            f"{calculation_end:.2f} seconds"
         )
 
         # Get discrete times and positions for next trajectory segment
@@ -436,8 +443,17 @@ class AccessSatellite(Satellite):
 
                 if len(next_opportunities) >= n:
                     return next_opportunities
+            if (
+                self.window_calculation_time
+                >= self.initial_generation_duration
+                + self.max_generation_duration_beyond_initial
+            ):
+                break
             self.calculate_additional_windows(self.generation_duration)
         if pad and len(next_opportunities) >= 1:
+            self.logger.info(
+                f"Only {len(next_opportunities)} opportunities found, padding to {n}."
+            )
             next_opportunities += [next_opportunities[-1]] * (
                 n - len(next_opportunities)
             )

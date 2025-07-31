@@ -3,6 +3,7 @@
 import logging
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, Union
 
 import numpy as np
@@ -145,13 +146,13 @@ class ObservationBuilder(Resetable):
         else:
             raise ValueError(f"Invalid observation type: {self.obs_type}")
 
-    @property
+    @cached_property
     def observation_space(self) -> spaces.Space:
         """Space of the observation."""
         obs = self.get_obs()
         return nested_obs_to_space(obs, dtype=self.dtype)
 
-    @property
+    @cached_property
     def observation_description(self) -> Any:
         """Human-interpretable description of observation space."""
         return self.obs_array_keys()
