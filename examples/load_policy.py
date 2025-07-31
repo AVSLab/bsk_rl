@@ -7,41 +7,69 @@ import numpy as np
 import glob
 from pathlib import Path
 from typing import Callable
+import os
 
+# --- FLAG TO QUICKLY CHANGE ---
+# Set to 'latest', 'smallest', or 'best' to control which policy is loaded.
+CHECKPOINT_SELECTION_MODE = 'latest'
 
-def find_latest_checkpoint(checkpoint_path_dir: Path) -> Path:
-    """Find the latest checkpoint in a directory.
+def find_latest_checkpoint(checkpoint_path_dir: Path, mode: str = 'latest') -> Path:
+    """
+    Find a specific checkpoint in a directory based on the given mode.
+    The function name is kept for consistency with the original structure.
 
     Args:
-        checkpoint_path_dir_path: The path to the directory containing checkpoints.
+        checkpoint_path_dir: The path to the directory containing checkpoints.
+        mode: The selection mode. Can be 'latest', 'smallest', or 'best'.
 
     Returns:
-        The path to the latest checkpoint directory.
+        The path to the selected checkpoint directory.
 
     Raises:
-        ValueError: If no checkpoints are found in the directory.
+        ValueError: If no suitable checkpoints are found.
     """
+    if mode not in ['latest', 'smallest', 'best']:
+        raise ValueError(f"Invalid mode '{mode}'. Choose from 'latest', 'smallest', or 'best'.")
 
-    checkpoints = glob.glob(
-        str(checkpoint_path_dir) + "/**/checkpoint_*", recursive=True
-    )
-    if len(checkpoints) == 0:
-        raise ValueError("No model to re-load and continue training")
-    checkpoint_number_str = ""
-    checkpoint_number_int = 0
-    for checkpoint_number in checkpoints:
-        checkpoint_folder_i = checkpoint_number.split("/")[-1]
-        checkpoint_number_i = int(checkpoint_folder_i.split("_")[-1])
-        if checkpoint_number_i > checkpoint_number_int:
-            checkpoint_number_int = checkpoint_number_i
-            checkpoint_number_str = checkpoint_folder_i.split("_")[-1]
+    # Use os.path.join for robust path construction and glob recursively
+    glob_pattern = os.path.join(str(checkpoint_path_dir), "**", "checkpoint_*")
+    all_checkpoints = glob.glob(glob_pattern, recursive=True)
 
-    latest_checkpoint_dir = glob.glob(
-        str(checkpoint_path_dir) + f"/**/checkpoint_{checkpoint_number_str}",
-        recursive=True,
-    )
+    if not all_checkpoints:
+        raise ValueError(f"No checkpoint directories found in {checkpoint_path_dir}")
 
-    return Path(latest_checkpoint_dir[0])
+    # Handle 'best' mode first
+    if mode == 'best':
+        for path in all_checkpoints:
+            if os.path.basename(path) == 'checkpoint_best':
+                return Path(path)
+        raise ValueError(f"Mode was 'best' but 'checkpoint_best' not found in {checkpoint_path_dir}")
+
+    # For 'latest' or 'smallest', parse only the numeric checkpoints
+    numeric_checkpoints = []
+    for path_str in all_checkpoints:
+        folder_name = os.path.basename(path_str)
+        try:
+            # Safely attempt to convert the last part of the folder name to an integer
+            checkpoint_num = int(folder_name.split('_')[-1])
+            numeric_checkpoints.append((checkpoint_num, path_str))
+        except ValueError:
+            # This line is the fix: it gracefully skips non-numeric folders like 'checkpoint_best'
+            continue
+
+    if not numeric_checkpoints:
+        raise ValueError(f"No numeric checkpoints found in {checkpoint_path_dir}")
+
+    # Sort checkpoints by their number
+    numeric_checkpoints.sort(key=lambda item: item[0])
+
+    # Return the correct path based on the mode
+    if mode == 'smallest':
+        selected_path = numeric_checkpoints[0][1]
+    else:  # mode == 'latest'
+        selected_path = numeric_checkpoints[-1][1]
+
+    return Path(selected_path)
 
 
 def load_policy(policy_path_general: Path) -> Callable:
@@ -52,12 +80,12 @@ def load_policy(policy_path_general: Path) -> Callable:
     Returns:
         A function that takes observations and returns actions.
     """
-
-    path_checkpoint = find_latest_checkpoint(policy_path_general)
-    print(f"Attempting to load policy from: {path_checkpoint}")
+    # The selection mode is passed here from the global flag
+    path_checkpoint = find_latest_checkpoint(policy_path_general, mode=CHECKPOINT_SELECTION_MODE)
+    print(f"✅ Loading policy from '{CHECKPOINT_SELECTION_MODE}' checkpoint: {path_checkpoint}")
 
     rl_module = RLModule.from_checkpoint(
-        path_checkpoint / "learner_group" / "learner" / "rl_module" / "inspector" ,
+        path_checkpoint / "learner_group" / "learner" / "rl_module" / "inspector",
     )
 
     def policy(
@@ -72,7 +100,6 @@ def load_policy(policy_path_general: Path) -> Callable:
         Returns:
             An integer representing the selected action.
         """
-
         obs = np.array(obs, dtype=np.float32)
         input_dict = {Columns.OBS: torch.from_numpy(obs).unsqueeze(0)}
 
