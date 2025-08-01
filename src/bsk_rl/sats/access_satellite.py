@@ -523,6 +523,8 @@ class AccessSatellite(Satellite):
 class ImagingSatellite(AccessSatellite):
     """Satellite with agile imaging capabilities."""
 
+    buffer_name = "image_buffer"
+
     dyn_type = dyn.ImagingDynModel
     fsw_type = fsw.ImagingFSWModel
 
@@ -541,6 +543,7 @@ class ImagingSatellite(AccessSatellite):
         self.dynamics: ImagingSatellite.dyn_type
         self.data_store: "UniqueImageStore"
         self.target_types = "target"
+        self.latest_target = None
 
     @property
     def known_targets(self) -> list["Target"]:
@@ -563,12 +566,7 @@ class ImagingSatellite(AccessSatellite):
         :meta private:
         """
         super().reset_pre_sim_init()
-        self.sat_args["bufferNames"] = [
-            loc["object"].id
-            for loc in self.locations_for_access_checking
-            if hasattr(loc["object"], "id")
-        ]
-
+        self.sat_args["bufferNames"] = [self.buffer_name]
         self.sat_args["transmitterNumBuffers"] = len(self.sat_args["bufferNames"])
 
     def _update_image_event(self, target: "Target") -> None:
@@ -583,16 +581,8 @@ class ImagingSatellite(AccessSatellite):
 
         self._image_event_name = valid_func_name(f"image_{self.name}_{target.id}")
         if self._image_event_name not in self.simulator.eventMap.keys():
-            data_names = np.array(
-                list(
-                    self.dynamics.storageUnit.storageUnitDataOutMsg.read().storedDataName
-                )
-            )
-            data_index = int(np.where(data_names == target.id)[0][0])
             current_data_level = (
-                self.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData[
-                    data_index
-                ]
+                self.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData[0]
             )
 
             def side_effect(sim):
@@ -606,7 +596,7 @@ class ImagingSatellite(AccessSatellite):
                 macros.sec2nano(self.fsw.fsw_rate),
                 True,
                 conditionFunction=lambda sim: self.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData[
-                    data_index
+                    0
                 ]
                 > current_data_level,
                 actionFunction=side_effect,
@@ -693,9 +683,10 @@ class ImagingSatellite(AccessSatellite):
         """
         msg = f"{target} tasked for imaging"
         self.logger.info(msg)
-        self.fsw.action_image(target.r_LP_P, target.id)
+        self.fsw.action_image(target.r_LP_P, self.buffer_name)
         self.enable_target_window(target, max_duration=max_duration)
         self.draw_imaging_line(target)
+        self.latest_target = target
 
     @vizard.visualize
     def draw_imaging_line(

@@ -77,15 +77,14 @@ class UniqueImageStore(DataStore):
         """
         super().__init__(*args, **kwargs)
 
-    def get_log_state(self) -> np.ndarray:
+    def get_log_state(self) -> float:
         """Log the instantaneous storage unit state at the end of each step.
 
         Returns:
-            array: storedData from satellite storage unit
+            float: storedData from satellite storage unit
         """
-        return np.array(
-            self.satellite.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData
-        )
+        msg = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg.read()
+        return msg.storedData[0]
 
     def compare_log_states(
         self, old_state: np.ndarray, new_state: np.ndarray
@@ -99,16 +98,13 @@ class UniqueImageStore(DataStore):
         Returns:
             list: Targets imaged at new_state that were unimaged at old_state.
         """
-        update_idx = np.where(new_state - old_state > 0)[0]
-        imaged = []
-        for idx in update_idx:
-            message = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg
-            target_id = message.read().storedDataName[int(idx)]
-            imaged.append(
-                [target for target in self.data.known if target.id == target_id][0]
-            )
-        self.update_target_colors(imaged)
-        return UniqueImageData(imaged=imaged)
+        data_increase = new_state - old_state
+        if data_increase <= 0:
+            return UniqueImageData()
+        else:
+            assert self.satellite.latest_target is not None
+            self.update_target_colors([self.satellite.latest_target])
+            return UniqueImageData(imaged=[self.satellite.latest_target])
 
     @vizard.visualize
     def update_target_colors(self, targets, vizInstance=None, vizSupport=None):
