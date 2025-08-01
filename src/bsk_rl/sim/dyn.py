@@ -1676,7 +1676,7 @@ class ImagingSCDynModel(ImagingDynModel):
         self.setup_instrument(**kwargs)
         self.setup_storage_unit(**kwargs)
         self.setup_ground_station_locations()
-        self.setup_reward_factors(**kwargs)
+        self.setup_reward_and_penalty_factors(**kwargs)
         self.setup_eclipse_threshold(**kwargs)
 
     @classmethod
@@ -1747,8 +1747,8 @@ class ImagingSCDynModel(ImagingDynModel):
             self.task_name, self.simpleNavObject, ModelPriority=priority
         )
 
-    @default_args(imaging_bonus=0.0, downlink_bonus=1.0)
-    def setup_reward_factors(self, imaging_bonus: float, downlink_bonus: float, priority: int = 2000, **kwargs) -> None:
+    @default_args(imaging_bonus=0.0, downlink_bonus=1.0, full_storage_penalty = 0, low_battery_penalty = 0)
+    def setup_reward_and_penalty_factors(self, imaging_bonus: float, downlink_bonus: float, full_storage_penalty: float, low_battery_penalty: float, priority: int = 2000, **kwargs) -> None:
         """Set up the reward bonus factors.
 
         Args:
@@ -1757,6 +1757,13 @@ class ImagingSCDynModel(ImagingDynModel):
         """
         self.imaging_bonus = imaging_bonus
         self.downlink_bonus = downlink_bonus
+        self.full_storage_penalty = full_storage_penalty
+        self.low_battery_penalty = low_battery_penalty
+        if self.full_storage_penalty == 0 and  self.low_battery_penalty == 0:
+            self.penalties = 0
+        else:
+            self.penalties = 1
+
 
 
     @default_args(eclipse_threshold_for_reward=0.5, eclipse_threshold_for_imaging=0.5)

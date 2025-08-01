@@ -221,12 +221,13 @@ class RSOTargetImageReward(GlobalReward):
 
         for sat_id, new_data in new_data_dict.items():
             reward[sat_id] = 0.0
-            if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.2:
-                reward[sat_id] += -5
-            elif sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.3:
-                reward[sat_id] += -5
-            if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.storage_level_fraction > .991:
-                reward[sat_id] += -10
+            if self.scenario.satellites[0].dynamics.penalties == 1:
+                if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.1:
+                    reward[sat_id] += self.scenario.satellites[0].dynamics.low_battery_penalty
+                elif sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.2:
+                    reward[sat_id] += self.scenario.satellites[0].dynamics.low_battery_penalty
+                if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.storage_level_fraction > .991:
+                    reward[sat_id] += self.scenario.satellites[0].dynamics.full_storage_penalty
 
             for target in new_data.imaged:
                 # if target not in self.data.imaged:
