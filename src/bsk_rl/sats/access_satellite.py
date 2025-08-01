@@ -479,7 +479,10 @@ class AccessSatellite(Satellite):
         )
 
     def add_access_filter(
-        self, access_filter_fn: Callable, types: Optional[Union[str, list[str]]] = None
+        self,
+        access_filter_fn: Callable,
+        types: Optional[Union[str, list[str]]] = None,
+        prepend: bool = False,
     ):
         """Add an access filter function to the list of access filters.
 
@@ -498,9 +501,14 @@ class AccessSatellite(Satellite):
             def access_filter_type_restricted(opportunity):
                 return opportunity["type"] not in types or access_filter_fn(opportunity)
 
-            self.access_filter_functions.append(access_filter_type_restricted)
+            to_add = access_filter_type_restricted
         else:
-            self.access_filter_functions.append(access_filter_fn)
+            to_add = access_filter_fn
+
+        if prepend:
+            self.access_filter_functions.insert(0, to_add)
+        else:
+            self.access_filter_functions.append(to_add)
 
     @property
     def default_access_filter(self):
@@ -510,6 +518,11 @@ class AccessSatellite(Satellite):
         """
 
         def access_filter(opportunity):
+            for access_filter_fn in self.access_filter_functions:
+                if not access_filter_fn(opportunity):
+                    return False
+            else:
+                return True
             return all(
                 [
                     access_filter_fn(opportunity)
