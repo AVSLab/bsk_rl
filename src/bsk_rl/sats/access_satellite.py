@@ -372,6 +372,7 @@ class AccessSatellite(Satellite):
         self,
         types: Optional[Union[str, list[str]]] = None,
         filter: Union[Optional[Callable], list] = None,
+        min_needed: Optional[int] = None,
     ) -> dict[Any, tuple[float, float]]:
         """Make dictionary of opportunities that maps objects to the next open windows.
 
@@ -379,6 +380,7 @@ class AccessSatellite(Satellite):
             types: Types of opportunities to include. If None, include all types.
             filter: Function that takes an opportunity dictionary and returns a boolean
                 if the opportunity should be included in the output.
+            min_needed: Minimum number of opportunities to return. If None, return all
         """
         if isinstance(types, str):
             types = [types]
@@ -391,11 +393,15 @@ class AccessSatellite(Satellite):
             filter = self.default_access_filter
 
         next_windows = {}
+        total_found = 0
         for opportunity in self.upcoming_opportunities:
             type = opportunity["type"]
             if (types is None or type in types) and filter(opportunity):
                 if opportunity["object"] not in next_windows:
                     next_windows[opportunity["object"]] = opportunity["window"]
+                    total_found += 1
+            if min_needed is not None and total_found >= min_needed:
+                break
         return next_windows
 
     def find_next_opportunities(
@@ -654,10 +660,10 @@ class ImagingSatellite(AccessSatellite):
                 behavior.
         """
         self._update_image_event(target)
-        next_window = self.next_opportunities_dict(
-            types=self.target_types,
-            filter=self.default_access_filter,
-        )[target]
+        for opportunity in self.upcoming_opportunities:
+            if opportunity["object"] == target:
+                next_window = opportunity["window"]
+                break
         self.logger.info(
             f"{target} window enabled: {next_window[0]:.1f} to {next_window[1]:.1f}"
         )
