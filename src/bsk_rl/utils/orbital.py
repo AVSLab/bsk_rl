@@ -584,9 +584,23 @@ def rv2HN(r_N: np.ndarray, v_N: np.ndarray):
         Hill frame rotation matrix HN
     """
     o_r_N = r_N / np.linalg.norm(r_N)
-    h_N = np.cross(r_N, v_N)
+    # Manually compute h_N = cross(r_N, v_N)
+    h_N = np.array(
+        [
+            r_N[1] * v_N[2] - r_N[2] * v_N[1],
+            r_N[2] * v_N[0] - r_N[0] * v_N[2],
+            r_N[0] * v_N[1] - r_N[1] * v_N[0],
+        ]
+    )
     o_h_N = h_N / np.linalg.norm(h_N)
-    o_theta_N = np.cross(o_h_N, o_r_N)
+    # Manually compute o_theta_N = cross(o_h_N, o_r_N)
+    o_theta_N = np.array(
+        [
+            o_h_N[1] * o_r_N[2] - o_h_N[2] * o_r_N[1],
+            o_h_N[2] * o_r_N[0] - o_h_N[0] * o_r_N[2],
+            o_h_N[0] * o_r_N[1] - o_h_N[1] * o_r_N[0],
+        ]
+    )
     HN = np.array([o_r_N, o_theta_N, o_h_N])
     return HN
 
