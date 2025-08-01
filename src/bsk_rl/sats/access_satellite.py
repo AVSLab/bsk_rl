@@ -532,12 +532,6 @@ class AccessSatellite(Satellite):
                     return False
             else:
                 return True
-            return all(
-                [
-                    access_filter_fn(opportunity)
-                    for access_filter_fn in self.access_filter_functions
-                ]
-            )
 
         return access_filter
 
