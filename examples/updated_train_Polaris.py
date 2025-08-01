@@ -5,15 +5,16 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import torch
+
+torch.set_num_threads(1)
+os.environ["MKL_NUM_THREADS"] = "11"
+
 import ray
-# from avs_rl_tools.relative_motion.envs import (  # InspectorSat,; RSOSat,; dt_env,; inspector_sat_args,; rso_sat_args,
-#     env_args,
-#     env_metrics_callback,
-#     sat_metrics_callback,
-# )
 from bsk_rl.utils.utils import get_available_cores
 from ray.rllib.algorithms.ppo import PPO, PPOConfig
 from ray.tune.logger import UnifiedLogger
+from bsk_rl.sim import dyn, fsw, world
 
 # from bsk_rl.data import FuelPenalty, RSOInspectionReward
 # from bsk_rl.scene import FibonacciSphereRSOPoints
@@ -122,7 +123,7 @@ def train_model(
             # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
             # CondenseMultiStepActions(),
         ),
-        # learner_class=TimeDiscountedGAEPPOTorchLearner, # this causes a problem with learning to charge due to discounting each second
+        # learner_class=TimeDiscountedGAEPPOTorchLearner,
         learner_config_dict=dict(reward_time="step_start"),
     )
     config.logger_config = dict(
@@ -193,8 +194,6 @@ def train_model(
 
         iter += 1
 
-imaging_duration = 300
-
 def env_metrics_callback(env):
     data = {}
 
@@ -216,15 +215,16 @@ def env_metrics_callback(env):
     data["rw_valid"] = rw_valid
 
     # Compute time *not* imaging a new target
-    total_imaging_time = num_imaged * imaging_duration  # Each successful image takes 300s
+    total_imaging_time = num_imaged * 300  # Each successful image takes 300s
     idle_time = episode_duration - total_imaging_time
-    num_unproductive_actions = idle_time / imaging_duration
+    num_unproductive_actions = idle_time / 300
     data["non-imaging_action_count"] = int(round(num_unproductive_actions))
 
     # Compute time *not* imaging a new target
-    total_imaging_time = num_imaged * imaging_duration  # Each successful image takes 300s
+    total_imaging_time = num_imaged * 300  # Each successful image takes 300s
     non_imaging_time = episode_duration - total_imaging_time
     data["non-imaging_time"] = int(round(non_imaging_time))
+
     data["cumulativeRewardSS1"]=env.rewarder.cum_reward['SS1']
     data["illuminated_images"] = len(env.rewarder.imaged_illuminated)
     data["Total Images Downlinked"] = env.rewarder.total_downlinks
@@ -355,8 +355,7 @@ if __name__ == "__main__":
     n_targets = 100
     n_targets_ahead = 10
     extra_tima_factor = 1.5
-    imaging_duration = 300
-    total_time = extra_tima_factor * n_targets * imaging_duration  #I give it 10 times the minimum time to finish
+    total_time = extra_tima_factor * n_targets * 300  #I give it 10 times the minimum time to finish
 
     class MyScanningSatellite(sats.AccessSatellite):
         observation_spec = [
@@ -365,6 +364,19 @@ if __name__ == "__main__":
                 dict(prop="battery_charge_fraction"),
                 dict(prop="wheel_speeds_fraction"),
             ),
+
+            #observation space 1
+            # obs.PolarisScTargetProperties(
+            #     dict(prop="target_elevation_angle", norm=1.0),
+            #     dict(prop="rel_pos_vector_r_BR_N", norm = 1596*1000),
+            #     dict(prop="angle_to_target", norm=1.0),
+            #     dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
+            #     dict(prop="target_id_info", norm=1.0),
+            #     dict(prop="target_imaged",  norm=1.0),
+            #     n_ahead_observe=n_targets_ahead,
+            #                                ),
+
+            #observation space 2
             obs.PolarisScTargetProperties(
                 dict(prop="target_elevation_angle", norm=1.0),
                 dict(prop="rel_pos_vector_r_BR_H", norm = 1596*1000),
@@ -373,7 +385,8 @@ if __name__ == "__main__":
                 dict(prop="target_shadowFactor", norm=1.0),
                 n_ahead_observe=n_targets_ahead,
                                            ),
-            obs.Eclipse(norm=5700.0),
+
+            obs.Eclipse(),
             obs.OpportunityProperties(
                 dict(prop="opportunity_open", norm = 5700.0),
                 dict(prop="opportunity_close", norm = 5700.0),
@@ -382,7 +395,7 @@ if __name__ == "__main__":
             )
         ]
         action_spec = [
-            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
+            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 5 minute
             act.Charge(duration=300.0),  # Charge for 5 minutes
             act.Downlink(duration=180.0), # Downlink for 3 min
             act.Desat(duration=150), # Desat for 2.5 min
@@ -391,37 +404,38 @@ if __name__ == "__main__":
         dyn_type = dyn.ImagingSCDynModel
         fsw_type = fsw.ImagingSCFSWModel
 
-
     sat_args = {}
     # Set some parameters as constants
     sat_args["imageAttErrorRequirement"] = 0.01
 
     # Storage
-    sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 # bits
+    sat_args["dataStorageCapacity"] = 50 * 8e6 / 2  # bits
     sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
     sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
     # Power
-    sat_args["batteryStorageCapacity"] = 500 * 3600  # W*s
-    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.4, 0.6) * 500 * 3600
+    sat_args["batteryStorageCapacity"] = 500 * 3600 # W*s
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.2, 0.4) * 500 * 3600
     sat_args["basePowerDraw"] = -10.0  # W
     sat_args["instrumentPowerDraw"] = -30.0  # W
     sat_args["transmitterPowerDraw"] = -25.0  # W
     sat_args["thrusterPowerDraw"] = -80.0  # W
-    # sat_args["panelArea"] = 0.25  # m^2
+    sat_args["panelArea"] = 1.0  # m^2
 
     # Attitude
-    sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.002, size=3)  # N*m
+    # sat_args["imageAttErrorRequirement"] = 0.1
+    # sat_args["imageRateErrorRequirement"] = 0.1
+    sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.001, size=3)  # N*m
     sat_args["maxWheelSpeed"] = 6000.0  # RPM
     sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
     sat_args["desatAttitude"] = "nadir"
 
     # reward bonuses and eclipse thresholds
-    sat_args["downlink_bonus"] = 0.6
+    sat_args["downlink_bonus"] = 0.75
     sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
-    sat_args["eclipse_threshold_for_imaging"] = 0.5
-    sat_args["eclipse_threshold_for_reward"] = sat_args["eclipse_threshold_for_imaging"]
+    sat_args["eclipse_threshold_for_imaging"] = 0.5 # to include both shadowed and illuminated RSOs
+    sat_args["eclipse_threshold_for_reward"] = 0.5 # can be the same as sat_args["eclipse_threshold_for_imaging"] if set to a positive number between 0 and 1
 
     class MyTargetSatellite(sats.Satellite):
         observation_spec = [
@@ -465,12 +479,12 @@ if __name__ == "__main__":
     all_sat = [sat] + targets
 
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
-    model_name = f"lowBaudRate_1e-5lr_002torque_imaging_reward_new_penalties_smallest_storage_{N}"
+    model_name = f"aug1_nopenalties_smallerICbattery_obsv2_2e-5lr_0.1cp_gamma95_75d25i.out_{N}"
     n_envs = (
         get_available_cores() - 6  # leave some extra cores for other processes
     )
     output_dir = (
-        Path("~/rllib_results").expanduser() / f"june19_lowBaudRate_1e-5lr_002torque_imaging_reward_new_penalties_smallest_storage_Polaris_simulation_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+        Path("~/rllib_results/july_results/july30rllib_results").expanduser() / f"aug1_nopenalties_smallerICbattery_obsv2_2e-5lr_0.1cp_gamma95_75d25i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
     )
     output_dir = Path(output_dir)
 
@@ -480,8 +494,8 @@ if __name__ == "__main__":
 
     jobs = build_job_array(
         training_args=dict(
-            lr=[1e-5],
-            gamma=[0.9995],
+            lr=[2e-5],
+            gamma=[0.95],
             train_batch_size=[int(50 * n_envs)],
             num_sgd_iter=[10],
             lambda_=[0.95],
@@ -495,6 +509,7 @@ if __name__ == "__main__":
             satellites=[all_sat],
             scenario=[scene.RandomSatellites("SS1",n_targets=n_targets)],
             rewarder=[data.RSOTargetImageReward()],
+            # world_type=world.GroundStationWorldModel, # this for some reason breaks the code.
             time_limit=[total_time],
             failure_penalty=[-100.0],
             terminate_on_time_limit=[False],
@@ -507,7 +522,7 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params_june19.txt", "w") as file: # update this when running on cluster
+    with open(output_dir / f"{model_name}_params_aug1.txt", "w") as file: # update this when running on cluster
         yaml.dump(sanitize_np(job_args), file)
 
     train_model(
@@ -516,7 +531,7 @@ if __name__ == "__main__":
         checkpoint_frequency=5,
         checkpoints_to_keep=3,
         total_timesteps=20_000_000,
-        reload_frequency=300_000,
+        reload_frequency=500_000,
         n_envs=n_envs,
         # temp_dir="/scratch/alpine/dahu1128/tmp", # uncomment this when running on cluster
         **job_args,
