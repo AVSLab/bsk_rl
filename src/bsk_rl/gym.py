@@ -474,7 +474,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         )
 
     def _step(self, actions: MultiSatAct) -> None:
-        logger.debug(f"Stepping environment with actions: {actions}")
+        logger.debug("Stepping environment with actions: %s", actions)
         if len(actions) != len(self.satellites):
             raise ValueError("There must be the same number of actions and satellites")
         for satellite, action in zip(self.satellites, actions):
@@ -533,8 +533,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         else:
             logger.debug(f"Episode terminated: {terminated}")
             logger.debug(f"Episode truncated: {truncated}")
-        logger.debug(f"Step info: {info}")
-        logger.debug(f"Step observation: {observation}")
+        logger.debug("Step info: %s", info)
+        logger.debug("Step observation: %s", observation)
         return observation, reward, terminated, truncated, info
 
     def render(self) -> None:  # pragma: no cover
@@ -959,8 +959,8 @@ class ConstellationTasking(
         if any(truncated.values()):
             truncated_true = [k for k, v in truncated.items() if v]
             logger.info(f"Episode truncated: {truncated_true}")
-        logger.debug(f"Step info: {info}")
-        logger.debug(f"Step observation: {observation}")
+        logger.debug("Step info: %s", info)
+        logger.debug("Step observation: %s", observation)
         return observation, reward, terminated, truncated, info
 
 
