@@ -76,6 +76,7 @@ class AccessSatellite(Satellite):
         r_LP_P: np.ndarray,
         min_elev: float,
         type: str,
+        start_time: float = 0.0,
     ) -> None:
         """Add a location to be included in opportunity calculations.
 
@@ -89,10 +90,12 @@ class AccessSatellite(Satellite):
             r_LP_P: [m] Objects planet-fixed location.
             min_elev: [rad] Minimum elevation angle for access.
             type: Category of opportunity target provides.
+            start_time: [s] Time at which to start calculating opportunities for this location.
         """
         location_dict = dict(r_LP_P=r_LP_P, min_elev=min_elev, type=type)
         location_dict[type] = object  # For backwards compatibility, prefer "object" key
         location_dict["object"] = object
+        location_dict["start_time"] = start_time
         self.locations_for_access_checking.append(location_dict)
 
     def reset_post_sim_init(self) -> None:
@@ -144,12 +147,18 @@ class AccessSatellite(Satellite):
         r_max = np.max(np.linalg.norm(positions, axis=-1))
         access_dist_thresh_multiplier = 1.1
         for location in self.locations_for_access_checking:
+            start_idx = max(
+                np.searchsorted(times, location["start_time"], side="right") - 1, 0
+            )
+            times_loc = times[start_idx:]
+            positions_loc = positions[start_idx:]
+
             alt_est = r_max - np.linalg.norm(location["r_LP_P"])
             access_dist_threshold = (
                 access_dist_thresh_multiplier * alt_est / np.sin(location["min_elev"])
             )
             candidate_windows = self._find_candidate_windows(
-                location["r_LP_P"], times, positions, access_dist_threshold
+                location["r_LP_P"], times_loc, positions_loc, access_dist_threshold
             )
 
             for candidate_window in candidate_windows:
@@ -160,7 +169,7 @@ class AccessSatellite(Satellite):
                     candidate_window,
                 )
                 new_windows = self._refine_window(
-                    roots, candidate_window, (times[0], times[-1])
+                    roots, candidate_window, (times_loc[0], times_loc[-1])
                 )
                 for new_window in new_windows:
                     self._add_window(
@@ -168,7 +177,7 @@ class AccessSatellite(Satellite):
                         new_window,
                         type=location["type"],
                         r_LP_P=location["r_LP_P"],
-                        merge_time=times[0],
+                        merge_time=times_loc[0],
                     )
 
         self.window_calculation_time = calculation_end
