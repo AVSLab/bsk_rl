@@ -9,6 +9,16 @@ from gymnasium import spaces
 
 from bsk_rl.act.actions import Action, ActionBuilder
 
+from bsk_rl.obs.observations import (
+    _angle_to_target,
+    _target_distance,
+    _target_elevation_angle,
+    _target_shadowFactor,
+    _target_id_extracted,
+    _relative_position_H
+)
+
+
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
     from bsk_rl.scene.targets import Target
@@ -332,6 +342,17 @@ class ImageRSO(DiscreteAction):
             duration = 6000 #1e9
         self.duration = duration
         self.ever_visible=[]
+        self.initial_angular_error = []
+        self.chosen_target_distance = []
+        self.chosen_target_elevation_angle = []
+        self.chosen_target_illumination_status = []
+        self.chosen_target_ids = []
+        self.chosen_target_priority = []
+        self.chosen_target_rel_pos_H = []
+        self.chosen_target_rel_direction = []  # e.g. "ahead", "left", etc.
+        self.chosen_target_azimuth = []
+        self.chosen_target_elevation_local = []
+        self.imaging_times = []
 
     def image_rso(
         self, target: Union[int, "RSOTarget", str], prev_action_key: Optional[str] = None
@@ -449,6 +470,88 @@ class ImageRSO(DiscreteAction):
                 self.simulator.terminate = True
 
         new_target = final_targets[action]
+        opp = {"object": new_target}
+
+        # Append target ID (as integer)
+        self.chosen_target_ids.append(new_target.id)
+
+        # Append target priority if available
+        priority = getattr(new_target, "priority", np.nan)
+        self.chosen_target_priority.append(priority)
+
+        # Append angular error (angle to target)
+        self.initial_angular_error.append(_angle_to_target(self.satellite, opp))
+
+        # Append target distance
+        self.chosen_target_distance.append(_target_distance(self.satellite, opp))
+
+        # Append elevation angle
+        self.chosen_target_elevation_angle.append(_target_elevation_angle(self.satellite, opp))
+
+        # Append illumination (eclipse shadow factor)
+        try:
+            self.chosen_target_illumination_status.append(_target_shadowFactor(self.satellite, opp))
+        except Exception as e:
+            print(f"Could not get shadow factor for target {new_target.id}: {e}")
+            self.chosen_target_illumination_status.append(np.nan)
+
+        # Append relative position in H frame
+        rel_pos_H = _relative_position_H(self.satellite, opp)
+        self.chosen_target_rel_pos_H.append(rel_pos_H)
+
+        # Determine relative direction based on rel_pos_H and c_hat (body-frame instrument forward vector)
+        c_hat_H = self.satellite.fsw.c_hat_P  # Assume this is in H frame (or transform if needed)
+
+        # Normalize vectors
+        c_hat_H = c_hat_H / np.linalg.norm(c_hat_H)
+        rel_dir_unit = rel_pos_H / np.linalg.norm(rel_pos_H)
+
+        # Compute dot and cross
+        dot = np.dot(rel_dir_unit, c_hat_H)
+        cross = np.cross(c_hat_H, rel_dir_unit)
+
+        # Define thresholds for classification
+        if dot > 0.7:
+            direction = "ahead"
+        elif dot < -0.7:
+            direction = "behind"
+        elif cross[2] > 0:
+            direction = "left"
+        else:
+            direction = "right"
+
+        self.chosen_target_rel_direction.append(direction)
+
+        # LOS vector from satellite to target in inertial frame
+        sat_pos = np.array(self.satellite.dynamics.r_BN_N)
+        sat_vel = np.array(self.satellite.dynamics.v_BN_N)
+        target_pos = np.array(new_target.target_spacecraft.dynamics.r_BN_N)
+
+        los_vector = target_pos - sat_pos
+        los_unit = los_vector / np.linalg.norm(los_vector)
+
+        # Build local frame (Hill frame)
+        r_hat = sat_pos / np.linalg.norm(sat_pos)
+        v_hat = sat_vel / np.linalg.norm(sat_vel)
+        z_hat = -r_hat  # Local "down"
+        y_hat = np.cross(r_hat, v_hat)
+        y_hat /= np.linalg.norm(y_hat)
+        x_hat = np.cross(y_hat, z_hat)  # Ensures orthogonality
+
+        # Transform LOS into local frame
+        los_local = np.array([
+            np.dot(los_unit, x_hat),
+            np.dot(los_unit, y_hat),
+            np.dot(los_unit, z_hat)
+        ])
+
+        # Compute azimuth and elevation from LOS in local frame
+        x, y, z = los_local
+        azimuth = np.degrees(np.arctan2(y, x)) % 360  # 0 = forward (along-track), 90 = right
+        elevation = np.degrees(np.arcsin(z))          # 0 = horizontal, +90 = zenith, -90 = nadir
+        self.chosen_target_azimuth.append(azimuth)
+        self.chosen_target_elevation_local.append(elevation)
+        self.imaging_times.append(self.satellite.simulator.sim_time)
 
 
         print_status = False
