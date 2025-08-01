@@ -1,6 +1,7 @@
 import gymnasium as gym
 from requests.packages import target
 import time
+
 start_time = time.time()
 from pathlib import Path
 import os
@@ -27,6 +28,27 @@ from ray.rllib.utils.spaces.space_utils import flatten_to_single_ndarray
 from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
 
+def save_plot_unique(fig, base_filename, folder="plots", extension=".pdf"):
+    """
+    Saves a matplotlib figure with a unique filename if file already exists.
+
+    Parameters:
+    - fig: Matplotlib figure object
+    - base_filename: Desired base filename without extension or folder
+    - folder: Directory to save the plots (default is "plots")
+    - extension: File extension (default is ".pdf")
+    """
+    os.makedirs(folder, exist_ok=True)
+    full_path = os.path.join(folder, base_filename + extension)
+
+    counter = 1
+    while os.path.exists(full_path):
+        full_path = os.path.join(folder, f"{base_filename}_{counter}{extension}")
+        counter += 1
+
+    fig.savefig(full_path, bbox_inches="tight")
+    print(f"Plot saved to {full_path}")
+
 class Policy:
     def __init__(self, policy_path, zero_element=None) -> None:
         self.zero_element = zero_element
@@ -51,7 +73,7 @@ save_data = False #set to False to avoid saving data
 n_targets = 100
 n_targets_ahead = 10
 imaging_duration = 300
-total_time = n_targets * 300  # 2100 # 5700.0  # approximately 1 orbit
+total_time = n_targets * 450  # 2100 # 5700.0  # approximately 1 orbit
 # obs_v = 1.1
 obs_v =2
 
@@ -60,6 +82,10 @@ obs_v =2
 downlink_reward_policy = "/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1750741069.7033312/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_0"
 downlink_reward_policy_shorter_imaging ="/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_shorter_imaging_5e-6lr_downlink_reward_penalties_smallest_storage_0"
 # imaging_reward_policy = ""
+# July 31st
+balance75d25i_reward_policy_woGAE_obs2_gamma95 = "/Users/dahu1128/rllib_results/july31_obsv2_1e-6lr_0.1cp_gamma95_75d25i_1753923413.642091/july31_obsv2_1e-6lr_0.1cp_gamma95_75d25i.out_0"
+balance95_75d25i_nopenalties_woGAE_obsv2_gamma95 = "/Users/dahu1128/rllib_results/july31_nopenalties_obsv2_1e-6lr_0.1cp_gamma95_75d25i_1753984221.842252/july31_nopenalties_obsv2_1e-6lr_0.1cp_gamma95_75d25i.out_0"
+
 # July 22nd
 balance00100_reward_policy_obs1_gamma99 = "/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv1_1e-5lr_0.1cp_gamma99_0d100i_1753189664.120498/july22_obsv1_1e-5lr_0.1cp_gamma99_0d100i_job_%a-%j.out_0"
 balance00100_reward_policy_obs1_gamma995 = "/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv1_1e-5lr_0.1cp_gamma995_0d100i_1753184464.3957765/july22_obsv1_1e-5lr_0.1cp_gamma995_0d100i_job_%a-%j.out_0"
@@ -93,10 +119,12 @@ cluster_1000_policy_v2_obs1 = "/Users/dahu1128/rllib_results/june_results/june29
 # June 23rd
 cluster_1000_policy_v2_obs1_wGAE ="/Users/dahu1128/rllib_results/june_results/june23rllib_results/lowBaudRate_5e-6lr_001torque_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1750740679.4746056/lowBaudRate_5e-6lr_001torque_downlink_reward_new_penalties_smallest_storage_0"
 
-policy_path = balance00100_reward_policy_obs2_gamma99
+policy_path = balance95_75d25i_nopenalties_woGAE_obsv2_gamma95
 
 # Define all known policy paths with associated obs values
 policy_obs_map = {
+    "balance95_75d25i_nopenalties_woGAE_obsv2_gamma95": 2,
+    "balance75d25i_reward_policy_woGAE_obs2_gamma95": 2,
     "balance00100_reward_policy_obs1_gamma99": 1,
     "balance00100_reward_policy_obs1_gamma995": 1,
     "balance00100_reward_policy_obs1_gamma9995": 1,
@@ -233,7 +261,7 @@ sat_args["basePowerDraw"] = -10.0  # W
 sat_args["instrumentPowerDraw"] = -30.0  # W
 sat_args["transmitterPowerDraw"] = -25.0  # W
 sat_args["thrusterPowerDraw"] = -80.0  # W
-# sat_args["panelArea"] = 0.25  # m^2
+sat_args["panelArea"] = 1 # m^2
 
 # Attitude
 sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.000, size=3)  # N*m
@@ -242,7 +270,7 @@ sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
 sat_args["desatAttitude"] = "nadir"
 
 # reward bonuses and eclipse thresholds
-sat_args["downlink_bonus"] = 0.0
+sat_args["downlink_bonus"] = 0.75
 sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
 sat_args["eclipse_threshold_for_imaging"] = 0.5
 sat_args["eclipse_threshold_for_reward"] = sat_args["eclipse_threshold_for_imaging"]
@@ -299,7 +327,7 @@ env = gym.make(
     disable_env_checker=True,
     # max_step_duration=700,
 )
-seed_number=2
+seed_number=10
 observation, info = env.reset(seed=seed_number) #5
 
 # env.simulator.ShowExecutionOrder() # to show execution order
@@ -332,6 +360,16 @@ action_counts = defaultdict(int)
 # charging_eclipse_flags = []
 # downlink_eclipse_flags = []
 # imaging_logs = []
+
+battery_levels = []
+storage_levels = []
+sim_times = []
+num_imaged = []
+num_downlinked = []
+charging_times = []
+downlink_times = []
+
+
 SS1_reward=0
 act_random=False
 for target_id in range(n_targets*6 *100 ):
@@ -359,8 +397,11 @@ for target_id in range(n_targets*6 *100 ):
         action_counts[policy_action] += 1
     if policy_action == 11:
         print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.satellites[0].dynamics.storage_level_fraction))
+        downlink_times.append(env.simulator.sim_time)
+
     elif policy_action == 10:
         print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.satellites[0].dynamics.battery_charge_fraction))
+        charging_times.append(env.simulator.sim_time)
     elif policy_action == 12:
         print('tasking DESAT now: at t=',simtime," and wheel_speeds --> "+str(env.satellites[0].dynamics.wheel_speeds_fraction))
 
@@ -377,6 +418,13 @@ for target_id in range(n_targets*6 *100 ):
     action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
     print('current action_dict to be executed', action_dict['SS1'])
     observation, reward, terminated, truncated, info = env.step(action=action_dict)
+
+    battery_levels.append(env.satellites[0].dynamics.battery_charge_fraction)
+    storage_levels.append(env.satellites[0].dynamics.storage_level_fraction)
+    sim_times.append(env.simulator.sim_time)
+    num_imaged.append(len(env.env.rewarder.imaged_illuminated))
+    num_downlinked.append(env.env.rewarder.useful_downlinks)
+
     SS1_reward+=reward['SS1']
     print("storage_level", env.satellites[0].dynamics.storage_level)
     print("dynamics.storage_level_fraction", env.satellites[0].dynamics.storage_level_fraction)
@@ -393,6 +441,19 @@ print("  Final data level:", observation)
 print(f"final reward for SS1 {SS1_reward} should be the same as {env.env.rewarder.cum_reward['SS1']}")
 print(f"and number of imaged targets {len(env.env.satellites[0].data_store.data.imaged)} out of those useful images were: {len(env.env.rewarder.imaged_illuminated)}")
 print(f"Total downlinked {env.env.rewarder.total_downlinks} out of those useful downlinks were: {env.env.rewarder.useful_downlinks}")
+# print(f"mean and std of chosen_target_azimuth {env.env.satellites[0].action_builder.action_spec[0].chosen_target_azimuth}")
+
+SS1_actions_spec = env.satellites[0].action_builder.action_spec[0]
+print(f"mean and std of chosen_target_azimuth: {np.mean(SS1_actions_spec.chosen_target_azimuth):.2f}, {np.std(SS1_actions_spec.chosen_target_azimuth):.2f}")
+print(f"mean and std of chosen_target_elevation: {np.mean(SS1_actions_spec.chosen_target_elevation_angle):.2f}, {np.std(SS1_actions_spec.chosen_target_elevation_angle):.2f}")
+print(f"mean and std of chosen_target_elevation_local: {np.mean(SS1_actions_spec.chosen_target_elevation_local):.2f}, {np.std(SS1_actions_spec.chosen_target_elevation_local):.2f}")
+print(f"mean and std of chosen_target_distance: {np.mean(SS1_actions_spec.chosen_target_distance):.2f}, {np.std(SS1_actions_spec.chosen_target_distance):.2f}")
+print(f"mean and std of initial angular error: {np.mean(SS1_actions_spec.initial_angular_error):.2f}, {np.std(SS1_actions_spec.initial_angular_error):.2f}")
+print(f"mean and std of chosen_target_priority: {np.mean(SS1_actions_spec.chosen_target_priority):.2f}, {np.std(SS1_actions_spec.chosen_target_priority):.2f}")
+print(f"fraction of targets that were illuminated: {np.mean(SS1_actions_spec.chosen_target_illumination_status):.2f}")
+print(f"fraction of targets ever visible: {len(SS1_actions_spec.ever_visible)/n_targets:.2f}")
+print(f"mean and std of rel pos in H-frame: {np.mean(SS1_actions_spec.chosen_target_rel_pos_H, axis=0)}, {np.std(SS1_actions_spec.chosen_target_rel_pos_H, axis=0)}")
+
 
 while not truncated:
     data_dict["sim_time"].append(env.simulator.sim_time)
@@ -415,31 +476,6 @@ action_labels = [
 counts = [action_counts[a] for a in actions]
 percentages = [100 * count / total_actions for count in counts]
 
-# Plot 1: Absolute Action Counts
-plt.figure(figsize=(10, 5))
-plt.bar(action_labels, counts, color="skyblue")
-plt.title("Action Count Distribution")
-plt.ylabel("Number of Times Action Was Taken")
-plt.xticks(rotation=45)
-plt.grid(True, axis='y', linestyle='--', alpha=0.6)
-plt.tight_layout()
-plt.savefig(f"random{act_random}_seed{seed_number}_{policy_name}_action_count_distribution.pdf")  # Save as PDF
-# plt.savefig("extended_time_action_count_distribution.pdf")  # Save as PDF
-
-plt.show()
-
-# Plot 2: Action Percentages
-plt.figure(figsize=(10, 5))
-plt.bar(action_labels, percentages, color="mediumseagreen")
-plt.title("Action Percentage Distribution")
-plt.ylabel("Percentage of Total Actions (%)")
-plt.xticks(rotation=45)
-plt.grid(True, axis='y', linestyle='--', alpha=0.6)
-plt.tight_layout()
-plt.savefig(f"random{act_random}_seed{seed_number}_{policy_name}_action_percentage_distribution.pdf")  # Save as PDF
-# plt.savefig("extended_time_action_percentage_distribution.pdf")  # Save as PDF
-plt.show()
-
 # Compute total target-imaging and non-target-imaging actions
 target_imaging_count = sum(counts[i] for i in range(10))     # Actions 0–9
 charge_action_count = counts[10]
@@ -459,6 +495,87 @@ print(f"Downlink actions: {downlink_action_count}")
 print(f"Charge actions: {charge_action_count}")
 print(f"Desat actions: {desat_action_count}")
 print("======================================\n")
+
+# Plot 1: Absolute Action Counts
+fig1 = plt.figure(figsize=(10, 5))
+plt.bar(action_labels, counts, color="skyblue")
+plt.title("Action Count Distribution")
+plt.ylabel("Number of Times Action Was Taken")
+plt.xticks(rotation=45)
+plt.grid(True, axis='y', linestyle='--', alpha=0.6)
+plt.tight_layout()
+save_plot_unique(fig1, f"random{act_random}_seed{seed_number}_{policy_name}_action_count_distribution")
+plt.show()
+
+# Plot 2: Action Percentages
+fig2 = plt.figure(figsize=(10, 5))
+plt.bar(action_labels, percentages, color="mediumseagreen")
+plt.title("Action Percentage Distribution")
+plt.ylabel("Percentage of Total Actions (%)")
+plt.xticks(rotation=45)
+plt.grid(True, axis='y', linestyle='--', alpha=0.6)
+plt.tight_layout()
+save_plot_unique(fig2, f"random{act_random}_seed{seed_number}_{policy_name}_action_percentage_distribution")
+plt.show()
+
+# Plot 3: metrics over time:
+fig3, ax1 = plt.subplots(figsize=(12, 6))
+ax1.plot(sim_times, battery_levels, label='Battery Level', color='tab:blue')
+ax1.plot(sim_times, storage_levels, label='Storage Level', color='tab:orange')
+ax1.set_xlabel("Simulation Time (s)")
+ax1.set_ylabel("Battery and Storage Fraction")
+ax1.set_ylim(0, 1.05)
+ax1.legend(loc='upper left')
+ax1.grid(True, linestyle='--', alpha=0.5)
+
+for t in charging_times:
+    ax1.axvline(t, color='cyan', linestyle='--', linewidth=0.8, alpha=0.6, label='Charge' if t == charging_times[0] else "")
+for t in downlink_times:
+    ax1.axvline(t, color='magenta', linestyle='--', linewidth=0.8, alpha=0.6, label='Downlink' if t == downlink_times[0] else "")
+
+ax2 = ax1.twinx()
+ax2.plot(sim_times, num_imaged, label='Cumulative Imaged Targets', color='tab:green')
+ax2.plot(sim_times, num_downlinked, label='Cumulative Downlinked Targets', color='tab:red')
+ax2.set_ylabel("Cumulative Count")
+
+lines, labels = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax1.legend(lines + lines2, labels + labels2, loc='upper left')
+
+plt.title("Battery, Storage, Imaging and Action Events Over Time")
+plt.tight_layout()
+save_plot_unique(fig3, f"random{act_random}_seed{seed_number}_{policy_name}_battery_storage_imaging_over_time")
+plt.show()
+
+# Plot 4 Azimuth and Elevation angle (deg) vs time
+# Convert time from seconds to minutes
+imaging_times_min = np.array(SS1_actions_spec.imaging_times) / 60.0
+azimuths = np.array(SS1_actions_spec.chosen_target_azimuth)
+elevations = np.array(SS1_actions_spec.chosen_target_elevation_angle)
+fig4, ax1 = plt.subplots(figsize=(10, 5))
+color1 = 'tab:blue'
+ax1.set_xlabel('Time [min]')
+ax1.set_ylabel('Azimuth [deg]', color=color1)
+ax1.plot(imaging_times_min, azimuths, 'o-', color=color1, label='Azimuth')
+ax1.tick_params(axis='y', labelcolor=color1)
+ax1.grid(True)
+
+ax2 = ax1.twinx()
+color2 = 'tab:green'
+ax2.set_ylabel('Elevation [deg]', color=color2)
+ax2.plot(imaging_times_min, elevations, 'x--', color=color2, label='Elevation')
+ax2.tick_params(axis='y', labelcolor=color2)
+
+plt.title('Pointing Directions During Imaging Over 60 Minutes')
+
+lines1, labels1 = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+plt.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
+
+plt.tight_layout()
+save_plot_unique(fig4, f"random{act_random}_seed{seed_number}_{policy_name}_azimuth_and_elevation_pointing_over_time")
+plt.show()
+
 
 
 if save_data:
