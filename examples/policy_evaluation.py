@@ -82,9 +82,12 @@ obs_v =2
 downlink_reward_policy = "/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1750741069.7033312/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_0"
 downlink_reward_policy_shorter_imaging ="/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_shorter_imaging_5e-6lr_downlink_reward_penalties_smallest_storage_0"
 # imaging_reward_policy = ""
+# August 1st
+balance75d25i_nopenalties_lowICbattery_woGAE_obs2_gamma95 = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug1_nopenalties_smallerICbattery_obsv2_2e-5lr_0.1cp_gamma95_75d25i_1754054673.0471108/aug1_nopenalties_smallerICbattery_obsv2_2e-5lr_0.1cp_gamma95_75d25i.out_0"
+
 # July 31st
 balance75d25i_reward_policy_woGAE_obs2_gamma95 = "/Users/dahu1128/rllib_results/july31_obsv2_1e-6lr_0.1cp_gamma95_75d25i_1753923413.642091/july31_obsv2_1e-6lr_0.1cp_gamma95_75d25i.out_0"
-balance95_75d25i_nopenalties_woGAE_obsv2_gamma95 = "/Users/dahu1128/rllib_results/july31_nopenalties_obsv2_1e-6lr_0.1cp_gamma95_75d25i_1753984221.842252/july31_nopenalties_obsv2_1e-6lr_0.1cp_gamma95_75d25i.out_0"
+balance75d25i_nopenalties_woGAE_obsv2_gamma95 = "/Users/dahu1128/rllib_results/july31_nopenalties_obsv2_1e-6lr_0.1cp_gamma95_75d25i_1753984221.842252/july31_nopenalties_obsv2_1e-6lr_0.1cp_gamma95_75d25i.out_0"
 
 # July 22nd
 balance00100_reward_policy_obs1_gamma99 = "/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv1_1e-5lr_0.1cp_gamma99_0d100i_1753189664.120498/july22_obsv1_1e-5lr_0.1cp_gamma99_0d100i_job_%a-%j.out_0"
@@ -119,11 +122,12 @@ cluster_1000_policy_v2_obs1 = "/Users/dahu1128/rllib_results/june_results/june29
 # June 23rd
 cluster_1000_policy_v2_obs1_wGAE ="/Users/dahu1128/rllib_results/june_results/june23rllib_results/lowBaudRate_5e-6lr_001torque_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1750740679.4746056/lowBaudRate_5e-6lr_001torque_downlink_reward_new_penalties_smallest_storage_0"
 
-policy_path = balance95_75d25i_nopenalties_woGAE_obsv2_gamma95
+policy_path = cluster_1000_policy_v2_obs1_wGAE
 
 # Define all known policy paths with associated obs values
 policy_obs_map = {
-    "balance95_75d25i_nopenalties_woGAE_obsv2_gamma95": 2,
+    "balance75d25i_nopenalties_lowICbattery_woGAE_obs2_gamma95": 2,
+    "balance75d25i_nopenalties_woGAE_obsv2_gamma95": 2,
     "balance75d25i_reward_policy_woGAE_obs2_gamma95": 2,
     "balance00100_reward_policy_obs1_gamma99": 1,
     "balance00100_reward_policy_obs1_gamma995": 1,
@@ -256,7 +260,7 @@ sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
 # Power
 sat_args["batteryStorageCapacity"] = 500 * 3600  # W*s
-sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.4, 0.6) * 500 * 3600
+sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.2, 0.4) * 500 * 3600
 sat_args["basePowerDraw"] = -10.0  # W
 sat_args["instrumentPowerDraw"] = -30.0  # W
 sat_args["transmitterPowerDraw"] = -25.0  # W
@@ -269,9 +273,11 @@ sat_args["maxWheelSpeed"] = 6000.0  # RPM
 sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
 sat_args["desatAttitude"] = "nadir"
 
-# reward bonuses and eclipse thresholds
+# reward and penalty factors and eclipse thresholds
 sat_args["downlink_bonus"] = 0.75
 sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
+sat_args["full_storage_penalty"] = -1
+sat_args["low_battery_penalty"] = -1
 sat_args["eclipse_threshold_for_imaging"] = 0.5
 sat_args["eclipse_threshold_for_reward"] = sat_args["eclipse_threshold_for_imaging"]
 
@@ -374,7 +380,7 @@ SS1_reward=0
 act_random=False
 for target_id in range(n_targets*6 *100 ):
     simtime = env.simulator.sim_time
-    print('\n SIMULATION TIME: ' + str(simtime) + ' seconds')
+    print(f"\n SIMULATION TIME: {simtime} seconds and current reward: {SS1_reward}")
     # Use policy to determine action
     # obs_for_policy = flatten_to_single_ndarray(observation[sat.name]) # This is a dict (as your env uses `obs_type=dict`)
     # obs_flat = flatten_to_single_ndarray(env.observation_spaces[sat.name], observation[sat.name])
@@ -490,7 +496,7 @@ non_target_pct = 100 * non_target_count / total_actions
 # Print summary
 print("\n=== Imaging vs Non-Imaging Summary ===")
 print(f"Target Imaging Actions (0–9): {target_imaging_count} ({target_imaging_pct:.2f}%)")
-print(f"Other Actions (10–12):        {non_target_count} ({non_target_pct:.2f}%)")
+print(f"Other Actions (10–12): {non_target_count} ({non_target_pct:.2f}%)")
 print(f"Downlink actions: {downlink_action_count}")
 print(f"Charge actions: {charge_action_count}")
 print(f"Desat actions: {desat_action_count}")
@@ -529,7 +535,7 @@ ax1.legend(loc='upper left')
 ax1.grid(True, linestyle='--', alpha=0.5)
 
 for t in charging_times:
-    ax1.axvline(t, color='cyan', linestyle='--', linewidth=0.8, alpha=0.6, label='Charge' if t == charging_times[0] else "")
+    ax1.axvline(t, color='deepskyblue', linestyle='--', linewidth=0.8, alpha=0.85, label='Charge' if t == charging_times[0] else "")
 for t in downlink_times:
     ax1.axvline(t, color='magenta', linestyle='--', linewidth=0.8, alpha=0.6, label='Downlink' if t == downlink_times[0] else "")
 
