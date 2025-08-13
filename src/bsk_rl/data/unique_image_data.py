@@ -20,9 +20,9 @@ class UniqueImageData(Data):
 
     def __init__(
         self,
-        imaged: Optional[list["Target"]] = None,
+        imaged: Optional[set["Target"]] = None,
         duplicates: int = 0,
-        known: Optional[list["Target"]] = None,
+        known: Optional[set["Target"]] = None,
     ) -> None:
         """Construct unit of data to record unique images.
 
@@ -31,17 +31,17 @@ class UniqueImageData(Data):
         ``known`` targets in the environment.
 
         Args:
-            imaged: List of targets that are known to be imaged.
+            imaged: Set of targets that are known to be imaged.
             duplicates: Count of target imaging duplication.
-            known: List of targets that are known to exist (imaged and unimaged).
+            known: Set of targets that are known to exist (imaged and unimaged).
         """
         if imaged is None:
-            imaged = []
-        self.imaged = list(set(imaged))
+            imaged = set()
+        self.imaged = set(imaged)
         self.duplicates = duplicates + len(imaged) - len(self.imaged)
         if known is None:
-            known = []
-        self.known = list(set(known))
+            known = set()
+        self.known = set(known)
 
     def __add__(self, other: "UniqueImageData") -> "UniqueImageData":
         """Combine two units of data.
@@ -52,7 +52,7 @@ class UniqueImageData(Data):
         Returns:
             Combined unit of data.
         """
-        imaged = list(set(self.imaged + other.imaged))
+        imaged = self.imaged | other.imaged
         duplicates = (
             self.duplicates
             + other.duplicates
@@ -60,7 +60,7 @@ class UniqueImageData(Data):
             + len(other.imaged)
             - len(imaged)
         )
-        known = list(set(self.known + other.known))
+        known = self.known | other.known
         return self.__class__(imaged=imaged, duplicates=duplicates, known=known)
 
 
@@ -104,7 +104,7 @@ class UniqueImageStore(DataStore):
         else:
             assert self.satellite.latest_target is not None
             self.update_target_colors([self.satellite.latest_target])
-            return UniqueImageData(imaged=[self.satellite.latest_target])
+            return UniqueImageData(imaged={self.satellite.latest_target})
 
     @vizard.visualize
     def update_target_colors(self, targets, vizInstance=None, vizSupport=None):
@@ -177,17 +177,20 @@ class UniqueImageReward(GlobalReward):
             reward: Cumulative reward across satellites for one step
         """
         reward = {}
-        imaged_targets = sum(
-            [new_data.imaged for new_data in new_data_dict.values()], []
-        )
+        imaged_counts = {}
+        for new_data in new_data_dict.values():
+            for target in new_data.imaged:
+                if target not in imaged_counts:
+                    imaged_counts[target] = 0
+                imaged_counts[target] += 1
+
         for sat_id, new_data in new_data_dict.items():
             reward[sat_id] = 0.0
             for target in new_data.imaged:
                 if target not in self.data.imaged:
-                    reward[sat_id] += self.reward_fn(
-                        target.priority
-                    ) / imaged_targets.count(target)
-
+                    reward[sat_id] += (
+                        self.reward_fn(target.priority) / imaged_counts[target]
+                    )
         return reward
 
 

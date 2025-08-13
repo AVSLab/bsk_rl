@@ -103,68 +103,64 @@ class TestUniqueImageData:
         dat1 = UniqueImageData()
         dat2 = UniqueImageData()
         dat = dat1 + dat2
-        assert dat.imaged == []
+        assert dat.imaged == set()
         assert dat.duplicates == 0
 
     def test_add_to_null(self):
         dat1 = UniqueImageData(imaged=[1, 2])
         dat2 = UniqueImageData()
         dat = dat1 + dat2
-        assert dat.imaged == [1, 2]
+        assert dat.imaged == {1, 2}
         assert dat.duplicates == 0
 
     def test_add(self):
         dat1 = UniqueImageData(imaged=[1, 2])
         dat2 = UniqueImageData(imaged=[3, 4])
         dat = dat1 + dat2
-        assert dat.imaged == [1, 2, 3, 4]
+        assert dat.imaged == {1, 2, 3, 4}
         assert dat.duplicates == 0
 
     def test_add_duplicates(self):
         dat1 = UniqueImageData(imaged=[1, 2])
         dat2 = UniqueImageData(imaged=[2, 3])
         dat = dat1 + dat2
-        assert dat.imaged == [1, 2, 3]
+        assert dat.imaged == {1, 2, 3}
         assert dat.duplicates == 1
 
     def test_add_duplicates_existing(self):
         dat1 = UniqueImageData(imaged=[1, 2], duplicates=2)
         dat2 = UniqueImageData(imaged=[2, 3], duplicates=3)
         dat = dat1 + dat2
-        assert dat.imaged == [1, 2, 3]
+        assert dat.imaged == {1, 2, 3}
         assert dat.duplicates == 6
 
 
 class TestUniqueImageStore:
     def test_get_log_state(self):
         sat = MagicMock()
-        sat.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData = [1, 2, 3]
+        sat.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData = [10]
         ds = UniqueImageStore(sat)
-        assert (ds.get_log_state() == np.array([1, 2, 3])).all()
+        assert ds.get_log_state() == 10
 
     @pytest.mark.parametrize(
         "before,after,imaged",
         [
-            ([0, 0, 0], [0, 0, 0], []),
-            ([0, 0, 1], [0, 0, 1], []),
-            ([0, 0, 1], [0, 0, 0], []),
-            ([0, 0, 0], [1, 0, 0], [0]),
-            ([0, 0, 0], [0, 1, 1], [1, 2]),
+            ([0], [0], False),
+            ([1], [1], False),
+            ([1], [0], False),
+            ([0], [1], True),
         ],
     )
     def test_compare_log_states(self, before, after, imaged):
         sat = MagicMock()
-        targets = [MagicMock() for i in range(3)]
         ds = UniqueImageStore(sat)
-        ds.data.known = targets
-        message = sat.dynamics.storageUnit.storageUnitDataOutMsg
-        message.read.return_value.storedDataName.__getitem__.side_effect = (
-            lambda x: targets[x].id
-        )
+        target = MagicMock()
+        ds.data.known = [target]
+        sat.latest_target = target
         dat = ds.compare_log_states(np.array(before), np.array(after))
-        assert len(dat.imaged) == len(imaged)
-        for i in imaged:
-            assert targets[i] in dat.imaged
+        assert len(dat.imaged) == imaged
+        if imaged:
+            assert target in dat.imaged
 
 
 class TestUniqueImagingManager:
