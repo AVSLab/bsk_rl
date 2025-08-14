@@ -117,9 +117,6 @@ bsk_rl/results/
 # .DS_Store
 .DS_Store
 
-# data files
-src/bsk_rl/_dat/simplemaps_worldcities/
-
 # Sphinx documentation
 /docs/build/*
 /docs/source/api_reference/*

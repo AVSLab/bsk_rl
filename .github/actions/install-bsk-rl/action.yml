@@ -42,4 +42,4 @@ runs:
       bskLargeData
   - name: Install BSK-RL
     shell: bash
-    run: pip install -e '.[${{ inputs.pip-options }}]' && finish_install
+    run: pip install -e '.[${{ inputs.pip-options }}]'

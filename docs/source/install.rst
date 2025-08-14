@@ -28,11 +28,10 @@ Instructions
 
    .. code-block:: console
 
-       (.venv) $ python -m pip install -e "." && finish_install
+       (.venv) $ python -m pip install -e "."
 
    The first half of this command will install ``pip`` dependencies and an editable copy
-   of the BSK-RL package. ``finish_install`` downloads data dependencies and verifies the
-   installation of Basilisk.
+   of the BSK-RL package.
 
    For a more granular installation, ``.[docs]`` (for documentation dependencies) or 
    ``.[rllib]`` (for RLlib tools) can be specified. ``.[all]`` installs all dependencies.

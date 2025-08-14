@@ -47,7 +47,7 @@ Complete installation instructions and common troubleshooting tips can be found
 
     .. code-block:: console
 
-        (.venv) $ python -m pip install -e . && finish_install
+        (.venv) $ python -m pip install -e .
 
 #. Test the installation.
 

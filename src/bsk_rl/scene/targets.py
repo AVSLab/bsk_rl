@@ -169,7 +169,7 @@ class CityTargets(UniformTargets):
         """Construct environment with static targets around population centers.
 
         Uses the `simplemaps Word Cities Database <https://simplemaps.com/data/world-cities>`_
-        for population center locations. This data is installed by ``finish_install``.
+        for population center locations.
 
         Args:
             n_targets: Number of targets to generate, as a fixed number or a range.
