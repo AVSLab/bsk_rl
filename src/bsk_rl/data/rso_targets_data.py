@@ -257,6 +257,8 @@ class RSOTargetImageReward(GlobalReward):
                             reward[sat_id] += self.reward_fn(target.priority * self.scenario.satellites[0].dynamics.downlink_bonus)
                             self.useful_downlinks += 1
 
+            shadow_factors=[]
+            penumbra_target_id = []
             # Adding Imaging Reward
             for target in new_data.imaged:
                 # if target not in self.data.imaged:
@@ -272,15 +274,16 @@ class RSOTargetImageReward(GlobalReward):
                 if sat_id == 'SS1':
                     # print('length of eclipseOutMsgs: '+str(len(self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs)))
                     if target is not None:
-                        shadow_factors = [ self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[i + target.id].read().shadowFactor     for i in range(len(self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs)-100)]
+                        shadow_factors.append(self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor)
                         # Check for non-binary shadow factors
+                        penumbra_target_id.append(target.id)
                         non_binary_indices = [i for i, val in enumerate(shadow_factors) if val != 0.0 and val != 1.0]
 
                         # Print results
                         if non_binary_indices:
                             print("Non-binary shadowFactors found at indices:", non_binary_indices)
                             for i in non_binary_indices:
-                                print(f"Index {i}: shadowFactor = {shadow_factors[i]}")
+                                print(f"Penumbra Target: ID {penumbra_target_id[i]}: shadowFactor = {shadow_factors[i]}")
                         # else:
                         #     print("All shadowFactors are either 0.0 or 1.0")
 
