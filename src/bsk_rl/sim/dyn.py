@@ -1747,7 +1747,7 @@ class ImagingSCDynModel(ImagingDynModel):
         self.simulator.AddModelToTask(
             self.task_name, self.simpleNavObject, ModelPriority=priority
         )
-    @default_args(use_heuristic=False, heuristic_mode="distance", heuristic_top_k = 10 )
+    @default_args(use_heuristic=False, heuristic_mode="angle", heuristic_top_k = 10 )
     def setup_metrics(self, use_heuristic: bool, heuristic_top_k: float, priority: int = 2000, **kwargs) -> None:
         self.total_downlinks = 0
         self.useful_downlinks = 0
@@ -1758,8 +1758,9 @@ class ImagingSCDynModel(ImagingDynModel):
         self.heuristic_mode = "angle"     # or "distance"
         self.heuristic_top_k = heuristic_top_k
 
-    @default_args(imaging_bonus=0.0, downlink_bonus=1.0, full_storage_penalty = 0, low_battery_penalty = 0)
-    def setup_reward_and_penalty_factors(self, imaging_bonus: float, downlink_bonus: float, full_storage_penalty: float, low_battery_penalty: float, priority: int = 2000, **kwargs) -> None:
+
+    @default_args(imaging_bonus=0.0, downlink_bonus=1.0, full_storage_penalty = 0, low_battery_penalty = 0, eclipsedImagePenalty = 0)
+    def setup_reward_and_penalty_factors(self, imaging_bonus: float, downlink_bonus: float, full_storage_penalty: float, low_battery_penalty: float, eclipsedImagePenalty: float, priority: int = 2000, **kwargs) -> None:
         """Set up the reward bonus factors.
 
         Args:
@@ -1774,6 +1775,11 @@ class ImagingSCDynModel(ImagingDynModel):
             self.penalties = 0
         else:
             self.penalties = 1
+        if 0 >= eclipsedImagePenalty >= -1:
+            self.eclipsedImagePenalty = eclipsedImagePenalty
+        else:
+            print(f"eclipsedImagePenalty should be between [-1, 0] ...\nExcluding the penalty (setting to 0)")
+            self.eclipsedImagePenalty = 0
 
 
 

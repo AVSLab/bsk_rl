@@ -270,9 +270,10 @@ class RSOTargetImageReward(GlobalReward):
                         ) / imaged_targets.count(target)
                         # self.imaged_illuminated.append(target)
                         # self.imaged_illuminated_dict[sat_id]+=target
+                    elif target not in self.data.imaged and self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor < self.scenario.satellites[0].dynamics.eclipse_threshold_for_reward:
+                        reward[sat_id] += target.priority * self.scenario.satellites[0].dynamics.eclipsedImagePenalty
 
                 if sat_id == 'SS1':
-                    # print('length of eclipseOutMsgs: '+str(len(self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs)))
                     if target is not None:
                         shadow_factors.append(self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor)
                         # Check for non-binary shadow factors
