@@ -140,3 +140,16 @@ interactive_plot.py
 animation.mp4
 random
 *.png
+examples/AMOS_DATA
+examples/data
+examples/batch_results
+examples/plots
+utils.py
+test_sat.py
+hooks_template.py
+copy_
+batch_policy_evaluation*.py
+copy_*.py
+batch_heuristic_evaluation*.py
+env_wrappers.py
+updated_batch_policy_evaluation.py
