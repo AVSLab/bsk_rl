@@ -1678,6 +1678,7 @@ class ImagingSCDynModel(ImagingDynModel):
         self.setup_ground_station_locations()
         self.setup_reward_and_penalty_factors(**kwargs)
         self.setup_eclipse_threshold(**kwargs)
+        self.setup_metrics(**kwargs)
 
     @classmethod
     def _requires_world(cls) -> list[type["WorldModel"]]:
@@ -1746,6 +1747,16 @@ class ImagingSCDynModel(ImagingDynModel):
         self.simulator.AddModelToTask(
             self.task_name, self.simpleNavObject, ModelPriority=priority
         )
+    @default_args(use_heuristic=False, heuristic_mode="distance", heuristic_top_k = 10 )
+    def setup_metrics(self, use_heuristic: bool, heuristic_top_k: float, priority: int = 2000, **kwargs) -> None:
+        self.total_downlinks = 0
+        self.useful_downlinks = 0
+        self.imaged_illuminated = 0
+        self.target_selection = []
+        self.target_selection_comparison = []
+        self.use_heuristic = use_heuristic
+        self.heuristic_mode = "angle"     # or "distance"
+        self.heuristic_top_k = heuristic_top_k
 
     @default_args(imaging_bonus=0.0, downlink_bonus=1.0, full_storage_penalty = 0, low_battery_penalty = 0)
     def setup_reward_and_penalty_factors(self, imaging_bonus: float, downlink_bonus: float, full_storage_penalty: float, low_battery_penalty: float, priority: int = 2000, **kwargs) -> None:

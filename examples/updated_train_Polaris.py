@@ -436,6 +436,8 @@ if __name__ == "__main__":
     sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
     sat_args["eclipse_threshold_for_imaging"] = 0.5 # to include both shadowed and illuminated RSOs
     sat_args["eclipse_threshold_for_reward"] = 0.5 # can be the same as sat_args["eclipse_threshold_for_imaging"] if set to a positive number between 0 and 1
+    sat_args["full_storage_penalty"] = -1
+    sat_args["low_battery_penalty"] = -1
 
     class MyTargetSatellite(sats.Satellite):
         observation_spec = [

@@ -206,6 +206,17 @@ class RSOTargetImageReward(GlobalReward):
         downlinked_targets = [int(i) for i in np.where(new_state - self.old_state < 0)[0]] # keep track of downlinked targets
 
 
+        if self.scenario.satellites[0].simulator.sim_time >= (self.scenario.satellites[0].simulator.time_limit - 300):
+            imaged_illuminated_elevations =[]
+            self.scenario.satellites[0].dynamics.imaged_illuminated = len(self.imaged_illuminated)
+            # self.scenario.satellites[0].imaged_illuminated_elevation = ()
+            self.scenario.satellites[0].dynamics.total_downlinks  = self.total_downlinks
+            self.scenario.satellites[0].dynamics.useful_downlinks  = self.useful_downlinks
+            print("METRICS")
+            print("self.scenario.satellites[0].dynamics.imaged_overall",len(self.scenario.satellites[0].data_store.data.imaged))
+            print("self.scenario.satellites[0].dynamics.imaged_illuminated",self.scenario.satellites[0].dynamics.imaged_illuminated)
+            print("self.scenario.satellites[0].dynamics.total_downlinks",self.scenario.satellites[0].dynamics.total_downlinks)
+            print("self.scenario.satellites[0].dynamics.useful_downlinks", self.scenario.satellites[0].dynamics.useful_downlinks)
 
         if len(downlinked_targets) > 0:
             self.total_downlinks += len(downlinked_targets)
