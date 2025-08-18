@@ -514,10 +514,7 @@ def custom_oe_randomizer():
     rLEO = 6871. * 1000  #7000 * 1000   # Minimum semi-major axis (LEO) in meters
     rUpperLEO =  8371.0 * 1000    # max semi-major axis  of upper LEO in meters
     # rGEO = 42164. * 1000   # Maximum semi-major axis (GEO) in meters
-
     oe = orbitalMotion.ClassicElements()
-    # oe.a = np.random.uniform(rLEO*5, rGEO)  # Random semi-major axis between LEO and GEO
-    # oe.a = np.random.uniform(1.05*rLEO, rUpperLEO)  # Random semi-major axis between LEO and GEO
     oe.a = np.random.uniform(1.00*rLEO, rUpperLEO)  # Random semi-major axis between LEO and GEO
     if oe.a < 2*rLEO:
         oe.e = np.random.uniform(0.0, 0.02)    # Random eccentricity (allowing less elliptical orbits when near LEO)
@@ -529,7 +526,6 @@ def custom_oe_randomizer():
     oe.Omega = np.random.uniform(0, 360) * macros.D2R  # Random RAAN
     oe.omega = np.random.uniform(0, 360) * macros.D2R  # Random argument of perigee
     oe.f = np.random.uniform(0, 360) * macros.D2R  # Random true anomaly
-    # print('randomized orbital elements: oe.a, oe.i, oe.e', oe.a, oe.i, oe.e, 'oe.Omega, oe.omega, oe.f', oe.Omega, oe.omega, oe.f)
     return oe
 
 # target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0*900 )
