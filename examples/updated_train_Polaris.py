@@ -1,6 +1,7 @@
 import os
 import shutil
 from functools import partial
+from itertools import count
 from pathlib import Path
 from typing import Any
 
@@ -102,7 +103,7 @@ def train_model(
                     "inspector": RLModuleSpec(
                         model_config_dict={
                             "use_lstm": False,
-                            "fcnet_hiddens": [2048, 2048],
+                            "fcnet_hiddens": [1024, 1024], #[2048, 2048],
                             "vf_share_layers": False,
                         },
                     ),
@@ -123,7 +124,7 @@ def train_model(
             # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
             # CondenseMultiStepActions(),
         ),
-        # learner_class=TimeDiscountedGAEPPOTorchLearner,
+        learner_class=TimeDiscountedGAEPPOTorchLearner,
         learner_config_dict=dict(reward_time="step_start"),
     )
     config.logger_config = dict(
@@ -175,7 +176,7 @@ def train_model(
             ray.init(
                 ignore_reinit_error=True,
                 num_cpus=get_available_cores(),
-                object_store_memory=2_000_000_000,  # 2 GB
+                object_store_memory=3_000_000_000,  # 2 GB
                 _temp_dir=temp_dir,
             )
             ppo = PPO.from_checkpoint(checkpoint_path)
@@ -227,8 +228,6 @@ def env_metrics_callback(env):
 
     data["cumulativeRewardSS1"]=env.rewarder.cum_reward['SS1']
     data["illuminated_images"] = len(env.rewarder.imaged_illuminated)
-    data["Total Images Downlinked"] = env.rewarder.total_downlinks
-    data["Useful Images Downlinked"] = env.rewarder.useful_downlinks
 
     SS1_actions_spec = env.satellites[0].action_builder.action_spec[0]
     # Target azimuth
@@ -284,6 +283,15 @@ def env_metrics_callback(env):
     # Illumination status
     if hasattr(SS1_actions_spec, "chosen_target_illumination_status") and SS1_actions_spec.chosen_target_illumination_status:
         data["mean_target_illumination_status"] = np.mean(SS1_actions_spec.chosen_target_illumination_status)
+        well_illuminated=0
+        not_illuminated=0
+        for ill in SS1_actions_spec.chosen_target_illumination_status:
+            if ill > 0.5:
+                well_illuminated+=1
+            else:
+                not_illuminated+=1
+        data["num_target_above_illumination_threshold"] = well_illuminated
+        data["num_target_below_illumination_threshold"] = not_illuminated
     else:
         data["mean_target_illumination_status"] = -1
 
@@ -319,6 +327,8 @@ def sat_metrics_callback(env, satellite):
 
         data["battery_charge_fraction"] = satellite.dynamics.battery_charge_fraction
         data["storage_level_fraction"] = satellite.dynamics.storage_level_fraction
+        data["Total Images Downlinked"] = satellite.dynamics.total_downlinks
+        data["Useful Images Downlinked"] = satellite.dynamics.useful_downlinks
 
     else:
         data["RW_norm"] = 0
@@ -328,6 +338,8 @@ def sat_metrics_callback(env, satellite):
 
         data["battery_charge_fraction"] = 0
         data["storage_level_fraction"] = 0
+        data["Total Images Downlinked"] = 0
+        data["Useful Images Downlinked"] = 0
 
     return data
 
@@ -354,6 +366,7 @@ if __name__ == "__main__":
 
     n_targets = 100
     n_targets_ahead = 10
+    imaging_duration = 300
     extra_tima_factor = 1.5
     total_time = extra_tima_factor * n_targets * 300  #I give it 10 times the minimum time to finish
 
@@ -362,7 +375,6 @@ if __name__ == "__main__":
             obs.SatProperties(
                 dict(prop="storage_level_fraction"),
                 dict(prop="battery_charge_fraction"),
-                dict(prop="wheel_speeds_fraction"),
             ),
 
             #observation space 1
@@ -376,7 +388,7 @@ if __name__ == "__main__":
             #     n_ahead_observe=n_targets_ahead,
             #                                ),
 
-            #observation space 2
+            #observation space 21
             obs.PolarisScTargetProperties(
                 dict(prop="target_elevation_angle", norm=1.0),
                 dict(prop="rel_pos_vector_r_BR_H", norm = 1596*1000),
@@ -385,19 +397,18 @@ if __name__ == "__main__":
                 dict(prop="target_shadowFactor", norm=1.0),
                 n_ahead_observe=n_targets_ahead,
                                            ),
-
-            obs.Eclipse(),
+            obs.Eclipse(norm=5700),
             obs.OpportunityProperties(
                 dict(prop="opportunity_open", norm = 5700.0),
                 dict(prop="opportunity_close", norm = 5700.0),
                 type="ground_station",
-                n_ahead_observe=5,
+                n_ahead_observe=1,
             )
         ]
         action_spec = [
-            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=300),  # Scan for 5 minute
+            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
             act.Charge(duration=300.0),  # Charge for 5 minutes
-            act.Downlink(duration=180.0), # Downlink for 3 min
+            act.Downlink(duration=300.0), # Downlink for 3 min
             act.Desat(duration=150), # Desat for 2.5 min
 
         ]
@@ -409,14 +420,14 @@ if __name__ == "__main__":
     sat_args["imageAttErrorRequirement"] = 0.01
 
     # Storage
-    sat_args["dataStorageCapacity"] = 50 * 8e6 / 2  # bits
+    sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 #*1000000 # bits
     sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
     sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
     # Power
-    sat_args["batteryStorageCapacity"] = 500 * 3600 # W*s
-    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.2, 0.4) * 500 * 3600
+    sat_args["batteryStorageCapacity"] = 500 * 3600 # *1000000 # W*s
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.2, 0.5) * 500 * 3600 #*1000000
     sat_args["basePowerDraw"] = -10.0  # W
     sat_args["instrumentPowerDraw"] = -30.0  # W
     sat_args["transmitterPowerDraw"] = -25.0  # W
@@ -426,13 +437,13 @@ if __name__ == "__main__":
     # Attitude
     # sat_args["imageAttErrorRequirement"] = 0.1
     # sat_args["imageRateErrorRequirement"] = 0.1
-    sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.001, size=3)  # N*m
+    sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.000, size=3)  # N*m
     sat_args["maxWheelSpeed"] = 6000.0  # RPM
     sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
-    sat_args["desatAttitude"] = "nadir"
+    sat_args["desatAttitude"] = "sun" # 'nadir' and 'sun' is the other option
 
     # reward bonuses and eclipse thresholds
-    sat_args["downlink_bonus"] = 0.75
+    sat_args["downlink_bonus"] = 1.0
     sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
     sat_args["eclipse_threshold_for_imaging"] = 0.5 # to include both shadowed and illuminated RSOs
     sat_args["eclipse_threshold_for_reward"] = 0.5 # can be the same as sat_args["eclipse_threshold_for_imaging"] if set to a positive number between 0 and 1
@@ -451,27 +462,24 @@ if __name__ == "__main__":
         fsw_type = fsw.BasicTargetFSWModel
 
     def custom_oe_randomizer():
-        rLEO = 7000. * 1000    # Minimum semi-major axis (LEO) in meters
-        rUpperLEO = 1.2 * 7000. * 1000    # Minimum semi-major axis (LEO) in meters
+        rLEO = 6871. * 1000  #7000 * 1000   # Minimum semi-major axis (LEO) in meters
+        rUpperLEO =  8371.0 * 1000    # max semi-major axis  of upper LEO in meters
         # rGEO = 42164. * 1000   # Maximum semi-major axis (GEO) in meters
-
-
         oe = orbitalMotion.ClassicElements()
-        # oe.a = np.random.uniform(rLEO*5, rGEO)  # Random semi-major axis between LEO and GEO
-        oe.a = np.random.uniform(1.01*rLEO, rUpperLEO)  # Random semi-major axis between LEO and GEO
-
+        oe.a = np.random.uniform(1.00*rLEO, rUpperLEO)  # Random semi-major axis between LEO and GEO
         if oe.a < 2*rLEO:
             oe.e = np.random.uniform(0.0, 0.02)    # Random eccentricity (allowing less elliptical orbits when near LEO)
+            while oe.a*(1-oe.e) < 6771. * 1000: # perigee must be at least 400 km altitude
+                oe.e = np.random.uniform(0.0, 0.02)
         else:
             oe.e = np.random.uniform(0.0, 0.2)    # Random eccentricity (allowing slightly elliptical orbits)
         oe.i = np.random.uniform(0, 180) * macros.D2R  # Random inclination up to 180 degrees
         oe.Omega = np.random.uniform(0, 360) * macros.D2R  # Random RAAN
         oe.omega = np.random.uniform(0, 360) * macros.D2R  # Random argument of perigee
         oe.f = np.random.uniform(0, 360) * macros.D2R  # Random true anomaly
-        # print('randomized orbital elements: oe.a, oe.i, oe.e', oe.a, oe.i, oe.e, 'oe.Omega, oe.omega, oe.f', oe.Omega, oe.omega, oe.f)
         return oe
 
-    target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0*900 )
+    target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )  # testing to see if sim is faster if the other agents are killed
     # Make the satellite
     sat = MyScanningSatellite(name="SS1", sat_args=sat_args) # SO1 for satellite observer 1
 
@@ -481,12 +489,12 @@ if __name__ == "__main__":
     all_sat = [sat] + targets
 
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
-    model_name = f"aug1_nopenalties_smallerICbattery_obsv2_2e-5lr_0.1cp_gamma95_75d25i.out_{N}"
+    model_name = f"aug18_wGAE_150batch_halfnetwork_-1penalties_smallerICbattery_restrictedResources_obsv6_1e-6lr_0.15cp_gamma9997_100d0i.out_{N}"
     n_envs = (
-        get_available_cores() - 6  # leave some extra cores for other processes
+        get_available_cores() - 4  # leave some extra cores for other processes
     )
     output_dir = (
-        Path("~/rllib_results/july_results/july30rllib_results").expanduser() / f"aug1_nopenalties_smallerICbattery_obsv2_2e-5lr_0.1cp_gamma95_75d25i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+        Path("~/rllib_results/july_results/july30rllib_results").expanduser() / f"aug18_wGAE_150batch_halfnetwork_-1penalties_smallerICbattery_restrictedResources_obsv6_1e-6lr_0.15cp_gamma9997_100d0i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
     )
     output_dir = Path(output_dir)
 
@@ -496,13 +504,13 @@ if __name__ == "__main__":
 
     jobs = build_job_array(
         training_args=dict(
-            lr=[2e-5],
-            gamma=[0.95],
-            train_batch_size=[int(50 * n_envs)],
+            lr=[1e-6],
+            gamma=[0.9997],
+            train_batch_size=[int(50/2 * n_envs)],  #n_envs on the Mac is 6 eventually   minimum train_batch_size = mini_batch = 128
             num_sgd_iter=[10],
             lambda_=[0.95],
             use_kl_loss=[False],
-            clip_param=[0.1],
+            clip_param=[0.15],
             grad_clip=[1.0],
             entropy_coeff=[0.0],
         ),
@@ -511,7 +519,7 @@ if __name__ == "__main__":
             satellites=[all_sat],
             scenario=[scene.RandomSatellites("SS1",n_targets=n_targets)],
             rewarder=[data.RSOTargetImageReward()],
-            # world_type=world.GroundStationWorldModel, # this for some reason breaks the code.
+            world_type=[world.GroundStationWorldModel],
             time_limit=[total_time],
             failure_penalty=[-100.0],
             terminate_on_time_limit=[False],
@@ -524,13 +532,13 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params_aug1.txt", "w") as file: # update this when running on cluster
+    with open(output_dir / f"{model_name}_params_aug18.txt", "w") as file: # update this when running on cluster
         yaml.dump(sanitize_np(job_args), file)
 
     train_model(
         model_name=model_name,
         output_directory=output_dir,
-        checkpoint_frequency=5,
+        checkpoint_frequency=3, # used to be 2
         checkpoints_to_keep=3,
         total_timesteps=20_000_000,
         reload_frequency=500_000,
