@@ -587,28 +587,101 @@ class ImageRSO(DiscreteAction):
                 print(f"Imaged targets: ({len(imaged_ids)}): {sorted(imaged_ids)}")
                 print(f"Unimaged targets: ({len(unimaged_ids)}): {sorted(unimaged_ids)}")
                 print(f"Never seen targets ({len(never_seen)}): {never_seen} \n")
-        run_heuristic_policy = False
+
+        run_heuristic_policy = self.satellite.dynamics.use_heuristic
         if run_heuristic_policy:
-            imaged_ids = []
-            for i in range(len(self.simulator.satellites[0].data_store.data.imaged)):
-                imaged_ids.append(self.simulator.satellites[0].data_store.data.imaged[i].id)
+            print("using HEURISTIC POLICY")
 
-            # Ensure final_targets has exactly n_actions entries
-            # If still fewer (e.g., fewer total unimaged than n_actions), repeat last
-            if len(final_targets) < num_actions:
-                try:
-                    final_targets += [final_targets[-1]] * (num_actions - len(final_targets))
-                except IndexError:
-                    sorted_fallback = sorted(
-                    known_targets,
-                    key=lambda tgt: np.linalg.norm(
-                        np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos
-                    )
-                )
-                    final_targets = sorted_fallback[:self.n_actions]
-                    self.simulator.terminate = True
+            # Config knobs (with sane defaults)
+            mode = getattr(self.satellite.dynamics, "heuristic_mode", "distance")  # 'distance' or 'angle'
+            top_k = int(getattr(self.satellite.dynamics, "heuristic_top_k", 10))
 
-            new_target = final_targets[0] # always choosing the first of the targets in the observation space
+            def _dist_to(tgt):
+                tgt_pos = np.array(tgt.target_spacecraft.dynamics.r_BN_N)
+                return np.linalg.norm(tgt_pos - scanner_pos)
+
+            def _elev_of(tgt):
+                tgt_pos = np.array(tgt.target_spacecraft.dynamics.r_BN_N)
+                return self.elevation_angle(scanner_pos, tgt_pos)
+
+            def _angle_err_of(tgt):
+                # Use the same "initial angular error" metric you already record
+                return float(_angle_to_target(self.satellite, {"object": tgt}))
+
+            # ---- Heuristic A: by distance (your current behavior) ----
+            if mode == "distance":
+                distances = [(tgt, _dist_to(tgt)) for tgt in unimaged_targets]
+                distances.sort(key=lambda x: x[1])
+
+                if not distances:
+                    # Fall back to nearest known target (nothing left unimaged)
+                    sorted_fallback = sorted(known_targets, key=_dist_to)
+                    if not sorted_fallback:
+                        raise RuntimeError("No targets available.")
+                    heuristic_target = sorted_fallback[0]
+                else:
+                    top_list = [t for t, _ in distances[:max(1, top_k)]]
+                    visible_candidates = [(t, _dist_to(t)) for t in top_list if -21.0 <= _elev_of(t) <= 90.0]
+                    if visible_candidates:
+                        visible_candidates.sort(key=lambda x: x[1])
+                        heuristic_target = visible_candidates[0][0]
+                    else:
+                        heuristic_target = distances[0][0]
+
+            # ---- Heuristic B: by current angle (smallest initial angular error) ----
+            elif mode == "angle":
+                # 1) visible + unimaged first
+                visible_unimaged = []
+                for tgt in unimaged_targets:
+                    elev = _elev_of(tgt)  # LOS check via elevation
+                    if -21.0 <= elev <= 90.0:
+                        try:
+                            aerr = _angle_err_of(tgt)
+                        except Exception:
+                            aerr = float("inf")
+                        visible_unimaged.append((tgt, aerr))
+
+                if visible_unimaged:
+                    # Pick the visible unimaged target with the smallest angle
+                    visible_unimaged.sort(key=lambda x: x[1])
+                    heuristic_target = visible_unimaged[0][0]
+                else:
+                    # 2) none in LOS → pick overall smallest-angle *unimaged* target (even if not visible)
+                    angle_list = []
+                    for tgt in unimaged_targets:
+                        try:
+                            angle_list.append((tgt, _angle_err_of(tgt)))
+                        except Exception:
+                            pass
+
+                    if angle_list:
+                        angle_list.sort(key=lambda x: x[1])
+                        heuristic_target = angle_list[0][0]
+                    else:
+                        # 3) no unimaged at all → fallback: best angle among known targets
+                        known_angles = []
+                        for tgt in known_targets:
+                            try:
+                                known_angles.append((tgt, _angle_err_of(tgt)))
+                            except Exception:
+                                pass
+                        if known_angles:
+                            known_angles.sort(key=lambda x: x[1])
+                            heuristic_target = known_angles[0][0]
+                        else:
+                            # last resort: nearest by distance
+                            heuristic_target = min(known_targets, key=_dist_to)
+
+            else:
+                raise ValueError(f"Unknown heuristic_mode '{mode}'. Use 'distance' or 'angle'.")
+
+            # Keep your comparison & logging exactly as before
+            self.satellite.dynamics.target_selection.append(policy_target)
+            if policy_target.id == heuristic_target.id:
+                self.satellite.dynamics.target_selection_comparison.append(heuristic_target.id)
+            else:
+                print(f"heuristic ({mode}) chose target: {heuristic_target.name}")
+                self.satellite.dynamics.target_selection_comparison.append(False)
 
         action_satid = new_target.id
         self.satellite.logger.info(f"target index {action_satid} tasked: {new_target.name}")
