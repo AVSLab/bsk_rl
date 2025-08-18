@@ -274,7 +274,7 @@ class RSOTargetImageReward(GlobalReward):
                         reward[sat_id] += target.priority * self.scenario.satellites[0].dynamics.eclipsedImagePenalty
 
                 if sat_id == 'SS1':
-                    if target is not None:
+                    if target is not None and self.scenario.satellites[0].dynamics.print_info:
                         shadow_factors.append(self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor)
                         # Check for non-binary shadow factors
                         penumbra_target_id.append(target.id)

@@ -1747,8 +1747,8 @@ class ImagingSCDynModel(ImagingDynModel):
         self.simulator.AddModelToTask(
             self.task_name, self.simpleNavObject, ModelPriority=priority
         )
-    @default_args(use_heuristic=False, heuristic_mode="angle", heuristic_top_k = 10 )
-    def setup_metrics(self, use_heuristic: bool, heuristic_top_k: float, priority: int = 2000, **kwargs) -> None:
+    @default_args(use_heuristic=False, heuristic_mode="angle", heuristic_top_k = 10, print_info=False)
+    def setup_metrics(self, use_heuristic: bool, heuristic_top_k: float, print_info: bool, priority: int = 2000, **kwargs) -> None:
         self.total_downlinks = 0
         self.useful_downlinks = 0
         self.imaged_illuminated = 0
@@ -1757,6 +1757,7 @@ class ImagingSCDynModel(ImagingDynModel):
         self.use_heuristic = use_heuristic
         self.heuristic_mode = "angle"     # or "distance"
         self.heuristic_top_k = heuristic_top_k
+        self.print_info=print_info
 
 
     @default_args(imaging_bonus=0.0, downlink_bonus=1.0, full_storage_penalty = 0, low_battery_penalty = 0, eclipsedImagePenalty = 0)

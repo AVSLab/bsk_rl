@@ -470,6 +470,12 @@ class ImageRSO(DiscreteAction):
                 self.simulator.terminate = True
 
         new_target = final_targets[action]
+        policy_target = new_target
+        if self.satellite.dynamics.print_info:
+            if len(visible_unimaged_targets) !=0 and action < len(visible_unimaged_targets):
+                print(f'chosen target elevation {visible_unimaged_targets[action][1]} and shadowFactor {self.satellite.dynamics.world.eclipseObject.eclipseOutMsgs[new_target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor}')
+            else:
+                print(f"currently no visible unimaged targets--> chosen target shadowFactor {self.satellite.dynamics.world.eclipseObject.eclipseOutMsgs[new_target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor}")
         opp = {"object": new_target}
 
         # Append target ID (as integer)
@@ -554,9 +560,9 @@ class ImageRSO(DiscreteAction):
         self.imaging_times.append(self.satellite.simulator.sim_time)
 
 
-        print_status = False
+        print_status = self.satellite.dynamics.print_info
         if print_status:
-            frequency_to_print = 0.1
+            frequency_to_print = 15
             if round(self.satellite.simulator.sim_time, 9) % (frequency_to_print * 300) < 0.1:
                 currently_visible_ids = []
                 for target in known_targets:
