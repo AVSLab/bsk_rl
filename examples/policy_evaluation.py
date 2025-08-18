@@ -74,20 +74,57 @@ n_targets = 100
 n_targets_ahead = 10
 imaging_duration = 300
 total_time = n_targets * 450  # 2100 # 5700.0  # approximately 1 orbit
-# obs_v = 1.1
-obs_v =2
+seed_number = 19
+use_shield=False
+act_random=False
+obs_v = 2 # this is overwritten for all policies that have an assigned obs type
 
-# loading the policy
+# POLICIES
 # downlink_reward_policy = "/Users/dahu1128/rllib_results/june12rllib_results/lowBaudRate_5e-6lr_downlink_reward_penalties_smallest_storage_Polaris_simulation_1749771784.4956822/lowBaudRate_5e-6lr_downlink_reward_penalties_smallest_storage_0/"
 downlink_reward_policy = "/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1750741069.7033312/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_0"
 downlink_reward_policy_shorter_imaging ="/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_shorter_imaging_5e-6lr_downlink_reward_penalties_smallest_storage_0"
 # imaging_reward_policy = ""
+# August 13th
+wGAE_balance0d100i_smallclip_largepenalties_smallbatch_obs2 = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug13_wGAE_smallclip_smallbatch_halfnetwork_largepenalties_smallerICbattery_restrictedResources_obsv2_1e-6lr_0.15cp_gamma9997_0d100i_1755121787.721219/aug13_wGAE_smallclip_smallbatch_halfnetwork_largepenalties_smallerICbattery_restrictedResources_obsv2_1e-6lr_0.15cp_gamma9997_0d100i.out_0"
+wGAE_balance0d100i_largepenalties_smallbatch_obs2 = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug13_wGAE_smallbatch_halfnetwork_largepenalties_smallerICbattery_restrictedResources_obsv2_1e-6lr_0.15cp_gamma9997_0d100i_1755107128.629914/aug13_wGAE_smallbatch_halfnetwork_largepenalties_smallerICbattery_restrictedResources_obsv2_1e-6lr_0.15cp_gamma9997_0d100i.out_0"
+latestbalance0d100i_largepenalties_smallbatch_obs2 = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aaug13_woGAE_smallbatch_halfnetwork_smallpenalties_smallerICbattery_restrictedResources_obsv2_2e-7lr_0.15cp_gamma95_0d100i_1755059875.601228/aug13_woGAE_smallbatch_halfnetwork_smallpenalties_smallerICbattery_restrictedResources_obsv2_2e-7lr_0.15cp_gamma95_0d100i.out_0"
+
+# August 11th
+balance50d50i_smallpenalties_smallbatch_obs2 = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug11_woGAE_smallbatch_smallpenalties_restrictedResources_obsv2_1e-6lr_0.15cp_gamma95_50d50i_1754970261.733622/aug11_woGAE_smallbatch_smallpenalties_restrictedResources_obsv2_1e-6lr_0.15cp_gamma95_50d50i.out_0"
+
 # August 1st
 balance75d25i_nopenalties_lowICbattery_woGAE_obs2_gamma95 = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug1_nopenalties_smallerICbattery_obsv2_2e-5lr_0.1cp_gamma95_75d25i_1754054673.0471108/aug1_nopenalties_smallerICbattery_obsv2_2e-5lr_0.1cp_gamma95_75d25i.out_0"
+
+# Cluster Aug1st policies:
+balance0d100i_nopenalties_wGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_nopenalties_wGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma9995_0d100i_1754183683.6134467/aug1_nopenalties_wGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma9995_0d100i.out_0"
+balance0d100i_nopenalties_wGAE_restricted_Resources_obs2_1754513855 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_nopenalties_wGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma9995_0d100i_1754513855.0651953/aug1_nopenalties_wGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma9995_0d100i.out_0"
+balance0d100i_nopenalties_wGAE_restricted_Resources_obs2_5e6lr = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_nopenalties_wGAE_restricted_Resources_obsv2_5e-6lr_0.1cp_gamma9995_0d100i_1754224141.9058733/aug1_0d100i_nopenalties_wGAE_restricted_Resources_obsv2_5e-6lr_0.1cp_gamma9995.out_0"
+balance0d100i_nopenalties_wGAE_unlimitedResources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_nopenalties_wGAE_unlimitedResources_obsv2_2e-5lr_0.1cp_gamma9995_0d100i_1754165705.0502024/aug1_nopenalties_wGAE_unlimitedResources_obsv2_2e-5lr_0.1cp_gamma9995_0d100i.out_0"
+balance0d100i_nopenalties_woGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_nopenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_0d100i_1754193344.0782313/aug1_nopenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_0d100i.out_0"
+balance0d100i_nopenalties_woGAE_restricted_Resources_obs2_1754513855 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_nopenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_0d100i_1754513855.064417/aug1_nopenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_0d100i.out_0"
+balance0d100i_nopenalties_woGAE_unlimitedResources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_nopenalties_woGAE_unlimitedResources_obsv2_2e-5lr_0.1cp_gamma95_0d100i_1754181832.6771822/aug1_nopenalties_woGAE_unlimitedResources_obsv2_2e-5lr_0.1cp_gamma95_0d100i.out_0"
+balance0d100i_nopenalties_woGAE_unlimitedResources_obs2_1754513855 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_nopenalties_woGAE_unlimitedResources_obsv2_2e-5lr_0.1cp_gamma95_0d100i_1754513855.0656035/aug1_nopenalties_woGAE_unlimitedResources_obsv2_2e-5lr_0.1cp_gamma95_0d100i.out_0"
+balance25d75i_smallpenalties_wGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_wGAE_restricted_Resources_obsv2_1e-5lr_0.1cp_gamma9995_25d75i_1754217650.8114564/aug1_25d75i_smallpenalties_wGAE_restricted_Resources_obsv2_1e-5lr_0.1cp_gamma9995.out_0"
+balance50d50i_smallpenalties_wGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_wGAE_restricted_Resources_obsv2_1e-5lr_0.1cp_gamma9995_50d50i_1754219572.1531365/aug1_50d50i_smallpenalties_wGAE_restricted_Resources_obsv2_1e-5lr_0.1cp_gamma9995.out_0"
+balance75d25i_smallpenalties_wGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_wGAE_restricted_Resources_obsv2_1e-5lr_0.1cp_gamma9995_75d25i_1754220926.8928921/aug1_75d25i_smallpenalties_wGAE_restricted_Resources_obsv2_1e-5lr_0.1cp_gamma9995.out_0"
+balance100d0i_smallpenalties_wGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_wGAE_restricted_Resources_obsv2_1e-5lr_0.1cp_gamma9995_100d0i_1754513855.0641232/aug1_100d0i_smallpenalties_wGAE_restricted_Resources_obsv2_1e-5lr_0.1cp_gamma9995.out_0"
+balance0d100i_smallpenalties_wGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_wGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma9995_0d100i_1754186234.8776257/aug1_smallpenalties_wGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma9995_0d100i.out_0"
+balance0d100i_smallpenalties_wGAE_restricted_Resources_obs2_1754513855 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_wGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma9995_0d100i_1754513855.0647912/aug1_smallpenalties_wGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma9995_0d100i.out_0"
+balance75d25i_smallpenalties_wGAE_restricted_Resources_obs2_5e6lr = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_wGAE_restricted_Resources_obsv2_5e-6lr_0.1cp_gamma9995_75d25i_1754222766.3191435/aug1_75d25i_smallpenalties_wGAE_restricted_Resources_obsv2_5e-6lr_0.1cp_gamma9995.out_0"
+balance0d100i_smallpenalties_woGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_0d100i_1754209168.7183337/aug1_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_0d100i.out_0"
+balance25d75i_smallpenalties_woGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_25d75i_1754209052.4012935/aug1_25d75i_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95.out_0"
+balance25d75i_smallpenalties_woGAE_restricted_Resources_obs2_1754513855 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_25d75i_1754513855.065375/aug1_25d75i_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95.out_0"
+balance50d50i_smallpenalties_woGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_50d50i_1754211122.300214/aug1_50d50i_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95.out_0"
+balance50d50i_smallpenalties_woGAE_restricted_Resources_obs2_1754513855 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_50d50i_1754513855.0651023/aug1_50d50i_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95.out_0"
+balance75d25i_smallpenalties_woGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_75d25i_1754214159.7715378/aug1_75d25i_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95.out_0"
+balance100d0i_smallpenalties_woGAE_restricted_Resources_obs2 = "/Users/dahu1128/rllib_results/august_results/aug1rllib_results/aug1_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95_100d0i_1754216613.0556254/aug1_100d0i_smallpenalties_woGAE_restricted_Resources_obsv2_2e-5lr_0.1cp_gamma95.out_0"
 
 # July 31st
 balance75d25i_reward_policy_woGAE_obs2_gamma95 = "/Users/dahu1128/rllib_results/july31_obsv2_1e-6lr_0.1cp_gamma95_75d25i_1753923413.642091/july31_obsv2_1e-6lr_0.1cp_gamma95_75d25i.out_0"
 balance75d25i_nopenalties_woGAE_obsv2_gamma95 = "/Users/dahu1128/rllib_results/july31_nopenalties_obsv2_1e-6lr_0.1cp_gamma95_75d25i_1753984221.842252/july31_nopenalties_obsv2_1e-6lr_0.1cp_gamma95_75d25i.out_0"
+
+# July 30th
+balance0d100i_smallpenalties_wGAE_gamma9995_obs2 = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/july30_wGAE_obsv2_1e-5lr_0.1cp_gamma99995_0d100i_imaging_1753832186.3342025/july30_wGAE_obsv2_1e-5lr_0.1cp_gamma99995_0d100i_imaging_job_%a-%j.out_0"
 
 # July 22nd
 balance00100_reward_policy_obs1_gamma99 = "/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv1_1e-5lr_0.1cp_gamma99_0d100i_1753189664.120498/july22_obsv1_1e-5lr_0.1cp_gamma99_0d100i_job_%a-%j.out_0"
@@ -122,10 +159,17 @@ cluster_1000_policy_v2_obs1 = "/Users/dahu1128/rllib_results/june_results/june29
 # June 23rd
 cluster_1000_policy_v2_obs1_wGAE ="/Users/dahu1128/rllib_results/june_results/june23rllib_results/lowBaudRate_5e-6lr_001torque_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1750740679.4746056/lowBaudRate_5e-6lr_001torque_downlink_reward_new_penalties_smallest_storage_0"
 
-policy_path = cluster_1000_policy_v2_obs1_wGAE
+# June 9th
+imaging_reward_smalldata_smallbat_obs1 = "/Users/dahu1128/rllib_results/reward_comparison/1e-6lr_failure_penalties_no_torque_small_battery_small_data_Polaris_sim_1749226596.4501252/model_0"
+
+policy_path = wGAE_balance0d100i_largepenalties_smallbatch_obs2
 
 # Define all known policy paths with associated obs values
 policy_obs_map = {
+    "wGAE_balance0d100i_smallclip_largepenalties_smallbatch_obs2": 2,
+    "wGAE_balance0d100i_largepenalties_smallbatch_obs2": 2,
+    "latestbalance0d100i_largepenalties_smallbatch_obs2": 2,
+    "balance50d50i_smallpenalties_smallbatch_obs2": 2,
     "balance75d25i_nopenalties_lowICbattery_woGAE_obs2_gamma95": 2,
     "balance75d25i_nopenalties_woGAE_obsv2_gamma95": 2,
     "balance75d25i_reward_policy_woGAE_obs2_gamma95": 2,
@@ -137,6 +181,8 @@ policy_obs_map = {
     "balance00100_reward_policy_obs2_gamma995": 2,
     "balance00100_reward_policy_obs2_gamma9995": 2,
     "balance00100_reward_policy_obs2_gamma99995": 2,
+    "balance5050_reward_policy_obs2": 2,
+    "balance0d100i_smallpenalties_wGAE_gamma9995_obs2": 2,
     "cluster_5050policy_obs2": 2,
     "cluster_7525policy_obs2": 2,
     "cluster_9010policy_obs2": 2,
@@ -149,6 +195,29 @@ policy_obs_map = {
     "downlink_reward_policy": 1,
     "downlink_reward_policy_shorter_imaging": 1,
     "cluster_policy": 1,
+    "imaging_reward_smalldata_smallbat_obs1": 1,
+    "balance0d100i_nopenalties_wGAE_restricted_Resources_obs2": 2,
+    "balance0d100i_nopenalties_wGAE_restricted_Resources_obs2_1754513855": 2,
+    "balance0d100i_nopenalties_wGAE_restricted_Resources_obs2_5e6lr": 2,
+    "balance0d100i_nopenalties_wGAE_unlimitedResources_obs2": 2,
+    "balance0d100i_nopenalties_woGAE_restricted_Resources_obs2": 2,
+    "balance0d100i_nopenalties_woGAE_restricted_Resources_obs2_1754513855": 2,
+    "balance0d100i_nopenalties_woGAE_unlimitedResources_obs2": 2,
+    "balance0d100i_nopenalties_woGAE_unlimitedResources_obs2_1754513855": 2,
+    "balance25d75i_smallpenalties_wGAE_restricted_Resources_obs2": 2,
+    "balance50d50i_smallpenalties_wGAE_restricted_Resources_obs2": 2,
+    "balance75d25i_smallpenalties_wGAE_restricted_Resources_obs2": 2,
+    "balance100d0i_smallpenalties_wGAE_restricted_Resources_obs2": 2,
+    "balance0d100i_smallpenalties_wGAE_restricted_Resources_obs2": 2,
+    "balance0d100i_smallpenalties_wGAE_restricted_Resources_obs2_1754513855": 2,
+    "balance75d25i_smallpenalties_wGAE_restricted_Resources_obs2_5e6lr": 2,
+    "balance0d100i_smallpenalties_woGAE_restricted_Resources_obs2": 2,
+    "balance25d75i_smallpenalties_woGAE_restricted_Resources_obs2": 2,
+    "balance25d75i_smallpenalties_woGAE_restricted_Resources_obs2_1754513855": 2,
+    "balance50d50i_smallpenalties_woGAE_restricted_Resources_obs2": 2,
+    "balance50d50i_smallpenalties_woGAE_restricted_Resources_obs2_1754513855": 2,
+    "balance75d25i_smallpenalties_woGAE_restricted_Resources_obs2": 2,
+    "balance100d0i_smallpenalties_woGAE_restricted_Resources_obs2": 2
 }
 
 # Compare policy_path to known variables
@@ -274,7 +343,7 @@ sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
 # Power
 sat_args["batteryStorageCapacity"] = 500 * 3600  # W*s
-sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.2, 0.4) * 500 * 3600
+sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.3, 0.3) * 500 * 3600
 sat_args["basePowerDraw"] = -10.0  # W
 sat_args["instrumentPowerDraw"] = -30.0  # W
 sat_args["transmitterPowerDraw"] = -25.0  # W
@@ -285,13 +354,13 @@ sat_args["panelArea"] = 1 # m^2
 sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.000, size=3)  # N*m
 sat_args["maxWheelSpeed"] = 6000.0  # RPM
 sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
-sat_args["desatAttitude"] = "nadir"
+sat_args["desatAttitude"] = "sun"
 
 # reward and penalty factors and eclipse thresholds
-sat_args["downlink_bonus"] = 0.75
+sat_args["downlink_bonus"] = 0.0
 sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
-sat_args["full_storage_penalty"] = -1
-sat_args["low_battery_penalty"] = -1
+sat_args["full_storage_penalty"] = 0
+sat_args["low_battery_penalty"] = 0
 sat_args["eclipse_threshold_for_imaging"] = 0.5
 sat_args["eclipse_threshold_for_reward"] = sat_args["eclipse_threshold_for_imaging"]
 
@@ -307,17 +376,50 @@ class MyTargetSatellite(sats.Satellite):
     fsw_type = fsw.BasicTargetFSWModel
 
 def custom_oe_randomizer():
-    rLEO = 7000. * 1000    # Minimum semi-major axis (LEO) in meters
-    rUpperLEO = 1.1 * 7000. * 1000    # max semi-major axis  of upper LEO in meters
+    # rLEO = 7000. * 1000    # Minimum semi-major axis (LEO) in meters
+    # rUpperLEO = 1.1 * 7000. * 1000    # max semi-major axis  of upper LEO in meters
+    # rUpperLEO = 1.2 * 7000. * 1000    # testing weird policy behaviour change
+    # rLEO = 6800. * 1000    # Minimum semi-major axis (LEO) in meters
+    #
+    #
+    # # rGEO = 42164. * 1000   # Maximum semi-major axis (GEO) in meters
+    #
+    #
+    # oe = orbitalMotion.ClassicElements()
+    # # oe.a = np.random.uniform(rLEO*5, rGEO)  # Random semi-major axis between LEO and GEO
+    # oe.a = np.random.uniform(1.00*rLEO, rUpperLEO)  # Random semi-major axis between LEO and GEO
+    #
+    # if oe.a < 2*rLEO:
+    #     oe.e = np.random.uniform(0.0, 0.02)    # Random eccentricity (allowing less elliptical orbits when near LEO)
+    # else:
+    #     oe.e = np.random.uniform(0.0, 0.2)    # Random eccentricity (allowing slightly elliptical orbits)
+    #
+    # #testing
+    # if oe.a < 2*rLEO:
+    #     oe.e = np.random.uniform(0.0, 0.02)    # Random eccentricity (allowing less elliptical orbits when near LEO)
+    #     while oe.a*(1-oe.e) < 6771. * 1000: # perigee must be at least 400 km altitude
+    #         oe.e = np.random.uniform(0.0, 0.02)
+    # else:
+    #     oe.e = np.random.uniform(0.0, 0.2)
+    #
+    # oe.i = np.random.uniform(0, 180) * macros.D2R  # Random inclination up to 180 degrees
+    # oe.Omega = np.random.uniform(0, 360) * macros.D2R  # Random RAAN
+    # oe.omega = np.random.uniform(0, 360) * macros.D2R  # Random argument of perigee
+    # oe.f = np.random.uniform(0, 360) * macros.D2R  # Random true anomaly
+    # # print('randomized orbital elements: oe.a, oe.i, oe.e', oe.a, oe.i, oe.e, 'oe.Omega, oe.omega, oe.f', oe.Omega, oe.omega, oe.f)
+    # return oe
+    rLEO = 6871. * 1000  #7000 * 1000   # Minimum semi-major axis (LEO) in meters
+    rUpperLEO =  8371. * 1000    # max semi-major axis  of upper LEO in meters
     # rGEO = 42164. * 1000   # Maximum semi-major axis (GEO) in meters
-
 
     oe = orbitalMotion.ClassicElements()
     # oe.a = np.random.uniform(rLEO*5, rGEO)  # Random semi-major axis between LEO and GEO
-    oe.a = np.random.uniform(1.05*rLEO, rUpperLEO)  # Random semi-major axis between LEO and GEO
-
+    # oe.a = np.random.uniform(1.05*rLEO, rUpperLEO)  # Random semi-major axis between LEO and GEO
+    oe.a = np.random.uniform(1.00*rLEO, rUpperLEO)  # Random semi-major axis between LEO and GEO
     if oe.a < 2*rLEO:
         oe.e = np.random.uniform(0.0, 0.02)    # Random eccentricity (allowing less elliptical orbits when near LEO)
+        while oe.a*(1-oe.e) < 6771. * 1000: # perigee must be at least 400 km altitude
+            oe.e = np.random.uniform(0.0, 0.02)
     else:
         oe.e = np.random.uniform(0.0, 0.2)    # Random eccentricity (allowing slightly elliptical orbits)
     oe.i = np.random.uniform(0, 180) * macros.D2R  # Random inclination up to 180 degrees
@@ -327,7 +429,10 @@ def custom_oe_randomizer():
     # print('randomized orbital elements: oe.a, oe.i, oe.e', oe.a, oe.i, oe.e, 'oe.Omega, oe.omega, oe.f', oe.Omega, oe.omega, oe.f)
     return oe
 
+
 target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0*900 )
+# target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0/(3600*80))  # testing to see if sim is faster if the other agents are killed
+
 # Make the satellite
 # sat = MyScanningSatellite(name="SS1", sat_args=sat_args, obs_type=dict) # SO1 for satellite observer 1
 sat = MyScanningSatellite(name="SS1", sat_args=sat_args) # SO1 for satellite observer 1
@@ -347,7 +452,7 @@ env = gym.make(
     disable_env_checker=True,
     # max_step_duration=700,
 )
-seed_number=10
+
 observation, info = env.reset(seed=seed_number) #5
 
 # env.simulator.ShowExecutionOrder() # to show execution order
@@ -365,10 +470,8 @@ data_dict = {
 print("Initial data level:", observation, "(randomized by sat_args)")
 
 last_downlink_time = 0 # initialize downlink time
-
-use_shield=False
 critical_storage_level = 0.95 # only task downlink if available storage_fraction is less than 0.05
-critical_battery_level = 0.3 # always task charging if battery is below 0.3
+critical_battery_level = 0.2 # always task charging if battery is below 0.3
 
 # storing the actions taken by the agent
 action_counts = defaultdict(int)
@@ -388,10 +491,13 @@ num_imaged = []
 num_downlinked = []
 charging_times = []
 downlink_times = []
+eclipse_status = []
+desat_times = []
 
 
 SS1_reward=0
-act_random=False
+SS1_reward_over_time = []
+
 for target_id in range(n_targets*6 *100 ):
     simtime = env.simulator.sim_time
     print(f"\n SIMULATION TIME: {simtime} seconds and current reward: {SS1_reward}")
@@ -424,7 +530,7 @@ for target_id in range(n_targets*6 *100 ):
         charging_times.append(env.simulator.sim_time)
     elif policy_action == 12:
         print('tasking DESAT now: at t=',simtime," and wheel_speeds --> "+str(env.satellites[0].dynamics.wheel_speeds_fraction))
-
+        desat_times.append(env.simulator.sim_time)
     if use_shield == True:
         if env.satellites[0].dynamics.storage_level_fraction > critical_storage_level:  # downlink if storage is more than 0.95
         #if simtime - last_downlink_time > 3000:
@@ -436,7 +542,8 @@ for target_id in range(n_targets*6 *100 ):
             print('tasking CHARGING now: at t=',simtime)
             action_dict = {sat.name: 10} # tasking charging
     action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
-    print('current action_dict to be executed', action_dict['SS1'])
+    print('current action_dict to be executed', action_dict['SS1'], "eclipse status of SS1:",env.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.satellites[0].dynamics.eclipse_index].read().shadowFactor)
+    eclipse_status.append(env.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.satellites[0].dynamics.eclipse_index].read().shadowFactor)
     observation, reward, terminated, truncated, info = env.step(action=action_dict)
 
     battery_levels.append(env.satellites[0].dynamics.battery_charge_fraction)
@@ -446,6 +553,7 @@ for target_id in range(n_targets*6 *100 ):
     num_downlinked.append(env.env.rewarder.useful_downlinks)
 
     SS1_reward+=reward['SS1']
+    SS1_reward_over_time.append(SS1_reward)
     print("storage_level", env.satellites[0].dynamics.storage_level)
     print("dynamics.storage_level_fraction", env.satellites[0].dynamics.storage_level_fraction)
     print("dynamics.battery_charge_fraction", env.satellites[0].dynamics.battery_charge_fraction)
@@ -454,7 +562,7 @@ for target_id in range(n_targets*6 *100 ):
 
     # print('truncated list: ', truncated)
     data_dict["sim_time"].append(env.simulator.sim_time)
-    if any(truncated.values()) or any(terminated.values()):
+    if all(truncated.values()) or all(terminated.values()):
         break
 
 print("  Final data level:", observation)
@@ -516,58 +624,79 @@ print(f"Charge actions: {charge_action_count}")
 print(f"Desat actions: {desat_action_count}")
 print("======================================\n")
 
-# Plot 1: Absolute Action Counts
-fig1 = plt.figure(figsize=(10, 5))
-plt.bar(action_labels, counts, color="skyblue")
-plt.title("Action Count Distribution")
-plt.ylabel("Number of Times Action Was Taken")
-plt.xticks(rotation=45)
-plt.grid(True, axis='y', linestyle='--', alpha=0.6)
+# Combined plot 1
+fig, ax1 = plt.subplots(figsize=(10, 5))
+
+# Plot absolute counts on the left y-axis
+bars1 = ax1.bar(action_labels, counts, color="skyblue", label="Action Count")
+ax1.set_ylabel("Number of Times Action Was Taken", color="skyblue")
+ax1.tick_params(axis='y', labelcolor="black")
+ax1.set_xticks(range(len(action_labels)))
+ax1.set_xticklabels(action_labels, rotation=45)
+
+# Create a second y-axis for the percentages
+ax2 = ax1.twinx()
+bars2 = ax2.bar(action_labels, percentages, color="mediumseagreen", alpha=0.000, label="Action Percentage")
+ax2.set_ylabel("Percentage of Total Actions (%)", color="mediumseagreen")
+ax2.tick_params(axis='y', labelcolor="black")
+
+# Grid on primary y-axis only
+ax1.grid(True, axis='y', linestyle='--', alpha=0.6)
+
+# Add a combined legend
+lines1, labels1 = bars1, ["Count"]
+lines2, labels2 = bars2, ["Percentage"]
+# ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right")
+
+plt.title("Action Distribution: Count and Percentage")
 plt.tight_layout()
-save_plot_unique(fig1, f"random{act_random}_seed{seed_number}_{policy_name}_action_count_distribution")
+
+# Save and show
+save_plot_unique(fig, f"random{act_random}_seed{seed_number}_{policy_mode}_{policy_name}_action_distribution_combined")
 plt.show()
 
-# Plot 2: Action Percentages
-fig2 = plt.figure(figsize=(10, 5))
-plt.bar(action_labels, percentages, color="mediumseagreen")
-plt.title("Action Percentage Distribution")
-plt.ylabel("Percentage of Total Actions (%)")
-plt.xticks(rotation=45)
-plt.grid(True, axis='y', linestyle='--', alpha=0.6)
-plt.tight_layout()
-save_plot_unique(fig2, f"random{act_random}_seed{seed_number}_{policy_name}_action_percentage_distribution")
-plt.show()
-
-# Plot 3: metrics over time:
+# Plot 2: metrics over time + cumulative reward
 fig3, ax1 = plt.subplots(figsize=(12, 6))
+
+# Battery & storage on left y-axis
 ax1.plot(sim_times, battery_levels, label='Battery Level', color='tab:blue')
 ax1.plot(sim_times, storage_levels, label='Storage Level', color='tab:orange')
 ax1.set_xlabel("Simulation Time (s)")
-ax1.set_ylabel("Battery and Storage Fraction")
+ax1.set_ylabel("Battery and Storage Fraction", color='black')
 ax1.set_ylim(0, 1.05)
-ax1.legend(loc='upper left')
+ax1.tick_params(axis='y', labelcolor='black')
 ax1.grid(True, linestyle='--', alpha=0.5)
 
+# Mark charging and downlink events
 for t in charging_times:
     ax1.axvline(t, color='deepskyblue', linestyle='--', linewidth=0.8, alpha=0.85, label='Charge' if t == charging_times[0] else "")
 for t in downlink_times:
     ax1.axvline(t, color='magenta', linestyle='--', linewidth=0.8, alpha=0.6, label='Downlink' if t == downlink_times[0] else "")
 
+# Create second y-axis for cumulative reward and target counts
 ax2 = ax1.twinx()
 ax2.plot(sim_times, num_imaged, label='Cumulative Imaged Targets', color='tab:green')
 ax2.plot(sim_times, num_downlinked, label='Cumulative Downlinked Targets', color='tab:red')
-ax2.set_ylabel("Cumulative Count")
+ax2.plot(sim_times, SS1_reward_over_time, label='Cumulative SS1 Reward', color='tab:purple')
+ax2.set_ylabel("Cumulative Count / Reward", color='black')
+ax2.tick_params(axis='y', labelcolor='black')
 
-lines, labels = ax1.get_legend_handles_labels()
+# Align both y-axes at 0
+ax2.set_ylim(bottom=0)
+ax1.set_ylim(bottom=0)
+
+# Combine legends
+lines1, labels1 = ax1.get_legend_handles_labels()
 lines2, labels2 = ax2.get_legend_handles_labels()
-ax1.legend(lines + lines2, labels + labels2, loc='upper left')
+ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
 
-plt.title("Battery, Storage, Imaging and Action Events Over Time")
+plt.title("Battery, Storage, Reward, Imaging and Action Events Over Time")
 plt.tight_layout()
-save_plot_unique(fig3, f"random{act_random}_seed{seed_number}_{policy_name}_battery_storage_imaging_over_time")
+save_plot_unique(fig3, f"random{act_random}_seed{seed_number}_{policy_mode}_{policy_name}_battery_storage_reward_over_time")
 plt.show()
 
-# Plot 4 Azimuth and Elevation angle (deg) vs time
+
+# Plot 3 Azimuth and Elevation angle (deg) vs time
 # Convert time from seconds to minutes
 imaging_times_min = np.array(SS1_actions_spec.imaging_times) / 60.0
 azimuths = np.array(SS1_actions_spec.chosen_target_azimuth)
@@ -593,10 +722,36 @@ lines2, labels2 = ax2.get_legend_handles_labels()
 plt.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
 
 plt.tight_layout()
-save_plot_unique(fig4, f"random{act_random}_seed{seed_number}_{policy_name}_azimuth_and_elevation_pointing_over_time")
+save_plot_unique(fig4, f"random{act_random}_seed{seed_number}_{policy_mode}_{policy_name}_azimuth_and_elevation_pointing_over_time")
 plt.show()
+SS1_actions_spec = env.satellites[0].action_builder.action_spec[0]
 
+fields = [
+    "chosen_target_azimuth",
+    "chosen_target_elevation_angle",
+    "chosen_target_elevation_local",
+    "chosen_target_distance",
+    "initial_angular_error",
+    "chosen_target_priority",
+    "chosen_target_illumination_status",
+]
 
+n_parts = 3
+
+for field in fields:
+    data = np.array(getattr(SS1_actions_spec, field))  # Convert to NumPy array
+    total_len = len(data)
+    indices = np.array_split(np.arange(total_len), n_parts)
+
+    print(f"\n--- {field} ---")
+    for i, idx in enumerate(indices):
+        segment = data[idx]
+        if field == "chosen_target_illumination_status":
+            print(f"  Segment {i+1}/{n_parts}: illuminated fraction = {np.mean(segment):.3f}")
+        else:
+            mean_val = np.mean(segment)
+            std_val = np.std(segment)
+            print(f"  Segment {i+1}/{n_parts}: mean = {mean_val:.2f}, std = {std_val:.2f}")
 
 if save_data:
     data_dir = "data"
@@ -615,3 +770,94 @@ else:
 end_time = time.time()
 elapsed_time = end_time - start_time
 print(f"Code execution time: {elapsed_time:.4f} seconds")
+
+data = {}
+data["cumulativeRewardSS1"]=env.rewarder.cum_reward['SS1']
+data["illuminated_images"] = len(env.rewarder.imaged_illuminated)
+# data["Total Images Downlinked"] = env.satellites[0].dynamics.total_downlinks
+# data["Useful Images Downlinked"] = env.satellites[0].dynamics.useful_downlinks
+
+SS1_actions_spec = env.satellites[0].action_builder.action_spec[0]
+# Target azimuth
+if hasattr(SS1_actions_spec, "chosen_target_azimuth") and SS1_actions_spec.chosen_target_azimuth:
+    data["mean_target_azimuth"] = np.mean(SS1_actions_spec.chosen_target_azimuth)
+    data["std_target_azimuth"] = np.std(SS1_actions_spec.chosen_target_azimuth)
+
+
+# Target elevation (inertial)
+if hasattr(SS1_actions_spec, "chosen_target_elevation") and SS1_actions_spec.chosen_target_elevation:
+    data["mean_target_elevation"] = np.mean(SS1_actions_spec.chosen_target_elevation)
+    data["std_target_elevation"] = np.std(SS1_actions_spec.chosen_target_elevation)
+else:
+    data["mean_target_elevation"] = -1
+    data["std_target_elevation"] = -1
+
+# Relative position in H-frame
+if hasattr(SS1_actions_spec, "chosen_target_rel_pos_H") and SS1_actions_spec.chosen_target_rel_pos_H:
+    mean_rel_pos = np.mean(SS1_actions_spec.chosen_target_rel_pos_H, axis=0)
+    std_rel_pos = np.std(SS1_actions_spec.chosen_target_rel_pos_H, axis=0)
+    for i, axis in enumerate(['x', 'y', 'z']):
+        data[f"mean_rel_pos_H_{axis}"] = mean_rel_pos[i]
+        data[f"std_rel_pos_H_{axis}"] = std_rel_pos[i]
+else:
+    for axis in ['x', 'y', 'z']:
+        data[f"mean_rel_pos_H_{axis}"] = -1
+        data[f"std_rel_pos_H_{axis}"] = -1
+
+# Target elevation (local)
+if hasattr(SS1_actions_spec, "chosen_target_elevation_local") and SS1_actions_spec.chosen_target_elevation_local:
+    data["mean_target_elevation_local"] = np.mean(SS1_actions_spec.chosen_target_elevation_local)
+    data["std_target_elevation_local"] = np.std(SS1_actions_spec.chosen_target_elevation_local)
+else:
+    data["mean_target_elevation_local"] = -1
+    data["std_target_elevation_local"] = -1
+
+# Initial angular error
+if hasattr(SS1_actions_spec, "initial_angular_error") and SS1_actions_spec.initial_angular_error:
+    data["mean_initial_ang_error"] = np.mean(SS1_actions_spec.initial_angular_error)
+    data["std_initial_ang_error"] = np.std(SS1_actions_spec.initial_angular_error)
+else:
+    data["mean_initial_ang_error"] = -1
+    data["std_initial_ang_error"] = -1
+
+# Target distance
+if hasattr(SS1_actions_spec, "chosen_target_distance") and SS1_actions_spec.chosen_target_distance:
+    data["mean_target_distance"] = np.mean(SS1_actions_spec.chosen_target_distance)
+    data["std_target_distance"] = np.std(SS1_actions_spec.chosen_target_distance)
+else:
+    data["mean_target_distance"] = -1
+    data["std_target_distance"] = -1
+
+# Illumination status
+if hasattr(SS1_actions_spec, "chosen_target_illumination_status") and SS1_actions_spec.chosen_target_illumination_status:
+    data["mean_target_illumination_status"] = np.mean(SS1_actions_spec.chosen_target_illumination_status)
+    well_illuminated=0
+    not_illuminated=0
+    for ill in SS1_actions_spec.chosen_target_illumination_status:
+        if ill > 0.5:
+            well_illuminated+=1
+        else:
+            not_illuminated+=1
+    data["num_target_above_illumination_threshold"] = well_illuminated
+    data["num_target_below_illumination_threshold"] = not_illuminated
+else:
+    data["mean_target_illumination_status"] = -1
+
+# Target priority
+if hasattr(SS1_actions_spec, "chosen_target_priority") and SS1_actions_spec.chosen_target_priority:
+    data["mean_target_priority"] = np.mean(SS1_actions_spec.chosen_target_priority)
+    data["std_target_priority"] = np.std(SS1_actions_spec.chosen_target_priority)
+else:
+    data["mean_target_priority"] = -1
+    data["std_target_priority"] = -1
+
+# Ever visible flags
+if hasattr(SS1_actions_spec, "ever_visible") and SS1_actions_spec.ever_visible:
+    data["target_ever_visible_fraction"] = len(SS1_actions_spec.ever_visible) / n_targets
+else:
+    data["target_ever_visible_fraction"] = -1
+
+print("ALL DATA: ", data)
+print(f"good images #:{len(env.rewarder.imaged_illuminated)} out of {target_imaging_count}")
+print(f"imaging success percentage {len(env.rewarder.imaged_illuminated)/target_imaging_count*100}%")
+

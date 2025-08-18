@@ -488,10 +488,12 @@ sat_args["downlink_bonus"] = 0.0
 sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
 sat_args["full_storage_penalty"] = 0
 sat_args["low_battery_penalty"] = 0
+sat_args["eclipsedImagePenalty"] = -1/3.
 sat_args["eclipse_threshold_for_imaging"] = 0.5
 sat_args["eclipse_threshold_for_reward"] = sat_args["eclipse_threshold_for_imaging"]
 sat_args["use_heuristic"] = use_heuristic
 sat_args["heuristic_mode"] = heuristic_mode
+
 if just_imaging:
     sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 *1000000
     sat_args["batteryStorageCapacity"] = 500 * 3600 *1000000
