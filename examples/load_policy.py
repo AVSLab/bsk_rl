@@ -11,7 +11,7 @@ import os
 
 # --- FLAG TO QUICKLY CHANGE ---
 # Set to 'latest', 'smallest', or 'best' to control which policy is loaded.
-CHECKPOINT_SELECTION_MODE = 'latest'
+CHECKPOINT_SELECTION_MODE = 'best'
 
 def find_latest_checkpoint(checkpoint_path_dir: Path, mode: str = 'latest') -> Path:
     """
@@ -38,12 +38,6 @@ def find_latest_checkpoint(checkpoint_path_dir: Path, mode: str = 'latest') -> P
     if not all_checkpoints:
         raise ValueError(f"No checkpoint directories found in {checkpoint_path_dir}")
 
-    # Handle 'best' mode first
-    if mode == 'best':
-        for path in all_checkpoints:
-            if os.path.basename(path) == 'checkpoint_best':
-                return Path(path)
-        raise ValueError(f"Mode was 'best' but 'checkpoint_best' not found in {checkpoint_path_dir}")
 
     # For 'latest' or 'smallest', parse only the numeric checkpoints
     numeric_checkpoints = []
@@ -63,6 +57,16 @@ def find_latest_checkpoint(checkpoint_path_dir: Path, mode: str = 'latest') -> P
     # Sort checkpoints by their number
     numeric_checkpoints.sort(key=lambda item: item[0])
 
+    # Handle 'best' mode first
+    if mode == 'best':
+        for path in all_checkpoints:
+            if os.path.basename(path) == 'checkpoint_best':
+                return Path(path)
+        print("'best' didn't exist... choosing smallest (renamed from best)")
+        return Path(numeric_checkpoints[0][1])
+        # raise ValueError(f"Mode was 'best' but 'checkpoint_best' not found in {checkpoint_path_dir}")
+
+
     # Return the correct path based on the mode
     if mode == 'smallest':
         selected_path = numeric_checkpoints[0][1]
@@ -72,7 +76,7 @@ def find_latest_checkpoint(checkpoint_path_dir: Path, mode: str = 'latest') -> P
     return Path(selected_path)
 
 
-def load_policy(policy_path_general: Path) -> Callable:
+def load_policy(policy_path_general: Path, policy_mode) -> Callable:
     """Load a PyTorch policy from a saved model.
 
     Args:
@@ -81,8 +85,8 @@ def load_policy(policy_path_general: Path) -> Callable:
         A function that takes observations and returns actions.
     """
     # The selection mode is passed here from the global flag
-    path_checkpoint = find_latest_checkpoint(policy_path_general, mode=CHECKPOINT_SELECTION_MODE)
-    print(f"✅ Loading policy from '{CHECKPOINT_SELECTION_MODE}' checkpoint: {path_checkpoint}")
+    path_checkpoint = find_latest_checkpoint(policy_path_general, mode=policy_mode)
+    print(f"✅ Loading policy from '{policy_mode}' checkpoint: {path_checkpoint}")
 
     rl_module = RLModule.from_checkpoint(
         path_checkpoint / "learner_group" / "learner" / "rl_module" / "inspector",

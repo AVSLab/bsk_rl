@@ -50,12 +50,12 @@ def save_plot_unique(fig, base_filename, folder="plots", extension=".pdf"):
     print(f"Plot saved to {full_path}")
 
 class Policy:
-    def __init__(self, policy_path, zero_element=None) -> None:
+    def __init__(self, policy_path, policy_mode,zero_element=None) -> None:
         self.zero_element = zero_element
         self.policy_function = None
         if policy_path is not None:
             # self.policy_function = load_torch_mlp_policy(policy_path, env_args)
-            self.policy_function = load_policy(policy_path)
+            self.policy_function = load_policy(policy_path,policy_mode=policy_mode)
 
     def act(self, observation):
         if self.zero_element is not None:
@@ -159,7 +159,21 @@ for name, val in list(globals().items()):
         break
 
 # Load policy
-policy = Policy(policy_path)
+# load_best=False
+# load_smallest=False
+# if load_best:
+#     policy = Policy(policy_path,policy_mode ='best')
+# elif load_smallest:
+#     policy = Policy(policy_path,policy_mode ='smallest')
+# else:
+#     policy = Policy(policy_path,policy_mode ='latest')
+policy_mode='latest'
+if policy_mode =='best':
+    policy = Policy(policy_path,policy_mode ='best')
+elif policy_mode =='smallest':
+    policy = Policy(policy_path,policy_mode ='smallest')
+else:
+    policy = Policy(policy_path,policy_mode ='latest')
 
 
 class MyScanningSatellite(sats.AccessSatellite):
