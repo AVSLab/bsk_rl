@@ -8,8 +8,8 @@ from typing import Any
 import numpy as np
 import torch
 
-torch.set_num_threads(1)
-os.environ["MKL_NUM_THREADS"] = "11"
+torch.set_num_threads(3)
+os.environ["MKL_NUM_THREADS"] = "3" # 11 on the cluster
 
 import ray
 from bsk_rl.utils.utils import get_available_cores
@@ -103,7 +103,7 @@ def train_model(
                     "inspector": RLModuleSpec(
                         model_config_dict={
                             "use_lstm": False,
-                            "fcnet_hiddens": [1024, 1024], #[2048, 2048],
+                            "fcnet_hiddens": [2048, 2048], #[2048, 2048], also tested [1024,1024] and it was pretty much the same
                             "vf_share_layers": False,
                         },
                     ),
@@ -375,6 +375,7 @@ if __name__ == "__main__":
             obs.SatProperties(
                 dict(prop="storage_level_fraction"),
                 dict(prop="battery_charge_fraction"),
+                dict(prop="wheel_speeds_fraction")
             ),
 
             #observation space 1
@@ -388,12 +389,12 @@ if __name__ == "__main__":
             #     n_ahead_observe=n_targets_ahead,
             #                                ),
 
-            #observation space 21
+            #observation space 2
             obs.PolarisScTargetProperties(
-                dict(prop="target_elevation_angle", norm=1.0),
-                dict(prop="rel_pos_vector_r_BR_H", norm = 1596*1000),
-                dict(prop="angle_to_target", norm=1.0),
-                dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
+                dict(prop="target_elevation_angle", norm=90.0),
+                dict(prop="rel_pos_vector_r_BR_H", norm = 15960*1000),
+                dict(prop="angle_to_target", norm=90.0),
+                dict(prop="target_distance", norm = 15960*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
                 dict(prop="target_shadowFactor", norm=1.0),
                 n_ahead_observe=n_targets_ahead,
                                            ),
@@ -402,7 +403,7 @@ if __name__ == "__main__":
                 dict(prop="opportunity_open", norm = 5700.0),
                 dict(prop="opportunity_close", norm = 5700.0),
                 type="ground_station",
-                n_ahead_observe=1,
+                n_ahead_observe=2,
             )
         ]
         action_spec = [
@@ -427,7 +428,7 @@ if __name__ == "__main__":
 
     # Power
     sat_args["batteryStorageCapacity"] = 500 * 3600 # *1000000 # W*s
-    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.2, 0.5) * 500 * 3600 #*1000000
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.15, 0.5) * 500 * 3600 #*1000000
     sat_args["basePowerDraw"] = -10.0  # W
     sat_args["instrumentPowerDraw"] = -30.0  # W
     sat_args["transmitterPowerDraw"] = -25.0  # W
@@ -443,12 +444,12 @@ if __name__ == "__main__":
     sat_args["desatAttitude"] = "sun" # 'nadir' and 'sun' is the other option
 
     # reward bonuses and eclipse thresholds
-    sat_args["downlink_bonus"] = 1.0
+    sat_args["downlink_bonus"] = 0.0
     sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
     sat_args["eclipse_threshold_for_imaging"] = 0.5 # to include both shadowed and illuminated RSOs
     sat_args["eclipse_threshold_for_reward"] = 0.5 # can be the same as sat_args["eclipse_threshold_for_imaging"] if set to a positive number between 0 and 1
-    sat_args["full_storage_penalty"] = -1
-    sat_args["low_battery_penalty"] = -1
+    # sat_args["full_storage_penalty"] = -1
+    # sat_args["low_battery_penalty"] = -1
 
     class MyTargetSatellite(sats.Satellite):
         observation_spec = [
@@ -510,7 +511,7 @@ if __name__ == "__main__":
             num_sgd_iter=[10],
             lambda_=[0.95],
             use_kl_loss=[False],
-            clip_param=[0.15],
+            clip_param=[0.1],
             grad_clip=[1.0],
             entropy_coeff=[0.0],
         ),
