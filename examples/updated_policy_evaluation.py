@@ -8,12 +8,14 @@ import os
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-
+size=1
+label_size = 12
+tick_label_size = 12
 AMOS_FONTS = dict(
-    title=14,   # figure/axes titles
-    label=14,   # x/y label font size
-    tick=12,    # tick label size
-    legend=12,  # legend font size
+    title=14*size,   # figure/axes titles
+    label=14*size,   # x/y label font size
+    tick=12*size,    # tick label size
+    legend=12*size,  # legend font size
 )
 
 matplotlib.rcParams.update({
@@ -87,12 +89,12 @@ class Policy:
 n_targets = 100
 n_targets_ahead = 10
 imaging_duration = 300
-total_time = n_targets * 450  # 2100 # 5700.0  # approximately 1 orbit
+total_time = n_targets * imaging_duration * 1.5   # 5700.0  # approximately 1 orbit
 seed_number = 19
 policy_mode = 'latest'
 eclipse_norm = 5700
 save_data = False #set to False to avoid saving data
-use_shield = True
+use_shield = False
 act_random = False
 use_heuristic = False
 heuristic_mode = "angle" #not used unless use_heuristic is True
@@ -114,6 +116,9 @@ downlink_reward_policy = "/Users/dahu1128/rllib_results/reward_comparison/lowBau
 downlink_reward_policy_shorter_imaging ="/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_shorter_imaging_5e-6lr_downlink_reward_penalties_smallest_storage_0"
 # imaging_reward_policy = ""
 
+# August 18th
+wGAE_imaging_reward_obsv21_1e_3lr = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug18_restrictedResources_obsv21_1e-3lr_0.1cp_gamma9995_100d0i_1755540587.565471/aug18_restrictedResources_obsv21_1e-3lr_0.1cp_gamma9995_100d0i.out_0"
+wGAE_150batch_1e_6lr_15cp_gamma9997_100d0i = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug18_wGAE_150batch_halfnetwork_-1penalties_smallerICbattery_restrictedResources_obsv6_1e-6lr_0.15cp_gamma9997_100d0i_1755498452.2236679/aug18_wGAE_150batch_halfnetwork_-1penalties_smallerICbattery_restrictedResources_obsv6_1e-6lr_0.15cp_gamma9997_100d0i.out_0"
 # August 15th
 wGAE_justImaging_gamma9999_Episodebatch_obs5 = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug15_wGAE_imaging_baseline_verysmallclip_episodebatch_halfnetwork_obsv5_1e-6lr_0.005cp_gamma9999_0d100imodel_1755324328.4317691/aug15_wGAE_imaging_baseline_verysmallclip_episodebatch_halfnetwork_obsv5_1e-6lr_0.005cp_gamma9999_0d100i.out_0"
 # wGAE_justImaging_gamma9999_Episodebatch_obs5 = "/Users/dahu1128/rllib_results/aug15_wGAE_imaging_baseline_verysmallclip_episodebatch_halfnetwork_obsv5_1e-6lr_0.005cp_gamma9999_0d100imodel_1755324328.4317691/aug15_wGAE_imaging_baseline_verysmallclip_episodebatch_halfnetwork_obsv5_1e-6lr_0.005cp_gamma9999_0d100i.out_0"
@@ -193,7 +198,7 @@ cluster_6040policy_obs11 = "/Users/dahu1128/rllib_results/july_results/july10rll
 # July 5th
 cluster_5050policy_5e6lr_obs11 = "/Users/dahu1128/rllib_results/july_results/july5rllib_results/july5_5e-6lr_0005torque_50d50i_reward_new_penalties_smallest_storage_Polaris_simulation_1751892467.767332/5e-6lr_0005torque_50d50i_reward_new_penalties_smallest_storage_0"
 cluster_5050policy_5e5lr_obs11 ="/Users/dahu1128/rllib_results/july_results/july5rllib_results/july5_5e-5lr_0005torque_50d50i_reward_new_penalties_smallest_storage_Polaris_simulation_1751887414.367687/5e-5lr_0005torque_50d50i_reward_new_penalties_smallest_storage_0"
-
+cluster_5050policy_1e5lr_obs11 = "/Users/dahu1128/rllib_results/reward_comparison/july5rllib_results/july5_1e-5lr_0005torque_50d50i_reward_new_penalties_smallest_storage_Polaris_simulation_1751885868.6929862/1e-5lr_0005torque_50d50i_reward_new_penalties_smallest_storage_0"
 # June 28th
 cluster_1000_policy_v1_obs1 = "/Users/dahu1128/rllib_results/june_results/june29rllib_results/june29_lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1751349196.029947/lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_0"
 cluster_1000_policy_v2_obs1 = "/Users/dahu1128/rllib_results/june_results/june29rllib_results/june29_lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1751336442.6073096/lowBaudRate_1e-5lr_0005torque_downlink_reward_new_penalties_smallest_storage_0"
@@ -205,10 +210,12 @@ cluster_1000_policy_v2_obs1_wGAE ="/Users/dahu1128/rllib_results/june_results/ju
 imaging_reward_smalldata_smallbat_obs1 = "/Users/dahu1128/rllib_results/reward_comparison/1e-6lr_failure_penalties_no_torque_small_battery_small_data_Polaris_sim_1749226596.4501252/model_0"
 imaging_unlimitedResources_baseline = "/Users/dahu1128/rllib_results/reward_comparison/100targets_10ahead_Polaris_simulation_1746754281.876747/model_0"
 
-policy_path = wGAE_balance0d100i_largepenalties_smallbatch_obs2
+policy_path = cluster_5050policy_5e5lr_obs11
 
 # Define all known policy paths with associated obs values
 policy_obs_map = {
+    "wGAE_150batch_1e_6lr_15cp_gamma9997_100d0i": 4,
+    "wGAE_imaging_reward_obsv21_1e_3lr": 6,
     "wGAE_justImaging_gamma9999_Episodebatch_obs5": 5,
     "wGAE_balance0d100i_gamma99993_2penalties_Episodebatch_obs4": 4,
     "wGAE_balance0d100i_gamma9999_5downlink10batterypenalties_Largebatch_obs21": 2.1,
@@ -285,6 +292,19 @@ elif policy_mode =='smallest':
 else:
     policy = Policy(policy_path,policy_mode ='latest')
 
+if obs_v==1:
+    GS_START = 87
+elif obs_v==1.1:
+    GS_START = 97
+elif obs_v==2:
+    GS_START = 77
+elif obs_v==2.1:
+    GS_START = 77
+elif obs_v==4:
+    N_GS = 1
+    GS_START = 74
+elif obs_v==0:
+    GS_START =74
 
 class MyScanningSatellite(sats.AccessSatellite):
     if obs_v==1:
@@ -311,6 +331,7 @@ class MyScanningSatellite(sats.AccessSatellite):
                 n_ahead_observe=5,
             )
         ]
+        GS_START = 87
     elif obs_v==1.1:
         observation_spec = [
             obs.SatProperties(
@@ -328,7 +349,7 @@ class MyScanningSatellite(sats.AccessSatellite):
                 dict(prop="target_shadowFactor", norm=1.0),
                 n_ahead_observe=n_targets_ahead,
                                            ),
-            obs.Eclipse(norm=eclipse_norm),
+            obs.Eclipse(norm=5700),
             obs.OpportunityProperties(
                 dict(prop="opportunity_open", norm = 5700.0),
                 dict(prop="opportunity_close", norm = 5700.0),
@@ -336,6 +357,7 @@ class MyScanningSatellite(sats.AccessSatellite):
                 n_ahead_observe=5,
             )
         ]
+        GS_START = 97
     elif obs_v==2:
         observation_spec = [
             obs.SatProperties(
@@ -374,7 +396,7 @@ class MyScanningSatellite(sats.AccessSatellite):
                 dict(prop="target_shadowFactor", norm=1.0),
                 n_ahead_observe=n_targets_ahead,
                                            ),
-            obs.Eclipse(norm=5700),    #update_train_Polaris locally was not normallized for eclipse...
+            obs.Eclipse(norm=5700),    #update_train_Polaris locally was not normalized for eclipse...
             obs.OpportunityProperties(
                 dict(prop="opportunity_open", norm = 5700.0),
                 dict(prop="opportunity_close", norm = 5700.0),
@@ -415,9 +437,10 @@ class MyScanningSatellite(sats.AccessSatellite):
             act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
             act.Charge(duration=300.0),  # Charge for 5 minutes
             act.Downlink(duration=300.0), # Downlink for 3 min
-            # act.Desat(duration=150), # Desat for 2.5 min
-
+            act.Desat(duration=150), # Desat for 2.5 min.  # FOR OBS4 this DESAT may need to be removed!
         ]
+        N_GS = 1
+        GS_START = 74
     if obs_v==0:
         observation_spec = [
             obs.SatProperties(
@@ -438,6 +461,7 @@ class MyScanningSatellite(sats.AccessSatellite):
             act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
             act.Charge(duration=300.0),  # Charge for 5 minutes
             ]
+        GS_START =74
     if obs_v==5:
         observation_spec = [
             obs.PolarisScTargetProperties(
@@ -452,6 +476,37 @@ class MyScanningSatellite(sats.AccessSatellite):
         action_spec = [
             act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
             ]
+    if obs_v==6:
+        observation_spec = [
+            obs.SatProperties(
+                dict(prop="storage_level_fraction"),
+                dict(prop="battery_charge_fraction"),
+                dict(prop="wheel_speeds_fraction"),
+
+                ),
+            obs.PolarisScTargetProperties(
+                dict(prop="target_elevation_angle", norm=1.0),
+                dict(prop="rel_pos_vector_r_BR_H", norm = 1596*1000),
+                dict(prop="angle_to_target", norm=1.0),
+                dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
+                dict(prop="target_shadowFactor", norm=1.0),
+                n_ahead_observe=n_targets_ahead,
+                                           ),
+            obs.Eclipse(norm=5700),
+            obs.OpportunityProperties(
+                dict(prop="opportunity_open", norm = 5700.0),
+                dict(prop="opportunity_close", norm = 5700.0),
+                type="ground_station",
+                n_ahead_observe=1,
+            )
+        ]
+        action_spec = [
+            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
+            act.Charge(duration=300.0),  # Charge for 5 minutes
+            act.Downlink(duration=300.0), # Downlink for 3 min
+            act.Desat(duration=150), # Desat for 2.5 min.  # FOR OBS4 this DESAT may need to be removed!
+
+        ]
     dyn_type = dyn.ImagingSCDynModel
     fsw_type = fsw.ImagingSCFSWModel
 
@@ -546,7 +601,7 @@ env = gym.make(
     rewarder=data.RSOTargetImageReward(),
     world_type=world.GroundStationWorldModel,
     time_limit=total_time,
-    log_level="ERROR", #ERROR or DEBUG
+    log_level="DEBUG", #ERROR or DEBUG
     disable_env_checker=True,
     # max_step_duration=700,
 )
@@ -923,9 +978,10 @@ for (t0, t1) in _all_gs_spans:
 # Battery & storage on left y-axis
 ax1.plot(sim_times, battery_levels,linewidth=1.4, label='Battery Level', color='tab:blue')
 ax1.plot(sim_times, storage_levels, linewidth=1.4, label='Storage Level', color='tab:orange')
-ax1.set_xlabel("Time [sec]")
-ax1.set_ylabel("Battery and Storage Fraction", color='black')
-ax1.tick_params(axis='y', labelcolor='black')
+ax1.set_xlabel("Time [sec]" , fontsize = label_size)
+ax1.set_ylabel("Battery and Storage Fraction", color='black', fontsize = label_size)
+ax1.tick_params(axis='y', labelcolor='black', labelsize = tick_label_size)
+ax1.tick_params(axis='x', labelcolor='black', labelsize = tick_label_size)
 ax1.grid(True, linestyle='-.', alpha=0.4)
 
 # X-limit at 45,000 s
@@ -947,14 +1003,14 @@ ax2.plot(sim_times, num_imaged, label='Cumulative Imaged Targets', color='tab:gr
 
 # Mark DESAT events
 if desat_times:
-    ax1.axvline(desat_times[0], color='crimson', linestyle='--', linewidth=1.2, alpha=0.85, label='Desat')
+    ax1.axvline(desat_times[0], color='crimson', linestyle='--', linewidth=0.8, alpha=0.85, label='Desat')
     for t in desat_times[1:]:
-        ax1.axvline(t, color='crimson', linestyle='--', linewidth=1.2, alpha=0.85)
+        ax1.axvline(t, color='crimson', linestyle='--', linewidth=0.8, alpha=0.85)
 
 ax2.plot(sim_times, num_downlinked, label='Cumulative Downlinked Targets', color='tab:red')
 # ax2.plot(sim_times, SS1_reward_over_time, label='Cumulative SS1 Reward', linestyle=':', linewidth=3.0, color='tab:purple')
-ax2.set_ylabel("Cumulative Count", color='black')
-ax2.tick_params(axis='y', labelcolor='black')
+ax2.set_ylabel("Cumulative Count", color='black', fontsize = label_size)
+ax2.tick_params(axis='y', labelcolor='black', labelsize = tick_label_size)
 
 # Align both y-axes at 0 and 1.0/100 respectively
 ax1.set_ylim(top=1.0, bottom=0.0)
@@ -970,7 +1026,7 @@ plt.tight_layout()
 if use_shield:
     save_plot_unique(fig3, f"seed{seed_number}_{policy_mode}_{policy_name}+SHIELD_battery_storage_reward_over_time")
 else:
-    save_plot_unique(fig3, f"eed{seed_number}_{policy_mode}_{policy_name}_battery_storage_reward_over_time")
+    save_plot_unique(fig3, f"seed{seed_number}_{policy_mode}_{policy_name}_battery_storage_reward_over_time")
 plt.show()
 
 
@@ -1012,20 +1068,18 @@ for (t0, t1) in _all_gs_spans:
 
 # Azimuth/Elevation
 color1 = 'tab:blue'
-ax1.set_xlabel('Time [sec]')
-ax1.set_ylabel('Azimuth [deg]', color=color1)
+ax1.set_xlabel('Time [sec]', fontsize = label_size)
+ax1.set_ylabel('Azimuth [deg]', color=color1, fontsize = label_size)
 ax1.plot(imaging_times, azimuths, 'o-', color=color1, label='Azimuth')
-ax1.tick_params(axis='y', labelcolor=color1)
+ax1.tick_params(axis='y', labelcolor=color1, labelsize = tick_label_size)
 ax1.grid(True, linestyle='-.', color='0.65')
-
-# X-limit at 45,000 s equivalent
+ax1.tick_params(axis='x', labelcolor='black', labelsize = tick_label_size)
 ax1.set_xlim(0, np.max(sim_times)/minute)
-
 ax2 = ax1.twinx()
 color2 = 'tab:green'
-ax2.set_ylabel('Elevation [deg]', color=color2)
+ax2.set_ylabel('Elevation [deg]', color=color2 , fontsize = label_size)
 ax2.plot(imaging_times, elevations, 'x--', color=color2, label='Elevation')
-ax2.tick_params(axis='y', labelcolor=color2)
+ax2.tick_params(axis='y', labelcolor=color2, labelsize = tick_label_size)
 
 
 plt.title('Pointing Directions During Episode')

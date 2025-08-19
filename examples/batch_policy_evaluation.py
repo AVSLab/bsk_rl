@@ -48,22 +48,23 @@ except Exception as _e:
 
 # ---------- USER CONFIG ----------
 # POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/july_results/july30rllib_results")  # <-- set to folder containing your aug1* policies
-# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug1rllib_results")  # <-- set to folder containing your aug1* policies
-POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/locally_trained")  # <-- set to folder containing your aug1* policies
+POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug1rllib_results")  # <-- set to folder containing your aug1* policies
+# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/locally_trained")  # <-- set to folder containing your aug1* policies
 # POLICY_FOLDER = Path("/Users/dahu1128/rllib_results")  # <-- set to folder containing your aug1* policies
 # FILTER_SUBSTRING = "aug13_wGAE_smallbatch"   # only load policies that contain this substring; set to "" to load all
 # FILTER_SUBSTRING = "aug15_wGAE_imaging_baseline"
-FILTER_SUBSTRING = "aug3_unlimitedResources"
+# FILTER_SUBSTRING = "aug3_unlimitedResources"
 # FILTER_SUBSTRING = "aug5_unlimitedResources"
 # FILTER_SUBSTRING = "aug1_nopenalties_woGAE_unlimitedResources"
 # FILTER_SUBSTRING = "aug1_nopenalties_wGAE_unlimitedResources_obsv2"
+FILTER_SUBSTRING = "aug1_nopenalties_wGAE_restricted_Resources_obsv2"
 
 
 POLICY_MATCH_SUFFIX = ".out_0"  # typical suffix in your screenshot; adjust if different
 N_RUNS = 10   # number of independent trials per policy (set X here)
-use_shield = False
-just_imaging = True
-POLICY_LOAD_MODE = "best"  # 'latest'|'best'|'smallest'
+use_shield = True
+just_imaging = False
+POLICY_LOAD_MODE = "latest"  # 'latest'|'best'|'smallest'
 SAVE_DIR = Path("batch_results")
 SAVE_DIR.mkdir(exist_ok=True)
 SEED_START = 180  # base seed; subsequent runs use seed+run_idx
