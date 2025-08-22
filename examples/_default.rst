@@ -38,4 +38,5 @@ Training
    time_discounted_gae
    async_multiagent_training
    curriculum_learning
+   training_with_shield
 
