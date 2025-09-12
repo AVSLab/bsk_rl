@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: pandoc/actions/setup@main
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/install-bsk-rl
+      - uses: ./.github/actions/build
         with:
           python-version: 3.11
           pip-options: all,rllib,docs
