@@ -4,13 +4,12 @@ on:
   push:
     branches:
       - develop
-  
+
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-    contents: write
-    pages: write
-    id-token: write
-  
+  contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: ${{ github.workflow }}
@@ -36,5 +35,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/build/html
           force_orphan: true
-  
-

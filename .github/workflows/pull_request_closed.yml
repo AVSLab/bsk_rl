@@ -1,30 +1,29 @@
 name: "Pull Request Closed"
 
 on:
-    pull_request:
-        types:
-            - closed
-        branches:
-            - develop
-    workflow_dispatch:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - develop
+  workflow_dispatch:
 
 jobs:
-    if_merged:
-        if: github.event.pull_request.merged == true
-        runs-on: ubuntu-latest
-        steps:
-        - name: Pull repo
-          uses: actions/checkout@v4
-          with:
-            ref: develop
-            fetch-depth: 0
-            token: ${{ secrets.BOT_ACCESS_TOKEN }}
-        - name: Bump version
-          run: ./.github/workflows/version_bumper.sh ./pyproject.toml
-        - name: Commit and push
-          run: |
-              git config user.name "AVSlabBot"
-              git config user.email "cuavslab@gmail.com"
-              git commit -a -m "[AUTO] Bump minor version number"
-              git push
-
+  if_merged:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull repo
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+          token: ${{ secrets.BOT_ACCESS_TOKEN }}
+      - name: Bump version
+        run: ./.github/workflows/version_bumper.sh ./pyproject.toml
+      - name: Commit and push
+        run: |
+          git config user.name "AVSlabBot"
+          git config user.email "cuavslab@gmail.com"
+          git commit -a -m "[AUTO] Bump minor version number"
+          git push
