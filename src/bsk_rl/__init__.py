@@ -1,7 +1,6 @@
 import gymnasium as gym
 from gymnasium.envs.registration import register
 
-from bsk_rl.check_bsk_version import check_bsk_version
 from bsk_rl.gym import (
     NO_ACTION,
     ConstellationTasking,
@@ -29,5 +28,3 @@ register(
     id="ConstellationTasking-v1",
     entry_point="bsk_rl.gym:ConstellationTasking",
 )
-
-check_bsk_version()
