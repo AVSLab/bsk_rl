@@ -8,6 +8,8 @@ Development - |version|
   that can be used with :class:`~bsk_rl.comm.BroadcastCommunication` to only communicate
   data when the action has been called.
 * Add example script for shielded training with action replacement and action masking in `Shielded training with action masking and action replacement <examples/training_with_shield.ipynb>`_.
+* Add ``bsk`` as a dependency in ``pyproject.toml``.
+* Update the CI/CD workflows to build BSK-RL using the new ``bsk`` dependency.
 
 
 Version 1.2.0
