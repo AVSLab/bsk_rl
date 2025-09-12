@@ -1,5 +1,8 @@
-name: Install BSK-RL
-description: Install BSK-RL using Basilisk wheels
+name: build
+description: >
+  Prepares the Python environment for BSK-RL, installs the project in editable
+  mode with its dependencies, and fetches the Basilisk large data.
+
 inputs:
   python-version:
     required: true
@@ -14,32 +17,10 @@ runs:
   - name: Set up Python ${{ inputs.python-version }}
     uses: actions/setup-python@v5
     with:
-      python-version: ${{ inputs.python-version }}
-  - name: Find artifact run
-    shell: bash
-    run: |
-      sudo apt-get install jq
-      export RUN_ID=$(
-        curl -L \
-          -H "Accept: application/vnd.github+json" \
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          "https://api.github.com/repos/AVSLab/basilisk/actions/runs?status=completed&per_page=100" | 
-        jq -r '.workflow_runs[] | select(.name == "Pull Request Closed") | .id' | 
-        head -n 1
-      )
-      echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-  - name: Pull artifacts
-    uses: actions/download-artifact@v4
-    with:
-      name: basilisk-wheels_ubuntu-22.04_python${{ inputs.python-version }}
-      repository: AVSLab/basilisk
-      run-id: ${{ env.RUN_ID }}
-      github-token: ${{ github.token }}
-  - name: Install Basilisk from wheels
-    shell: bash
-    run: |
-      pip install *asilisk*.whl
-      bskLargeData
+      python-version: ${{ inputs.python-version }}  
   - name: Install BSK-RL
     shell: bash
     run: pip install -e '.[${{ inputs.pip-options }}]'
+  - name: Install large data
+    shell: bash
+    run: bskLargeData
