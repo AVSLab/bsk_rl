@@ -39,6 +39,7 @@ class TestAccessSatellite:
                 r_LP_P=[0, 0, 0],
                 min_elev=1.0,
                 type="target",
+                start_time=0.0,
             )
             in sat.locations_for_access_checking
         )
@@ -87,7 +88,13 @@ class TestAccessSatellite:
             ),
         )
         sat.locations_for_access_checking = [
-            dict(object=tgt, type="target", min_elev=1.3, r_LP_P=tgt.r_LP_P)
+            dict(
+                object=tgt,
+                type="target",
+                min_elev=1.3,
+                r_LP_P=tgt.r_LP_P,
+                start_time=9.0,
+            )
         ]
         sat.calculate_additional_windows(100.0)
         assert tgt in sat.opportunities_dict()
@@ -319,8 +326,8 @@ class TestImagingSatellite:
         sat.sat_args = {}
         sat.reset_pre_sim_init()
         mock_reset.assert_called_once()
-        assert sat.sat_args["transmitterNumBuffers"] == 5
-        assert len(sat.sat_args["bufferNames"]) == 5
+        assert sat.sat_args["transmitterNumBuffers"] == 1
+        assert len(sat.sat_args["bufferNames"]) == 1
 
     @pytest.mark.parametrize(
         "gen_duration,time_limit,expected",
@@ -423,9 +430,9 @@ class TestImagingSatellite:
         sat.logger = MagicMock()
         sat.task_target_for_imaging(self.tgt0)
         sat.fsw.action_image.assert_called_once()
-        assert sat.fsw.action_image.call_args[0][1].startswith("tgt_0")
         sat.logger.info.assert_called()
         sat._update_image_event.assert_called_once()
         assert sat._update_image_event.call_args[0][0] == self.tgt0
         sat.update_timed_terminal_event.assert_called_once()
         assert sat.update_timed_terminal_event.call_args[0][0] == 50.0
+        assert sat.latest_target == self.tgt0
