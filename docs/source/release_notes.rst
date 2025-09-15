@@ -10,6 +10,7 @@ Development - |version|
 * Add example script for shielded training with action replacement and action masking in `Shielded training with action masking and action replacement <examples/training_with_shield.ipynb>`_.
 * Add ``bsk`` as a dependency in ``pyproject.toml``.
 * Update the CI/CD workflows to build BSK-RL using the new ``bsk`` dependency.
+* Optimize performance of AEOS environments, especially for high request counts.
 
 
 Version 1.2.0
