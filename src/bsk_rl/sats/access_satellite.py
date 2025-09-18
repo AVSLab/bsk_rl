@@ -703,7 +703,7 @@ class ImagingSatellite(AccessSatellite):
         """
         msg = f"{target} tasked for imaging"
         self.logger.info(msg)
-        self.fsw.action_image(target.r_LP_P, self.buffer_name)
+        self.fsw.action_image(target.r_LP_P(self.simulator.sim_time), self.buffer_name)
         self.enable_target_window(target, max_duration=max_duration)
         self.draw_imaging_line(target)
         self.latest_target = target
