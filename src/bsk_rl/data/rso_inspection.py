@@ -141,7 +141,7 @@ class RSOInspectionDataStore(DataStore):
         return inspected_logs, illuminated_logs
 
     def compare_log_states(self, _, logs) -> RSOInspectionData:
-        """Identify point status and update their colors in Vizard."""
+        """Identify point status."""
         if self.role == RSO:
             return RSOInspectionData()
 
@@ -161,60 +161,12 @@ class RSOInspectionDataStore(DataStore):
             if any(log):
                 point_illuminate_status[rso_point] = True
 
-        self.update_point_colors(
-            self.data.point_illuminate_status.keys(),
-            color="gray",
-        )
-        self.update_point_colors(
-            [
-                rso_point
-                for rso_point in point_illuminate_status
-                if point_illuminate_status[rso_point]
-            ],
-            color="yellow",
-        )
-        self.update_point_colors(
-            [
-                rso_point
-                for rso_point in point_inspect_status
-                if point_inspect_status[rso_point]
-            ],
-            color="chartreuse",
-            permanent=True,
-        )
-
         if len(point_inspect_status) > 0:
             self.satellite.logger.info(
                 f"Inspected {len(point_inspect_status)} points this step"
             )
 
         return RSOInspectionData(point_inspect_status, point_illuminate_status)
-
-    @vizard.visualize
-    def update_point_colors(
-        self,
-        rso_points,
-        color,
-        alpha=0.5,
-        permanent=False,
-        vizInstance=None,
-        vizSupport=None,
-    ):
-        """Update target colors in Vizard."""
-        if not hasattr(self, "permanent_point_colors"):
-            self.permanent_point_colors = []
-
-        for location in vizInstance.locations:
-            if (
-                location.stationName not in self.permanent_point_colors
-                and location.stationName in [str(point) for point in rso_points]
-            ):
-                if not all(
-                    np.equal(location.color, vizSupport.toRGBA255(color, alpha=alpha))
-                ):
-                    location.color = vizSupport.toRGBA255(color, alpha=alpha)
-                    if permanent:
-                        self.permanent_point_colors.append(location.stationName)
 
 
 class RSOInspectionReward(GlobalReward):
@@ -286,6 +238,43 @@ class RSOInspectionReward(GlobalReward):
             {point: False for point in self.scenario.rso_points},
         )
 
+    @vizard.visualize
+    def determine_point_colors(self, total_data, new_data_dict):
+        """Determine target colors in Vizard."""
+        colors = ["grey"] * len(self.scenario.rso_points)
+        for i, point in enumerate(self.scenario.rso_points):
+            if any(
+                [
+                    data.point_illuminate_status.get(point, False)
+                    for data in new_data_dict.values()
+                ]
+            ):
+                colors[i] = "yellow"
+            if total_data.point_inspect_status.get(point, False):
+                colors[i] = "chartreuse"
+
+        return colors
+
+    @vizard.visualize
+    def update_point_colors(
+        self,
+        rso_points,
+        colors,
+        alpha=0.5,
+        vizInstance=None,
+        vizSupport=None,
+    ):
+        """Update target colors in Vizard."""
+        if not hasattr(self, "prev_colors"):
+            self.prev_colors = [None] * len(colors)
+
+        for point, color, prev_color in zip(rso_points, colors, self.prev_colors):
+            color_vec = vizSupport.toRGBA255(color, alpha=alpha)
+            if prev_color != color:
+                vizSupport.changeLocation(vizInstance, str(point), color=color_vec)
+
+        self.prev_colors = colors
+
     def calculate_reward(
         self, new_data_dict: dict[str, RSOInspectionData]
     ) -> dict[str, float]:
@@ -306,6 +295,10 @@ class RSOInspectionReward(GlobalReward):
                 new_points / total_points * self.inspection_reward_scale
             )
             total_data += data
+
+        # Plot inspection status in Vizard
+        colors = self.determine_point_colors(total_data, new_data_dict)
+        self.update_point_colors(self.scenario.rso_points, colors)
 
         # Check for completion bonus
         logger.info(
