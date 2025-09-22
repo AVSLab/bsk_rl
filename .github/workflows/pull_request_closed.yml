@@ -19,11 +19,21 @@ jobs:
           ref: develop
           fetch-depth: 0
           token: ${{ secrets.BOT_ACCESS_TOKEN }}
+
       - name: Bump version
         run: ./.github/workflows/version_bumper.sh ./pyproject.toml
+        id: bump
+
       - name: Commit and push
         run: |
           git config user.name "AVSlabBot"
           git config user.email "cuavslab@gmail.com"
           git commit -a -m "[AUTO] Bump minor version number"
           git push
+
+      - name: Create tag
+        if: ${{ steps.bump.outputs.updated_version != '' }}
+        run: |
+          git tag -a "v${{ steps.bump.outputs.updated_version }}" \
+            -m "Release v${{ steps.bump.outputs.updated_version }}"
+          git push --tags

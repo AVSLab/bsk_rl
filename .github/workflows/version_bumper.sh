@@ -23,12 +23,20 @@ if [[ $version_line =~ $regex ]]; then
     last_number=${BASH_REMATCH[2]}
     incremented_number=$((last_number + 1))
     updated_version=${BASH_REMATCH[1]}$incremented_number
-    
+
     # Update the version in the pyproject.toml file
     sed -i "s/version = \"${BASH_REMATCH[1]}${last_number}\"/version = \"$updated_version\"/" "$file"
-    
+
     echo "Version updated to $updated_version in $file"
 else
     echo "Error: Version not found in $file or not in X.Y.Z format"
     exit 1
+fi
+
+
+# Expose the update versions to GitHub Actions
+if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+  {
+    echo "updated_version=$updated_version"
+  } >> "$GITHUB_OUTPUT"
 fi
