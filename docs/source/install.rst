@@ -5,17 +5,33 @@ Installation
     :maxdepth: 1
 
 
-Instructions
-------------
+Quick Installation
+------------------
+BSK-RL is available on PyPi and can be installed with pip. Simply run
+
+      .. code-block:: console
+   
+         $ pip install bsk-rl
+
+
+Editable Installation
+---------------------
 #. Install the `Basilisk <http://hanspeterschaub.info/basilisk/Install.html>`_ spacecraft
-   simulation framework, following instructions for the appropriate operating system.
-   Installation on MacOS and Linux is preferable to Windows. Use a Python virtual
-   environment as suggested in the Basilisk installation instructions.
-#. Clone the BSK-RL repository. 
+   simulation framework, either with `pip install bsk` or by following instructions for
+   the appropriate operating system. Installation on MacOS and Linux are preferable to
+   Windows. Use a Python virtual environment as suggested in the Basilisk installation
+   instructions.
+#. Clone the BSK-RL repository over SSH:
 
    .. code-block:: console
         
        $ git clone git@github.com:AVSLab/bsk_rl.git
+
+   or over HTTPS, as some networks block SSH:
+
+   .. code-block:: console
+
+       $ git clone https://github.com/AVSLab/bsk_rl.git
 
 #. Move to the base directory of the repository.
 
@@ -59,23 +75,3 @@ Common Issues
 -------------
 
 Please report new installation issues on GitHub.
-
-SPICE Errors
-^^^^^^^^^^^^
-
-Errors such as 
-
-   .. code-block:: console
-
-        Toolkit version: N0065
-
-        SPICE(NOSUCHFILE) --
-
-        The attempt to load
-        "/home/user/basilisk/dist3/Basilisk/supportData/EphemerisData/de430.bsp" by
-        the routine FURNSH failed. It could not be located.
-
-        A traceback follows. The name of the highest level module is first.
-        furnsh_c --> FURNSH --> ZZLDKER
-
-can be resolved by ensuring that `Basilisk is installed using git-lfs <http://hanspeterschaub.info/basilisk/Install/pullCloneBSK.html>`_.

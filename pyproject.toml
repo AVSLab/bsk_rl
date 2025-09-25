@@ -6,8 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "bsk_rl"
 version = "1.2.5"
 authors = [
-    { name = "Adam Herrmann", email = "adam.herrmann@colorado.edu" },
     { name = "Mark Stephenson", email = "mark.a.stephenson@colorado.edu" },
+    { name = "Adam Herrmann", email = "adam.herrmann@colorado.edu" },
 ]
 description = "RL environments and tools for spacecraft autonomy research, built on Basilisk. Developed by the AVS Lab."
 readme = "README.md"

@@ -32,28 +32,15 @@ Quickstart
 ----------
 Installation
 ^^^^^^^^^^^^
-Complete installation instructions and common troubleshooting tips can be found 
-:doc:`here <install>`. To install BSK-RL:
-
-#. Install the `Basilisk <https://hanspeterschaub.info/basilisk>`_ spacecraft simulation 
-   framework.
-#. Clone BSK-RL.
+BSK-RL is available on PyPi and can be installed with pip. Simply run 
 
     .. code-block:: console
 
-        $ git clone git@github.com:AVSLab/bsk_rl.git && cd bsk_rl
+        $ pip install bsk-rl
 
-#. Install BSK-RL in the same virtual environment as Basilisk.
+Complete installation instructions for an editable installation and common troubleshooting tips can be found 
+:doc:`here <install>`.
 
-    .. code-block:: console
-
-        (.venv) $ python -m pip install -e .
-
-#. Test the installation.
-
-    .. code-block:: console
-
-        (.venv) $ pytest .
 
 Construct an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^
