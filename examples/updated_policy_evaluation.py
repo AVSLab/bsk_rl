@@ -759,8 +759,13 @@ for target_id in range(n_targets*6 *100 ):
 
     # action_dict = {sat.name: target_id}  # Assign the main satellite to observe `target_idx` # sequentially observing each target
     action_dict = {sat.name: 0}  # Assign the closest target when the list is sorted by distance
-    chosen_action_id = policy_action # Assgin policy_action to action dictionary for env.step
-    action_dict = {sat.name: policy_action}
+    chosen_action_id = policy_action # Assign policy_action to action dictionary for env.step
+
+    if use_heuristic:
+        policy_action=0 #assign action 0 to heuristic
+        action_dict = {sat.name: policy_action}
+    else:
+        action_dict = {sat.name: policy_action}
     if policy_action == 11:
         print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.satellites[0].dynamics.storage_level_fraction))
         downlink_times.append(env.simulator.sim_time)

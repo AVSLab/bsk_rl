@@ -614,6 +614,10 @@ class ImageRSO(DiscreteAction):
                 # Use the same "initial angular error" metric you already record
                 return float(_angle_to_target(self.satellite, {"object": tgt}))
 
+            imaged_ids = []
+            for i in range(len(self.simulator.satellites[0].data_store.data.imaged)):
+                imaged_ids.append(self.simulator.satellites[0].data_store.data.imaged[i].id)
+
             # ---- Heuristic A: by distance (your current behavior) ----
             if mode == "distance":
                 distances = [(tgt, _dist_to(tgt)) for tgt in unimaged_targets]
@@ -634,6 +638,7 @@ class ImageRSO(DiscreteAction):
                     else:
                         heuristic_target = distances[0][0]
 
+                new_target = heuristic_target
             # ---- Heuristic B: by current angle (smallest initial angular error) ----
             elif mode == "angle":
                 # 1) visible + unimaged first
@@ -678,6 +683,7 @@ class ImageRSO(DiscreteAction):
                             # last resort: nearest by distance
                             heuristic_target = min(known_targets, key=_dist_to)
 
+                new_target = heuristic_target
             else:
                 raise ValueError(f"Unknown heuristic_mode '{mode}'. Use 'distance' or 'angle'.")
 
