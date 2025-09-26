@@ -490,12 +490,12 @@ if __name__ == "__main__":
     all_sat = [sat] + targets
 
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
-    model_name = f"aug18_wGAE_150batch_halfnetwork_-1penalties_smallerICbattery_restrictedResources_obsv6_1e-6lr_0.15cp_gamma9997_100d0i.out_{N}"
+    model_name = f"aug20_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i.out_{N}"
     n_envs = (
         get_available_cores() - 4  # leave some extra cores for other processes
     )
     output_dir = (
-        Path("~/rllib_results/july_results/july30rllib_results").expanduser() / f"aug18_wGAE_150batch_halfnetwork_-1penalties_smallerICbattery_restrictedResources_obsv6_1e-6lr_0.15cp_gamma9997_100d0i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+        Path("~/rllib_results/july_results/july30rllib_results").expanduser() / f"aug20_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
     )
     output_dir = Path(output_dir)
 
@@ -505,14 +505,14 @@ if __name__ == "__main__":
 
     jobs = build_job_array(
         training_args=dict(
-            lr=[1e-6],
+            lr=[1e-5],
             gamma=[0.9997],
-            train_batch_size=[int(50/2 * n_envs)],  #n_envs on the Mac is 6 eventually   minimum train_batch_size = mini_batch = 128
+            train_batch_size=[int(600 * n_envs)],  #n_envs on the Mac is 6 eventually   minimum train_batch_size = mini_batch = 128
             num_sgd_iter=[10],
             lambda_=[0.95],
             use_kl_loss=[False],
-            clip_param=[0.1],
-            grad_clip=[1.0],
+            clip_param=[0.05],
+            grad_clip=[1.0/2],
             entropy_coeff=[0.0],
         ),
         env_args=dict(
@@ -533,7 +533,7 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params_aug18.txt", "w") as file: # update this when running on cluster
+    with open(output_dir / f"{model_name}_params_aug19.txt", "w") as file: # update this when running on cluster
         yaml.dump(sanitize_np(job_args), file)
 
     train_model(
