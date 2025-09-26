@@ -22,6 +22,7 @@ from collections import defaultdict
 
 import numpy as np
 import matplotlib.pyplot as plt
+from pandas.core.window import ExponentialMovingWindow
 
 # --------------------------- PRESETS / TOGGLES ---------------------------
 EXAMPLES_DIR = Path(__file__).resolve().parent
@@ -42,6 +43,12 @@ PRESETS = {
     "old_imaging_heuristic": EXAMPLES_DIR / "old_heuristic_imaging",
     "aug3_imaging_rl":        EXAMPLES_DIR / "aug3_RL-policy_imaging",
     "no_outlier_imaging_rl":        EXAMPLES_DIR / "no_outlier_RL-policy_imaging",
+    "justImaging_heuristic_data": EXAMPLES_DIR / "justImaging_heuristic_data",
+    "corrected_heuristic_RR_MC_data": EXAMPLES_DIR / "corrected_heuristic_RR_MC_data",
+    "RL_justImaging_data": EXAMPLES_DIR / "RL_justImaging_data",
+    "new_corrected_Heuristic_RR_data": EXAMPLES_DIR / "new_corrected_Heuristic_RR_data",
+
+
 }
 
 # --------------------------- Helpers ---------------------------
