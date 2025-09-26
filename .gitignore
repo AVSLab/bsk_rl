@@ -153,3 +153,6 @@ copy_*.py
 batch_heuristic_evaluation*.py
 env_wrappers.py
 updated_batch_policy_evaluation.py
+*.json
+*.csv
+*.npz
