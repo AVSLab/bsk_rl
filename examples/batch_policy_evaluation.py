@@ -48,7 +48,10 @@ except Exception as _e:
 
 # ---------- USER CONFIG ----------
 # POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/july_results/july30rllib_results")  # <-- set to folder containing your aug1* policies
-POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug1rllib_results")  # <-- set to folder containing your aug1* policies
+# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug1rllib_results")  # <-- set to folder containing your aug1* policies
+POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug18rllib_results")  # <-- set to folder containing your aug1* policies
+# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug19rllib_results")  # <-- set to folder containing your aug1* policies
+
 # POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/locally_trained")  # <-- set to folder containing your aug1* policies
 # POLICY_FOLDER = Path("/Users/dahu1128/rllib_results")  # <-- set to folder containing your aug1* policies
 # FILTER_SUBSTRING = "aug13_wGAE_smallbatch"   # only load policies that contain this substring; set to "" to load all
@@ -57,17 +60,20 @@ POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug1rllib_res
 # FILTER_SUBSTRING = "aug5_unlimitedResources"
 # FILTER_SUBSTRING = "aug1_nopenalties_woGAE_unlimitedResources"
 # FILTER_SUBSTRING = "aug1_nopenalties_wGAE_unlimitedResources_obsv2"
-FILTER_SUBSTRING = "aug1_nopenalties_wGAE_restricted_Resources_obsv2"
+# FILTER_SUBSTRING = "aug1_nopenalties_wGAE_restricted_Resources_obsv2"
+# FILTER_SUBSTRING = "aug19_justimaging_obsv5_1e-5lr_batch3200_gamma9995_0d100i"
+FILTER_SUBSTRING = "aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma9995_0d100i"
+
 
 
 POLICY_MATCH_SUFFIX = ".out_0"  # typical suffix in your screenshot; adjust if different
 N_RUNS = 10   # number of independent trials per policy (set X here)
 use_shield = True
 just_imaging = False
-POLICY_LOAD_MODE = "latest"  # 'latest'|'best'|'smallest'
+POLICY_LOAD_MODE = "best"  # 'latest'|'best'|'smallest'
 SAVE_DIR = Path("batch_results")
 SAVE_DIR.mkdir(exist_ok=True)
-SEED_START = 180  # base seed; subsequent runs use seed+run_idx
+SEED_START = 100  # base seed; subsequent runs use seed+run_idx
 TIME_LIMIT = None  # optional override for env time_limit (None means use default from script)
 # ----------------------------------------------------------------
 
@@ -78,6 +84,8 @@ DEFAULT_POLICY_OBS_MAP = {
     "aug3_unlimitedResources": 2,
     "aug13_wGAE_smallbatch": 2,  # all aug1 policies use obs_v==2
     "aug15_wGAE_imaging_baseline": 5,
+    "aug19_justimaging_obsv5_1e-5lr_batch3200_gamma9995_0d100i": 5,
+    "aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma9995_0d100i": 7,
     # include other mappings if desired
 }
 
@@ -343,6 +351,7 @@ def make_env(obs_v, seed_number, total_time, n_targets=100, n_targets_ahead=10, 
     # sat_args (same values as your script)
     sat_args = {}
     sat_args["imageAttErrorRequirement"] = 0.01
+    sat_args["imageRateErrorRequirement"] = 0.05
     sat_args["dataStorageCapacity"] = 50 * 8e6 / 2
     sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
     sat_args["instrumentBaudRate"] = 0.5 * 8e6

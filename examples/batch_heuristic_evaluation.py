@@ -45,20 +45,20 @@ try:
 except Exception as _e:
     pass
 # ---------- USER CONFIG ----------
-# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/july_results/july30rllib_results")  # <-- set to folder containing your aug1* policies
-POLICY_FOLDER = Path("/Users/dahu1128/rllib_results")  # <-- set to folder containing your aug1* policies
-# FILTER_SUBSTRING = "aug13_wGAE_smallbatch"   # only load policies that contain this substring; set to "" to load all
-FILTER_SUBSTRING = "aug15_wGAE_imaging_baseline"
+POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/july_results/july30rllib_results")  # <-- set to folder containing your aug1* policies
+# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results")  # <-- set to folder containing your aug1* policies
+FILTER_SUBSTRING = "aug13_wGAE_smallbatch"   # only load policies that contain this substring; set to "" to load all
+# FILTER_SUBSTRING = "aug15_wGAE_imaging_baseline"
 POLICY_MATCH_SUFFIX = ".out_0"  # typical suffix in your screenshot; adjust if different
 N_RUNS = 10   # number of independent trials per policy (set X here)
-use_shield = False
+use_shield = True
 use_heuristic = True
 heuristic_mode = "angle"
-just_imaging = True
+just_imaging = False
 POLICY_LOAD_MODE = "best"  # 'latest'|'best'|'smallest' as in your Policy wrapper
 SAVE_DIR = Path("batch_results")
 SAVE_DIR.mkdir(exist_ok=True)
-SEED_START = 180  # base seed; subsequent runs use seed+run_idx
+SEED_START = 100  # base seed; subsequent runs use seed+run_idx
 TIME_LIMIT = None  # optional override for env time_limit (None means use default from script)
 # ----------------------------------------------------------------
 
@@ -335,6 +335,7 @@ def make_env(obs_v, seed_number, total_time, n_targets=100, n_targets_ahead=10, 
     # sat_args (same values as your script)
     sat_args = {}
     sat_args["imageAttErrorRequirement"] = 0.01
+    sat_args["imageRateErrorRequirement"] = 0.05
     sat_args["dataStorageCapacity"] = 50 * 8e6 / 2
     sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
