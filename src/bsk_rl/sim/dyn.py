@@ -1864,10 +1864,14 @@ class ImagingSCDynModel(ImagingDynModel):
         )
 
         self.inspector_state_recorder = self.scObject.scStateOutMsg.recorder(macros.sec2nano(1.0))
+
         self.simulator.AddModelToTask(
             self.task_name, self.inspector_state_recorder, ModelPriority=priority
         )
-
+        self.inspector_eclipse_recorder = self.world.eclipseObject.eclipseOutMsgs[0].recorder(macros.sec2nano(1.0))
+        self.simulator.AddModelToTask(
+            self.task_name, self.inspector_eclipse_recorder, ModelPriority=priority
+        )
 
 
     @default_args(
