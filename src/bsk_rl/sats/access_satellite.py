@@ -662,18 +662,18 @@ class ImagingSatellite(AccessSatellite):
 
     @vizard.visualize
     def draw_imaging_line(
-        self, target: "Target", vizSupport=None, vizInstance=None
+        self, target_name: str, vizSupport=None, vizInstance=None
     ) -> None:
         """Draw a line from the satellite to the target in vizard."""
         if not hasattr(self, "target_line"):
             vizSupport.createTargetLine(
                 vizInstance,
                 fromBodyName=self.name,
-                toBodyName=target.name,
+                toBodyName=target_name,
                 lineColor=self.vizard_color,
             )
             self.target_line = vizSupport.targetLineList[-1]
-        self.target_line.toBodyName = target.name
+        self.target_line.toBodyName = target_name
         vizSupport.updateTargetLineList(vizInstance)
 
     @vizard.visualize

@@ -5,9 +5,20 @@ import os
 from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any
+import numpy as np
 
-from Basilisk.utilities import SimulationBaseClass
 from Basilisk.utilities import macros as mc
+from Basilisk.utilities import SimulationBaseClass
+from Basilisk.simulation import simpleInstrument, simpleStorageUnit, partitionedStorageUnit, spaceToGroundTransmitter
+from Basilisk.simulation import groundLocation
+from Basilisk.utilities import vizSupport
+from Basilisk.utilities import unitTestSupport
+
+from Basilisk.simulation import spacecraft
+from Basilisk.utilities import macros
+from Basilisk.utilities import orbitalMotion
+from Basilisk.utilities import simIncludeGravBody
+from Basilisk.architecture import astroConstants
 
 from bsk_rl.utils import vizard
 
@@ -17,6 +28,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
+def strip_prefix(s, prefix="GroundStation"):
+    return s[len(prefix):] if s.startswith(prefix) else s
 
 class Simulator(SimulationBaseClass.SimBaseClass):
     """Basilisk simulator for GeneralSatelliteTasking environments."""
@@ -108,9 +121,24 @@ class Simulator(SimulationBaseClass.SimBaseClass):
             **list_data,
             saveFile=save_path / f"viz_{time()}",
         )
+        viz = self.vizInstance
+
+        for i in range(len(self.world.groundStations)):
+            vizSupport.addLocation(viz, stationName=strip_prefix(self.world.groundStations[i].ModelTag)
+                                   , parentBodyName=self.world.planet.displayName
+                                   , r_GP_P=unitTestSupport.EigenVector3d2list(self.world.groundStations[i].r_LP_P_Init)
+                                   , fieldOfView=np.radians(160.)
+                                   , color='green'
+                                   , range=1000.0*1000  # meters
+                                   )
+            viz.settings.spacecraftSizeMultiplier = 1.5
+            viz.settings.showLocationCommLines = 1
+            viz.settings.showLocationCones = 1
+            viz.settings.showLocationLabels = 1
         for key, value in vizard_settings.items():
             setattr(self.vizInstance.settings, key, value)
         vizard.VIZINSTANCE = self.vizInstance
+
 
     @vizard.visualize
     def set_vizard_epoch(self, vizInstance=None):

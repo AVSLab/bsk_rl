@@ -749,9 +749,7 @@ class ImagingFSWModel(BasicFSWModel):
             genericSensor.normalVector = self.locPoint.pHat_B
             genericSensor.r_SB_B = [0.0, 0.0, 0.0]
             genericSensor.fieldOfView.push_back(4 * self.insControl.attErrTolerance)
-            genericSensor.color = vizInterface.IntVector(
-                vizSupport.toRGBA255(self.fsw.satellite.vizard_color, alpha=0.5)
-            )
+            genericSensor.color = vizInterface.IntVector(vizSupport.toRGBA255(self.fsw.satellite.vizard_color, alpha=0.5))
             cmdInMsg = messaging.DeviceCmdMsgReader()
             cmdInMsg.subscribeTo(self.insControl.deviceCmdOutMsg)
             genericSensor.genericSensorCmdInMsg = cmdInMsg
@@ -1280,6 +1278,31 @@ class BasicTargetFSWModel(FSWModel):
 
 class ImagingSCFSWModel(ImagingFSWModel):
 
+    @vizard.visualize
+    def _update_imaging_line(self, to_body_name: str, vizSupport=None, vizInstance=None) -> None:
+        """
+        Create (on first use) or retarget a Vizard line from this spacecraft to `to_body_name`.
+        The line updates automatically as the bodies move; only retarget on new selections.
+        """
+        # Use a consistent color per spacecraft, or hardcode a color if you prefer
+        line_color = "yellow"  # getattr(self.satellite, "vizard_color", "yellow")
+
+        if not hasattr(self, "_rso_line"):
+            # create the line once
+            vizSupport.createTargetLine(
+                vizInstance,
+                fromBodyName=self.satellite.name,   # origin = this imaging spacecraft
+                toBodyName=to_body_name,            # destination = current RSO body name
+                lineColor=line_color
+            )
+            self._rso_line = vizSupport.targetLineList[-1]
+        else:
+            # retarget the existing line
+            self._rso_line.toBodyName = to_body_name
+
+        # push the change to Vizard
+        vizSupport.updateTargetLineList(vizInstance)
+
     class LocPointTask(ImagingFSWModel.LocPointTask):
         """Task to point at targets and trigger the instrument."""
 
@@ -1416,6 +1439,12 @@ class ImagingSCFSWModel(ImagingFSWModel):
         self.dynamics.instrument.nodeDataName = RSOTarget.target_spacecraft.name
         self.insControl.imaged = 0
         self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
+
+        # Enable the task that drives pointing
+        self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
+
+        # --- NEW: draw/retarget the pointing line to this RSO ---
+        self._update_imaging_line(RSOTarget.target_spacecraft.name)
 
 
 class SteeringFSWModel(BasicFSWModel):

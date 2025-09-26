@@ -673,6 +673,8 @@ env = gym.make(
     time_limit=total_time,
     log_level="ERROR", #ERROR or DEBUG
     disable_env_checker=True,
+    vizard_dir="/Users/dahu1128/Documents",
+    vizard_settings=dict(vizard_rate=2), # in seconds
     # max_step_duration=700,
 )
 
