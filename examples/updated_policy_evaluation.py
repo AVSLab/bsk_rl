@@ -90,11 +90,11 @@ n_targets = 100
 n_targets_ahead = 10
 imaging_duration = 300
 total_time = n_targets * imaging_duration * 1.5   # 5700.0  # approximately 1 orbit
-seed_number = 19
+seed_number = 184
 policy_mode = 'latest'
 eclipse_norm = 5700
 save_data = False #set to False to avoid saving data
-use_shield = False
+use_shield = True
 act_random = False
 use_heuristic = False
 heuristic_mode = "angle" #not used unless use_heuristic is True
@@ -116,9 +116,37 @@ downlink_reward_policy = "/Users/dahu1128/rllib_results/reward_comparison/lowBau
 downlink_reward_policy_shorter_imaging ="/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_shorter_imaging_5e-6lr_downlink_reward_penalties_smallest_storage_0"
 # imaging_reward_policy = ""
 
+# August 19th
+aug19_obsv7_1e_5lr_batch5000_gamma9997_0d100i = "/Users/dahu1128/rllib_results/august_results/aug19rllib_results/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_0d100i_1755684700.6020117/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_0d100i.out_0"
+aug19_justImaging_obsv5_1e5lr_batch3200_gamma9995_0d100i = "/Users/dahu1128/rllib_results/august_results/aug19rllib_results/aug19_justimaging_obsv5_1e-5lr_batch3200_gamma9995_0d100i_1755681942.7970276/aug19_justimaging_obsv5_1e-5lr_batch3200_gamma9995_0d100i.out_0"
+obsv7_1e_5lr_batch5000_gamma9997_0d100i = "/Users/dahu1128/rllib_results/aug19rllib_results/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_0d100i_1755684700.6020117/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_0d100i.out_0"
+obsv7_1e_5lr_batch5000_gamma9997_10d90i = "/Users/dahu1128/rllib_results/aug19rllib_results/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i_1755684765.6849554/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i.out_0"
+obsv7_1e_5lr_batch5000_gamma9997_20d80i = "/Users/dahu1128/rllib_results/aug19rllib_results/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_20d80i_1755685121.0937102/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_20d80i.out_0"
+obsv7_1e_5lr_batch5000_gamma9997_30d70i = "/Users/dahu1128/rllib_results/aug19rllib_results/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_30d70i_1755685667.1920402/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_30d70i.out_0"
+obsv7_1e_5lr_batch5000_gamma9997_40d60i = "/Users/dahu1128/rllib_results/aug19rllib_results/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_40d60i_1755688491.5682302/aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_40d60i.out_0"
+# obsv7_1e_5lr_batch5000_gamma9997_50d50i = ""
+# obsv7_1e_5lr_batch5000_gamma9997_60d40i = ""
+# obsv7_1e_5lr_batch5000_gamma9997_70d30i = ""
+# obsv7_1e_5lr_batch5000_gamma9997_80d20i = ""
+# obsv7_1e_5lr_batch5000_gamma9997_90d10i = ""
+# obsv7_1e_5lr_batch5000_gamma9997_90d10i = ""
+
 # August 18th
-wGAE_imaging_reward_obsv21_1e_3lr = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug18_restrictedResources_obsv21_1e-3lr_0.1cp_gamma9995_100d0i_1755540587.565471/aug18_restrictedResources_obsv21_1e-3lr_0.1cp_gamma9995_100d0i.out_0"
+# cluster
+aug18_obsv7_1e_5lr_batch320_gamma9995_0d100i_1755589893 = "/Users/dahu1128/rllib_results/august_results/aug18rllib_results/aug18_restrictedResources_obsv7_1e-5lr_0.1cp_gamma9995_0d100i_1755589893.5762584/aug18_restrictedResources_obsv7_1e-5lr_batch320_gamma9995_0d100i.out_0"
+# aug18_obsv7_1e_5lr_batch3200_gamma9995_0d100i_1755591535 = "/Users/dahu1128/rllib_results/august_results/aug18rllib_results/aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma9995_0d100i_1755591535.5134878/aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma9995_0d100i.out_0"
+aug18_obsv7_1e_5lr_batch3200_gamma9995_0d100i_1755591535 = "/Users/dahu1128/rllib_results/august_results/aug18rllib_results/aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma9995_0d100i_1755591535.5134878/aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma9995_0d100i.out_0"
+aug18_obsv7_1e_6lr_batch3200_gradclip0_001_cp0_005_gamma9995_0d100i_1755597947 = "/Users/dahu1128/rllib_results/august_results/aug18rllib_results/aug18_restrictedResources_obsv7_1e-6lr_batch3200_gradclip0.001_cp0.005_gamma9995_0d100i_1755597947.1568983/aug18_restrictedResources_obsv7_1e-6lr_batch3200_gradclip0.001_cp0.005_gamma9995_0d100i.out_0"
+aug18_obsv7_5e_6lr_batch1600_gamma999_0d100i_1755590430 = "/Users/dahu1128/rllib_results/august_results/aug18rllib_results/aug18_restrictedResources_obsv7_5e-6lr_batch1600_gamma999_0d100i_1755590430.431192/aug18_restrictedResources_obsv7_5e-6lr_batch1600_gamma999_0d100i.out_0"
+aug18_obsv7_5e_6lr_batch160_gamma9995_0d100i_1755599175 = "/Users/dahu1128/rllib_results/august_results/aug18rllib_results/aug18_restrictedResources_obsv7_5e-6lr_batch160_gamma9995_0d100i_1755599175.0386055/aug18_restrictedResources_obsv7_5e-6lr_batch160_gamma9995_0d100i.out_0"
+aug18_obsv7_5e_6lr_batch3200_gamma9995_0d100i_1755590744 = "/Users/dahu1128/rllib_results/august_results/aug18rllib_results/aug18_restrictedResources_obsv7_5e-6lr_batch3200_gamma9995_0d100i_1755590744.7777116/aug18_restrictedResources_obsv7_5e-6lr_batch3200_gamma9995_0d100i.out_0"
+aug18_obsv7_5e_6lr_batch320_gamma9995_0d100i_1755590009 = "/Users/dahu1128/rllib_results/august_results/aug18rllib_results/aug18_restrictedResources_obsv7_5e-6lr_batch320_gamma9995_0d100i_1755590009.3689198/aug18_restrictedResources_obsv7_5e-6lr_batch320_gamma9995_0d100i.out_0"
+aug18_obsv7_5e_6lr_batch320_gamma999_0d100i_1755589530 = "/Users/dahu1128/rllib_results/august_results/aug18rllib_results/aug18_restrictedResources_obsv7_5e-6lr_batch320_gamma999_0d100i_1755589530.5835643/aug18_restrictedResources_obsv7_5e-6lr_batch320_gamma999_0d100i.out_0"
+# locally trained
+wGAE_imaging_reward_obsv7_1e_6lr = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug18_wGAE_150batch_halfnetwork_-1penalties_smallerICbattery_restrictedResources_obsv6_1e-6lr_0.15cp_gamma9997_100d0i_1755562684.144431/aug18_wGAE_150batch_halfnetwork_-1penalties_smallerICbattery_restrictedResources_obsv6_1e-6lr_0.15cp_gamma9997_100d0i.out_0"
+wGAE_imaging_reward_obsv6_1e_3lr = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug18_restrictedResources_obsv21_1e-3lr_0.1cp_gamma9995_100d0i_1755540587.565471/aug18_restrictedResources_obsv21_1e-3lr_0.1cp_gamma9995_100d0i.out_0"
 wGAE_150batch_1e_6lr_15cp_gamma9997_100d0i = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug18_wGAE_150batch_halfnetwork_-1penalties_smallerICbattery_restrictedResources_obsv6_1e-6lr_0.15cp_gamma9997_100d0i_1755498452.2236679/aug18_wGAE_150batch_halfnetwork_-1penalties_smallerICbattery_restrictedResources_obsv6_1e-6lr_0.15cp_gamma9997_100d0i.out_0"
+
 # August 15th
 wGAE_justImaging_gamma9999_Episodebatch_obs5 = "/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug15_wGAE_imaging_baseline_verysmallclip_episodebatch_halfnetwork_obsv5_1e-6lr_0.005cp_gamma9999_0d100imodel_1755324328.4317691/aug15_wGAE_imaging_baseline_verysmallclip_episodebatch_halfnetwork_obsv5_1e-6lr_0.005cp_gamma9999_0d100i.out_0"
 # wGAE_justImaging_gamma9999_Episodebatch_obs5 = "/Users/dahu1128/rllib_results/aug15_wGAE_imaging_baseline_verysmallclip_episodebatch_halfnetwork_obsv5_1e-6lr_0.005cp_gamma9999_0d100imodel_1755324328.4317691/aug15_wGAE_imaging_baseline_verysmallclip_episodebatch_halfnetwork_obsv5_1e-6lr_0.005cp_gamma9999_0d100i.out_0"
@@ -184,6 +212,7 @@ balance00100_reward_policy_obs2_gamma995 = '/Users/dahu1128/rllib_results/july_r
 balance00100_reward_policy_obs2_gamma9995 = '/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv2_1e-5lr_0.1cp_gamma9995_0d100i_1753504923.8221972/july22_obsv2_1e-5lr_0.1cp_gamma9995_0d100i_job_%a-%j.out_0'
 balance00100_reward_policy_obs2_gamma99995 = '/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv2_1e-5lr_0.1cp_gamma99995_0d100i_1753349618.6116135/july22_obsv2_1e-5lr_0.1cp_gamma99995_0d100i_job_%a-%j.out_0'
 
+balance00d100i_obs2_gamma9995_1e6lr = "/Users/dahu1128/rllib_results/july_results/july22rllib_results/july22_obsv2_1e-6lr_0.1cp_gamma9995_0d100i_1753350277.895099/july22_obsv2_1e-6lr_0.1cp_gamma9995_0d100i.out_0"
 
 
 # July 16th
@@ -210,12 +239,32 @@ cluster_1000_policy_v2_obs1_wGAE ="/Users/dahu1128/rllib_results/june_results/ju
 imaging_reward_smalldata_smallbat_obs1 = "/Users/dahu1128/rllib_results/reward_comparison/1e-6lr_failure_penalties_no_torque_small_battery_small_data_Polaris_sim_1749226596.4501252/model_0"
 imaging_unlimitedResources_baseline = "/Users/dahu1128/rllib_results/reward_comparison/100targets_10ahead_Polaris_simulation_1746754281.876747/model_0"
 
-policy_path = cluster_5050policy_5e5lr_obs11
+#June 6th
+imaging_rewarded_noeclipse_1e_6lr_failure_penalties = "/Users/dahu1128/rllib_results/june_results/june6rllib_results/1e-6lr_failure_penalties_no_torque_small_battery_small_data_Polaris_sim_1749226596.4501252/model_0"
+
+policy_path = obsv7_1e_5lr_batch5000_gamma9997_40d60i #balance00d100i_obs2_gamma9995_1e6lr
 
 # Define all known policy paths with associated obs values
 policy_obs_map = {
+    "obsv7_1e_5lr_batch5000_gamma9997_90d10i": 7,
+    "obsv7_1e_5lr_batch5000_gamma9997_80d20i": 7,
+    "obsv7_1e_5lr_batch5000_gamma9997_70d30i": 7,
+    "obsv7_1e_5lr_batch5000_gamma9997_60d40i": 7,
+    "obsv7_1e_5lr_batch5000_gamma9997_50d50i": 7,
+    "obsv7_1e_5lr_batch5000_gamma9997_40d60i": 7,
+    "obsv7_1e_5lr_batch5000_gamma9997_30d70i": 7,
+    "obsv7_1e_5lr_batch5000_gamma9997_20d80i": 7,
+    "obsv7_1e_5lr_batch5000_gamma9997_10d90i": 7,
+    "obsv7_1e_5lr_batch5000_gamma9997_0d100i": 7,
+    "aug19_justImaging_obsv5_1e5lr_batch3200_gamma9995_0d100i": 5,
+    "aug19_obsv7_1e_5lr_batch5000_gamma9997_0d100i": 7,
+    "imaging_rewarded_noeclipse_1e_6lr_failure_penalties": 1,
+    "balance00d100i_obs2_gamma9995_1e6lr": 2,
+    "aug18_obsv7_5e_6lr_batch3200_gamma9995_0d100i_1755590744": 7,
+    "aug18_obsv7_1e_5lr_batch3200_gamma9995_0d100i_1755591535": 7,
+    "wGAE_imaging_reward_obsv7_1e_6lr": 7,
     "wGAE_150batch_1e_6lr_15cp_gamma9997_100d0i": 4,
-    "wGAE_imaging_reward_obsv21_1e_3lr": 6,
+    "wGAE_imaging_reward_obsv6_1e_3lr": 6,
     "wGAE_justImaging_gamma9999_Episodebatch_obs5": 5,
     "wGAE_balance0d100i_gamma99993_2penalties_Episodebatch_obs4": 4,
     "wGAE_balance0d100i_gamma9999_5downlink10batterypenalties_Largebatch_obs21": 2.1,
@@ -305,7 +354,9 @@ elif obs_v==4:
     GS_START = 74
 elif obs_v==0:
     GS_START =74
-
+elif obs_v==7:
+    N_GS = 2
+    GS_START = 77
 class MyScanningSatellite(sats.AccessSatellite):
     if obs_v==1:
         observation_spec = [
@@ -465,13 +516,15 @@ class MyScanningSatellite(sats.AccessSatellite):
     if obs_v==5:
         observation_spec = [
             obs.PolarisScTargetProperties(
-                dict(prop="target_elevation_angle", norm=1.0),
-                dict(prop="rel_pos_vector_r_BR_H", norm = 1596*1000),
-                dict(prop="angle_to_target", norm=1.0),
-                dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
+                dict(prop="target_elevation_angle", norm=90.0),
+                dict(prop="rel_pos_vector_r_BR_H", norm = 15960*1000),
+                dict(prop="angle_to_target", norm=90.0),
+                dict(prop="target_distance", norm = 15960*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
                 dict(prop="target_shadowFactor", norm=1.0),
                 n_ahead_observe=n_targets_ahead,
                                            ),
+            obs.Eclipse(norm=5700),
+
         ]
         action_spec = [
             act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
@@ -506,6 +559,30 @@ class MyScanningSatellite(sats.AccessSatellite):
             act.Downlink(duration=300.0), # Downlink for 3 min
             act.Desat(duration=150), # Desat for 2.5 min.  # FOR OBS4 this DESAT may need to be removed!
 
+        ]
+    elif obs_v==7:
+        observation_spec = [
+            obs.SatProperties(
+                dict(prop="storage_level_fraction"),
+                dict(prop="battery_charge_fraction"),
+                dict(prop="wheel_speeds_fraction"),
+
+                ),
+            obs.PolarisScTargetProperties(
+                dict(prop="target_elevation_angle", norm=90.0),
+                dict(prop="rel_pos_vector_r_BR_H", norm = 15960*1000),
+                dict(prop="angle_to_target", norm=90.0),
+                dict(prop="target_distance", norm = 15960*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
+                dict(prop="target_shadowFactor", norm=1.0),
+                n_ahead_observe=n_targets_ahead,
+                                           ),
+            obs.Eclipse(norm=5700),
+            obs.OpportunityProperties(
+                dict(prop="opportunity_open", norm = 5700.0),
+                dict(prop="opportunity_close", norm = 5700.0),
+                type="ground_station",
+                n_ahead_observe=2,
+            )
         ]
     dyn_type = dyn.ImagingSCDynModel
     fsw_type = fsw.ImagingSCFSWModel

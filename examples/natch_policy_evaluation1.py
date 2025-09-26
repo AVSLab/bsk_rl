@@ -73,7 +73,7 @@ just_imaging = False
 POLICY_LOAD_MODE = "best"  # 'latest'|'best'|'smallest'
 SAVE_DIR = Path("batch_results")
 SAVE_DIR.mkdir(exist_ok=True)
-SEED_START = 100  # base seed; subsequent runs use seed+run_idx
+SEED_START = 190  # base seed; subsequent runs use seed+run_idx
 TIME_LIMIT = None  # optional override for env time_limit (None means use default from script)
 # ----------------------------------------------------------------
 
