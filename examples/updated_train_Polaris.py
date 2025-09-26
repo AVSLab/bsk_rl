@@ -428,7 +428,7 @@ if __name__ == "__main__":
 
     # Power
     sat_args["batteryStorageCapacity"] = 500 * 3600 # *1000000 # W*s
-    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.15, 0.5) * 500 * 3600 #*1000000
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.10, 0.4) * 500 * 3600 #*1000000
     sat_args["basePowerDraw"] = -10.0  # W
     sat_args["instrumentPowerDraw"] = -30.0  # W
     sat_args["transmitterPowerDraw"] = -25.0  # W

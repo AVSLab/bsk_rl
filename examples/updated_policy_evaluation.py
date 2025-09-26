@@ -596,43 +596,33 @@ sat_args = {}
 
 # Set some parameters as constants
 sat_args["imageAttErrorRequirement"] = 0.01
-
-# Storage
-sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 # bits
+sat_args["imageRateErrorRequirement"] = 0.05
+sat_args["dataStorageCapacity"] = 50 * 8e6 / 2
 sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
 sat_args["instrumentBaudRate"] = 0.5 * 8e6
 sat_args["transmitterBaudRate"] = -0.5 * 8e6
-
-# Power
-sat_args["batteryStorageCapacity"] = 500 * 3600 # W*s
-sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.25, 0.4) * 500 * 3600
-sat_args["basePowerDraw"] = -10.0  # W
-sat_args["instrumentPowerDraw"] = -30.0  # W
-sat_args["transmitterPowerDraw"] = -25.0  # W
-sat_args["thrusterPowerDraw"] = -80.0  # W
-sat_args["panelArea"] = 1 # m^2
-
-# Attitude
-sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.000, size=3)  # N*m
-sat_args["maxWheelSpeed"] = 6000.0  # RPM
+sat_args["batteryStorageCapacity"] = 500 * 3600
+sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.3, 0.3) * 500 * 3600
+sat_args["basePowerDraw"] = -10.0
+sat_args["instrumentPowerDraw"] = -30.0
+sat_args["transmitterPowerDraw"] = -25.0
+sat_args["thrusterPowerDraw"] = -80.0
+sat_args["panelArea"] = 1
+sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.000, size=3)
+sat_args["maxWheelSpeed"] = 6000.0
 sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
 sat_args["desatAttitude"] = "sun"
-
-# reward and penalty factors and eclipse thresholds
 sat_args["downlink_bonus"] = 0.0
 sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
 sat_args["full_storage_penalty"] = 0
 sat_args["low_battery_penalty"] = 0
-sat_args["eclipsedImagePenalty"] = -1/3.
 sat_args["eclipse_threshold_for_imaging"] = 0.5
 sat_args["eclipse_threshold_for_reward"] = sat_args["eclipse_threshold_for_imaging"]
-sat_args["use_heuristic"] = use_heuristic
-sat_args["heuristic_mode"] = heuristic_mode
-
 if just_imaging:
     sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 *1000000
     sat_args["batteryStorageCapacity"] = 500 * 3600 *1000000
     sat_args["storedCharge_Init"] = lambda: np.random.uniform(1.0, 1.0) * 500 * 3600 *1000000
+
 
 class MyTargetSatellite(sats.Satellite):
     observation_spec = [
@@ -681,7 +671,7 @@ env = gym.make(
     rewarder=data.RSOTargetImageReward(),
     world_type=world.GroundStationWorldModel,
     time_limit=total_time,
-    log_level="DEBUG", #ERROR or DEBUG
+    log_level="ERROR", #ERROR or DEBUG
     disable_env_checker=True,
     # max_step_duration=700,
 )
