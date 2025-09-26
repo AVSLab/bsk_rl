@@ -170,6 +170,8 @@ class RSOTargetImageReward(GlobalReward):
         self.total_downlinks = 0
         self.useful_downlinks = 0
         self.imaged_illuminated = []
+        self.imaged_illuminated_names: set[str] = set()
+        self.usefully_downlinked_names: set[str] = set()
 
     def initial_data(self, satellite: "Satellite") -> "RSOTargetImageData":
         """Furnish data to the scenario.
@@ -204,7 +206,36 @@ class RSOTargetImageReward(GlobalReward):
 
         new_state = np.array(self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedData)
         downlinked_targets = [int(i) for i in np.where(new_state - self.old_state < 0)[0]] # keep track of downlinked targets
+        downlinked_idxs = [int(i) for i in np.where(new_state - self.old_state < 0)[0]]
+        if downlinked_idxs:
+            # Event-level total (unchanged semantics)
+            self.total_downlinks += len(downlinked_idxs)
 
+            # Names of downlinked targets this step
+            msg = self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg
+            downlinked_names = [msg.read().storedDataName[idx] for idx in downlinked_idxs]
+
+            print("Downlinked target names:", downlinked_names)
+            print('total accumulated rewards SS1: ' + str(self.cum_reward['SS1']))
+            print('Targets imaged:' + str(len(self.scenario.satellites[0].data_store.data.imaged)))
+
+            # Reward per event (unchanged)
+            for sat_id, _ in new_data_dict.items():
+                if sat_id != 'SS1':
+                    continue
+                for name in downlinked_names:
+                    # Reward logic: find target by name and award if it was illuminated
+                    tgt = next((t for t in self.scenario.target_spacecrafts if t.name == name), None)
+                    if (tgt is not None) and (tgt.name in self.imaged_illuminated_names):
+                        # Add to "unique useful downlinked" set (counts at most once per target)
+                        if name not in self.usefully_downlinked_names:
+                            self.usefully_downlinked_names.add(name)
+                            # Keep the metric synchronized with the set size
+                            self.useful_downlinks = len(self.usefully_downlinked_names)
+
+                        # Keep your downlink reward per event as before
+                        # (If you prefer to reward only once per target, gate on the same condition above.)
+                        # reward[sat_id] += self.reward_fn(tgt.priority * self.scenario.satellites[0].dynamics.downlink_bonus)
 
         if self.scenario.satellites[0].simulator.sim_time >= (self.scenario.satellites[0].simulator.time_limit - 300):
             imaged_illuminated_elevations =[]
@@ -218,17 +249,6 @@ class RSOTargetImageReward(GlobalReward):
             print("self.scenario.satellites[0].dynamics.total_downlinks",self.scenario.satellites[0].dynamics.total_downlinks)
             print("self.scenario.satellites[0].dynamics.useful_downlinks", self.scenario.satellites[0].dynamics.useful_downlinks)
 
-        if len(downlinked_targets) > 0:
-            self.total_downlinks += len(downlinked_targets)
-            downlinked_names = [
-                self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedDataName[idx]
-                for idx in downlinked_targets
-            ]
-            print("Downlinked target names:", downlinked_names)
-        # else:
-        #     print("No targets downlinked this step.")
-            print('total accumulated rewards SS1: '+str(self.cum_reward['SS1']))
-            print('Targets imaged:'+str(len(self.scenario.satellites[0].data_store.data.imaged)))
 
         for sat_id, new_data in new_data_dict.items():
             reward[sat_id] = 0.0
@@ -245,6 +265,7 @@ class RSOTargetImageReward(GlobalReward):
                 if sat_id == 'SS1':
                     if target not in self.data.imaged and self.scenario.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor > self.scenario.satellites[0].dynamics.eclipse_threshold_for_reward:
                         self.imaged_illuminated.append(target)
+                        self.imaged_illuminated_names.add(target.name)
 
             # Adding Downlink Reward
             if len(downlinked_targets) > 0:
@@ -255,7 +276,7 @@ class RSOTargetImageReward(GlobalReward):
                         target = next((t for t in self.scenario.target_spacecrafts if t.name == target_name), None)
                         if target is not None and target in self.imaged_illuminated:
                             reward[sat_id] += self.reward_fn(target.priority * self.scenario.satellites[0].dynamics.downlink_bonus)
-                            self.useful_downlinks += 1
+                            # self.useful_downlinks += 1
 
             shadow_factors=[]
             penumbra_target_id = []
