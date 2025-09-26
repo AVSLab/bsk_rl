@@ -8,9 +8,12 @@ import os
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.collections import PolyCollection
+
 size=1
-label_size = 12
-tick_label_size = 12
+label_size = 13
+tick_label_size = 13
+legend_fontsize = 11
 AMOS_FONTS = dict(
     title=14*size,   # figure/axes titles
     label=14*size,   # x/y label font size
@@ -833,6 +836,22 @@ for target_id in range(n_targets*6 *100 ):
                 ground_station_windows[gs_name].append(pair_abs.copy())
                 _last_gs_pair[gs_name] = pair_abs.copy()
 
+rec = env.satellites[0].dynamics.inspector_eclipse_recorder
+ecl_sf = np.asarray(rec.shadowFactor, dtype=float).ravel()   # length ~ 45000
+t_ecl_sf = range(len(ecl_sf))
+
+# Try to use recorder timestamps if present; otherwise assume 1 Hz from t=0
+try:
+    t_raw = np.asarray(rec.times, dtype=float).ravel()       # some recorders expose .times
+    ecl_t = t_raw*macros.NANO2SEC if t_raw.max() > 1e6 else t_raw
+except Exception:
+    ecl_t = np.arange(ecl_sf.size, dtype=float)              # 0,1,2,... seconds
+
+# Optional: keep your x-limit consistent with the longest series you plot
+tmax = float(ecl_t[-1])
+if sim_times:
+    tmax = max(tmax, float(np.max(sim_times)))
+
 print("  Final data level:", observation)
 print(f"final reward for SS1 {SS1_reward} should be the same as {env.env.rewarder.cum_reward['SS1']}")
 print(f"and number of imaged targets {len(env.env.satellites[0].data_store.data.imaged)} out of those useful images were: {len(env.env.rewarder.imaged_illuminated)}")
@@ -927,15 +946,18 @@ lines1, labels1 = bars1, ["Count"]
 lines2, labels2 = bars2, ["Percentage"]
 # ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right")
 
-plt.title("Action Distribution: Count and Percentage")
+# plt.title("Action Distribution: Count and Percentage")
 plt.tight_layout()
-
-# Save and show
 if use_shield:
-    save_plot_unique(fig, f"seed{seed_number}_{policy_mode}_{policy_name}+SHIELD_action_distribution_combined")
+    if use_heuristic:
+        save_plot_unique(fig, f"seed{seed_number}_HEURISTIC+SHIELD_action_distribution_combined")
+    else:
+        save_plot_unique(fig, f"seed{seed_number}_{policy_mode}_{policy_name}+SHIELD_action_distribution_combined")
 else:
-    save_plot_unique(fig, f"seed{seed_number}_{policy_mode}_{policy_name}_action_distribution_combined")
-
+    if use_heuristic:
+        save_plot_unique(fig, f"seed{seed_number}_HEURISTIC_action_distribution_combined")
+    else:
+        save_plot_unique(fig, f"seed{seed_number}_{policy_mode}_{policy_name}_action_distribution_combined")
 plt.show()
 
 # --- Compute eclipse & penumbra spans from shadowFactor ---
@@ -943,7 +965,7 @@ plt.show()
 umbra_spans = []
 penumbra_spans = []
 
-if eclipse_status and sim_times and len(eclipse_status) == len(sim_times):
+if len(ecl_sf) == len(t_ecl_sf):
     def _val(x):
         try: return float(getattr(x, "shadowFactor", x))
         except Exception: return 1.0
@@ -955,7 +977,7 @@ if eclipse_status and sim_times and len(eclipse_status) == len(sim_times):
     in_umbra = False; t0_umb = None
     in_penu  = False; t0_pen = None
 
-    for t, s in zip(sim_times, eclipse_status):
+    for t, s in zip(t_ecl_sf, ecl_sf):
         v = _val(s)
 
         if is_umbra(v):
@@ -985,7 +1007,7 @@ if eclipse_status and sim_times and len(eclipse_status) == len(sim_times):
                 in_penu, t0_pen = False, None
 
     # close any open span at the end
-    t_last = sim_times[-1]
+    t_last = t_ecl_sf[-1]
     if in_umbra and t0_umb is not None:
         umbra_spans.append((t0_umb, t_last))
     if in_penu and t0_pen is not None:
@@ -993,7 +1015,7 @@ if eclipse_status and sim_times and len(eclipse_status) == len(sim_times):
 else:
     umbra_spans, penumbra_spans = [], []
 
-# Plot 2: metrics over time + cumulative reward
+######### PLOT2: metrics over time + cumulative reward
 # (Uses EXTRACTED + MERGED window spans for eclipse and ground stations)
 
 # ---- helpers to ensure we have merged spans ----
@@ -1049,7 +1071,7 @@ for (t0, t1) in _all_gs_spans:
     t0, t1 = float(t0), float(t1)
     ax1.fill_between([t0, t1], 0, 1, transform=ax1.get_xaxis_transform(),
                      color='green', alpha=gs_alpha, #zorder=0.03,
-                     label='GS window' if _first_gs_lbl else '')
+                     label='Groundstation window' if _first_gs_lbl else '')
     _first_gs_lbl = False
 
 # Battery & storage on left y-axis
@@ -1076,7 +1098,7 @@ if downlink_times:
 
 # Create second y-axis for cumulative reward and target counts
 ax2 = ax1.twinx()
-ax2.plot(sim_times, num_imaged, label='Cumulative Imaged Targets', color='tab:green')
+ax2.plot(sim_times, num_imaged, label='Illuminated Images (cumulative)', color='tab:green')
 
 # Mark DESAT events
 if desat_times:
@@ -1084,7 +1106,7 @@ if desat_times:
     for t in desat_times[1:]:
         ax1.axvline(t, color='crimson', linestyle='--', linewidth=0.8, alpha=0.85)
 
-ax2.plot(sim_times, num_downlinked, label='Cumulative Downlinked Targets', color='tab:red')
+ax2.plot(sim_times, num_downlinked, label='Downlinked Targets (cumulative)', color='tab:red')
 # ax2.plot(sim_times, SS1_reward_over_time, label='Cumulative SS1 Reward', linestyle=':', linewidth=3.0, color='tab:purple')
 ax2.set_ylabel("Cumulative Count", color='black', fontsize = label_size)
 ax2.tick_params(axis='y', labelcolor='black', labelsize = tick_label_size)
@@ -1096,16 +1118,21 @@ ax2.set_ylim(top=100, bottom=0.0)
 # Combine legends
 lines1, labels1 = ax1.get_legend_handles_labels()
 lines2, labels2 = ax2.get_legend_handles_labels()
-ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', fontsize=legend_fontsize)
 
-plt.title("Battery, Storage, Reward, Imaging and Action Events Over Time")
+# plt.title("Battery, Storage, Reward, Imaging and Action Events Over Time")
 plt.tight_layout()
 if use_shield:
-    save_plot_unique(fig3, f"seed{seed_number}_{policy_mode}_{policy_name}+SHIELD_battery_storage_reward_over_time")
+    if use_heuristic:
+        save_plot_unique(fig3, f"seed{seed_number}_HEURISTIC+SHIELD_battery_storage_reward_over_time")
+    else:
+        save_plot_unique(fig3, f"seed{seed_number}_{policy_mode}_{policy_name}+SHIELD_battery_storage_reward_over_time")
 else:
-    save_plot_unique(fig3, f"seed{seed_number}_{policy_mode}_{policy_name}_battery_storage_reward_over_time")
+    if use_heuristic:
+        save_plot_unique(fig3, f"seed{seed_number}_HEURISTIC_battery_storage_reward_over_time")
+    else:
+        save_plot_unique(fig3, f"seed{seed_number}_{policy_mode}_{policy_name}_battery_storage_reward_over_time")
 plt.show()
-
 
 # Plot 3 Azimuth and Elevation angle (deg) vs time
 # (minutes on x-axis; same merged shading converted to minutes)
@@ -1128,6 +1155,7 @@ for (t0, t1) in umbra_spans:
                      color='grey', alpha=umbra_alpha, zorder=0,
                      label='Umbra (full eclipse)' if _first_u3 else '')
     _first_u3 = False
+
 # for (t0, t1) in penumbra_spans:
 #     ax1.fill_between([t0/60.0, t1/60.0], 0, 1, transform=ax1.get_xaxis_transform(),
 #                      color='grey', alpha=penumbra_alpha, zorder=0,
@@ -1140,7 +1168,7 @@ for (t0, t1) in _all_gs_spans:
     t0m, t1m = float(t0)/minute, float(t1)/minute
     ax1.fill_between([t0m, t1m], 0, 1, transform=ax1.get_xaxis_transform(),
                      color='green', alpha=gs_alpha, #zorder=0.03,
-                     label='GS window' if _first_gs_lbl3 else '')
+                     label='Groundstation window' if _first_gs_lbl3 else '')
     _first_gs_lbl3 = False
 
 # Azimuth/Elevation
@@ -1159,18 +1187,25 @@ ax2.plot(imaging_times, elevations, 'x--', color=color2, label='Elevation')
 ax2.tick_params(axis='y', labelcolor=color2, labelsize = tick_label_size)
 
 
-plt.title('Pointing Directions During Episode')
+# plt.title('Pointing Directions During Episode')
 
 # Combined legend
 lines1, labels1 = ax1.get_legend_handles_labels()
 lines2, labels2 = ax2.get_legend_handles_labels()
-plt.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
+plt.legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=legend_fontsize)
 
 plt.tight_layout()
 if use_shield:
-    save_plot_unique(fig4, f"seed{seed_number}_{policy_mode}_{policy_name}+SHIELD_azimuth_and_elevation_pointing_over_time")
+    if use_heuristic:
+        save_plot_unique(fig4, f"seed{seed_number}_HEURISTIC+SHIELD_azimuth_and_elevation_pointing_over_time")
+    else:
+        save_plot_unique(fig4, f"seed{seed_number}_{policy_mode}_{policy_name}+SHIELD_azimuth_and_elevation_pointing_over_time")
 else:
-    save_plot_unique(fig4, f"seed{seed_number}_{policy_mode}_{policy_name}_azimuth_and_elevation_pointing_over_time")
+    if use_heuristic:
+        save_plot_unique(fig4, f"seed{seed_number}_HEURISTIC_azimuth_and_elevation_pointing_over_time")
+    else:
+        save_plot_unique(fig4, f"seed{seed_number}_{policy_mode}_{policy_name}_azimuth_and_elevation_pointing_over_time")
+
 plt.show()
 
 
