@@ -19,7 +19,7 @@ dependencies = [
     "gymnasium",
     "numpy",
     "pandas",
-    "pettingzoo",
+    "pettingzoo>=1.24.0",
     "pytest==7.3.1",
     "pytest-cov",
     "pytest-repeat",
