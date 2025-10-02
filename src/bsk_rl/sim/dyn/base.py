@@ -317,6 +317,7 @@ class BasicDynamicsModel(DynamicsModel):
         vN=None,
         oe=random_orbit,
         mu=orbitalMotion.MU_EARTH * 1e9,
+        min_orbital_radius=(orbitalMotion.REQ_EARTH + 200) * 1e3,
     )
     def setup_spacecraft_hub(
         self,
@@ -330,6 +331,7 @@ class BasicDynamicsModel(DynamicsModel):
         rN: Optional[Iterable[float]],
         vN: Optional[Iterable[float]],
         mu: float,
+        min_orbital_radius: float,
         priority: int = 2000,
         **kwargs,
     ) -> None:
@@ -352,6 +354,7 @@ class BasicDynamicsModel(DynamicsModel):
             mu: Gravitational parameter (used only with ``oe``).
             rN: [m] Initial inertial position.
             vN: [m/s] Initial inertial velocity.
+            min_orbital_radius: [m] Minimum allowable orbital radius
             priority: Model priority.
             kwargs: Passed to other setup functions.
         """
@@ -383,6 +386,8 @@ class BasicDynamicsModel(DynamicsModel):
         self.simulator.AddModelToTask(
             self.task_name, self.scObject, ModelPriority=priority
         )
+
+        self.min_orbital_radius = min_orbital_radius
 
         self.setup_gravity_bodies()
         self.setup_disturbance_torque(**kwargs)
@@ -504,7 +509,7 @@ class BasicDynamicsModel(DynamicsModel):
 
         Checks if altitude is greater than 200km above Earth's surface.
         """
-        return np.linalg.norm(self.r_BN_N) > (orbitalMotion.REQ_EARTH + 200) * 1e3
+        return np.linalg.norm(self.r_BN_N) > self.min_orbital_radius
 
     @default_args(
         wheelSpeeds=lambda: np.random.uniform(-1500, 1500, 3),
