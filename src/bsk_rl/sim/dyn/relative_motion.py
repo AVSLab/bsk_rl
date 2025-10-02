@@ -6,11 +6,11 @@ import numpy as np
 from Basilisk.simulation import spacecraftLocation
 from Basilisk.utilities import macros
 
-from bsk_rl.sim.dyn import BasicDynamicsModel
+from bsk_rl.sim.dyn import DynamicsModel
 from bsk_rl.utils.functional import aliveness_checker, default_args, valid_func_name
 
 
-class LOSCommDynModel(BasicDynamicsModel):
+class LOSCommDynModel(DynamicsModel):
     """For evaluating line-of-sight connections between satellites for communication."""
 
     def __init__(self, *args, **kwargs) -> None:
@@ -64,7 +64,7 @@ class LOSCommDynModel(BasicDynamicsModel):
             )
 
 
-class ConjunctionDynModel(BasicDynamicsModel):
+class ConjunctionDynModel(DynamicsModel):
     """For evaluating conjunctions between satellites."""
 
     def __init__(self, *args, **kwargs) -> None:
@@ -134,7 +134,7 @@ class ConjunctionDynModel(BasicDynamicsModel):
                 )
 
 
-class MaxRangeDynModel(BasicDynamicsModel):
+class MaxRangeDynModel(DynamicsModel):
     """For evaluating a maximum range limitation between satellites."""
 
     def __init__(self, *args, **kwargs) -> None:

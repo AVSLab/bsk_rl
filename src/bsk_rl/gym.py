@@ -365,6 +365,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.scenario.reset_during_sim_init()
         self.rewarder.reset_during_sim_init()
         self.communicator.reset_during_sim_init()
+        for satellite in self.satellites:
+            satellite.reset_during_sim_init()
 
         self.simulator.finish_init()
 
