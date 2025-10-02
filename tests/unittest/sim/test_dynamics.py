@@ -153,6 +153,7 @@ class TestBasicDynamicsModel:
     )
     def test_altitude_valid(self, vec, valid):
         dyn = BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
+        dyn.min_orbital_radius = 1e6
         dyn.simulator.world = MagicMock()
         dyn.scObject = MagicMock()
         message = dyn.scObject.scStateOutMsg.read.return_value
