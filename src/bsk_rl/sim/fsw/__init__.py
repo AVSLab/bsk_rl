@@ -29,7 +29,14 @@ decorator. These functions are called at each step to check if the satellite is 
 operational, returning true if the satellite is still alive.
 """
 
-from bsk_rl.sim.fsw.base import BasicFSWModel, FSWModel, SteeringFSWModel, Task, action
+from bsk_rl.sim.fsw.base import (
+    BaseFSWModel,
+    BasicFSWModel,
+    FSWModel,
+    SteeringFSWModel,
+    Task,
+    action,
+)
 from bsk_rl.sim.fsw.ground_imaging import (
     ContinuousImagingFSWModel,
     ImagingFSWModel,
@@ -49,4 +56,5 @@ __all__ = [
     "SteeringImagerFSWModel",
     "MagicOrbitalManeuverFSWModel",
     "RSOInspectorFSWModel",
+    "BaseFSWModel",
 ]

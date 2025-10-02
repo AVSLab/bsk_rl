@@ -63,6 +63,64 @@ def action(
     return inner
 
 
+class Task(ABC):
+    """Abstract class for defining FSW tasks."""
+
+    name: str = AbstractClassProperty()
+
+    def __init__(self, fsw: "FSWModel", priority: int) -> None:
+        """Template class for defining FSW processes.
+
+        Each FSW process has a task associated with it, which handle certain housekeeping
+        functions.
+
+        Args:
+            fsw: FSW model task contributes to
+            priority: Task priority
+        """
+        self.fsw: "FSWModel" = proxy(fsw)
+        self.priority = priority
+
+    def create_task(self) -> None:
+        """Add task to FSW with a unique name."""
+        self.fsw.fsw_proc.addTask(
+            self.fsw.simulator.CreateNewTask(
+                self.name + self.fsw.satellite.name, mc.sec2nano(self.fsw.fsw_rate)
+            ),
+            taskPriority=self.priority,
+        )
+
+    @abstractmethod  # pragma: no cover
+    def _create_module_data(self) -> None:
+        """Create module data wrappers."""
+        pass
+
+    @abstractmethod  # pragma: no cover
+    def _setup_fsw_objects(self, **kwargs) -> None:
+        """Initialize model parameters with satellite arguments."""
+        pass
+
+    def _add_model_to_task(self, module, priority) -> None:
+        """Add a model to this task.
+
+        Args:
+            module: Basilisk module
+            priority: Model priority
+        """
+        self.fsw.simulator.AddModelToTask(
+            self.name + self.fsw.satellite.name,
+            module,
+            ModelPriority=priority,
+        )
+
+    def reset_for_action(self) -> None:
+        """Housekeeping for task when a new action is called.
+
+        Disables task by default, can be overridden by subclasses.
+        """
+        self.fsw.simulator.disableTask(self.name + self.fsw.satellite.name)
+
+
 class FSWModel(ABC):
     """Abstract Basilisk flight software model."""
 
@@ -132,7 +190,6 @@ class FSWModel(ABC):
     def _make_task_list(self) -> list["Task"]:
         return []
 
-    @abstractmethod  # pragma: no cover
     def _set_messages(self) -> None:
         """Message setup after task creation."""
         pass
@@ -150,65 +207,45 @@ class FSWModel(ABC):
         self.logger.debug("Basilisk FSW deleted")
 
 
-class Task(ABC):
-    """Abstract class for defining FSW tasks."""
+class BaseFSWModel(FSWModel):
+    @classmethod
+    def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
+        return [dyn.BaseDynamicsModel]
 
-    name: str = AbstractClassProperty()
+    def _set_messages(self) -> None:
+        self._set_config_msgs()
+        self._set_gateway_msgs()
 
-    def __init__(self, fsw: FSWModel, priority: int) -> None:
-        """Template class for defining FSW processes.
+    def _set_config_msgs(self) -> None:
+        self._set_vehicle_config_msg()
 
-        Each FSW process has a task associated with it, which handle certain housekeeping
-        functions.
+    def _set_vehicle_config_msg(self) -> None:
+        """Set the vehicle configuration message."""
+        # Use the same inertia in the FSW algorithm as in the simulation
+        vehicleConfigOut = messaging.VehicleConfigMsgPayload()
+        vehicleConfigOut.ISCPntB_B = self.dynamics.I_mat
+        self.vcConfigMsg = messaging.VehicleConfigMsg().write(vehicleConfigOut)
 
-        Args:
-            fsw: FSW model task contributes to
-            priority: Task priority
-        """
-        self.fsw: FSWModel = proxy(fsw)
-        self.priority = priority
+    def _set_gateway_msgs(self) -> None:
+        """Create C-wrapped gateway messages."""
+        self.attRefMsg = messaging.AttRefMsg_C()
+        self.attGuidMsg = messaging.AttGuidMsg_C()
+        self._zero_gateway_msgs()
 
-    def create_task(self) -> None:
-        """Add task to FSW with a unique name."""
-        self.fsw.fsw_proc.addTask(
-            self.fsw.simulator.CreateNewTask(
-                self.name + self.fsw.satellite.name, mc.sec2nano(self.fsw.fsw_rate)
-            ),
-            taskPriority=self.priority,
-        )
+    def _zero_gateway_msgs(self) -> None:
+        """Zero all the FSW gateway message payloads."""
+        self.attRefMsg.write(messaging.AttRefMsgPayload())
+        self.attGuidMsg.write(messaging.AttGuidMsgPayload())
 
-    @abstractmethod  # pragma: no cover
-    def _create_module_data(self) -> None:
-        """Create module data wrappers."""
-        pass
-
-    @abstractmethod  # pragma: no cover
-    def _setup_fsw_objects(self, **kwargs) -> None:
-        """Initialize model parameters with satellite arguments."""
-        pass
-
-    def _add_model_to_task(self, module, priority) -> None:
-        """Add a model to this task.
-
-        Args:
-            module: Basilisk module
-            priority: Model priority
-        """
-        self.fsw.simulator.AddModelToTask(
-            self.name + self.fsw.satellite.name,
-            module,
-            ModelPriority=priority,
-        )
-
-    def reset_for_action(self) -> None:
-        """Housekeeping for task when a new action is called.
-
-        Disables task by default, can be overridden by subclasses.
-        """
-        self.fsw.simulator.disableTask(self.name + self.fsw.satellite.name)
+    def _make_task_list(self):
+        return []
 
 
-class BasicFSWModel(FSWModel):
+class MagicPointingFSWModel(BaseFSWModel):
+    pass  # TODO
+
+
+class BasicFSWModel(BaseFSWModel):
     """Basic FSW model with minimum necessary Basilisk components."""
 
     @classmethod
@@ -224,21 +261,10 @@ class BasicFSWModel(FSWModel):
             self.MRPControlTask(self),
         ]
 
-    def _set_messages(self) -> None:
-        self._set_config_msgs()
-        self._set_gateway_msgs()
-
     def _set_config_msgs(self) -> None:
-        self._set_vehicle_config_msg()
+        super()._set_config_msgs()
         self._set_thrusters_config_msg()
         self._set_rw_config_msg()
-
-    def _set_vehicle_config_msg(self) -> None:
-        """Set the vehicle configuration message."""
-        # Use the same inertia in the FSW algorithm as in the simulation
-        vehicleConfigOut = messaging.VehicleConfigMsgPayload()
-        vehicleConfigOut.ISCPntB_B = self.dynamics.I_mat
-        self.vcConfigMsg = messaging.VehicleConfigMsg().write(vehicleConfigOut)
 
     def _set_thrusters_config_msg(self) -> None:
         """Import the thrusters configuration information."""
@@ -250,10 +276,7 @@ class BasicFSWModel(FSWModel):
 
     def _set_gateway_msgs(self) -> None:
         """Create C-wrapped gateway messages."""
-        self.attRefMsg = messaging.AttRefMsg_C()
-        self.attGuidMsg = messaging.AttGuidMsg_C()
-
-        self._zero_gateway_msgs()
+        super()._set_gateway_msgs()
 
         # connect gateway FSW effector command msgs with the dynamics
         self.dynamics.rwStateEffector.rwMotorCmdInMsg.subscribeTo(
@@ -262,11 +285,6 @@ class BasicFSWModel(FSWModel):
         self.dynamics.thrusterSet.cmdsInMsg.subscribeTo(
             self.thrDump.thrusterOnTimeOutMsg
         )
-
-    def _zero_gateway_msgs(self) -> None:
-        """Zero all the FSW gateway message payloads."""
-        self.attRefMsg.write(messaging.AttRefMsgPayload())
-        self.attGuidMsg.write(messaging.AttGuidMsgPayload())
 
     @action
     def action_drift(self) -> None:
