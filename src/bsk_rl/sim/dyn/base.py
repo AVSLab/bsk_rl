@@ -122,33 +122,7 @@ class DynamicsModel(ABC):
         self.logger.debug("Basilisk dynamics deleted")
 
 
-class BasicDynamicsModel(DynamicsModel):
-    """Basic Dynamics model with minimum necessary Basilisk components."""
-
-    @classmethod
-    def _requires_world(cls) -> list[type["WorldModel"]]:
-        return [world.BasicWorldModel]
-
-    def __init__(self, *args, **kwargs) -> None:
-        """A dynamics model with a basic feature set.
-
-        Includes the following:
-
-        * Spacecraft hub physical properties
-        * Gravity
-        * Constant disturbance torque (defaults to none)
-        * Aerodynamic drag
-        * Eclipse checking for power generation
-        * Reaction wheels
-        * Momentum desaturation thrusters
-        * Solar panels, battery, and power system
-
-        Args:
-            *args: Passed to superclass
-            **kwargs: Passed to superclass
-        """
-        super().__init__(*args, **kwargs)
-
+class BaseDynamicsModel(DynamicsModel):
     @property
     def sigma_BN(self):
         """Body attitude MRP relative to inertial frame."""
@@ -273,38 +247,10 @@ class BasicDynamicsModel(DynamicsModel):
         )
         return beta
 
-    @property
-    def battery_charge(self):
-        """Battery charge [W*s]."""
-        return self.powerMonitor.batPowerOutMsg.read().storageLevel
-
-    @property
-    def battery_charge_fraction(self):
-        """Battery charge as a fraction of capacity."""
-        return self.battery_charge / self.powerMonitor.storageCapacity
-
-    @property
-    def wheel_speeds(self):
-        """Wheel speeds [rad/s]."""
-        return np.array(self.rwStateEffector.rwSpeedOutMsg.read().wheelSpeeds)[0:3]
-
-    @property
-    def wheel_speeds_fraction(self):
-        """Wheel speeds normalized by maximum allowable speed."""
-        return self.wheel_speeds / (self.maxWheelSpeed * macros.rpm2radsec)
-
     def _setup_dynamics_objects(self, **kwargs) -> None:
+        """Caller for all dynamics object initialization."""
         self.setup_spacecraft_hub(**kwargs)
-        self.setup_drag_effector(**kwargs)
-        self.setup_reaction_wheel_dyn_effector(**kwargs)
-        self.setup_thruster_dyn_effector()
         self.setup_simple_nav_object()
-        self.setup_eclipse_object()
-        self.setup_solar_panel(**kwargs)
-        self.setup_battery(**kwargs)
-        self.setup_power_sink(**kwargs)
-        self.setup_reaction_wheel_power(**kwargs)
-        self.setup_thruster_power(**kwargs)
 
     @default_args(
         mass=330,
@@ -390,14 +336,96 @@ class BasicDynamicsModel(DynamicsModel):
         self.min_orbital_radius = min_orbital_radius
 
         self.setup_gravity_bodies()
-        self.setup_disturbance_torque(**kwargs)
-        self.setup_density_model()
 
     def setup_gravity_bodies(self) -> None:
         """Set up gravitational bodies from the :class:`~bsk_rl.sim.world.WorldModel` to included in the simulation."""
         self.scObject.gravField.gravBodies = spacecraft.GravBodyVector(
             list(self.world.gravFactory.gravBodies.values())
         )
+
+    def setup_simple_nav_object(self, priority: int = 1400, **kwargs) -> None:
+        """Set up the navigation module.
+
+        Args:
+            priority: Model priority.
+            kwargs: Passed to other setup functions.
+        """
+        self.simpleNavObject = simpleNav.SimpleNav()
+        self.simpleNavObject.ModelTag = "SimpleNav"
+        self.simpleNavObject.scStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
+        self.simulator.AddModelToTask(
+            self.task_name, self.simpleNavObject, ModelPriority=priority
+        )
+
+    @aliveness_checker
+    def altitude_valid(self) -> bool:
+        """Check that satellite has not deorbited.
+
+        Checks if altitude is greater than 200km above Earth's surface.
+        """
+        return np.linalg.norm(self.r_BN_N) > self.min_orbital_radius
+
+
+class BasicDynamicsModel(BaseDynamicsModel):
+    """Basic Dynamics model with minimum necessary Basilisk components."""
+
+    @classmethod
+    def _requires_world(cls) -> list[type["WorldModel"]]:
+        return [world.BasicWorldModel]
+
+    def __init__(self, *args, **kwargs) -> None:
+        """A dynamics model with a basic feature set.
+
+        Includes the following:
+
+        * Spacecraft hub physical properties
+        * Gravity
+        * Constant disturbance torque (defaults to none)
+        * Aerodynamic drag
+        * Eclipse checking for power generation
+        * Reaction wheels
+        * Momentum desaturation thrusters
+        * Solar panels, battery, and power system
+
+        Args:
+            *args: Passed to superclass
+            **kwargs: Passed to superclass
+        """
+        super().__init__(*args, **kwargs)
+
+    @property
+    def battery_charge(self):
+        """Battery charge [W*s]."""
+        return self.powerMonitor.batPowerOutMsg.read().storageLevel
+
+    @property
+    def battery_charge_fraction(self):
+        """Battery charge as a fraction of capacity."""
+        return self.battery_charge / self.powerMonitor.storageCapacity
+
+    @property
+    def wheel_speeds(self):
+        """Wheel speeds [rad/s]."""
+        return np.array(self.rwStateEffector.rwSpeedOutMsg.read().wheelSpeeds)[0:3]
+
+    @property
+    def wheel_speeds_fraction(self):
+        """Wheel speeds normalized by maximum allowable speed."""
+        return self.wheel_speeds / (self.maxWheelSpeed * macros.rpm2radsec)
+
+    def _setup_dynamics_objects(self, **kwargs) -> None:
+        super()._setup_dynamics_objects(**kwargs)
+        self.setup_disturbance_torque(**kwargs)
+        self.setup_density_model()
+        self.setup_drag_effector(**kwargs)
+        self.setup_reaction_wheel_dyn_effector(**kwargs)
+        self.setup_thruster_dyn_effector()
+        self.setup_eclipse_object()
+        self.setup_solar_panel(**kwargs)
+        self.setup_battery(**kwargs)
+        self.setup_power_sink(**kwargs)
+        self.setup_reaction_wheel_power(**kwargs)
+        self.setup_thruster_power(**kwargs)
 
     @default_args(disturbance_vector=None)
     def setup_disturbance_torque(
@@ -488,29 +516,6 @@ class BasicDynamicsModel(DynamicsModel):
         self.simulator.AddModelToTask(
             self.task_name, self.dragEffector, ModelPriority=priority
         )
-
-    def setup_simple_nav_object(self, priority: int = 1400, **kwargs) -> None:
-        """Set up the navigation module.
-
-        Args:
-            priority: Model priority.
-            kwargs: Passed to other setup functions.
-        """
-        self.simpleNavObject = simpleNav.SimpleNav()
-        self.simpleNavObject.ModelTag = "SimpleNav"
-        self.simpleNavObject.scStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
-        self.simulator.AddModelToTask(
-            self.task_name, self.simpleNavObject, ModelPriority=priority
-        )
-
-    @aliveness_checker
-    def altitude_valid(self) -> bool:
-        """Check that satellite has not deorbited.
-
-        Checks if altitude is greater than the configurable minimum orbital radius
-        (`min_orbital_radius`). The default value corresponds to 200km above Earth's surface.
-        """
-        return np.linalg.norm(self.r_BN_N) > self.min_orbital_radius
 
     @default_args(
         wheelSpeeds=lambda: np.random.uniform(-1500, 1500, 3),
@@ -747,5 +752,6 @@ __doc_title__ = "Dynamics Base"
 
 __all__ = [
     "DynamicsModel",
+    "BaseDynamicsModel",
     "BasicDynamicsModel",
 ]

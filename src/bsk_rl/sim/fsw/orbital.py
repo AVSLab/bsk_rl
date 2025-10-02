@@ -2,11 +2,11 @@
 
 import numpy as np
 
-from bsk_rl.sim.fsw import BasicFSWModel, action
+from bsk_rl.sim.fsw import FSWModel, action
 from bsk_rl.utils.functional import aliveness_checker, default_args
 
 
-class MagicOrbitalManeuverFSWModel(BasicFSWModel):
+class MagicOrbitalManeuverFSWModel(FSWModel):
     """Model that allows for instantaneous Delta V maneuvers."""
 
     def __init__(self, *args, **kwargs) -> None:
