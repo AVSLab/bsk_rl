@@ -38,7 +38,7 @@ from Basilisk.simulation import (
 from Basilisk.utilities import macros as mc
 from Basilisk.utilities import orbitalMotion, simIncludeGravBody
 
-from bsk_rl.utils.functional import collect_default_args, default_args
+from bsk_rl.utils.functional import Resetable, collect_default_args, default_args
 from bsk_rl.utils.orbital import random_epoch
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 bsk_path = __path__[0]
 
 
-class WorldModel(ABC):
+class WorldModel(ABC, Resetable):
     """Abstract Basilisk world model."""
 
     @classmethod
