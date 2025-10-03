@@ -362,20 +362,25 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         )
         self.simulator.setup_vizard(**self.vizard_settings)
 
+        self.simulator.world.reset_during_sim_init()
         self.scenario.reset_during_sim_init()
         self.rewarder.reset_during_sim_init()
         self.communicator.reset_during_sim_init()
         for satellite in self.satellites:
             satellite.reset_during_sim_init()
+            satellite.dynamics.reset_during_sim_init()
+            satellite.fsw.reset_during_sim_init()
 
         self.simulator.finish_init()
 
+        self.simulator.world.reset_post_sim_init()
         self.scenario.reset_post_sim_init()
         self.rewarder.reset_post_sim_init()
         self.communicator.reset_post_sim_init()
-
         for satellite in self.satellites:
             satellite.reset_post_sim_init()
+            satellite.dynamics.reset_post_sim_init()
+            satellite.fsw.reset_post_sim_init()
             satellite.data_store.update_from_logs()
 
         observation = self._get_obs()

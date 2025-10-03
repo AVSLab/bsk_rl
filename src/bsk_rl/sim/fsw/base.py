@@ -24,6 +24,7 @@ from Basilisk.utilities import macros as mc
 from bsk_rl.sim import dyn
 from bsk_rl.utils.functional import (
     AbstractClassProperty,
+    Resetable,
     check_aliveness_checkers,
     default_args,
 )
@@ -121,7 +122,7 @@ class Task(ABC):
         self.fsw.simulator.disableTask(self.name + self.fsw.satellite.name)
 
 
-class FSWModel(ABC):
+class FSWModel(ABC, Resetable):
     """Abstract Basilisk flight software model."""
 
     @classmethod

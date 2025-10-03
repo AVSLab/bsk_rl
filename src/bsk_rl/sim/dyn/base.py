@@ -25,6 +25,7 @@ from bsk_rl.sim import world
 from bsk_rl.utils import actuator_primitives as aP
 from bsk_rl.utils.attitude import random_tumble
 from bsk_rl.utils.functional import (
+    Resetable,
     aliveness_checker,
     check_aliveness_checkers,
     default_args,
@@ -37,7 +38,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sim.world import WorldModel
 
 
-class DynamicsModel(ABC):
+class DynamicsModel(ABC, Resetable):
     """Abstract Basilisk dynamics model."""
 
     @classmethod
