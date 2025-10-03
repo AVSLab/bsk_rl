@@ -52,6 +52,16 @@ from bsk_rl.act.discrete_actions import (
     ImageStrip,
     Scan,
 )
+from bsk_rl.act.hybrid_actions import (
+    HybridAction,
+    HybridFSWAction,
+    HybridImageStrip)
+
+from bsk_rl.act.hybrid_actions_multi import (
+    MultiHybridAction,
+    MultiHybridFSWAction,
+    MultiHybridImageStrip
+)
 
 __doc_title__ = "Actions"
 __all__ = [
@@ -65,4 +75,10 @@ __all__ = [
     "Image",
     "ImageStrip",
     "Scan",
+    "HybridAction",
+    "HybridFSWAction",
+    "HybridImageStrip",
+    "MultiHybridAction",
+    "MultiHybridFSWAction",
+    "MultiHybridImageStrip"
 ]

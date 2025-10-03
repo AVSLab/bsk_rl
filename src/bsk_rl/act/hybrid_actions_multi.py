@@ -1,0 +1,236 @@
+"""Discrete actions are indexable by integer."""
+
+import logging
+from abc import abstractmethod
+from typing import TYPE_CHECKING, Any, Optional, Union
+import numpy as np
+from gymnasium import spaces
+
+from bsk_rl.act.actions import Action, ActionBuilder
+
+if TYPE_CHECKING:  # pragma: no cover
+    from bsk_rl.sats import Satellite
+    from bsk_rl.scene.targets import Target
+
+logger = logging.getLogger(__name__)
+
+
+def clean_action(action: tuple[int, Union[float, np.ndarray, list]]) -> tuple[int, float]:
+    """
+    Convert hybrid action into a (discrete, continuous) tuple.
+    - discrete: Python int, chosen discrete action
+    - continuous: Python float, corresponding continuous parameter
+    """
+    # Make sure discrete is a Python int
+    discrete = action[0].item() if isinstance(action[0], np.generic) else int(action[0])
+
+    # Continuous branch is an array/list; pick the one at index = discrete
+    cont_array = np.asarray(action[1])
+    continuous = cont_array[discrete]
+
+    # Convert to plain Python float
+    if isinstance(continuous, np.generic):
+        continuous = continuous.item()
+    else:
+        continuous = float(continuous)
+
+    return (discrete, continuous)
+
+class MultiHybridActionBuilder(ActionBuilder):
+    def __init__(self, satellite: "Satellite") -> None:
+        """Processes actions for a discrete action space.
+
+        Args:
+            satellite: Satellite to create actions for.
+        """
+        super().__init__(satellite)
+        self.prev_action_key = None
+
+    def reset_post_sim_init(self) -> None:
+        """Log previous action key."""
+        super().reset_post_sim_init()
+        self.prev_action_key = None
+
+    @property
+    def action_space(self) -> spaces.Tuple:
+        """Hybrid action space: one discrete choice + continuous parameters for each possible discrete action."""
+        n_discrete = sum([act.n_actions for act in self.action_spec])
+        return spaces.Tuple((
+            spaces.Discrete(n_discrete),  # choose one discrete action
+            spaces.Box(low=-1.0, high=1.0, shape=(n_discrete,), dtype=np.float32)  # one continuous param per discrete action
+        ))
+
+    @property
+    def action_description(self) -> list[str]:
+        """Return a list of strings corresponding to action names."""
+        actions = []
+        for act in self.action_spec:
+            if act.n_actions == 1:
+                actions.append(act.name)
+            else:
+                actions.extend([f"{act.name}_{i}" for i in range(act.n_actions)])
+        return actions
+
+    def set_action(self, action: tuple[int, Union[float, np.ndarray, list]]) -> None:
+        """Sets the action based on the integer index.
+
+        If the action is not an integer, the satellite will attempt to call ``set_action_override``
+        for each action, in order, until one works.
+        """
+        action = clean_action(action)
+        self.satellite.disable_timed_terminal_event()
+        if not np.issubdtype(type(action[0]), np.integer):
+            logger.warning(
+                f"Action '{action[0]}' is not an integer. Will attempt to use compatible set_action_override method."
+            )
+            for act in self.action_spec:
+                try:
+                    self.prev_action_key = act.set_action_override(
+                        (action[0], action[1]), prev_action_key=self.prev_action_key
+                    )
+                    return
+                except AttributeError:
+                    pass
+                except TypeError:
+                    pass
+            else:
+                raise ValueError(
+                    f"Action '{action[0]}' is not an integer and no compatible set_action_override method found."
+                )
+        index = 0
+        for act in self.action_spec:
+            if index + act.n_actions > action[0]:
+                self.prev_action_key = act.set_action(
+                    (action[0] - index, action[1]), prev_action_key=self.prev_action_key
+                )
+                return
+            index += act.n_actions
+        else:
+            raise ValueError(f"Action index {action[0]} out of range.")
+
+class MultiHybridAction(Action):
+    builder_type = MultiHybridActionBuilder
+
+    def __init__(self, name: str = "discrete_act", n_actions: int = 1):
+        """Base class for discrete, integer-indexable actions.
+
+        A discrete action may represent multiple indexed actions of the same type.
+
+        Optionally, discrete actions may have a ``set_action_override`` function defined.
+        If the action passed to the satellite is not an integer, the satellite will iterate
+        over the ``action_spec`` and attempt to call ``set_action_override`` on each action
+        until one is successful.
+
+        Args:
+            name: Name of the action.
+            n_actions: Number of actions available.
+        """
+        super().__init__(name=name)
+        self.n_actions = n_actions
+
+    @abstractmethod
+    def set_action(self, action: tuple[int, Union[float, np.ndarray, list]], prev_action_key=None) -> str:
+        """Activate an action by local index."""
+        pass
+
+class MultiHybridFSWAction(MultiHybridAction):
+    def __init__(
+        self,
+        fsw_action,
+        name=None,
+        duration: Optional[float] = None,
+        reset_task: bool = False,
+    ):
+        """Discrete action to task a flight software action function.
+
+        This action executes a function of a :class:`~bsk_rl.sim.fsw.FSWModel`
+        instance that takes no arguments, typically decorated with ``@action``.
+
+        Args:
+            fsw_action: Name of the flight software function to task.
+            name: Name of the action. If not specified, defaults to the ``fsw_action`` name.
+            duration: Duration of the action in seconds. Defaults to a large value so that
+                the :class:`~bsk_rl.GeneralSatelliteTasking` ``max_step_duration``
+                controls step length.
+            reset_task: If true, reset the action if the previous action was the same.
+                Generally, this parameter should be false to ensure realistic, continuous
+                operation of satellite modes; however, some Basilisk modules may require
+                frequent resetting for normal operation.
+        """
+        if name is None:
+            name = fsw_action
+        super().__init__(name=name, n_actions=1)
+        self.fsw_action = fsw_action
+        self.reset_task = reset_task
+        if duration is None:
+            duration = 1e9
+        self.duration = duration
+
+    def set_action(self, action: tuple[int, Union[float, np.ndarray, list]], prev_action_key=None) -> str:
+        """Activate the ``fsw_action`` function.
+
+        Args:
+            action: Should always be ``1``.
+            prev_action_key: Previous action key.
+
+        Returns:
+            The name of the activated action.
+        """
+        action = clean_action(action)
+        assert action[0] == 0
+        self.satellite.logger.info(f"{self.name} tasked for {self.duration} seconds")
+        action_duration = np.min([self.duration, action[1]]) if self.duration is not None else action[1]
+        self.satellite.update_timed_terminal_event(
+            self.simulator.sim_time + action_duration, info=f"for {self.fsw_action}"
+        )
+
+        if self.reset_task or prev_action_key != self.fsw_action:
+            getattr(self.satellite.fsw, self.fsw_action)()
+
+        return self.fsw_action
+    
+class MultiHybridImageStrip(MultiHybridAction):
+    def __init__(
+        self,
+        n_ahead_image: int,
+        max_duration: float,
+        name: str = "action_image_strip",
+    ):
+        from bsk_rl.sats import StripImagingSatellite
+
+        self.satellite: "StripImagingSatellite"
+        self.max_duration = max_duration
+        super().__init__(name=name, n_actions=n_ahead_image)
+
+
+    def image(
+        self, action: tuple[int, float], prev_action_key: Optional[str] = None
+    ) -> str:
+        """Task or retask a satellite for imaging a target.
+
+        Args:
+            target: Target to image.
+            prev_action_key: Previous action key.
+
+        :meta private:
+        """
+        target = action[0]
+        pre_imaging_time = action[1]
+        target = self.satellite.parse_target_selection(target)
+        target.pre_imaging_time = pre_imaging_time*self.max_duration
+        self.satellite.task_target_for_imaging(target)
+        return target.id
+
+    def set_action(self, action: tuple[int, Union[float, np.ndarray, list]], prev_action_key: Optional[str] = None) -> str:
+        """Image a target by local index.
+
+        Args:
+            action: Index of the target to image.
+            prev_action_key: Previous action key.
+
+        :meta_private:
+        """
+        self.satellite.logger.info(f"target index {action[0]} tasked")
+        return self.image(action, prev_action_key)
+
+   

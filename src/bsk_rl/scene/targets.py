@@ -24,7 +24,12 @@ if TYPE_CHECKING:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
-
+import matplotlib.pyplot as plt
+from matplotlib.colors import LightSource
+from matplotlib.colors import Normalize
+from matplotlib.cm import ScalarMappable
+from matplotlib.cm import get_cmap
+from matplotlib.colors import LightSource
 import random
 
 
@@ -68,14 +73,16 @@ class Target:
 
 class Strip:
     """Ground strip target with associated value."""
-    def __init__(self, name: str, r_LP_P_start: Iterable[float], r_LP_P_end: Iterable[float], priority: float,aquisition_speed: float, pre_imaging_time: list[float]) -> None:
+    def __init__(self, name: str, r_LP_P_start: Iterable[float], r_LP_P_end: Iterable[float], priority: float, aquisition_speed: float, pre_imaging_time: float) -> None:
         """Strip target with name, associated priority, location of the starting point, location of the end point
 
         Args:
-            name: Identifier; does not need to be unique
+            name: Identifier does not need to be unique
             r_LP_P_start: Starting point of the strip in the planet-fixed frame [m]
             r_LP_P_end: Ending point of the strip in the planet-fixed frame [m]
             priority: Value metric.
+            acquisition_speed: Speed at which the satellite can acquire the strip [m/s]
+            pre_imaging_time: Time required before imaging can start [s]
         """
         self.name = name
         self.r_LP_P_start = np.array(r_LP_P_start)
@@ -269,8 +276,6 @@ class UniformStripTargets(Scenario):
             self,
             n_targets: Union[int, tuple[int, int]],
             length_strip_bounds: tuple[float, float],
-            pre_imaging_time_option: float = 3, #in seconds
-            max_pre_imaging: float = 60, #in seconds
             priority_distribution: Optional[Callable] = None,
             radius: float = orbitalMotion.REQ_EARTH * 1e3,
             aquisition_speed: float = 3*1e3, #in m/s
@@ -294,9 +299,7 @@ class UniformStripTargets(Scenario):
             self.radius = radius
             self.length_strip_bounds = length_strip_bounds
             self.aquisition_speed = aquisition_speed
-            self.pre_imaging_time_option = pre_imaging_time_option
-            self.max_pre_imaging = max_pre_imaging
-            self.pre_imaging_time = [self.max_pre_imaging] * self.pre_imaging_time_option
+            self.pre_imaging_time = 0
            
     def reset_overwrite_previous(self) -> None:
         """Overwrite target list from previous episode."""
@@ -324,6 +327,54 @@ class UniformStripTargets(Scenario):
                         ],  # Assume not randomized
                         type="target",
                     )
+    def reset_during_sim_init(self) -> None:
+        """Visualize targets in Vizard on reset."""
+        for target in self.targets:
+            self.visualize_target(target)
+
+    @vizard.visualize
+    def visualize_target(self, target, vizSupport=None, vizInstance=None):
+        
+        def compute_strip_vertices(r_start, r_end, width=100e3):
+            r_start = np.array(r_start).flatten()
+            r_end = np.array(r_end).flatten()
+
+            # Direction along the centerline
+            d_vec = r_end - r_start
+            d_vec /= np.linalg.norm(d_vec)
+
+            # Approximate surface normal at the midpoint
+            mid_vec = (r_start + r_end) / 2
+            mid_vec /= np.linalg.norm(mid_vec)
+
+            # Perpendicular vector in the tangent plane
+            p_vec = np.cross(mid_vec, d_vec)
+            p_vec /= np.linalg.norm(p_vec)
+
+            # Compute the four corner points
+            half_width = width / 2.0
+            v1 = r_start + half_width * p_vec  # top-left
+            v2 = r_start - half_width * p_vec  # bottom-left
+            v3 = r_end + half_width * p_vec    # top-right
+            v4 = r_end - half_width * p_vec    # bottom-right
+
+            vertices = list(v1) + list(v3) + list(v4) + list(v2)
+            return vertices
+        
+        def get_priority_color(priority):
+            priority = np.clip(priority, 0.0, 1.0)
+            r = 255
+            g = int(255 * (1 - priority))  # fades from white to red
+            b = int(255 * (1 - priority))
+            a = 100
+            return [255, 255, 255, a]  
+        
+        vizSupport.addQuadMap(vizInstance,
+                              ID=int(target.name[6:]),
+                              parentBodyName="earth",
+                              vertices=compute_strip_vertices(target.r_LP_P_start, target.r_LP_P_end, width=100e3),
+                              color=get_priority_color(target.priority)
+                              )
 
     def regenerate_targets(self) -> None:
         """Regenerate target strips uniformly.
@@ -360,7 +411,6 @@ class UniformStripTargets(Scenario):
                 Strip(name=f"strip-{i}", r_LP_P_start=x_start, r_LP_P_end=end_point, priority=self.priority_distribution(), aquisition_speed=self.aquisition_speed,pre_imaging_time=self.pre_imaging_time)
             )
 
-
-
+    
 __doc_title__ = "Target Scenarios"
 __all__ = ["Target", "Strip", "UniformTargets", "CityTargets","UniformStripTargets"]

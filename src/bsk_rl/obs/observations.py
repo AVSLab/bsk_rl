@@ -518,35 +518,6 @@ def _compute_total_attitude_error(sat, opp):
     trace_R = np.trace(R_error)
     angle = np.arccos(np.clip((trace_R - 1) / 2.0, -1.0, 1.0))
 
-    s = len(opp["object"].pre_imaging_time)
-    m = opp["object"].pre_imaging_time[-1]
-    if (s, m) == (1, 60):
-        opp["object"].pre_imaging_time = [60]
-    elif (s, m) == (2, 60):
-        opp["object"].pre_imaging_time = [20, 60]
-    elif (s, m) == (4, 60):
-        opp["object"].pre_imaging_time = [0, 20, 40, 60]
-    elif (s, m) == (7, 60):
-        opp["object"].pre_imaging_time = [0, 10, 20, 30, 40, 50, 60]
-    
-    elif (s, m) == (1, 100):
-        opp["object"].pre_imaging_time = [100]
-    elif (s, m) == (3, 100):
-        opp["object"].pre_imaging_time = [20, 60, 100]
-    elif (s, m) == (6, 100):
-        opp["object"].pre_imaging_time = [0, 20, 40, 60, 80, 100]
-    elif (s, m) == (11, 100):
-        opp["object"].pre_imaging_time = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    
-    elif (s, m) == (1, 140):
-        opp["object"].pre_imaging_time = [140]
-    elif (s, m) == (4, 140):
-        opp["object"].pre_imaging_time = [20, 60, 100, 140]
-    elif (s, m) == (8, 140):
-        opp["object"].pre_imaging_time = [0, 20, 40, 60, 80, 100, 120, 140]
-    elif (s, m) == (15, 140):
-        opp["object"].pre_imaging_time = [i * 10 for i in range(15)] + [140]
-
     return angle 
 
 # #Compute the norm of the attitude error rate
@@ -613,6 +584,8 @@ def _compute_attitude_error_rate(sat, opp, dt=0.0005):
     omega_actual = sat.dynamics.omega_BP_P
     omega_error = omega_actual - omega_desired
     return np.linalg.norm(omega_error)
+
+
 class StripOpportunityProperties(Observation):
     _fn_map = {
         "priority": lambda sat, opp: opp["object"].priority, #Priority of the strip
@@ -623,10 +596,8 @@ class StripOpportunityProperties(Observation):
         "strip_length": _strip_length, # Length of the strip
         "attitude_error": _compute_total_attitude_error, # Norm of the principal rotation
         "attitude_error_rate": _compute_attitude_error_rate,
-        # "attitude_error_rate_ref": _attitude_rate_ref,
-        # "attitude_error_rate_ref_2": _attitude_rate_ref_2,
         "duration_task": _duration_task, # Duration of the imaging task without the pre-imaging time
-        "pre_imaging_time": lambda sat, opp: np.array(opp["object"].pre_imaging_time), # Pre-imaging time vector 
+        "pre_imaging_time": lambda sat, opp: opp["object"].pre_imaging_time, # Pre-imaging time vector 
         "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time, #Time until the opportunity opens (taking into account the pre-imaging time)
         "opportunity_close": lambda sat, opp: opp["window"][1] - sat.simulator.sim_time, #Time until the opportunity closes (taking into account the pre-imaging time)
     }
@@ -635,7 +606,6 @@ class StripOpportunityProperties(Observation):
         self,
         *target_properties: dict[str, Any],
         n_ahead_observe: int,
-        n_pre_imaging: int,
         type="target",
         name=None,
     ):
@@ -684,7 +654,6 @@ class StripOpportunityProperties(Observation):
         super().__init__(name=name)
         self.type = type
         self.target_properties = target_properties
-        self.n_pre_imaging = n_pre_imaging
         for i, prop_spec in enumerate(self.target_properties):
             for key in prop_spec:
                 if key not in ["fn", "norm", "name", "prop"]:
@@ -739,14 +708,14 @@ class StripOpportunityProperties(Observation):
                 pad=True,
             )
         ):
-            if i % self.n_pre_imaging == 0:
-                props = {}
-                for prop_spec in self.target_properties:
-                    name = prop_spec["name"]
-                    norm = prop_spec["norm"]
-                    value = prop_spec["fn"](self.satellite, opportunity)
-                    props[name] = value / norm
-                obs[f"{self.name}_{i}"] = props
+            
+            props = {}
+            for prop_spec in self.target_properties:
+                name = prop_spec["name"]
+                norm = prop_spec["norm"]
+                value = prop_spec["fn"](self.satellite, opportunity)
+                props[name] = value / norm
+            obs[f"{self.name}_{i}"] = props
         return obs
 
 

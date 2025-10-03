@@ -95,7 +95,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
             vizard_rate = self.sim_rate
         viz_proc.addTask(self.CreateNewTask(viz_task_name, mc.sec2nano(vizard_rate)))
 
-        customizers = ["spriteList", "genericSensorList"]
+        customizers = ["spriteList"]
         list_data = {}
         for customizer in customizers:
             list_data[customizer] = [

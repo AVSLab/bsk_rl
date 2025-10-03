@@ -3,7 +3,8 @@
 import bisect
 import logging
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
-
+import os
+import pandas as pd
 import numpy as np
 from Basilisk.utilities import macros
 from scipy.optimize import minimize_scalar, root_scalar
@@ -15,6 +16,23 @@ from bsk_rl.utils import vizard
 from bsk_rl.utils.functional import valid_func_name
 from bsk_rl.utils.orbital import elevation
 from Basilisk.utilities import orbitalMotion
+
+import matplotlib.pyplot as plt
+from matplotlib.dates import DateFormatter
+from datetime import datetime
+import matplotlib.dates as mdates
+
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
+from datetime import datetime, timedelta
+from collections import defaultdict
+import matplotlib.pyplot as plt
+from matplotlib.colors import LightSource
+from matplotlib.colors import Normalize
+from matplotlib.cm import ScalarMappable
+from matplotlib.cm import get_cmap
+from matplotlib.colors import LightSource
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.data.unique_image_data import UniqueImageStore
@@ -134,7 +152,7 @@ class AccessSatellite(Satellite):
             else:
                 self.initial_generation_duration = self.simulator.time_limit
         self.calculate_additional_windows(self.initial_generation_duration)
-
+   
     def calculate_additional_windows(self, duration: float) -> None:
         """Use a multiroot finding method to evaluate imaging windows for each location.
 
@@ -411,21 +429,19 @@ class AccessSatellite(Satellite):
                 key=lambda x: x["window"][1],
             )
         else:
-            for index,time in enumerate(pre_imaging_time):  # Iterate over the pre-imaging time list
-                new_opportunity = {
-                "object": object,
-                "window": new_window,
-                "type": type,
-                }
-                new_opportunity["r_LP_P_start"] = r_LP_P
-                new_opportunity["r_LP_P_end"] = r_LP_P_end
-                new_opportunity["acquisition_speed"] = acquisition_speed
-                new_opportunity["index_pre_imaging_time"] = index
-                new_opportunity["pre_imaging_time"] = time  # Assign the current time from the list
-                bisect.insort(
-                    self.opportunities,
-                    new_opportunity,
-                    key=lambda x: x["window"][1],
+            new_opportunity = {
+            "object": object,
+            "window": new_window,
+            "type": type,
+            }
+            new_opportunity["r_LP_P_start"] = r_LP_P
+            new_opportunity["r_LP_P_end"] = r_LP_P_end
+            new_opportunity["acquisition_speed"] = acquisition_speed
+            new_opportunity["pre_imaging_time"] = pre_imaging_time
+            bisect.insort(
+                self.opportunities,
+                new_opportunity,
+                key=lambda x: x["window"][1],
                 )
 
     @property
@@ -887,7 +903,6 @@ class StripImagingSatellite(AccessSatellite):
                 n=target_query + 1, types=self.target_types
             )[-1]
             target= opp_target["object"]
-            target.pre_imaging_time[0] = target.pre_imaging_time[opp_target["index_pre_imaging_time"]]
 
         elif isinstance(target_query, Strip):
             target = target_query
@@ -919,7 +934,7 @@ class StripImagingSatellite(AccessSatellite):
         dot_product = np.dot(target.r_LP_P_start / np.linalg.norm(target.r_LP_P_start), target.r_LP_P_end / np.linalg.norm(target.r_LP_P_end))
         theta = np.arccos(np.clip(dot_product, -1.0, 1.0))
         d_strip = theta * orbitalMotion.REQ_EARTH * 1e3  # length of the strip [m]
-        t_strip = d_strip / target.aquisition_speed +target.pre_imaging_time[0]  # Calculation of the time to cover the strip
+        t_strip = d_strip / target.aquisition_speed +target.pre_imaging_time  # Calculation of the time to cover the strip
         #Get the current time of the simulation in seconds
         current_time = self.simulator.sim_time
         #Calculate the expected final time of the imaging action in seconds
@@ -943,7 +958,7 @@ class StripImagingSatellite(AccessSatellite):
         """
         msg = f"{target} tasked for imaging"
         self.logger.info(msg)
-        self.fsw.action_image_strip(target.r_LP_P_start,target.r_LP_P_end,target.aquisition_speed,target.pre_imaging_time[0], target.id)
+        self.fsw.action_image_strip(target.r_LP_P_start,target.r_LP_P_end,target.aquisition_speed,target.pre_imaging_time, target.id)
         self.enable_target_window(target)
 
 

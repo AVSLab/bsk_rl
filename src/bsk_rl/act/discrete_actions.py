@@ -306,6 +306,7 @@ class ImageStrip(DiscreteAction):
         self,
         n_ahead_image: int,
         name: str = "action_image_strip",
+        pre_imaging_time_option: list = [60],
     ):
         """Actions to image upcoming strips (:class:`~bsk_rl.env.simulation.fsw.StripImagingFSWModel.action_image_strip`).
 
@@ -322,7 +323,8 @@ class ImageStrip(DiscreteAction):
         from bsk_rl.sats import StripImagingSatellite
 
         self.satellite: "StripImagingSatellite"
-        super().__init__(name=name, n_actions=n_ahead_image)
+        self.pre_imaging_time_option = pre_imaging_time_option
+        super().__init__(name=name, n_actions=n_ahead_image*len(pre_imaging_time_option))
 
     def image(
         self, target: Union[int, "Strip", str], prev_action_key: Optional[str] = None
@@ -335,13 +337,12 @@ class ImageStrip(DiscreteAction):
 
         :meta private:
         """
-        target = self.satellite.parse_target_selection(target)
-        if target.id != prev_action_key:
-            self.satellite.task_target_for_imaging(target)
-        else:
-            #self.satellite.enable_target_window(target)
-            self.satellite.task_target_for_imaging(target)
-
+        num_pre_imaging_time_options = len(self.pre_imaging_time_option)
+        target_index = target // num_pre_imaging_time_options
+        pre_imaging_time_index = target % num_pre_imaging_time_options
+        target = self.satellite.parse_target_selection(target_index)
+        target.pre_imaging_time = self.pre_imaging_time_option[pre_imaging_time_index]
+        self.satellite.task_target_for_imaging(target)
         return target.id
 
     def set_action(self, action: int, prev_action_key: Optional[str] = None) -> str:
@@ -355,21 +356,6 @@ class ImageStrip(DiscreteAction):
         """
         self.satellite.logger.info(f"target index {action} tasked")
         return self.image(action, prev_action_key)
-
-    def set_action_override(
-        self, action: Union["Strip", str], prev_action_key: Optional[str] = None
-    ) -> str:
-        """Image a target by target index, Target, or ID.
-
-        Args:
-            action: Target to image in the form of a Target object, target ID, or target index.
-            prev_action_key: Previous action key.
-
-        :meta_private:
-        """
-        return self.image(action, prev_action_key)
-
-
 
 __doc_title__ = "Discrete Backend"
 __all__ = ["DiscreteActionBuilder"]

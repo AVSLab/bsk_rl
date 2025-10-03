@@ -8,6 +8,8 @@ import math
 
 from bsk_rl.data.base import Data, DataStore, GlobalReward
 from Basilisk.utilities import orbitalMotion
+from bsk_rl.utils import vizard
+import matplotlib.pyplot as plt
 
 if TYPE_CHECKING:
     from bsk_rl.sats import Satellite
@@ -123,7 +125,63 @@ class UniqueStripImageStore(DataStore):
 
             if data_generated_target >= math.floor(0.90 * t_strip * 2) / 2: # The strip is considered as imaged if the data buffer-increase is greater than 95% of the data necessary to store the images from the target strip
                 imaged.append(target)
+            self.update_target_colors(imaged)
         return UniqueStripImageData(imaged=imaged)
+    
+    @vizard.visualize
+    def update_target_colors(self, targets, vizInstance=None, vizSupport=None):
+        """Update target colors in Vizard."""
+        for target in targets:
+            def compute_strip_vertices(r_start, r_end, width=100e3):
+                r_start = np.array(r_start).flatten()
+                r_end = np.array(r_end).flatten()
+
+                # Direction along the centerline
+                d_vec = r_end - r_start
+                d_vec /= np.linalg.norm(d_vec)
+
+                # Approximate surface normal at the midpoint
+                mid_vec = (r_start + r_end) / 2
+                mid_vec /= np.linalg.norm(mid_vec)
+
+                # Perpendicular vector in the tangent plane
+                p_vec = np.cross(mid_vec, d_vec)
+                p_vec /= np.linalg.norm(p_vec)
+
+                # Compute the four corner points
+                half_width = width / 2.0
+                v1 = r_start + half_width * p_vec  # top-left
+                v2 = r_start - half_width * p_vec  # bottom-left
+                v3 = r_end + half_width * p_vec    # top-right
+                v4 = r_end - half_width * p_vec    # bottom-right
+
+                vertices = list(v1) + list(v3) + list(v4) + list(v2)
+                return vertices
+            def get_priority_color(priority, is_imaged=True):
+                """
+                Maps priority (0 to 1) to an RGBA color using the magma colormap.
+                Sets alpha to 255 if imaged, 50 if not.
+                """
+                priority = np.clip(priority, 0.0, 1.0)
+
+                # Get RGBA from magma colormap (values in 0-1 float)
+                cmap = plt.get_cmap('autumn')
+                rgba = cmap(priority)  # returns (r, g, b, a) in [0, 1]
+
+                # Convert to 0–255 and override alpha depending on imaging
+                r = int(rgba[0] * 255)
+                g = int(rgba[1] * 255)
+                b = int(rgba[2] * 255)
+                a = 255 
+
+                return [r, g, b, a]
+            
+            vizSupport.addQuadMap(vizInstance,
+                                ID=int(target.name[6:]),
+                                parentBodyName="earth",
+                                vertices=compute_strip_vertices(target.r_LP_P_start, target.r_LP_P_end, width=100e3),
+                                color=get_priority_color(target.priority),  # Use target priority for color
+                                )
 
 
 class UniqueStripImageReward(GlobalReward):
