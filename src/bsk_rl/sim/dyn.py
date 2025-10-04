@@ -482,7 +482,7 @@ class BasicDynamicsModel(DynamicsModel):
         return np.linalg.norm(self.r_BN_N) > (orbitalMotion.REQ_EARTH + 200) * 1e3
 
     @default_args(
-        wheelSpeeds= lambda: np.random.uniform(-500, 500, 3),
+        wheelSpeeds= lambda: np.random.uniform(-1500, 1500, 3),
         maxWheelSpeed=np.inf,
         u_max=0.200,
     )
