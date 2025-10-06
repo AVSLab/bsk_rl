@@ -185,6 +185,7 @@ class EpisodeDataLogger:
         self.metrics_logger = None
         self.env: "GeneralSatelliteTasking"
         self.satellites: list["Satellite"]
+        self.logs_to_skip = 3  # Hacky way to avoid a log on initial reset
 
     def set_metrics_logger(self, metrics_logger):
         """Set the metrics logger for this environment."""
@@ -216,7 +217,10 @@ class EpisodeDataLogger:
 
     def reset(self, **kwargs):
         """Log data before resetting the environment."""
-        self.log_data_on_reset()
+        if self.logs_to_skip > 0:
+            self.logs_to_skip -= 1
+        else:
+            self.log_data_on_reset()
         return self.env.reset(**kwargs)
 
 
