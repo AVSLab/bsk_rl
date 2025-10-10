@@ -109,9 +109,12 @@ class UniqueImageStore(DataStore):
     @vizard.visualize
     def update_target_colors(self, targets, vizInstance=None, vizSupport=None):
         """Update target colors in Vizard."""
-        for location in vizInstance.locations:
-            if location.stationName in [target.name for target in targets]:
-                location.color = vizSupport.toRGBA255(self.satellite.vizard_color)
+        for target in targets:
+            vizSupport.changeLocation(
+                vizInstance,
+                target.name,
+                color=vizSupport.toRGBA255(self.satellite.vizard_color),
+            )
 
 
 class UniqueImageReward(GlobalReward):
