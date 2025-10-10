@@ -128,6 +128,7 @@ class UniformTargets(Scenario):
             fieldOfView=np.arctan(500 / 800),
             color=vizSupport.toRGBA255("white"),
             range=1000.0 * 1000,  # meters
+            markerScale=np.sqrt(target.priority),
         )
         if vizInstance.settings.showLocationCones == 0:
             vizInstance.settings.showLocationCones = -1
