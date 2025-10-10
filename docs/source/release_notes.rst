@@ -12,6 +12,8 @@ Development - |version|
 * Update the CI/CD workflows to build BSK-RL using the new ``bsk`` dependency.
 * Optimize performance of AEOS environments, especially for high request counts.
 * Allow for the Vizard output path to be specified as a .bin file instead of just a directory.
+* Use Vizard 2.3.1 locations for visualization; results in significantly smaller output
+  files.
 
 
 Version 1.2.0
