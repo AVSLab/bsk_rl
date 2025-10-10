@@ -82,8 +82,6 @@ class Simulator(SimulationBaseClass.SimBaseClass):
     def setup_vizard(self, vizard_rate=None, vizSupport=None, **vizard_settings):
         """Setup Vizard for visualization."""
         save_path = Path(vizard.VIZARD_PATH)
-        if not save_path.exists():
-            os.makedirs(save_path, exist_ok=True)
 
         viz_proc_name = "VizProcess"
         viz_proc = self.CreateNewProcess(viz_proc_name, priority=400)
@@ -100,12 +98,21 @@ class Simulator(SimulationBaseClass.SimBaseClass):
             list_data[customizer] = [
                 sat.vizard_data.get(customizer, None) for sat in self.satellites
             ]
+
+        # determine save file: if the configured path is a .bin file, use it directly,
+        # otherwise create a timestamped file inside the directory
+        if save_path.suffix == ".bin":
+            saveFile = save_path
+        else:
+            saveFile = save_path / f"viz_{time()}.bin"
+        saveFile.parent.mkdir(parents=True, exist_ok=True)
+
         self.vizInstance = vizSupport.enableUnityVisualization(
             self,
             viz_task_name,
             scList=[sat.dynamics.scObject for sat in self.satellites],
             **list_data,
-            saveFile=save_path / f"viz_{time()}",
+            saveFile=str(saveFile),
         )
         for key, value in vizard_settings.items():
             setattr(self.vizInstance.settings, key, value)
