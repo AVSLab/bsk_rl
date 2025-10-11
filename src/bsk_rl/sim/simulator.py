@@ -49,6 +49,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self.max_step_duration = max_step_duration
         self.time_limit = time_limit
         self.logger = logger
+        self.use_simple_earth = False
 
         self.world: WorldModel
 
@@ -65,6 +66,8 @@ class Simulator(SimulationBaseClass.SimBaseClass):
     def finish_init(self) -> None:
         """Finish simulator initialization."""
         self.set_vizard_epoch()
+        if self.use_simple_earth:
+            self.make_earth_simple()
         self.InitializeSimulation()
         self.TotalSim.StepUntilStop(0, -1)
 
@@ -79,7 +82,13 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         return self.sim_time_ns * mc.NANO2SEC
 
     @vizard.visualize
-    def setup_vizard(self, vizard_rate=None, vizSupport=None, **vizard_settings):
+    def setup_vizard(
+        self,
+        vizard_rate=None,
+        use_simple_earth=False,
+        vizSupport=None,
+        **vizard_settings,
+    ):
         """Setup Vizard for visualization."""
         save_path = Path(vizard.VIZARD_PATH)
 
@@ -114,14 +123,34 @@ class Simulator(SimulationBaseClass.SimBaseClass):
             **list_data,
             saveFile=str(saveFile),
         )
+
+        self.use_simple_earth = use_simple_earth
+        if self.use_simple_earth:
+            vizard_settings["atmospheresOff"] = 1
         for key, value in vizard_settings.items():
             setattr(self.vizInstance.settings, key, value)
+
         vizard.VIZINSTANCE = self.vizInstance
 
     @vizard.visualize
     def set_vizard_epoch(self, vizInstance=None):
         """Set the Vizard epoch."""
         vizInstance.epochInMsg.subscribeTo(self.world.gravFactory.epochMsg)
+
+    @vizard.visualize
+    def make_earth_simple(self, vizInstance=None, vizSupport=None):
+        """Make the Earth shader in Vizard lower detail to help viewing ground locations."""
+        earth_texture_path = (
+            Path(__file__).resolve().parent.parent
+            / "_dat"
+            / "world.200407.3x5400x2700.jpg"
+        )
+        vizSupport.createCustomModel(
+            vizInstance,
+            simBodiesToModify=["earth"],
+            modelPath="HI_DEF_SPHERE",
+            customTexturePath=str(earth_texture_path),
+        )
 
     def _set_world(
         self, world_type: type["WorldModel"], world_args: dict[str, Any]

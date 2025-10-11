@@ -123,7 +123,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 modules will be imported.
             vizard_settings: Settings for Vizard visualization. Set in ``vizIstance.settings``.
                 Additionally, the key ``vizard_rate`` can be set to the rate at which Vizard updates.
-                Valid setting can be found `here <https://hanspeterschaub.info/basilisk/Vizard/vizardAdvanced/vizardSettings.html#id1>`_.
+                The key ``use_simple_earth`` can be set to use a lower detail Earth shader
+                that may help viewing ground locations. Other settings can be found
+                `in the Basilisk documentation <https://avslab.github.io/basilisk/Vizard/vizardAdvanced/vizardSettings.html#id1>`_.
             render_mode: Unused.
         """
         self.seed = None

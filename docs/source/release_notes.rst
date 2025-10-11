@@ -14,6 +14,9 @@ Development - |version|
 * Allow for the Vizard output path to be specified as a .bin file instead of just a directory.
 * Use Vizard 2.3.1 locations for visualization; results in significantly smaller output
   files.
+* Allow for a simpler Earth model to be used in Vizard by setting ``use_simple_earth=True``
+  in the Vizard settings dictionary. This is helpful for when visualizing may Earth-fixed
+  targets.
 
 
 Version 1.2.0
