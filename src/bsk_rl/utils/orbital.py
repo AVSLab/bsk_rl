@@ -14,6 +14,7 @@ from Basilisk.utilities import (
 )
 from Basilisk.utilities.orbitalMotion import ClassicElements, elem2rv
 from scipy.interpolate import interp1d
+from numba import njit, float64
 
 bskPath = __path__[0]
 
@@ -104,7 +105,8 @@ def random_epoch(start: int = 2000, end: int = 2022):
     return epoch
 
 
-def elevation(r_sat: np.ndarray, r_target: np.ndarray) -> np.ndarray:
+@njit(float64(float64[::1], float64[::1]), fastmath=True, cache=True)
+def elevation(r_sat: np.ndarray, r_target: np.ndarray) -> float:
     """Find the elevation angle from a target to a satellite.
 
     Args:
@@ -452,7 +454,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         except AttributeError:
             pass
 
-
+@njit(fastmath=True, cache=True)
 def lla2ecef(lat: float, long: float, radius: float):
     """Project LLA to Earth Centered, Earth Fixed location.
 
@@ -468,6 +470,7 @@ def lla2ecef(lat: float, long: float, radius: float):
     )
 
 
+@njit(fastmath=True, cache=True)
 def rv2HN(r_N: np.ndarray, v_N: np.ndarray):
     """Find the Hill frame rotation matrix from position and velocity.
 
@@ -475,16 +478,30 @@ def rv2HN(r_N: np.ndarray, v_N: np.ndarray):
         r_N: Position vector in the inertial frame
         v_N: Velocity vector in the inertial frame
     Returns:
-        Hill frame rotation matrix HN
+        Hill frame rotation matrix HN.
     """
     o_r_N = r_N / np.linalg.norm(r_N)
-    h_N = np.cross(r_N, v_N)
+    # Manually compute h_N = cross(r_N, v_N)
+    h_N = np.array(
+        [
+            r_N[1] * v_N[2] - r_N[2] * v_N[1],
+            r_N[2] * v_N[0] - r_N[0] * v_N[2],
+            r_N[0] * v_N[1] - r_N[1] * v_N[0],
+        ]
+    )
     o_h_N = h_N / np.linalg.norm(h_N)
-    o_theta_N = np.cross(o_h_N, o_r_N)
+    # Manually compute o_theta_N = cross(o_h_N, o_r_N)
+    o_theta_N = np.array(
+        [
+            o_h_N[1] * o_r_N[2] - o_h_N[2] * o_r_N[1],
+            o_h_N[2] * o_r_N[0] - o_h_N[0] * o_r_N[2],
+            o_h_N[0] * o_r_N[1] - o_h_N[1] * o_r_N[0],
+        ]
+    )
     HN = np.array([o_r_N, o_theta_N, o_h_N])
     return HN
 
-
+@njit(fastmath=True, cache=True)
 def rv2omega(r_N: np.ndarray, v_N: np.ndarray):
     """Find the Hill frame rotation rate from position and velocity.
 

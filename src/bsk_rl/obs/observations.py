@@ -13,6 +13,7 @@ from bsk_rl.utils.functional import vectorize_nested_dict
 from bsk_rl.utils.orbital import rv2HN
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
+from numba import njit, float64, types
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -468,6 +469,24 @@ def _duration_task(sat, opp):
     t_strip = d_strip / opp["object"].aquisition_speed 
     return t_strip
 
+@njit(float64[:](float64[:], float64[:]), fastmath=True, cache=True)
+def _cross(vec_a: np.ndarray, vec_b: np.ndarray) -> np.ndarray:
+    res = np.empty(3, dtype=np.float64)
+    res[0] = vec_a[1] * vec_b[2] - vec_a[2] * vec_b[1]
+    res[1] = vec_a[2] * vec_b[0] - vec_a[0] * vec_b[2]
+    res[2] = vec_a[0] * vec_b[1] - vec_a[1] * vec_b[0]
+    return res
+
+@njit(types.UniTuple(float64[:], 4)(float64[:], float64[:], float64[:], float64[:]),fastmath=True, cache=True)
+def _compute_R(c_hat_desired, p_hat_desired, p_hat_P, c_hat_P):
+
+    d_hat_desired = _cross(c_hat_desired, p_hat_desired)
+    p_hat_current = p_hat_P / np.linalg.norm(p_hat_P)
+    c_hat_current = c_hat_P / np.linalg.norm(c_hat_P)
+    d_hat_current = _cross(c_hat_current, p_hat_current)
+
+    return d_hat_desired, p_hat_current, c_hat_current, d_hat_current
+
 #Compute the principal rotation in the planet fixed frame at time t and update the possible pre-imaging times
 def _compute_total_attitude_error(sat, opp):
     """
@@ -499,16 +518,18 @@ def _compute_total_attitude_error(sat, opp):
     c_hat_desired /= np.linalg.norm(c_hat_desired)
 
     # Desired d_hat = c_hat x p_hat
-    d_hat_desired = np.cross(c_hat_desired, p_hat_desired)
+    # d_hat_desired = np.cross(c_hat_desired, p_hat_desired)
+
+    # # Step 4: Current orientation matrix
+    # p_hat_current = sat.fsw.p_hat_P / np.linalg.norm(sat.fsw.p_hat_P)
+    # c_hat_current = sat.fsw.c_hat_P / np.linalg.norm(sat.fsw.c_hat_P)
+    # d_hat_current = np.cross(c_hat_current, p_hat_current)
+
+    # Step 4: Current orientation matrix
+    d_hat_desired, p_hat_current, c_hat_current, d_hat_current = _compute_R(c_hat_desired, p_hat_desired, sat.fsw.p_hat_P, sat.fsw.c_hat_P)
 
     # Assemble desired rotation matrix
     R_desired = np.column_stack((c_hat_desired, d_hat_desired, p_hat_desired))
-
-    # Step 4: Current orientation matrix
-    p_hat_current = sat.fsw.p_hat_P / np.linalg.norm(sat.fsw.p_hat_P)
-    c_hat_current = sat.fsw.c_hat_P / np.linalg.norm(sat.fsw.c_hat_P)
-    d_hat_current = np.cross(c_hat_current, p_hat_current)
-
     R_current = np.column_stack((c_hat_current, d_hat_current, p_hat_current))
 
     # Step 5: Relative rotation matrix
@@ -520,34 +541,36 @@ def _compute_total_attitude_error(sat, opp):
 
     return angle 
 
+@njit(fastmath=True, cache=True)
+def compute_R_desired(r_LP_P_start, r_LP_P_end, r_BN_P):
+    p_hat = r_LP_P_start - r_BN_P
+    p_hat /= np.linalg.norm(p_hat)
+
+    scan_vec = r_LP_P_end - r_LP_P_start
+    scan_vec /= np.linalg.norm(scan_vec)
+
+    scan_proj = scan_vec - np.dot(scan_vec, p_hat) * p_hat
+    norm_proj = np.linalg.norm(scan_proj)
+
+    eps = 1e-8
+    if norm_proj < eps:
+        tmp = np.array([1.0, 0.0, 0.0]) if abs(p_hat[0]) < 0.9 else np.array([0.0, 1.0, 0.0])
+        scan_proj = tmp - np.dot(tmp, p_hat) * p_hat
+        scan_proj /= np.linalg.norm(scan_proj)
+    else:
+        scan_proj /= norm_proj
+
+    c_hat = _cross(p_hat, scan_proj)
+    c_hat /= np.linalg.norm(c_hat)
+    d_hat = _cross(c_hat, p_hat)
+
+    R = np.column_stack((c_hat, d_hat, p_hat))
+    # Re-orthonormalize with QR for numerical stability
+    Q, _ = np.linalg.qr(R)
+    return Q
+
 # #Compute the norm of the attitude error rate
 def _compute_attitude_error_rate(sat, opp, dt=0.0005):
-    def compute_R_desired(r_LP_P_start, r_LP_P_end, r_BN_P):
-        p_hat = r_LP_P_start - r_BN_P
-        p_hat /= np.linalg.norm(p_hat)
-
-        scan_vec = r_LP_P_end - r_LP_P_start
-        scan_vec /= np.linalg.norm(scan_vec)
-
-        scan_proj = scan_vec - np.dot(scan_vec, p_hat) * p_hat
-        norm_proj = np.linalg.norm(scan_proj)
-
-        eps = 1e-8
-        if norm_proj < eps:
-            tmp = np.array([1.0, 0.0, 0.0]) if abs(p_hat[0]) < 0.9 else np.array([0.0, 1.0, 0.0])
-            scan_proj = tmp - np.dot(tmp, p_hat) * p_hat
-            scan_proj /= np.linalg.norm(scan_proj)
-        else:
-            scan_proj /= norm_proj
-
-        c_hat = np.cross(p_hat, scan_proj)
-        c_hat /= np.linalg.norm(c_hat)
-        d_hat = np.cross(c_hat, p_hat)
-
-        R = np.column_stack((c_hat, d_hat, p_hat))
-        # Re-orthonormalize with QR for numerical stability
-        Q, _ = np.linalg.qr(R)
-        return Q
 
     # Initial and advanced positions
     r_BN_P = sat.dynamics.r_BN_P
