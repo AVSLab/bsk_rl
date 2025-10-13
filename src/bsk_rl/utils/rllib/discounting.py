@@ -413,7 +413,8 @@ class TimeDiscountedGAEPPOLearner(PPOLearner):
         return batch, episodes
 
 
-# class TimeDiscountedGAEPPOTorchLearner(PPOTorchLearner, TimeDiscountedGAEPPOLearner):
+class TimeDiscountedGAEPPOTorchLearner(PPOTorchLearner, TimeDiscountedGAEPPOLearner):
+    pass
 #     def configure_optimizers_for_module(self, module_id: str) -> None:
 #         module = self.module[module_id]
 
