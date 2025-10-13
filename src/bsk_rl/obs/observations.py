@@ -588,6 +588,7 @@ def _compute_attitude_error_rate(sat, opp, dt=0.0005):
 
 class StripOpportunityProperties(Observation):
     _fn_map = {
+        "available": lambda sat, opp: 1.0, # Whether the opportunity is available (1) or not (0)
         "priority": lambda sat, opp: opp["object"].priority, #Priority of the strip
         "r_LP_P_start": lambda sat, opp: opp["r_LP_P_start"], # Location of the start of the strip in the planet-fixed frame
         "r_LB_H_start": _r_LB_H_start, # Location of the start of the strip in the Hill frame
