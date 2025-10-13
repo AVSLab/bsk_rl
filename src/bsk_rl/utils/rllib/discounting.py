@@ -413,45 +413,45 @@ class TimeDiscountedGAEPPOLearner(PPOLearner):
         return batch, episodes
 
 
-class TimeDiscountedGAEPPOTorchLearner(PPOTorchLearner, TimeDiscountedGAEPPOLearner):
-    def configure_optimizers_for_module(self, module_id: str) -> None:
-        module = self.module[module_id]
+# class TimeDiscountedGAEPPOTorchLearner(PPOTorchLearner, TimeDiscountedGAEPPOLearner):
+#     def configure_optimizers_for_module(self, module_id: str) -> None:
+#         module = self.module[module_id]
 
-        if isinstance(module, ConditionedHybridActionTorchRLMDif):
-            cfg = self.config
+#         if isinstance(module, ConditionedHybridActionTorchRLMDif):
+#             cfg = self.config
 
-            lr_encoder = getattr(cfg, "lr_encoder", 1e-5)
-            lr_prior = getattr(cfg, "lr_prior", 3e-5)
-            lr_posterior = getattr(cfg, "lr_posterior", 1e-5)
-            lr_vf = getattr(cfg, "lr_vf", 3e-5)
+#             lr_encoder = getattr(cfg, "lr_encoder", 1e-5)
+#             lr_prior = getattr(cfg, "lr_prior", 3e-5)
+#             lr_posterior = getattr(cfg, "lr_posterior", 1e-5)
+#             lr_vf = getattr(cfg, "lr_vf", 3e-5)
 
-            optimizer = optim.Adam([
-                {"params": module.encoder.parameters(), "lr": lr_encoder},
-                {"params": module.prior.parameters(), "lr": lr_prior},
-                {"params": module.posterior.parameters(), "lr": lr_posterior},
-                {"params": module.vf.parameters(), "lr": lr_vf},
-            ])
+#             optimizer = optim.Adam([
+#                 {"params": module.encoder.parameters(), "lr": lr_encoder},
+#                 {"params": module.prior.parameters(), "lr": lr_prior},
+#                 {"params": module.posterior.parameters(), "lr": lr_posterior},
+#                 {"params": module.vf.parameters(), "lr": lr_vf},
+#             ])
 
-            self.register_optimizer(
-                module_id=module_id,
-                optimizer_name="multi_lr_optimizer",
-                optimizer=optimizer,
-                params=list(module.parameters()),
-                lr=None,  # Each param group has its own LR
-            )
+#             self.register_optimizer(
+#                 module_id=module_id,
+#                 optimizer_name="multi_lr_optimizer",
+#                 optimizer=optimizer,
+#                 params=list(module.parameters()),
+#                 lr=None,  # Each param group has its own LR
+#             )
 
-            print(
-                f"[INFO] Using custom multi-lr optimizer for {module_id} "
-                f"({type(module).__name__})."
-            )
+#             print(
+#                 f"[INFO] Using custom multi-lr optimizer for {module_id} "
+#                 f"({type(module).__name__})."
+#             )
 
-        else:
-            # 👇 Fall back to PPO’s default optimizer configuration
-            super().configure_optimizers_for_module(module_id)
-            print(
-                f"[INFO] Using default optimizer for {module_id} "
-                f"({type(module).__name__})."
-            )
+#         else:
+#             # 👇 Fall back to PPO’s default optimizer configuration
+#             super().configure_optimizers_for_module(module_id)
+#             print(
+#                 f"[INFO] Using default optimizer for {module_id} "
+#                 f"({type(module).__name__})."
+#             )
     
 
 
