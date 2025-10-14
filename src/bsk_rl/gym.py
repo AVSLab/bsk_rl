@@ -132,10 +132,10 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self._configure_logging(log_level, log_dir)
         if vizard_dir is not None:
             vizard.VIZARD_PATH = vizard_dir
-            if vizard_settings is not None:
-                logger.warning(
-                    "Vizard settings provided but Vizard is not enabled. Ignoring settings."
-                )
+        if vizard_settings is not None and vizard_dir is None:
+            logger.warning(
+                "Vizard settings provided but Vizard is not enabled. Ignoring settings."
+            )
         self.vizard_settings = vizard_settings if vizard_settings is not None else {}
 
         if isinstance(satellites, Satellite):

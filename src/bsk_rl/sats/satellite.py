@@ -362,7 +362,7 @@ class Satellite(ABC, Resetable):
             self._timed_terminal_event_name,
             macros.sec2nano(self.simulator.sim_rate),
             True,
-            conditionFunction=lambda sim: sim.sim_time >= t_close,
+            conditionTime=macros.sec2nano(t_close),
             actionFunction=side_effect,
             terminal=self.variable_interval,
         )

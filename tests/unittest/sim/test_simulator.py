@@ -54,10 +54,8 @@ class TestSimulator:
         sim = self.mock_sim()
         event = MagicMock()
         sim.eventMap = {"event": event, "other": MagicMock()}
-        sim.eventList = [MagicMock(), event, MagicMock()]
         sim.delete_event("event")
         assert "event" not in sim.eventMap
-        assert event not in sim.eventList
 
     @pytest.mark.parametrize(
         "start_time,step_duration,time_limit,stop_time",

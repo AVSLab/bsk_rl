@@ -179,7 +179,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
             "max_step_duration",
             mc.sec2nano(self.sim_rate),
             True,
-            conditionFunction=lambda sim: sim.sim_time >= step_end_time,
+            conditionTime=mc.sec2nano(step_end_time),
             actionFunction=lambda sim: sim.logger.info("Max step duration reached"),
             terminal=True,
         )
@@ -193,8 +193,6 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         necessary to remove created for tasks that are no longer needed (even if it is
         inactive), or else significant time is spent processing the event at each step.
         """
-        event = self.eventMap[event_name]
-        self.eventList.remove(event)
         del self.eventMap[event_name]
 
     def get_satellite(self, name: str) -> "Satellite":
