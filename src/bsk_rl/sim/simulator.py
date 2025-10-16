@@ -183,7 +183,9 @@ class Simulator(SimulationBaseClass.SimBaseClass):
             actionFunction=lambda sim: sim.logger.info("Max step duration reached"),
             terminal=True,
         )
-        self.ConfigureStopTime(mc.sec2nano(min(self.time_limit, 2**31)))
+        self.ConfigureStopTime(
+            mc.sec2nano(min(self.time_limit, 2**31)), StopCondition=">="
+        )
         self.ExecuteSimulation()
 
     def delete_event(self, event_name) -> None:
