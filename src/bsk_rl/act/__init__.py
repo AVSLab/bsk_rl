@@ -63,6 +63,11 @@ from bsk_rl.act.hybrid_actions_multi import (
     MultiHybridImageStrip
 )
 
+from bsk_rl.act.hybrid_actions_squashed import (
+    HybridActionSquashed,
+    HybridFSWActionSquashed,
+    HybridImageStripSquashed
+)
 __doc_title__ = "Actions"
 __all__ = [
     "Action",
@@ -80,5 +85,8 @@ __all__ = [
     "HybridImageStrip",
     "MultiHybridAction",
     "MultiHybridFSWAction",
-    "MultiHybridImageStrip"
+    "MultiHybridImageStrip",
+    "HybridActionSquashed",
+    "HybridFSWActionSquashed",
+    "HybridImageStripSquashed"
 ]

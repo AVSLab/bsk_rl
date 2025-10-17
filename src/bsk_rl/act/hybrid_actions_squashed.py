@@ -16,27 +16,13 @@ logger = logging.getLogger(__name__)
 
 
 def clean_action(action: tuple[int, Union[float, np.ndarray, list]]) -> tuple[int, float]:
-    """
-    Convert hybrid action into a (discrete, continuous) tuple.
-    - discrete: Python int, chosen discrete action
-    - continuous: Python float, corresponding continuous parameter
-    """
-    # Make sure discrete is a Python int
-    discrete = action[0].item() if isinstance(action[0], np.generic) else int(action[0])
-
-    # Continuous branch is an array/list; pick the one at index = discrete
-    cont_array = np.asarray(action[1])
-    continuous = cont_array[discrete]
-
-    # Convert to plain Python float
-    if isinstance(continuous, np.generic):
-        continuous = continuous.item()
-    else:
-        continuous = float(continuous)
+    discrete = action[0].item() if isinstance(action[0], np.generic) else action[0]
+    val = action[1][0] if isinstance(action[1], (list, np.ndarray)) else action[1]
+    continuous = val.item() if isinstance(val, np.generic) else val
 
     return (discrete, (continuous + 1) / 2)
 
-class MultiHybridActionBuilder(ActionBuilder):
+class HybridActionBuilderSquashed(ActionBuilder):
     def __init__(self, satellite: "Satellite") -> None:
         """Processes actions for a discrete action space.
 
@@ -53,12 +39,11 @@ class MultiHybridActionBuilder(ActionBuilder):
 
     @property
     def action_space(self) -> spaces.Tuple:
-        """Hybrid action space: one discrete choice + continuous parameters for each possible discrete action."""
-        n_discrete = sum([act.n_actions for act in self.action_spec])
+        """Discrete action space."""
         return spaces.Tuple((
-            spaces.Discrete(n_discrete),  # choose one discrete action
-            spaces.Box(low=-1.0, high=1.0, shape=(n_discrete,), dtype=np.float32)  # one continuous param per discrete action
-        ))
+                spaces.Discrete(sum([act.n_actions for act in self.action_spec])),
+                spaces.Box(low=-1, high=1, shape=(1,))
+            )) #But how to deal with charge, downlink, and desat? Fraction of maximum action duration?
 
     @property
     def action_description(self) -> list[str]:
@@ -108,8 +93,8 @@ class MultiHybridActionBuilder(ActionBuilder):
         else:
             raise ValueError(f"Action index {action[0]} out of range.")
 
-class MultiHybridAction(Action):
-    builder_type = MultiHybridActionBuilder
+class HybridActionSquashed(Action):
+    builder_type = HybridActionBuilderSquashed
 
     def __init__(self, name: str = "discrete_act", n_actions: int = 1):
         """Base class for discrete, integer-indexable actions.
@@ -133,7 +118,7 @@ class MultiHybridAction(Action):
         """Activate an action by local index."""
         pass
 
-class MultiHybridFSWAction(MultiHybridAction):
+class HybridFSWActionSquashed(HybridActionSquashed):
     def __init__(
         self,
         fsw_action,
@@ -189,7 +174,7 @@ class MultiHybridFSWAction(MultiHybridAction):
 
         return self.fsw_action
     
-class MultiHybridImageStrip(MultiHybridAction):
+class HybridImageStripSquashed(HybridActionSquashed):
     def __init__(
         self,
         n_ahead_image: int,
