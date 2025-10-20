@@ -26,7 +26,31 @@ for working with these environments.
 A whitepaper on the design philosophy behind BSK-RL and an example use case can be 
 :download:`downloaded here <_static/stephenson_bskrl_2024.pdf>`.
 
-..  youtube:: 8qR-AGrCFQw
+Capabilities
+------------
+
+Earth Observation
+^^^^^^^^^^^^^^^^^
+
+..  youtube:: lCN0TiNJ1i4
+
+..  youtube:: 4orleGCi7n0
+
+|
+
+Spacecraft Inspection
+^^^^^^^^^^^^^^^^^^^^^
+
+..  youtube:: eQEoTOYADKc
+
+|
+
+Space Domain Awareness
+^^^^^^^^^^^^^^^^^^^^^^
+
+..  youtube:: Aas0z43uS9M
+
+|
 
 Quickstart
 ----------
