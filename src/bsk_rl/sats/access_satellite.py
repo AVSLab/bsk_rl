@@ -147,6 +147,11 @@ class AccessSatellite(Satellite):
         r_max = np.max(np.linalg.norm(positions, axis=-1))
         access_dist_thresh_multiplier = 1.1
         for location in self.locations_for_access_checking:
+            start_idx = max(
+                np.searchsorted(times, location["start_time"], side="right") - 1, 0
+            )
+            times_loc = times[start_idx:]
+            positions_loc = positions[start_idx:]
             if callable(location["r_LP_P"]):
                 location_positions = np.array([location["r_LP_P"](t) for t in times])
                 location_pos_ref = location["r_LP_P"](times[0])  # For alt_est estimate
