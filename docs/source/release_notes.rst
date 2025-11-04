@@ -17,6 +17,19 @@ Development - |version|
 * Allow for a simpler Earth model to be used in Vizard by setting ``use_simple_earth=True``
   in the Vizard settings dictionary. This is helpful for when visualizing may Earth-fixed
   targets.
+* Allow flight software and dynamics models to be specified as lists of classes. This allows
+  for multiple inheritance to be used for easily creating more complex satellite models.
+* The inheritance structure of flight software and dynamics models has changed. Most models
+  now inherit from :class:`~bsk_rl.sim.fsw.BaseFSWModel` or :class:`~bsk_rl.sim.dyn.BaseDynModel`
+  instead of :class:`~bsk_rl.sim.fsw.FSWModel` or :class:`~bsk_rl.sim.dyn.DynamicsModel`.
+  These are lighter-weight base classes that lack some functionality that was not always
+  wanted.
+
+  .. warning::
+
+    If your custom satellite configurations break as a result of this change, add 
+    :class:`~bsk_rl.sim.fsw.BasicFSWModel` and :class:`~bsk_rl.sim.dyn.BasicDynModel`
+    to your ``fsw_type`` and ``dyn_type`` lists in your satellite classes.
 
 
 Version 1.2.0
