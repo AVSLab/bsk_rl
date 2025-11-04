@@ -1,6 +1,7 @@
 """Dynamics models concerning the relative motion of spacecraft."""
 
 import types
+from typing import Optional
 
 import numpy as np
 from Basilisk.simulation import spacecraftLocation
@@ -84,15 +85,23 @@ class ConjunctionDynModel(BasicDynamicsModel):
         """Check if conjunction has not occured."""
         return len(self.conjunctions) == 0
 
-    @default_args(conjunction_radius=10)
-    def setup_conjunctions(self, conjunction_radius: float, **kwargs) -> None:
+    @default_args(conjunction_radius=10, conjunction_check_rate=None)
+    def setup_conjunctions(
+        self,
+        conjunction_radius: float,
+        conjunction_check_rate: Optional[float],
+        **kwargs,
+    ) -> None:
         """Set up conjunction checking between satellites.
 
         Args:
             conjunction_radius: [m] Minimum distance for a conjunction.
+            conjunction_check_rate: [s] Rate at which to check for conjunctions. Defaults to sim rate.
             kwargs: Passed to other setup functions.
         """
         self.conjunction_radius = conjunction_radius
+        if conjunction_check_rate is None:
+            conjunction_check_rate = self.simulator.sim_rate
 
         for sat_dyn in self.simulator.dynamics_list.values():
             if sat_dyn != self and isinstance(sat_dyn, ConjunctionDynModel):
@@ -126,11 +135,12 @@ class ConjunctionDynModel(BasicDynamicsModel):
                     valid_func_name(
                         f"conjunction_{self.satellite.name}_{sat_dyn.satellite.name}"
                     ),
-                    macros.sec2nano(self.simulator.sim_rate),
+                    macros.sec2nano(conjunction_check_rate),
                     True,
                     conditionFunction=condition,
                     actionFunction=side_effect,
                     terminal=True,
+                    exactRateMatch=False,
                 )
 
 
