@@ -65,4 +65,6 @@ class TestSimulator:
         sim = self.mock_sim(max_step_duration=step_duration, time_limit=time_limit)
         sim.TotalSim.CurrentNanos = start_time * 1000000000
         sim.run()
-        sim.ConfigureStopTime.assert_called_with(time_limit * 1000000000)
+        sim.ConfigureStopTime.assert_called_with(
+            time_limit * 1000000000, StopCondition=">="
+        )
