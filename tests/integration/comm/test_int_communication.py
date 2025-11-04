@@ -33,17 +33,13 @@ oes_eclipsed = walker_delta(
 )
 
 
-class FullFeaturedDynModel(dyn.GroundStationDynModel, dyn.LOSCommDynModel):
-    pass
-
-
 class FullFeaturedSatellite(sats.ImagingSatellite):
     observation_spec = [
         obs.SatProperties(dict(prop="r_BN_P", module="dynamics", norm=6e6)),
         obs.Time(),
     ]
     action_spec = [act.Image(n_ahead_image=10)]
-    dyn_type = FullFeaturedDynModel
+    dyn_type = (dyn.LOSCommDynModel, dyn.GroundStationDynModel)
 
 
 def make_communication_env(oes, comm_type):

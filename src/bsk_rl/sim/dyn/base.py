@@ -124,6 +124,10 @@ class DynamicsModel(ABC, Resetable):
 
 
 class BaseDynamicsModel(DynamicsModel):
+    @classmethod
+    def _requires_world(cls) -> list[type["WorldModel"]]:
+        return []
+
     @property
     def sigma_BN(self):
         """Body attitude MRP relative to inertial frame."""
@@ -250,6 +254,7 @@ class BaseDynamicsModel(DynamicsModel):
 
     def _setup_dynamics_objects(self, **kwargs) -> None:
         """Caller for all dynamics object initialization."""
+        super()._setup_dynamics_objects(**kwargs)
         self.setup_spacecraft_hub(**kwargs)
         self.setup_simple_nav_object()
 
@@ -370,10 +375,6 @@ class BaseDynamicsModel(DynamicsModel):
 class BasicDynamicsModel(BaseDynamicsModel):
     """Basic Dynamics model with minimum necessary Basilisk components."""
 
-    @classmethod
-    def _requires_world(cls) -> list[type["WorldModel"]]:
-        return [world.BasicWorldModel]
-
     def __init__(self, *args, **kwargs) -> None:
         """A dynamics model with a basic feature set.
 
@@ -393,6 +394,13 @@ class BasicDynamicsModel(BaseDynamicsModel):
             **kwargs: Passed to superclass
         """
         super().__init__(*args, **kwargs)
+
+    @classmethod
+    def _requires_world(cls) -> list[type["WorldModel"]]:
+        return [
+            world.EclipseWorldModel,
+            world.AtmosphereWorldModel,
+        ] + super()._requires_world()
 
     @property
     def battery_charge(self):

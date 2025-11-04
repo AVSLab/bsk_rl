@@ -15,7 +15,8 @@ Two other fields (``dyn_model`` and ``fsw_model``) may be specified to select th
 underlying dynamics and FSW models used by the Basilisk simulation. Some actions,
 communication methods, or other environment configurations may necessitate the use of a
 specific dynamics or FSW model. See :ref:`bsk_rl.sim.fsw` and :ref:`bsk_rl.sim.dyn` for
-more information on selecting these models.
+more information on selecting these models. The models can be specified as a single type
+or as a tuple of types to use multiple inheritance.
 
 In practice, configuring a satellite and passing it to an environment is straightforward:
 

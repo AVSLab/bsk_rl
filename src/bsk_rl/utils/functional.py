@@ -4,7 +4,9 @@ import re
 import warnings
 from copy import deepcopy
 from functools import wraps
+from types import new_class
 from typing import Any, Callable, ParamSpec, TypeVar
+from unittest.mock import MagicMock
 
 import numpy as np
 
@@ -84,8 +86,8 @@ def collect_default_args(object: object) -> dict[str, Any]:
     defaults = {}
     for name in dir(object):
         if (
-            callable(getattr(object, name))
-            and not name.startswith("__")
+            not name.startswith("__")
+            and callable(getattr(object, name))
             and hasattr(getattr(object, name), "defaults")
         ):
             safe_dict_merge(getattr(object, name).defaults, defaults)
@@ -159,6 +161,52 @@ def is_property(obj: Any, attr_name: str) -> bool:
     cls = type(obj)
     attribute = getattr(cls, attr_name, None)
     return attribute is not None and isinstance(attribute, property)
+
+
+def mock_safe_bases(*bases):
+    """Return bases with MagicMock replaced by their specs."""
+    clean_bases = []
+    for b in bases:
+        if isinstance(b, MagicMock):
+            # Use its spec if available, else object
+            clean_bases.append(getattr(b, "_spec_class", object))
+        else:
+            clean_bases.append(b)
+    return tuple(clean_bases)
+
+
+def remove_duplicate_bases(*bases):
+    """Removes duplicate bases while preserving order."""
+    seen = set()
+    clean_bases = []
+    for b in bases:
+        if b not in seen:
+            seen.add(b)
+            clean_bases.append(b)
+    return tuple(clean_bases)
+
+
+def remove_inherited_bases(*bases):
+    """Removes bases that are subclasses of other bases to help with MRO."""
+    clean_bases = []
+    for b in bases:
+        for b2 in bases:
+            if b != b2 and issubclass(b2, b):
+                break
+        else:
+            clean_bases.append(b)
+    return tuple(clean_bases)
+
+
+def compose_types(*types, name=""):
+    """Compose multiple types into a new type."""
+    try:
+        type_name = f"{name}({', '.join([t.__name__ for t in types])})"
+    except (AttributeError, TypeError):
+        type_name = f"{name}({len(types)})"
+    types = remove_duplicate_bases(*types)
+    types = remove_inherited_bases(*types)
+    return new_class(type_name, bases=mock_safe_bases(*types))
 
 
 class AbstractClassProperty:
