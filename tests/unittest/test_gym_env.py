@@ -52,7 +52,7 @@ class TestGeneralSatelliteTasking:
             )
             for class_list in classes
         ]
-        assert env._minimum_world_model() == result
+        assert issubclass(env._minimum_world_model(), result)
 
     @patch(
         "bsk_rl.GeneralSatelliteTasking.__init__",
@@ -76,7 +76,6 @@ class TestGeneralSatelliteTasking:
         mock_rewarder = [MagicMock(scenario=None), MagicMock(scenario=None)]
         env = GeneralSatelliteTasking(
             satellites=[mock_sat],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=mock_rewarder,
         )
@@ -89,7 +88,6 @@ class TestGeneralSatelliteTasking:
         mock_rewarder = MagicMock(scenario=None)
         env = GeneralSatelliteTasking(
             satellites=[mock_sat],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=mock_rewarder,
         )
@@ -127,7 +125,6 @@ class TestGeneralSatelliteTasking:
             sat.name = name
         env = GeneralSatelliteTasking(
             satellites=mock_sats,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(scenario=None),
         )
@@ -138,7 +135,6 @@ class TestGeneralSatelliteTasking:
     def test_get_obs(self):
         env = GeneralSatelliteTasking(
             satellites=[MagicMock(get_obs=MagicMock(return_value=i)) for i in range(3)],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -156,7 +152,6 @@ class TestGeneralSatelliteTasking:
                 )
                 for i in range(3)
             ],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
             generate_obs_retasking_only=True,
@@ -169,7 +164,6 @@ class TestGeneralSatelliteTasking:
             sat.name = f"sat{i}"
         env = GeneralSatelliteTasking(
             satellites=mock_sats,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -185,7 +179,6 @@ class TestGeneralSatelliteTasking:
             satellites=[
                 MagicMock(action_space=spaces.Discrete(i + 1)) for i in range(3)
             ],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -198,7 +191,6 @@ class TestGeneralSatelliteTasking:
             satellites=[
                 MagicMock(observation_space=spaces.Discrete(i + 1)) for i in range(3)
             ],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -215,7 +207,6 @@ class TestGeneralSatelliteTasking:
             satellites=[
                 MagicMock(observation_space=spaces.Discrete(i + 1)) for i in range(3)
             ],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -230,7 +221,6 @@ class TestGeneralSatelliteTasking:
         mock_sats = [MagicMock() for _ in range(2)]
         env = GeneralSatelliteTasking(
             satellites=mock_sats,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             communicator=MagicMock(),
             rewarder=MagicMock(
@@ -253,7 +243,6 @@ class TestGeneralSatelliteTasking:
         mock_sats = [MagicMock() for _ in range(2)]
         env = GeneralSatelliteTasking(
             satellites=mock_sats,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(reward=MagicMock(return_value=25.0)),
         )
@@ -279,7 +268,6 @@ class TestGeneralSatelliteTasking:
         mock_sats = [MagicMock() for _ in range(2)]
         env = GeneralSatelliteTasking(
             satellites=mock_sats,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             communicator=MagicMock(),
             rewarder=MagicMock(
@@ -313,7 +301,6 @@ class TestGeneralSatelliteTasking:
         mock_sat = MagicMock()
         env = SatelliteTasking(
             satellite=[mock_sat],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             communicator=MagicMock(),
             rewarder=MagicMock(reward=MagicMock(return_value={mock_sat.name: 25.0})),
@@ -332,7 +319,6 @@ class TestGeneralSatelliteTasking:
     def test_close(self):
         env = GeneralSatelliteTasking(
             satellites=[MagicMock()],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -346,13 +332,13 @@ class TestSatelliteTasking:
         Satellite,
         __abstractmethods__=set(),
         __init__=MagicMock(return_value=None),
+        dyn_type=MagicMock(),
     )
     def test_init(self):
         mock_sat = Satellite("sat", {})
         mock_sat.name = "sat"
         env = SatelliteTasking(
             satellite=mock_sat,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -362,7 +348,6 @@ class TestSatelliteTasking:
         with pytest.raises(ValueError):
             SatelliteTasking(
                 satellite=[MagicMock(), MagicMock()],
-                world_type=MagicMock(),
                 scenario=MagicMock(),
                 rewarder=MagicMock(),
             )
@@ -372,7 +357,6 @@ class TestSatelliteTasking:
         mock_sat = MagicMock()
         env = SatelliteTasking(
             satellite=[mock_sat],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -412,7 +396,6 @@ class TestConstellationTasking:
         mock_data = MagicMock(scenario=None)
         env = ConstellationTasking(
             satellites=[mock_sat_1, mock_sat_2],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=mock_data,
         )
@@ -429,7 +412,6 @@ class TestConstellationTasking:
     def test_agents(self):
         env = ConstellationTasking(
             satellites=[MagicMock() for i in range(3)],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -447,7 +429,6 @@ class TestConstellationTasking:
     def test_get_obs(self):
         env = ConstellationTasking(
             satellites=[MagicMock(get_obs=MagicMock(return_value=i)) for i in range(3)],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -468,7 +449,6 @@ class TestConstellationTasking:
             sat.name = f"sat{i}"
         env = ConstellationTasking(
             satellites=mock_sats,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -490,7 +470,6 @@ class TestConstellationTasking:
             satellites=[
                 MagicMock(action_space=spaces.Discrete(i + 1)) for i in range(3)
             ],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -506,7 +485,6 @@ class TestConstellationTasking:
                 MagicMock(observation_space=spaces.Box(low=0, high=i + 1, shape=(1,)))
                 for i in range(3)
             ],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -527,7 +505,6 @@ class TestConstellationTasking:
             satellites=[
                 MagicMock(is_alive=MagicMock(return_value=False)) for i in range(3)
             ],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
             failure_penalty=-20.0,
@@ -551,7 +528,6 @@ class TestConstellationTasking:
             satellites=[
                 MagicMock(is_alive=MagicMock(return_value=False)) for i in range(3)
             ],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
             failure_penalty=-20.0,
@@ -579,7 +555,6 @@ class TestConstellationTasking:
             sat.name = f"sat{i}"
         env = ConstellationTasking(
             satellites=mock_sats,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(
                 is_terminated=MagicMock(return_value=False),
@@ -615,7 +590,6 @@ class TestConstellationTasking:
             sat.name = f"sat{i}"
         env = ConstellationTasking(
             satellites=mock_sats,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(
                 is_terminated=MagicMock(return_value=False),
@@ -642,7 +616,6 @@ class TestConstellationTasking:
             sat.name = f"sat{i}"
         env = ConstellationTasking(
             satellites=mock_sats,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
             time_limit=lambda: np.random.uniform(10, 20),
@@ -661,7 +634,6 @@ class TestConstellationTasking:
     def test_close(self):
         env = ConstellationTasking(
             satellites=[MagicMock()],
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -679,7 +651,6 @@ class TestConstellationTasking:
             sat.name = f"sat{i}"
         env = ConstellationTasking(
             satellites=mock_sats,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )
@@ -713,7 +684,6 @@ class TestConstellationTasking:
             sat.name = f"sat{i}"
         env = ConstellationTasking(
             satellites=mock_sats,
-            world_type=MagicMock(),
             scenario=MagicMock(),
             rewarder=MagicMock(),
         )

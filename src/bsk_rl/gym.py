@@ -17,8 +17,8 @@ from bsk_rl.data.composition import ComposedReward
 from bsk_rl.sats import Satellite
 from bsk_rl.scene import Scenario
 from bsk_rl.sim import Simulator
-from bsk_rl.sim.world import WorldModel
-from bsk_rl.utils import logging_config, vizard
+from bsk_rl.sim.world import BaseWorldModel, WorldModel
+from bsk_rl.utils import functional, logging_config, vizard
 
 logger = logging.getLogger(__name__)
 
@@ -215,23 +215,13 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
     def _minimum_world_model(self) -> type[WorldModel]:
         """Determine the minimum world model required by the satellites."""
-        types = set(
+        world_types = set(
             sum(
                 [satellite.dyn_type._requires_world() for satellite in self.satellites],
                 [],
             )
         )
-        if len(types) == 1:
-            return list(types)[0]
-        for test_type in types:
-            if all([issubclass(test_type, other_type) for other_type in types]):
-                return test_type
-
-        # Else compose all types into a new class
-        class MinimumEnv(*types):
-            pass
-
-        return MinimumEnv
+        return functional.compose_types(*world_types, BaseWorldModel, name="World")
 
     def get_satellite(self, name: str) -> "Satellite":
         """Get a satellite by name.

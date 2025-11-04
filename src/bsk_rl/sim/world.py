@@ -110,7 +110,7 @@ class WorldModel(ABC, Resetable):
         pass
 
 
-class BasicWorldModel(WorldModel):
+class BaseWorldModel(WorldModel):
     """Basic world with minimum necessary Basilisk world components."""
 
     def __init__(self, *args, **kwargs) -> None:
@@ -148,8 +148,6 @@ class BasicWorldModel(WorldModel):
     def _setup_world_objects(self, **kwargs) -> None:
         self.setup_gravity_bodies(**kwargs)
         self.setup_ephem_object(**kwargs)
-        self.setup_atmosphere_density_model(**kwargs)
-        self.setup_eclipse_object(**kwargs)
 
     @default_args(utc_init=random_epoch)
     def setup_gravity_bodies(
@@ -205,6 +203,68 @@ class BasicWorldModel(WorldModel):
             self.world_task_name, self.ephemConverter, ModelPriority=priority
         )
 
+    def __del__(self) -> None:
+        """Log when world is deleted and unload SPICE."""
+        super().__del__()
+        try:
+            self.gravFactory.unloadSpiceKernels()
+        except AttributeError:
+            pass
+
+
+class EclipseWorldModel(BaseWorldModel):
+    def __init__(self, *args, **kwargs) -> None:
+        """Model that includes eclipse messages.
+
+        This model adds eclipses for power generation and other purposes.
+
+        Args:
+            *args: Passed to superclass.
+            **kwargs: Passed to superclass.
+
+        """
+        super().__init__(*args, **kwargs)
+
+    def _setup_world_objects(self, **kwargs) -> None:
+        super()._setup_world_objects(**kwargs)
+        self.setup_eclipse_object(**kwargs)
+
+    def setup_eclipse_object(self, priority: int = 988, **kwargs) -> None:
+        """Set up the celestial object that is causing an eclipse message.
+
+        Args:
+            priority: Model priority.
+            kwargs: Ignored
+        """
+        self.eclipseObject = eclipse.Eclipse()
+        self.eclipseObject.addPlanetToModel(
+            self.gravFactory.spiceObject.planetStateOutMsgs[self.body_index]
+        )
+        self.eclipseObject.sunInMsg.subscribeTo(
+            self.gravFactory.spiceObject.planetStateOutMsgs[self.sun_index]
+        )
+        self.simulator.AddModelToTask(
+            self.world_task_name, self.eclipseObject, ModelPriority=priority
+        )
+
+
+class AtmosphereWorldModel(BaseWorldModel):
+    def __init__(self, *args, **kwargs) -> None:
+        """Model that includes an atmosphere.
+
+        This model adds an atmosphere to the planet that can be used for drag.
+
+        Args:
+            *args: Passed to superclass.
+            **kwargs: Passed to superclass.
+
+        """
+        super().__init__(*args, **kwargs)
+
+    def _setup_world_objects(self, **kwargs) -> None:
+        super()._setup_world_objects(**kwargs)
+        self.setup_atmosphere_density_model(**kwargs)
+
     @default_args(
         planetRadius=orbitalMotion.REQ_EARTH * 1e3,
         baseDensity=1.22,
@@ -239,41 +299,14 @@ class BasicWorldModel(WorldModel):
             self.world_task_name, self.densityModel, ModelPriority=priority
         )
 
-    def setup_eclipse_object(self, priority: int = 988, **kwargs) -> None:
-        """Set up the celestial object that is causing an eclipse message.
 
-        Args:
-            priority: Model priority.
-            kwargs: Ignored
-        """
-        self.eclipseObject = eclipse.Eclipse()
-        self.eclipseObject.addPlanetToModel(
-            self.gravFactory.spiceObject.planetStateOutMsgs[self.body_index]
-        )
-        self.eclipseObject.sunInMsg.subscribeTo(
-            self.gravFactory.spiceObject.planetStateOutMsgs[self.sun_index]
-        )
-        self.simulator.AddModelToTask(
-            self.world_task_name, self.eclipseObject, ModelPriority=priority
-        )
-
-    def __del__(self) -> None:
-        """Log when world is deleted and unload SPICE."""
-        super().__del__()
-        try:
-            self.gravFactory.unloadSpiceKernels()
-        except AttributeError:
-            pass
-
-
-class GroundStationWorldModel(BasicWorldModel):
+class GroundStationWorldModel(BaseWorldModel):
     """Model that includes downlink ground stations."""
 
     def __init__(self, *args, **kwargs) -> None:
         """Model that includes downlink ground stations.
 
-        This model includes the basic world components, as well as ground stations for
-        downlinking data.
+        This model adds ground stations for downlinking data.
 
         Args:
             *args: Passed to superclass.
@@ -394,4 +427,10 @@ class GroundStationWorldModel(BasicWorldModel):
 
 
 __doc_title__ = "World Sims"
-__all__ = ["WorldModel", "BasicWorldModel", "GroundStationWorldModel"]
+__all__ = [
+    "WorldModel",
+    "BaseWorldModel",
+    "EclipseWorldModel",
+    "AtmosphereWorldModel",
+    "GroundStationWorldModel",
+]

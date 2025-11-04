@@ -108,7 +108,7 @@ class TestConjunctionDynModel:
     )
     def test_conjunction(self, rN1, vN1, collision):
         class CollisionSat(sats.Satellite):
-            fsw_type = fsw.BasicFSWModel
+            fsw_type = fsw.BaseFSWModel
             dyn_type = dyn.ConjunctionDynModel
             observation_spec = [obs.Time()]
             action_spec = [act.Drift()]
@@ -177,13 +177,13 @@ class TestMaxRangeDynModel:
     @pytest.mark.parametrize("fail_chief", [True, False])
     def test_max_range(self, rN1, rN2, max_range_violation, fail_chief):
         class ChiefSat(sats.Satellite):
-            fsw_type = fsw.BasicFSWModel
-            dyn_type = dyn.BasicDynamicsModel
+            fsw_type = fsw.BaseFSWModel
+            dyn_type = dyn.BaseDynamicsModel
             observation_spec = [obs.Time()]
             action_spec = [act.Drift()]
 
         class DeputySat(sats.Satellite):
-            fsw_type = fsw.BasicFSWModel
+            fsw_type = fsw.BaseFSWModel
             dyn_type = dyn.MaxRangeDynModel
             observation_spec = [obs.Time()]
             action_spec = [act.Drift()]

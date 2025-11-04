@@ -36,10 +36,6 @@ class TestDynamicsModel:
 basicdyn = module + "BasicDynamicsModel."
 
 
-def test_basic_requires_world():
-    assert world.BasicWorldModel in BasicDynamicsModel._requires_world()
-
-
 @patch(basicdyn + "_requires_world", MagicMock(return_value=[]))
 @patch(basicdyn + "setup_spacecraft_hub")
 @patch(basicdyn + "setup_drag_effector")
@@ -52,6 +48,8 @@ def test_basic_requires_world():
 @patch(basicdyn + "setup_power_sink")
 @patch(basicdyn + "setup_reaction_wheel_power")
 @patch(basicdyn + "setup_thruster_power")
+@patch(basicdyn + "setup_disturbance_torque")
+@patch(basicdyn + "setup_density_model")
 def test_basic_setup_objects(self, *args):
     BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
     for setter in args:
@@ -218,7 +216,7 @@ class TestLOSCommDynModel:
     losdyn = module + "LOSCommDynModel."
 
     @patch(losdyn + "_requires_world", MagicMock(return_value=[]))
-    @patch(module + "BasicDynamicsModel._setup_dynamics_objects", MagicMock())
+    @patch(module + "BaseDynamicsModel._setup_dynamics_objects", MagicMock())
     @patch(losdyn + "setup_los_comms")
     def test_setup_objects(self, *args):
         LOSCommDynModel(MagicMock(simulator=MagicMock()), 1.0)

@@ -1,4 +1,3 @@
-import types
 from functools import partial
 
 import numpy as np
@@ -42,14 +41,11 @@ class InspectorSat(sats.Satellite):
             fsw_action="action_inspect_rso",
         )
     ]
-    dyn_type = types.new_class("Dyn", (dyn.MaxRangeDynModel, dyn.RSOInspectorDynModel))
-    fsw_type = types.new_class(
-        "FSW",
-        (
-            fsw.SteeringFSWModel,
-            fsw.MagicOrbitalManeuverFSWModel,
-            fsw.RSOInspectorFSWModel,
-        ),
+    dyn_type = (dyn.MaxRangeDynModel, dyn.RSOInspectorDynModel)
+    fsw_type = (
+        fsw.SteeringFSWModel,
+        fsw.MagicOrbitalManeuverFSWModel,
+        fsw.RSOInspectorFSWModel,
     )
 
 

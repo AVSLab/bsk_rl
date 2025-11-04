@@ -19,6 +19,7 @@ from bsk_rl.utils.functional import (
     AbstractClassProperty,
     Resetable,
     collect_default_args,
+    compose_types,
     safe_dict_merge,
     valid_func_name,
 )
@@ -38,10 +39,54 @@ SatAct = Any
 class Satellite(ABC, Resetable):
     """Abstract base class for satellites."""
 
-    dyn_type: type["dyn.DynamicsModel"] = AbstractClassProperty()
-    fsw_type: type["fsw.FSWModel"] = AbstractClassProperty()
+    dyn_type: Union[
+        type["dyn.DynamicsModel"], tuple[type["dyn.DynamicsModel"], ...]
+    ] = AbstractClassProperty()
+    fsw_type: Union[type["fsw.FSWModel"], tuple[type["fsw.FSWModel"], ...]] = (
+        AbstractClassProperty()
+    )
     observation_spec: list["Observation"] = AbstractClassProperty()
     action_spec: list["Action"] = AbstractClassProperty()
+
+    _dyn_type = None
+
+    @classmethod
+    def get_dyn_type(cls) -> type["dyn.DynamicsModel"]:
+        """Get the dynamics model type for the satellite.
+
+        This should be used in class methods instead of referencing ``dyn_type``. In
+        instantiated satellites, ``self.dyn_type`` refers to the output of this function.
+
+        Returns:
+            Dynamics model type
+        """
+        if cls._dyn_type is None:
+            if isinstance(cls.dyn_type, (list, tuple)):
+                dyn_types = cls.dyn_type
+            else:
+                dyn_types = (cls.dyn_type,)
+            cls._dyn_type = compose_types(*dyn_types, dyn.BaseDynamicsModel, name="Dyn")
+        return cls._dyn_type
+
+    _fsw_type = None
+
+    @classmethod
+    def get_fsw_type(cls) -> type["fsw.FSWModel"]:
+        """Get the flight software model type for the satellite.
+
+        This should be used in class methods instead of referencing ``fsw_type``. In
+        instantiated satellites, ``self.fsw_type`` refers to the output of this function.
+
+        Returns:
+            Flight software model type
+        """
+        if cls._fsw_type is None:
+            if isinstance(cls.fsw_type, (list, tuple)):
+                fsw_types = cls.fsw_type
+            else:
+                fsw_types = (cls.fsw_type,)
+            cls._fsw_type = compose_types(*fsw_types, fsw.BaseFSWModel, name="FSW")
+        return cls._fsw_type
 
     @classmethod
     def default_sat_args(cls, **kwargs) -> dict[str, Any]:
@@ -53,14 +98,17 @@ class Satellite(ABC, Resetable):
         Returns:
             Dictionary of arguments for simulation models.
         """
-        defaults = collect_default_args(cls.dyn_type)
-        defaults = safe_dict_merge(defaults, collect_default_args(cls.fsw_type))
-        for name in dir(cls.fsw_type):
-            if inspect.isclass(getattr(cls.fsw_type, name)) and issubclass(
-                getattr(cls.fsw_type, name), fsw.Task
+        defaults = collect_default_args(cls.get_dyn_type())
+        fsw_type = cls.get_fsw_type()
+        defaults = safe_dict_merge(defaults, collect_default_args(fsw_type))
+        for name in dir(fsw_type):
+            if (
+                not name.startswith("__")
+                and inspect.isclass(getattr(fsw_type, name))
+                and issubclass(getattr(fsw_type, name), fsw.Task)
             ):
                 defaults = safe_dict_merge(
-                    defaults, collect_default_args(getattr(cls.fsw_type, name))
+                    defaults, collect_default_args(getattr(fsw_type, name))
                 )
 
         for k, v in kwargs.items():
@@ -109,6 +157,9 @@ class Satellite(ABC, Resetable):
             self, obs_type=obs_type, dtype=dtype
         )
         self.action_builder = select_action_builder(self)
+
+        self.fsw_type = self.get_fsw_type()
+        self.dyn_type = self.get_dyn_type()
 
     @property
     @deprecated(reason="Use satellite.name instead")

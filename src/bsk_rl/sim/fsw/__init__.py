@@ -49,6 +49,7 @@ __doc_title__ = "FSW Sims"
 __all__ = [
     "action",
     "FSWModel",
+    "BaseFSWModel",
     "BasicFSWModel",
     "ImagingFSWModel",
     "ContinuousImagingFSWModel",
@@ -56,5 +57,4 @@ __all__ = [
     "SteeringImagerFSWModel",
     "MagicOrbitalManeuverFSWModel",
     "RSOInspectorFSWModel",
-    "BaseFSWModel",
 ]

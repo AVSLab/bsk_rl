@@ -195,6 +195,10 @@ class FSWModel(ABC, Resetable):
         """Message setup after task creation."""
         pass
 
+    def _zero_gateway_msgs(self) -> None:
+        """Zero all the FSW gateway message payloads."""
+        pass
+
     def is_alive(self, log_failure=False) -> bool:
         """Check if the FSW model has failed any aliveness requirements.
 
@@ -211,7 +215,7 @@ class FSWModel(ABC, Resetable):
 class BaseFSWModel(FSWModel):
     @classmethod
     def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
-        return [dyn.BaseDynamicsModel]
+        return super()._requires_dyn() + [dyn.BaseDynamicsModel]
 
     def _set_messages(self) -> None:
         self._set_config_msgs()
@@ -240,6 +244,13 @@ class BaseFSWModel(FSWModel):
 
     def _make_task_list(self):
         return []
+
+    @action
+    def action_drift(self) -> None:
+        """Disable all tasks and do nothing."""
+        self.simulator.disableTask(
+            BasicFSWModel.MRPControlTask.name + self.satellite.name
+        )
 
 
 class MagicPointingFSWModel(BaseFSWModel):
@@ -285,13 +296,6 @@ class BasicFSWModel(BaseFSWModel):
         )
         self.dynamics.thrusterSet.cmdsInMsg.subscribeTo(
             self.thrDump.thrusterOnTimeOutMsg
-        )
-
-    @action
-    def action_drift(self) -> None:
-        """Disable all tasks and do nothing."""
-        self.simulator.disableTask(
-            BasicFSWModel.MRPControlTask.name + self.satellite.name
         )
 
     class SunPointTask(Task):

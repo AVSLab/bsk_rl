@@ -9,18 +9,41 @@ from bsk_rl.sim import Simulator
 from bsk_rl.sim.fsw import Task
 
 
+class MockDynType:
+    def with_defaults(self):
+        pass
+
+
+MockDynType.with_defaults.defaults = {"a": 1, "d": np.array([4, 5])}
+
+
+class MockFSWType:
+    def with_defaults(self):
+        pass
+
+    some_task = Task
+
+
+MockFSWType.with_defaults.defaults = {"b": 2}
+
+
+def with_defaults():
+    pass
+
+
+MockFSWType.some_task.with_defaults = with_defaults
+MockFSWType.some_task.with_defaults.defaults = {"c": 3}
+
+
 @patch.multiple(sats.Satellite, __abstractmethods__=set())
 @patch("bsk_rl.sats.Satellite.observation_spec", MagicMock())
 @patch("bsk_rl.sats.Satellite.action_spec", [MagicMock()])
+# Mock to avoid picking up the base models
+@patch("bsk_rl.sats.Satellite.get_dyn_type", MagicMock(return_value=MockDynType))
+@patch("bsk_rl.sats.Satellite.get_fsw_type", MagicMock(return_value=MockFSWType))
 class TestSatellite:
-    sats.Satellite.dyn_type = MagicMock(
-        with_defaults=MagicMock(defaults={"a": 1, "d": np.array([4, 5])})
-    )
-    Task.with_defaults = MagicMock(defaults={"c": 3})
-    sats.Satellite.fsw_type = MagicMock(
-        with_defaults=MagicMock(defaults={"b": 2}),
-        some_task=Task,
-    )
+    sats.Satellite.dyn_type = MockDynType
+    sats.Satellite.fsw_type = MockFSWType
     sats.Satellite.logger = MagicMock()
 
     def test_default_sat_args(self):
@@ -141,7 +164,9 @@ class TestSatellite:
         mock_fsw = MagicMock()
 
         sat = sats.Satellite(name="TestSat", sat_args=None)
+        sat.dyn_type = MagicMock()
         sat.dyn_type.return_value = mock_dyn
+        sat.fsw_type = MagicMock()
         sat.fsw_type.return_value = mock_fsw
         sat.generate_sat_args()
         sat.set_simulator(mock_sim)
