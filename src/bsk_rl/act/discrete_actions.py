@@ -180,13 +180,24 @@ class Charge(DiscreteFSWAction):
 
 class Drift(DiscreteFSWAction):
     def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
-        """Action to disable all FSW tasks (:class:`~bsk_rl.sim.fsw.BasicFSWModel.action_drift`).
+        """Action to disable all FSW tasks (:class:`~bsk_rl.sim.fsw.BaseFSWModel.action_drift`).
 
         Args:
             name: Action name.
             duration: Time to task action, in seconds.
         """
         super().__init__(fsw_action="action_drift", name=name, duration=duration)
+
+
+class NadirPoint(DiscreteFSWAction):
+    def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
+        """Action to point nadir (:class:`~bsk_rl.sim.fsw.BaseFSWModel.action_nadir_point`).
+
+        Args:
+            name: Action name.
+            duration: Time to task action, in seconds.
+        """
+        super().__init__(fsw_action="action_nadir_point", name=name, duration=duration)
 
 
 class Desat(DiscreteFSWAction):

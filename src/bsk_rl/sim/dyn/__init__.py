@@ -38,7 +38,12 @@ operational, returning true if the satellite is still alive.
 
 from deprecated import deprecated
 
-from bsk_rl.sim.dyn.base import BaseDynamicsModel, BasicDynamicsModel, DynamicsModel
+from bsk_rl.sim.dyn.base import (
+    BaseDynamicsModel,
+    BasicDynamicsModel,
+    DynamicsModel,
+    EclipseDynModel,
+)
 from bsk_rl.sim.dyn.ground_imaging import (
     ContinuousImagingDynModel,
     GroundStationDynModel,
@@ -68,6 +73,7 @@ __all__ = [
     "DynamicsModel",
     "BaseDynamicsModel",
     "BasicDynamicsModel",
+    "EclipseDynModel",
     "LOSCommDynModel",
     "ImagingDynModel",
     "ContinuousImagingDynModel",

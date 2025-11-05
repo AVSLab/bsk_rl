@@ -372,7 +372,30 @@ class BaseDynamicsModel(DynamicsModel):
         return np.linalg.norm(self.r_BN_N) > self.min_orbital_radius
 
 
-class BasicDynamicsModel(BaseDynamicsModel):
+class EclipseDynModel(BaseDynamicsModel):
+    """Dynamics model with eclipse checking."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Dynamics model with eclipse checking."""
+        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def _requires_world(cls) -> list[type["WorldModel"]]:
+        return [
+            world.EclipseWorldModel,
+        ] + super()._requires_world()
+
+    def _setup_dynamics_objects(self, **kwargs) -> None:
+        super()._setup_dynamics_objects(**kwargs)
+        self.setup_eclipse_object()
+
+    def setup_eclipse_object(self) -> None:
+        """Add the spacecraft to the eclipse module."""
+        self.world.eclipseObject.addSpacecraftToModel(self.scObject.scStateOutMsg)
+        self.eclipse_index = len(self.world.eclipseObject.eclipseOutMsgs) - 1
+
+
+class BasicDynamicsModel(EclipseDynModel, BaseDynamicsModel):
     """Basic Dynamics model with minimum necessary Basilisk components."""
 
     def __init__(self, *args, **kwargs) -> None:
@@ -398,7 +421,6 @@ class BasicDynamicsModel(BaseDynamicsModel):
     @classmethod
     def _requires_world(cls) -> list[type["WorldModel"]]:
         return [
-            world.EclipseWorldModel,
             world.AtmosphereWorldModel,
         ] + super()._requires_world()
 
@@ -429,7 +451,6 @@ class BasicDynamicsModel(BaseDynamicsModel):
         self.setup_drag_effector(**kwargs)
         self.setup_reaction_wheel_dyn_effector(**kwargs)
         self.setup_thruster_dyn_effector()
-        self.setup_eclipse_object()
         self.setup_solar_panel(**kwargs)
         self.setup_battery(**kwargs)
         self.setup_power_sink(**kwargs)
@@ -606,11 +627,6 @@ class BasicDynamicsModel(BaseDynamicsModel):
             self.task_name, self.thrusterPowerSink, ModelPriority=priority
         )
         self.powerMonitor.addPowerNodeToModel(self.thrusterPowerSink.nodePowerOutMsg)
-
-    def setup_eclipse_object(self) -> None:
-        """Add the spacecraft to the eclipse module."""
-        self.world.eclipseObject.addSpacecraftToModel(self.scObject.scStateOutMsg)
-        self.eclipse_index = len(self.world.eclipseObject.eclipseOutMsgs) - 1
 
     @default_args(
         panelArea=2 * 1.0 * 0.5,
