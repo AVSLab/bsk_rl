@@ -395,67 +395,16 @@ class EclipseDynModel(BaseDynamicsModel):
         self.eclipse_index = len(self.world.eclipseObject.eclipseOutMsgs) - 1
 
 
-class BasicDynamicsModel(EclipseDynModel, BaseDynamicsModel):
-    """Basic Dynamics model with minimum necessary Basilisk components."""
+class DisturbanceTorqueDynModel(BaseDynamicsModel):
+    """Dynamics model with constant disturbance torque."""
 
     def __init__(self, *args, **kwargs) -> None:
-        """A dynamics model with a basic feature set.
-
-        Includes the following:
-
-        * Spacecraft hub physical properties
-        * Gravity
-        * Constant disturbance torque (defaults to none)
-        * Aerodynamic drag
-        * Eclipse checking for power generation
-        * Reaction wheels
-        * Momentum desaturation thrusters
-        * Solar panels, battery, and power system
-
-        Args:
-            *args: Passed to superclass
-            **kwargs: Passed to superclass
-        """
+        """Dynamics model with constant disturbance torque."""
         super().__init__(*args, **kwargs)
-
-    @classmethod
-    def _requires_world(cls) -> list[type["WorldModel"]]:
-        return [
-            world.AtmosphereWorldModel,
-        ] + super()._requires_world()
-
-    @property
-    def battery_charge(self):
-        """Battery charge [W*s]."""
-        return self.powerMonitor.batPowerOutMsg.read().storageLevel
-
-    @property
-    def battery_charge_fraction(self):
-        """Battery charge as a fraction of capacity."""
-        return self.battery_charge / self.powerMonitor.storageCapacity
-
-    @property
-    def wheel_speeds(self):
-        """Wheel speeds [rad/s]."""
-        return np.array(self.rwStateEffector.rwSpeedOutMsg.read().wheelSpeeds)[0:3]
-
-    @property
-    def wheel_speeds_fraction(self):
-        """Wheel speeds normalized by maximum allowable speed."""
-        return self.wheel_speeds / (self.maxWheelSpeed * macros.rpm2radsec)
 
     def _setup_dynamics_objects(self, **kwargs) -> None:
         super()._setup_dynamics_objects(**kwargs)
         self.setup_disturbance_torque(**kwargs)
-        self.setup_density_model()
-        self.setup_drag_effector(**kwargs)
-        self.setup_reaction_wheel_dyn_effector(**kwargs)
-        self.setup_thruster_dyn_effector()
-        self.setup_solar_panel(**kwargs)
-        self.setup_battery(**kwargs)
-        self.setup_power_sink(**kwargs)
-        self.setup_reaction_wheel_power(**kwargs)
-        self.setup_thruster_power(**kwargs)
 
     @default_args(disturbance_vector=None)
     def setup_disturbance_torque(
@@ -474,11 +423,33 @@ class BasicDynamicsModel(EclipseDynModel, BaseDynamicsModel):
         self.extForceTorqueObject.extTorquePntB_B = disturbance_vector
         self.scObject.addDynamicEffector(self.extForceTorqueObject)
 
+
+class AtmosphericDragDynModel(BaseDynamicsModel):
+    """Dynamics model with atmospheric drag."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Dynamics model with atmospheric drag."""
+        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def _requires_world(cls) -> list[type["WorldModel"]]:
+        return [
+            world.AtmosphereWorldModel,
+        ] + super()._requires_world()
+
+    def _setup_dynamics_objects(self, **kwargs) -> None:
+        super()._setup_dynamics_objects(**kwargs)
+        self.setup_density_model()
+        self.setup_drag_effector(**kwargs)
+
     def setup_density_model(self) -> None:
         """Set up the atmospheric density model effector."""
         self.world.densityModel.addSpacecraftToModel(self.scObject.scStateOutMsg)
 
-    @default_args(dragCoeff=2.2)
+    @default_args(
+        dragCoeff=2.2,
+        panelArea=2 * 1.0 * 0.5,
+    )
     def setup_drag_effector(
         self,
         width: float,
@@ -546,6 +517,69 @@ class BasicDynamicsModel(EclipseDynModel, BaseDynamicsModel):
         self.simulator.AddModelToTask(
             self.task_name, self.dragEffector, ModelPriority=priority
         )
+
+
+class BasicDynamicsModel(
+    EclipseDynModel,
+    DisturbanceTorqueDynModel,
+    AtmosphericDragDynModel,
+    BaseDynamicsModel,
+):
+    """Basic Dynamics model with minimum necessary Basilisk components."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """A dynamics model with a basic feature set.
+
+        Includes the following:
+
+        * Spacecraft hub physical properties
+        * Gravity
+        * Constant disturbance torque (defaults to none)
+        * Aerodynamic drag
+        * Eclipse checking for power generation
+        * Reaction wheels
+        * Momentum desaturation thrusters
+        * Solar panels, battery, and power system
+
+        Args:
+            *args: Passed to superclass
+            **kwargs: Passed to superclass
+        """
+        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def _requires_world(cls) -> list[type["WorldModel"]]:
+        return super()._requires_world()
+
+    @property
+    def battery_charge(self):
+        """Battery charge [W*s]."""
+        return self.powerMonitor.batPowerOutMsg.read().storageLevel
+
+    @property
+    def battery_charge_fraction(self):
+        """Battery charge as a fraction of capacity."""
+        return self.battery_charge / self.powerMonitor.storageCapacity
+
+    @property
+    def wheel_speeds(self):
+        """Wheel speeds [rad/s]."""
+        return np.array(self.rwStateEffector.rwSpeedOutMsg.read().wheelSpeeds)[0:3]
+
+    @property
+    def wheel_speeds_fraction(self):
+        """Wheel speeds normalized by maximum allowable speed."""
+        return self.wheel_speeds / (self.maxWheelSpeed * macros.rpm2radsec)
+
+    def _setup_dynamics_objects(self, **kwargs) -> None:
+        super()._setup_dynamics_objects(**kwargs)
+        self.setup_reaction_wheel_dyn_effector(**kwargs)
+        self.setup_thruster_dyn_effector()
+        self.setup_solar_panel(**kwargs)
+        self.setup_battery(**kwargs)
+        self.setup_power_sink(**kwargs)
+        self.setup_reaction_wheel_power(**kwargs)
+        self.setup_thruster_power(**kwargs)
 
     @default_args(
         wheelSpeeds=lambda: np.random.uniform(-1500, 1500, 3),
@@ -779,4 +813,7 @@ __all__ = [
     "DynamicsModel",
     "BaseDynamicsModel",
     "BasicDynamicsModel",
+    "EclipseDynModel",
+    "DisturbanceTorqueDynModel",
+    "AtmosphericDragDynModel",
 ]
