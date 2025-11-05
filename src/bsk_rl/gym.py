@@ -56,7 +56,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         satellites: Union[Satellite, list[Satellite]],
         scenario: Optional[Scenario] = None,
         rewarder: Optional[Union[GlobalReward, list[GlobalReward]]] = None,
-        world_type: Optional[type[WorldModel]] = None,
+        world_type: Optional[
+            Union[type[WorldModel], tuple[type[WorldModel], ...]]
+        ] = None,
         world_args: Optional[dict[str, Any]] = None,
         communicator: Optional[CommunicationMethod] = None,
         sat_arg_randomizer: Optional[SatArgRandomizer] = None,
@@ -96,7 +98,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             sat_arg_randomizer: For correlated randomization of satellites arguments. Should
                 be a function that takes a list of satellites and returns a dictionary that
                 maps satellites to dictionaries of satellite model arguments to be overridden.
-            world_type: Type of Basilisk world model to be constructed.
+            world_type: Type or tuple of types of Basilisk world model to be constructed.
             world_args: Arguments for :class:`~bsk_rl.sim.world.WorldModel` construction.
                 Should be in the form of a dictionary with keys corresponding to the
                 arguments of the constructor and values that are either the desired value
@@ -175,6 +177,14 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         if world_type is None:
             world_type = self._minimum_world_model()
+        else:
+            logger.warning(
+                "Using user-specified world type. Generally, the env-determined world "
+                "type is sufficient."
+            )
+            if not isinstance(world_type, (list, tuple)):
+                world_type = (world_type,)
+            world_type = functional.compose_types(*world_type, WorldModel, name="World")
         self.world_type = world_type
         if world_args is None:
             world_args = self.world_type.default_world_args()

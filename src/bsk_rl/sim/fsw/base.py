@@ -149,6 +149,11 @@ class FSWModel(ABC, Resetable):
 
         for required in self._requires_dyn():
             if not issubclass(satellite.dyn_type, required):
+                self.satellite.logger.warning(
+                    "Some sim model inheritance has changed. Explicitly include"
+                    "BasicFSWModel and BasicDynamicsModel if your configurations no "
+                    "longer work."
+                )
                 raise TypeError(
                     f"{satellite.dyn_type} must be a subclass of {required} to "
                     + f"use FSW model of type {self.__class__}"
