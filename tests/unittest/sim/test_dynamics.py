@@ -38,7 +38,6 @@ basicdyn = module + "BasicDynamicsModel."
 
 @patch(basicdyn + "_requires_world", MagicMock(return_value=[]))
 @patch(basicdyn + "setup_spacecraft_hub")
-@patch(basicdyn + "setup_drag_effector")
 @patch(basicdyn + "setup_reaction_wheel_dyn_effector")
 @patch(basicdyn + "setup_thruster_dyn_effector")
 @patch(basicdyn + "setup_simple_nav_object")
@@ -48,8 +47,9 @@ basicdyn = module + "BasicDynamicsModel."
 @patch(basicdyn + "setup_power_sink")
 @patch(basicdyn + "setup_reaction_wheel_power")
 @patch(basicdyn + "setup_thruster_power")
-@patch(basicdyn + "setup_disturbance_torque")
-@patch(basicdyn + "setup_density_model")
+@patch(module + "DisturbanceTorqueDynModel." + "setup_disturbance_torque")
+@patch(module + "AtmosphericDragDynModel." + "setup_density_model")
+@patch(module + "AtmosphericDragDynModel." + "setup_drag_effector")
 def test_basic_setup_objects(self, *args):
     BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
     for setter in args:
