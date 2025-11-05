@@ -21,7 +21,7 @@ Development - |version|
   for multiple inheritance to be used for easily creating more complex satellite models.
 * The inheritance structure of flight software and dynamics models has changed. Most models
   now inherit from :class:`~bsk_rl.sim.fsw.BaseFSWModel` or :class:`~bsk_rl.sim.dyn.BaseDynModel`
-  instead of :class:`~bsk_rl.sim.fsw.FSWModel` or :class:`~bsk_rl.sim.dyn.DynamicsModel`.
+  instead of :class:`~bsk_rl.sim.fsw.BasicFSWModel` or :class:`~bsk_rl.sim.dyn.BasicDynModel`.
   These are lighter-weight base classes that lack some functionality that was not always
   wanted.
 
@@ -31,6 +31,10 @@ Development - |version|
     :class:`~bsk_rl.sim.fsw.BasicFSWModel` and :class:`~bsk_rl.sim.dyn.BasicDynModel`
     to your ``fsw_type`` and ``dyn_type`` lists in your satellite classes.
 
+* :class:`~bsk_rl.sim.fsw.BaseFSWModel` implements direct actuator-less attitude control.
+  By inheriting from a FSW class that overrides the ``MRPControlTask``, such as
+  :class:`~bsk_rl.sim.fsw.BasicFSWModel` or :class:`~bsk_rl.sim.fsw.SteeringFSWModel`,
+  users can implement custom attitude control strategies.
 
 Version 1.2.0
 -------------

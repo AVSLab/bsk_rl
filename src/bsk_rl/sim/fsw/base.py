@@ -91,7 +91,6 @@ class Task(ABC):
             taskPriority=self.priority,
         )
 
-    @abstractmethod  # pragma: no cover
     def _create_module_data(self) -> None:
         """Create module data wrappers."""
         pass
@@ -248,7 +247,27 @@ class BaseFSWModel(FSWModel):
         self.attGuidMsg.write(messaging.AttGuidMsgPayload())
 
     def _make_task_list(self):
-        return []
+        return [self.MRPControlTask(self), self.NadirPointTask(self)]
+
+    class MRPControlTask(Task):
+        """Task to control the satellite attitude magically (i.e. without actuators)."""
+
+        name = "mrpControlTask"
+
+        def __init__(self, fsw, priority=80) -> None:  # noqa: D107
+            """Task to control the satellite magically."""
+            super().__init__(fsw, priority)
+
+        def _setup_fsw_objects(self, **kwargs) -> None:
+            self.setup_automatic_pointing()
+
+        def setup_automatic_pointing(self):
+            """Connect the attitude to the reference."""
+            self.fsw.dynamics.scObject.attRefInMsg.subscribeTo(self.fsw.attRefMsg)
+
+        def reset_for_action(self) -> None:
+            """MRP control is enabled by default for all tasks."""
+            self.fsw.simulator.enableTask(self.name + self.fsw.satellite.name)
 
     @action
     def action_drift(self) -> None:
@@ -257,9 +276,44 @@ class BaseFSWModel(FSWModel):
             BasicFSWModel.MRPControlTask.name + self.satellite.name
         )
 
+    class NadirPointTask(Task):
+        """Task to generate nadir-pointing reference."""
 
-class MagicPointingFSWModel(BaseFSWModel):
-    pass  # TODO
+        name = "nadirPointTask"
+
+        def __init__(self, fsw, priority=98) -> None:  # noqa: D107
+            """Task to generate nadir-pointing reference."""
+            super().__init__(fsw, priority)
+
+        def _create_module_data(self) -> None:
+            self.hillPoint = self.fsw.hillPoint = hillPoint.hillPoint()
+            self.hillPoint.ModelTag = "hillPoint"
+
+        def _setup_fsw_objects(self, **kwargs) -> None:
+            """Configure the nadir-pointing task.
+
+            Args:
+                kwargs: Passed to other setup functions.
+            """
+            self.hillPoint.transNavInMsg.subscribeTo(
+                self.fsw.dynamics.simpleNavObject.transOutMsg
+            )
+            self.hillPoint.celBodyInMsg.subscribeTo(
+                self.fsw.world.ephemConverter.ephemOutMsgs[self.fsw.world.body_index]
+            )
+            messaging.AttRefMsg_C_addAuthor(
+                self.hillPoint.attRefOutMsg, self.fsw.attRefMsg
+            )
+
+            self._add_model_to_task(self.hillPoint, priority=1199)
+
+    @action
+    def action_nadir_point(self) -> None:
+        """Point the satellite nadir."""
+        self.hillPoint.Reset(self.simulator.sim_time_ns)
+        self.simulator.enableTask(
+            BasicFSWModel.NadirPointTask.name + self.satellite.name
+        )
 
 
 class BasicFSWModel(BaseFSWModel):
@@ -272,11 +326,9 @@ class BasicFSWModel(BaseFSWModel):
     def _make_task_list(self) -> list[Task]:
         return [
             self.SunPointTask(self),
-            self.NadirPointTask(self),
             self.RWDesatTask(self),
             self.TrackingErrorTask(self),
-            self.MRPControlTask(self),
-        ]
+        ] + super()._make_task_list()
 
     def _set_config_msgs(self) -> None:
         super()._set_config_msgs()
@@ -349,37 +401,6 @@ class BasicFSWModel(BaseFSWModel):
         """Charge battery by pointing the solar panels at the sun."""
         self.sunPoint.Reset(self.simulator.sim_time_ns)
         self.simulator.enableTask(self.SunPointTask.name + self.satellite.name)
-
-    class NadirPointTask(Task):
-        """Task to generate nadir-pointing reference."""
-
-        name = "nadirPointTask"
-
-        def __init__(self, fsw, priority=98) -> None:  # noqa: D107
-            """Task to generate nadir-pointing reference."""
-            super().__init__(fsw, priority)
-
-        def _create_module_data(self) -> None:
-            self.hillPoint = self.fsw.hillPoint = hillPoint.hillPoint()
-            self.hillPoint.ModelTag = "hillPoint"
-
-        def _setup_fsw_objects(self, **kwargs) -> None:
-            """Configure the nadir-pointing task.
-
-            Args:
-                kwargs: Passed to other setup functions.
-            """
-            self.hillPoint.transNavInMsg.subscribeTo(
-                self.fsw.dynamics.simpleNavObject.transOutMsg
-            )
-            self.hillPoint.celBodyInMsg.subscribeTo(
-                self.fsw.world.ephemConverter.ephemOutMsgs[self.fsw.world.body_index]
-            )
-            messaging.AttRefMsg_C_addAuthor(
-                self.hillPoint.attRefOutMsg, self.fsw.attRefMsg
-            )
-
-            self._add_model_to_task(self.hillPoint, priority=1199)
 
     class RWDesatTask(Task):
         """Task to desaturate reaction wheels."""

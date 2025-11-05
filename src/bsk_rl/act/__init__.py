@@ -30,6 +30,8 @@ Use :class:`DiscreteAction` for integer-indexable, discrete actions.
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
 | :class:`Drift`             | 1       | Do nothing.                                                                                           |
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
+| :class:`NadirPoint`        | 1       | Point the satellite nadir.                                                                            |
++----------------------------+---------+-------------------------------------------------------------------------------------------------------+
 | :class:`Desat`             | 1       | Desaturate the reaction wheels with RCS thrusters. Needs to be called multiple times.                 |
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
 | :class:`Downlink`          | 1       | Downlink data to any ground station that is in range.                                                 |
@@ -72,6 +74,7 @@ from bsk_rl.act.discrete_actions import (
     Downlink,
     Drift,
     Image,
+    NadirPoint,
     Scan,
 )
 
