@@ -74,17 +74,13 @@ class TestWorldModel:
     @patch(baseworld + "setup_gravity_bodies")
     @patch(baseworld + "setup_ephem_object")
     def test_setup_and_delete(self, grav_set, epoch_set):
-        world = WorldModel(MagicMock(), 1.0)
+        world = WorldModel(MagicMock(), 1.0)  # noqa: F841
         for setter in (grav_set, epoch_set):
             setter.assert_called_once()
-        unload_function = MagicMock()
-        world.gravFactory = MagicMock(unloadSpiceKernels=unload_function)
-        del world
-        unload_function.assert_called_once()
 
     @patch(baseworld + "_setup_world_objects", MagicMock())
     @patch(module + "simIncludeGravBody", MagicMock())
-    def testsetup_gravity_bodies(self):
+    def test_setup_gravity_bodies(self):
         # Smoke test
         world = WorldModel(MagicMock(), 1.0)
         world.simulator = MagicMock()
@@ -93,7 +89,7 @@ class TestWorldModel:
 
     @patch(baseworld + "_setup_world_objects", MagicMock())
     @patch(module + "ephemerisConverter", MagicMock())
-    def testsetup_epoch_object(self):
+    def test_setup_epoch_object(self):
         # Smoke test
         world = WorldModel(MagicMock(), 1.0)
         world.simulator = MagicMock()
@@ -109,7 +105,7 @@ class TestAtmosphereWorldModel:
 
     @patch(baseworld + "_setup_world_objects", MagicMock())
     @patch(module + "exponentialAtmosphere", MagicMock())
-    def testsetup_atmosphere_density_model(self):
+    def test_setup_atmosphere_density_model(self):
         # Smoke test
         world = AtmosphereWorldModel(MagicMock(), 1.0)
         world.simulator = MagicMock()
@@ -129,7 +125,7 @@ class TestEclipseWorldModel:
 
     @patch(baseworld + "_setup_world_objects", MagicMock())
     @patch(module + "eclipse", MagicMock())
-    def testsetup_eclipse_object(self):
+    def test_setup_eclipse_object(self):
         # Smoke test
         world = EclipseWorldModel(MagicMock(), 1.0)
         world.simulator = MagicMock()
@@ -151,7 +147,7 @@ class TestGroundStationWorldModel:
 
     @patch(groundworld + "_setup_world_objects", MagicMock())
     @patch(groundworld + "_create_ground_station")
-    def testsetup_ground_locations(self, mock_gs_create):
+    def test_setup_ground_locations(self, mock_gs_create):
         world = GroundStationWorldModel(MagicMock(), 1.0)
         world.setup_ground_locations([dict(a=1), dict(b=2)], 1000.0, 1.0, 1000.0)
         mock_gs_create.assert_has_calls(

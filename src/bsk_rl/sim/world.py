@@ -214,14 +214,6 @@ class WorldModel(WorldModelABC):
             self.world_task_name, self.ephemConverter, ModelPriority=priority
         )
 
-    def __del__(self) -> None:
-        """Log when world is deleted and unload SPICE."""
-        super().__del__()
-        try:
-            self.gravFactory.unloadSpiceKernels()
-        except AttributeError:
-            pass
-
 
 class EclipseWorldModel(WorldModel):
     def __init__(self, *args, **kwargs) -> None:

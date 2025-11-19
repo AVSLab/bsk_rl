@@ -562,13 +562,6 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
             fill_value="extrapolate",
         )
 
-    def __del__(self) -> None:
-        """Unload spice kernels when object is deleted."""
-        try:
-            self.gravFactory.unloadSpiceKernels()
-        except AttributeError:
-            pass
-
 
 def lla2ecef(lat: float, long: float, radius: float):
     """Project LLA to Earth Centered, Earth Fixed location.
