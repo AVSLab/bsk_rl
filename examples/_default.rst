@@ -21,6 +21,7 @@ Earth Observation
    cloud_environment
    cloud_environment_with_reimaging
    aeos
+   target_location_uncertainty
 
 RSO Inspection
 ~~~~~~~~~~~~~~

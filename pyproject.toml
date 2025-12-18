@@ -14,7 +14,7 @@ readme = "README.md"
 requires-python = ">=3.10.0"
 license = { text = "MIT" }
 dependencies = [
-    "bsk>=2.8.9",
+    "bsk @ git+https://github.com/AVSLab/basilisk.git@develop",
     "Deprecated",
     "gymnasium",
     "numpy",
