@@ -19,7 +19,7 @@ from bsk_rl.utils import actuator_primitives as aP
 from bsk_rl.utils.functional import aliveness_checker, default_args
 
 if TYPE_CHECKING:  # pragma: no cover
-    from bsk_rl.sim.world import WorldModel
+    from bsk_rl.sim.world import WorldModelABC
 
 
 class ImagingDynModel(BasicDynamicsModel):
@@ -419,7 +419,7 @@ class GroundStationDynModel(ImagingDynModel):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def _requires_world(cls) -> list[type["WorldModel"]]:
+    def _requires_world(cls) -> list[type["WorldModelABC"]]:
         return super()._requires_world() + [world.GroundStationWorldModel]
 
     def _setup_dynamics_objects(self, **kwargs) -> None:

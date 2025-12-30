@@ -5,20 +5,20 @@ import pytest
 
 from bsk_rl.sim.world import (
     AtmosphereWorldModel,
-    BaseWorldModel,
     EclipseWorldModel,
     GroundStationWorldModel,
     WorldModel,
+    WorldModelABC,
 )
 
 module = "bsk_rl.sim.world."
 
 
-class TestWorldModel:
+class TestWorldModelABC:
     @patch(module + "collect_default_args")
     def test_default_world_args(self, mock_collect):
         mock_collect.return_value = {"a": 1, "b": 2, "c": 3}
-        assert WorldModel.default_world_args() == {"a": 1, "b": 2, "c": 3}
+        assert WorldModelABC.default_world_args() == {"a": 1, "b": 2, "c": 3}
 
     @pytest.mark.parametrize(
         "overwrite,error", [({"c": 4}, False), ({"not_c": 4}, True)]
@@ -27,21 +27,21 @@ class TestWorldModel:
     def test_default_sat_args_overwrote(self, mock_collect, overwrite, error):
         mock_collect.return_value = {"a": 1, "b": 2, "c": 3}
         if not error:
-            assert WorldModel.default_world_args(**overwrite) == {
+            assert WorldModelABC.default_world_args(**overwrite) == {
                 "a": 1,
                 "b": 2,
                 "c": 4,
             }
         else:
             with pytest.raises(KeyError):
-                WorldModel.default_world_args(**overwrite)
+                WorldModelABC.default_world_args(**overwrite)
 
-    @patch.multiple(WorldModel, __abstractmethods__=set())
-    @patch(module + "WorldModel._setup_world_objects")
+    @patch.multiple(WorldModelABC, __abstractmethods__=set())
+    @patch(module + "WorldModelABC._setup_world_objects")
     def test_init(self, mock_obj_init):
         mock_sim = MagicMock()
         kwargs = dict(a=1, b=2)
-        world = WorldModel(mock_sim, 1.0, **kwargs)
+        world = WorldModelABC(mock_sim, 1.0, **kwargs)
         mock_sim.CreateNewProcess.assert_called_once()
         mock_sim.CreateNewTask.assert_called_once()
         mock_obj_init.assert_called_once_with(**kwargs)
@@ -49,12 +49,12 @@ class TestWorldModel:
         assert world.simulator == mock_sim
 
 
-class TestBaseWorldModel:
-    baseworld = module + "BaseWorldModel."
+class TestWorldModel:
+    baseworld = module + "WorldModel."
 
     @patch(baseworld + "__init__", MagicMock(return_value=None))
     def test_PN(self):
-        world = BaseWorldModel(MagicMock(), 1.0)
+        world = WorldModel(MagicMock(), 1.0)
         world.gravFactory = MagicMock()
         world.body_index = 0
         msg = world.gravFactory.spiceObject.planetStateOutMsgs.__getitem__
@@ -63,7 +63,7 @@ class TestBaseWorldModel:
 
     @patch(baseworld + "__init__", MagicMock(return_value=None))
     def test_omega_PN_N(self):
-        world = BaseWorldModel(MagicMock(), 1.0)
+        world = WorldModel(MagicMock(), 1.0)
         world.gravFactory = MagicMock()
         world.body_index = 0
         msg = world.gravFactory.spiceObject.planetStateOutMsgs.__getitem__
@@ -74,7 +74,7 @@ class TestBaseWorldModel:
     @patch(baseworld + "setup_gravity_bodies")
     @patch(baseworld + "setup_ephem_object")
     def test_setup_and_delete(self, grav_set, epoch_set):
-        world = BaseWorldModel(MagicMock(), 1.0)
+        world = WorldModel(MagicMock(), 1.0)
         for setter in (grav_set, epoch_set):
             setter.assert_called_once()
         unload_function = MagicMock()
@@ -86,7 +86,7 @@ class TestBaseWorldModel:
     @patch(module + "simIncludeGravBody", MagicMock())
     def testsetup_gravity_bodies(self):
         # Smoke test
-        world = BaseWorldModel(MagicMock(), 1.0)
+        world = WorldModel(MagicMock(), 1.0)
         world.simulator = MagicMock()
         world.setup_gravity_bodies(utc_init="time")
         world.simulator.AddModelToTask.assert_called_once()
@@ -95,7 +95,7 @@ class TestBaseWorldModel:
     @patch(module + "ephemerisConverter", MagicMock())
     def testsetup_epoch_object(self):
         # Smoke test
-        world = BaseWorldModel(MagicMock(), 1.0)
+        world = WorldModel(MagicMock(), 1.0)
         world.simulator = MagicMock()
         world.gravFactory = MagicMock()
         world.sun_index = 0
@@ -144,7 +144,7 @@ class TestGroundStationWorldModel:
     groundworld = module + "GroundStationWorldModel."
 
     @patch(groundworld + "setup_ground_locations")
-    @patch(module + "BaseWorldModel._setup_world_objects", MagicMock())
+    @patch(module + "WorldModel._setup_world_objects", MagicMock())
     def test_setup_world_objects(self, ground_set):
         GroundStationWorldModel(MagicMock(), 1.0)
         ground_set.assert_called_once()

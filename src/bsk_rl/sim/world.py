@@ -1,7 +1,7 @@
 """Basilisk world models are given in ``bsk_rl.sim.world``.
 
 In most cases, the user does not need to specify the world model, as it is inferred from
-the requirements of the :class:`~bsk_rl.sim.fsw.FSWModel`. However, the user can specify
+the requirements of the :class:`~bsk_rl.sim.fsw.FSWModelABC`. However, the user can specify
 the world model in the :class:`~bsk_rl.GeneralSatelliteTasking` constructor if desired.
 
 Customization of the world model parameters is via the ``world_args`` parameter in the
@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 bsk_path = __path__[0]
 
 
-class WorldModel(ABC, Resetable):
+class WorldModelABC(ABC, Resetable):
     """Abstract Basilisk world model."""
 
     @classmethod
@@ -78,7 +78,7 @@ class WorldModel(ABC, Resetable):
     ) -> None:
         """Abstract Basilisk world model.
 
-        One WorldModel is instantiated for the environment each time a new simulator
+        One WorldModelABC is instantiated for the environment each time a new simulator
         is created.
 
         Args:
@@ -110,7 +110,7 @@ class WorldModel(ABC, Resetable):
         pass
 
 
-class BaseWorldModel(WorldModel):
+class WorldModel(WorldModelABC):
     """Basic world with minimum necessary Basilisk world components."""
 
     def __init__(self, *args, **kwargs) -> None:
@@ -212,7 +212,7 @@ class BaseWorldModel(WorldModel):
             pass
 
 
-class EclipseWorldModel(BaseWorldModel):
+class EclipseWorldModel(WorldModel):
     def __init__(self, *args, **kwargs) -> None:
         """Model that includes eclipse messages.
 
@@ -248,7 +248,7 @@ class EclipseWorldModel(BaseWorldModel):
         )
 
 
-class AtmosphereWorldModel(BaseWorldModel):
+class AtmosphereWorldModel(WorldModel):
     def __init__(self, *args, **kwargs) -> None:
         """Model that includes an atmosphere.
 
@@ -300,7 +300,7 @@ class AtmosphereWorldModel(BaseWorldModel):
         )
 
 
-class GroundStationWorldModel(BaseWorldModel):
+class GroundStationWorldModel(WorldModel):
     """Model that includes downlink ground stations."""
 
     def __init__(self, *args, **kwargs) -> None:
@@ -428,8 +428,8 @@ class GroundStationWorldModel(BaseWorldModel):
 
 __doc_title__ = "World Sims"
 __all__ = [
+    "WorldModelABC",
     "WorldModel",
-    "BaseWorldModel",
     "EclipseWorldModel",
     "AtmosphereWorldModel",
     "GroundStationWorldModel",

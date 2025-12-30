@@ -13,7 +13,7 @@ from bsk_rl.utils import vizard
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
-    from bsk_rl.sim.world import WorldModel
+    from bsk_rl.sim.world import WorldModelABC
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
     def __init__(
         self,
         satellites: list["Satellite"],
-        world_type: type["WorldModel"],
+        world_type: type["WorldModelABC"],
         world_args: dict[str, Any],
         sim_rate: float = 1.0,
         max_step_duration: float = 600.0,
@@ -51,7 +51,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self.logger = logger
         self.use_simple_earth = False
 
-        self.world: WorldModel
+        self.world: WorldModelABC
 
         self._set_world(world_type, world_args)
 
@@ -153,7 +153,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         )
 
     def _set_world(
-        self, world_type: type["WorldModel"], world_args: dict[str, Any]
+        self, world_type: type["WorldModelABC"], world_args: dict[str, Any]
     ) -> None:
         """Construct the simulator world model.
 

@@ -35,15 +35,15 @@ from bsk_rl.utils.orbital import random_orbit, rv2HN, rv2omega
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
     from bsk_rl.sim import Simulator
-    from bsk_rl.sim.world import WorldModel
+    from bsk_rl.sim.world import WorldModelABC
 
 
-class DynamicsModel(ABC, Resetable):
+class DynamicsModelABC(ABC, Resetable):
     """Abstract Basilisk dynamics model."""
 
     @classmethod
-    def _requires_world(cls) -> list[type["WorldModel"]]:
-        """Define minimum :class:`~bsk_rl.sim.world.WorldModel` for compatibility."""
+    def _requires_world(cls) -> list[type["WorldModelABC"]]:
+        """Define minimum :class:`~bsk_rl.sim.world.WorldModelABC` for compatibility."""
         return []
 
     def __init__(
@@ -55,7 +55,7 @@ class DynamicsModel(ABC, Resetable):
     ) -> None:
         """The abstract base dynamics model.
 
-        One DynamicsModel is instantiated for each satellite in the environment each
+        One DynamicsModelABC is instantiated for each satellite in the environment each
         time the environment is reset and new simulator is created.
 
         Args:
@@ -92,7 +92,7 @@ class DynamicsModel(ABC, Resetable):
         return self.satellite.simulator
 
     @property
-    def world(self) -> "WorldModel":
+    def world(self) -> "WorldModelABC":
         """Reference to the episode world model."""
         return self.simulator.world
 
@@ -123,9 +123,9 @@ class DynamicsModel(ABC, Resetable):
         self.logger.debug("Basilisk dynamics deleted")
 
 
-class BaseDynamicsModel(DynamicsModel):
+class DynamicsModel(DynamicsModelABC):
     @classmethod
-    def _requires_world(cls) -> list[type["WorldModel"]]:
+    def _requires_world(cls) -> list[type["WorldModelABC"]]:
         return []
 
     @property
@@ -344,7 +344,7 @@ class BaseDynamicsModel(DynamicsModel):
         self.setup_gravity_bodies()
 
     def setup_gravity_bodies(self) -> None:
-        """Set up gravitational bodies from the :class:`~bsk_rl.sim.world.WorldModel` to included in the simulation."""
+        """Set up gravitational bodies from the :class:`~bsk_rl.sim.world.WorldModelABC` to included in the simulation."""
         self.scObject.gravField.gravBodies = spacecraft.GravBodyVector(
             list(self.world.gravFactory.gravBodies.values())
         )
@@ -372,7 +372,7 @@ class BaseDynamicsModel(DynamicsModel):
         return np.linalg.norm(self.r_BN_N) > self.min_orbital_radius
 
 
-class EclipseDynModel(BaseDynamicsModel):
+class EclipseDynModel(DynamicsModel):
     """Dynamics model with eclipse checking."""
 
     def __init__(self, *args, **kwargs) -> None:
@@ -380,7 +380,7 @@ class EclipseDynModel(BaseDynamicsModel):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def _requires_world(cls) -> list[type["WorldModel"]]:
+    def _requires_world(cls) -> list[type["WorldModelABC"]]:
         return [
             world.EclipseWorldModel,
         ] + super()._requires_world()
@@ -395,7 +395,7 @@ class EclipseDynModel(BaseDynamicsModel):
         self.eclipse_index = len(self.world.eclipseObject.eclipseOutMsgs) - 1
 
 
-class DisturbanceTorqueDynModel(BaseDynamicsModel):
+class DisturbanceTorqueDynModel(DynamicsModel):
     """Dynamics model with constant disturbance torque."""
 
     def __init__(self, *args, **kwargs) -> None:
@@ -424,7 +424,7 @@ class DisturbanceTorqueDynModel(BaseDynamicsModel):
         self.scObject.addDynamicEffector(self.extForceTorqueObject)
 
 
-class AtmosphericDragDynModel(BaseDynamicsModel):
+class AtmosphericDragDynModel(DynamicsModel):
     """Dynamics model with atmospheric drag."""
 
     def __init__(self, *args, **kwargs) -> None:
@@ -432,7 +432,7 @@ class AtmosphericDragDynModel(BaseDynamicsModel):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def _requires_world(cls) -> list[type["WorldModel"]]:
+    def _requires_world(cls) -> list[type["WorldModelABC"]]:
         return [
             world.AtmosphereWorldModel,
         ] + super()._requires_world()
@@ -523,7 +523,7 @@ class BasicDynamicsModel(
     EclipseDynModel,
     DisturbanceTorqueDynModel,
     AtmosphericDragDynModel,
-    BaseDynamicsModel,
+    DynamicsModel,
 ):
     """Basic Dynamics model with minimum necessary Basilisk components."""
 
@@ -548,7 +548,7 @@ class BasicDynamicsModel(
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def _requires_world(cls) -> list[type["WorldModel"]]:
+    def _requires_world(cls) -> list[type["WorldModelABC"]]:
         return super()._requires_world()
 
     @property
@@ -810,8 +810,8 @@ class BasicDynamicsModel(
 __doc_title__ = "Dynamics Base"
 
 __all__ = [
+    "DynamicsModelABC",
     "DynamicsModel",
-    "BaseDynamicsModel",
     "BasicDynamicsModel",
     "EclipseDynModel",
     "DisturbanceTorqueDynModel",

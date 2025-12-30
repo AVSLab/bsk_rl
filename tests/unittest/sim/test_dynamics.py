@@ -8,7 +8,7 @@ from bsk_rl.sim import world
 from bsk_rl.sim.dyn import (
     BasicDynamicsModel,
     ContinuousImagingDynModel,
-    DynamicsModel,
+    DynamicsModelABC,
     GroundStationDynModel,
     ImagingDynModel,
     LOSCommDynModel,
@@ -18,18 +18,18 @@ from bsk_rl.sim.dyn import base as dyn_module
 module = "bsk_rl.sim.dyn."
 
 
-@patch.multiple(DynamicsModel, __abstractmethods__=set())
-class TestDynamicsModel:
+@patch.multiple(DynamicsModelABC, __abstractmethods__=set())
+class TestDynamicsModelABC:
     def test_base_class(self):
         sat = MagicMock()
-        dyn = DynamicsModel(sat, 1.0)
+        dyn = DynamicsModelABC(sat, 1.0)
         dyn.simulator.CreateNewProcess.assert_called_once()
         assert sat.simulator.world == dyn.world
         dyn.reset_for_action()
 
     @patch(module + "base.check_aliveness_checkers", MagicMock(return_value=True))
     def test_is_alive(self):
-        dyn = DynamicsModel(MagicMock(), 1.0)
+        dyn = DynamicsModelABC(MagicMock(), 1.0)
         assert dyn.is_alive()
 
 
@@ -216,7 +216,7 @@ class TestLOSCommDynModel:
     losdyn = module + "LOSCommDynModel."
 
     @patch(losdyn + "_requires_world", MagicMock(return_value=[]))
-    @patch(module + "BaseDynamicsModel._setup_dynamics_objects", MagicMock())
+    @patch(module + "DynamicsModel._setup_dynamics_objects", MagicMock())
     @patch(losdyn + "setup_los_comms")
     def test_setup_objects(self, *args):
         LOSCommDynModel(MagicMock(simulator=MagicMock()), 1.0)

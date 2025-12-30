@@ -4,10 +4,10 @@ import numpy as np
 from Basilisk.simulation import spacecraftLocation
 from Basilisk.utilities import macros
 
-from bsk_rl.sim.dyn import BaseDynamicsModel, ContinuousImagingDynModel, EclipseDynModel
+from bsk_rl.sim.dyn import ContinuousImagingDynModel, DynamicsModel, EclipseDynModel
 
 
-class RSODynModel(EclipseDynModel, BaseDynamicsModel):
+class RSODynModel(EclipseDynModel, DynamicsModel):
     """For an RSO with points targets for observation."""
 
     def __init__(self, *args, **kwargs) -> None:

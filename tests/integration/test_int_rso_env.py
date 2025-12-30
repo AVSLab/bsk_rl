@@ -15,7 +15,7 @@ class RSOSat(sats.Satellite):
     ]
     action_spec = [act.Drift(duration=1e9)]
     dyn_type = dyn.RSODynModel
-    fsw_type = fsw.BaseFSWModel
+    fsw_type = fsw.FSWModel
 
 
 class InspectorSat(sats.Satellite):

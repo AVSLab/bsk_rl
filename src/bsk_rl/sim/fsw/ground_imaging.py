@@ -17,14 +17,14 @@ from bsk_rl.utils.functional import default_args
 from bsk_rl.utils.orbital import rv2HN
 
 if TYPE_CHECKING:  # pragma: no cover
-    from bsk_rl.sim.dyn import DynamicsModel
+    from bsk_rl.sim.dyn import DynamicsModelABC
 
 
 class ImagingFSWModel(BasicFSWModel):
     """Extend FSW with instrument pointing and triggering control."""
 
     @classmethod
-    def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
+    def _requires_dyn(cls) -> list[type["DynamicsModelABC"]]:
         return super()._requires_dyn() + [dyn.ImagingDynModel]
 
     def __init__(self, *args, **kwargs) -> None:

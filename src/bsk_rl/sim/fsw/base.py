@@ -32,8 +32,8 @@ from bsk_rl.utils.functional import (
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
     from bsk_rl.sim import Simulator
-    from bsk_rl.sim.dyn.base import DynamicsModel
-    from bsk_rl.sim.world import WorldModel
+    from bsk_rl.sim.dyn.base import DynamicsModelABC
+    from bsk_rl.sim.world import WorldModelABC
 
 
 def action(
@@ -69,7 +69,7 @@ class Task(ABC):
 
     name: str = AbstractClassProperty()
 
-    def __init__(self, fsw: "FSWModel", priority: int) -> None:
+    def __init__(self, fsw: "FSWModelABC", priority: int) -> None:
         """Template class for defining FSW processes.
 
         Each FSW process has a task associated with it, which handle certain housekeeping
@@ -79,7 +79,7 @@ class Task(ABC):
             fsw: FSW model task contributes to
             priority: Task priority
         """
-        self.fsw: "FSWModel" = proxy(fsw)
+        self.fsw: "FSWModelABC" = proxy(fsw)
         self.priority = priority
 
     def create_task(self) -> None:
@@ -121,12 +121,12 @@ class Task(ABC):
         self.fsw.simulator.disableTask(self.name + self.fsw.satellite.name)
 
 
-class FSWModel(ABC, Resetable):
+class FSWModelABC(ABC, Resetable):
     """Abstract Basilisk flight software model."""
 
     @classmethod
-    def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
-        """Define minimum :class:`DynamicsModel` for compatibility."""
+    def _requires_dyn(cls) -> list[type["DynamicsModelABC"]]:
+        """Define minimum :class:`DynamicsModelABC` for compatibility."""
         return []
 
     def __init__(
@@ -134,7 +134,7 @@ class FSWModel(ABC, Resetable):
     ) -> None:
         """The abstract base flight software model.
 
-        One FSWModel is instantiated for each satellite in the environment each time the
+        One FSWModelABC is instantiated for each satellite in the environment each time the
         environment is reset and new simulator is created.
 
         Args:
@@ -183,12 +183,12 @@ class FSWModel(ABC, Resetable):
         return self.satellite.simulator
 
     @property
-    def world(self) -> "WorldModel":
+    def world(self) -> "WorldModelABC":
         """Reference to the episode world model."""
         return self.simulator.world
 
     @property
-    def dynamics(self) -> "DynamicsModel":
+    def dynamics(self) -> "DynamicsModelABC":
         """Reference to the satellite dynamics model for the episode."""
         return self.satellite.dynamics
 
@@ -216,10 +216,10 @@ class FSWModel(ABC, Resetable):
         self.logger.debug("Basilisk FSW deleted")
 
 
-class BaseFSWModel(FSWModel):
+class FSWModel(FSWModelABC):
     @classmethod
-    def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
-        return super()._requires_dyn() + [dyn.BaseDynamicsModel]
+    def _requires_dyn(cls) -> list[type["DynamicsModelABC"]]:
+        return super()._requires_dyn() + [dyn.DynamicsModel]
 
     def _set_messages(self) -> None:
         self._set_config_msgs()
@@ -316,11 +316,11 @@ class BaseFSWModel(FSWModel):
         )
 
 
-class BasicFSWModel(BaseFSWModel):
+class BasicFSWModel(FSWModel):
     """Basic FSW model with minimum necessary Basilisk components."""
 
     @classmethod
-    def _requires_dyn(cls) -> list[type["DynamicsModel"]]:
+    def _requires_dyn(cls) -> list[type["DynamicsModelABC"]]:
         return [dyn.BasicDynamicsModel]
 
     def _make_task_list(self) -> list[Task]:
@@ -742,7 +742,7 @@ class SteeringFSWModel(BasicFSWModel):
 __doc_title__ = "FSW Base"
 __all__ = [
     "action",
-    "FSWModel",
+    "FSWModelABC",
     "Task",
     "BasicFSWModel",
     "SteeringFSWModel",
