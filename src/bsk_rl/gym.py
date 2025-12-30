@@ -17,7 +17,7 @@ from bsk_rl.data.composition import ComposedReward
 from bsk_rl.sats import Satellite
 from bsk_rl.scene import Scenario
 from bsk_rl.sim import Simulator
-from bsk_rl.sim.world import BaseWorldModel, WorldModel
+from bsk_rl.sim.world import WorldModel, WorldModelABC
 from bsk_rl.utils import functional, logging_config, vizard
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         scenario: Optional[Scenario] = None,
         rewarder: Optional[Union[GlobalReward, list[GlobalReward]]] = None,
         world_type: Optional[
-            Union[type[WorldModel], tuple[type[WorldModel], ...]]
+            Union[type[WorldModelABC], tuple[type[WorldModelABC], ...]]
         ] = None,
         world_args: Optional[dict[str, Any]] = None,
         communicator: Optional[CommunicationMethod] = None,
@@ -99,7 +99,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 be a function that takes a list of satellites and returns a dictionary that
                 maps satellites to dictionaries of satellite model arguments to be overridden.
             world_type: Type or tuple of types of Basilisk world model to be constructed.
-            world_args: Arguments for :class:`~bsk_rl.sim.world.WorldModel` construction.
+            world_args: Arguments for :class:`~bsk_rl.sim.world.WorldModelABC` construction.
                 Should be in the form of a dictionary with keys corresponding to the
                 arguments of the constructor and values that are either the desired value
                 or a function that takes no arguments and returns a randomized value.
@@ -184,7 +184,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             )
             if not isinstance(world_type, (list, tuple)):
                 world_type = (world_type,)
-            world_type = functional.compose_types(*world_type, WorldModel, name="World")
+            world_type = functional.compose_types(
+                *world_type, WorldModelABC, name="World"
+            )
         self.world_type = world_type
         if world_args is None:
             world_args = self.world_type.default_world_args()
@@ -223,7 +225,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.render_mode = render_mode
         self.generate_obs_retasking_only = generate_obs_retasking_only
 
-    def _minimum_world_model(self) -> type[WorldModel]:
+    def _minimum_world_model(self) -> type[WorldModelABC]:
         """Determine the minimum world model required by the satellites."""
         world_types = set(
             sum(
@@ -231,7 +233,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 [],
             )
         )
-        return functional.compose_types(*world_types, BaseWorldModel, name="World")
+        return functional.compose_types(*world_types, WorldModel, name="World")
 
     def get_satellite(self, name: str) -> "Satellite":
         """Get a satellite by name.

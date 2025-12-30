@@ -40,9 +40,9 @@ class Satellite(ABC, Resetable):
     """Abstract base class for satellites."""
 
     dyn_type: Union[
-        type["dyn.DynamicsModel"], tuple[type["dyn.DynamicsModel"], ...]
+        type["dyn.DynamicsModelABC"], tuple[type["dyn.DynamicsModelABC"], ...]
     ] = AbstractClassProperty()
-    fsw_type: Union[type["fsw.FSWModel"], tuple[type["fsw.FSWModel"], ...]] = (
+    fsw_type: Union[type["fsw.FSWModelABC"], tuple[type["fsw.FSWModelABC"], ...]] = (
         AbstractClassProperty()
     )
     observation_spec: list["Observation"] = AbstractClassProperty()
@@ -51,7 +51,7 @@ class Satellite(ABC, Resetable):
     _dyn_type = None
 
     @classmethod
-    def get_dyn_type(cls) -> type["dyn.DynamicsModel"]:
+    def get_dyn_type(cls) -> type["dyn.DynamicsModelABC"]:
         """Get the dynamics model type for the satellite.
 
         This should be used in class methods instead of referencing ``dyn_type``. In
@@ -65,13 +65,13 @@ class Satellite(ABC, Resetable):
                 dyn_types = cls.dyn_type
             else:
                 dyn_types = (cls.dyn_type,)
-            cls._dyn_type = compose_types(*dyn_types, dyn.BaseDynamicsModel, name="Dyn")
+            cls._dyn_type = compose_types(*dyn_types, dyn.DynamicsModel, name="Dyn")
         return cls._dyn_type
 
     _fsw_type = None
 
     @classmethod
-    def get_fsw_type(cls) -> type["fsw.FSWModel"]:
+    def get_fsw_type(cls) -> type["fsw.FSWModelABC"]:
         """Get the flight software model type for the satellite.
 
         This should be used in class methods instead of referencing ``fsw_type``. In
@@ -85,12 +85,12 @@ class Satellite(ABC, Resetable):
                 fsw_types = cls.fsw_type
             else:
                 fsw_types = (cls.fsw_type,)
-            cls._fsw_type = compose_types(*fsw_types, fsw.BaseFSWModel, name="FSW")
+            cls._fsw_type = compose_types(*fsw_types, fsw.FSWModel, name="FSW")
         return cls._fsw_type
 
     @classmethod
     def default_sat_args(cls, **kwargs) -> dict[str, Any]:
-        """Compile default arguments for :class:`~bsk_rl.sim.dyn.DynamicsModel` and :class:`~bsk_rl.sim.fsw.FSWModel`, replacing those specified.
+        """Compile default arguments for :class:`~bsk_rl.sim.dyn.DynamicsModelABC` and :class:`~bsk_rl.sim.fsw.FSWModelABC`, replacing those specified.
 
         Args:
             **kwargs: Arguments to override in the default arguments.
@@ -129,8 +129,8 @@ class Satellite(ABC, Resetable):
 
         Args:
             name: Identifier for satellite; does not need to be unique.
-            sat_args: Arguments for :class:`~bsk_rl.sim.dyn.DynamicsModel` and
-                :class:`~bsk_rl.sim.fsw.FSWModel` construction. Should be in the form of
+            sat_args: Arguments for :class:`~bsk_rl.sim.dyn.DynamicsModelABC` and
+                :class:`~bsk_rl.sim.fsw.FSWModelABC` construction. Should be in the form of
                 a dictionary with keys corresponding to the arguments of the constructor
                 and values that are either the desired value or a function that takes no
                 arguments and returns a randomized value.
@@ -147,8 +147,8 @@ class Satellite(ABC, Resetable):
             sat_args = self.default_sat_args()
         self.sat_args_generator = self.default_sat_args(**sat_args)
         self.simulator: "Simulator"
-        self.fsw: "fsw.FSWModel"
-        self.dynamics: "dyn.DynamicsModel"
+        self.fsw: "fsw.FSWModelABC"
+        self.dynamics: "dyn.DynamicsModelABC"
         self.data_store: "DataStore"
         self.requires_retasking: bool
         self.variable_interval = variable_interval
@@ -228,7 +228,7 @@ class Satellite(ABC, Resetable):
         """
         self.simulator = proxy(simulator)
 
-    def set_dynamics(self, dyn_rate: float) -> "dyn.DynamicsModel":
+    def set_dynamics(self, dyn_rate: float) -> "dyn.DynamicsModelABC":
         """Create dynamics model; called during simulator initialization.
 
         Args:
@@ -243,7 +243,7 @@ class Satellite(ABC, Resetable):
         self.dynamics = proxy(dynamics)
         return dynamics
 
-    def set_fsw(self, fsw_rate: float) -> "fsw.FSWModel":
+    def set_fsw(self, fsw_rate: float) -> "fsw.FSWModelABC":
         """Create flight software model; called during simulator initialization.
 
         Args:

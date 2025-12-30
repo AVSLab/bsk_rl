@@ -120,7 +120,7 @@ class DiscreteFSWAction(DiscreteAction):
     ):
         """Discrete action to task a flight software action function.
 
-        This action executes a function of a :class:`~bsk_rl.sim.fsw.FSWModel`
+        This action executes a function of a :class:`~bsk_rl.sim.fsw.FSWModelABC`
         instance that takes no arguments, typically decorated with ``@action``.
 
         Args:

@@ -40,10 +40,10 @@ from deprecated import deprecated
 
 from bsk_rl.sim.dyn.base import (
     AtmosphericDragDynModel,
-    BaseDynamicsModel,
     BasicDynamicsModel,
     DisturbanceTorqueDynModel,
     DynamicsModel,
+    DynamicsModelABC,
     EclipseDynModel,
 )
 from bsk_rl.sim.dyn.ground_imaging import (
@@ -72,8 +72,8 @@ class FullFeaturedDynModel(GroundStationDynModel, LOSCommDynModel):
 
 __doc_title__ = "Dynamics Sims"
 __all__ = [
+    "DynamicsModelABC",
     "DynamicsModel",
-    "BaseDynamicsModel",
     "BasicDynamicsModel",
     "EclipseDynModel",
     "DisturbanceTorqueDynModel",

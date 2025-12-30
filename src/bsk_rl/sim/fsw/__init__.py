@@ -30,9 +30,9 @@ operational, returning true if the satellite is still alive.
 """
 
 from bsk_rl.sim.fsw.base import (
-    BaseFSWModel,
     BasicFSWModel,
     FSWModel,
+    FSWModelABC,
     SteeringFSWModel,
     Task,
     action,
@@ -48,8 +48,8 @@ from bsk_rl.sim.fsw.rso_inspection import RSOInspectorFSWModel
 __doc_title__ = "FSW Sims"
 __all__ = [
     "action",
+    "FSWModelABC",
     "FSWModel",
-    "BaseFSWModel",
     "BasicFSWModel",
     "ImagingFSWModel",
     "ContinuousImagingFSWModel",

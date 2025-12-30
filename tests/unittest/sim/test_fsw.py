@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from bsk_rl.sim.fsw import BasicFSWModel, FSWModel, ImagingFSWModel, Task, action
+from bsk_rl.sim.fsw import BasicFSWModel, FSWModelABC, ImagingFSWModel, Task, action
 
 module = "bsk_rl.sim.fsw."
 
@@ -25,18 +25,18 @@ def test_action_decorator():
     mock_actions.assert_called_once_with(3, bar=4)
 
 
-@patch.multiple(FSWModel, __abstractmethods__=set())
+@patch.multiple(FSWModelABC, __abstractmethods__=set())
 class TestFSWModel:
     def test_base_class(self):
         sat = MagicMock()
-        fsw = FSWModel(sat, 1.0)
+        fsw = FSWModelABC(sat, 1.0)
         # fsw.simulator.CreateNewProcess.assert_called_once()
         assert sat.simulator.world == fsw.world
         assert sat.dynamics == fsw.dynamics
 
     @patch(module + "base.check_aliveness_checkers", MagicMock(return_value=True))
     def test_is_alive(self):
-        fsw = FSWModel(MagicMock(), 1.0)
+        fsw = FSWModelABC(MagicMock(), 1.0)
         assert fsw.is_alive()
 
 

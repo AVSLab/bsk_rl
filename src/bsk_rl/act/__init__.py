@@ -24,7 +24,7 @@ Use :class:`DiscreteAction` for integer-indexable, discrete actions.
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
 | **Action**                 |**Count**| **Description**                                                                                       |
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
-| :class:`DiscreteFSWAction` | 1       | Call an arbitrary ``@action`` decorated function in the :class:`~bsk_rl.sim.fsw.FSWModel`.            |
+| :class:`DiscreteFSWAction` | 1       | Call an arbitrary ``@action`` decorated function in the :class:`~bsk_rl.sim.fsw.FSWModelABC`.            |
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
 | :class:`Charge`            | 1       | Point the solar panels at the sun.                                                                    |
 +----------------------------+---------+-------------------------------------------------------------------------------------------------------+
