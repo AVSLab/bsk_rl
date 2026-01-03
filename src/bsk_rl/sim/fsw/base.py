@@ -247,7 +247,11 @@ class FSWModel(FSWModelABC):
         self.attGuidMsg.write(messaging.AttGuidMsgPayload())
 
     def _make_task_list(self):
-        return [self.MRPControlTask(self), self.NadirPointTask(self)]
+        return [
+            self.MRPControlTask(self),
+            self.NadirPointTask(self),
+            self.TrackingErrorTask(self),
+        ]
 
     class MRPControlTask(Task):
         """Task to control the satellite attitude magically (i.e. without actuators)."""
@@ -315,6 +319,38 @@ class FSWModel(FSWModelABC):
             BasicFSWModel.NadirPointTask.name + self.satellite.name
         )
 
+    class TrackingErrorTask(Task):
+        """Task to convert an attitude reference to guidance."""
+
+        name = "trackingErrTask"
+
+        def __init__(self, fsw, priority=90) -> None:  # noqa: D107
+            """Task to convert an attitude reference to guidance."""
+            super().__init__(fsw, priority)
+
+        def _create_module_data(self) -> None:
+            self.trackingError = self.fsw.trackingError = (
+                attTrackingError.attTrackingError()
+            )
+            self.trackingError.ModelTag = "trackingError"
+
+        def _setup_fsw_objects(self, **kwargs) -> None:
+            self.trackingError.attNavInMsg.subscribeTo(
+                self.fsw.dynamics.simpleNavObject.attOutMsg
+            )
+            self.trackingError.attRefInMsg.subscribeTo(self.fsw.attRefMsg)
+            messaging.AttGuidMsg_C_addAuthor(
+                self.trackingError.attGuidOutMsg, self.fsw.attGuidMsg
+            )
+
+            self._add_model_to_task(self.trackingError, priority=1197)
+
+    @action
+    def action_attitude_mrp(self, sigma_RN: np.ndarray) -> None:
+        """Point the satellite to the specified attitude."""
+        self.attRefMsg.write(messaging.AttRefMsgPayload(sigma_RN=sigma_RN))
+        self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.name)
+
 
 class BasicFSWModel(FSWModel):
     """Basic FSW model with minimum necessary Basilisk components."""
@@ -327,7 +363,6 @@ class BasicFSWModel(FSWModel):
         return [
             self.SunPointTask(self),
             self.RWDesatTask(self),
-            self.TrackingErrorTask(self),
         ] + super()._make_task_list()
 
     def _set_config_msgs(self) -> None:
@@ -537,32 +572,6 @@ class BasicFSWModel(FSWModel):
         else:
             raise ValueError(f"{self.desatAttitude} not a valid desatAttitude")
         self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.name)
-
-    class TrackingErrorTask(Task):
-        """Task to convert an attitude reference to guidance."""
-
-        name = "trackingErrTask"
-
-        def __init__(self, fsw, priority=90) -> None:  # noqa: D107
-            """Task to convert an attitude reference to guidance."""
-            super().__init__(fsw, priority)
-
-        def _create_module_data(self) -> None:
-            self.trackingError = self.fsw.trackingError = (
-                attTrackingError.attTrackingError()
-            )
-            self.trackingError.ModelTag = "trackingError"
-
-        def _setup_fsw_objects(self, **kwargs) -> None:
-            self.trackingError.attNavInMsg.subscribeTo(
-                self.fsw.dynamics.simpleNavObject.attOutMsg
-            )
-            self.trackingError.attRefInMsg.subscribeTo(self.fsw.attRefMsg)
-            messaging.AttGuidMsg_C_addAuthor(
-                self.trackingError.attGuidOutMsg, self.fsw.attGuidMsg
-            )
-
-            self._add_model_to_task(self.trackingError, priority=1197)
 
     class MRPControlTask(Task):
         """Task to control the satellite attitude using reaction wheels."""
