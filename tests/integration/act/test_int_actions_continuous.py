@@ -1,5 +1,6 @@
 import gymnasium as gym
 import numpy as np
+import pytest
 from pytest import approx
 
 from bsk_rl import act, obs, sats
@@ -68,3 +69,29 @@ class TestHillImpulsiveThrust:
         self.env.step([0.0, 0.0, 0.0, 5.0])
         time_after = self.env.unwrapped.simulator.sim_time
         assert time_after - time_before == approx(5.0)
+
+
+class TestAttitudeSetpoint:
+    @pytest.mark.parametrize("basic_types", [True, False])
+    def test_attitude(self, basic_types):
+        class AttitudeSat(sats.Satellite):
+            if basic_types:
+                dyn_type = dyn.BasicDynamicsModel
+                fsw_type = fsw.BasicFSWModel
+            else:
+                dyn_type = dyn.DynamicsModel
+                fsw_type = fsw.FSWModel
+            observation_spec = [obs.SatProperties(dict(prop="sigma_BN"))]
+            action_spec = [act.AttitudeSetpoint(control_period=360.0)]
+
+        env = gym.make(
+            "SatelliteTasking-v1",
+            satellite=AttitudeSat("AttitudeSat", sat_args=dict()),
+            sim_rate=0.1,
+            time_limit=3600,
+            disable_env_checker=True,
+        )
+
+        env.reset()
+        observation, _, _, _, _ = env.step([0.1, 0.2, 0.3])
+        assert np.allclose(observation, np.array([0.1, 0.2, 0.3]), atol=1e-4)

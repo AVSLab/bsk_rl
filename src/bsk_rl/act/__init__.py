@@ -54,13 +54,15 @@ can only have a single continuous action in their ``action_spec``.
 +-----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
 | :class:`ImpulsiveThrustHill`| 4           | Like :class:`ImpulsiveThrust`, but specified in the Hill frame of another satellite.                  |
 +-----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
-
+| :class:`AttitudeSetpoint`   | 3           | Set the inertial attitude setpoint using Modified Rodrigues Parameters (MRPs).                        |
++-----------------------------+-------------+-------------------------------------------------------------------------------------------------------+
 
 
 """
 
 from bsk_rl.act.actions import Action
 from bsk_rl.act.continuous_actions import (
+    AttitudeSetpoint,
     ContinuousAction,
     ImpulsiveThrust,
     ImpulsiveThrustHill,
@@ -85,6 +87,7 @@ __all__ = [
     "DiscreteFSWAction",
     "Charge",
     "Drift",
+    "NadirPoint",
     "Desat",
     "Downlink",
     "Image",
@@ -93,4 +96,5 @@ __all__ = [
     "ContinuousAction",
     "ImpulsiveThrust",
     "ImpulsiveThrustHill",
+    "AttitudeSetpoint",
 ]

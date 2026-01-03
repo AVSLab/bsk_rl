@@ -36,6 +36,7 @@ Development - |version|
   By inheriting from a FSW class that overrides the ``MRPControlTask``, such as
   :class:`~bsk_rl.sim.fsw.BasicFSWModel` or :class:`~bsk_rl.sim.fsw.SteeringFSWModel`,
   users can implement custom attitude control strategies.
+* Add a continuous action for setting attitude in :class:`~bsk_rl.act.AttitudeSetpoint`.
 
 Version 1.2.0
 -------------

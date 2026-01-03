@@ -183,3 +183,50 @@ class ImpulsiveThrustHill(ImpulsiveThrust):
         dv_N = NH @ dv_H
 
         super().set_action(np.concatenate((dv_N, [dt])))
+
+
+class AttitudeSetpoint(ContinuousAction):
+    def __init__(
+        self,
+        name: str = "attitude_act",
+        control_period: float = 60,
+    ) -> None:
+        """Set the attitude command to the specified MRP.
+
+        Args:
+            name: Name of the action.
+            control_period: Control period for the action. [s]
+        """
+        super().__init__(name)
+        self.control_period = control_period
+
+    @property
+    def space(self) -> spaces.Box:
+        """Return the action space."""
+        return spaces.Box(
+            low=np.array([-1, -1, -1]),
+            high=np.array([1, 1, 1]),
+            shape=(3,),
+            dtype=np.float32,
+        )
+
+    @property
+    def action_description(self) -> list[str]:
+        """Description of the continuous action space."""
+        return ["mrp_1", "mrp_2", "mrp_3"]
+
+    def set_action(self, action: np.ndarray) -> None:
+        """Orient the satellite to the specified attitude.
+
+        Args:
+            action: vector of [mrp_1, mrp_2, mrp_3]
+        """
+        assert len(action) == 3, "Action must have 3 elements."
+
+        self.satellite.logger.info(
+            f"Setting attitude command to {action} for {self.control_period} seconds."
+        )
+        self.satellite.fsw.action_attitude_mrp(action)
+        self.satellite.update_timed_terminal_event(
+            self.satellite.simulator.sim_time + self.control_period
+        )
