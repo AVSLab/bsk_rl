@@ -957,6 +957,8 @@ charging_times = []
 downlink_times = []
 eclipse_status = []
 desat_times = []
+step_log = []  # each element is a dict (one per env.step)
+
 # Ground-station windows: dict[str, list[np.ndarray([open_abs, close_abs])]]
 ground_station_windows = {}         # e.g., {'ground_station_0': [np.array([t_open, t_close]), ...], ...}
 _last_gs_pair = {}                  # e.g., {'ground_station_0': np.array([last_open, last_close])}
@@ -971,15 +973,11 @@ SS1_reward_over_time = []
 
 for target_id in range(n_targets*6 *100 ):
     simtime = env.simulator.sim_time
-    print(f"\n SIMULATION TIME: {simtime} seconds and current reward: {SS1_reward}")
-    # Use policy to determine action
-    # obs_for_policy = flatten_to_single_ndarray(observation[sat.name]) # This is a dict (as your env uses `obs_type=dict`)
-    # obs_flat = flatten_to_single_ndarray(env.observation_spaces[sat.name], observation[sat.name])
+    print(f"\n SIMULATION TIME: {simtime:.1f} seconds and current reward: {SS1_reward:.2f}")
 
-    # policy_action = policy.act(obs_for_policy)
     policy_action = policy.act(observation[sat.name])
-    if isinstance(policy_action, np.ndarray):  # Handle vector action output (if needed)
-        policy_action = policy_action.item()  # or do appropriate conversion if the policy returns a torch tensor
+    if isinstance(policy_action, np.ndarray):  # Handle vector action output
+        policy_action = policy_action.item()  # conversion
     if act_random:
         random_action = np.random.randint(0,13)
         action_dict = {sat.name: random_action}
@@ -998,54 +996,80 @@ for target_id in range(n_targets*6 *100 ):
     else:
         action_dict = {sat.name: policy_action}
     if policy_action == 11:
-        print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.satellites[0].dynamics.storage_level_fraction))
+        print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
         downlink_times.append(env.simulator.sim_time)
 
     elif policy_action == 10:
-        print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.satellites[0].dynamics.battery_charge_fraction))
+        print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
         charging_times.append(env.simulator.sim_time)
     elif policy_action == 12:
-        print('tasking DESAT now: at t=',simtime," and wheel_speeds --> "+str(env.satellites[0].dynamics.wheel_speeds_fraction))
+        print('tasking DESAT now: at t=',simtime," and wheel_speeds --> "+str(env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction))
         desat_times.append(env.simulator.sim_time)
     if use_shield == True:
-        if env.satellites[0].dynamics.storage_level_fraction > critical_storage_level:  # downlink if storage is more than 0.95
-            print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.satellites[0].dynamics.storage_level_fraction))
+        if env.unwrapped.satellites[0].dynamics.storage_level_fraction > critical_storage_level:  # downlink if storage is more than 0.95
+            print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
             chosen_action_id = 11
             action_dict = {sat.name: chosen_action_id} # tasking downlink
             last_downlink_time = simtime
             downlink_times.append(env.simulator.sim_time)
 
-        if env.satellites[0].dynamics.battery_charge_fraction < critical_battery_level:  # charge if battery is less than 0.05
-            print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.satellites[0].dynamics.battery_charge_fraction))
+        if env.unwrapped.satellites[0].dynamics.battery_charge_fraction < critical_battery_level:  # charge if battery is less than 0.05
+            print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
             chosen_action_id = 10
             action_dict = {sat.name: chosen_action_id} # tasking charging
             charging_times.append(env.simulator.sim_time)
 
     action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
-    print('current action_dict to be executed', action_dict['SS1'], "eclipse status of SS1:",env.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.satellites[0].dynamics.eclipse_index].read().shadowFactor)
-    eclipse_status.append(env.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.satellites[0].dynamics.eclipse_index].read().shadowFactor)
+    print('current action_dict to be executed', action_dict['SS1'], "eclipse status of SS1:",env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
+    eclipse_status.append(env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
+
+    sat0 = env.satellites[0]
+    sat_shadow_cmd = float(sat0.dynamics.world.eclipseObject.eclipseOutMsgs[sat0.dynamics.eclipse_index].read().shadowFactor)
+
+    step_log.append({
+        "t_cmd": float(simtime),
+        "action_id": int(chosen_action_id if "chosen_action_id" in locals() else policy_action),
+        "sat_shadow_cmd": sat_shadow_cmd,
+        "battery_frac_cmd": float(sat0.dynamics.battery_charge_fraction),
+        "storage_frac_cmd": float(sat0.dynamics.storage_level_fraction),
+    })
+
+    #STEPPING IN THE SIM
     observation, reward, terminated, truncated, info = env.step(action=action_dict)
 
-    battery_levels.append(env.satellites[0].dynamics.battery_charge_fraction)
-    storage_levels.append(env.satellites[0].dynamics.storage_level_fraction)
-    sim_times.append(env.simulator.sim_time)
-    num_imaged.append(len(env.env.rewarder.imaged_illuminated))
-    num_downlinked.append(env.env.rewarder.useful_downlinks)
+    SS1_reward += float(reward["SS1"])
 
-    SS1_reward+=reward['SS1']
+    sat_shadow_after = float(sat0.dynamics.world.eclipseObject.eclipseOutMsgs[sat0.dynamics.eclipse_index].read().shadowFactor)
+    step_log[-1].update({
+        "t_after": float(env.simulator.sim_time),
+        "sat_shadow_after": sat_shadow_after,
+        "battery_frac_after": float(sat0.dynamics.battery_charge_fraction),
+        "storage_frac_after": float(sat0.dynamics.storage_level_fraction),
+        "reward_step": float(reward["SS1"]),
+        "reward_cum": float(SS1_reward),
+    })
+
+
+    battery_levels.append(env.unwrapped.satellites[0].dynamics.battery_charge_fraction)
+    storage_levels.append(env.unwrapped.satellites[0].dynamics.storage_level_fraction)
+    sim_times.append(env.simulator.sim_time)
+    num_imaged.append(len(env.env.unwrapped.rewarder.imaged_illuminated))
+    num_downlinked.append(env.env.unwrapped.rewarder.useful_downlinks)
+
     SS1_reward_over_time.append(SS1_reward)
-    print("storage_level", env.satellites[0].dynamics.storage_level)
-    print("dynamics.storage_level_fraction", env.satellites[0].dynamics.storage_level_fraction)
-    print("dynamics.battery_charge_fraction", env.satellites[0].dynamics.battery_charge_fraction)
-    print("env.satellites[0].dynamics.wheel_speeds_fraction", env.satellites[0].dynamics.wheel_speeds_fraction)
+    print("storage_level", env.unwrapped.satellites[0].dynamics.storage_level)
+    print("dynamics.storage_level_fraction", env.unwrapped.satellites[0].dynamics.storage_level_fraction)
+    print("dynamics.battery_charge_fraction", env.unwrapped.satellites[0].dynamics.battery_charge_fraction)
+    print("env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction", env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction)
 
     # print('truncated list: ', truncated)
     data_dict["sim_time"].append(env.simulator.sim_time)
-    if all(truncated.values()) or all(terminated.values()) or len(env.env.satellites[0].data_store.data.imaged)==100:
-        if len(env.env.satellites[0].data_store.data.imaged) == 100:
+    if all(truncated.values()) or all(terminated.values()) or len(env.env.unwrapped.satellites[0].data_store.data.imaged)==n_targets:
+        if len(env.env.unwrapped.satellites[0].data_store.data.imaged) == n_targets:
             print('ALL targets imaged!')
         else:
-            print("Scanning Satellite is dead")
+            simtime = env.simulator.sim_time
+            print("Episode terminated at time: {simtime}")
         break
         # --- Ground stations from flat obs ---
     # Build/extend per-station lists in ground_station_windows dict
@@ -1072,7 +1096,7 @@ for target_id in range(n_targets*6 *100 ):
                 ground_station_windows[gs_name].append(pair_abs.copy())
                 _last_gs_pair[gs_name] = pair_abs.copy()
 
-rec = env.satellites[0].dynamics.inspector_eclipse_recorder
+rec = env.unwrapped.satellites[0].dynamics.inspector_eclipse_recorder
 ecl_sf = np.asarray(rec.shadowFactor, dtype=float).ravel()   # length ~ 45000
 t_ecl_sf = range(len(ecl_sf))
 
