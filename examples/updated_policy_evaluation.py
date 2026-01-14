@@ -728,8 +728,8 @@ class MyScanningSatellite(sats.AccessSatellite):
 sat_args = {}
 
 # Set some parameters as constants
-sat_args["imageAttErrorRequirement"] = 0.01
-sat_args["imageRateErrorRequirement"] = 0.05
+sat_args["imageAttErrorRequirement"] = 0.0025
+sat_args["imageRateErrorRequirement"] = 0.01
 sat_args["dataStorageCapacity"] = 50 * 8e6 / 2
 sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
 sat_args["instrumentBaudRate"] = 0.5 * 8e6
@@ -745,16 +745,19 @@ sat_args["disturbance_vector"] = lambda: np.random.normal(scale=0.000, size=3)
 sat_args["maxWheelSpeed"] = 6000.0
 sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
 sat_args["desatAttitude"] = "sun"
-sat_args["downlink_bonus"] = 0.0
+sat_args["downlink_bonus"] = alpha
 sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
 sat_args["full_storage_penalty"] = 0
 sat_args["low_battery_penalty"] = 0
 sat_args["eclipse_threshold_for_imaging"] = 0.5
 sat_args["eclipse_threshold_for_reward"] = sat_args["eclipse_threshold_for_imaging"]
-if just_imaging:
+
+# if just_imaging:
+if sim_cfg.just_imaging:
     sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 *1000000
     sat_args["batteryStorageCapacity"] = 500 * 3600 *1000000
     sat_args["storedCharge_Init"] = lambda: np.random.uniform(1.0, 1.0) * 500 * 3600 *1000000
+
 
 
 class MyTargetSatellite(sats.Satellite):
