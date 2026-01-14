@@ -186,8 +186,8 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         necessary to remove created for tasks that are no longer needed (even if it is
         inactive), or else significant time is spent processing the event at each step.
         """
-        event = self.eventMap[event_name]
-        self.eventList.remove(event)
+        # event = self.eventMap[event_name]
+        # self.eventList.remove(event)
         del self.eventMap[event_name]
 
     def __del__(self):
