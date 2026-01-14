@@ -8,7 +8,14 @@ import os
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import json
+from datetime import datetime
+import pandas as pd
+from functools import partial
 from matplotlib.collections import PolyCollection
+
+from sim_config import SimConfig
+
 
 size=1
 label_size = 13
@@ -47,6 +54,64 @@ from ray.rllib.utils.spaces.space_utils import flatten_to_single_ndarray
 
 from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
+def _safe(s: str) -> str:
+    """Filesystem-safe string."""
+    return "".join(c if c.isalnum() or c in "-_." else "_" for c in str(s))
+
+def make_run_dir(base_dir: str, seed: int, policy_tag: str, run_tag: str = "") -> str:
+    """
+    Create a unique run directory so nothing is overwritten.
+    Example: data/RL_seed20_latest_obsv7_20260108_195446/
+    """
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    name_parts = [policy_tag, f"seed{seed}"]
+    if run_tag:
+        name_parts.append(_safe(run_tag))
+    name_parts.append(ts)
+    run_dir = os.path.join(base_dir, "_".join(name_parts))
+    os.makedirs(run_dir, exist_ok=True)
+    return run_dir
+
+import re
+def alpha_from_tag(s: str, default=None, strict_sum_100: bool = True):
+    """
+    Extract alpha from a string containing patterns like '10d90i' or '75d25i'.
+
+    Interpretation:
+      - 'XdYi' means X% downlink, Y% imaging
+      - alpha = X / 100
+
+    Returns:
+      float alpha, or `default` if not found.
+    """
+    if s is None:
+        return default
+
+    m = re.search(r"(\d+)\s*d\s*(\d+)\s*i", str(s))
+    if not m:
+        return default
+
+    d = int(m.group(1))  # downlink percent
+    i = int(m.group(2))  # imaging percent
+
+    if strict_sum_100 and (d + i != 100):
+        # If you want to be tolerant instead, set strict_sum_100=False
+        raise ValueError(f"Found tag '{d}d{i}i' but d+i != 100 in: {s}")
+
+    return d / 100.0
+
+def print_alpha(policy_name: str, policy_path: str):
+    a = alpha_from_tag(policy_path, default=None, strict_sum_100=False)
+    print(f"\n\nPOLICY NAME: {policy_name:50s} alpha value being extracted: alpha = {a}  ({policy_path})")
+
+def save_npy(run_dir: str, name: str, arr) -> None:
+    np.save(os.path.join(run_dir, f"{name}.npy"), np.asarray(arr))
+
+def save_json(run_dir: str, name: str, obj: dict) -> None:
+    path = os.path.join(run_dir, f"{name}.json")
+    with open(path, "w") as f:
+        json.dump(obj, f, indent=2, default=str)
+    print(f"Saved JSON to: {path}")
 
 def save_plot_unique(fig, base_filename, folder="plots", extension=".pdf"):
     """
