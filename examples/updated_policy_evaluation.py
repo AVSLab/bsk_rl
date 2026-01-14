@@ -1107,46 +1107,416 @@ try:
 except Exception:
     ecl_t = np.arange(ecl_sf.size, dtype=float)              # 0,1,2,... seconds
 
-# Optional: keep your x-limit consistent with the longest series you plot
+
+
+#compute "actual acquisition times" from deviceCmd rising edges
+dev_cmd = np.asarray(ins_cmd_rec.deviceCmd, dtype=float).ravel()
+
+# Recorder timestamps (try to use .times if present; otherwise assume 1 Hz)
+try:
+    t_raw = np.asarray(ins_cmd_rec.times, dtype=float).ravel()
+    t_dev = t_raw * macros.NANO2SEC if t_raw.size and t_raw.max() > 1e6 else t_raw
+except Exception:
+    # fallback: assume 1 Hz samples starting at 0
+    t_dev = np.arange(dev_cmd.size, dtype=float)
+
+# Rising edges where deviceCmd goes 0 -> 1
+if dev_cmd.size >= 2:
+    edges = np.where((dev_cmd[1:] > 0.5) & (dev_cmd[:-1] <= 0.5))[0] + 1
+else:
+    edges = np.array([], dtype=int)
+
+acq_event_times = t_dev[edges]  # "capture triggered" times
+
+# Command times from your ImageRSO action spec (these are when you issued the imaging action)
+SS1_actions_spec = env.unwrapped.satellites[0].action_builder.action_spec[0]
+cmd_times = np.asarray(SS1_actions_spec.imaging_times, dtype=float).ravel()
+cmd_target_ids = np.asarray(SS1_actions_spec.chosen_target_ids, dtype=int).ravel()
+assert cmd_times.size == cmd_target_ids.size, "cmd_times and cmd_target_ids must align"
+
+
+# Align each command with the next acquisition event within the imaging window
+imaging_window = float(imaging_duration)  # 300s in your sim config
+
+acq_times_for_cmd = np.full(cmd_times.shape, np.nan, dtype=float)
+acq_dt_for_cmd = np.full(cmd_times.shape, np.nan, dtype=float)
+acq_success = np.zeros(cmd_times.shape, dtype=bool)
+
+j = 0
+for i, t0 in enumerate(cmd_times):
+    # advance acquisition pointer to the first event after command time
+    while j < acq_event_times.size and acq_event_times[j] <= t0:
+        j += 1
+
+    # accept the next event if it occurs within the imaging window
+    if j < acq_event_times.size and acq_event_times[j] <= (t0 + imaging_window + 1e-6):
+        acq_times_for_cmd[i] = acq_event_times[j]
+        acq_dt_for_cmd[i] = acq_event_times[j] - t0
+        acq_success[i] = True
+        j += 1
+
+# Convenience aliases used by later logging
+t_acq  = np.asarray(acq_times_for_cmd, dtype=float).ravel()
+dt_acq = np.asarray(acq_dt_for_cmd, dtype=float).ravel()
+acq_ok = np.asarray(acq_success, dtype=bool).ravel()
+# --- target shadowFactor at acquisition time (per command index) ---
+target_shadow_acq = np.full_like(t_acq, np.nan, dtype=float)
+
+if np.any(acq_ok):
+    _t_cache = {}
+    _sf_cache = {}
+
+    for i in np.where(acq_ok)[0]:
+        tid = int(cmd_target_ids[i])  # must align with cmd_times indexing
+
+        # mapping: sat[0] is inspector, targets are sat[tid+1]
+        try:
+            tgt_sat = env.unwrapped.satellites[tid + 1]
+            rec = tgt_sat.dynamics.target_eclipse_recorder
+        except Exception:
+            continue
+
+        if tid not in _t_cache:
+            sf = np.asarray(rec.shadowFactor, dtype=float).ravel()
+            try:
+                t_raw = np.asarray(rec.times, dtype=float).ravel()
+                tt = t_raw * macros.NANO2SEC if (t_raw.size and t_raw.max() > 1e6) else t_raw
+            except Exception:
+                tt = np.arange(sf.size, dtype=float)
+
+            _t_cache[tid] = tt
+            _sf_cache[tid] = sf
+
+        tt = _t_cache[tid]
+        sf = _sf_cache[tid]
+        target_shadow_acq[i] = float(np.interp(float(t_acq[i]), tt, sf))
+
+
+# Compute spacecraft shadowFactor at command and at acquisition (interpolate eclipse recorder)
+sat_sf_cmd = np.interp(cmd_times, ecl_t, ecl_sf) if cmd_times.size else np.array([])
+sat_sf_acq = np.interp(acq_times_for_cmd[acq_success], ecl_t, ecl_sf) if np.any(acq_success) else np.array([])
+
+# Summary metrics
+avg_acq_time_sec = float(np.nanmean(acq_dt_for_cmd)) if np.any(acq_success) else float("nan")
+median_acq_time_sec = float(np.nanmedian(acq_dt_for_cmd)) if np.any(acq_success) else float("nan")
+acq_success_rate = float(np.mean(acq_success)) if cmd_times.size else float("nan")
+
+tau_umbra = 0.05
+pct_acq_in_umbra = float(np.mean(sat_sf_acq <= tau_umbra)) if sat_sf_acq.size else float("nan")
+pct_cmd_in_umbra = float(np.mean(sat_sf_cmd <= tau_umbra)) if sat_sf_cmd.size else float("nan")
+
+# store raw series for plotting later
+data_dict["image_command_times"] = cmd_times.tolist()
+data_dict["image_command_target_ids"] = cmd_target_ids.tolist()
+data_dict["image_acq_times"] = acq_times_for_cmd.tolist()
+data_dict["image_acq_dt"] = acq_dt_for_cmd.tolist()
+data_dict["image_acq_success"] = acq_success.astype(int).tolist()
+
+# build images.csv table
+
+SS1_actions_spec = env.unwrapped.satellites[0].action_builder.action_spec[0]
+
+img_cmd_times = np.asarray(SS1_actions_spec.imaging_times, dtype=float).ravel()
+img_target_ids = np.asarray(SS1_actions_spec.chosen_target_ids, dtype=int).ravel()
+
+az = np.asarray(getattr(SS1_actions_spec, "chosen_target_azimuth", []), dtype=float).ravel()
+el_loc = np.asarray(getattr(SS1_actions_spec, "chosen_target_elevation_local", []), dtype=float).ravel()
+rng = np.asarray(getattr(SS1_actions_spec, "chosen_target_distance", []), dtype=float).ravel()
+tgt_sf_cmd = np.asarray(getattr(SS1_actions_spec, "chosen_target_illumination_status", []), dtype=float).ravel()
+
+# Look-ahead index: +1 forward, -1 backward
+# azimuth is in degrees
+look_ahead = np.cos(np.deg2rad(az)) if az.size else np.array([])
+UMBRA_TAU = 0.05
+SUNLIT_TAU = 0.95
+
+# shadowFactor at command time (satellite)
+sat_sf_cmd_img = np.interp(img_cmd_times, ecl_t, ecl_sf) if img_cmd_times.size else np.array([])
+
+def _shadow(t):
+    return float(np.interp(t, ecl_t, ecl_sf))
+
+delta = 60.0
+eps = 0.05
+
+phase = []          # combined, interpretable label
+phase_state = []    # sunlit / umbra / penumbra
+phase_slope = []    # entering / exiting / flat_slope
+ds_list = []        # optional: keep the slope value for debugging/analysis
+
+for t, s_cmd in zip(img_cmd_times, sat_sf_cmd_img):
+    t0 = max(float(ecl_t[0]), float(t - delta))
+    t1 = min(float(ecl_t[-1]), float(t + delta))
+    ds = _shadow(t1) - _shadow(t0)
+    ds_list.append(ds)
+
+    # illumination state at command time
+    if s_cmd <= UMBRA_TAU:
+        st = "umbra"
+    elif s_cmd >= SUNLIT_TAU:
+        st = "sunlit"
+    else:
+        st = "penumbra"
+
+    # transition direction (slope)
+    if ds < -eps:
+        sl = "entering"
+    elif ds > eps:
+        sl = "exiting"
+    else:
+        sl = "flat_slope"
+
+    phase_state.append(st)
+    phase_slope.append(sl)
+
+    # combined label (this is the one you’ll plot most of the time)
+    if st in ("umbra", "sunlit"):
+        phase.append(st)   # keep it simple: umbra or sunlit
+    else:
+        # only in penumbra do we want entering/exiting; otherwise it's ambiguous
+        if sl in ("entering", "exiting"):
+            phase.append(sl)
+        else:
+            phase.append("penumbra_flat")
+
+
+ # WINDOW METRICS (sat eclipse during imaging action window)
+imaging_window = float(imaging_duration)  # 300s from config
+tau_umbra = UMBRA_TAU
+tau_sunlit = SUNLIT_TAU
+
+# Helper: window min/max of shadowFactor using recorder samples
+# We assume ecl_t is monotonically increasing and in seconds.
+ecl_t_arr = np.asarray(ecl_t, dtype=float)
+ecl_sf_arr = np.asarray(ecl_sf, dtype=float)
+
+sat_shadow_cmd_img = np.interp(img_cmd_times, ecl_t_arr, ecl_sf_arr) if img_cmd_times.size else np.array([])
+
+sat_shadow_min_win = np.full(img_cmd_times.shape, np.nan, dtype=float)
+sat_shadow_max_win = np.full(img_cmd_times.shape, np.nan, dtype=float)
+win_bucket = np.array(["UNK"] * img_cmd_times.size, dtype=object)
+
+for i, t0 in enumerate(img_cmd_times):
+    t1 = t0 + imaging_window
+
+    # indices of recorder samples within [t0, t1]
+    # using searchsorted keeps this O(log N) per command
+    j0 = int(np.searchsorted(ecl_t_arr, t0, side="left"))
+    j1 = int(np.searchsorted(ecl_t_arr, t1, side="right"))
+
+    if j0 >= ecl_t_arr.size:
+        continue
+    if j1 <= j0:
+        # no sample strictly inside window; fallback to interpolation at endpoints
+        s0 = float(np.interp(t0, ecl_t_arr, ecl_sf_arr))
+        s1 = float(np.interp(t1, ecl_t_arr, ecl_sf_arr))
+        s_min = min(s0, s1)
+        s_max = max(s0, s1)
+    else:
+        seg = ecl_sf_arr[j0:j1]
+        if seg.size == 0:
+            continue
+        s_min = float(np.min(seg))
+        s_max = float(np.max(seg))
+
+    sat_shadow_min_win[i] = s_min
+    sat_shadow_max_win[i] = s_max
+
+    s_cmd = float(sat_shadow_cmd_img[i]) if i < sat_shadow_cmd_img.size else float("nan")
+
+    # Bucket definitions
+    if np.isfinite(s_min) and s_max <= tau_umbra:
+        win_bucket[i] = "always_umbra"
+    elif np.isfinite(s_max) and s_min >= tau_sunlit:
+        win_bucket[i] = "always_sunlit"
+    elif np.isfinite(s_cmd) and (s_cmd >= tau_sunlit) and (s_min <= tau_umbra):
+        win_bucket[i] = "sunlit_to_umbra"
+    elif np.isfinite(s_cmd) and (s_cmd <= tau_umbra) and (s_max >= tau_sunlit):
+        win_bucket[i] = "umbra_to_sunlit"
+    else:
+        win_bucket[i] = "mixed_penumbra"
+
+
+sat_sf_acq_img = np.full_like(t_acq, np.nan, dtype=float)
+if np.any(acq_ok):
+    sat_sf_acq_img[acq_ok] = np.interp(t_acq[acq_ok], ecl_t, ecl_sf)
+
+# Optional: include orbit regime if you add it later in discrete_actions.py
+alt_km = np.asarray(getattr(SS1_actions_spec, "chosen_target_alt_km", []), dtype=float).ravel()
+regime = np.asarray(getattr(SS1_actions_spec, "chosen_target_orbit_regime", []), dtype=object).ravel()
+if alt_km.size == 0:
+    alt_km = np.full(img_cmd_times.shape, np.nan, dtype=float)
+if regime.size == 0:
+    regime = np.array(["UNK"] * img_cmd_times.size, dtype=object)
+
+# Build dataframe (trim to the shortest common length to be safe)
+L = min(img_cmd_times.size, img_target_ids.size, az.size, el_loc.size, rng.size, tgt_sf_cmd.size, t_acq.size, dt_acq.size, look_ahead.size, sat_sf_cmd_img.size, regime.size, alt_km.size, sat_shadow_min_win.size, sat_shadow_max_win.size, win_bucket.size, target_shadow_acq.size)
+
+df_images = pd.DataFrame({
+    "t_cmd": img_cmd_times[:L],
+    "target_id": img_target_ids[:L],
+    "azimuth_deg": az[:L],
+    "elevation_local_deg": el_loc[:L],
+    "range_m": rng[:L],
+    "target_shadow_cmd": tgt_sf_cmd[:L],
+    "sat_shadow_cmd": sat_sf_cmd_img[:L],
+    "phase": np.array(phase, dtype=object)[:L],
+    "phase_state": np.array(phase_state, dtype=object)[:L],
+    "phase_slope": np.array(phase_slope, dtype=object)[:L],
+    "ecl_ds": np.array(ds_list, dtype=float)[:L],
+    "look_ahead": look_ahead[:L],
+    "t_acq": t_acq[:L],
+    "dt_acq": dt_acq[:L],
+    "acq_success": acq_ok[:L].astype(int),
+    "sat_shadow_acq": sat_sf_acq_img[:L],
+    "target_alt_km": alt_km[:L],
+    "target_regime": regime[:L],
+    "sat_shadow_min_win": sat_shadow_min_win[:L],
+    "sat_shadow_max_win": sat_shadow_max_win[:L],
+    "win_bucket": win_bucket[:L],
+    "target_shadow_acq": target_shadow_acq[:L],
+})
+
+
+print("df_images columns:", list(df_images.columns))
+print("win_bucket counts:\n", df_images["win_bucket"].value_counts(dropna=False))
+print("non-nan target_shadow_acq:", np.isfinite(df_images["target_shadow_acq"].to_numpy(dtype=float)).sum())
+
+images_csv = os.path.join(run_dir, "images.csv")
+df_images.to_csv(images_csv, index=False)
+print(f"Saved: {images_csv}")
+
+def _mean_safe(x):
+    x = np.asarray(x, dtype=float)
+    x = x[np.isfinite(x)]
+    return float(np.mean(x)) if x.size else float("nan")
+
+def _frac_safe(mask):
+    mask = np.asarray(mask, dtype=bool)
+    return float(np.mean(mask)) if mask.size else float("nan")
+
+tau_umbra = UMBRA_TAU
+tau_sunlit = SUNLIT_TAU
+
+df = df_images.copy()
+
+# Helpful masks
+m_umbra = df["sat_shadow_cmd"].astype(float) <= tau_umbra
+m_sunlit = df["sat_shadow_cmd"].astype(float) >= tau_sunlit
+m_enter = (df["phase_slope"].astype(str) == "entering")
+m_exit  = (df["phase_slope"].astype(str) == "exiting")
+
+look = df["look_ahead"].astype(float).to_numpy()
+
+# Interpretable "behavior" rates
+enter_lookback_rate = _frac_safe((look < 0) & m_enter.to_numpy())
+exit_lookahead_rate = _frac_safe((look > 0) & m_exit.to_numpy())
+
+# Conditional means (these are what you’ll MC-average across seeds)
+look_metrics = {
+    "N_img_cmd": int(len(df)),
+    "N_entering": int(m_enter.sum()),
+    "N_exiting": int(m_exit.sum()),
+    "N_umbra_cmd": int(m_umbra.sum()),
+    "N_sunlit_cmd": int(m_sunlit.sum()),
+
+    "E_lookAhead_all": _mean_safe(look),
+    "E_lookAhead_umbra": _mean_safe(df.loc[m_umbra, "look_ahead"]),
+    "E_lookAhead_sunlit": _mean_safe(df.loc[m_sunlit, "look_ahead"]),
+    "E_lookAhead_entering": _mean_safe(df.loc[m_enter, "look_ahead"]),
+    "E_lookAhead_exiting": _mean_safe(df.loc[m_exit, "look_ahead"]),
+
+    "P_lookBack_given_entering": enter_lookback_rate,
+    "P_lookAhead_given_exiting": exit_lookahead_rate,
+}
+
+
+
+
+# Regime metrics (requires target_regime column populated)
+if "target_regime" in df.columns:
+    # Overall selection distribution by regime
+    vc = df["target_regime"].value_counts(dropna=False)
+    total = float(vc.sum()) if vc.size else 0.0
+    frac_by_regime = {str(k): float(v)/total for k, v in vc.items()} if total > 0 else {}
+
+    # Regime distribution during umbra
+    vc_u = df.loc[m_umbra, "target_regime"].value_counts(dropna=False)
+    total_u = float(vc_u.sum()) if vc_u.size else 0.0
+    frac_by_regime_umbra = {str(k): float(v)/total_u for k, v in vc_u.items()} if total_u > 0 else {}
+
+    # Acquisition time by regime (success only)
+    if "acq_success" in df.columns and "dt_acq" in df.columns:
+        succ = df["acq_success"].astype(int) == 1
+        g = df.loc[succ].groupby("target_regime")["dt_acq"]
+        dt_mean = {str(k): _mean_safe(v) for k, v in g}
+    else:
+        dt_mean = {}
+
+    # Illumination at command by regime (uses target_shadow_cmd)
+    if "target_shadow_cmd" in df.columns:
+        g2 = df.groupby("target_regime")["target_shadow_cmd"]
+        illum_mean = {str(k): _mean_safe(v) for k, v in g2}
+    else:
+        illum_mean = {}
+
+    regime_metrics = {
+        "frac_target_regime_all": frac_by_regime,
+        "frac_target_regime_umbra": frac_by_regime_umbra,
+        "mean_dt_acq_success_by_regime": dt_mean,
+        "mean_target_shadow_cmd_by_regime": illum_mean,
+    }
+else:
+    regime_metrics = {}
+
+
+
+
+# keep x-limit consistent with the longest series plotted
 tmax = float(ecl_t[-1])
 if sim_times:
     tmax = max(tmax, float(np.max(sim_times)))
 
 print("  Final data level:", observation)
-print(f"final reward for SS1 {SS1_reward} should be the same as {env.env.rewarder.cum_reward['SS1']}")
-print(f"and number of imaged targets {len(env.env.satellites[0].data_store.data.imaged)} out of those useful images were: {len(env.env.rewarder.imaged_illuminated)}")
-print(f"Total downlinked {env.env.rewarder.total_downlinks} out of those useful downlinks were: {env.env.rewarder.useful_downlinks}")
-# print(f"mean and std of chosen_target_azimuth {env.env.satellites[0].action_builder.action_spec[0].chosen_target_azimuth}")
+print(f"final reward for SS1 {SS1_reward} should be the same as {env.env.unwrapped.rewarder.cum_reward['SS1']}")
+print(f"and number of imaged targets {len(env.env.unwrapped.satellites[0].data_store.data.imaged)} out of those useful images were: {len(env.env.unwrapped.rewarder.imaged_illuminated)}")
+print(f"Total downlinked {env.env.unwrapped.rewarder.total_downlinks} out of those useful downlinks were: {env.env.unwrapped.rewarder.useful_downlinks}")
+# print(f"mean and std of chosen_target_azimuth {env.env.unwrapped.satellites[0].action_builder.action_spec[0].chosen_target_azimuth}")
 
-SS1_actions_spec = env.satellites[0].action_builder.action_spec[0]
+SS1_actions_spec = env.unwrapped.satellites[0].action_builder.action_spec[0]
 print(f"mean and std of chosen_target_azimuth: {np.mean(SS1_actions_spec.chosen_target_azimuth):.2f}, {np.std(SS1_actions_spec.chosen_target_azimuth):.2f}")
 print(f"mean and std of chosen_target_elevation: {np.mean(SS1_actions_spec.chosen_target_elevation_angle):.2f}, {np.std(SS1_actions_spec.chosen_target_elevation_angle):.2f}")
 print(f"mean and std of chosen_target_elevation_local: {np.mean(SS1_actions_spec.chosen_target_elevation_local):.2f}, {np.std(SS1_actions_spec.chosen_target_elevation_local):.2f}")
 print(f"mean and std of chosen_target_distance: {np.mean(SS1_actions_spec.chosen_target_distance):.2f}, {np.std(SS1_actions_spec.chosen_target_distance):.2f}")
 print(f"mean and std of initial angular error: {np.mean(SS1_actions_spec.initial_angular_error):.2f}, {np.std(SS1_actions_spec.initial_angular_error):.2f}")
 print(f"mean and std of chosen_target_priority: {np.mean(SS1_actions_spec.chosen_target_priority):.2f}, {np.std(SS1_actions_spec.chosen_target_priority):.2f}")
+print("\n=== Imaging Acquisition Timing (actual capture trigger) ===")
+print(f"Imaging commands issued: {cmd_times.size}")
+print(f"Acquisition success rate: {acq_success_rate:.3f}")
+print(f"Average acquisition time [s]: {avg_acq_time_sec:.2f}")
+print(f"Median acquisition time [s]: {median_acq_time_sec:.2f}")
+print(f"% commands in umbra (SF<=0.05): {pct_cmd_in_umbra:.3f}")
+print(f"% acquisitions in umbra (SF<=0.05): {pct_acq_in_umbra:.3f}")
+print("==========================================================\n")
 print(f"fraction of targets that were illuminated: {np.mean(SS1_actions_spec.chosen_target_illumination_status):.2f}")
 print(f"fraction of targets ever visible: {len(SS1_actions_spec.ever_visible)/n_targets:.2f}")
 print(f"mean and std of rel pos in H-frame: {np.mean(SS1_actions_spec.chosen_target_rel_pos_H, axis=0)}, {np.std(SS1_actions_spec.chosen_target_rel_pos_H, axis=0)}")
 
-print("Target Selection comparison:", env.satellites[0].dynamics.target_selection_comparison)
+print("Target Selection comparison:", env.unwrapped.satellites[0].dynamics.target_selection_comparison)
 # Count only the matches (non-False entries)
-num_same = np.count_nonzero(np.array(env.satellites[0].dynamics.target_selection_comparison) != False)
+num_same = np.count_nonzero(np.array(env.unwrapped.satellites[0].dynamics.target_selection_comparison) != False)
 print("Target Selection comparison numbers:", num_same)
-num_diff = np.count_nonzero(np.array(env.satellites[0].dynamics.target_selection_comparison) == False)
+num_diff = np.count_nonzero(np.array(env.unwrapped.satellites[0].dynamics.target_selection_comparison) == False)
 print("Number different:", num_diff)
 
 
-while not truncated:
-    data_dict["sim_time"].append(env.simulator.sim_time)
-
-data_dict["inspector_sigmaBN"].append(env.satellites[0].dynamics.inspector_state_recorder.sigma_BN)
-data_dict["inspector_omegaBN"].append(env.satellites[0].dynamics.inspector_state_recorder.omega_BN_B)
-data_dict["inspector_r_BN_N"].append(env.satellites[0].dynamics.inspector_state_recorder.r_BN_N)
-data_dict["currentTarget_r_BN_N"].append(env.satellites[0].dynamics.simpleNavObject.transOutMsg.read().r_BN_N)
+data_dict["inspector_sigmaBN"].append(env.unwrapped.satellites[0].dynamics.inspector_state_recorder.sigma_BN)
+data_dict["inspector_omegaBN"].append(env.unwrapped.satellites[0].dynamics.inspector_state_recorder.omega_BN_B)
+data_dict["inspector_r_BN_N"].append(env.unwrapped.satellites[0].dynamics.inspector_state_recorder.r_BN_N)
+data_dict["currentTarget_r_BN_N"].append(env.unwrapped.satellites[0].dynamics.simpleNavObject.transOutMsg.read().r_BN_N)
 
 for l in range (len(targets)):
-    data_dict["target_r_BN_N"][targets[l].name].append(env.satellites[l+1].dynamics.target_state_recorder.r_BN_N)
+    data_dict["target_r_BN_N"][targets[l].name].append(env.unwrapped.satellites[l+1].dynamics.target_state_recorder.r_BN_N)
 
 # ---- Plotting ----
 total_actions = sum(action_counts.values())
