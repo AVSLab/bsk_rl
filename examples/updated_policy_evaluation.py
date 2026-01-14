@@ -153,32 +153,81 @@ class Policy:
         return action
 
 
-
-n_targets = 100
-n_targets_ahead = 10
-imaging_duration = 300
-total_time = n_targets * imaging_duration * 1.5   # 5700.0  # approximately 1 orbit
-seed_number = 184
-policy_mode = 'latest'
-eclipse_norm = 5700
-save_data = False #set to False to avoid saving data
 use_shield = True
 act_random = False
 use_heuristic = False
-heuristic_mode = "angle" #not used unless use_heuristic is True
-just_imaging = False
-obs_v = 2 # this is overwritten for all policies that have an assigned obs type
+heuristic_mode = "distance"  # not used unless use_heuristic is True. heuristic modes: {"angle", "distance"}
+if act_random:
+    policy_tag = "RANDOM"
+elif use_heuristic:
+    policy_tag = "HEUR"
+    if heuristic_mode == "angle":
+        policy_tag = "HEUR_ANGLE"
+    elif heuristic_mode == "distance":
+        policy_tag = "HEUR_DISTANCE"
+else:
+    policy_tag = "RL"
+
+
+# Base simulation configuration (shared between training & evaluation)
+sim_cfg = SimConfig(
+    n_targets=100,
+    n_targets_ahead=10,
+    imaging_duration=300.0,
+    extra_time_factor=1.5,
+    obs_v=7.0,          # default obs version; will be overwritten if policy_name known
+    just_imaging=False,
+)
+
+# Local aliases to minimize refactoring elsewhere
+n_targets = sim_cfg.n_targets
+n_targets_ahead = sim_cfg.n_targets_ahead
+imaging_duration = sim_cfg.imaging_duration
+total_time = sim_cfg.total_time
+obs_v = sim_cfg.obs_v
+just_imaging = sim_cfg.just_imaging
+
+# setting up sim parameters manually if needed
+# n_targets = 100
+# n_targets_ahead = 10
+# imaging_duration = 300
+# total_time = n_targets * imaging_duration * 1.5   # 5700.0  # approximately 1 orbit
+
+seed_number = 20  # 17 / 10 / 184 ...
+policy_mode = 'latest'
+eclipse_norm = 5700
+save_data = True   # set to False to avoid saving data
+safe_vizard = False
+viz_rate = 30.0
+
+# Orbit / GS constants
 ORBIT_PERIOD_SEC = 95 * 60
 ECL_SLICE  = slice(75, 77)
-GS_START   = 77
-N_GS       = 5          # <<< set this to your actual number of ground stations
+GS_START   = 77     # will be refined based on obs_v below
+N_GS       = 5      # updated for some obs_v
 PAIR_STRIDE = 2
 
-# If your local training now outputs *normalized* offsets since Aug 14,
-# toggle these flags as appropriate. If values are already absolute times, set to False.
+if use_heuristic:
+    run_tag = f"HEUR_{heuristic_mode}"
+elif act_random:
+    run_tag = "RANDOM"
+else:
+    run_tag = f"{policy_tag}_{policy_mode}"
+
+
+base_data_dir = os.path.join(os.path.dirname(__file__), "data")  # examples/data
+run_dir = make_run_dir(base_data_dir, seed_number, policy_tag, run_tag)
+print(f"\n=== Run outputs will be saved to: {run_dir} ===\n")
+
+
+
+# If the local training now outputs *normalized* offsets since Aug 14, toggle these flags as appropriate. If values are already absolute times, set to False.
 GS_NORMALIZED = True    # set True if GS values are normalized offsets; False if absolute times
 
 # POLICIES
+# September/October Policies
+obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i_reducedFailurePenalty_lowBatPenalty_1761114479.911475/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i_reducedFailurePenalty_lowBatPenalty.out_0"
+
 # downlink_reward_policy = "/Users/dahu1128/rllib_results/june12rllib_results/lowBaudRate_5e-6lr_downlink_reward_penalties_smallest_storage_Polaris_simulation_1749771784.4956822/lowBaudRate_5e-6lr_downlink_reward_penalties_smallest_storage_0/"
 downlink_reward_policy = "/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_Polaris_simulation_1750741069.7033312/lowBaudRate_5e-6lr_downlink_reward_new_penalties_smallest_storage_0"
 downlink_reward_policy_shorter_imaging ="/Users/dahu1128/rllib_results/reward_comparison/lowBaudRate_shorter_imaging_5e-6lr_downlink_reward_penalties_smallest_storage_0"
