@@ -1284,7 +1284,7 @@ class ImagingSCFSWModel(ImagingFSWModel):
         Create (on first use) or retarget a Vizard line from this spacecraft to `to_body_name`.
         The line updates automatically as the bodies move; only retarget on new selections.
         """
-        # Use a consistent color per spacecraft, or hardcode a color if you prefer
+        # Use a consistent color per spacecraft
         line_color = "yellow"  # getattr(self.satellite, "vizard_color", "yellow")
 
         if not hasattr(self, "_rso_line"):
@@ -1322,6 +1322,18 @@ class ImagingSCFSWModel(ImagingFSWModel):
                 simpleInstrumentController.simpleInstrumentController()
             )
             self.insControl.ModelTag = "instrumentController"
+
+            # Recorder for "image actually triggered" events
+            # deviceCmdOutMsg.deviceCmd will go to 1 when att/access requirements are met and the image is captured
+            REC_DT_SEC = getattr(self.fsw, "metrics_rec_dt_sec", 1.0)
+            self.ins_cmd_recorder = self.insControl.deviceCmdOutMsg.recorder(macros.sec2nano(REC_DT_SEC))
+
+            # Add recorder to the SAME task where insControl runs (this LocPointTask),
+            # so it only records while the imaging task is enabled.
+            self.fsw.simulator.AddModelToTask(self.name + self.fsw.satellite.name,self.ins_cmd_recorder, ModelPriority=980)
+
+            # Expose it so evaluation/training scripts can access it easily
+            self.fsw.ins_cmd_recorder = self.ins_cmd_recorder
 
             # #Adding a recorder for the pointing performance
             # self.pointing_state_recorder = self.fsw.locPoint.attGuidOutMsg.recorder(macros.sec2nano(1.0))
