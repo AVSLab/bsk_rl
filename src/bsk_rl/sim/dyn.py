@@ -1111,9 +1111,14 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
             self.task_name, self.powerMonitor, ModelPriority=priority
         )
 
-        self.target_state_recorder = self.scObject.scStateOutMsg.recorder(macros.sec2nano(1.0))
+        self.target_state_recorder = self.scObject.scStateOutMsg.recorder(macros.sec2nano(1.0)) # state recorder for target
         self.simulator.AddModelToTask(
             self.task_name, self.target_state_recorder, ModelPriority=priority
+        )
+
+        self.target_eclipse_recorder = self.world.eclipseObject.eclipseOutMsgs[0].recorder(macros.sec2nano(1.0)) # eclipse recorder for target
+        self.simulator.AddModelToTask(
+            self.task_name, self.target_eclipse_recorder, ModelPriority=priority
         )
 
 
