@@ -359,10 +359,11 @@ imaging_unlimitedResources_baseline = "/Users/dahu1128/rllib_results/reward_comp
 #June 6th
 imaging_rewarded_noeclipse_1e_6lr_failure_penalties = "/Users/dahu1128/rllib_results/june_results/june6rllib_results/1e-6lr_failure_penalties_no_torque_small_battery_small_data_Polaris_sim_1749226596.4501252/model_0"
 
-policy_path = obsv7_1e_5lr_batch5000_gamma9997_40d60i #balance00d100i_obs2_gamma9995_1e6lr
+policy_path = obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i #balance00d100i_obs2_gamma9995_1e6lr
 
 # Define all known policy paths with associated obs values
 policy_obs_map = {
+    "obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i": 7,
     "obsv7_1e_5lr_batch5000_gamma9997_90d10i": 7,
     "obsv7_1e_5lr_batch5000_gamma9997_80d20i": 7,
     "obsv7_1e_5lr_batch5000_gamma9997_70d30i": 7,
@@ -450,30 +451,48 @@ for name, val in list(globals().items()):
         obs_v = policy_obs_map[name]
         break
 
-# Load policy
-if policy_mode =='best':
-    policy = Policy(policy_path,policy_mode ='best')
-elif policy_mode =='smallest':
-    policy = Policy(policy_path,policy_mode ='smallest')
-else:
-    policy = Policy(policy_path,policy_mode ='latest')
 
-if obs_v==1:
-    GS_START = 87
-elif obs_v==1.1:
-    GS_START = 97
-elif obs_v==2:
-    GS_START = 77
-elif obs_v==2.1:
-    GS_START = 77
-elif obs_v==4:
-    N_GS = 1
-    GS_START = 74
-elif obs_v==0:
-    GS_START =74
-elif obs_v==7:
-    N_GS = 2
-    GS_START = 77
+# Choose which policy to evaluate by NAME
+policy_name = "obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i"  # <--- EDIT THIS when you switch policies
+policy_path = globals()[policy_name]
+
+alpha = alpha_from_tag(policy_name, default=0.0)
+print_alpha(policy_name,policy_path)
+
+# Update obs_v both locally and in the shared sim config
+if policy_name in policy_obs_map:
+    obs_v = policy_obs_map[policy_name]
+    sim_cfg.obs_v = obs_v
+else:
+    # fall back to whatever was in SimConfig
+    obs_v = sim_cfg.obs_v
+
+VALID_POLICY_MODES = {"best", "smallest", "latest"}
+
+if policy_mode not in VALID_POLICY_MODES:
+    raise ValueError(f"Invalid policy_mode '{policy_mode}'. Expected one of {VALID_POLICY_MODES}.")
+
+policy = Policy(policy_path, policy_mode=policy_mode)
+
+
+
+# Ground-station settings as a function of obs_v
+GS_BY_OBS = {
+    1:   dict(gs_start=87, n_gs=None),
+    1.1: dict(gs_start=97, n_gs=None),
+    2:   dict(gs_start=77, n_gs=None),
+    2.1: dict(gs_start=77, n_gs=None),
+    4:   dict(gs_start=74, n_gs=1),
+    0:   dict(gs_start=74, n_gs=None),
+    7:   dict(gs_start=77, n_gs=2),
+}
+
+gs_cfg = GS_BY_OBS.get(obs_v, dict(gs_start=GS_START, n_gs=None))
+GS_START = gs_cfg["gs_start"]
+if gs_cfg["n_gs"] is not None:
+    N_GS = gs_cfg["n_gs"]
+
+
 class MyScanningSatellite(sats.AccessSatellite):
     if obs_v==1:
         observation_spec = [
