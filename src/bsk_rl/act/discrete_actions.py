@@ -24,6 +24,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.scene.targets import Target
 
 logger = logging.getLogger(__name__)
+R_EARTH_M = 6371e3
+LEO_MAX_KM = 2000.0
+MEO_MAX_KM = 30000.0
 
 
 class DiscreteActionBuilder(ActionBuilder):
@@ -349,7 +352,9 @@ class ImageRSO(DiscreteAction):
         self.chosen_target_ids = []
         self.chosen_target_priority = []
         self.chosen_target_rel_pos_H = []
-        self.chosen_target_rel_direction = []  # e.g. "ahead", "left", etc.
+        self.chosen_target_rel_direction = []  # "ahead", "left", etc.
+        self.chosen_target_alt_km = []
+        self.chosen_target_orbit_regime = []
         self.chosen_target_azimuth = []
         self.chosen_target_elevation_local = []
         self.imaging_times = []
@@ -532,6 +537,19 @@ class ImageRSO(DiscreteAction):
         sat_pos = np.array(self.satellite.dynamics.r_BN_N)
         sat_vel = np.array(self.satellite.dynamics.v_BN_N)
         target_pos = np.array(new_target.target_spacecraft.dynamics.r_BN_N)
+
+        r_norm = float(np.linalg.norm(target_pos))
+        alt_km = (r_norm - R_EARTH_M) / 1000.0
+
+        if alt_km < LEO_MAX_KM:
+            regime = "LEO"
+        elif alt_km < MEO_MAX_KM:
+            regime = "MEO"
+        else:
+            regime = "GEO"
+
+        self.chosen_target_alt_km.append(alt_km)
+        self.chosen_target_orbit_regime.append(regime)
 
         los_vector = target_pos - sat_pos
         los_unit = los_vector / np.linalg.norm(los_vector)
