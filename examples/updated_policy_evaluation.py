@@ -1998,7 +1998,7 @@ plt.show()
 # plt.show()
 
 
-SS1_actions_spec = env.satellites[0].action_builder.action_spec[0]
+SS1_actions_spec = env.unwrapped.satellites[0].action_builder.action_spec[0]
 fields = [
     "chosen_target_azimuth",
     "chosen_target_elevation_angle",
@@ -2025,47 +2025,77 @@ for field in fields:
             mean_val = np.mean(segment)
             std_val = np.std(segment)
             print(f"  Segment {i+1}/{n_parts}: mean = {mean_val:.2f}, std = {std_val:.2f}")
-
 if save_data:
-    data_dir = "data"
-    os.makedirs(data_dir, exist_ok=True)
+    # steps.csv
+    df_steps = pd.DataFrame(step_log)
+    steps_csv = os.path.join(run_dir, "steps.csv")
+    df_steps.to_csv(steps_csv, index=False)
+    print(f"Saved: {steps_csv}")
 
-    for key, value in data_dict.items():
-        if isinstance(value, dict):  # Save per-target data separately
-            for target_name, target_data in value.items():
-                np.save(os.path.join(data_dir, f"{key}_{target_name}.npy"), np.array(target_data))
-        else:
-            np.save(os.path.join(data_dir, f"{key}.npy"), np.array(value))
+    # Your existing arrays (save into run_dir, not shared data/)
+    save_npy(run_dir, "sim_times", sim_times)
+    save_npy(run_dir, "battery_levels", battery_levels)
+    save_npy(run_dir, "storage_levels", storage_levels)
+    save_npy(run_dir, "eclipse_status", eclipse_status)
+    save_npy(run_dir, "downlink_times", downlink_times)
+    save_npy(run_dir, "charging_times", charging_times)
+    save_npy(run_dir, "desat_times", desat_times)
 
-    
-    # Also save high-level time series useful for analysis
-    np.save(os.path.join(data_dir, "sim_times.npy"), np.array(sim_times))
-    np.save(os.path.join(data_dir, "battery_levels.npy"), np.array(battery_levels))
-    np.save(os.path.join(data_dir, "storage_levels.npy"), np.array(storage_levels))
-    np.save(os.path.join(data_dir, "eclipse_status.npy"), np.array(eclipse_status))
-    np.save(os.path.join(data_dir, "charging_times.npy"), np.array(charging_times))
-    np.save(os.path.join(data_dir, "downlink_times.npy"), np.array(downlink_times))
-    np.save(os.path.join(data_dir, "desat_times.npy"), np.array(desat_times))
-    # Save extracted windows
-    np.save(os.path.join(data_dir, "eclipse_windows.npy"), np.array(eclipse_windows, dtype=float))
+    # Acquisition arrays you already created
+    save_npy(run_dir, "image_command_times", cmd_times)
+    save_npy(run_dir, "image_command_target_ids", cmd_target_ids)
+    save_npy(run_dir, "image_acq_times", acq_times_for_cmd)
+    save_npy(run_dir, "image_acq_dt", acq_dt_for_cmd)
+    save_npy(run_dir, "image_acq_success", acq_success.astype(int))
 
-    # # Ground-station windows: save each station separately
-    # for gs_name, windows in ground_station_windows.items():
-    #     np.save(os.path.join(data_dir, f"{gs_name}_windows.npy"), np.array(windows, dtype=float))
-    print("Data saved successfully in 'data/' folder.")
+    # If you already save eclipse windows:
+    try:
+        save_npy(run_dir, "eclipse_windows", eclipse_windows)
+    except Exception:
+        pass
 else:
-    print("Not saving data")
+    print("Not saving data (save_data=False).")
+
+# if save_data:
+#     data_dir = "data"
+#     os.makedirs(data_dir, exist_ok=True)
+#
+#     for key, value in data_dict.items():
+#         if isinstance(value, dict):  # Save per-target data separately
+#             for target_name, target_data in value.items():
+#                 np.save(os.path.join(data_dir, f"{key}_{target_name}.npy"), np.array(target_data))
+#         else:
+#             np.save(os.path.join(data_dir, f"{key}.npy"), np.array(value))
+#
+#
+#     # Also save high-level time series useful for analysis
+#     np.save(os.path.join(data_dir, "sim_times.npy"), np.array(sim_times))
+#     np.save(os.path.join(data_dir, "battery_levels.npy"), np.array(battery_levels))
+#     np.save(os.path.join(data_dir, "storage_levels.npy"), np.array(storage_levels))
+#     np.save(os.path.join(data_dir, "eclipse_status.npy"), np.array(eclipse_status))
+#     np.save(os.path.join(data_dir, "charging_times.npy"), np.array(charging_times))
+#     np.save(os.path.join(data_dir, "downlink_times.npy"), np.array(downlink_times))
+#     np.save(os.path.join(data_dir, "desat_times.npy"), np.array(desat_times))
+#     # Save extracted windows
+#     np.save(os.path.join(data_dir, "eclipse_windows.npy"), np.array(eclipse_windows, dtype=float))
+#
+#     # # Ground-station windows: save each station separately
+#     # for gs_name, windows in ground_station_windows.items():
+#     #     np.save(os.path.join(data_dir, f"{gs_name}_windows.npy"), np.array(windows, dtype=float))
+#     print("Data saved successfully in 'data/' folder.")
+# else:
+#     print("Not saving data")
 end_time = time.time()
 elapsed_time = end_time - start_time
 print(f"Code execution time: {elapsed_time:.4f} seconds")
 
 data = {}
-data["cumulativeRewardSS1"]=env.rewarder.cum_reward['SS1']
-data["illuminated_images"] = len(env.rewarder.imaged_illuminated)
-# data["Total Images Downlinked"] = env.satellites[0].dynamics.total_downlinks
-# data["Useful Images Downlinked"] = env.satellites[0].dynamics.useful_downlinks
+data["cumulativeRewardSS1"] = round(env.unwrapped.rewarder.cum_reward['SS1'], 2)
+data["illuminated_images"] = len(env.unwrapped.rewarder.imaged_illuminated)
+# data["Total Images Downlinked"] = env.unwrapped.satellites[0].dynamics.total_downlinks
+# data["Useful Images Downlinked"] = env.unwrapped.satellites[0].dynamics.useful_downlinks
 
-SS1_actions_spec = env.satellites[0].action_builder.action_spec[0]
+SS1_actions_spec = env.unwrapped.satellites[0].action_builder.action_spec[0]
 # Target azimuth
 if hasattr(SS1_actions_spec, "chosen_target_azimuth") and SS1_actions_spec.chosen_target_azimuth:
     data["mean_target_azimuth"] = np.mean(SS1_actions_spec.chosen_target_azimuth)
@@ -2151,7 +2181,10 @@ print("ALL DATA: ", data)
 # Save metrics dictionary to JSON
 try:
     import json
-    json_path = os.path.join(data_dir, f"metrics_random{act_random}_seed{seed_number}_{policy_mode}_{policy_name}.json")
+    json_path = os.path.join(
+        run_dir,
+        f"metrics_{policy_tag}_random{act_random}_seed{seed_number}_{policy_mode}_{policy_name}.json"
+    )
     def _convert(o):
         import numpy as _np
         if isinstance(o, (_np.floating,)):
@@ -2170,14 +2203,36 @@ try:
         "desat_action_count": 'desat_action_count' in locals() and desat_action_count or None,
         "target_imaging_pct": 'target_imaging_pct' in locals() and target_imaging_pct or None,
         "non_target_pct": 'non_target_pct' in locals() and non_target_pct or None,
-        "imaging_success_percentage": 'env' in locals() and len(env.rewarder.imaged_illuminated)/target_imaging_count*100 if ('env' in locals() and target_imaging_count) else None
+        "imaging_success_percentage": 'env' in locals() and len(env.unwrapped.rewarder.imaged_illuminated)/target_imaging_count*100 if ('env' in locals() and target_imaging_count) else None
     }
-    payload = {"data": data, "summary": summary}
+    summary.update({
+    "acq_success_rate": acq_success_rate,
+    "avg_acquisition_time_sec": avg_acq_time_sec,
+    "median_acquisition_time_sec": median_acq_time_sec,
+    "pct_cmd_in_umbra": pct_cmd_in_umbra,
+    "pct_acq_in_umbra": pct_acq_in_umbra,
+    })
+    summary.update({"look_metrics": look_metrics})
+    summary.update({"regime_metrics": regime_metrics})
+
+
+    run_meta = {
+    "seed": seed_number,
+    "policy_tag": policy_tag,
+    "policy_mode": policy_mode,
+    "policy_name": policy_name,
+    "act_random": bool(act_random),
+    "use_heuristic": bool(use_heuristic),
+    "run_dir": run_dir,
+    }
+
+
+    payload = {"meta": run_meta, "data": data, "summary": summary}
     with open(json_path, "w") as jf:
         json.dump(payload, jf, indent=2, default=_convert)
     print(f"Saved metrics JSON to {json_path}")
 except Exception as e:
     print("WARNING: Failed to save metrics JSON:", e)
-print(f"good images #:{len(env.rewarder.imaged_illuminated)} out of {target_imaging_count}")
-print(f"imaging success percentage {len(env.rewarder.imaged_illuminated)/target_imaging_count*100}%")
+print(f"good images #:{len(env.unwrapped.rewarder.imaged_illuminated)} out of {target_imaging_count}")
+print(f"imaging success percentage {len(env.unwrapped.rewarder.imaged_illuminated)/target_imaging_count*100}%")
 
