@@ -164,8 +164,8 @@ class RSOTargetImageReward(GlobalReward):
         super().__init__()
         self.reward_fn = reward_fn
         self.inspection_task_completed = False
-        self.downlink_bonus = 0.5
-        self.imaging_bonus = 0.5
+        # self.downlink_bonus = 0.5 #deprecated
+        # self.imaging_bonus = 0.5 #deprecated
         self.eclipse_threshold_for_reward = 0.5
         self.total_downlinks = 0
         self.useful_downlinks = 0
