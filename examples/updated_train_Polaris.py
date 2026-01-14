@@ -7,6 +7,8 @@ from typing import Any
 
 import numpy as np
 import torch
+from dataclasses import asdict
+from sim_config import SimConfig
 
 torch.set_num_threads(3)
 os.environ["MKL_NUM_THREADS"] = "3" # 11 on the cluster
@@ -364,11 +366,26 @@ if __name__ == "__main__":
         orbitalMotion,
     )
 
-    n_targets = 100
-    n_targets_ahead = 10
-    imaging_duration = 300
-    extra_tima_factor = 1.5
-    total_time = extra_tima_factor * n_targets * 300  #I give it 10 times the minimum time to finish
+    # n_targets = 100
+    # n_targets_ahead = 10
+    # imaging_duration = 300
+    # extra_tima_factor = 1.5
+    # total_time = extra_tima_factor * n_targets * 300  #I give it 10 times the minimum time to finish
+    # Shared sim configuration (should match what you use in evaluation)
+    sim_cfg = SimConfig(
+        n_targets=100,
+        n_targets_ahead=10,
+        imaging_duration=300.0,
+        extra_time_factor=1.5,
+        obs_v=7.0,        # <-- whatever obs_v your training run uses
+        just_imaging=False,
+    )
+
+    n_targets = sim_cfg.n_targets
+    n_targets_ahead = sim_cfg.n_targets_ahead
+    imaging_duration = sim_cfg.imaging_duration
+    total_time = sim_cfg.total_time
+
 
     class MyScanningSatellite(sats.AccessSatellite):
         observation_spec = [
@@ -533,8 +550,19 @@ if __name__ == "__main__":
     print(f"Running job {N}: {N+1} of {len(jobs)}")
     job_args = jobs[N]
 
-    with open(output_dir / f"{model_name}_params_aug19.txt", "w") as file: # update this when running on cluster
-        yaml.dump(sanitize_np(job_args), file)
+    # with open(output_dir / f"{model_name}_params_aug19.txt", "w") as file: # update this when running on cluster
+    # yaml.dump(sanitize_np(job_args), file)
+
+
+
+    # Save exactly what was used for this run (sim + training/env args)
+    run_cfg = {
+        "sim": asdict(sim_cfg),
+        "job_args": sanitize_np(job_args),
+    }
+
+    with open(output_dir / f"{model_name}_config.yaml", "w") as file:
+        yaml.dump(run_cfg, file)
 
     train_model(
         model_name=model_name,
@@ -544,6 +572,19 @@ if __name__ == "__main__":
         total_timesteps=20_000_000,
         reload_frequency=500_000,
         n_envs=n_envs,
-        # temp_dir="/scratch/alpine/dahu1128/tmp", # uncomment this when running on cluster
+        # temp_dir="/scratch/alpine/dahu1128/tmp",
         **job_args,
     )
+
+
+    # train_model(
+    #     model_name=model_name,
+    #     output_directory=output_dir,
+    #     checkpoint_frequency=3, # used to be 2
+    #     checkpoints_to_keep=3,
+    #     total_timesteps=20_000_000,
+    #     reload_frequency=500_000,
+    #     n_envs=n_envs,
+    #     # temp_dir="/scratch/alpine/dahu1128/tmp", # uncomment this when running on cluster
+    #     **job_args,
+    # )
