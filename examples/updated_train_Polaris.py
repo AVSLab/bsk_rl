@@ -480,30 +480,92 @@ if __name__ == "__main__":
         dyn_type = dyn.BasicTargetDynamicsModel  # Passed as a type
         fsw_type = fsw.BasicTargetFSWModel
 
-    def custom_oe_randomizer():
-        rLEO = 6871. * 1000  #7000 * 1000   # Minimum semi-major axis (LEO) in meters
-        rUpperLEO =  8371.0 * 1000    # max semi-major axis  of upper LEO in meters
-        # rGEO = 42164. * 1000   # Maximum semi-major axis (GEO) in meters
+    R_E = 6371e3  # [m]
+    D2R = macros.D2R
+
+    # Default altitude bands (altitude above Earth's mean radius)
+    DEFAULT_ALT_BOUNDS = {
+        "LEO": (400e3, 2000e3),
+        "MEO": (2000e3, 35000e3),
+        "GEO": (35786e3 - 300e3, 35786e3 + 300e3),  # ~GEO ring
+    }
+
+    def _sample_for_regime(regime: str,
+                           altitude_bounds: dict[str, tuple[float, float]],
+                           min_perigee_alt: float) -> orbitalMotion.ClassicElements:
         oe = orbitalMotion.ClassicElements()
-        oe.a = np.random.uniform(1.00*rLEO, rUpperLEO)  # Random semi-major axis between LEO and GEO
-        if oe.a < 2*rLEO:
-            oe.e = np.random.uniform(0.0, 0.02)    # Random eccentricity (allowing less elliptical orbits when near LEO)
-            while oe.a*(1-oe.e) < 6771. * 1000: # perigee must be at least 400 km altitude
-                oe.e = np.random.uniform(0.0, 0.02)
+
+        h_min, h_max = altitude_bounds[regime]
+        h = np.random.uniform(h_min, h_max)
+        a = R_E + h
+
+        if regime == "LEO":
+            e = np.random.uniform(0.0, 0.02)
+            while a * (1 - e) < (R_E + min_perigee_alt):
+                e = np.random.uniform(0.0, 0.02)
+            i_deg = np.random.uniform(0.0, 180.0)
+        elif regime == "MEO":
+            e = np.random.uniform(0.0, 0.10)
+            while a * (1 - e) < (R_E + min_perigee_alt):
+                e = np.random.uniform(0.0, 0.10)
+            i_deg = np.random.uniform(0.0, 120.0)
+        elif regime == "GEO":
+            e = np.random.uniform(0.0, 0.0015)
+            i_deg = np.random.uniform(0.0, 15.0)
+            if a * (1 - e) < (R_E + min_perigee_alt):
+                e = 0.0
         else:
-            oe.e = np.random.uniform(0.0, 0.2)    # Random eccentricity (allowing slightly elliptical orbits)
-        oe.i = np.random.uniform(0, 180) * macros.D2R  # Random inclination up to 180 degrees
-        oe.Omega = np.random.uniform(0, 360) * macros.D2R  # Random RAAN
-        oe.omega = np.random.uniform(0, 360) * macros.D2R  # Random argument of perigee
-        oe.f = np.random.uniform(0, 360) * macros.D2R  # Random true anomaly
+            raise ValueError(f"Unknown orbit regime '{regime}'")
+
+        oe.a = a
+        oe.e = e
+        oe.i = i_deg * D2R
+        oe.Omega = np.random.uniform(0.0, 360.0) * D2R
+        oe.omega = np.random.uniform(0.0, 360.0) * D2R
+        oe.f = np.random.uniform(0.0, 360.0) * D2R
         return oe
 
-    target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )  # testing to see if sim is faster if the other agents are killed
+    def custom_oe_randomizer(regime: str = "LEO",
+                             mix_weights: dict[str, float] | None = None,
+                             altitude_bounds: dict[str, tuple[float, float]] | None = None,
+                             min_perigee_alt: float = 400e3) -> orbitalMotion.ClassicElements:
+        """
+        Backward-compatible zero-arg sampler of ClassicElements.
+        - Called with no args -> defaults to LEO (old scripts keep working).
+        - For MEO/GEO or mixed, wrap with a zero-arg lambda/partial that sets 'regime'.
+
+        Example:
+            oe = custom_oe_randomizer()                       # LEO (legacy behavior)
+            oe = custom_oe_randomizer(regime="MEO")           # use via lambda/partial at call site
+        """
+        if altitude_bounds is None:
+            altitude_bounds = DEFAULT_ALT_BOUNDS
+
+        # Mixed regime selection if requested (called via wrapper that forwards kwargs)
+        if regime.lower() == "mixed":
+            if mix_weights is None:
+                regimes, probs = ["LEO", "MEO", "GEO"], np.array([0.6, 0.3, 0.1])
+            else:
+                regimes = ["LEO", "MEO", "GEO"]
+                probs = np.array([mix_weights.get(r, 0.0) for r in regimes], dtype=float)
+                if probs.sum() <= 0:
+                    raise ValueError("mix_weights must include positive weights.")
+                probs = probs / probs.sum()
+            regime = np.random.choice(regimes, p=probs)
+
+        return _sample_for_regime(regime.upper(), altitude_bounds, min_perigee_alt)
+
+
+    # target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0*900 )
+    # target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )  # testing to see if sim is faster if the other agents are killed
+    target_args_mixed = dict(oe=partial(custom_oe_randomizer, regime="mixed", mix_weights={"LEO":0.5,"MEO":0.3,"GEO":0.2}), batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )
+
+
+
     # Make the satellite
     sat = MyScanningSatellite(name="SS1", sat_args=sat_args) # SO1 for satellite observer 1
 
-
-    targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)]
+    targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args_mixed) for i in range(n_targets)]
 
     all_sat = [sat] + targets
 
