@@ -26,7 +26,17 @@ if TYPE_CHECKING:  # pragma: no cover
 logger = logging.getLogger(__name__)
 R_EARTH_M = 6371e3
 LEO_MAX_KM = 2000.0
-MEO_MAX_KM = 30000.0
+MEO_MAX_KM = 35000.0
+GEO_ALT_KM = 35786.0
+GEO_TOL_KM = 300.0
+
+LEO_MIN_KM = 400.0
+
+# Smart-decision thresholds
+SUNLIT_TAU = 0.5          # shadowFactor >= this => "illuminated"
+UMBRA_TAU  = 0.5          # shadowFactor < this  => "in umbra"
+SUN_ALIGN_DOT_TAU = 0.0   # dot(los_H, sun_H) >= this => "sunward"
+
 
 
 class DiscreteActionBuilder(ActionBuilder):
@@ -359,6 +369,22 @@ class ImageRSO(DiscreteAction):
         self.chosen_target_elevation_local = []
         self.imaging_times = []
 
+        # Sun / eclipse-alignment metrics (Hill frame)
+        self.sun_azimuth = []
+        self.sun_elevation_local = []
+        self.sun_target_dot = []
+        self.sun_target_sep_deg = []
+        self.sun_target_daz_deg = []
+        self.scanner_shadowFactor = []
+
+        # "Smart vs regular" counts (only when scanner is in umbra)
+        self.umbra_imaging_decisions = 0
+        self.umbra_smart_decisions = 0
+        self.umbra_regular_decisions = 0
+        self.umbra_smart_reason_counts = {"illum_target": 0, "high_regime": 0, "sunward_leo": 0}
+
+
+
     def image_rso(
         self, target: Union[int, "RSOTarget", str], prev_action_key: Optional[str] = None
     ) -> str:
@@ -399,6 +425,65 @@ class ImageRSO(DiscreteAction):
         elevation_rad = np.arcsin(cos_angle)
         return np.degrees(elevation_rad)
 
+
+    def sun_hat_chief(self) -> np.ndarray:
+        """Unit sun direction vector expressed in the H frame (same convention as los_H)."""
+        r_SN_N = (
+            self.satellite.simulator.world.gravFactory.spiceObject.planetStateOutMsgs[
+                self.satellite.simulator.world.sun_index
+            ]
+            .read()
+            .PositionVector
+        )
+        sat_pos = np.asarray(self.satellite.dynamics.r_BN_N, dtype=float)
+        r_SN_N = np.asarray(r_SN_N, dtype=float)
+
+        # Inertial unit vector from spacecraft to sun
+        r_SB_N = r_SN_N - sat_pos
+        sun_N_hat = r_SB_N / np.linalg.norm(r_SB_N)
+
+        # Use the same Hill triad you use for target LOS projection
+        sat_vel = np.asarray(self.satellite.dynamics.v_BN_N, dtype=float)
+        r_hat = sat_pos / np.linalg.norm(sat_pos)
+        v_hat = sat_vel / np.linalg.norm(sat_vel)
+
+        x_hat = r_hat
+        z_hat = np.cross(r_hat, v_hat)
+        z_hat /= np.linalg.norm(z_hat)
+        y_hat = np.cross(z_hat, x_hat)
+
+        sun_H = np.array([np.dot(sun_N_hat, x_hat), np.dot(sun_N_hat, y_hat), np.dot(sun_N_hat, z_hat)], dtype=float)
+        sun_H /= np.linalg.norm(sun_H)
+        return sun_H
+
+
+    @staticmethod
+    def az_el_from_H(u_H: np.ndarray) -> tuple[float, float]:
+        """Return (az_deg, el_deg) from a unit vector in H frame."""
+        u_H = np.asarray(u_H, dtype=float)
+        u_H = u_H / np.linalg.norm(u_H)
+        x, y, z = u_H
+        el = float(np.degrees(np.arcsin(np.clip(x, -1.0, 1.0))))
+        az = float(np.degrees(np.arctan2(z, y)) % 360.0)
+        return az, el
+
+    @staticmethod
+    def wrap_deg180(a: float) -> float:
+        """Wrap degrees to [-180, 180)."""
+        return (a + 180.0) % 360.0 - 180.0
+
+
+    @staticmethod
+    def classify_regime_from_alt_km(alt_km: float) -> str:
+        """Classify using your altitude-band definitions."""
+        if (LEO_MIN_KM <= alt_km < LEO_MAX_KM):
+            return "LEO"
+        if (LEO_MAX_KM <= alt_km < MEO_MAX_KM):
+            return "MEO"
+        # GEO ring OR anything above MEO ceiling treated as GEO-like
+        if abs(alt_km - GEO_ALT_KM) <= GEO_TOL_KM or alt_km >= MEO_MAX_KM:
+            return "GEO"
+        return "UNKNOWN"
 
     def set_action(self, action: int, prev_action_key: Optional[str] = None) -> str:
         """
@@ -498,6 +583,7 @@ class ImageRSO(DiscreteAction):
 
         # Append elevation angle
         self.chosen_target_elevation_angle.append(_target_elevation_angle(self.satellite, opp))
+        print("_target_elevation_angle(self.satellite, opp): ",_target_elevation_angle(self.satellite, opp))
 
         # Append illumination (eclipse shadow factor)
         try:
@@ -551,31 +637,118 @@ class ImageRSO(DiscreteAction):
         self.chosen_target_alt_km.append(alt_km)
         self.chosen_target_orbit_regime.append(regime)
 
-        los_vector = target_pos - sat_pos
-        los_unit = los_vector / np.linalg.norm(los_vector)
-
-        # Build local frame (Hill frame)
         r_hat = sat_pos / np.linalg.norm(sat_pos)
         v_hat = sat_vel / np.linalg.norm(sat_vel)
-        z_hat = -r_hat  # Local "down"
-        y_hat = np.cross(r_hat, v_hat)
-        y_hat /= np.linalg.norm(y_hat)
-        x_hat = np.cross(y_hat, z_hat)  # Ensures orthogonality
 
-        # Transform LOS into local frame
-        los_local = np.array([
-            np.dot(los_unit, x_hat),
-            np.dot(los_unit, y_hat),
-            np.dot(los_unit, z_hat)
+        x_hat = r_hat  # +zenith
+        z_hat = np.cross(r_hat, v_hat)
+        z_hat /= np.linalg.norm(z_hat)
+        y_hat = np.cross(z_hat, x_hat)
+
+        los = target_pos - sat_pos
+        los /= np.linalg.norm(los)
+
+        los_H = np.array([
+            np.dot(los, x_hat),
+            np.dot(los, y_hat),
+            np.dot(los, z_hat),
         ])
 
-        # Compute azimuth and elevation from LOS in local frame
-        x, y, z = los_local
-        azimuth = np.degrees(np.arctan2(y, x)) % 360  # 0 = forward (along-track), 90 = right
-        elevation = np.degrees(np.arcsin(z))          # 0 = horizontal, +90 = zenith, -90 = nadir
+        x, y, z = los_H
+
+        elevation = np.degrees(np.arcsin(x))        # zenith-based elevation
+        azimuth = np.degrees(np.arctan2(z, y)) % 360
+
+
+        print(f"azimuth and elevation: {azimuth}, {elevation}")
         self.chosen_target_azimuth.append(azimuth)
         self.chosen_target_elevation_local.append(elevation)
+
         self.imaging_times.append(self.satellite.simulator.sim_time)
+
+        # -----------------------------
+        # Sun alignment + "smart decision" counting (only when scanner is in umbra)
+        # -----------------------------
+
+        # Scanner shadowFactor
+        try:
+            sc_idx = getattr(self.satellite.dynamics, "eclipse_index", None)
+            sc_sf = float(self.satellite.dynamics.world.eclipseObject.eclipseOutMsgs[sc_idx].read().shadowFactor) if sc_idx is not None else float("nan")
+        except Exception:
+            sc_sf = float("nan")
+
+        # Target shadowFactor at decision time
+        try:
+            tgt_sf = float(self.satellite.dynamics.world.eclipseObject.eclipseOutMsgs[
+                new_target.target_spacecraft.dynamics.eclipse_index
+            ].read().shadowFactor)
+        except Exception:
+            tgt_sf = float("nan")
+
+        # Sun direction in H frame + az/el
+        sun_H = self.sun_hat_chief()
+        sun_az, sun_el = self.az_el_from_H(sun_H)
+
+        # LOS already projected into H as los_H; normalize for safety
+        los_H_u = los_H / np.linalg.norm(los_H)
+        sun_H_u = sun_H / np.linalg.norm(sun_H)
+
+        dot_sun = float(np.clip(np.dot(los_H_u, sun_H_u), -1.0, 1.0))
+        sep_deg = float(np.degrees(np.arccos(dot_sun)))
+        daz = self.wrap_deg180(sun_az - azimuth)
+
+        # Store per-imaging-event sun metrics
+        self.sun_azimuth.append(sun_az)
+        self.sun_elevation_local.append(sun_el)
+        self.sun_target_dot.append(dot_sun)
+        self.sun_target_sep_deg.append(sep_deg)
+        self.sun_target_daz_deg.append(daz)
+        self.scanner_shadowFactor.append(sc_sf)
+
+        # Regime classification (your altitude-band definition)
+        regime = self.classify_regime_from_alt_km(alt_km)
+
+        # SMART criteria during scanner umbra:
+        #   (1) target illuminated, OR (2) target is MEO/GEO, OR (3) LEO but sunward
+        if np.isfinite(sc_sf) and sc_sf < UMBRA_TAU:
+            self.umbra_imaging_decisions += 1
+
+            illum_target = np.isfinite(tgt_sf) and (tgt_sf >= SUNLIT_TAU)
+            high_regime = (regime in {"MEO", "GEO"})
+            sunward_leo = (regime == "LEO") and (dot_sun >= SUN_ALIGN_DOT_TAU)
+
+            smart = bool(illum_target or high_regime or sunward_leo)
+            print(
+                    f"[UMBRA] smart={smart} "
+                    f"scanner_sf={sc_sf:.3f} target_sf={tgt_sf:.3f} regime={regime} "
+                    f"sun_az/el=({sun_az:.1f},{sun_el:.1f}) tgt_az/el=({azimuth:.1f},{elevation:.1f}) "
+                    f"dot={dot_sun:.3f} sep_deg={sep_deg:.1f} dAz={daz:.1f}"
+                )
+
+            if illum_target:
+                self.umbra_smart_reason_counts["illum_target"] += 1
+            if high_regime:
+                self.umbra_smart_reason_counts["high_regime"] += 1
+            if sunward_leo:
+                self.umbra_smart_reason_counts["sunward_leo"] += 1
+
+            if smart:
+                self.umbra_smart_decisions += 1
+            else:
+                self.umbra_regular_decisions += 1
+
+            if self.satellite.dynamics.print_info:
+                print(
+                    f"[UMBRA] smart={smart} "
+                    f"scanner_sf={sc_sf:.3f} target_sf={tgt_sf:.3f} regime={regime} "
+                    f"sun_az/el=({sun_az:.1f},{sun_el:.1f}) tgt_az/el=({azimuth:.1f},{elevation:.1f}) "
+                    f"dot={dot_sun:.3f} sep_deg={sep_deg:.1f} dAz={daz:.1f}"
+                )
+
+
+        # sun_direction  = sun_hat_chief(self) #what is the azimuth of the sun direction  and how aligned is it with the choices made when in and around eclipse... I want to measure that if it is choosing a target when the scanning sc is around eclipse it should either be looking towards the sunny side of the eclipse or look at much higher up targets and others RSOs who have a shadowfactor of 1 either when choosing them or when aquiring their image.help me print these metrcis here or generate the metrics for the main script somehow.
+
+
 
 
         print_status = self.satellite.dynamics.print_info
