@@ -570,12 +570,14 @@ if __name__ == "__main__":
     all_sat = [sat] + targets
 
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
-    model_name = f"aug20_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i.out_{N}"
+    model_name = f"jan23_MIXED_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i.out_{N}"
     n_envs = (
         get_available_cores() - 4  # leave some extra cores for other processes
     )
+    batch_multiplier = 700
+    print('n_envs', n_envs, 'therefore batch size is ', batch_multiplier*n_envs)
     output_dir = (
-        Path("~/rllib_results/july_results/july30rllib_results").expanduser() / f"aug20_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+        Path("~/rllib_results/july_results/jan23_rllib_results").expanduser() / f"jan23_MIXED_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
     )
     output_dir = Path(output_dir)
 
@@ -587,7 +589,7 @@ if __name__ == "__main__":
         training_args=dict(
             lr=[1e-5],
             gamma=[0.9997],
-            train_batch_size=[int(600 * n_envs)],  #n_envs on the Mac is 6 eventually   minimum train_batch_size = mini_batch = 128
+            train_batch_size=[int(batch_multiplier * n_envs)],  #n_envs on the Mac is 6 eventually   minimum train_batch_size = mini_batch = 128
             num_sgd_iter=[10],
             lambda_=[0.95],
             use_kl_loss=[False],
