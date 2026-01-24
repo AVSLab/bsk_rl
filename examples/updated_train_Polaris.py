@@ -377,7 +377,7 @@ if __name__ == "__main__":
         n_targets_ahead=10,
         imaging_duration=300.0,
         extra_time_factor=1.5,
-        obs_v=7.0,        # <-- whatever obs_v your training run uses
+        obs_v=7.0,
         just_imaging=False,
     )
 
@@ -435,7 +435,8 @@ if __name__ == "__main__":
 
     sat_args = {}
     # Set some parameters as constants
-    sat_args["imageAttErrorRequirement"] = 0.01
+    sat_args["imageAttErrorRequirement"] = 0.0025
+    sat_args["imageRateErrorRequirement"] = 0.01
 
     # Storage
     sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 #*1000000 # bits
