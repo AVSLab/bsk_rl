@@ -193,7 +193,7 @@ just_imaging = sim_cfg.just_imaging
 # imaging_duration = 300
 # total_time = n_targets * imaging_duration * 1.5   # 5700.0  # approximately 1 orbit
 
-seed_number = 20  # 17 / 10 / 184 ...
+seed_number = 11  # 17 / 10 / 184 ...
 policy_mode = 'latest'
 eclipse_norm = 5700
 save_data = True   # set to False to avoid saving data
@@ -226,6 +226,22 @@ GS_NORMALIZED = True    # set True if GS values are normalized offsets; False if
 
 # POLICIES
 # September/October Policies
+oct14_obsv7_1e_5lr_batch10000_gamma9997_0d100i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch10k_gamma9997_00d100i_reducedFailurePenalty_1761262315.4656546/oct14_restrictedResources_obsv7_1e-5lr_batch10k_gamma9997_00d100i_reducedFailurePenalty.out_0"
+# October 14 – batch5000, gamma9997, reducedFailurePenalty
+oct14_obsv7_1e_5lr_batch5000_gamma9997_0d100i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_0d100i_reducedFailurePenalty_1761159994.1781282/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_0d100i_reducedFailurePenalty.out_0"
+oct14_obsv7_1e_5lr_batch5000_gamma9997_10d90i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i_reducedFailurePenalty_1761114479.911475/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i_reducedFailurePenalty.out_0"
+oct14_obsv7_1e_5lr_batch5000_gamma9997_20d80i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_20d80i_1761099406.663396/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_20d80i.out_0"
+oct14_obsv7_1e_5lr_batch5000_gamma9997_30d70i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_30d70i_1761079141.0804758/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_30d70i.out_0"
+oct14_obsv7_1e_5lr_batch5000_gamma9997_40d60i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_40d60i_1761079131.258607/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_40d60i.out_0"
+oct14_obsv7_1e_5lr_batch5000_gamma9997_50d50i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_50d50i_reducedFailurePenalty_1761078528.689754/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_50d50i_reducedFailurePenalty.out_0"
+oct14_obsv7_1e_5lr_batch5000_gamma9997_60d40i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_60d40i_reducedFailurePenalty_lowBatPenalty_1761078528.6867332/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_60d40i_reducedFailurePenalty_lowBatPenalty.out_0"
+oct14_obsv7_1e_5lr_batch5000_gamma9997_70d30i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_70d30i_1761251961.5538032/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_70d30i.out_0"
+oct14_obsv7_1e_5lr_batch5000_gamma9997_80d20i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_80d20i_1761251244.9588354/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_80d20i.out_0"
+oct14_obsv7_1e_5lr_batch5000_gamma9997_90d10i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_90d10i_reducedFailurePenalty_1761248998.453683/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_90d10i_reducedFailurePenalty.out_0"
+oct14_obsv7_1e_5lr_batch5000_gamma9997_100d00i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_100d00i_reducedFailurePenalty_1761227644.112857/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_100d00i_reducedFailurePenalty.out_0"
+
+oct14_obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i_reducedFailurePenalty_lowBatPenalty_1761114479.911475/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i_reducedFailurePenalty_lowBatPenalty.out_0"
+
 obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i_reducedFailurePenalty_lowBatPenalty_1761114479.911475/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i_reducedFailurePenalty_lowBatPenalty.out_0"
 
 # downlink_reward_policy = "/Users/dahu1128/rllib_results/june12rllib_results/lowBaudRate_5e-6lr_downlink_reward_penalties_smallest_storage_Polaris_simulation_1749771784.4956822/lowBaudRate_5e-6lr_downlink_reward_penalties_smallest_storage_0/"
@@ -359,11 +375,27 @@ imaging_unlimitedResources_baseline = "/Users/dahu1128/rllib_results/reward_comp
 #June 6th
 imaging_rewarded_noeclipse_1e_6lr_failure_penalties = "/Users/dahu1128/rllib_results/june_results/june6rllib_results/1e-6lr_failure_penalties_no_torque_small_battery_small_data_Polaris_sim_1749226596.4501252/model_0"
 
-policy_path = obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i #balance00d100i_obs2_gamma9995_1e6lr
+# policy_path = obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i #DEPRECATED... now the globals() line is used below...    #balance00d100i_obs2_gamma9995_1e6lr
+# Choose which policy to evaluate by NAME
+policy_name = "oct14_obsv7_1e_5lr_batch10000_gamma9997_0d100i"  # <--- EDIT THIS when you switch policies
+policy_path = globals()[policy_name]
 
 # Define all known policy paths with associated obs values
 policy_obs_map = {
-    "obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i": 7,
+    "oct14_obsv7_1e_5lr_batch10000_gamma9997_0d100i": 7,
+    "oct14_obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i": 7,
+    "oct14_obsv7_1e_5lr_batch5000_gamma9997_100d00i": 7,
+    "oct14_obsv7_1e_5lr_batch5000_gamma9997_90d10i": 7,
+    "oct14_obsv7_1e_5lr_batch5000_gamma9997_80d20i": 7,
+    "oct14_obsv7_1e_5lr_batch5000_gamma9997_70d30i": 7,
+    "oct14_obsv7_1e_5lr_batch5000_gamma9997_60d40i": 7,
+    "oct14_obsv7_1e_5lr_batch5000_gamma9997_50d50i": 7,
+    "oct14_obsv7_1e_5lr_batch5000_gamma9997_40d60i": 7,
+    "oct14_obsv7_1e_5lr_batch5000_gamma9997_30d70i": 7,
+    "oct14_obsv7_1e_5lr_batch5000_gamma9997_20d80i": 7,
+    "oct14_obsv7_1e_5lr_batch5000_gamma9997_10d90i": 7,
+    "oct14_obsv7_1e_5lr_batch5000_gamma9997_0d100i": 7,
+
     "obsv7_1e_5lr_batch5000_gamma9997_90d10i": 7,
     "obsv7_1e_5lr_batch5000_gamma9997_80d20i": 7,
     "obsv7_1e_5lr_batch5000_gamma9997_70d30i": 7,
@@ -450,11 +482,6 @@ for name, val in list(globals().items()):
         policy_name = name
         obs_v = policy_obs_map[name]
         break
-
-
-# Choose which policy to evaluate by NAME
-policy_name = "obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i"  # <--- EDIT THIS when you switch policies
-policy_path = globals()[policy_name]
 
 alpha = alpha_from_tag(policy_name, default=0.0)
 print_alpha(policy_name,policy_path)
@@ -1020,7 +1047,7 @@ for target_id in range(n_targets*6 *100 ):
             charging_times.append(env.simulator.sim_time)
 
     action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
-    print('current action_dict to be executed', action_dict['SS1'], "eclipse status of SS1:",env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
+    print('current action_dict to be executed', action_dict['SS1'], "; eclipse status of SS1:",env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
     eclipse_status.append(env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
 
     sat0 = env.satellites[0]
