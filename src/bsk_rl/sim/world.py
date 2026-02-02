@@ -44,9 +44,15 @@ from bsk_rl.utils.orbital import random_epoch
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sim import Simulator
 
-logger = logging.getLogger(__name__)
+try:
+    from Basilisk.utilities.supportDataTools.dataFetcher import DataFile, get_path
 
-bsk_path = __path__[0]
+    _DATA_FETCHER_API = True
+except ImportError:
+    bskPath = __path__[0]
+    _DATA_FETCHER_API = False
+
+logger = logging.getLogger(__name__)
 
 
 class WorldModelABC(ABC, Resetable):
@@ -169,14 +175,19 @@ class WorldModel(WorldModelABC):
         self.planet.isCentralBody = (
             True  # ensure this is the central gravitational body
         )
-        self.planet.useSphericalHarmonicsGravityModel(
-            bsk_path + "/supportData/LocalGravData/GGM03S.txt", 10
-        )
+        if _DATA_FETCHER_API:
+            path_grav_data = str(get_path(DataFile.LocalGravData.GGM03S))
+            path_ephem_data = str(get_path(DataFile.EphemerisData.de430).parent)
+        else:
+            path_grav_data = bsk_path + "/supportData/LocalGravData/GGM03S.txt"
+            path_ephem_data = bsk_path + "/supportData/EphemerisData/"
+
+        self.planet.useSphericalHarmonicsGravityModel(path_grav_data, 10)
 
         # setup Spice interface for some solar system bodies
         timeInitString = utc_init
         self.gravFactory.createSpiceInterface(
-            bsk_path + "/supportData/EphemerisData/", timeInitString, epochInMsg=True
+            path_ephem_data, timeInitString, epochInMsg=True
         )
         self.gravFactory.spiceObject.zeroBase = "earth"
 

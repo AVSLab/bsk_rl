@@ -15,7 +15,13 @@ from Basilisk.utilities import (
 from Basilisk.utilities.orbitalMotion import ClassicElements, elem2rv, rv2elem
 from scipy.interpolate import interp1d
 
-bskPath = __path__[0]
+try:
+    from Basilisk.utilities.supportDataTools.dataFetcher import DataFile, get_path
+
+    _DATA_FETCHER_API = True
+except ImportError:
+    bskPath = __path__[0]
+    _DATA_FETCHER_API = False
 
 logger = logging.getLogger(__name__)
 
@@ -412,13 +418,15 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         planet = self.gravFactory.createEarth()
         self.gravFactory.createSun()
         planet.isCentralBody = True
-        planet.useSphericalHarmonicsGravityModel(
-            bskPath + "/supportData/LocalGravData/GGM03S.txt", 10
-        )
+        if _DATA_FETCHER_API:
+            path_grav_data = str(get_path(DataFile.LocalGravData.GGM03S))
+            path_ephem_data = str(get_path(DataFile.EphemerisData.de430).parent)
+        else:
+            path_grav_data = bskPath + "/supportData/LocalGravData/GGM03S.txt"
+            path_ephem_data = bskPath + "/supportData/EphemerisData/"
+        planet.useSphericalHarmonicsGravityModel(path_grav_data, 10)
         UTCInit = self.utc_init
-        self.gravFactory.createSpiceInterface(
-            bskPath + "/supportData/EphemerisData/", UTCInit
-        )
+        self.gravFactory.createSpiceInterface(path_ephem_data, UTCInit)
         self.gravFactory.spiceObject.zeroBase = "earth"
         self.AddModelToTask(simTaskName, self.gravFactory.spiceObject)
         scObject.gravField.gravBodies = spacecraft.GravBodyVector(
