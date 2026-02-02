@@ -25,6 +25,7 @@ Development - |version|
   :class:`~bsk_rl.sim.dyn.DynModelABC`, instead of from :class:`~bsk_rl.sim.fsw.BasicFSWModel` 
   or :class:`~bsk_rl.sim.dyn.BasicDynModel`. These are lighter-weight base classes that lack
   some functionality that was not always wanted.
+* Update support data import paths to allow compatibility with Basilisk's new dataFetcher API.
 
   .. warning::
 
