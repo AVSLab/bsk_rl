@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bsk_rl"
-version = "1.2.15"
+version = "1.2.16"
 authors = [
     { name = "Mark Stephenson", email = "mark.a.stephenson@colorado.edu" },
     { name = "Adam Herrmann", email = "adam.herrmann@colorado.edu" },
