@@ -7,6 +7,9 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 import numpy as np
 from gymnasium import spaces
 
+from Basilisk.utilities import macros
+from bsk_rl.utils.functional import valid_func_name
+
 from bsk_rl.act.actions import Action, ActionBuilder
 
 from bsk_rl.obs.observations import (
@@ -354,6 +357,7 @@ class ImageRSO(DiscreteAction):
         if duration is None:
             duration = 6000 #1e9
         self.duration = duration
+        self._image_event_name = None
         self.ever_visible=[]
         self.initial_angular_error = []
         self.chosen_target_distance = []
@@ -399,6 +403,50 @@ class ImageRSO(DiscreteAction):
         self.satellite.fsw.action_image_rso_target(target)  #  TODO: here the data_name of the buffer should also be passsed  add ,target.target_spacecraft.name
 
         return target.id
+
+    def _disable_image_success_event(self) -> None:
+        """Disable prior image-success event if present."""
+        if (
+            self._image_event_name is not None
+            and self._image_event_name in self.simulator.eventMap
+        ):
+            self.simulator.delete_event(self._image_event_name)
+        self._image_event_name = None
+
+    def _enable_image_success_event(self, target) -> None:
+        """Terminate current action as soon as selected target data buffer increases."""
+        self._disable_image_success_event()
+
+        msg = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg.read()
+        data_names = np.array(list(msg.storedDataName))
+        data_name = target.target_spacecraft.name
+        match_idx = np.where(data_names == data_name)[0]
+        if len(match_idx) == 0:
+            raise ValueError(
+                f"Could not find storage buffer partition '{data_name}' for target {target}."
+            )
+
+        data_index = int(match_idx[0])
+        current_data_level = msg.storedData[data_index]
+
+        self._image_event_name = valid_func_name(
+            f"image_rso_{self.satellite.name}_{target.id}"
+        )
+        self.simulator.createNewEvent(
+            self._image_event_name,
+            macros.sec2nano(self.satellite.fsw.fsw_rate),
+            True,
+            [
+                f"self.dynamics_list['{self.satellite.name}'].storageUnit.storageUnitDataOutMsg.read()"
+                + f".storedData[{data_index}] > {current_data_level}"
+            ],
+            [
+                self.satellite._info_command(f"imaged {target}"),
+                self.satellite._satellite_command + ".requires_retasking = True",
+            ],
+            terminal=self.satellite.variable_interval,
+        )
+
 
 
     @staticmethod
@@ -886,14 +934,51 @@ class ImageRSO(DiscreteAction):
                 print(f"heuristic ({mode}) chose target: {heuristic_target.name}")
                 self.satellite.dynamics.target_selection_comparison.append(False)
 
+        # action_satid = new_target.id
+        # self.satellite.logger.info(f"target index {action_satid} tasked: {new_target.name}")
+        # self.satellite.update_timed_terminal_event(
+        #     self.simulator.sim_time + self.duration, info=""
+        # )
+        # prev_action_key = action_satid
+        #
+        # return self.image_rso(new_target, prev_action_key)
+
         action_satid = new_target.id
         self.satellite.logger.info(f"target index {action_satid} tasked: {new_target.name}")
-        self.satellite.update_timed_terminal_event(
-            self.simulator.sim_time + self.duration, info=""
-        )
-        prev_action_key = action_satid
 
-        return self.image_rso(new_target, prev_action_key)
+        # Remove stale success event from previous imaging task (if any)
+        self._disable_image_success_event()
+
+        # Task FSW for RSO imaging
+        action_key = self.image_rso(new_target, action_satid)
+
+        # Early finish condition: end action as soon as selected target buffer increases
+        self._enable_image_success_event(new_target)
+
+        # Fallback finish condition: whichever is earlier
+        # (A) 300s action duration, or (B) target LOS window close
+        timeout_time = self.simulator.sim_time + self.duration
+        timeout_info = f"for image_rso timeout ({self.duration:.1f}s)"
+
+        try:
+            target_type = getattr(self.satellite, "target_types", "target")
+            next_windows = self.satellite.next_opportunities_dict(
+                types=target_type,
+                filter=self.satellite.default_access_filter,
+            )
+            if new_target in next_windows:
+                window_close = next_windows[new_target][1]
+                if window_close < timeout_time:
+                    timeout_time = window_close
+                    timeout_info = f"for {new_target} window"
+        except Exception:
+            # Keep duration timeout fallback if windows are unavailable
+            pass
+
+        self.satellite.update_timed_terminal_event(timeout_time, info=timeout_info)
+
+        return action_key
+
 
 
 __doc_title__ = "Discrete Backend"
