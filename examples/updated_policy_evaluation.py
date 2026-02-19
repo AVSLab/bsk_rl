@@ -193,8 +193,8 @@ just_imaging = sim_cfg.just_imaging
 # imaging_duration = 300
 # total_time = n_targets * imaging_duration * 1.5   # 5700.0  # approximately 1 orbit
 
-seed_number = 11  # 17 / 10 / 184 ...
-policy_mode = 'latest'
+seed_number = 21  # 17 / 10 / 184 ...
+policy_mode = 'best'
 eclipse_norm = 5700
 save_data = True   # set to False to avoid saving data
 safe_vizard = False
@@ -906,7 +906,7 @@ target_args_mixed = dict(oe=partial(custom_oe_randomizer, regime="mixed", mix_we
 # sat = MyScanningSatellite(name="SS1", sat_args=sat_args, obs_type=dict) # SO1 for satellite observer 1
 sat = MyScanningSatellite(name="SS1", sat_args=sat_args) # SO1 for satellite observer 1
 
-targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args_mixed) for i in range(n_targets)] # TODO: this creates the same IC of oe for all targets
+targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)] # TODO: this creates the same IC of oe for all targets
 
 all_sat = [sat] + targets   #oe = lambda: random_orbit(alt=np.random.uniform(1000,2000)))
 if safe_vizard == True:
@@ -1620,7 +1620,8 @@ else:
         save_plot_unique(fig, f"seed{seed_number}_HEURISTIC_action_distribution_combined")
     else:
         save_plot_unique(fig, f"seed{seed_number}_{policy_mode}_{policy_name}_action_distribution_combined")
-plt.show()
+# plt.close() #plt.show()
+
 
 # --- Compute eclipse & penumbra spans from shadowFactor ---
 # shadowFactor: 1 = lit, 0 < sf < 1 = penumbra, 0 = umbra
@@ -1794,7 +1795,7 @@ else:
         save_plot_unique(fig3, f"seed{seed_number}_HEURISTIC_battery_storage_reward_over_time")
     else:
         save_plot_unique(fig3, f"seed{seed_number}_{policy_mode}_{policy_name}_battery_storage_reward_over_time")
-plt.show()
+#plt.show
 
 # Plot 3 Azimuth and Elevation angle (deg) vs time
 # (minutes on x-axis; same merged shading converted to minutes)
@@ -1868,6 +1869,7 @@ else:
     else:
         save_plot_unique(fig4, f"seed{seed_number}_{policy_mode}_{policy_name}_azimuth_and_elevation_pointing_over_time")
 
+# plt.close() #
 plt.show()
 
 
