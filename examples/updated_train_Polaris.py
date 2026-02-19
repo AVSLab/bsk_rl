@@ -10,8 +10,8 @@ import torch
 from dataclasses import asdict
 from sim_config import SimConfig
 
-torch.set_num_threads(3)
-os.environ["MKL_NUM_THREADS"] = "3" # 11 on the cluster
+torch.set_num_threads(11)
+os.environ["MKL_NUM_THREADS"] = "11" # 11 on the cluster
 
 import ray
 from bsk_rl.utils.utils import get_available_cores

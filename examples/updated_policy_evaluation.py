@@ -49,7 +49,7 @@ from Basilisk.utilities import (
     orbitalMotion,
 )
 
-from examples.load_policy import load_policy
+from load_policy import load_policy
 from ray.rllib.utils.spaces.space_utils import flatten_to_single_ndarray
 
 from Basilisk.architecture import bskLogging
@@ -225,6 +225,10 @@ print(f"\n=== Run outputs will be saved to: {run_dir} ===\n")
 GS_NORMALIZED = True    # set True if GS values are normalized offsets; False if absolute times
 
 # POLICIES
+# 2026 JANUARY
+jan24_MIXED_4200batch_obsv7_1e_5lr_gamma9997_0d100i = "/Users/dahu1128/rllib_results/jan_results/jan24_MIXED_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i_1769338253.32188/jan24_MIXED_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i.out_0"
+
+
 # September/October Policies
 oct14_obsv7_1e_5lr_batch10000_gamma9997_0d100i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch10k_gamma9997_00d100i_reducedFailurePenalty_1761262315.4656546/oct14_restrictedResources_obsv7_1e-5lr_batch10k_gamma9997_00d100i_reducedFailurePenalty.out_0"
 # October 14 – batch5000, gamma9997, reducedFailurePenalty
@@ -377,11 +381,12 @@ imaging_rewarded_noeclipse_1e_6lr_failure_penalties = "/Users/dahu1128/rllib_res
 
 # policy_path = obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i #DEPRECATED... now the globals() line is used below...    #balance00d100i_obs2_gamma9995_1e6lr
 # Choose which policy to evaluate by NAME
-policy_name = "oct14_obsv7_1e_5lr_batch10000_gamma9997_0d100i"  # <--- EDIT THIS when you switch policies
+policy_name = "oct14_obsv7_1e_5lr_batch5000_gamma9997_20d80i"  # <--- EDIT THIS when you switch policies
 policy_path = globals()[policy_name]
 
 # Define all known policy paths with associated obs values
 policy_obs_map = {
+    "jan24_MIXED_4200batch_obsv7_1e_5lr_gamma9997_0d100i": 7,
     "oct14_obsv7_1e_5lr_batch10000_gamma9997_0d100i": 7,
     "oct14_obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i": 7,
     "oct14_obsv7_1e_5lr_batch5000_gamma9997_100d00i": 7,
