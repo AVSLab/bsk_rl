@@ -457,7 +457,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         self.AddModelToTask(simTaskName, self.planet_state_log)
         self._J20002Pfix_log = []
         self.AddModelToTask(simTaskName, self.eclipse_log)
-        self._shadowFactor_log = []
+        self._illuminationFactor_log = []
 
         self.InitializeSimulation()
 
@@ -484,7 +484,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         self._time_log.extend(self.sc_state_log.times())
         self._r_BN_N_log.extend(self.sc_state_log.r_BN_N)
         self._J20002Pfix_log.extend(self.planet_state_log.J20002Pfix)
-        self._shadowFactor_log.extend(self.eclipse_log.shadowFactor)
+        self._illuminationFactor_log.extend(self.eclipse_log.illuminationFactor)
         self.sc_state_log.clear()
         self.planet_state_log.clear()
         self.eclipse_log.clear()
@@ -493,7 +493,10 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
         self.extend_to(t + self.dt)
         upcoming_times = self.times[self.times > self._eclipse_search_time]
         upcoming_eclipse = (
-            np.array(self._shadowFactor_log)[self.times > self._eclipse_search_time] > 0
+            np.array(self._illuminationFactor_log)[
+                self.times > self._eclipse_search_time
+            ]
+            > 0
         ).astype(float)
         for i in np.where(np.diff(upcoming_eclipse) == -1)[0]:
             self._eclipse_starts.append(upcoming_times[i])

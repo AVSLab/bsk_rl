@@ -6,7 +6,7 @@ etc.). Implemented geometries include:
 
 * :class:`SphericalRSO`: Points are generated on a sphere using the Fibonacci sphere method.
 
-This module does not consider self-shadowing effects or inspector to RSO shadowing effects.
+This module does not consider self-occlusion effects or inspector-to-RSO occlusion effects.
 """
 
 import logging
@@ -37,7 +37,7 @@ class RSOPoint:
     theta_max: float
     range_max: float
     theta_solar_max: float
-    min_shadow_factor: float
+    min_illumination_factor: float
 
     def __hash__(self) -> int:
         """Hash target by unique id."""
@@ -52,7 +52,7 @@ class RSOPoint:
                 self.theta_max,
                 self.range_max,
                 self.theta_solar_max,
-                self.min_shadow_factor,
+                self.min_illumination_factor,
             )
         )
 
@@ -105,7 +105,7 @@ class RSOPoints(Scenario):
                 point.theta_max,
                 point.range_max,
                 point.theta_solar_max,
-                point.min_shadow_factor,
+                point.min_illumination_factor,
             )
             # Add point to each inspector
             for inspector in self.inspectors:
@@ -167,7 +167,7 @@ class SphericalRSO(RSOPoints):
         theta_max: float = np.radians(45),
         range_max: float = -1,
         theta_solar_max: float = np.radians(60),
-        min_shadow_factor: float = 0.1,
+        min_illumination_factor: float = 0.1,
     ):
         """Generate points on a sphere using the Fibonacci sphere method.
 
@@ -177,14 +177,14 @@ class SphericalRSO(RSOPoints):
             theta_max: [rad] Maximum angle from the normal for inspection.
             range_max: [m] Maximum range for inspection.
             theta_solar_max: [rad] Minimum solar incidence angle for illumination.
-            min_shadow_factor: Minimum shadow factor for imaging.
+            min_illumination_factor: Minimum illumination factor for imaging.
         """
         self.n_points = n_points
         self.radius = radius
         self.theta_max = theta_max
         self.range_max = range_max
         self.theta_solar_max = theta_solar_max
-        self.min_shadow_factor = min_shadow_factor
+        self.min_illumination_factor = min_illumination_factor
 
     def generate_points(self) -> list[RSOPoint]:
         """Generate a list of RSOPoint objects on a sphere."""
@@ -200,7 +200,7 @@ class SphericalRSO(RSOPoints):
                     self.theta_max,
                     self.range_max,
                     self.theta_solar_max,
-                    self.min_shadow_factor,
+                    self.min_illumination_factor,
                 )
             )
 
