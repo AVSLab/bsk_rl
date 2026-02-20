@@ -35,7 +35,7 @@ class RSODynModel(EclipseDynModel, DynamicsModel):
         theta: float,
         range: float,
         theta_solar: float,
-        min_shadow_factor: float,
+        min_illumination_factor: float,
     ):
         """Add a point on the RSO for observation.
 
@@ -45,7 +45,7 @@ class RSODynModel(EclipseDynModel, DynamicsModel):
             theta: [rad] Max angle from instrument to normal.
             range: [m] Max range to point for imaging.
             theta_solar: [rad] Maximum solar incidence angle for illumination.
-            min_shadow_factor: [-] Minimum shadow factor for imaging.
+            min_illumination_factor: [-] Minimum illumination factor for imaging.
         """
         rso_point_model = spacecraftLocation.SpacecraftLocation()
         rso_point_model.primaryScStateInMsg.subscribeTo(self.scObject.scStateOutMsg)
@@ -67,7 +67,7 @@ class RSODynModel(EclipseDynModel, DynamicsModel):
         rso_point_model.aHat_B = aHat_B
         rso_point_model.theta = theta
         rso_point_model.theta_solar = theta_solar
-        rso_point_model.min_shadow_factor = min_shadow_factor
+        rso_point_model.min_illumination_factor = min_illumination_factor
         rso_point_model.maximumRange = range
         self.simulator.AddModelToTask(
             self.rso_task_name, rso_point_model, ModelPriority=1
