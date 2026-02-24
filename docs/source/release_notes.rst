@@ -26,6 +26,9 @@ Development - |version|
   or :class:`~bsk_rl.sim.dyn.BasicDynModel`. These are lighter-weight base classes that lack
   some functionality that was not always wanted.
 * Update support data import paths to allow compatibility with Basilisk's new dataFetcher API.
+* Standardize RSO inspection/eclipse naming from ``shadow`` to ``illumination``.
+  Custom code should update ``min_shadow_factor`` to ``min_illumination_factor`` and
+  ``shadowFactor`` to ``illuminationFactor`` where these names are referenced.
 
   .. warning::
 
