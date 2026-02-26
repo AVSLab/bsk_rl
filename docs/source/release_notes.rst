@@ -15,7 +15,7 @@ Development - |version|
 * Use Vizard 2.3.1 locations for visualization; results in significantly smaller output
   files.
 * Allow for a simpler Earth model to be used in Vizard by setting ``use_simple_earth=True``
-  in the Vizard settings dictionary. This is helpful for when visualizing may Earth-fixed
+  in the Vizard settings dictionary. This is helpful for when visualizing many Earth-fixed
   targets.
 * Allow flight software and dynamics models to be specified as lists of classes. This allows
   for multiple inheritance to be used for easily creating more complex satellite models.
@@ -131,14 +131,14 @@ Version 1.0.1
   all non-agent information in ``info['__common__']``, which is expected by RLlib's 
   multiagent interfaces.
 * Rewarder, communication, scenario, and satellites all have standardized ``reset_overwrite_previous``,
-  ``reset_pre_sim_init``, and ``reset_post_sim_init`` methods to all for more complex
+  ``reset_pre_sim_init``, and ``reset_post_sim_init`` methods to allow for more complex
   initialization dependencies.
 * Replace ``get_access_filter`` with :class:`~bsk_rl.sats.AccessSatellite.add_access_filter`,
   which uses boolean functions to determine which opportunity windows to consider.
 * Changed the initial data generation to be defined in :class:`~bsk_rl.data.GlobalReward` 
   instead of :class:`~bsk_rl.scene.Scenario`.
 * Added a new :ref:`examples` script that demonstrates how to include
-  a targets with cloud coverage and a rewarder that accounts for cloud cover.
+  targets with cloud coverage and a rewarder that accounts for cloud cover.
 * Reformat the info dictionary to be more consistent across environments. All satellites now
   have a ``requires_retasking`` key, as opposed to a global list of satellites that require retasking.
   Each satellite also gets ``d_ts`` in its info dictionary. Info and warning messages are no longer

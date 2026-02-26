@@ -56,7 +56,7 @@ Quickstart
 ----------
 Installation
 ^^^^^^^^^^^^
-BSK-RL is available on PyPi and can be installed with pip. Simply run 
+BSK-RL is available on PyPI and can be installed with pip. Simply run 
 
     .. code-block:: console
 

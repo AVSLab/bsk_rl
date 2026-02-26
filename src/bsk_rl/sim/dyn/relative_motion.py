@@ -82,7 +82,7 @@ class ConjunctionDynModel(DynamicsModelABC):
 
     @aliveness_checker
     def conjunction_valid(self) -> bool:
-        """Check if conjunction has not occured."""
+        """Check if conjunction has not occurred."""
         return len(self.conjunctions) == 0
 
     @default_args(conjunction_radius=10, conjunction_check_rate=None)
