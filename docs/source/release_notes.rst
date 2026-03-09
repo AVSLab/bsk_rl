@@ -30,6 +30,7 @@ Development - |version|
   Custom code should update ``min_shadow_factor`` to ``min_illumination_factor`` and
   ``shadowFactor`` to ``illuminationFactor`` where these names are referenced.
 * Fix target angle rate observation. ``r_BN_P`` is now correctly used instead of ``v_BN_P``.
+* Relax ``TestAttitudeSetpoint`` test tolerance to account for different initial conditions and avoid eventual failures.
 
   .. warning::
 
