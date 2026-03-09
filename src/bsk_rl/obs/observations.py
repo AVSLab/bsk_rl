@@ -319,7 +319,7 @@ def _target_angle(sat, opp):
 
 
 def _target_angle_rate(sat, opp):
-    r_BN_P = sat.dynamics.v_BN_P
+    r_BN_P = sat.dynamics.r_BN_P
     v_BN_P = sat.dynamics.v_BN_P
     r_LP_P = opp["object"].r_LP_P
     omega_BP_P = sat.dynamics.omega_BP_P
