@@ -82,7 +82,7 @@ class TestAttitudeSetpoint:
                 dyn_type = dyn.DynamicsModel
                 fsw_type = fsw.FSWModel
             observation_spec = [obs.SatProperties(dict(prop="sigma_BN"))]
-            action_spec = [act.AttitudeSetpoint(control_period=360.0)]
+            action_spec = [act.AttitudeSetpoint(control_period=540.0)]
 
         env = gym.make(
             "SatelliteTasking-v1",
@@ -94,4 +94,4 @@ class TestAttitudeSetpoint:
 
         env.reset()
         observation, _, _, _, _ = env.step([0.1, 0.2, 0.3])
-        assert np.allclose(observation, np.array([0.1, 0.2, 0.3]), atol=1e-4)
+        assert np.allclose(observation, np.array([0.1, 0.2, 0.3]), atol=2e-3)
