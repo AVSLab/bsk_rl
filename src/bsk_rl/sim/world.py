@@ -49,7 +49,7 @@ try:
 
     _DATA_FETCHER_API = True
 except ImportError:
-    bskPath = __path__[0]
+    bsk_path = __path__[0]
     _DATA_FETCHER_API = False
 
 logger = logging.getLogger(__name__)
