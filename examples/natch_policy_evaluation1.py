@@ -435,7 +435,7 @@ def make_env(obs_v, seed_number, total_time, n_targets=100, n_targets_ahead=10, 
         sat_args["storedCharge_Init"] = lambda: np.random.uniform(1.0, 1.0) * 500 * 3600 *1000000
 
 
-    target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )  # testing to see if sim is faster if the other agents are killed
+    target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )
 
 
     sat = MyScanningSatellite(name="SS1", sat_args=sat_args)
@@ -858,4 +858,3 @@ if __name__ == "__main__":
     start_all = time.time()
     main()
     print(f"Batch finished in {time.time() - start_all:.1f} s")
-

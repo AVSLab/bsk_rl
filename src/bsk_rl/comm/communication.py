@@ -122,8 +122,6 @@ class FreeCommunication(CommunicationMethod):
 class LOSCommunication(CommunicationMethod):
     """Implements communication between satellites with a direct line-of-sight."""
 
-    # TODO only communicate data from before latest LOS time
-
     def __init__(self, *args, **kwargs) -> None:
         """Implements communication between satellites with a direct line-of-sight.
 

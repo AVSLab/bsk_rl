@@ -183,7 +183,6 @@ class ComposedReward(GlobalReward):
 
     def create_data_store(self, satellite: Satellite) -> None:
         """Create a :class:`CompositeDataStore` for a satellite."""
-        # TODO support passing kwargs
         satellite.data_store = ComposedDataStore(
             satellite,
             *[r.datastore_type for r in self.rewarders],

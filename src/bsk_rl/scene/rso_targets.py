@@ -73,7 +73,6 @@ class RSOTarget:
         self.name = name
         self.priority = priority
         self.target_spacecraft = target_rso
-        # self.eclipse_status = self.target_spacecraft.eclispe_index # TODO: fix this DHP
 
 
 
@@ -136,7 +135,7 @@ class RandomSatellites(Scenario):
         super().link_satellites(satellites)
         ChiefSatellite = self.satellites[0].name
         self.ScanningSat = [satellite for satellite in self.satellites if satellite.name == ChiefSatellite][0]
-        self.ScanningSat.sat_args_generator["bufferNames"] = [sc.name for sc in self.satellites] # TODO: this is will give an error since it is called before target_spacecrafts gets created
+        self.ScanningSat.sat_args_generator["bufferNames"] = [sc.name for sc in self.satellites]
         self.ScanningSat.sat_args_generator["transmitterNumBuffers"] = len(self.ScanningSat.sat_args_generator["bufferNames"])
 
     def reset_pre_sim_init(self):
@@ -154,7 +153,6 @@ class RandomSatellites(Scenario):
     def reset_during_sim_init(self):
         for i in range(self.n_targets):
             self.satellites[0].dynamics.targetLocation.addSpacecraftToModel(self.satellites[i+1].dynamics.scObject.scStateOutMsg) # this adds all possible targets to SS.targetLocation
-
 
 
 

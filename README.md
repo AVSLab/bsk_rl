@@ -8,7 +8,9 @@
 ### Usage
 Installation instructions, examples, and documentation can be found on the [BSK-RL website](https://avslab.github.io/bsk_rl/).
 
+### Space-To-Space Imaging Snapshot
+For the public late-summer 2025 imaging-only evaluation snapshot used for the AMOS journal paper, see [README_space_to_space_imaging_public.md](README_space_to_space_imaging_public.md).
+
 ### Acknowledgment
 
 BSK-RL is developed by the [Autonomous Vehicle Systems (AVS) Lab](https://hanspeterschaub.info/AVSlab.html) at the University of Colorado Boulder.
-

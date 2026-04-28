@@ -378,7 +378,7 @@ class MyTargetSatellite(sats.Satellite):
 def custom_oe_randomizer():
     # rLEO = 7000. * 1000    # Minimum semi-major axis (LEO) in meters
     # rUpperLEO = 1.1 * 7000. * 1000    # max semi-major axis  of upper LEO in meters
-    # rUpperLEO = 1.2 * 7000. * 1000    # testing weird policy behaviour change
+    # rUpperLEO = 1.2 * 7000. * 1000
     # rLEO = 6800. * 1000    # Minimum semi-major axis (LEO) in meters
     #
     #
@@ -394,7 +394,6 @@ def custom_oe_randomizer():
     # else:
     #     oe.e = np.random.uniform(0.0, 0.2)    # Random eccentricity (allowing slightly elliptical orbits)
     #
-    # #testing
     # if oe.a < 2*rLEO:
     #     oe.e = np.random.uniform(0.0, 0.02)    # Random eccentricity (allowing less elliptical orbits when near LEO)
     #     while oe.a*(1-oe.e) < 6771. * 1000: # perigee must be at least 400 km altitude
@@ -431,13 +430,13 @@ def custom_oe_randomizer():
 
 
 target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0*900 )
-# target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0/(3600*80))  # testing to see if sim is faster if the other agents are killed
+# target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0/(3600*80))
 
 # Make the satellite
 # sat = MyScanningSatellite(name="SS1", sat_args=sat_args, obs_type=dict) # SO1 for satellite observer 1
 sat = MyScanningSatellite(name="SS1", sat_args=sat_args) # SO1 for satellite observer 1
 
-targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)] # TODO: this creates the same IC of oe for all targets
+targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)]
 
 all_sat = [sat] + targets   #oe = lambda: random_orbit(alt=np.random.uniform(1000,2000)))
 
@@ -860,4 +859,3 @@ else:
 print("ALL DATA: ", data)
 print(f"good images #:{len(env.rewarder.imaged_illuminated)} out of {target_imaging_count}")
 print(f"imaging success percentage {len(env.rewarder.imaged_illuminated)/target_imaging_count*100}%")
-
