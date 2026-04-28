@@ -89,7 +89,7 @@ target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0
 sat = MyScanningSatellite(name="SS1", sat_args=sat_args) # SO1 for satellite observer 1
 
 
-targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)] # TODO: this creates the same IC of oe for all targets
+targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)]
 
 all_sat = [sat] + targets   #oe = lambda: random_orbit(alt=np.random.uniform(1000,2000)))
 

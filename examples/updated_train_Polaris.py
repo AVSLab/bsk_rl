@@ -480,7 +480,8 @@ if __name__ == "__main__":
         oe.f = np.random.uniform(0, 360) * macros.D2R  # Random true anomaly
         return oe
 
-    target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )  # testing to see if sim is faster if the other agents are killed
+    # Use lightweight target-agent power settings for these training runs.
+    target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )
     # Make the satellite
     sat = MyScanningSatellite(name="SS1", sat_args=sat_args) # SO1 for satellite observer 1
 

@@ -1347,7 +1347,9 @@ class ImagingSCFSWModel(ImagingFSWModel):
             self.locPoint.scTransInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
-            self.locPoint.scTargetInMsg.subscribeTo(        # TODO: fix this to the target transOutMsg
+            # Initialize the target input with the inspector state; action_image_rso_target
+            # retargets this message to the selected spacecraft before imaging.
+            self.locPoint.scTargetInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
             # # self.locPoint.scTargetInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.simpleNavObject.transOutMsg)
@@ -1392,7 +1394,7 @@ class ImagingSCFSWModel(ImagingFSWModel):
 
             if self.fsw.dynamics.targetLocation.accessOutMsgs:
                 self.insControl.locationAccessInMsg.subscribeTo(
-                    self.fsw.dynamics.targetLocation.accessOutMsgs[-1] # TODO: this should be changed to the id of the target but this currently still works since I am lenghting this array everytime we choose a new target
+                    self.fsw.dynamics.targetLocation.accessOutMsgs[-1]
                 )
             else:
                 msgData = messaging.AccessMsgPayload() # this is the payload
@@ -1400,8 +1402,6 @@ class ImagingSCFSWModel(ImagingFSWModel):
                 msg.write(msgData)
                 self.insControl.locationAccessInMsg.subscribeTo(msg)
             self._add_model_to_task(self.insControl, priority=987)
-
-            # self.current_target_r_BN_N=[] # TODO: DHP this should be set up so that plotting can be done easier!
 
     @action
     def action_image_rso_target(self, RSOTarget) -> None:
@@ -1420,7 +1420,6 @@ class ImagingSCFSWModel(ImagingFSWModel):
         self.dynamics.instrumentPowerSink.powerStatus = 1
         # self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P
         self.locPoint.scTargetInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.simpleNavObject.transOutMsg)
-        # self.dynamics.targetLocation.addSpacecraftToModel(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)  # TODO: check if this is right syntax
         # self.dynamics.simpleNavObject.scStateInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)
         self.dynamics.simpleTargetNav.scStateInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)
 

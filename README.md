@@ -8,7 +8,9 @@
 ### Usage
 Installation instructions, examples, and documentation can be found on the [BSK-RL website](https://avslab.github.io/bsk_rl/).
 
+### AMOS Journal Snapshot
+This branch also includes a public-facing snapshot of the August and September 2025 AMOS journal workflow. See [README_amos_journal_public.md](README_amos_journal_public.md) for provenance, recommended entry points, and notes on the research-era evaluation scripts.
+
 ### Acknowledgment
 
 BSK-RL is developed by the [Autonomous Vehicle Systems (AVS) Lab](https://hanspeterschaub.info/AVSlab.html) at the University of Colorado Boulder.
-

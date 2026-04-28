@@ -365,7 +365,7 @@ class ImageRSO(DiscreteAction):
 
         :meta private:
         """
-        self.satellite.fsw.action_image_rso_target(target)  #  TODO: here the data_name of the buffer should also be passsed  add ,target.target_spacecraft.name
+        self.satellite.fsw.action_image_rso_target(target)
 
         return target.id
 
