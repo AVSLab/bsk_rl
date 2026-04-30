@@ -10,8 +10,9 @@ import torch
 from dataclasses import asdict
 from sim_config import SimConfig
 
-torch.set_num_threads(11)
-os.environ["MKL_NUM_THREADS"] = "11" # 11 on the cluster
+_TORCH_THREADS = int(os.environ.get("BSK_RL_TORCH_THREADS", "11"))
+torch.set_num_threads(_TORCH_THREADS)
+os.environ.setdefault("MKL_NUM_THREADS", str(_TORCH_THREADS)) # 11 on the cluster historically
 
 import ray
 from bsk_rl.utils.utils import get_available_cores
@@ -42,6 +43,47 @@ except (ImportError, ModuleNotFoundError):  # Older versions of RLlib
     )
 
 # os.environ["RAY_DEDUP_LOGS"] = "0"
+
+
+def _env_int(name: str, default: int) -> int:
+    """Read an integer environment override while keeping script defaults simple."""
+    raw_value = os.environ.get(name)
+    if raw_value is None:
+        return int(default)
+    return int(raw_value)
+
+
+def _cluster_scratch_root() -> Path:
+    """Return the preferred scratch root on CURC, with a local-safe fallback."""
+    user = os.environ.get("USER", "dahu1128")
+    scratch_root = Path(
+        os.environ.get("BSK_RL_SCRATCH", f"/scratch/alpine/{user}")
+    ).expanduser()
+    if scratch_root.exists() or os.environ.get("SLURM_JOB_ID"):
+        return scratch_root
+    return Path("~/rllib_results").expanduser()
+
+
+def _default_output_root() -> Path:
+    """Use scratch on the cluster and a home-directory fallback on local machines."""
+    explicit = os.environ.get("BSK_RL_OUTPUT_DIR")
+    if explicit is not None:
+        return Path(explicit).expanduser()
+    scratch_root = _cluster_scratch_root()
+    if str(scratch_root).endswith("rllib_results"):
+        return scratch_root / "amos2026_results"
+    return scratch_root / "rllib_results"
+
+
+def _default_ray_tmpdir() -> Path:
+    """Keep Ray's temporary files on scratch during cluster jobs."""
+    explicit = os.environ.get("BSK_RL_RAY_TMPDIR") or os.environ.get("TMPDIR")
+    if explicit is not None:
+        return Path(explicit).expanduser()
+    scratch_root = _cluster_scratch_root()
+    if str(scratch_root).endswith("rllib_results"):
+        return Path("/tmp")
+    return scratch_root / "tmp"
 
 
 def train_model(
@@ -197,6 +239,37 @@ def train_model(
 
         iter += 1
 
+
+def _finite_values(values):
+    """Return finite floats for callback metrics without breaking RLlib logging."""
+    finite = []
+    for value in values:
+        if value is None:
+            continue
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            continue
+        if np.isfinite(value):
+            finite.append(value)
+    return finite
+
+
+def _safe_mean(values, default=-1.0):
+    values = _finite_values(values)
+    return float(np.mean(values)) if values else default
+
+
+def _safe_std(values, default=-1.0):
+    values = _finite_values(values)
+    return float(np.std(values)) if values else default
+
+
+def _safe_max(values, default=-1.0):
+    values = _finite_values(values)
+    return float(np.max(values)) if values else default
+
+
 def env_metrics_callback(env):
     data = {}
 
@@ -217,13 +290,13 @@ def env_metrics_callback(env):
     rw_valid = env.satellites[0].dynamics.rw_speeds_valid()
     data["rw_valid"] = rw_valid
 
-    # Compute time *not* imaging a new target
+    # Legacy fixed-duration estimate kept for continuity with older TensorBoard plots.
     total_imaging_time = num_imaged * 300  # Each successful image takes 300s
     idle_time = episode_duration - total_imaging_time
     num_unproductive_actions = idle_time / 300
     data["non-imaging_action_count"] = int(round(num_unproductive_actions))
 
-    # Compute time *not* imaging a new target
+    # Legacy fixed-duration estimate kept for continuity with older TensorBoard plots.
     total_imaging_time = num_imaged * 300  # Each successful image takes 300s
     non_imaging_time = episode_duration - total_imaging_time
     data["non-imaging_time"] = int(round(non_imaging_time))
@@ -232,6 +305,92 @@ def env_metrics_callback(env):
     data["illuminated_images"] = len(env.rewarder.imaged_illuminated)
 
     SS1_actions_spec = env.satellites[0].action_builder.action_spec[0]
+    target_priority_by_id = {}
+    try:
+        target_priority_by_id = {
+            int(target.id): float(target.priority)
+            for target in env.scenario.target_spacecrafts
+        }
+    except Exception:
+        target_priority_by_id = {}
+
+    all_target_priorities = list(target_priority_by_id.values())
+    data["target_priority_sum"] = float(np.sum(all_target_priorities)) if all_target_priorities else -1
+    data["target_priority_mean"] = _safe_mean(all_target_priorities)
+    data["target_priority_max"] = _safe_max(all_target_priorities)
+
+    # These records come from ImageRSO and capture the real variable-duration action
+    # time, not the nominal 300 s maximum.
+    imaging_attempt_records = list(
+        getattr(SS1_actions_spec, "imaging_attempt_records", [])
+    )
+    imaging_action_durations = [
+        float(record["end_time"]) - float(record["start_time"])
+        for record in imaging_attempt_records
+        if record.get("start_time") is not None and record.get("end_time") is not None
+    ]
+    successful_imaging_action_durations = [
+        float(record["end_time"]) - float(record["start_time"])
+        for record in imaging_attempt_records
+        if record.get("success")
+        and record.get("start_time") is not None
+        and record.get("end_time") is not None
+    ]
+    attempted_priorities = [
+        target_priority_by_id.get(int(record["target_id"]))
+        for record in imaging_attempt_records
+        if record.get("target_id") is not None
+    ]
+    successful_capture_priorities = [
+        target_priority_by_id.get(int(record["target_id"]))
+        for record in imaging_attempt_records
+        if record.get("success") and record.get("target_id") is not None
+    ]
+    data["num_imaging_attempts"] = len(imaging_attempt_records)
+    data["actual_imaging_action_time_sec"] = float(np.sum(imaging_action_durations))
+    data["actual_non_imaging_time_sec"] = (
+        float(episode_duration) - data["actual_imaging_action_time_sec"]
+    )
+    data["mean_imaging_action_duration_sec"] = _safe_mean(imaging_action_durations)
+    data["mean_successful_imaging_action_duration_sec"] = _safe_mean(
+        successful_imaging_action_durations
+    )
+    data["mean_imaging_slew_time_sec"] = _safe_mean(
+        record.get("slew_time_s") for record in imaging_attempt_records
+    )
+    data["mean_attempted_target_priority"] = _safe_mean(attempted_priorities)
+    data["mean_successful_capture_priority"] = _safe_mean(
+        successful_capture_priorities
+    )
+
+    verified_records = list(
+        getattr(env.rewarder.data, "verified_useful_records", [])
+    )
+    verified_priorities = [
+        target_priority_by_id.get(int(record["target_id"]))
+        for record in verified_records
+        if record.get("target_id") is not None
+    ]
+    data["mean_verified_useful_priority"] = _safe_mean(verified_priorities)
+    data["max_verified_useful_priority"] = _safe_max(verified_priorities)
+
+    total_downlinks = int(getattr(env.rewarder, "total_downlinks", 0))
+    useful_downlinks = int(getattr(env.rewarder, "useful_downlinks", 0))
+    failed_downlinks = int(getattr(env.rewarder, "failed_downlinks", 0))
+    data["total_downlinks"] = total_downlinks
+    data["useful_downlinks"] = useful_downlinks
+    data["failed_downlinks"] = failed_downlinks
+    data["bad_downlinks"] = int(getattr(env.rewarder, "bad_downlinks", failed_downlinks))
+    data["pending_images"] = int(getattr(env.rewarder, "pending_images", 0))
+    data["verified_image_count"] = int(getattr(env.rewarder, "verified_image_count", 0))
+    data["reimage_count"] = int(getattr(env.rewarder, "reimage_count", 0))
+    data["useful_downlink_fraction"] = (
+        useful_downlinks / total_downlinks if total_downlinks > 0 else 0.0
+    )
+    data["cooldown_target_count"] = len(
+        getattr(env.satellites[0].data_store.data, "cooldown_until_by_id", {})
+    )
+
     # Target azimuth
     if hasattr(SS1_actions_spec, "chosen_target_azimuth") and SS1_actions_spec.chosen_target_azimuth:
         data["mean_target_azimuth"] = np.mean(SS1_actions_spec.chosen_target_azimuth)
@@ -301,9 +460,13 @@ def env_metrics_callback(env):
     if hasattr(SS1_actions_spec, "chosen_target_priority") and SS1_actions_spec.chosen_target_priority:
         data["mean_target_priority"] = np.mean(SS1_actions_spec.chosen_target_priority)
         data["std_target_priority"] = np.std(SS1_actions_spec.chosen_target_priority)
+        data["max_target_priority"] = np.max(SS1_actions_spec.chosen_target_priority)
+        data["mean_chosen_target_priority"] = data["mean_target_priority"]
     else:
         data["mean_target_priority"] = -1
         data["std_target_priority"] = -1
+        data["max_target_priority"] = -1
+        data["mean_chosen_target_priority"] = -1
 
     # Ever visible flags
     if hasattr(SS1_actions_spec, "ever_visible") and SS1_actions_spec.ever_visible:
@@ -315,13 +478,8 @@ def env_metrics_callback(env):
 
 def sat_metrics_callback(env, satellite):
     data = {}
-    # print('if satellite.name == SS1', satellite.name == 'SS1')
     if satellite.name == 'SS1':
-        print('satellite.name', satellite.name)
-        print('np.linalg.norm(satellite.dynamics.wheel_speeds)', np.linalg.norm(satellite.dynamics.wheel_speeds))
-        print('satellite.dynamics.wheel_speeds', satellite.dynamics.wheel_speeds)
-        print('satellite.dynamics.battery_charge_fraction', satellite.dynamics.battery_charge_fraction)
-        print('satellite.dynamics.storage_level_fraction', satellite.dynamics.storage_level_fraction)
+        # Keep this callback quiet on the cluster; these values still go to RLlib metrics.
         data["RW_norm"] = np.linalg.norm(satellite.dynamics.wheel_speeds)
         data["RW1"] = satellite.dynamics.wheel_speeds[0]
         data["RW2"] = satellite.dynamics.wheel_speeds[1]
@@ -329,8 +487,11 @@ def sat_metrics_callback(env, satellite):
 
         data["battery_charge_fraction"] = satellite.dynamics.battery_charge_fraction
         data["storage_level_fraction"] = satellite.dynamics.storage_level_fraction
-        data["Total Images Downlinked"] = satellite.dynamics.total_downlinks
-        data["Useful Images Downlinked"] = satellite.dynamics.useful_downlinks
+        data["Total Images Downlinked"] = getattr(satellite.dynamics, "total_downlinks", 0)
+        data["Useful Images Downlinked"] = getattr(satellite.dynamics, "useful_downlinks", 0)
+        data["Failed Images Downlinked"] = getattr(satellite.dynamics, "failed_downlinks", 0)
+        data["Bad Images Downlinked"] = getattr(satellite.dynamics, "bad_downlinks", 0)
+        data["Verified Reimages"] = getattr(satellite.dynamics, "reimage_count", 0)
 
     else:
         data["RW_norm"] = 0
@@ -342,6 +503,9 @@ def sat_metrics_callback(env, satellite):
         data["storage_level_fraction"] = 0
         data["Total Images Downlinked"] = 0
         data["Useful Images Downlinked"] = 0
+        data["Failed Images Downlinked"] = 0
+        data["Bad Images Downlinked"] = 0
+        data["Verified Reimages"] = 0
 
     return data
 
@@ -371,7 +535,8 @@ if __name__ == "__main__":
     # imaging_duration = 300
     # extra_tima_factor = 1.5
     # total_time = extra_tima_factor * n_targets * 300  #I give it 10 times the minimum time to finish
-    # Shared sim configuration (should match what you use in evaluation)
+    # Shared AMOS sim configuration. Priority distribution defaults live in SimConfig:
+    # uniform priorities are rescaled so each episode sums to priority_sum=100.
     sim_cfg = SimConfig(
         n_targets=100,
         n_targets_ahead=10,
@@ -385,6 +550,37 @@ if __name__ == "__main__":
     n_targets_ahead = sim_cfg.n_targets_ahead
     imaging_duration = sim_cfg.imaging_duration
     total_time = sim_cfg.total_time
+
+    def make_rso_scenario():
+        return scene.RandomSatellites(
+            "SS1",
+            n_targets=n_targets,
+            priority_mode=sim_cfg.priority_mode,
+            priority_sum=sim_cfg.priority_sum,
+            rescale_priorities_to_sum=sim_cfg.rescale_priorities_to_sum,
+            priority_constant=sim_cfg.priority_constant,
+            priority_uniform_low=sim_cfg.priority_uniform_low,
+            priority_uniform_high=sim_cfg.priority_uniform_high,
+            priority_gaussian_mean=sim_cfg.priority_gaussian_mean,
+            priority_gaussian_std=sim_cfg.priority_gaussian_std,
+            priority_min=sim_cfg.priority_min,
+            priority_max=sim_cfg.priority_max,
+        )
+
+    def make_rso_rewarder():
+        return data.RSOTargetImageReward(
+            reimage_cooldown_orbits=sim_cfg.reimage_cooldown_orbits,
+            verify_image_quality_on_downlink=sim_cfg.verify_image_quality_on_downlink,
+            hide_pending_targets=sim_cfg.hide_pending_targets,
+            image_quality_threshold=sim_cfg.image_quality_threshold,
+        )
+
+    def make_downlink_action(duration: float):
+        return act.Downlink(
+            duration=duration,
+            variable_duration_downlink=sim_cfg.variable_duration_downlink,
+            empty_storage_threshold_bits=sim_cfg.downlink_empty_threshold_bits,
+        )
 
 
     class MyScanningSatellite(sats.AccessSatellite):
@@ -424,9 +620,17 @@ if __name__ == "__main__":
             )
         ]
         action_spec = [
-            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
+            act.ImageRSO(
+                n_ahead_image=n_targets_ahead,
+                duration=imaging_duration,
+                variable_duration_imaging=sim_cfg.variable_duration_imaging,
+                min_pointing_hold_s=sim_cfg.min_pointing_hold_s,
+                hold_mode=sim_cfg.hold_mode,
+                require_illumination_during_hold=sim_cfg.require_illumination_during_hold,
+                hold_illumination_threshold=sim_cfg.hold_illumination_threshold,
+            ),  # Scan for 5 minute
             act.Charge(duration=300.0),  # Charge for 5 minutes
-            act.Downlink(duration=300.0), # Downlink for 3 min
+            make_downlink_action(300.0), # Downlink for 3 min
             act.Desat(duration=150), # Desat for 2.5 min
 
         ]
@@ -461,8 +665,9 @@ if __name__ == "__main__":
     sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
     sat_args["desatAttitude"] = "sun" # 'nadir' and 'sun' is the other option
 
-    # reward bonuses and eclipse thresholds
-    sat_args["downlink_bonus"] = 0.0
+    # Alpha=0.2 legacy reward split. In downlink-verification mode, reward is paid
+    # after useful downlink, but these fields still recover old behavior if disabled.
+    sat_args["downlink_bonus"] = 0.2
     sat_args["imaging_bonus"] = 1.0 - sat_args["downlink_bonus"]
     sat_args["eclipse_threshold_for_imaging"] = 0.5 # to include both shadowed and illuminated RSOs
     sat_args["eclipse_threshold_for_reward"] = 0.5 # can be the same as sat_args["eclipse_threshold_for_imaging"] if set to a positive number between 0 and 1
@@ -556,32 +761,54 @@ if __name__ == "__main__":
         return _sample_for_regime(regime.upper(), altitude_bounds, min_perigee_alt)
 
 
-    # target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0*900 )
-    # target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )  # testing to see if sim is faster if the other agents are killed
-    target_args_mixed = dict(oe=partial(custom_oe_randomizer, regime="mixed", mix_weights={"LEO":0.5,"MEO":0.3,"GEO":0.2}), batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )
+    # For this first AMOS training pass, keep the science question LEO-to-LEO.
+    # Later LEO-to-any can switch oe back to the mixed-regime partial below.
+    target_args = dict(
+        oe=custom_oe_randomizer,
+        batteryStorageCapacity=1,
+        storedCharge_Init=0.0,
+        basePowerDraw=-10000.0,
+    )
+    # target_args_mixed = dict(oe=partial(custom_oe_randomizer, regime="mixed", mix_weights={"LEO":0.5,"MEO":0.3,"GEO":0.2}), batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )
 
 
 
     # Make the satellite
     sat = MyScanningSatellite(name="SS1", sat_args=sat_args) # SO1 for satellite observer 1
 
-    targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args_mixed) for i in range(n_targets)]
+    targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)]
 
     all_sat = [sat] + targets
 
-    N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
-    model_name = f"jan23_MIXED_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i.out_{N}"
-    n_envs = (
-        get_available_cores() - 4  # leave some extra cores for other processes
+    # Prefer Slurm array IDs on the cluster, but keep CLI/local execution working.
+    default_job_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+    N = _env_int("SLURM_ARRAY_TASK_ID", default_job_index)
+    n_envs = max(
+        1,
+        _env_int(
+            "BSK_RL_NUM_ENVS",
+            get_available_cores() - 4,  # leave some extra cores for other processes
+        ),
     )
-    batch_multiplier = 700
-    print('n_envs', n_envs, 'therefore batch size is ', batch_multiplier*n_envs)
-    output_dir = (
-        Path("~/rllib_results/july_results/jan23_rllib_results").expanduser() / f"jan23_MIXED_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+    batch_multiplier = _env_int("BSK_RL_BATCH_MULTIPLIER", 150)
+    batch_size = int(batch_multiplier * n_envs)
+    total_timesteps = _env_int("BSK_RL_TOTAL_TIMESTEPS", 20_000_000)
+    checkpoint_frequency = _env_int("BSK_RL_CHECKPOINT_FREQUENCY", 3)
+    run_tag = (
+        f"amos2026_LEO_wGAE_{batch_size}batch_restrictedResources_obsv7_"
+        "1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2"
     )
+    model_name = f"{run_tag}.out_{N}"
+    print('n_envs', n_envs, 'therefore batch size is ', batch_size)
+
+    output_dir = _default_output_root() / f"{run_tag}_{time.time()}"
     output_dir = Path(output_dir)
+    ray_tmpdir = _default_ray_tmpdir()
+    ray_tmpdir.mkdir(parents=True, exist_ok=True)
 
     print(f"Tensorboard logging: tensorboard --logdir {output_dir}")
+    print(f"Ray temp dir: {ray_tmpdir}")
+    print(f"Total timesteps: {total_timesteps}")
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -589,7 +816,7 @@ if __name__ == "__main__":
         training_args=dict(
             lr=[1e-5],
             gamma=[0.9997],
-            train_batch_size=[int(batch_multiplier * n_envs)],  #n_envs on the Mac is 6 eventually   minimum train_batch_size = mini_batch = 128
+            train_batch_size=[batch_size],  # n_envs on the Mac is 6 eventually; minimum train_batch_size = mini_batch = 128
             num_sgd_iter=[10],
             lambda_=[0.95],
             use_kl_loss=[False],
@@ -600,8 +827,8 @@ if __name__ == "__main__":
         env_args=dict(
             # **{k: [v] for k, v in env_args().items()},
             satellites=[all_sat],
-            scenario=[scene.RandomSatellites("SS1",n_targets=n_targets)],
-            rewarder=[data.RSOTargetImageReward()],
+            scenario=[make_rso_scenario()],
+            rewarder=[make_rso_rewarder()],
             world_type=[world.GroundStationWorldModel],
             time_limit=[total_time],
             failure_penalty=[-100.0],
@@ -624,6 +851,15 @@ if __name__ == "__main__":
     run_cfg = {
         "sim": asdict(sim_cfg),
         "job_args": sanitize_np(job_args),
+        "cluster": {
+            "job_index": N,
+            "n_envs": n_envs,
+            "batch_multiplier": batch_multiplier,
+            "batch_size": batch_size,
+            "total_timesteps": total_timesteps,
+            "ray_tmpdir": str(ray_tmpdir),
+            "torch_threads": _TORCH_THREADS,
+        },
     }
 
     with open(output_dir / f"{model_name}_config.yaml", "w") as file:
@@ -632,12 +868,12 @@ if __name__ == "__main__":
     train_model(
         model_name=model_name,
         output_directory=output_dir,
-        checkpoint_frequency=3, # used to be 2
+        checkpoint_frequency=checkpoint_frequency, # used to be 2
         checkpoints_to_keep=3,
-        total_timesteps=20_000_000,
+        total_timesteps=total_timesteps,
         reload_frequency=500_000,
         n_envs=n_envs,
-        # temp_dir="/scratch/alpine/dahu1128/tmp",
+        temp_dir=str(ray_tmpdir),
         **job_args,
     )
 
