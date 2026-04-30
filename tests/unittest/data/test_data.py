@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -7,6 +8,7 @@ from pytest import approx
 from bsk_rl.data.base import Data, DataStore, GlobalReward
 from bsk_rl.data.nadir_data import ScanningTime, ScanningTimeReward, ScanningTimeStore
 from bsk_rl.data.no_data import NoData, NoDataStore, NoReward
+from bsk_rl.data.rso_targets_data import RSOTargetImageData, RSOTargetImageReward
 from bsk_rl.data.unique_image_data import (
     UniqueImageData,
     UniqueImageReward,
@@ -129,6 +131,143 @@ class TestUniqueImageData:
         dat = dat1 + dat2
         assert dat.imaged == [1, 2, 3]
         assert dat.duplicates == 6
+
+
+class TestRSOTargetImageData:
+    def test_pending_target_is_not_eligible_when_hidden(self):
+        target = MagicMock(id=1)
+        data = RSOTargetImageData(known=[target], hide_pending_targets=True)
+
+        data.mark_target_pending(
+            target,
+            {
+                "record_id": "capture-1",
+                "target_id": 1,
+                "mean_hold_shadow_factor": 0.1,
+            },
+        )
+
+        assert data.target_lifecycle_state(target, sim_time=10.0) == "pending_verification"
+        assert not data.is_target_eligible(target, sim_time=10.0)
+
+    def test_failed_pending_image_can_be_reimaged_immediately(self):
+        target = MagicMock(id=1)
+        data = RSOTargetImageData(known=[target], hide_pending_targets=True)
+        data.mark_target_pending(target, {"record_id": "capture-1", "target_id": 1})
+        data.mark_target_cooldown(target, cooldown_until=100.0)
+
+        record = data.pop_pending_record(target)
+        data.mark_record_verified(record, useful=False)
+        data.clear_target_cooldown(target)
+
+        assert data.target_lifecycle_state(target, sim_time=10.0) == "eligible"
+        assert data.is_target_eligible(target, sim_time=10.0)
+
+    def test_useful_verified_image_enters_cooldown(self):
+        target = MagicMock(id=1)
+        data = RSOTargetImageData(known=[target], hide_pending_targets=True)
+        data.mark_target_pending(target, {"record_id": "capture-1", "target_id": 1})
+
+        record = data.pop_pending_record(target)
+        data.mark_record_verified(record, useful=True)
+        data.mark_target_imaged(target)
+        data.mark_target_cooldown(target, cooldown_until=100.0)
+
+        assert data.target_lifecycle_state(target, sim_time=50.0) == "cooldown"
+        assert not data.is_target_eligible(target, sim_time=50.0)
+        assert data.target_lifecycle_state(target, sim_time=101.0) == "eligible"
+        assert target in data.imaged
+
+
+class TestRSOTargetImageReward:
+    @staticmethod
+    def _target(target_id, name, priority=1.0):
+        target = MagicMock()
+        target.id = target_id
+        target.name = name
+        target.priority = priority
+        return target
+
+    def test_verified_cooldown_is_anchored_to_capture_time(self):
+        target = self._target(1, "target_1")
+        data = RSOTargetImageData(known=[target], hide_pending_targets=True)
+        rewarder = RSOTargetImageReward()
+        rewarder.data = data
+        rewarder.reimage_cooldown_s = 20.0
+
+        scanner = MagicMock()
+        scanner.data_store.data = data
+        rewarder.scenario = MagicMock(satellites=[scanner])
+
+        cooldown_until = rewarder._start_cooldown_everywhere(
+            target, capture_time=100.0
+        )
+
+        assert cooldown_until == approx(120.0)
+        assert data.cooldown_until_by_id[1] == approx(120.0)
+        assert data.target_lifecycle_state(target, sim_time=119.0) == "cooldown"
+        assert data.target_lifecycle_state(target, sim_time=2000.0) == "eligible"
+
+    def test_downlink_verifies_only_decreased_partition(self):
+        target_0 = self._target(0, "target_0", priority=3.0)
+        target_1 = self._target(1, "target_1", priority=7.0)
+        rewarder = RSOTargetImageReward(verify_image_quality_on_downlink=True)
+        rewarder.data = RSOTargetImageData(
+            known=[target_0, target_1], hide_pending_targets=True
+        )
+        rewarder.reimage_cooldown_s = 20.0
+        rewarder.old_state = np.array([10.0, 10.0])
+
+        scanner = MagicMock()
+        scanner.name = "SS1"
+        scanner.simulator.sim_time = 2000.0
+        scanner.simulator.time_limit = 100000.0
+        scanner.dynamics.penalties = 0
+        scanner.dynamics.eclipse_threshold_for_reward = 0.5
+        scanner.data_store.data = RSOTargetImageData(
+            known=[target_0, target_1], hide_pending_targets=True
+        )
+        scanner.dynamics.storageUnit.storageUnitDataOutMsg.read.return_value = (
+            SimpleNamespace(
+                storedData=[0.0, 10.0],
+                storedDataName=["target_0", "target_1"],
+            )
+        )
+
+        rewarder.scenario = MagicMock(
+            satellites=[scanner], target_spacecrafts=[target_0, target_1]
+        )
+        pending = RSOTargetImageData(
+            pending_image_records_by_id={
+                0: [
+                    {
+                        "record_id": "capture-0",
+                        "target_id": 0,
+                        "target_name": "target_0",
+                        "capture_time": 100.0,
+                        "mean_hold_shadow_factor": 1.0,
+                    }
+                ],
+                1: [
+                    {
+                        "record_id": "capture-1",
+                        "target_id": 1,
+                        "target_name": "target_1",
+                        "capture_time": 150.0,
+                        "mean_hold_shadow_factor": 1.0,
+                    }
+                ],
+            },
+            hide_pending_targets=True,
+        )
+
+        reward = rewarder._calculate_reward_with_downlink_verification({"SS1": pending})
+
+        assert reward["SS1"] == approx(3.0)
+        assert scanner.data_store.data.cooldown_until_by_id[0] == approx(120.0)
+        assert not scanner.data_store.data.is_target_pending(target_0)
+        assert scanner.data_store.data.is_target_pending(target_1)
+        assert 1 not in scanner.data_store.data.cooldown_until_by_id
 
 
 class TestUniqueImageStore:

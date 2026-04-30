@@ -482,21 +482,30 @@ def _target_id_extracted(sat, opp):
     id= int((opp["object"].target_spacecraft.id).strip("target_"))
     return id
 
+def _eligible_targets_now(sat, known_targets):
+    """Return currently image-eligible targets from the datastore lifecycle state."""
+    data_obj = sat.data_store.data
+    sim_time = float(sat.simulator.sim_time)
+    if hasattr(data_obj, "eligible_targets"):
+        return data_obj.eligible_targets(sim_time, known_targets)
+
+    # Backward-compatible fallback for legacy data objects.
+    imaged_targets = getattr(data_obj, "imaged", [])
+    imaged_ids = {tgt.id for tgt in imaged_targets}
+    return [tgt for tgt in known_targets if tgt.id not in imaged_ids]
+
 def _target_imaged(sat, opp):
-    imaged = 0
-    if len(sat.data_store.data.imaged[0:]) != 0:
-        imaged_ids = []
+    target = opp["object"]
+    data_obj = sat.data_store.data
+    sim_time = float(sat.simulator.sim_time)
 
-        for i in range(len(sat.simulator.satellites[0].data_store.data.imaged)):
-            imaged_ids.append(sat.simulator.satellites[0].data_store.data.imaged[i].id)
-        if int((opp["object"].target_spacecraft.id).strip("target_")) in sorted(imaged_ids):
-            imaged = 1
-        # print('sat.data_store.data.imaged[int((opp["object"].target_spacecraft.id).strip("target_"))]', sat.data_store.data.imaged[int((opp["object"].target_spacecraft.id).strip("target_"))])
-        #  sat.data_store.data.imaged[int((opp["object"].target_spacecraft.id).strip("target_"))]
-    else:
-        imaged = 0
+    if hasattr(data_obj, "is_target_eligible"):
+        # Keep feature name for compatibility; value now means "currently cooling down".
+        return int(not data_obj.is_target_eligible(target, sim_time))
 
-    return imaged
+    imaged_targets = getattr(data_obj, "imaged", [])
+    imaged_ids = {tgt.id for tgt in imaged_targets}
+    return int(target.id in imaged_ids)
 def _target_shadowFactor(sat, opp):
     return sat.simulator.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[opp["object"].target_spacecraft.dynamics.eclipse_index].read().shadowFactor
 
@@ -642,15 +651,12 @@ class PolarisScTargetProperties(Observation):
 
         scanner_pos = np.array(self.satellite.dynamics.r_BN_N)
         known_targets = self.satellite.data_store.data.known
-        imaged_targets = self.satellite.data_store.data.imaged
+        eligible_targets = _eligible_targets_now(self.satellite, known_targets)
+        eligible_ids = {tgt.id for tgt in eligible_targets}
 
-        imaged_ids = {tgt.id for tgt in imaged_targets}
-        unimaged_targets = [tgt for tgt in known_targets if tgt.id not in imaged_ids]
-
-
-        # Compute elevation angles for unimaged targets
+        # Compute elevation angles for currently eligible targets
         target_elevations = []
-        for target in unimaged_targets:
+        for target in eligible_targets:
             target_pos = np.array(target.target_spacecraft.dynamics.r_BN_N)
             los_vector = target_pos - scanner_pos
             los_unit = los_vector / np.linalg.norm(los_vector)
@@ -661,32 +667,32 @@ class PolarisScTargetProperties(Observation):
             elev = np.degrees(elevation_rad)
             target_elevations.append((target, elev))
 
-        visible_unimaged_targets = [
+        visible_eligible_targets = [
             (tgt, elev) for tgt, elev in target_elevations
-            if -21.0 <= elev <= 90.0 and tgt.id not in imaged_ids
+            if -21.0 <= elev <= 90.0 and tgt.id in eligible_ids
         ]
 
-        visible_unimaged_targets.sort(key=lambda x: x[1])
+        visible_eligible_targets.sort(key=lambda x: x[1])
 
         num_actions = self.n_ahead_observe
-        final_targets = [tgt for tgt, _ in visible_unimaged_targets[:num_actions]]
+        final_targets = [tgt for tgt, _ in visible_eligible_targets[:num_actions]]
 
         if len(final_targets) < num_actions:
             remaining = num_actions - len(final_targets)
             selected_ids = {tgt.id for tgt in final_targets}
-            remaining_unimaged = [tgt for tgt in unimaged_targets if tgt.id not in selected_ids]
-            remaining_unimaged.sort(
+            remaining_eligible = [tgt for tgt in eligible_targets if tgt.id not in selected_ids]
+            remaining_eligible.sort(
                 key=lambda tgt: np.linalg.norm(np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos)
             )
-            final_targets += remaining_unimaged[:remaining] # padding the array with the closest unimaged targets
+            final_targets += remaining_eligible[:remaining]  # pad with closest eligible targets
 
         if len(final_targets) < num_actions:
             if len(final_targets) < 1:
-                print("no new targets available!")
+                print("no eligible targets available!")
             try:
                 final_targets += [final_targets[-1]] * (num_actions - len(final_targets))
             except IndexError:
-                print('All targets imaged... No unimaged targets remaining')
+                print("No eligible targets available; using closest known targets fallback")
                 sorted_fallback = sorted(
                     known_targets,
                     key=lambda tgt: np.linalg.norm(
@@ -694,7 +700,8 @@ class PolarisScTargetProperties(Observation):
                     )
                 )
                 final_targets = sorted_fallback[:self.n_ahead_observe]
-                self.simulator.terminate = True
+                if not final_targets:
+                    raise RuntimeError("No targets available.")
 
         obs = {}
 
