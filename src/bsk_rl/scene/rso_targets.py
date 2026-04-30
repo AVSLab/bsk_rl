@@ -105,57 +105,167 @@ class RSOTarget:
 class RandomSatellites(Scenario):
     """Spacecraft target with associated priority"""
 
-    def __init__(self, ChiefSatellite, n_targets: int) -> None:
-        """Spacecraft target with associated priority and location.
+    def __init__(
+        self,
+        ChiefSatellite,
+        n_targets: int,
+        priority_mode: str = "uniform",
+        priority_sum: Optional[float] = 100.0,
+        rescale_priorities_to_sum: bool = True,
+        priority_constant: float = 1.0,
+        priority_uniform_low: float = 0.0,
+        priority_uniform_high: Optional[float] = None,
+        priority_gaussian_mean: Optional[float] = None,
+        priority_gaussian_std: Optional[float] = None,
+        priority_min: float = 0.0,
+        priority_max: Optional[float] = None,
+    ) -> None:
+        """Spacecraft-target scenario with configurable target priority generation.
 
         Args:
-            # name: Identifier; does not need to be unique
-            n_targets: Number of targets
-            # priority_distribution: Function for generating target priority. Defaults
-            #     to ``lambda: uniform(0, 1)`` if not specified.
-            # priority: Value metric.
+            ChiefSatellite: Name of scanning/imaging satellite.
+            n_targets: Number of targets.
+            priority_mode: ``"uniform"``, ``"gaussian"``, or ``"constant"``.
+            priority_sum: Desired total priority sum. If ``None``, do not rescale.
+            rescale_priorities_to_sum: If True and ``priority_sum`` is set, rescale
+                generated priorities to make the sum exactly ``priority_sum``.
+            priority_constant: Constant priority used in ``"constant"`` mode.
+            priority_uniform_low: Uniform lower bound.
+            priority_uniform_high: Uniform upper bound. Defaults to
+                ``2 * priority_sum / n_targets`` when ``priority_sum`` is set.
+            priority_gaussian_mean: Gaussian mean. Defaults to ``priority_sum / n_targets``
+                when ``priority_sum`` is set.
+            priority_gaussian_std: Gaussian standard deviation. Defaults to mean/3.
+            priority_min: Minimum allowed priority after generation.
+            priority_max: Maximum allowed priority after generation.
         """
-        self.n_targets = n_targets
-        # if priority_distribution is None:  #priority distribution to be added later
-        #     priority_distribution = lambda: np.random.rand()  # noqa: E731
-        # self.priority_distribution = priority_distribution
+        self.chief_satellite_name = ChiefSatellite
+        self.n_targets = int(n_targets)
+        self.priority_mode = str(priority_mode).lower()
+        self.priority_sum = priority_sum
+        self.rescale_priorities_to_sum = bool(rescale_priorities_to_sum)
+        self.priority_constant = float(priority_constant)
+        self.priority_uniform_low = float(priority_uniform_low)
+        self.priority_uniform_high = priority_uniform_high
+        self.priority_gaussian_mean = priority_gaussian_mean
+        self.priority_gaussian_std = priority_gaussian_std
+        self.priority_min = float(priority_min)
+        self.priority_max = priority_max
 
+        if self.priority_mode not in {"uniform", "gaussian", "constant"}:
+            raise ValueError(
+                "priority_mode must be one of: 'uniform', 'gaussian', 'constant'."
+            )
+        if self.n_targets < 0:
+            raise ValueError("n_targets must be non-negative.")
 
-        # dyn_proc_name = "DynamicsProcess" + self.satellite.name
-        # self.dyn_proc = self.simulator.CreateNewProcess(dyn_proc_name, priority)
-        # self.dyn_rate = dyn_rate
-        # self.task_name = "DynamicsTask" + self.satellite.name
-        # self.dyn_proc.addTask(
-        #     self.simulator.CreateNewTask(self.task_name, macros.sec2nano(self.dyn_rate))
-        # )
-        #
-        # # Initialize all modules and write init one-time messages
-        # self.scObject: spacecraft.Spacecraft
-        # self._setup_dynamics_objects(**kwargs)
+    def _generate_raw_priorities(self) -> np.ndarray:
+        """Generate nonnegative target priorities according to ``priority_mode``."""
+        if self.n_targets == 0:
+            return np.array([], dtype=float)
+
+        target_mean = (
+            float(self.priority_sum) / float(self.n_targets)
+            if self.priority_sum is not None
+            else 1.0
+        )
+
+        if self.priority_mode == "uniform":
+            high = (
+                float(self.priority_uniform_high)
+                if self.priority_uniform_high is not None
+                else 2.0 * target_mean
+            )
+            low = self.priority_uniform_low
+            if high < low:
+                raise ValueError("priority_uniform_high must be >= priority_uniform_low.")
+            priorities = np.random.uniform(low=low, high=high, size=self.n_targets)
+        elif self.priority_mode == "gaussian":
+            mean = (
+                float(self.priority_gaussian_mean)
+                if self.priority_gaussian_mean is not None
+                else target_mean
+            )
+            std = (
+                float(self.priority_gaussian_std)
+                if self.priority_gaussian_std is not None
+                else max(mean / 3.0, 1e-6)
+            )
+            if std <= 0.0:
+                raise ValueError("priority_gaussian_std must be positive.")
+            priorities = np.random.normal(loc=mean, scale=std, size=self.n_targets)
+        else:  # constant
+            priorities = np.full(self.n_targets, fill_value=self.priority_constant)
+
+        priorities = np.clip(priorities, self.priority_min, None)
+        if self.priority_max is not None:
+            priorities = np.clip(priorities, None, float(self.priority_max))
+        return priorities.astype(float)
+
+    def _rescale_priorities(self, priorities: np.ndarray) -> np.ndarray:
+        """Rescale priorities to make sum exactly ``priority_sum`` when requested."""
+        if (
+            not self.rescale_priorities_to_sum
+            or self.priority_sum is None
+            or len(priorities) == 0
+        ):
+            return priorities
+
+        desired_sum = float(self.priority_sum)
+        current_sum = float(np.sum(priorities))
+
+        if current_sum <= 0.0:
+            priorities = np.full(len(priorities), desired_sum / float(len(priorities)))
+        else:
+            priorities = priorities * (desired_sum / current_sum)
+
+        # Preserve the sampled distribution shape, then pin the final total exactly.
+        priorities[-1] += desired_sum - float(np.sum(priorities))
+        return priorities
+
+    def _generate_priorities(self) -> np.ndarray:
+        """Generate priorities according to configured distribution and scaling."""
+        return self._rescale_priorities(self._generate_raw_priorities())
+
     def link_satellites(self, satellites: list["Satellite"]) -> None:
         super().link_satellites(satellites)
-        ChiefSatellite = self.satellites[0].name
-        self.ScanningSat = [satellite for satellite in self.satellites if satellite.name == ChiefSatellite][0]
-        self.ScanningSat.sat_args_generator["bufferNames"] = [sc.name for sc in self.satellites] # TODO: this is will give an error since it is called before target_spacecrafts gets created
-        self.ScanningSat.sat_args_generator["transmitterNumBuffers"] = len(self.ScanningSat.sat_args_generator["bufferNames"])
+        scanning_sat_name = self.chief_satellite_name
+        self.ScanningSat = [
+            satellite for satellite in self.satellites if satellite.name == scanning_sat_name
+        ][0]
+        self.ScanningSat.sat_args_generator["bufferNames"] = [
+            sc.name for sc in self.satellites
+        ]  # includes scanner + all target spacecraft names
+        self.ScanningSat.sat_args_generator["transmitterNumBuffers"] = len(
+            self.ScanningSat.sat_args_generator["bufferNames"]
+        )
 
     def reset_pre_sim_init(self):
+        priorities = self._generate_priorities()
         for i in range(self.n_targets):
-            target_sc_name = f"target_{i}" # this name here should match the bufferName so that the data gets added to the buffer !
-            sc = RSOTarget(self.satellites[i+1],target_sc_name,i, 1.0)
-            # sc = RSOTarget(i, priority=self.priority_distribution(), oe) #to be implemented later with priority_distribution
+            target_sc_name = f"target_{i}"  # must match buffer name
+            sc = RSOTarget(self.satellites[i + 1], target_sc_name, i, float(priorities[i]))
             self.target_spacecrafts.append(sc)
 
+        if len(priorities) > 0:
+            logger.info(
+                "Generated %d target priorities with mode=%s, min=%.6f, max=%.6f, sum=%.6f",
+                len(priorities),
+                self.priority_mode,
+                float(np.min(priorities)),
+                float(np.max(priorities)),
+                float(np.sum(priorities)),
+            )
 
     def reset_overwrite_previous(self) -> None:
         self.target_spacecrafts = []
 
-
     def reset_during_sim_init(self):
         for i in range(self.n_targets):
-            self.satellites[0].dynamics.targetLocation.addSpacecraftToModel(self.satellites[i+1].dynamics.scObject.scStateOutMsg) # this adds all possible targets to SS.targetLocation
-
-
+            # Add all candidate targets to scanner's target location model.
+            self.satellites[0].dynamics.targetLocation.addSpacecraftToModel(
+                self.satellites[i + 1].dynamics.scObject.scStateOutMsg
+            )
 
 
 
