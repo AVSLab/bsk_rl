@@ -99,6 +99,26 @@ class TestDiscreteFSWAction:
         fswact.satellite.fsw.action_fsw.assert_called_once()
 
 
+class TestDownlink:
+    def test_empty_storage_event_waits_one_cadence(self):
+        downlink = act.Downlink(duration=180.0, variable_duration_downlink=True)
+        downlink.simulator = MagicMock(sim_time=100.0, sim_rate=1.0, eventMap={})
+        downlink.satellite = MagicMock()
+        downlink.satellite.fsw.fsw_rate = 0.5
+        downlink.satellite.dynamics.storage_level = 0.0
+        downlink.satellite._satellite_command = "satellite"
+        downlink.satellite.variable_interval = True
+        downlink.satellite._info_command.return_value = "downlink storage empty"
+
+        downlink._enable_downlink_empty_event()
+
+        assert not downlink._downlink_empty_event_ready()
+        downlink.simulator.sim_time = 100.5
+        assert not downlink._downlink_empty_event_ready()
+        downlink.simulator.sim_time = 101.0
+        assert downlink._downlink_empty_event_ready()
+
+
 class TestImage:
     target = MagicMock()
     target.id = "target_1"
