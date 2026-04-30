@@ -10,9 +10,8 @@ import torch
 from dataclasses import asdict
 from sim_config import SimConfig
 
-_TORCH_THREADS = int(os.environ.get("BSK_RL_TORCH_THREADS", "11"))
-torch.set_num_threads(_TORCH_THREADS)
-os.environ.setdefault("MKL_NUM_THREADS", str(_TORCH_THREADS)) # 11 on the cluster historically
+torch.set_num_threads(11)
+os.environ["MKL_NUM_THREADS"] = "11" # 11 on the cluster historically
 
 import ray
 from bsk_rl.utils.utils import get_available_cores
@@ -43,47 +42,6 @@ except (ImportError, ModuleNotFoundError):  # Older versions of RLlib
     )
 
 # os.environ["RAY_DEDUP_LOGS"] = "0"
-
-
-def _env_int(name: str, default: int) -> int:
-    """Read an integer environment override while keeping script defaults simple."""
-    raw_value = os.environ.get(name)
-    if raw_value is None:
-        return int(default)
-    return int(raw_value)
-
-
-def _cluster_scratch_root() -> Path:
-    """Return the preferred scratch root on CURC, with a local-safe fallback."""
-    user = os.environ.get("USER", "dahu1128")
-    scratch_root = Path(
-        os.environ.get("BSK_RL_SCRATCH", f"/scratch/alpine/{user}")
-    ).expanduser()
-    if scratch_root.exists() or os.environ.get("SLURM_JOB_ID"):
-        return scratch_root
-    return Path("~/rllib_results").expanduser()
-
-
-def _default_output_root() -> Path:
-    """Use scratch on the cluster and a home-directory fallback on local machines."""
-    explicit = os.environ.get("BSK_RL_OUTPUT_DIR")
-    if explicit is not None:
-        return Path(explicit).expanduser()
-    scratch_root = _cluster_scratch_root()
-    if str(scratch_root).endswith("rllib_results"):
-        return scratch_root / "amos2026_results"
-    return scratch_root / "rllib_results"
-
-
-def _default_ray_tmpdir() -> Path:
-    """Keep Ray's temporary files on scratch during cluster jobs."""
-    explicit = os.environ.get("BSK_RL_RAY_TMPDIR") or os.environ.get("TMPDIR")
-    if explicit is not None:
-        return Path(explicit).expanduser()
-    scratch_root = _cluster_scratch_root()
-    if str(scratch_root).endswith("rllib_results"):
-        return Path("/tmp")
-    return scratch_root / "tmp"
 
 
 def train_model(
@@ -780,35 +738,26 @@ if __name__ == "__main__":
 
     all_sat = [sat] + targets
 
-    # Prefer Slurm array IDs on the cluster, but keep CLI/local execution working.
-    default_job_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-    N = _env_int("SLURM_ARRAY_TASK_ID", default_job_index)
-    n_envs = max(
-        1,
-        _env_int(
-            "BSK_RL_NUM_ENVS",
-            get_available_cores() - 4,  # leave some extra cores for other processes
-        ),
+    N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
+    n_envs = (
+        get_available_cores() - 4  # leave some extra cores for other processes
     )
-    batch_multiplier = _env_int("BSK_RL_BATCH_MULTIPLIER", 150)
+    batch_multiplier = 150
     batch_size = int(batch_multiplier * n_envs)
-    total_timesteps = _env_int("BSK_RL_TOTAL_TIMESTEPS", 20_000_000)
-    checkpoint_frequency = _env_int("BSK_RL_CHECKPOINT_FREQUENCY", 3)
     run_tag = (
         f"amos2026_LEO_wGAE_{batch_size}batch_restrictedResources_obsv7_"
         "1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2"
     )
     model_name = f"{run_tag}.out_{N}"
-    print('n_envs', n_envs, 'therefore batch size is ', batch_size)
+    print('n_envs', n_envs, 'therefore batch size is ', batch_multiplier*n_envs)
 
-    output_dir = _default_output_root() / f"{run_tag}_{time.time()}"
+    output_dir = (
+        Path("/scratch/alpine/dahu1128/rllib_results").expanduser()
+        / f"{run_tag}_{time.time()}"
+    )
     output_dir = Path(output_dir)
-    ray_tmpdir = _default_ray_tmpdir()
-    ray_tmpdir.mkdir(parents=True, exist_ok=True)
 
     print(f"Tensorboard logging: tensorboard --logdir {output_dir}")
-    print(f"Ray temp dir: {ray_tmpdir}")
-    print(f"Total timesteps: {total_timesteps}")
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -816,7 +765,7 @@ if __name__ == "__main__":
         training_args=dict(
             lr=[1e-5],
             gamma=[0.9997],
-            train_batch_size=[batch_size],  # n_envs on the Mac is 6 eventually; minimum train_batch_size = mini_batch = 128
+            train_batch_size=[int(batch_multiplier * n_envs)],  # n_envs on the Mac is 6 eventually; minimum train_batch_size = mini_batch = 128
             num_sgd_iter=[10],
             lambda_=[0.95],
             use_kl_loss=[False],
@@ -851,15 +800,6 @@ if __name__ == "__main__":
     run_cfg = {
         "sim": asdict(sim_cfg),
         "job_args": sanitize_np(job_args),
-        "cluster": {
-            "job_index": N,
-            "n_envs": n_envs,
-            "batch_multiplier": batch_multiplier,
-            "batch_size": batch_size,
-            "total_timesteps": total_timesteps,
-            "ray_tmpdir": str(ray_tmpdir),
-            "torch_threads": _TORCH_THREADS,
-        },
     }
 
     with open(output_dir / f"{model_name}_config.yaml", "w") as file:
@@ -868,12 +808,12 @@ if __name__ == "__main__":
     train_model(
         model_name=model_name,
         output_directory=output_dir,
-        checkpoint_frequency=checkpoint_frequency, # used to be 2
+        checkpoint_frequency=3, # used to be 2
         checkpoints_to_keep=3,
-        total_timesteps=total_timesteps,
+        total_timesteps=20_000_000,
         reload_frequency=500_000,
         n_envs=n_envs,
-        temp_dir=str(ray_tmpdir),
+        temp_dir="/scratch/alpine/dahu1128/tmp",
         **job_args,
     )
 
