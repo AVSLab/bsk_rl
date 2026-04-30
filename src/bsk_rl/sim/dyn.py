@@ -1753,16 +1753,28 @@ class ImagingSCDynModel(ImagingDynModel):
             self.task_name, self.simpleNavObject, ModelPriority=priority
         )
     @default_args(use_heuristic=False, heuristic_mode="angle", heuristic_top_k = 10, print_info=False)
-    def setup_metrics(self, use_heuristic: bool, heuristic_top_k: float, print_info: bool, priority: int = 2000, **kwargs) -> None:
+    def setup_metrics(
+        self,
+        use_heuristic: bool,
+        heuristic_top_k: float,
+        print_info: bool,
+        priority: int = 2000,
+        heuristic_mode: str = "angle",
+        **kwargs,
+    ) -> None:
         self.total_downlinks = 0
         self.useful_downlinks = 0
         self.imaged_illuminated = 0
         self.target_selection = []
         self.target_selection_comparison = []
         self.use_heuristic = use_heuristic
-        self.heuristic_mode = "angle"     # or "distance"
+        self.heuristic_mode = heuristic_mode if heuristic_mode in {"angle", "distance"} else "angle"
         self.heuristic_top_k = heuristic_top_k
         self.print_info=print_info
+        self.last_policy_target_id = None
+        self.last_heuristic_target_id = None
+        self.last_imaging_target_id = None
+        self.last_imaging_selection_mode = None
 
 
     @default_args(imaging_bonus=0.0, downlink_bonus=1.0, full_storage_penalty = 0, low_battery_penalty = 0, eclipsedImagePenalty = 0)

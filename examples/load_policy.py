@@ -8,6 +8,7 @@ import glob
 from pathlib import Path
 from typing import Callable
 import os
+import time
 
 # --- FLAG TO QUICKLY CHANGE ---
 # Set to 'latest', 'smallest', or 'best' to control which policy is loaded.
@@ -75,8 +76,57 @@ def find_latest_checkpoint(checkpoint_path_dir: Path, mode: str = 'latest') -> P
 
     return Path(selected_path)
 
+def _extract_linear_layers(named_parameters: dict[str, torch.Tensor], prefix: str) -> list[list[int]]:
+    layers = []
+    layer_idx = 0
+    while True:
+        weight_key = f"{prefix}.{layer_idx}.weight"
+        if weight_key not in named_parameters:
+            break
+        weight = named_parameters[weight_key]
+        layers.append([int(weight.shape[1]), int(weight.shape[0])])
+        layer_idx += 2
+    return layers
 
-def load_policy(policy_path_general: Path, policy_mode) -> Callable:
+
+def summarize_rl_module(rl_module: RLModule) -> dict:
+    named_parameters = dict(rl_module.named_parameters())
+    total_params = sum(int(param.numel()) for param in named_parameters.values())
+    trainable_params = sum(
+        int(param.numel()) for param in named_parameters.values() if param.requires_grad
+    )
+
+    actor_layers = _extract_linear_layers(
+        named_parameters,
+        "encoder.actor_encoder.net.mlp",
+    )
+    critic_layers = _extract_linear_layers(
+        named_parameters,
+        "encoder.critic_encoder.net.mlp",
+    )
+    policy_head_layers = _extract_linear_layers(named_parameters, "pi.net.mlp")
+    value_head_layers = _extract_linear_layers(named_parameters, "vf.net.mlp")
+
+    return {
+        "module_class": type(rl_module).__name__,
+        "total_parameters": total_params,
+        "trainable_parameters": trainable_params,
+        "actor_encoder_layers": actor_layers,
+        "critic_encoder_layers": critic_layers,
+        "policy_head_layers": policy_head_layers,
+        "value_head_layers": value_head_layers,
+        "parameter_shapes": {
+            name: list(param.shape) for name, param in named_parameters.items()
+        },
+        "module_repr": str(rl_module),
+    }
+
+
+def load_policy(
+    policy_path_general: Path,
+    policy_mode,
+    profile_inference: bool = False,
+) -> Callable:
     """Load a PyTorch policy from a saved model.
 
     Args:
@@ -91,6 +141,8 @@ def load_policy(policy_path_general: Path, policy_mode) -> Callable:
     rl_module = RLModule.from_checkpoint(
         path_checkpoint / "learner_group" / "learner" / "rl_module" / "inspector",
     )
+    model_summary = summarize_rl_module(rl_module)
+    inference_times_ns: list[int] = []
 
     def policy(
         obs: list[float],
@@ -104,7 +156,8 @@ def load_policy(policy_path_general: Path, policy_mode) -> Callable:
         Returns:
             An integer representing the selected action.
         """
-        obs = np.array(obs, dtype=np.float32)
+        start_ns = time.perf_counter_ns() if profile_inference else None
+        obs = np.asarray(obs, dtype=np.float32)
         input_dict = {Columns.OBS: torch.from_numpy(obs).unsqueeze(0)}
 
         rl_module_out = rl_module.forward_inference(input_dict)
@@ -114,6 +167,14 @@ def load_policy(policy_path_general: Path, policy_mode) -> Callable:
         else:
             action = np.random.choice(len(logits[0]), p=softmax(logits[0]))
 
+        if start_ns is not None:
+            inference_times_ns.append(time.perf_counter_ns() - start_ns)
+
         return action
+
+    policy.inference_times_ns = inference_times_ns
+    policy.checkpoint_path = path_checkpoint
+    policy.model_summary = model_summary
+    policy.profile_inference = profile_inference
 
     return policy

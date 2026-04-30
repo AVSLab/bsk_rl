@@ -147,6 +147,18 @@ def parse_args():
         default='{"LEO":0.5,"MEO":0.3,"GEO":0.2}',
         help='JSON dict of regime weights when target_env="mixed"'
     )
+    p.add_argument(
+        "--policy_name",
+        type=str,
+        default=None,
+        help="Policy variable name to evaluate, e.g. oct14_obsv7_1e_5lr_batch5000_gamma9997_20d80i.",
+    )
+    p.add_argument(
+        "--policy_mode",
+        choices=["best", "smallest", "latest"],
+        default="latest",
+        help="Checkpoint selection mode passed to load_policy.",
+    )
 
     return p.parse_args()
 
@@ -227,6 +239,7 @@ sim_cfg = SimConfig(
     n_targets=100,
     n_targets_ahead=10,
     imaging_duration=300.0,
+    variable_duration_imaging=True,  # AMOS 2026: stop after successful hold-gated image
     extra_time_factor=1.5,
     obs_v=7.0,          # default obs version; will be overwritten if policy_name known
     just_imaging=False,
@@ -236,9 +249,45 @@ sim_cfg = SimConfig(
 n_targets = sim_cfg.n_targets
 n_targets_ahead = sim_cfg.n_targets_ahead
 imaging_duration = sim_cfg.imaging_duration
+variable_duration_imaging = sim_cfg.variable_duration_imaging
+variable_duration_downlink = sim_cfg.variable_duration_downlink
+downlink_empty_threshold_bits = sim_cfg.downlink_empty_threshold_bits
 total_time = sim_cfg.total_time
 obs_v = sim_cfg.obs_v
 just_imaging = sim_cfg.just_imaging
+
+def make_rso_scenario():
+    return scene.RandomSatellites(
+        "SS1",
+        n_targets=n_targets,
+        priority_mode=sim_cfg.priority_mode,
+        priority_sum=sim_cfg.priority_sum,
+        rescale_priorities_to_sum=sim_cfg.rescale_priorities_to_sum,
+        priority_constant=sim_cfg.priority_constant,
+        priority_uniform_low=sim_cfg.priority_uniform_low,
+        priority_uniform_high=sim_cfg.priority_uniform_high,
+        priority_gaussian_mean=sim_cfg.priority_gaussian_mean,
+        priority_gaussian_std=sim_cfg.priority_gaussian_std,
+        priority_min=sim_cfg.priority_min,
+        priority_max=sim_cfg.priority_max,
+    )
+
+
+def make_rso_rewarder():
+    return data.RSOTargetImageReward(
+        reimage_cooldown_orbits=sim_cfg.reimage_cooldown_orbits,
+        verify_image_quality_on_downlink=sim_cfg.verify_image_quality_on_downlink,
+        hide_pending_targets=sim_cfg.hide_pending_targets,
+        image_quality_threshold=sim_cfg.image_quality_threshold,
+    )
+
+
+def make_downlink_action(duration: float):
+    return act.Downlink(
+        duration=duration,
+        variable_duration_downlink=variable_duration_downlink,
+        empty_storage_threshold_bits=downlink_empty_threshold_bits,
+    )
 
 # setting up sim parameters manually if needed
 # n_targets = 100
@@ -247,9 +296,8 @@ just_imaging = sim_cfg.just_imaging
 # total_time = n_targets * imaging_duration * 1.5   # 5700.0  # approximately 1 orbit
 
 
-args = parse_args()
+args = ARGS
 TARGET_ENV = args.target_env
-TARGET_ENV = "mixed"
 MIX_WEIGHTS = json.loads(args.mix_weights) if TARGET_ENV == "mixed" else None
 
 
@@ -263,7 +311,7 @@ if args.no_save_data:
 elif args.save_data:
     save_data = True
 
-policy_mode = 'latest'
+policy_mode = args.policy_mode
 eclipse_norm = 5700
 save_vizard = False
 viz_rate = 5.0
@@ -445,7 +493,12 @@ imaging_rewarded_noeclipse_1e_6lr_failure_penalties = "/Users/dahu1128/rllib_res
 
 # policy_path = obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i #DEPRECATED... now the globals() line is used below...    #balance00d100i_obs2_gamma9995_1e6lr
 # Choose which policy to evaluate by NAME
-policy_name = "oct14_obsv7_1e_5lr_batch5000_gamma9997_10d90i"  # <--- EDIT THIS when you switch policies
+policy_name = args.policy_name or "oct14_obsv7_1e_5lr_batch5000_gamma9997_10d90i"
+if policy_name not in globals():
+    raise ValueError(
+        f"Unknown policy_name '{policy_name}'. Add it to the policy path block or "
+        "choose one of the existing policy variable names."
+    )
 policy_path = globals()[policy_name]
 
 # Define all known policy paths with associated obs values
@@ -686,9 +739,17 @@ class MyScanningSatellite(sats.AccessSatellite):
             )
         ]
     action_spec = [
-        act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
+        act.ImageRSO(
+            n_ahead_image=n_targets_ahead,
+            duration=imaging_duration,
+            variable_duration_imaging=variable_duration_imaging,
+            min_pointing_hold_s=sim_cfg.min_pointing_hold_s,
+            hold_mode=sim_cfg.hold_mode,
+            require_illumination_during_hold=sim_cfg.require_illumination_during_hold,
+            hold_illumination_threshold=sim_cfg.hold_illumination_threshold,
+        ),  # Scan for 5 minute
         act.Charge(duration=300.0),  # Charge for 5 minutes
-        act.Downlink(duration=180.0), # Downlink for 3 min
+        make_downlink_action(180.0), # Downlink for 3 min
         act.Desat(duration=150), # Desat for 2.5 min
 
     ]
@@ -715,9 +776,17 @@ class MyScanningSatellite(sats.AccessSatellite):
             )
         ]
         action_spec = [
-            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
+            act.ImageRSO(
+                n_ahead_image=n_targets_ahead,
+                duration=imaging_duration,
+                variable_duration_imaging=variable_duration_imaging,
+                min_pointing_hold_s=sim_cfg.min_pointing_hold_s,
+                hold_mode=sim_cfg.hold_mode,
+                require_illumination_during_hold=sim_cfg.require_illumination_during_hold,
+                hold_illumination_threshold=sim_cfg.hold_illumination_threshold,
+            ),  # Scan for 5 minute
             act.Charge(duration=300.0),  # Charge for 5 minutes
-            act.Downlink(duration=300.0), # Downlink for 3 min
+            make_downlink_action(300.0), # Downlink for 3 min
             act.Desat(duration=150), # Desat for 2.5 min.  # FOR OBS4 this DESAT may need to be removed!
         ]
         N_GS = 1
@@ -739,7 +808,15 @@ class MyScanningSatellite(sats.AccessSatellite):
             obs.Eclipse(norm=1.0),
                 ]
         action_spec = [
-            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
+            act.ImageRSO(
+                n_ahead_image=n_targets_ahead,
+                duration=imaging_duration,
+                variable_duration_imaging=variable_duration_imaging,
+                min_pointing_hold_s=sim_cfg.min_pointing_hold_s,
+                hold_mode=sim_cfg.hold_mode,
+                require_illumination_during_hold=sim_cfg.require_illumination_during_hold,
+                hold_illumination_threshold=sim_cfg.hold_illumination_threshold,
+            ),  # Scan for 5 minute
             act.Charge(duration=300.0),  # Charge for 5 minutes
             ]
         GS_START =74
@@ -757,7 +834,15 @@ class MyScanningSatellite(sats.AccessSatellite):
 
         ]
         action_spec = [
-            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
+            act.ImageRSO(
+                n_ahead_image=n_targets_ahead,
+                duration=imaging_duration,
+                variable_duration_imaging=variable_duration_imaging,
+                min_pointing_hold_s=sim_cfg.min_pointing_hold_s,
+                hold_mode=sim_cfg.hold_mode,
+                require_illumination_during_hold=sim_cfg.require_illumination_during_hold,
+                hold_illumination_threshold=sim_cfg.hold_illumination_threshold,
+            ),  # Scan for 5 minute
             ]
     if obs_v==6:
         observation_spec = [
@@ -784,9 +869,17 @@ class MyScanningSatellite(sats.AccessSatellite):
             )
         ]
         action_spec = [
-            act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
+            act.ImageRSO(
+                n_ahead_image=n_targets_ahead,
+                duration=imaging_duration,
+                variable_duration_imaging=variable_duration_imaging,
+                min_pointing_hold_s=sim_cfg.min_pointing_hold_s,
+                hold_mode=sim_cfg.hold_mode,
+                require_illumination_during_hold=sim_cfg.require_illumination_during_hold,
+                hold_illumination_threshold=sim_cfg.hold_illumination_threshold,
+            ),  # Scan for 5 minute
             act.Charge(duration=300.0),  # Charge for 5 minutes
-            act.Downlink(duration=300.0), # Downlink for 3 min
+            make_downlink_action(300.0), # Downlink for 3 min
             act.Desat(duration=150), # Desat for 2.5 min.  # FOR OBS4 this DESAT may need to be removed!
 
         ]
@@ -994,8 +1087,8 @@ if save_vizard == True:
     env = gym.make(
         "ConstellationTasking-v1",
         satellites=all_sat,
-        scenario=scene.RandomSatellites("SS1",n_targets=n_targets),
-        rewarder=data.RSOTargetImageReward(),
+        scenario=make_rso_scenario(),
+        rewarder=make_rso_rewarder(),
         world_type=world.GroundStationWorldModel,
         time_limit=total_time,
         log_level="WARNING", #ERROR or DEBUG
@@ -1008,8 +1101,8 @@ else:
     env = gym.make(
         "ConstellationTasking-v1",
         satellites=all_sat,
-        scenario=scene.RandomSatellites("SS1",n_targets=n_targets),
-        rewarder=data.RSOTargetImageReward(),
+        scenario=make_rso_scenario(),
+        rewarder=make_rso_rewarder(),
         world_type=world.GroundStationWorldModel,
         time_limit=total_time,
         log_level="WARNING", #ERROR or DEBUG
@@ -2387,4 +2480,3 @@ except Exception as e:
     print("WARNING: Failed to save metrics JSON:", e)
 print(f"good images #:{len(env.unwrapped.rewarder.imaged_illuminated)} out of {target_imaging_count}")
 print(f"imaging success percentage {len(env.unwrapped.rewarder.imaged_illuminated)/target_imaging_count*100}%")
-
