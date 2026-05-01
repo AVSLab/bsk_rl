@@ -1,0 +1,98 @@
+name: Commit Checks
+on: [pull_request]
+
+jobs:
+  formatting:
+    name: Linting and Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: psf/black@stable
+      - uses: chartboost/ruff-action@v1
+      - uses: isort/isort-action@v1
+
+  check-commit-message:
+    name: Check Commit Message
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Commit Format
+        uses: gsactions/commit-message-checker@v2
+        with:
+          pattern: '((Issue \#[0-9]+:)|(\[((\#[0-9]+)|(MINOR)|(AUTO)|(RELEASE))\])) .+'
+          checkAllCommitMessages: 'true'
+          error: 'Your first line has to have the format "Issue #XXX: Commit message" or "[#XXX] Commit Message".'
+          excludeDescription: 'true'
+          excludeTitle: 'true'
+          accessToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check Line Length
+        uses: gsactions/commit-message-checker@v2
+        with:
+          pattern: '.{1,72}'
+          error: 'The maximum line length of 72 characters is exceeded.'
+          excludeDescription: 'true'
+          excludeTitle: 'true'
+          checkAllCommitMessages: 'true'
+          accessToken: ${{ secrets.GITHUB_TOKEN }}
+
+  run-pytest:
+    name: Run Tests
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Find artifact run
+        run: |
+          sudo apt-get install jq
+          export RUN_ID=$(
+            curl -L \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/AVSLab/basilisk/actions/runs?status=completed&per_page=100" | 
+            jq -r '.workflow_runs[] | select(.name == "Pull Request Closed") | .id' | 
+            head -n 1
+          )
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+      - name: Pull artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: basilisk-wheels_ubuntu-22.04_python${{ matrix.python-version }}
+          repository: AVSLab/basilisk
+          run-id: ${{ env.RUN_ID }}
+          github-token: ${{ github.token }}
+      - name: Install Basilisk from wheels
+        run: |
+          pip install *asilisk*.whl
+          bskLargeData
+      - name: Install BSK-RL
+        run: pip install -e '.[all]' && finish_install
+      - name: Run pytest
+        run: pytest -v -ra --tb=long -o log_cli=true -o log_level=DEBUG
+
+  check-doc-build:
+    name: Test Documentation Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pandoc/actions/setup@main
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+            python-version: '3.10'     
+      - name: Mock Basilisk
+        run: |
+          cp docs/sitecustomize.py $(python -c 'import site; print(site.getsitepackages()[0])')/sitecustomize.py
+      - name: Install dependencies
+        run: |
+          pip install -e '.[docs,rllib]'
+        # skip finish install steps
+      - name: Sphinx build
+        run: |
+          cd docs
+          make html
+          cd ..

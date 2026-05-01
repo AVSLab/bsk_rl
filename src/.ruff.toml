@@ -1,0 +1,7 @@
+[lint.pydocstyle]
+convention = "google"
+
+[lint]
+select = ["D", "W", "D404"]
+ignore = ["D101", "D104"]
+extend-safe-fixes = ["D"]

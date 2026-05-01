@@ -1,0 +1,14 @@
+data/
+data_scaling_campaign/
+data_scaling_campaign_200/
+data_scaling_campaign_400/
+plots/
+analysis_out/
+outputs/
+__pycache__/
+*.pyc
+*.prof
+*.npy
+*.csv
+*.json
+*.tex

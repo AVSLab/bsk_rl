@@ -1,0 +1,31 @@
+# Minimal makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line, and also
+# from the environment for the first two.
+SPHINXOPTS    ?=
+SPHINXBUILD   ?= sphinx-build
+SOURCEDIR     = source
+BUILDDIR      = build
+
+# Put it first so that "make" without argument is like "make help".
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: help Makefile
+
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+%: Makefile
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+clean:
+	cp build/doctrees/nbsphinx/README.txt _tmp_README.txt
+	rm -rf "source/examples" "source/api_reference" "build"
+	mkdir -p "build/doctrees/nbsphinx"
+	cp _tmp_README.txt build/doctrees/nbsphinx/README.txt
+	rm _tmp_README.txt
+	
+view:
+	# works on macOS
+	open build/html/index.html
