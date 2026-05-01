@@ -47,13 +47,13 @@ except Exception as _e:
 # -------------------------------------------------------------------------
 
 # ---------- USER CONFIG ----------
-# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/july_results/july30rllib_results")  # <-- set to folder containing your aug1* policies
-# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug1rllib_results")  # <-- set to folder containing your aug1* policies
-POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug18rllib_results")  # <-- set to folder containing your aug1* policies
-# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug19rllib_results")  # <-- set to folder containing your aug1* policies
+# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/july_results/july30rllib_results")  # Set to a local folder containing trained policies.
+# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug1rllib_results")  # Set to a local folder containing trained policies.
+POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug18rllib_results")  # Set to a local folder containing trained policies.
+# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/aug19rllib_results")  # Set to a local folder containing trained policies.
 
-# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/locally_trained")  # <-- set to folder containing your aug1* policies
-# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results")  # <-- set to folder containing your aug1* policies
+# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/august_results/locally_trained")  # Set to a local folder containing trained policies.
+# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results")  # Set to a local folder containing trained policies.
 # FILTER_SUBSTRING = "aug13_wGAE_smallbatch"   # only load policies that contain this substring; set to "" to load all
 # FILTER_SUBSTRING = "aug15_wGAE_imaging_baseline"
 # FILTER_SUBSTRING = "aug3_unlimitedResources"
@@ -348,7 +348,7 @@ def make_env(obs_v, seed_number, total_time, n_targets=100, n_targets_ahead=10, 
                 act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
                 act.Charge(duration=300.0),  # Charge for 5 minutes
                 act.Downlink(duration=300.0), # Downlink for 3 min
-                act.Desat(duration=150), # Desat for 2.5 min.  # FOR OBS4 this DESAT may need to be removed!
+                act.Desat(duration=150), # Desat for 2.5 min.
 
             ]
         elif obs_v==7:

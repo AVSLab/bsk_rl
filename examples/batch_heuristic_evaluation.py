@@ -45,8 +45,8 @@ try:
 except Exception as _e:
     pass
 # ---------- USER CONFIG ----------
-POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/july_results/july30rllib_results")  # <-- set to folder containing your aug1* policies
-# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results")  # <-- set to folder containing your aug1* policies
+POLICY_FOLDER = Path("/Users/dahu1128/rllib_results/july_results/july30rllib_results")  # Set to a local folder containing trained policies.
+# POLICY_FOLDER = Path("/Users/dahu1128/rllib_results")  # Set to a local folder containing trained policies.
 FILTER_SUBSTRING = "aug13_wGAE_smallbatch"   # only load policies that contain this substring; set to "" to load all
 # FILTER_SUBSTRING = "aug15_wGAE_imaging_baseline"
 POLICY_MATCH_SUFFIX = ".out_0"  # typical suffix in your screenshot; adjust if different

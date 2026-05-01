@@ -106,7 +106,7 @@ obs_v = 2 # this is overwritten for all policies that have an assigned obs type
 ORBIT_PERIOD_SEC = 95 * 60
 ECL_SLICE  = slice(75, 77)
 GS_START   = 77
-N_GS       = 5          # <<< set this to your actual number of ground stations
+N_GS       = 5          # Number of ground-station opportunity windows in the observation.
 PAIR_STRIDE = 2
 
 # If your local training now outputs *normalized* offsets since Aug 14,
@@ -491,7 +491,7 @@ class MyScanningSatellite(sats.AccessSatellite):
             act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
             act.Charge(duration=300.0),  # Charge for 5 minutes
             act.Downlink(duration=300.0), # Downlink for 3 min
-            act.Desat(duration=150), # Desat for 2.5 min.  # FOR OBS4 this DESAT may need to be removed!
+            act.Desat(duration=150), # Desat for 2.5 min.
         ]
         N_GS = 1
         GS_START = 74
@@ -560,7 +560,7 @@ class MyScanningSatellite(sats.AccessSatellite):
             act.ImageRSO(n_ahead_image=n_targets_ahead,duration=imaging_duration),  # Scan for 5 minute
             act.Charge(duration=300.0),  # Charge for 5 minutes
             act.Downlink(duration=300.0), # Downlink for 3 min
-            act.Desat(duration=150), # Desat for 2.5 min.  # FOR OBS4 this DESAT may need to be removed!
+            act.Desat(duration=150), # Desat for 2.5 min.
 
         ]
     elif obs_v==7:
@@ -674,7 +674,7 @@ env = gym.make(
     time_limit=total_time,
     log_level="ERROR", #ERROR or DEBUG
     disable_env_checker=True,
-    vizard_dir="/Users/dahu1128/Documents",
+    vizard_dir="/Users/dahu1128/Documents",  # Replace with a local output directory if using Vizard.
     vizard_settings=dict(vizard_rate=2), # in seconds
     # max_step_duration=700,
 )
