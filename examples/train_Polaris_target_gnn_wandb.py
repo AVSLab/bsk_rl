@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 """Safe local copy of the Polaris AMOS 2026 target-wise GNN trainer.
 
-Local quick syntax:
-    BSK_RL_NUM_ENVS=1 BSK_RL_BATCH_MULTIPLIER=32 BSK_RL_TOTAL_TIMESTEPS=10000 \
-        python3 examples/train_Polaris_target_gnn_wandb.py
+Local IDE use:
+    Press Run/Play on this file. The default local settings intentionally keep
+    this lightweight enough for a startup check.
 
-Cluster syntax:
+Local terminal equivalent:
+    /Users/dahu1128/Repositories/bsk_rl/.venv/bin/python \
+        /Users/dahu1128/Repositories/bsk_rl/examples/train_Polaris_target_gnn_wandb.py
+
+Cluster use:
+    Submit the matching Slurm wrapper, not the Python file directly:
+        sbatch examples/amos_2026/sbatch_train_polaris_target_gnn_wandb_debug.sh
+        sbatch examples/amos_2026/sbatch_train_polaris_target_gnn_wandb_48h.sh
+
+Cluster comments:
     # Put the W&B key at /projects/$USER/bsk_rl/examples/wandb_key.txt, or set
-    # BSK_RL_WANDB_KEY_PATH=/path/to/wandb_key.txt before launching.
-    # In Slurm, also keep Ray's temp path short:
-    # export BSK_RL_RAY_TMPDIR=/tmp/bskray_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID:-0}
-    # export TMPDIR=$BSK_RL_RAY_TMPDIR
-    # export BSK_RL_OUTPUT_DIR=/scratch/alpine/$USER/rllib_results
-    BSK_RL_TOTAL_TIMESTEPS=20000000 BSK_RL_BATCH_MULTIPLIER=150 \
-        python3 -u examples/train_Polaris_target_gnn_wandb.py
+    # BSK_RL_WANDB_KEY_PATH=/path/to/wandb_key.txt in the sbatch script.
+    # The sbatch scripts also keep Ray's temp path short enough for AF_UNIX.
 
 This script intentionally removes charge, downlink, and desat actions so the
 custom RLModule can score only the target choices. Because there is no downlink
@@ -46,7 +50,8 @@ import torch
 import yaml
 from sim_config import SimConfig
 
-_TORCH_THREADS = int(os.environ.get("BSK_RL_TORCH_THREADS", "11"))
+_DEFAULT_TORCH_THREADS = "11" if os.environ.get("SLURM_JOB_ID") else "1"
+_TORCH_THREADS = int(os.environ.get("BSK_RL_TORCH_THREADS", _DEFAULT_TORCH_THREADS))
 torch.set_num_threads(_TORCH_THREADS)
 os.environ.setdefault("MKL_NUM_THREADS", str(_TORCH_THREADS))
 
@@ -119,13 +124,19 @@ def _default_output_root() -> Path:
 
 
 def _default_ray_tmpdir() -> Path:
-    explicit = os.environ.get("BSK_RL_RAY_TMPDIR") or os.environ.get("TMPDIR")
+    explicit = os.environ.get("BSK_RL_RAY_TMPDIR")
     if explicit is not None:
         return Path(explicit).expanduser()
+
+    if os.environ.get("SLURM_JOB_ID") and os.environ.get("TMPDIR"):
+        return Path(os.environ["TMPDIR"]).expanduser()
+
     # Ray appends long socket paths below this directory, so keep it short.
     job_id = os.environ.get("SLURM_JOB_ID", "local")
     array_id = os.environ.get("SLURM_ARRAY_TASK_ID", "0")
-    return Path(f"/tmp/bskray_{job_id}_{array_id}")
+    if os.environ.get("SLURM_JOB_ID"):
+        return Path(f"/tmp/bskray_{job_id}_{array_id}")
+    return Path("~/rllib_results/ray_tmp").expanduser() / f"bskray_{job_id}_{array_id}"
 
 
 def _wandb_key_path() -> Path:
@@ -740,7 +751,7 @@ if __name__ == "__main__":
     )
 
     print(f"n_envs={n_envs}; batch_size={batch_size}; torch_threads={_TORCH_THREADS}")
-    print(f"TensorBoard: tensorboard --logdir {output_dir}")
+    print(f"Tensorboard logging: tensorboard --logdir {output_dir}")
     print(f"Ray temp dir: {ray_tmpdir}")
     print(f"Total timesteps: {total_timesteps}")
     print(f"Running job {job_index}: {job_index + 1} of {len(jobs)}")
