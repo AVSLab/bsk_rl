@@ -159,7 +159,8 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         inactive), or else significant time is spent processing the event at each step.
         """
         event = self.eventMap[event_name]
-        self.eventList.remove(event)
+        if hasattr(self, "eventList"):
+            self.eventList.remove(event)
         del self.eventMap[event_name]
 
     def __del__(self):

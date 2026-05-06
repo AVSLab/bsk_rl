@@ -7,6 +7,21 @@ from warnings import warn
 from packaging.version import parse as parse_version
 
 
+def _get_basilisk_distribution_version() -> str:
+    """Return the installed Basilisk distribution version.
+
+    Basilisk was historically published under the distribution name
+    "Basilisk" and is now published as "bsk".
+    """
+    for dist_name in ("Basilisk", "bsk"):
+        try:
+            return version(dist_name)
+        except PackageNotFoundError:
+            continue
+
+    raise PackageNotFoundError("Basilisk")
+
+
 def check_bsk_version():
     """Check Basilisk version against requirement."""
     # Don't run check if Basilisk is mocked
@@ -26,7 +41,7 @@ def check_bsk_version():
     )
     bsk_req = parse_version(f.read().strip())
     try:
-        bsk_version = parse_version(version("Basilisk"))
+        bsk_version = parse_version(_get_basilisk_distribution_version())
         if not bsk_version >= bsk_req:
             warn(
                 f"Basilisk>={bsk_req} is required for full functionality. "
@@ -34,6 +49,7 @@ def check_bsk_version():
             )
     except PackageNotFoundError:
         raise ImportError(
-            "The 'Basilisk' distribution was not found. Install from "
+            "No Basilisk distribution metadata was found (tried 'Basilisk' and 'bsk'). "
+            "Install from "
             "http://hanspeterschaub.info/basilisk/."
         )

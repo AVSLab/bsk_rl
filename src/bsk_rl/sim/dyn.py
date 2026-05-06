@@ -472,6 +472,8 @@ class BasicDynamicsModel(DynamicsModel):
         self.simulator.AddModelToTask(
             self.task_name, self.simpleNavObject, ModelPriority=priority
         )
+        self.navLogtrans= self.simpleNavObject.transOutMsg.recorder(macros.sec2nano(3.0))
+        self.simulator.AddModelToTask(self.task_name, self.navLogtrans)
 
     @aliveness_checker
     def altitude_valid(self) -> bool:
@@ -1101,8 +1103,8 @@ class StripImagingDynModel(ImagingDynModel):
         self.imagingStrip = stripLocation.StripLocation()
         self.imagingStrip.ModelTag = "scanningStrip"
         self.imagingStrip.planetRadius = groundLocationPlanetRadius
-        self.imagingStrip.acquisition_speed = 3*1e-6 # in m/ns
-        self.imagingStrip.pre_imaging_time = 0.0 # in ns
+        self.imagingStrip.acquisitionSpeed = 3*1e-6 # in m/ns
+        self.imagingStrip.preImagingTime = 0.0 # in ns
         self.imagingStrip.specifyLocationStart(0, 0, 0)
         self.imagingStrip.specifyLocationEnd(0, 0, 1000.0)
         #self.imagingStrip.newpstart()

@@ -5,7 +5,6 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Optional, Union
 import numpy as np
 from gymnasium import spaces
-
 from bsk_rl.act.actions import Action, ActionBuilder
 
 if TYPE_CHECKING:  # pragma: no cover
