@@ -77,11 +77,14 @@ except (ImportError, ModuleNotFoundError):  # Older versions of RLlib
     from ray.rllib.core.rl_module.rl_module import SingleAgentRLModuleSpec as RLModuleSpec
 
 
-# Observation bookkeeping for Target-GNN's module. The observation spec below is
-# ordered so the first OBS_SAT_DIM entries are spacecraft/global features and all
-# remaining entries are repeated TARGET_FEATURES_PER_TARGET chunks.
-# storage, battery, 3 wheel speeds, eclipse start/end, 2 ground-station windows
+# Observation bookkeeping for Target-GNN's module. The network slices the flat
+# observation as [spacecraft/global block][target_0 block][target_1 block]...
+# so this has to match MyScanningSatellite.observation_spec exactly.
 OBS_SAT_DIM = 11
+# OBS_SAT_DIM = 11 means:
+# storage level, battery, 3 wheel speeds, eclipse start/end, and 2 ground-station
+# windows with open/close time each. If you add/remove a global observation,
+# update this number and the run_cfg "observation_layout" below.
 TARGET_FEATURES_PER_TARGET = 7  # elevation, rel-pos-H(3), angle, distance, shadow
 NON_IMAGING_ACTIONS = 0  # image-only action space: one logit per candidate target
 
@@ -106,47 +109,47 @@ def _env_bool(name: str, default: bool) -> bool:
 def _cluster_scratch_root() -> Path:
     user = os.environ.get("USER", "dahu1128")
     scratch_root = Path(
-        os.environ.get("BSK_RL_SCRATCH", f"/scratch/alpine/{user}")
+        os.environ.get("BSK_RL_SCRATCH", f"/scratch/alpine/{user}")  # cluster default
     ).expanduser()
     if scratch_root.exists() or os.environ.get("SLURM_JOB_ID"):
         return scratch_root
-    return Path("~/rllib_results/may_results/may6rllib_results").expanduser()
+    return Path("~/rllib_results/may_results/may6rllib_results").expanduser()  # local default
 
 
 def _default_output_root() -> Path:
     explicit = os.environ.get("BSK_RL_OUTPUT_DIR")
     if explicit is not None:
-        return Path(explicit).expanduser()
+        return Path(explicit).expanduser()  # cluster sbatch sets /scratch/alpine/$USER/rllib_results
     scratch_root = _cluster_scratch_root()
     if os.environ.get("SLURM_JOB_ID"):
-        return scratch_root / "rllib_results"
-    return scratch_root
+        return scratch_root / "rllib_results"  # cluster fallback if BSK_RL_OUTPUT_DIR is not set
+    return scratch_root  # local: ~/rllib_results/may_results/may6rllib_results
 
 
 def _default_ray_tmpdir() -> Path:
     explicit = os.environ.get("BSK_RL_RAY_TMPDIR")
     if explicit is not None:
-        return Path(explicit).expanduser()
+        return Path(explicit).expanduser()  # cluster sbatch sets /tmp/bskray_${SLURM_JOB_ID}_...
 
     if os.environ.get("SLURM_JOB_ID") and os.environ.get("TMPDIR"):
-        return Path(os.environ["TMPDIR"]).expanduser()
+        return Path(os.environ["TMPDIR"]).expanduser()  # cluster fallback if TMPDIR is already set
 
     # Ray appends long socket paths below this directory, so keep it short.
     job_id = os.environ.get("SLURM_JOB_ID", "local")
     array_id = os.environ.get("SLURM_ARRAY_TASK_ID", "0")
     if os.environ.get("SLURM_JOB_ID"):
-        return Path(f"/tmp/bskray_{job_id}_{array_id}")
-    return Path("~/rllib_results/ray_tmp").expanduser() / f"bskray_{job_id}_{array_id}"
+        return Path(f"/tmp/bskray_{job_id}_{array_id}")  # cluster: avoid AF_UNIX path length errors
+    return Path("~/rllib_results/ray_tmp").expanduser() / f"bskray_{job_id}_{array_id}"  # local
 
 
 def _wandb_key_path() -> Path:
     explicit = os.environ.get("BSK_RL_WANDB_KEY_PATH")
     if explicit:
-        return Path(explicit).expanduser()
-    local_key = EXAMPLES_DIR / "wandb_key.txt"
+        return Path(explicit).expanduser()  # cluster sbatch sets /projects/$USER/bsk_rl/examples/wandb_key.txt
+    local_key = EXAMPLES_DIR / "wandb_key.txt"  # local: /Users/dahu1128/Repositories/bsk_rl/examples/wandb_key.txt
     if local_key.exists():
         return local_key
-    return Path.cwd() / "wandb_key.txt"
+    return Path.cwd() / "wandb_key.txt"  # fallback if running from a different working directory
 
 
 def _maybe_init_wandb(run_name: str, config: dict[str, Any]):
@@ -154,6 +157,9 @@ def _maybe_init_wandb(run_name: str, config: dict[str, Any]):
         print("W&B disabled via BSK_RL_USE_WANDB=0")
         return None
 
+    # Local runs are forgiving by default, so pressing play still works if W&B is
+    # not installed. The W&B sbatch scripts set BSK_RL_REQUIRE_WANDB=1 so cluster
+    # jobs fail immediately instead of silently training without live logging.
     require_wandb = _env_bool("BSK_RL_REQUIRE_WANDB", False)
     key_path = _wandb_key_path()
     if not key_path.exists():
@@ -181,8 +187,8 @@ def _maybe_init_wandb(run_name: str, config: dict[str, Any]):
 def target_gnn_model_config(n_targets_ahead: int) -> dict[str, Any]:
     """Return the target-wise GNN settings suggested for the imaging ablation."""
     return {
-        "n_targets": int(n_targets_ahead),
-        "obs_sat": OBS_SAT_DIM,
+        "n_targets": int(n_targets_ahead),  # candidate targets shown to policy, not total catalog targets
+        "obs_sat": OBS_SAT_DIM,  # number of non-target/global observation values at the front
         "width_f": 256,
         "depth_f": 2,
         "block_f": False,
@@ -200,7 +206,7 @@ def target_gnn_model_config(n_targets_ahead: int) -> dict[str, Any]:
         "critic_width_g": 64,
         "critic_depth_g": 3,
         "critic_pooling_std": False,
-        "non_imaging_actions": NON_IMAGING_ACTIONS,
+        "non_imaging_actions": NON_IMAGING_ACTIONS,  # 0 because this ablation removes charge/downlink/desat
     }
 
 
@@ -506,15 +512,18 @@ def sat_metrics_callback(env, satellite):
 
 
 if __name__ == "__main__":
+    # Local defaults are chosen so you can press Run/Play in the IDE and quickly
+    # see that Ray, Basilisk, the GNN module, and optional W&B setup all start.
+    # The cluster sbatch files override these through BSK_RL_* environment vars.
     sim_cfg = SimConfig(
-        n_targets=_env_int("BSK_RL_N_TARGETS", 100),
-        n_targets_ahead=_env_int("BSK_RL_N_TARGETS_AHEAD", 10),
-        imaging_duration=_env_float("BSK_RL_IMAGING_DURATION", 300.0),
-        extra_time_factor=_env_float("BSK_RL_EXTRA_TIME_FACTOR", 1.5),
-        obs_v=8.0,
-        just_imaging=True,
-        verify_image_quality_on_downlink=False,
-        hide_pending_targets=False,
+        n_targets=_env_int("BSK_RL_N_TARGETS", 100),  # local: 100 catalog targets; cluster: override if sweeping scale
+        n_targets_ahead=_env_int("BSK_RL_N_TARGETS_AHEAD", 10),  # local/cluster: GNN action count = 10 candidates
+        imaging_duration=_env_float("BSK_RL_IMAGING_DURATION", 300.0),  # max action duration before fast hold gate stops it
+        extra_time_factor=_env_float("BSK_RL_EXTRA_TIME_FACTOR", 1.5),  # episode length multiplier
+        obs_v=8.0,  # observation layout version; v8 means global block first, target blocks second
+        just_imaging=True,  # image-only ablation for the target-wise GNN architecture
+        verify_image_quality_on_downlink=False,  # no downlink action exists in this script
+        hide_pending_targets=False,  # pending lifecycle is tested in the baseline AMOS trainer, not here
     )
 
     n_targets = sim_cfg.n_targets
@@ -541,6 +550,9 @@ if __name__ == "__main__":
     def make_rso_rewarder():
         return data.RSOTargetImageReward(
             reimage_cooldown_orbits=sim_cfg.reimage_cooldown_orbits,
+            # In the full AMOS lifecycle, useful images are verified at downlink.
+            # Here there is no downlink action, so reward/cooldown must happen at
+            # capture time or the image-only policy would never receive reward.
             verify_image_quality_on_downlink=False,
             hide_pending_targets=False,
             image_quality_threshold=sim_cfg.image_quality_threshold,
@@ -548,18 +560,25 @@ if __name__ == "__main__":
 
     class MyScanningSatellite(sats.AccessSatellite):
         observation_spec = [
+            # Global spacecraft/resource state. These entries form the first
+            # OBS_SAT_DIM values consumed by the GNN.
             obs.SatProperties(
                 dict(prop="storage_level_fraction"),
                 dict(prop="battery_charge_fraction"),
                 dict(prop="wheel_speeds_fraction"),
             ),
             obs.Eclipse(norm=5700),
+            # Ground-station windows are still useful global context even though
+            # this image-only ablation has no downlink action; keeping them in
+            # the global block preserves a path back to the full AMOS trainer.
             obs.OpportunityProperties(
                 dict(prop="opportunity_open", norm=5700.0),
                 dict(prop="opportunity_close", norm=5700.0),
                 type="ground_station",
                 n_ahead_observe=2,
             ),
+            # Target candidate block. The GNN applies the same encoder to each
+            # of these n_targets_ahead chunks, then scores each target action.
             obs.PolarisScTargetProperties(
                 dict(prop="target_elevation_angle", norm=90.0),
                 dict(prop="rel_pos_vector_r_BR_H", norm=15960 * 1000),
@@ -570,6 +589,8 @@ if __name__ == "__main__":
             ),
         ]
         action_spec = [
+            # Only imaging actions are exposed here. If charge/downlink/desat are
+            # added back, NON_IMAGING_ACTIONS and the model head must change too.
             act.ImageRSO(
                 n_ahead_image=n_targets_ahead,
                 duration=imaging_duration,
@@ -591,12 +612,12 @@ if __name__ == "__main__":
     # enough that resource depletion is not the dominant learning problem.
     baseline_storage_bits = 50 * 8e6 / 2
     baseline_battery_ws = 500 * 3600
-    sat_args["dataStorageCapacity"] = 10 * baseline_storage_bits
+    sat_args["dataStorageCapacity"] = 10 * baseline_storage_bits  # local/cluster: large enough for image-only runs
     sat_args["storageInit"] = lambda: 0.0
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
     sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
-    sat_args["batteryStorageCapacity"] = 10 * baseline_battery_ws
+    sat_args["batteryStorageCapacity"] = 10 * baseline_battery_ws  # local/cluster: avoid learning mostly battery survival
     sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.8, 1.0) * 10 * baseline_battery_ws
     sat_args["basePowerDraw"] = -10.0
     sat_args["instrumentPowerDraw"] = -30.0
@@ -701,10 +722,10 @@ if __name__ == "__main__":
     default_job_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
     job_index = _env_int("SLURM_ARRAY_TASK_ID", default_job_index)
     on_cluster = bool(os.environ.get("SLURM_JOB_ID"))
-    default_n_envs = get_available_cores() - 4 if on_cluster else 1
-    default_batch_multiplier = 150 if on_cluster else 32
-    default_total_timesteps = 20_000_000 if on_cluster else 10_000
-    default_checkpoint_frequency = 3 if on_cluster else 1
+    default_n_envs = get_available_cores() - 4 if on_cluster else 1  # local: 1; cluster: cores minus buffer
+    default_batch_multiplier = 150 if on_cluster else 32  # local: 32; cluster: 150 unless sbatch overrides
+    default_total_timesteps = 20_000_000 if on_cluster else 10_000  # local startup check; cluster full train
+    default_checkpoint_frequency = 3 if on_cluster else 1  # local: checkpoint every iter; cluster: less often
     n_envs = max(1, _env_int("BSK_RL_NUM_ENVS", default_n_envs))
     batch_multiplier = _env_int("BSK_RL_BATCH_MULTIPLIER", default_batch_multiplier)
     batch_size = int(batch_multiplier * n_envs)
@@ -718,18 +739,18 @@ if __name__ == "__main__":
         "hold10s_reimage2orb_prioritySum100"
     )
     model_name = f"{run_tag}.out_{job_index}"
-    output_dir = _default_output_root() / f"{run_tag}_{time.time()}"
-    ray_tmpdir = _default_ray_tmpdir()
+    output_dir = _default_output_root() / f"{run_tag}_{time.time()}"  # local: ~/rllib_results/...; cluster: /scratch/alpine/$USER/rllib_results/...
+    ray_tmpdir = _default_ray_tmpdir()  # local: ~/rllib_results/ray_tmp/...; cluster: /tmp/bskray_${SLURM_JOB_ID}_...
     output_dir.mkdir(parents=True, exist_ok=True)
     ray_tmpdir.mkdir(parents=True, exist_ok=True)
 
-    inspector_model_config = target_gnn_model_config(n_targets_ahead)
+    inspector_model_config = target_gnn_model_config(n_targets_ahead)  # n_targets_ahead must match ImageRSO/observation count
     inspector_rl_module_spec = RLModuleSpec(
         module_class=GNNModule,
         model_config_dict=inspector_model_config,
     )
 
-    base_lr = 0.00033003435881682255
+    base_lr = 0.00033003435881682255  # current GNN hyperparameter starting point; not yet AMOS-tuned
     jobs = build_job_array(
         training_args=dict(
             lr=[[[0, base_lr], [40000, base_lr / 16.749479444886223]]],
@@ -746,7 +767,7 @@ if __name__ == "__main__":
             satellites=[all_sat],
             scenario=[make_rso_scenario()],
             rewarder=[make_rso_rewarder()],
-            world_type=[world.GroundStationWorldModel],
+            world_type=[world.GroundStationWorldModel],  # needed because the global obs includes ground-station windows
             time_limit=[total_time],
             failure_penalty=[-100.0],
             terminate_on_time_limit=[False],
@@ -804,7 +825,7 @@ if __name__ == "__main__":
         print("Dry run requested via BSK_RL_DRY_RUN=1; configuration written.")
         raise SystemExit(0)
 
-    wandb_logger = _maybe_init_wandb(model_name, run_cfg)
+    wandb_logger = _maybe_init_wandb(model_name, run_cfg)  # local: optional; cluster W&B sbatch: required
 
     train_model(
         model_name=model_name,
