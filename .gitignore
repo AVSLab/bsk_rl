@@ -156,3 +156,7 @@ updated_batch_policy_evaluation.py
 *.json
 *.csv
 *.npz
+
+# Local W&B API tokens
+examples/wandb_key.txt
+wandb_key.txt
