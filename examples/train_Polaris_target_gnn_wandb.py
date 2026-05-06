@@ -113,7 +113,7 @@ def _cluster_scratch_root() -> Path:
     ).expanduser()
     if scratch_root.exists() or os.environ.get("SLURM_JOB_ID"):
         return scratch_root
-    return Path("~/rllib_results/may_results/may6rllib_results").expanduser()  # local default
+    return Path("~/rllib_results/may_results").expanduser()  # local default
 
 
 def _default_output_root() -> Path:
@@ -139,7 +139,9 @@ def _default_ray_tmpdir() -> Path:
     array_id = os.environ.get("SLURM_ARRAY_TASK_ID", "0")
     if os.environ.get("SLURM_JOB_ID"):
         return Path(f"/tmp/bskray_{job_id}_{array_id}")  # cluster: avoid AF_UNIX path length errors
-    return Path("~/rllib_results/ray_tmp").expanduser() / f"bskray_{job_id}_{array_id}"  # local
+    # Local also needs a short path on macOS; Ray adds
+    # session_.../sockets/plasma_store below this and otherwise exceeds AF_UNIX.
+    return Path(f"/tmp/bskrl_{array_id}")  # local; outputs still go to ~/rllib_results/...
 
 
 def _wandb_key_path() -> Path:
@@ -740,7 +742,7 @@ if __name__ == "__main__":
     )
     model_name = f"{run_tag}.out_{job_index}"
     output_dir = _default_output_root() / f"{run_tag}_{time.time()}"  # local: ~/rllib_results/...; cluster: /scratch/alpine/$USER/rllib_results/...
-    ray_tmpdir = _default_ray_tmpdir()  # local: ~/rllib_results/ray_tmp/...; cluster: /tmp/bskray_${SLURM_JOB_ID}_...
+    ray_tmpdir = _default_ray_tmpdir()  # local: /tmp/bskrl_0; cluster: /tmp/bskray_${SLURM_JOB_ID}_...
     output_dir.mkdir(parents=True, exist_ok=True)
     ray_tmpdir.mkdir(parents=True, exist_ok=True)
 

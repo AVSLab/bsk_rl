@@ -160,3 +160,7 @@ updated_batch_policy_evaluation.py
 # Local W&B API tokens
 examples/wandb_key.txt
 wandb_key.txt
+
+# Local W&B run cache/logs
+examples/wandb/
+wandb/
