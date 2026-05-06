@@ -134,6 +134,39 @@ class MultiHeadAttention(nn.Module):
         return output
 
 
+class FastSelfAttention(nn.Module):
+    """Self-attention block using PyTorch's fused kernel when available."""
+
+    def __init__(self, d_in, d_model, n_heads=4):
+        super().__init__()
+        assert d_model % n_heads == 0
+        self.n_heads = n_heads
+        self.d_head = d_model // n_heads
+
+        self.qkv = nn.Linear(d_in, 3 * d_model, bias=False)
+        self.out = nn.Linear(d_model, d_in, bias=False)
+
+    def forward(self, x):
+        B, N, _ = x.shape
+
+        qkv = self.qkv(x)
+        qkv = qkv.view(B, N, 3, self.n_heads, self.d_head)
+        qkv = qkv.permute(2, 0, 3, 1, 4)
+        q, k, v = qkv[0], qkv[1], qkv[2]
+
+        if hasattr(torch.nn.functional, "scaled_dot_product_attention"):
+            attn = torch.nn.functional.scaled_dot_product_attention(
+                q, k, v, dropout_p=0.0, is_causal=False
+            )
+        else:  # pragma: no cover - compatibility with older PyTorch
+            scale = math.sqrt(self.d_head)
+            weights = torch.softmax(torch.matmul(q, k.transpose(-2, -1)) / scale, dim=-1)
+            attn = torch.matmul(weights, v)
+
+        attn = attn.transpose(1, 2).contiguous().view(B, N, -1)
+        return self.out(attn)
+
+
 class GNNCritic(nn.Module):
 
     def __init__(
@@ -149,6 +182,9 @@ class GNNCritic(nn.Module):
         n_tgts: int = 32,
         obs_sat: int = 38,
         dropout: float = 0.0,
+        attention: bool = False,
+        attention_dim: int = 32,
+        num_heads: int = 2,
     ):
         super(GNNCritic, self).__init__()
 
@@ -184,6 +220,12 @@ class GNNCritic(nn.Module):
 
         self.model_f = nn.Sequential(*layers_f)
         self.out_layer_f = nn.Linear(width_f, tgt_encoded_dim)
+
+        self.attention = attention
+        if self.attention:
+            self.attention_layer = FastSelfAttention(
+                tgt_encoded_dim, attention_dim, num_heads
+            )
 
         n_dim = 2
         self.pooling_std = pooling_std
@@ -227,6 +269,10 @@ class GNNCritic(nn.Module):
             for block_f in self.blocks_f:
                 latent_tgts = block_f(latent_tgts)  # (B, n_tgts, width_f)
         latent_tgts = self.out_layer_f(latent_tgts)  # (B, n_tgts, tgt_encoded_dim)
+
+        if self.attention:
+            attention = self.attention_layer(latent_tgts)
+            latent_tgts = latent_tgts + attention
 
         if self.pooling_std:
             latent = torch.cat(
@@ -313,7 +359,7 @@ class GNNActor(nn.Module):
         sequential_g = []
         for i in range(attention_depth):
             layers_attention.append(
-                MultiHeadAttention(tgt_encoded_dim, attention_dim, num_heads)
+                FastSelfAttention(tgt_encoded_dim, attention_dim, num_heads)
             )
             layers_normalization.append(nn.LayerNorm(tgt_encoded_dim))
 
@@ -448,6 +494,9 @@ class GNNModule(PPOTorchRLModule, nn.Module):
                 depth_g=model_config["critic_depth_g"],
                 pooling_std=model_config["critic_pooling_std"],
                 dropout=dropout,
+                attention=model_config.get("critic_attention", False),
+                attention_dim=model_config.get("critic_attention_dim", 32),
+                num_heads=model_config.get("critic_num_heads", 2),
             )
             # Holds the parameter names to be removed or renamed when synching
             # from the learner to the inference module.
