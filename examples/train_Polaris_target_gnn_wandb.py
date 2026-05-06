@@ -154,9 +154,13 @@ def _maybe_init_wandb(run_name: str, config: dict[str, Any]):
         print("W&B disabled via BSK_RL_USE_WANDB=0")
         return None
 
+    require_wandb = _env_bool("BSK_RL_REQUIRE_WANDB", False)
     key_path = _wandb_key_path()
     if not key_path.exists():
-        print(f"W&B disabled: key file not found at {key_path}")
+        message = f"W&B key file not found at {key_path}"
+        if require_wandb:
+            raise FileNotFoundError(message)
+        print(f"W&B disabled: {message}")
         return None
 
     try:
@@ -168,6 +172,8 @@ def _maybe_init_wandb(run_name: str, config: dict[str, Any]):
             config=config,
         )
     except Exception as exc:
+        if require_wandb:
+            raise
         print(f"W&B disabled after initialization failure: {exc}")
         return None
 
