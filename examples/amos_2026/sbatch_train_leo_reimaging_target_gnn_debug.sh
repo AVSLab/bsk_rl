@@ -42,6 +42,7 @@ export BSK_RL_BATCH_MULTIPLIER=${BSK_RL_BATCH_MULTIPLIER:-150} # cluster overrid
 export BSK_RL_TOTAL_TIMESTEPS=${BSK_RL_TOTAL_TIMESTEPS:-500000} # cluster override: BSK_RL_TOTAL_TIMESTEPS=20000000 sbatch ...
 export BSK_RL_CHECKPOINT_FREQUENCY=${BSK_RL_CHECKPOINT_FREQUENCY:-1}
 export BSK_RL_TORCH_THREADS=${BSK_RL_TORCH_THREADS:-11}
+export PYTHONUNBUFFERED=1
 
 mkdir -p /scratch/alpine/$USER/job_output "$BSK_RL_OUTPUT_DIR" "$BSK_RL_RAY_TMPDIR"
 
@@ -61,6 +62,6 @@ strings "$(gcc -print-file-name=libstdc++.so.6)" | grep GLIBCXX_3.4.29 || true
 python3 -c "import bsk_rl; import bsk_rl.sim.simulator; print('bsk_rl import ok')"
 
 echo "Running AMOS 2026 Target-GNN imaging-only training script"
-python3 examples/amos_2026/train_leo_reimaging_target_gnn.py
+python3 -u examples/amos_2026/train_leo_reimaging_target_gnn.py
 
 echo "== End of Job =="
