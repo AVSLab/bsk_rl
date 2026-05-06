@@ -87,6 +87,7 @@ OBS_SAT_DIM = 11
 # update this number and the run_cfg "observation_layout" below.
 TARGET_FEATURES_PER_TARGET = 7  # elevation, rel-pos-H(3), angle, distance, shadow
 NON_IMAGING_ACTIONS = 0  # image-only action space: one logit per candidate target
+PPO_MIN_TRAIN_BATCH_SIZE = 128  # RLlib's default SGD minibatch size is 128.
 
 
 def _env_int(name: str, default: int) -> int:
@@ -295,13 +296,13 @@ def train_model(
     )
     config.logger_config = dict(type=UnifiedLogger, logdir=run_directory)
 
-    ppo = PPO(config)
-
     iteration = 0
     step = 0
     current_best_return = -np.inf
 
     try:
+        ppo = PPO(config)
+
         while True:
             prev_step = step
             results = ppo.train()
@@ -724,13 +725,18 @@ if __name__ == "__main__":
     default_job_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
     job_index = _env_int("SLURM_ARRAY_TASK_ID", default_job_index)
     on_cluster = bool(os.environ.get("SLURM_JOB_ID"))
-    default_n_envs = get_available_cores() - 4 if on_cluster else 1  # local: 1; cluster: cores minus buffer
+    default_n_envs = (
+        get_available_cores() - 4 if on_cluster else get_available_cores() - 6
+    )  # local: cores minus 6 like copy_updated_train_Polaris.py; cluster: cores minus 4
     default_batch_multiplier = 150 if on_cluster else 32  # local: 32; cluster: 150 unless sbatch overrides
     default_total_timesteps = 20_000_000 if on_cluster else 10_000  # local startup check; cluster full train
     default_checkpoint_frequency = 3 if on_cluster else 1  # local: checkpoint every iter; cluster: less often
     n_envs = max(1, _env_int("BSK_RL_NUM_ENVS", default_n_envs))
     batch_multiplier = _env_int("BSK_RL_BATCH_MULTIPLIER", default_batch_multiplier)
-    batch_size = int(batch_multiplier * n_envs)
+    batch_size = max(
+        PPO_MIN_TRAIN_BATCH_SIZE,
+        int(batch_multiplier * n_envs),
+    )  # keep train_batch_size >= RLlib's default sgd_minibatch_size
     total_timesteps = _env_int("BSK_RL_TOTAL_TIMESTEPS", default_total_timesteps)
     checkpoint_frequency = _env_int(
         "BSK_RL_CHECKPOINT_FREQUENCY", default_checkpoint_frequency
