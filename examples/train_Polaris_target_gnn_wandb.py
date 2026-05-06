@@ -708,12 +708,7 @@ if __name__ == "__main__":
             regime = np.random.choice(regimes, p=probs)
         return _sample_for_regime(regime.upper(), altitude_bounds, min_perigee_alt)
 
-    target_args = dict(
-        oe=custom_oe_randomizer,
-        batteryStorageCapacity=1.0,
-        storedCharge_Init=1.0,
-        basePowerDraw=0.0,
-    )
+    target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 0.1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )
 
     sat = MyScanningSatellite(name="SS1", sat_args=sat_args)
     targets = [
