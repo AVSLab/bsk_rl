@@ -34,8 +34,10 @@ cd /projects/$USER/bsk_rl
 
 export BSK_RL_SCRATCH=/scratch/alpine/$USER
 export BSK_RL_OUTPUT_DIR=/scratch/alpine/$USER/rllib_results
-export BSK_RL_RAY_TMPDIR=/scratch/alpine/$USER/tmp/amos2026_target_gnn_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID:-0}
+# Ray creates AF_UNIX sockets below this directory; keep the path short.
+export BSK_RL_RAY_TMPDIR=/tmp/bskray_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID:-0}
 export TMPDIR=$BSK_RL_RAY_TMPDIR
+trap 'rm -rf "$BSK_RL_RAY_TMPDIR"' EXIT
 export LD_LIBRARY_PATH="$(dirname "$(gcc -print-file-name=libstdc++.so.6)"):${LD_LIBRARY_PATH:-}"
 
 export BSK_RL_BATCH_MULTIPLIER=${BSK_RL_BATCH_MULTIPLIER:-150} # cluster override: BSK_RL_BATCH_MULTIPLIER=300 sbatch ...
