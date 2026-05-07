@@ -341,6 +341,11 @@ print(f"\n=== Run outputs will be saved to: {run_dir} ===\n")
 GS_NORMALIZED = True    # set True if GS values are normalized offsets; False if absolute times
 
 # POLICIES
+###2026 POLICIES
+#May5 2048-2048 network
+may5_2026_obsv7_1e_5lr_batch4200_gamma9997_20d80i = "/Users/dahu1128/rllib_results/cluster2026/may2026/amos2026_LEO_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2_1778031984.626593/amos2026_LEO_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2.out_0"
+
+
 # September/October Policies
 # October 14 – batch5000, gamma9997, reducedFailurePenalty
 oct14_obsv7_1e_5lr_batch5000_gamma9997_0d100i = "/Users/dahu1128/rllib_results/october_results/oct14rllib_results/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_0d100i_reducedFailurePenalty_1761159994.1781282/oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_0d100i_reducedFailurePenalty.out_0"
@@ -493,7 +498,7 @@ imaging_rewarded_noeclipse_1e_6lr_failure_penalties = "/Users/dahu1128/rllib_res
 
 # policy_path = obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i #DEPRECATED... now the globals() line is used below...    #balance00d100i_obs2_gamma9995_1e6lr
 # Choose which policy to evaluate by NAME
-policy_name = args.policy_name or "oct14_obsv7_1e_5lr_batch5000_gamma9997_10d90i"
+policy_name = args.policy_name or "may5_2026_obsv7_1e_5lr_batch4200_gamma9997_20d80i"
 if policy_name not in globals():
     raise ValueError(
         f"Unknown policy_name '{policy_name}'. Add it to the policy path block or "
@@ -503,6 +508,7 @@ policy_path = globals()[policy_name]
 
 # Define all known policy paths with associated obs values
 policy_obs_map = {
+    "may5_2026_obsv7_1e_5lr_batch4200_gamma9997_20d80i": 7,
     "oct14_obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i": 7,
     "oct14_obsv7_1e_5lr_batch5000_gamma9997_100d00i": 7,
     "oct14_obsv7_1e_5lr_batch5000_gamma9997_90d10i": 7,
