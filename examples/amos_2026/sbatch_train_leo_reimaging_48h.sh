@@ -49,9 +49,6 @@ date
 hostname
 echo "SLURM_JOB_ID=${SLURM_JOB_ID:-}"
 echo "SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-}"
-echo "branch: $(git rev-parse --abbrev-ref HEAD)"
-echo "commit: $(git rev-parse --short HEAD)"
-git status --short --untracked-files=no
 
 echo "gcc path: $(which gcc)"
 gcc --version
