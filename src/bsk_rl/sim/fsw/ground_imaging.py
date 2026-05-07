@@ -102,6 +102,9 @@ class ImagingFSWModel(BasicFSWModel):
             messaging.AttGuidMsg_C_addAuthor(
                 self.locPoint.attGuidOutMsg, self.fsw.attGuidMsg
             )
+            messaging.AttRefMsg_C_addAuthor(
+                self.locPoint.attRefOutMsg, self.fsw.attRefMsg
+            )
 
             self._add_model_to_task(self.locPoint, priority=1198)
 
@@ -188,14 +191,10 @@ class ImagingFSWModel(BasicFSWModel):
         baud rate. The transmitter power sink will be active as long as the task is enabled.
         """
         self.hillPoint.Reset(self.simulator.sim_time_ns)
-        self.trackingError.Reset(self.simulator.sim_time_ns)
         self.dynamics.transmitter.dataStatus = 1
         self.dynamics.transmitterPowerSink.powerStatus = 1
         self.simulator.enableTask(
             BasicFSWModel.NadirPointTask.name + self.satellite.name
-        )
-        self.simulator.enableTask(
-            BasicFSWModel.TrackingErrorTask.name + self.satellite.name
         )
 
 

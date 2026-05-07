@@ -254,7 +254,7 @@ class FSWModel(FSWModelABC):
         ]
 
     class MRPControlTask(Task):
-        """Task to control the satellite attitude magically (i.e. without actuators)."""
+        """Task to control the satellite attitude magically to the reference (i.e. without actuators)."""
 
         name = "mrpControlTask"
 
@@ -345,11 +345,14 @@ class FSWModel(FSWModelABC):
 
             self._add_model_to_task(self.trackingError, priority=1197)
 
+        def reset_for_action(self) -> None:
+            """Tracking error is enabled by default for all tasks."""
+            self.fsw.simulator.enableTask(self.name + self.fsw.satellite.name)
+
     @action
     def action_attitude_mrp(self, sigma_RN: np.ndarray) -> None:
         """Point the satellite to the specified attitude."""
         self.attRefMsg.write(messaging.AttRefMsgPayload(sigma_RN=sigma_RN))
-        self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.name)
 
 
 class BasicFSWModel(FSWModel):
@@ -554,7 +557,6 @@ class BasicFSWModel(FSWModel):
         power sink, and enables the desaturation tasks. This action typically needs to be
         called multiple times to fully desaturate the wheels.
         """
-        self.trackingError.Reset(self.simulator.sim_time_ns)
         self.thrDesatControl.Reset(self.simulator.sim_time_ns)
         self.thrDump.Reset(self.simulator.sim_time_ns)
         self.dynamics.thrusterPowerSink.powerStatus = 1
@@ -571,7 +573,6 @@ class BasicFSWModel(FSWModel):
             pass
         else:
             raise ValueError(f"{self.desatAttitude} not a valid desatAttitude")
-        self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.name)
 
     class MRPControlTask(Task):
         """Task to control the satellite attitude using reaction wheels."""
