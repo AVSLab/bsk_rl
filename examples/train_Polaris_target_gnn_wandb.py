@@ -384,6 +384,11 @@ def _safe_mean(values, default=-1.0):
     return float(np.mean(values)) if values else default
 
 
+def _safe_median(values, default=-1.0):
+    values = _finite_values(values)
+    return float(np.median(values)) if values else default
+
+
 def _safe_std(values, default=-1.0):
     values = _finite_values(values)
     return float(np.std(values)) if values else default
@@ -437,6 +442,27 @@ def env_metrics_callback(env):
         and record.get("start_time") is not None
         and record.get("end_time") is not None
     ]
+    unsuccessful_durations = [
+        float(record["end_time"]) - float(record["start_time"])
+        for record in imaging_attempt_records
+        if not record.get("success")
+        and record.get("start_time") is not None
+        and record.get("end_time") is not None
+    ]
+    imaging_slew_times = [
+        record.get("slew_time_s") for record in imaging_attempt_records
+    ]
+    successful_slew_times = [
+        record.get("slew_time_s")
+        for record in imaging_attempt_records
+        if record.get("success")
+    ]
+    unsuccessful_slew_times = [
+        record.get("slew_time_s")
+        for record in imaging_attempt_records
+        if not record.get("success")
+    ]
+    imaging_success_flags = [bool(record.get("success")) for record in imaging_attempt_records]
     attempted_priorities = [
         target_priority_by_id.get(int(record["target_id"]))
         for record in imaging_attempt_records
@@ -449,17 +475,41 @@ def env_metrics_callback(env):
     ]
 
     data["num_imaging_attempts"] = len(imaging_attempt_records)
+    data["imaging_attempt_success_rate"] = _safe_mean(imaging_success_flags)
     data["actual_imaging_action_time_sec"] = float(np.sum(imaging_durations))
     data["actual_non_imaging_time_sec"] = episode_duration - data["actual_imaging_action_time_sec"]
     data["mean_imaging_action_duration_sec"] = _safe_mean(imaging_durations)
+    data["median_imaging_action_duration_sec"] = _safe_median(imaging_durations)
     data["mean_successful_imaging_action_duration_sec"] = _safe_mean(successful_durations)
-    data["mean_imaging_slew_time_sec"] = _safe_mean(
-        record.get("slew_time_s") for record in imaging_attempt_records
-    )
+    data["median_successful_imaging_action_duration_sec"] = _safe_median(successful_durations)
+    data["mean_unsuccessful_imaging_action_duration_sec"] = _safe_mean(unsuccessful_durations)
+    data["median_unsuccessful_imaging_action_duration_sec"] = _safe_median(unsuccessful_durations)
+    data["mean_imaging_slew_time_sec"] = _safe_mean(imaging_slew_times)
+    data["median_imaging_slew_time_sec"] = _safe_median(imaging_slew_times)
+    data["mean_successful_imaging_slew_time_sec"] = _safe_mean(successful_slew_times)
+    data["median_successful_imaging_slew_time_sec"] = _safe_median(successful_slew_times)
+    data["mean_unsuccessful_imaging_slew_time_sec"] = _safe_mean(unsuccessful_slew_times)
+    data["median_unsuccessful_imaging_slew_time_sec"] = _safe_median(unsuccessful_slew_times)
     data["mean_attempted_target_priority"] = _safe_mean(attempted_priorities)
     data["mean_successful_capture_priority"] = _safe_mean(successful_priorities)
     data["reimage_count"] = int(getattr(env.rewarder, "reimage_count", 0))
-    data["cooldown_target_count"] = len(getattr(reward_data, "cooldown_until_by_id", {}))
+    cooldown_until_by_id = getattr(reward_data, "cooldown_until_by_id", {})
+    pending_by_id = getattr(reward_data, "pending_image_records_by_id", {})
+    active_cooldown_ids = {
+        int(target_id)
+        for target_id, cooldown_until in cooldown_until_by_id.items()
+        if episode_duration < float(cooldown_until)
+    }
+    pending_target_ids = {
+        int(target_id) for target_id, records in pending_by_id.items() if records
+    }
+    temporarily_ineligible_ids = set(active_cooldown_ids)
+    if getattr(reward_data, "hide_pending_targets", True):
+        temporarily_ineligible_ids.update(pending_target_ids)
+    data["cooldown_target_count_legacy"] = len(cooldown_until_by_id)
+    data["cooldown_target_count"] = len(active_cooldown_ids)
+    data["pending_verification_target_count"] = len(pending_target_ids)
+    data["temporarily_ineligible_target_count"] = len(temporarily_ineligible_ids)
 
     if getattr(ss1_actions, "chosen_target_priority", None):
         data["mean_target_priority"] = float(np.mean(ss1_actions.chosen_target_priority))
