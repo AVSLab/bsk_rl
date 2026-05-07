@@ -1777,19 +1777,44 @@ class ImagingSCDynModel(ImagingDynModel):
         self.last_imaging_selection_mode = None
 
 
-    @default_args(imaging_bonus=0.0, downlink_bonus=1.0, full_storage_penalty = 0, low_battery_penalty = 0, eclipsedImagePenalty = 0)
-    def setup_reward_and_penalty_factors(self, imaging_bonus: float, downlink_bonus: float, full_storage_penalty: float, low_battery_penalty: float, eclipsedImagePenalty: float, priority: int = 2000, **kwargs) -> None:
+    @default_args(
+        imaging_bonus=0.0,
+        downlink_bonus=1.0,
+        full_storage_penalty=0,
+        low_battery_penalty=0,
+        empty_downlink_penalty=-1,
+        eclipsedImagePenalty=0,
+    )
+    def setup_reward_and_penalty_factors(
+        self,
+        imaging_bonus: float,
+        downlink_bonus: float,
+        full_storage_penalty: float,
+        low_battery_penalty: float,
+        empty_downlink_penalty: float,
+        eclipsedImagePenalty: float,
+        priority: int = 2000,
+        **kwargs,
+    ) -> None:
         """Set up the reward bonus factors.
 
         Args:
             imaging_bonus: percentage of priority rewarded when target is imaged
             downlink_bonus: percentage of priority rewarded when target is downlinked
+            empty_downlink_penalty: penalty when downlink is selected with no onboard data
         """
         self.imaging_bonus = imaging_bonus
         self.downlink_bonus = downlink_bonus
         self.full_storage_penalty = full_storage_penalty
         self.low_battery_penalty = low_battery_penalty
-        if self.full_storage_penalty == 0 and  self.low_battery_penalty == 0:
+        self.empty_downlink_penalty = empty_downlink_penalty
+        self.last_downlink_started_empty = False
+        self.last_downlink_start_storage_level = None
+        if (
+            self.full_storage_penalty == 0
+            and self.low_battery_penalty == 0
+            and self.empty_downlink_penalty == 0
+        ):
             self.penalties = 0
         else:
             self.penalties = 1

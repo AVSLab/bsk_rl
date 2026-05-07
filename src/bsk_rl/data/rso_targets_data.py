@@ -758,15 +758,22 @@ class RSOTargetImageReward(GlobalReward):
         scanner = self.scenario.satellites[0]
         if scanner.dynamics.penalties != 1:
             return
+        empty_downlink_started = bool(
+            getattr(scanner.dynamics, "last_downlink_started_empty", False)
+        )
         for sat_id in reward:
             if sat_id != "SS1":
                 continue
             if scanner.dynamics.battery_charge_fraction < 0.05:
                 reward[sat_id] += scanner.dynamics.low_battery_penalty
-            elif scanner.dynamics.battery_charge_fraction < 0.1:
+            elif scanner.dynamics.battery_charge_fraction < 0.2:
                 reward[sat_id] += scanner.dynamics.low_battery_penalty
             if scanner.dynamics.storage_level_fraction > 0.991:
                 reward[sat_id] += scanner.dynamics.full_storage_penalty
+            if empty_downlink_started:
+                reward[sat_id] += scanner.dynamics.empty_downlink_penalty
+        if empty_downlink_started:
+            scanner.dynamics.last_downlink_started_empty = False
 
     def _publish_terminal_metrics(self) -> None:
         """Mirror rewarder metrics onto dynamics near the end of the episode."""
@@ -892,7 +899,7 @@ class RSOTargetImageReward(GlobalReward):
             self.old_state = np.zeros_like(
                 self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedData
             )
-        reward = {}
+        reward = {sat_id: 0.0 for sat_id in new_data_dict}
         imaged_targets = sum(
             [new_data.imaged for new_data in new_data_dict.values()], []
         )
@@ -906,6 +913,7 @@ class RSOTargetImageReward(GlobalReward):
             int(target.id): self.data.is_target_eligible(target, sim_time)
             for target in imaged_targets
         }
+        self._add_operational_penalties(reward)
 
         new_state = np.array(self.scenario.satellites[0].dynamics.storageUnit.storageUnitDataOutMsg.read().storedData)
         downlinked_targets = [int(i) for i in np.where(new_state - self.old_state < 0)[0]] # keep track of downlinked targets
@@ -954,15 +962,6 @@ class RSOTargetImageReward(GlobalReward):
 
 
         for sat_id, new_data in new_data_dict.items():
-            reward[sat_id] = 0.0
-            if self.scenario.satellites[0].dynamics.penalties == 1:
-                if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.05:
-                    reward[sat_id] += self.scenario.satellites[0].dynamics.low_battery_penalty
-                elif sat_id == 'SS1' and self.scenario.satellites[0].dynamics.battery_charge_fraction < 0.1:
-                    reward[sat_id] += self.scenario.satellites[0].dynamics.low_battery_penalty
-                if sat_id == 'SS1' and self.scenario.satellites[0].dynamics.storage_level_fraction > .991:
-                    reward[sat_id] += self.scenario.satellites[0].dynamics.full_storage_penalty
-
             for target in new_data.imaged:
                 # if target not in self.data.imaged:
                 if sat_id == 'SS1':

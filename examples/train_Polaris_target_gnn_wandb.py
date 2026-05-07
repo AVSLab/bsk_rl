@@ -687,6 +687,7 @@ if __name__ == "__main__":
     sat_args["imaging_bonus"] = 1.0
     sat_args["eclipse_threshold_for_imaging"] = 0.5
     sat_args["eclipse_threshold_for_reward"] = 0.5
+    sat_args["empty_downlink_penalty"] = -1
 
     class MyTargetSatellite(sats.Satellite):
         observation_spec = [obs.Time()]

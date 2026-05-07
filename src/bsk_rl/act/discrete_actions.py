@@ -267,15 +267,18 @@ class Downlink(DiscreteFSWAction):
         # The action must advance at least one FSW/sim cadence before it can stop early.
         self._downlink_earliest_stop_time = None
 
-    def _storage_empty(self) -> bool:
-        """Return True when the satellite storage buffer is effectively empty."""
+    def _storage_level_bits(self) -> float:
+        """Return the current onboard storage level in bits."""
         try:
-            storage_level = float(self.satellite.dynamics.storage_level)
+            return float(self.satellite.dynamics.storage_level)
         except Exception:
             msg = self.satellite.dynamics.storageUnit.storageUnitDataOutMsg.read()
             stored_data = np.array(msg.storedData, dtype=float)
-            storage_level = float(np.sum(np.maximum(stored_data, 0.0)))
-        return storage_level <= self.empty_storage_threshold_bits
+            return float(np.sum(np.maximum(stored_data, 0.0)))
+
+    def _storage_empty(self) -> bool:
+        """Return True when the satellite storage buffer is effectively empty."""
+        return self._storage_level_bits() <= self.empty_storage_threshold_bits
 
     def _disable_downlink_empty_event(self) -> None:
         """Disable prior downlink-empty terminal event if present."""
@@ -341,6 +344,11 @@ class Downlink(DiscreteFSWAction):
 
     def set_action(self, action: int, prev_action_key=None) -> str:
         """Activate downlink and optionally stop early when storage is empty."""
+        start_storage_level = self._storage_level_bits()
+        self.satellite.dynamics.last_downlink_start_storage_level = start_storage_level
+        self.satellite.dynamics.last_downlink_started_empty = (
+            start_storage_level <= self.empty_storage_threshold_bits
+        )
         action_key = super().set_action(action, prev_action_key=prev_action_key)
         if self.variable_duration_downlink:
             self._enable_downlink_empty_event()
