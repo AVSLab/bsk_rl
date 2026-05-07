@@ -19,8 +19,13 @@ set -euo pipefail
 
 module purge
 echo "Loading modules"
-module --ignore_cache load gcc/14.2.0
-module --ignore_cache load python/3.10.2
+if ! module --ignore_cache load gcc/14.2.0; then
+    echo "WARNING: gcc/14.2.0 module not found; falling back to /curc/sw/install/gcc/14.2.0"
+    export PATH="/curc/sw/install/gcc/14.2.0/bin:${PATH}"
+fi
+if ! module --ignore_cache load python/3.10.2; then
+    echo "WARNING: python/3.10.2 module not found; continuing with the virtualenv python"
+fi
 
 echo "Activating virtual environment"
 source /projects/$USER/.venv/bin/activate
@@ -32,7 +37,12 @@ export BSK_RL_OUTPUT_DIR=/scratch/alpine/$USER/rllib_results
 export BSK_RL_RAY_TMPDIR=/tmp/bskray_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID:-0}
 export TMPDIR=$BSK_RL_RAY_TMPDIR
 trap 'rm -rf "$BSK_RL_RAY_TMPDIR"' EXIT
-export LD_LIBRARY_PATH="$(dirname "$(gcc -print-file-name=libstdc++.so.6)"):${LD_LIBRARY_PATH:-}"
+if [ -d /curc/sw/install/gcc/14.2.0/lib64 ]; then
+    export LD_LIBRARY_PATH="/curc/sw/install/gcc/14.2.0/lib64:${LD_LIBRARY_PATH:-}"
+fi
+if command -v gcc >/dev/null 2>&1; then
+    export LD_LIBRARY_PATH="$(dirname "$(gcc -print-file-name=libstdc++.so.6)"):${LD_LIBRARY_PATH:-}"
+fi
 
 export BSK_RL_TOTAL_TIMESTEPS=${BSK_RL_TOTAL_TIMESTEPS:-20000000}
 export BSK_RL_BATCH_MULTIPLIER=${BSK_RL_BATCH_MULTIPLIER:-150}
