@@ -2,12 +2,14 @@
 """AMOS 2026 LEO-to-LEO imaging-only trainer with target-wise GNN.
 
 Local quick syntax:
-    BSK_RL_NUM_ENVS=1 BSK_RL_BATCH_MULTIPLIER=32 BSK_RL_TOTAL_TIMESTEPS=10000 \
-        python3 examples/amos_2026/train_leo_reimaging_target_gnn.py
+    python3 examples/amos_2026/train_leo_reimaging_target_gnn.py
 
 Cluster syntax:
     BSK_RL_TOTAL_TIMESTEPS=20000000 BSK_RL_BATCH_MULTIPLIER=150 \
         sbatch examples/amos_2026/sbatch_train_leo_reimaging_target_gnn_debug.sh
+
+The script auto-detects local vs. Slurm. Local defaults are a short smoke test;
+cluster defaults are the full training configuration.
 
 This script intentionally removes charge, downlink, and desat actions so the
 custom RLModule can score only the target choices. Because there is no downlink
@@ -37,7 +39,8 @@ import torch
 import yaml
 from sim_config import SimConfig
 
-_TORCH_THREADS = int(os.environ.get("BSK_RL_TORCH_THREADS", "11"))
+_DEFAULT_TORCH_THREADS = "11" if os.environ.get("SLURM_JOB_ID") else "1"
+_TORCH_THREADS = int(os.environ.get("BSK_RL_TORCH_THREADS", _DEFAULT_TORCH_THREADS))
 torch.set_num_threads(_TORCH_THREADS)
 os.environ.setdefault("MKL_NUM_THREADS", str(_TORCH_THREADS))
 
@@ -68,6 +71,7 @@ except (ImportError, ModuleNotFoundError):  # Older versions of RLlib
 OBS_SAT_DIM = 7  # storage, battery, 3 wheel speeds, next eclipse start/end
 TARGET_FEATURES_PER_TARGET = 7  # elevation, rel-pos-H(3), angle, distance, shadow
 NON_IMAGING_ACTIONS = 0  # image-only action space: one logit per candidate target
+PPO_MIN_TRAIN_BATCH_SIZE = 128  # RLlib's default SGD minibatch size is 128.
 
 
 def _env_int(name: str, default: int) -> int:
@@ -101,13 +105,20 @@ def _default_output_root() -> Path:
 
 
 def _default_ray_tmpdir() -> Path:
-    explicit = os.environ.get("BSK_RL_RAY_TMPDIR") or os.environ.get("TMPDIR")
+    explicit = os.environ.get("BSK_RL_RAY_TMPDIR")
     if explicit is not None:
         return Path(explicit).expanduser()
-    scratch_root = _cluster_scratch_root()
-    if str(scratch_root).endswith("rllib_results"):
-        return Path("/tmp")
-    return scratch_root / "tmp"
+
+    if os.environ.get("SLURM_JOB_ID") and os.environ.get("TMPDIR"):
+        return Path(os.environ["TMPDIR"]).expanduser()
+
+    # Ray appends session_.../sockets/plasma_store below this directory.
+    # Keep the base path short, especially on macOS where PyCharm's TMPDIR is long.
+    job_id = os.environ.get("SLURM_JOB_ID", "local")
+    array_id = os.environ.get("SLURM_ARRAY_TASK_ID", "0")
+    if os.environ.get("SLURM_JOB_ID"):
+        return Path(f"/tmp/bskray_{job_id}_{array_id}")
+    return Path(f"/tmp/bskrl_{array_id}")
 
 
 def target_gnn_model_config(n_targets_ahead: int) -> dict[str, Any]:
@@ -295,6 +306,11 @@ def _safe_mean(values, default=-1.0):
     return float(np.mean(values)) if values else default
 
 
+def _safe_median(values, default=-1.0):
+    values = _finite_values(values)
+    return float(np.median(values)) if values else default
+
+
 def _safe_std(values, default=-1.0):
     values = _finite_values(values)
     return float(np.std(values)) if values else default
@@ -348,6 +364,27 @@ def env_metrics_callback(env):
         and record.get("start_time") is not None
         and record.get("end_time") is not None
     ]
+    unsuccessful_durations = [
+        float(record["end_time"]) - float(record["start_time"])
+        for record in imaging_attempt_records
+        if not record.get("success")
+        and record.get("start_time") is not None
+        and record.get("end_time") is not None
+    ]
+    imaging_slew_times = [
+        record.get("slew_time_s") for record in imaging_attempt_records
+    ]
+    successful_slew_times = [
+        record.get("slew_time_s")
+        for record in imaging_attempt_records
+        if record.get("success")
+    ]
+    unsuccessful_slew_times = [
+        record.get("slew_time_s")
+        for record in imaging_attempt_records
+        if not record.get("success")
+    ]
+    imaging_success_flags = [bool(record.get("success")) for record in imaging_attempt_records]
     attempted_priorities = [
         target_priority_by_id.get(int(record["target_id"]))
         for record in imaging_attempt_records
@@ -360,17 +397,41 @@ def env_metrics_callback(env):
     ]
 
     data["num_imaging_attempts"] = len(imaging_attempt_records)
+    data["imaging_attempt_success_rate"] = _safe_mean(imaging_success_flags)
     data["actual_imaging_action_time_sec"] = float(np.sum(imaging_durations))
     data["actual_non_imaging_time_sec"] = episode_duration - data["actual_imaging_action_time_sec"]
     data["mean_imaging_action_duration_sec"] = _safe_mean(imaging_durations)
+    data["median_imaging_action_duration_sec"] = _safe_median(imaging_durations)
     data["mean_successful_imaging_action_duration_sec"] = _safe_mean(successful_durations)
-    data["mean_imaging_slew_time_sec"] = _safe_mean(
-        record.get("slew_time_s") for record in imaging_attempt_records
-    )
+    data["median_successful_imaging_action_duration_sec"] = _safe_median(successful_durations)
+    data["mean_unsuccessful_imaging_action_duration_sec"] = _safe_mean(unsuccessful_durations)
+    data["median_unsuccessful_imaging_action_duration_sec"] = _safe_median(unsuccessful_durations)
+    data["mean_imaging_slew_time_sec"] = _safe_mean(imaging_slew_times)
+    data["median_imaging_slew_time_sec"] = _safe_median(imaging_slew_times)
+    data["mean_successful_imaging_slew_time_sec"] = _safe_mean(successful_slew_times)
+    data["median_successful_imaging_slew_time_sec"] = _safe_median(successful_slew_times)
+    data["mean_unsuccessful_imaging_slew_time_sec"] = _safe_mean(unsuccessful_slew_times)
+    data["median_unsuccessful_imaging_slew_time_sec"] = _safe_median(unsuccessful_slew_times)
     data["mean_attempted_target_priority"] = _safe_mean(attempted_priorities)
     data["mean_successful_capture_priority"] = _safe_mean(successful_priorities)
     data["reimage_count"] = int(getattr(env.rewarder, "reimage_count", 0))
-    data["cooldown_target_count"] = len(getattr(reward_data, "cooldown_until_by_id", {}))
+    cooldown_until_by_id = getattr(reward_data, "cooldown_until_by_id", {})
+    pending_by_id = getattr(reward_data, "pending_image_records_by_id", {})
+    active_cooldown_ids = {
+        int(target_id)
+        for target_id, cooldown_until in cooldown_until_by_id.items()
+        if episode_duration < float(cooldown_until)
+    }
+    pending_target_ids = {
+        int(target_id) for target_id, records in pending_by_id.items() if records
+    }
+    temporarily_ineligible_ids = set(active_cooldown_ids)
+    if getattr(reward_data, "hide_pending_targets", True):
+        temporarily_ineligible_ids.update(pending_target_ids)
+    data["cooldown_target_count_legacy"] = len(cooldown_until_by_id)
+    data["cooldown_target_count"] = len(active_cooldown_ids)
+    data["pending_verification_target_count"] = len(pending_target_ids)
+    data["temporarily_ineligible_target_count"] = len(temporarily_ineligible_ids)
 
     if getattr(ss1_actions, "chosen_target_priority", None):
         data["mean_target_priority"] = float(np.mean(ss1_actions.chosen_target_priority))
@@ -614,11 +675,20 @@ if __name__ == "__main__":
 
     default_job_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
     job_index = _env_int("SLURM_ARRAY_TASK_ID", default_job_index)
-    n_envs = max(1, _env_int("BSK_RL_NUM_ENVS", get_available_cores() - 4))
-    batch_multiplier = _env_int("BSK_RL_BATCH_MULTIPLIER", 150)
-    batch_size = int(batch_multiplier * n_envs)
-    total_timesteps = _env_int("BSK_RL_TOTAL_TIMESTEPS", 20_000_000)
-    checkpoint_frequency = _env_int("BSK_RL_CHECKPOINT_FREQUENCY", 3)
+    on_cluster = bool(os.environ.get("SLURM_JOB_ID"))
+    default_n_envs = (
+        get_available_cores() - 4 if on_cluster else get_available_cores() - 6
+    )
+    default_batch_multiplier = 150 if on_cluster else 32
+    default_total_timesteps = 20_000_000 if on_cluster else 10_000
+    default_checkpoint_frequency = 3 if on_cluster else 1
+    n_envs = max(1, _env_int("BSK_RL_NUM_ENVS", default_n_envs))
+    batch_multiplier = _env_int("BSK_RL_BATCH_MULTIPLIER", default_batch_multiplier)
+    batch_size = max(PPO_MIN_TRAIN_BATCH_SIZE, int(batch_multiplier * n_envs))
+    total_timesteps = _env_int("BSK_RL_TOTAL_TIMESTEPS", default_total_timesteps)
+    checkpoint_frequency = _env_int(
+        "BSK_RL_CHECKPOINT_FREQUENCY", default_checkpoint_frequency
+    )
 
     run_tag = (
         f"amos2026_LEO_targetGNN_imagingOnly_{batch_size}batch_"
@@ -667,6 +737,7 @@ if __name__ == "__main__":
         ),
     )
 
+    print(f"Run mode: {'cluster' if on_cluster else 'local'}")
     print(f"n_envs={n_envs}; batch_size={batch_size}; torch_threads={_TORCH_THREADS}")
     print(f"TensorBoard: tensorboard --logdir {output_dir}")
     print(f"Ray temp dir: {ray_tmpdir}")

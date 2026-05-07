@@ -58,10 +58,13 @@ export BSK_RL_WANDB_PROJECT=${BSK_RL_WANDB_PROJECT:-amos2026-bsk-rl}
 export BSK_RL_WANDB_GROUP=${BSK_RL_WANDB_GROUP:-polaris-target-gnn-obs-v8-debug}
 
 # Small/configurable values for a first startup-failure check.
-export BSK_RL_BATCH_MULTIPLIER=${BSK_RL_BATCH_MULTIPLIER:-150} # local default inside Python: 32
-export BSK_RL_TOTAL_TIMESTEPS=${BSK_RL_TOTAL_TIMESTEPS:-500000} # debug job; local default inside Python: 10000
+export BSK_RL_NUM_ENVS=${BSK_RL_NUM_ENVS:-2}
+export BSK_RL_BATCH_MULTIPLIER=${BSK_RL_BATCH_MULTIPLIER:-32} # local default inside Python: 32
+export BSK_RL_TOTAL_TIMESTEPS=${BSK_RL_TOTAL_TIMESTEPS:-10000} # debug job; local default inside Python: 10000
 export BSK_RL_CHECKPOINT_FREQUENCY=${BSK_RL_CHECKPOINT_FREQUENCY:-1}
-export BSK_RL_TORCH_THREADS=${BSK_RL_TORCH_THREADS:-11}
+export BSK_RL_TORCH_THREADS=${BSK_RL_TORCH_THREADS:-1}
+export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-}
+export TF_CPP_MIN_LOG_LEVEL=${TF_CPP_MIN_LOG_LEVEL:-2}
 export PYTHONUNBUFFERED=1
 
 mkdir -p /scratch/alpine/$USER/job_output "$BSK_RL_OUTPUT_DIR" "$BSK_RL_RAY_TMPDIR"
