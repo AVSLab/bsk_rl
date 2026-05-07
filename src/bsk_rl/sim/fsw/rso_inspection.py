@@ -49,6 +49,9 @@ class RSOInspectorFSWModel(ContinuousImagingFSWModel):
             messaging.AttGuidMsg_C_addAuthor(
                 self.locPoint.attGuidOutMsg, self.fsw.attGuidMsg
             )
+            messaging.AttRefMsg_C_addAuthor(
+                self.locPoint.attRefOutMsg, self.fsw.attRefMsg
+            )
 
             self._add_model_to_task(self.locPoint, priority=1198)
 
