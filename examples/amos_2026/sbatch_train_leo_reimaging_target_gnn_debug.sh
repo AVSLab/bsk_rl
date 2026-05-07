@@ -24,8 +24,8 @@ set -euo pipefail
 module purge
 
 echo "Loading modules"
-module load gcc/14.2.0
-module load python/3.10.2
+module --ignore_cache load gcc/14.2.0
+module --ignore_cache load python/3.10.2
 
 echo "Activating virtual environment"
 source /projects/$USER/.venv/bin/activate
