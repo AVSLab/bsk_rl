@@ -64,6 +64,34 @@ except (ImportError, ModuleNotFoundError):  # Older versions of RLlib
     )
     from ray.rllib.core.rl_module.rl_module import SingleAgentRLModuleSpec as RLModuleSpec
 
+import warnings
+
+try:
+    from ray.util import RayDeprecationWarning
+
+    warnings.filterwarnings(
+        "ignore",
+        category=RayDeprecationWarning,
+        message=".*UnifiedLogger.*",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        category=RayDeprecationWarning,
+        message=".*JsonLogger.*",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        category=RayDeprecationWarning,
+        message=".*CSVLogger.*",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        category=RayDeprecationWarning,
+        message=".*TBXLogger.*",
+    )
+except Exception:
+    pass
+
 
 # Observation bookkeeping for Target-GNN's module. The observation spec below is
 # ordered so the first OBS_SAT_DIM entries are spacecraft/global features and all
