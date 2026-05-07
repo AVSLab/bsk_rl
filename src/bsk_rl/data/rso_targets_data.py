@@ -499,6 +499,7 @@ class RSOTargetImageReward(GlobalReward):
         self.verified_image_count = 0
         self.reimage_count = 0
         self.verified_counts_by_id: dict[int, int] = {}
+        self.imaging_rewarded_record_keys: set[str] = set()
         self.imaged_illuminated = []
         self.imaged_illuminated_names: set[str] = set()
         self.usefully_downlinked_names: set[str] = set()
@@ -518,6 +519,7 @@ class RSOTargetImageReward(GlobalReward):
         self.verified_image_count = 0
         self.reimage_count = 0
         self.verified_counts_by_id = {}
+        self.imaging_rewarded_record_keys = set()
         self.imaged_illuminated = []
         self.imaged_illuminated_names = set()
         self.usefully_downlinked_names = set()
@@ -674,6 +676,31 @@ class RSOTargetImageReward(GlobalReward):
             ].data_store.data.pending_image_records_by_id.values()
         )
 
+    def _reward_new_pending_illuminated_images(
+        self,
+        reward: dict[str, float],
+        new_data_dict: dict[str, RSOTargetImageData],
+    ) -> None:
+        """Reward the imaging portion when a captured onboard image is already useful."""
+        scanner = self.scenario.satellites[0]
+        imaging_bonus = float(getattr(scanner.dynamics, "imaging_bonus", 0.0))
+        if imaging_bonus == 0.0 or "SS1" not in reward:
+            return
+
+        for new_data in new_data_dict.values():
+            for target_id, records in new_data.pending_image_records_by_id.items():
+                target = self._target_from_id(target_id)
+                if target is None:
+                    continue
+                for record in records:
+                    record_key = RSOTargetImageData._record_key(record)
+                    if record_key in self.imaging_rewarded_record_keys:
+                        continue
+                    if not self._record_quality_passed(record):
+                        continue
+                    reward["SS1"] += self.reward_fn(target.priority * imaging_bonus)
+                    self.imaging_rewarded_record_keys.add(record_key)
+
     def _pop_pending_record_everywhere(
         self, target: "Target"
     ) -> Optional[dict[str, Any]]:
@@ -766,6 +793,7 @@ class RSOTargetImageReward(GlobalReward):
         reward = {sat_id: 0.0 for sat_id in new_data_dict}
         self._add_operational_penalties(reward)
         self._broadcast_new_pending_records(new_data_dict)
+        self._reward_new_pending_illuminated_images(reward, new_data_dict)
 
         sim_time = float(scanner.simulator.sim_time)
         storage_msg = scanner.dynamics.storageUnit.storageUnitDataOutMsg.read()
@@ -825,7 +853,9 @@ class RSOTargetImageReward(GlobalReward):
                 self.imaged_illuminated.append(target)
                 self.imaged_illuminated_names.add(target.name)
                 if "SS1" in reward:
-                    reward["SS1"] += self.reward_fn(target.priority)
+                    reward["SS1"] += self.reward_fn(
+                        target.priority * scanner.dynamics.downlink_bonus
+                    )
             else:
                 self._mark_verified_everywhere(target, record, useful=False)
                 self._clear_cooldown_everywhere(target)
