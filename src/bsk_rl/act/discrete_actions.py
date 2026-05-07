@@ -243,7 +243,7 @@ class Downlink(DiscreteFSWAction):
         name: Optional[str] = None,
         duration: Optional[float] = None,
         variable_duration_downlink: bool = False,
-        empty_storage_threshold_bits: float = 1.0,
+        empty_storage_threshold_bits: float = 0.1,
     ):
         """Action to transmit data from the data buffer (:class:`~bsk_rl.env.simulation.fsw.ImagingFSWModel.action_downlink`).
 
@@ -312,7 +312,8 @@ class Downlink(DiscreteFSWAction):
         min_duration_s = max(
             float(getattr(self.satellite.fsw, "fsw_rate", 0.0)),
             float(getattr(self.simulator, "sim_rate", 0.0)),
-            1e-9,
+            # Avoid rapid retasking loops when storage is already empty.
+            10.0,
         )
         # Even if storage is already empty, wait one cadence so env.step advances time.
         self._downlink_earliest_stop_time = (
@@ -1235,10 +1236,36 @@ class ImageRSO(DiscreteAction):
                         currently_visible_ids_eclipsed.append(target.id)
                         currently_visible_ids_eclipsed_elevation.append(elev)
 
-                all_ids = set(range(len(known_targets)))
+                all_ids = {target.id for target in known_targets}
                 seen_ids = set(self.ever_visible)
                 eligible_ids_now = {target.id for target in eligible_targets}
-                cooling_down_ids = all_ids - eligible_ids_now
+                data_obj = self.satellite.data_store.data
+                pending_verification_ids = set()
+                cooling_down_ids = set()
+                if hasattr(data_obj, "target_lifecycle_state"):
+                    sim_time = float(self.satellite.simulator.sim_time)
+                    for target in known_targets:
+                        state = data_obj.target_lifecycle_state(target, sim_time)
+                        if state == "pending_verification":
+                            pending_verification_ids.add(target.id)
+                        elif state == "cooldown":
+                            cooling_down_ids.add(target.id)
+                else:
+                    pending_by_id = getattr(data_obj, "pending_image_records_by_id", {})
+                    pending_verification_ids = {
+                        int(target_id)
+                        for target_id, records in pending_by_id.items()
+                        if records
+                    }
+                    cooldown_until_by_id = getattr(data_obj, "cooldown_until_by_id", {})
+                    sim_time = float(self.satellite.simulator.sim_time)
+                    cooling_down_ids = {
+                        int(target_id)
+                        for target_id, cooldown_until in cooldown_until_by_id.items()
+                        if sim_time < float(cooldown_until)
+                    }
+                temporarily_ineligible_ids = all_ids - eligible_ids_now
+                unexpected_cooldown_ids = cooling_down_ids - ever_imaged_ids
                 never_seen = sorted(list(all_ids - seen_ids))
 
                 print(f"\nSimulation Timestep: {self.satellite.simulator.sim_time}")
@@ -1248,7 +1275,14 @@ class ImageRSO(DiscreteAction):
                     print(f"Currently Visible but Eclipse targets ({len(currently_visible_ids_eclipsed)}): {currently_visible_ids_eclipsed}")
                 print(f"Ever-imaged targets: ({len(ever_imaged_ids)}): {sorted(ever_imaged_ids)}")
                 print(f"Eligible targets now: ({len(eligible_ids_now)}): {sorted(eligible_ids_now)}")
+                print(f"Pending-verification targets: ({len(pending_verification_ids)}): {sorted(pending_verification_ids)}")
                 print(f"Cooling-down targets: ({len(cooling_down_ids)}): {sorted(cooling_down_ids)}")
+                print(f"Temporarily ineligible targets: ({len(temporarily_ineligible_ids)}): {sorted(temporarily_ineligible_ids)}")
+                if unexpected_cooldown_ids:
+                    print(
+                        "WARNING: true cooldown contains targets not in verified imaged list: "
+                        f"{sorted(unexpected_cooldown_ids)}"
+                    )
                 print(f"Never seen targets ({len(never_seen)}): {never_seen} \n")
 
         run_heuristic_policy = self.satellite.dynamics.use_heuristic
