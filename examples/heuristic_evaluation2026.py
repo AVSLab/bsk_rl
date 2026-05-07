@@ -284,7 +284,7 @@ class Policy:
 
 use_shield = True
 act_random = False
-use_heuristic = False
+use_heuristic = True
 heuristic_mode = "angle"  # not used unless use_heuristic is True. heuristic modes: {"angle", "distance"}
 if act_random:
     policy_tag = "RANDOM"
@@ -1514,7 +1514,6 @@ successful_imaging_slew_times_sec = np.asarray(
 unsuccessful_imaging_slew_times_sec = np.asarray(
     image_action_metrics["unsuccessful_imaging_slew_times_sec"], dtype=float
 )
-
 
 tau_umbra = 0.05
 pct_acq_in_umbra = float(np.mean(sat_sf_acq <= tau_umbra)) if sat_sf_acq.size else float("nan")

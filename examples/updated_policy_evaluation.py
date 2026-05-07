@@ -15,6 +15,18 @@ from functools import partial
 from matplotlib.collections import PolyCollection
 
 from sim_config import SimConfig
+try:
+    from evaluation_image_metrics import (
+        imaging_attempt_metrics,
+        illuminated_image_count,
+        illuminated_image_metrics,
+    )
+except ModuleNotFoundError:
+    from examples.evaluation_image_metrics import (
+        imaging_attempt_metrics,
+        illuminated_image_count,
+        illuminated_image_metrics,
+    )
 
 
 size=1
@@ -75,10 +87,11 @@ def make_run_dir(base_dir: str, seed: int, policy_tag: str, run_tag: str = "") -
 import re
 def alpha_from_tag(s: str, default=None, strict_sum_100: bool = True):
     """
-    Extract alpha from a string containing patterns like '10d90i' or '75d25i'.
+    Extract alpha from a string containing patterns like '10d90i' or 'alpha0p2'.
 
     Interpretation:
       - 'XdYi' means X% downlink, Y% imaging
+      - 'alpha0p2' or 'alpha0.2' means alpha = 0.2
       - alpha = X / 100
 
     Returns:
@@ -87,21 +100,47 @@ def alpha_from_tag(s: str, default=None, strict_sum_100: bool = True):
     if s is None:
         return default
 
-    m = re.search(r"(\d+)\s*d\s*(\d+)\s*i", str(s))
-    if not m:
-        return default
+    text = str(s)
+    m = re.search(r"(\d+)\s*d\s*(\d+)\s*i", text)
+    if m:
+        d = int(m.group(1))  # downlink percent
+        i = int(m.group(2))  # imaging percent
 
-    d = int(m.group(1))  # downlink percent
-    i = int(m.group(2))  # imaging percent
+        if strict_sum_100 and (d + i != 100):
+            # If you want to be tolerant instead, set strict_sum_100=False
+            raise ValueError(f"Found tag '{d}d{i}i' but d+i != 100 in: {s}")
 
-    if strict_sum_100 and (d + i != 100):
-        # If you want to be tolerant instead, set strict_sum_100=False
-        raise ValueError(f"Found tag '{d}d{i}i' but d+i != 100 in: {s}")
+        return d / 100.0
 
-    return d / 100.0
+    m = re.search(r"alpha\s*[_=-]?\s*(\d+(?:[p.]\d+)?)", text, flags=re.IGNORECASE)
+    if m:
+        alpha = float(m.group(1).replace("p", "."))
+        return alpha / 100.0 if alpha > 1.0 else alpha
+
+    return default
+
+
+def reward_mix_tag_from_alpha(alpha_value, default_alpha: float = 0.0) -> str:
+    """Format alpha as the existing downlink/imaging reward tag style."""
+    if alpha_value is None:
+        alpha_value = default_alpha
+    downlink_pct = int(round(float(alpha_value) * 100))
+    downlink_pct = max(0, min(100, downlink_pct))
+    imaging_pct = 100 - downlink_pct
+    return f"{downlink_pct:02d}d{imaging_pct:02d}i"
+
+
+def reward_mix_tag_from_policy(policy_name: str, policy_path: str, default_alpha: float = 0.0) -> str:
+    for candidate in (policy_name, policy_path):
+        alpha_value = alpha_from_tag(candidate, default=None, strict_sum_100=False)
+        if alpha_value is not None:
+            return reward_mix_tag_from_alpha(alpha_value, default_alpha)
+    return reward_mix_tag_from_alpha(default_alpha, default_alpha)
 
 def print_alpha(policy_name: str, policy_path: str):
-    a = alpha_from_tag(policy_path, default=None, strict_sum_100=False)
+    a = alpha_from_tag(policy_name, default=None, strict_sum_100=False)
+    if a is None:
+        a = alpha_from_tag(policy_path, default=None, strict_sum_100=False)
     print(f"\n\nPOLICY NAME: {policy_name:50s} alpha value being extracted: alpha = {a}  ({policy_path})")
 
 def save_npy(run_dir: str, name: str, arr) -> None:
@@ -230,7 +269,7 @@ def make_downlink_action(duration: float):
 # imaging_duration = 300
 # total_time = n_targets * imaging_duration * 1.5   # 5700.0  # approximately 1 orbit
 
-seed_number = 184  # 17 / 10 / 184 ...
+seed_number = 99  # 17 / 10 / 184 ...
 policy_mode = 'latest'
 eclipse_norm = 5700
 save_data = True   # set to False to avoid saving data
@@ -249,12 +288,10 @@ if use_heuristic:
 elif act_random:
     run_tag = "RANDOM"
 else:
-    run_tag = f"{policy_tag}_{policy_mode}"
+    run_tag = None
 
 
 base_data_dir = os.path.join(os.path.dirname(__file__), "data")  # examples/data
-run_dir = make_run_dir(base_data_dir, seed_number, policy_tag, run_tag)
-print(f"\n=== Run outputs will be saved to: {run_dir} ===\n")
 
 
 
@@ -540,6 +577,13 @@ VALID_POLICY_MODES = {"best", "smallest", "latest"}
 
 if policy_mode not in VALID_POLICY_MODES:
     raise ValueError(f"Invalid policy_mode '{policy_mode}'. Expected one of {VALID_POLICY_MODES}.")
+
+if run_tag is None:
+    reward_mix_tag = reward_mix_tag_from_policy(policy_name, policy_path, default_alpha=0.0)
+    run_tag = f"{policy_tag}_{policy_mode}{reward_mix_tag}"
+
+run_dir = make_run_dir(base_data_dir, seed_number, policy_tag, run_tag)
+print(f"\n=== Run outputs will be saved to: {run_dir} ===\n")
 
 policy = Policy(policy_path, policy_mode=policy_mode)
 
@@ -1163,7 +1207,7 @@ for target_id in range(n_targets*6 *100 ):
     battery_levels.append(env.unwrapped.satellites[0].dynamics.battery_charge_fraction)
     storage_levels.append(env.unwrapped.satellites[0].dynamics.storage_level_fraction)
     sim_times.append(env.simulator.sim_time)
-    num_imaged.append(len(env.env.unwrapped.rewarder.imaged_illuminated))
+    num_imaged.append(illuminated_image_count(env))
     num_downlinked.append(env.env.unwrapped.rewarder.useful_downlinks)
 
     SS1_reward_over_time.append(SS1_reward)
@@ -1307,9 +1351,30 @@ sat_sf_cmd = np.interp(cmd_times, ecl_t, ecl_sf) if cmd_times.size else np.array
 sat_sf_acq = np.interp(acq_times_for_cmd[acq_success], ecl_t, ecl_sf) if np.any(acq_success) else np.array([])
 
 # Summary metrics
-avg_acq_time_sec = float(np.nanmean(acq_dt_for_cmd)) if np.any(acq_success) else float("nan")
-median_acq_time_sec = float(np.nanmedian(acq_dt_for_cmd)) if np.any(acq_success) else float("nan")
+successful_acq_dt = np.asarray(acq_dt_for_cmd[acq_success], dtype=float)
+successful_acq_dt = successful_acq_dt[np.isfinite(successful_acq_dt)]
+avg_acq_time_sec = float(np.mean(successful_acq_dt)) if successful_acq_dt.size else float("nan")
+median_acq_time_sec = float(np.median(successful_acq_dt)) if successful_acq_dt.size else float("nan")
 acq_success_rate = float(np.mean(acq_success)) if cmd_times.size else float("nan")
+image_action_metrics = imaging_attempt_metrics(SS1_actions_spec)
+imaging_action_durations_sec = np.asarray(
+    image_action_metrics["imaging_action_durations_sec"], dtype=float
+)
+successful_imaging_action_durations_sec = np.asarray(
+    image_action_metrics["successful_imaging_action_durations_sec"], dtype=float
+)
+unsuccessful_imaging_action_durations_sec = np.asarray(
+    image_action_metrics["unsuccessful_imaging_action_durations_sec"], dtype=float
+)
+imaging_slew_times_sec = np.asarray(
+    image_action_metrics["imaging_slew_times_sec"], dtype=float
+)
+successful_imaging_slew_times_sec = np.asarray(
+    image_action_metrics["successful_imaging_slew_times_sec"], dtype=float
+)
+unsuccessful_imaging_slew_times_sec = np.asarray(
+    image_action_metrics["unsuccessful_imaging_slew_times_sec"], dtype=float
+)
 
 tau_umbra = 0.05
 pct_acq_in_umbra = float(np.mean(sat_sf_acq <= tau_umbra)) if sat_sf_acq.size else float("nan")
@@ -1321,6 +1386,13 @@ data_dict["image_command_target_ids"] = cmd_target_ids.tolist()
 data_dict["image_acq_times"] = acq_times_for_cmd.tolist()
 data_dict["image_acq_dt"] = acq_dt_for_cmd.tolist()
 data_dict["image_acq_success"] = acq_success.astype(int).tolist()
+data_dict["successful_image_acq_dt"] = successful_acq_dt.tolist()
+data_dict["imaging_action_durations_sec"] = imaging_action_durations_sec.tolist()
+data_dict["successful_imaging_action_durations_sec"] = successful_imaging_action_durations_sec.tolist()
+data_dict["unsuccessful_imaging_action_durations_sec"] = unsuccessful_imaging_action_durations_sec.tolist()
+data_dict["imaging_slew_times_sec"] = imaging_slew_times_sec.tolist()
+data_dict["successful_imaging_slew_times_sec"] = successful_imaging_slew_times_sec.tolist()
+data_dict["unsuccessful_imaging_slew_times_sec"] = unsuccessful_imaging_slew_times_sec.tolist()
 
 # build images.csv table
 
@@ -1589,7 +1661,7 @@ if sim_times:
 
 print("  Final data level:", observation)
 print(f"final reward for SS1 {SS1_reward} should be the same as {env.env.unwrapped.rewarder.cum_reward['SS1']}")
-print(f"and number of imaged targets {len(env.env.unwrapped.satellites[0].data_store.data.imaged)} out of those useful images were: {len(env.env.unwrapped.rewarder.imaged_illuminated)}")
+print(f"and number of imaged targets {len(env.env.unwrapped.satellites[0].data_store.data.imaged)} out of those useful images were: {illuminated_image_count(env)}")
 print(f"Total downlinked {env.env.unwrapped.rewarder.total_downlinks} out of those useful downlinks were: {env.env.unwrapped.rewarder.useful_downlinks}")
 # print(f"mean and std of chosen_target_azimuth {env.env.unwrapped.satellites[0].action_builder.action_spec[0].chosen_target_azimuth}")
 
@@ -1605,6 +1677,12 @@ print(f"Imaging commands issued: {cmd_times.size}")
 print(f"Acquisition success rate: {acq_success_rate:.3f}")
 print(f"Average acquisition time [s]: {avg_acq_time_sec:.2f}")
 print(f"Median acquisition time [s]: {median_acq_time_sec:.2f}")
+print(f"Imaging attempts recorded: {image_action_metrics['num_imaging_attempts']}")
+print(f"Imaging attempt success rate: {image_action_metrics['imaging_attempt_success_rate']:.3f}")
+print(f"Average imaging action duration [s]: {image_action_metrics['mean_imaging_action_duration_sec']:.2f}")
+print(f"Median imaging action duration [s]: {image_action_metrics['median_imaging_action_duration_sec']:.2f}")
+print(f"Average imaging slew duration [s]: {image_action_metrics['mean_imaging_slew_time_sec']:.2f}")
+print(f"Median imaging slew duration [s]: {image_action_metrics['median_imaging_slew_time_sec']:.2f}")
 print(f"% commands in umbra (SF<=0.05): {pct_cmd_in_umbra:.3f}")
 print(f"% acquisitions in umbra (SF<=0.05): {pct_acq_in_umbra:.3f}")
 print("==========================================================\n")
@@ -1854,7 +1932,7 @@ ax2.tick_params(axis='y', labelcolor='black', labelsize = tick_label_size)
 
 # Align both y-axes at 0 and 1.0/100 respectively
 ax1.set_ylim(top=1.0, bottom=0.0)
-ax2.set_ylim(top=100, bottom=0.0)
+ax2.set_ylim(top=300, bottom=0.0)
 
 # Combine legends
 lines1, labels1 = ax1.get_legend_handles_labels()
@@ -2159,6 +2237,13 @@ if save_data:
     save_npy(run_dir, "image_acq_times", acq_times_for_cmd)
     save_npy(run_dir, "image_acq_dt", acq_dt_for_cmd)
     save_npy(run_dir, "image_acq_success", acq_success.astype(int))
+    save_npy(run_dir, "successful_image_acq_dt", successful_acq_dt)
+    save_npy(run_dir, "imaging_action_durations_sec", imaging_action_durations_sec)
+    save_npy(run_dir, "successful_imaging_action_durations_sec", successful_imaging_action_durations_sec)
+    save_npy(run_dir, "unsuccessful_imaging_action_durations_sec", unsuccessful_imaging_action_durations_sec)
+    save_npy(run_dir, "imaging_slew_times_sec", imaging_slew_times_sec)
+    save_npy(run_dir, "successful_imaging_slew_times_sec", successful_imaging_slew_times_sec)
+    save_npy(run_dir, "unsuccessful_imaging_slew_times_sec", unsuccessful_imaging_slew_times_sec)
 
     # If you already save eclipse windows:
     try:
@@ -2203,7 +2288,9 @@ print(f"Code execution time: {elapsed_time:.4f} seconds")
 
 data = {}
 data["cumulativeRewardSS1"] = round(env.unwrapped.rewarder.cum_reward['SS1'], 2)
-data["illuminated_images"] = len(env.unwrapped.rewarder.imaged_illuminated)
+image_metrics = illuminated_image_metrics(env)
+data["illuminated_images"] = image_metrics["total_illuminated_images"]
+data.update(image_metrics)
 # data["Total Images Downlinked"] = env.unwrapped.satellites[0].dynamics.total_downlinks
 # data["Useful Images Downlinked"] = env.unwrapped.satellites[0].dynamics.useful_downlinks
 
@@ -2315,7 +2402,7 @@ try:
         "desat_action_count": 'desat_action_count' in locals() and desat_action_count or None,
         "target_imaging_pct": 'target_imaging_pct' in locals() and target_imaging_pct or None,
         "non_target_pct": 'non_target_pct' in locals() and non_target_pct or None,
-        "imaging_success_percentage": 'env' in locals() and len(env.unwrapped.rewarder.imaged_illuminated)/target_imaging_count*100 if ('env' in locals() and target_imaging_count) else None
+        "imaging_success_percentage": 'env' in locals() and illuminated_image_count(env)/target_imaging_count*100 if ('env' in locals() and target_imaging_count) else None
     }
     summary.update({
     "acq_success_rate": acq_success_rate,
@@ -2323,6 +2410,21 @@ try:
     "median_acquisition_time_sec": median_acq_time_sec,
     "pct_cmd_in_umbra": pct_cmd_in_umbra,
     "pct_acq_in_umbra": pct_acq_in_umbra,
+    "num_imaging_attempts": image_action_metrics["num_imaging_attempts"],
+    "imaging_attempt_success_rate": image_action_metrics["imaging_attempt_success_rate"],
+    "total_imaging_action_time_sec": image_action_metrics["total_imaging_action_time_sec"],
+    "mean_imaging_action_duration_sec": image_action_metrics["mean_imaging_action_duration_sec"],
+    "median_imaging_action_duration_sec": image_action_metrics["median_imaging_action_duration_sec"],
+    "mean_successful_imaging_action_duration_sec": image_action_metrics["mean_successful_imaging_action_duration_sec"],
+    "median_successful_imaging_action_duration_sec": image_action_metrics["median_successful_imaging_action_duration_sec"],
+    "mean_unsuccessful_imaging_action_duration_sec": image_action_metrics["mean_unsuccessful_imaging_action_duration_sec"],
+    "median_unsuccessful_imaging_action_duration_sec": image_action_metrics["median_unsuccessful_imaging_action_duration_sec"],
+    "mean_imaging_slew_time_sec": image_action_metrics["mean_imaging_slew_time_sec"],
+    "median_imaging_slew_time_sec": image_action_metrics["median_imaging_slew_time_sec"],
+    "mean_successful_imaging_slew_time_sec": image_action_metrics["mean_successful_imaging_slew_time_sec"],
+    "median_successful_imaging_slew_time_sec": image_action_metrics["median_successful_imaging_slew_time_sec"],
+    "mean_unsuccessful_imaging_slew_time_sec": image_action_metrics["mean_unsuccessful_imaging_slew_time_sec"],
+    "median_unsuccessful_imaging_slew_time_sec": image_action_metrics["median_unsuccessful_imaging_slew_time_sec"],
     })
     summary.update({"look_metrics": look_metrics})
     summary.update({"regime_metrics": regime_metrics})
@@ -2345,5 +2447,5 @@ try:
     print(f"Saved metrics JSON to {json_path}")
 except Exception as e:
     print("WARNING: Failed to save metrics JSON:", e)
-print(f"good images #:{len(env.unwrapped.rewarder.imaged_illuminated)} out of {target_imaging_count}")
-print(f"imaging success percentage {len(env.unwrapped.rewarder.imaged_illuminated)/target_imaging_count*100}%")
+print(f"good images #:{illuminated_image_count(env)} out of {target_imaging_count}")
+print(f"imaging success percentage {illuminated_image_count(env)/target_imaging_count*100}%")

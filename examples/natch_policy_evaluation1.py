@@ -34,6 +34,16 @@ from examples.load_policy import load_policy
 from ray.rllib.utils.spaces.space_utils import flatten_to_single_ndarray
 from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
+try:
+    from evaluation_image_metrics import (
+        illuminated_image_count,
+        illuminated_image_metrics,
+    )
+except ModuleNotFoundError:
+    from examples.evaluation_image_metrics import (
+        illuminated_image_count,
+        illuminated_image_metrics,
+    )
 
 # Make Basilisk not unload kernels on teardown (prevents CSPICE hang)
 try:
@@ -546,9 +556,9 @@ def run_single_trial(
 
         # imaging metrics
         imaged_all = _get_imaged_all(env)               # raw imaged list
-        imaged_illum = getattr(rewarder, "imaged_illuminated", [])
+        imaged_illum = illuminated_image_count(env)
         run_stats["num_imaged"].append(_safe_len(imaged_all))
-        run_stats["num_imaged_illuminated"].append(_safe_len(imaged_illum))
+        run_stats["num_imaged_illuminated"].append(int(imaged_illum))
 
         # downlink metrics
         total_dl = getattr(rewarder, "total_downlinks", 0)
@@ -566,7 +576,7 @@ def run_single_trial(
         all_trunc = all(truncated.values()) if isinstance(truncated, dict) else bool(truncated)
 
         # "100 imaged" condition: check illuminated first (if you truly want *all* imaged use imaged_all)
-        done_imaging = _safe_len(imaged_illum) >= 100 if imaged_illum is not None else _safe_len(imaged_all) >= 100
+        done_imaging = int(imaged_illum) >= 100 if imaged_illum is not None else _safe_len(imaged_all) >= 100
 
         if all_term or all_trunc or done_imaging:
             break
@@ -578,9 +588,10 @@ def run_single_trial(
 
     # Use both variants to be robust
     final_imaged_all = _safe_len(_get_imaged_all(env))
-    final_imaged_illum = _safe_len(getattr(_get_rewarder(env), "imaged_illuminated", []))
+    final_imaged_illum = illuminated_image_count(env)
     summary["final_num_imaged"] = final_imaged_all
     summary["final_num_imaged_illuminated"] = final_imaged_illum
+    summary.update(illuminated_image_metrics(env))
 
     final_total_dl = int(getattr(_get_rewarder(env), "total_downlinks", 0))
     final_useful_dl = int(getattr(_get_rewarder(env), "useful_downlinks", 0))

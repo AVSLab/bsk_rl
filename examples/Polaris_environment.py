@@ -23,6 +23,16 @@ from Basilisk.utilities import (
 
 from Basilisk.architecture import bskLogging
 bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)
+try:
+    from evaluation_image_metrics import (
+        illuminated_image_count,
+        illuminated_image_metrics,
+    )
+except ModuleNotFoundError:
+    from examples.evaluation_image_metrics import (
+        illuminated_image_count,
+        illuminated_image_metrics,
+    )
 
 def save_plot_unique(fig, base_filename, folder="plots", extension=".pdf"):
     """
@@ -315,7 +325,7 @@ for target_id in range(n_targets*4 *100 ):
     battery_levels.append(env.satellites[0].dynamics.battery_charge_fraction)
     storage_levels.append(env.satellites[0].dynamics.storage_level_fraction)
     sim_times.append(env.simulator.sim_time)
-    num_imaged.append(len(env.env.rewarder.imaged_illuminated))
+    num_imaged.append(illuminated_image_count(env))
     num_downlinked.append(env.env.rewarder.useful_downlinks)
 
     SS1_reward+=reward['SS1']
@@ -360,7 +370,7 @@ for target_id in range(n_targets*4 *100 ):
 
 print("  Final data level:", observation)
 print(f"final reward for SS1 {SS1_reward} should be the same as {env.env.rewarder.cum_reward['SS1']}")
-print(f"and number of imaged targets {len(env.env.satellites[0].data_store.data.imaged)} out of those useful images were: {len(env.env.rewarder.imaged_illuminated)}")
+print(f"and number of imaged targets {len(env.env.satellites[0].data_store.data.imaged)} out of those useful images were: {illuminated_image_count(env)}")
 print(f"Total downlinked {env.env.rewarder.total_downlinks} out of those useful downlinks were: {env.env.rewarder.useful_downlinks}")
 # print(f"mean and std of chosen_target_azimuth {env.env.satellites[0].action_builder.action_spec[0].chosen_target_azimuth}")
 
@@ -768,7 +778,9 @@ print(f"Code execution time: {elapsed_time:.4f} seconds")
 
 data = {}
 data["cumulativeRewardSS1"]=env.rewarder.cum_reward['SS1']
-data["illuminated_images"] = len(env.rewarder.imaged_illuminated)
+image_metrics = illuminated_image_metrics(env)
+data["illuminated_images"] = image_metrics["total_illuminated_images"]
+data.update(image_metrics)
 # data["Total Images Downlinked"] = env.satellites[0].dynamics.total_downlinks
 # data["Useful Images Downlinked"] = env.satellites[0].dynamics.useful_downlinks
 
@@ -877,7 +889,7 @@ try:
         # "desat_action_count": 'desat_action_count' in locals() and desat_action_count or None,
         "target_imaging_pct": 'target_imaging_pct' in locals() and target_imaging_pct or None,
         "non_target_pct": 'non_target_pct' in locals() and non_target_pct or None,
-        "imaging_success_percentage": 'env' in locals() and len(env.rewarder.imaged_illuminated)/target_imaging_count*100 if ('env' in locals() and target_imaging_count) else None
+        "imaging_success_percentage": 'env' in locals() and illuminated_image_count(env)/target_imaging_count*100 if ('env' in locals() and target_imaging_count) else None
     }
     payload = {"data": data, "summary": summary}
     with open(json_path, "w") as jf:
@@ -885,6 +897,5 @@ try:
     print(f"Saved metrics JSON to {json_path}")
 except Exception as e:
     print("WARNING: Failed to save metrics JSON:", e)
-print(f"good images #:{len(env.rewarder.imaged_illuminated)} out of {target_imaging_count}")
-print(f"imaging success percentage {len(env.rewarder.imaged_illuminated)/target_imaging_count*100}%")
-
+print(f"good images #:{illuminated_image_count(env)} out of {target_imaging_count}")
+print(f"imaging success percentage {illuminated_image_count(env)/target_imaging_count*100}%")
