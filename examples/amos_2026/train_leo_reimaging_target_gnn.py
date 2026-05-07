@@ -653,7 +653,11 @@ if __name__ == "__main__":
             satellites=[all_sat],
             scenario=[make_rso_scenario()],
             rewarder=[make_rso_rewarder()],
-            world_type=[world.BasicWorldModel],
+            # ImagingSCDynModel depends on the ground-station world hooks even
+            # in this imaging-only ablation. Using BasicWorldModel makes every
+            # Ray env runner fail during reset with a "must be a subclass of
+            # GroundStationWorldModel" TypeError on the cluster.
+            world_type=[world.GroundStationWorldModel],
             time_limit=[total_time],
             failure_penalty=[-100.0],
             terminate_on_time_limit=[False],
