@@ -18,6 +18,7 @@ from bsk_rl.utils.utils import get_available_cores
 from ray.rllib.algorithms.ppo import PPO, PPOConfig
 from ray.tune.logger import UnifiedLogger
 from bsk_rl.sim import dyn, fsw, world
+from bsk_rl.utils.rllib.target_gnn_module import GNNModule
 
 # from bsk_rl.data import FuelPenalty, RSOInspectionReward
 # from bsk_rl.scene import FibonacciSphereRSOPoints
@@ -103,10 +104,30 @@ def train_model(
             rl_module_spec=MultiRLModuleSpec(
                 module_specs={
                     "inspector": RLModuleSpec(
+                        module_class=GNNModule,
                         model_config_dict={
-                            "use_lstm": False,
-                            "fcnet_hiddens": [2048, 2048], #[2048, 2048], also tested [1024,1024] and it was pretty much the same
-                            "vf_share_layers": False,
+                            "n_targets": 10,
+                            "obs_sat": 11,
+                            "width_f": 256, #network targeted for imaging
+                            "depth_f": 2,
+                            "block_f": False,
+                            "width_g": 128,
+                            "depth_g": 4, #second network for extra actions
+                            "tgt_encoded_dim": 128,
+                            "attention_depth": 1,
+                            "num_heads": 2,
+                            "attention_dim": 128, #self attention model
+                            "dropout_rate": 0,
+                            "act_function": "ReLU",
+                            "critic_tgt_encoded_dim": 128,
+                            "critic_width_f": 256,
+                            "critic_depth_f": 2,
+                            "critic_block_f": False,
+                            "critic_width_g": 64,
+                            "critic_depth_g": 3,
+                            "critic_block_g": False,
+                            "critic_pooling_std": False,
+                            "non_imaging_actions": 0, # it will create some output for 3 extra actiins effectively disregarding them
                         },
                     ),
                     "rso": RLModuleSpec(
@@ -218,6 +239,11 @@ def _safe_mean(values, default=-1.0):
     return float(np.mean(values)) if values else default
 
 
+def _safe_median(values, default=-1.0):
+    values = _finite_values(values)
+    return float(np.median(values)) if values else default
+
+
 def _safe_std(values, default=-1.0):
     values = _finite_values(values)
     return float(np.std(values)) if values else default
@@ -230,9 +256,10 @@ def _safe_max(values, default=-1.0):
 
 def env_metrics_callback(env):
     data = {}
+    reward_data = env.rewarder.data
 
     # Number of unique targets successfully imaged
-    num_imaged = len(env.rewarder.data.imaged)
+    num_imaged = len(reward_data.imaged)
     data["num_unique_targets_imaged"] = num_imaged
 
     # Episode duration
@@ -294,6 +321,29 @@ def env_metrics_callback(env):
         and record.get("start_time") is not None
         and record.get("end_time") is not None
     ]
+    unsuccessful_imaging_action_durations = [
+        float(record["end_time"]) - float(record["start_time"])
+        for record in imaging_attempt_records
+        if not record.get("success")
+        and record.get("start_time") is not None
+        and record.get("end_time") is not None
+    ]
+    imaging_slew_times = [
+        record.get("slew_time_s") for record in imaging_attempt_records
+    ]
+    successful_imaging_slew_times = [
+        record.get("slew_time_s")
+        for record in imaging_attempt_records
+        if record.get("success")
+    ]
+    unsuccessful_imaging_slew_times = [
+        record.get("slew_time_s")
+        for record in imaging_attempt_records
+        if not record.get("success")
+    ]
+    imaging_success_flags = [
+        bool(record.get("success")) for record in imaging_attempt_records
+    ]
     attempted_priorities = [
         target_priority_by_id.get(int(record["target_id"]))
         for record in imaging_attempt_records
@@ -305,16 +355,40 @@ def env_metrics_callback(env):
         if record.get("success") and record.get("target_id") is not None
     ]
     data["num_imaging_attempts"] = len(imaging_attempt_records)
+    data["imaging_attempt_success_rate"] = _safe_mean(imaging_success_flags)
     data["actual_imaging_action_time_sec"] = float(np.sum(imaging_action_durations))
     data["actual_non_imaging_time_sec"] = (
         float(episode_duration) - data["actual_imaging_action_time_sec"]
     )
     data["mean_imaging_action_duration_sec"] = _safe_mean(imaging_action_durations)
+    data["median_imaging_action_duration_sec"] = _safe_median(
+        imaging_action_durations
+    )
     data["mean_successful_imaging_action_duration_sec"] = _safe_mean(
         successful_imaging_action_durations
     )
-    data["mean_imaging_slew_time_sec"] = _safe_mean(
-        record.get("slew_time_s") for record in imaging_attempt_records
+    data["median_successful_imaging_action_duration_sec"] = _safe_median(
+        successful_imaging_action_durations
+    )
+    data["mean_unsuccessful_imaging_action_duration_sec"] = _safe_mean(
+        unsuccessful_imaging_action_durations
+    )
+    data["median_unsuccessful_imaging_action_duration_sec"] = _safe_median(
+        unsuccessful_imaging_action_durations
+    )
+    data["mean_imaging_slew_time_sec"] = _safe_mean(imaging_slew_times)
+    data["median_imaging_slew_time_sec"] = _safe_median(imaging_slew_times)
+    data["mean_successful_imaging_slew_time_sec"] = _safe_mean(
+        successful_imaging_slew_times
+    )
+    data["median_successful_imaging_slew_time_sec"] = _safe_median(
+        successful_imaging_slew_times
+    )
+    data["mean_unsuccessful_imaging_slew_time_sec"] = _safe_mean(
+        unsuccessful_imaging_slew_times
+    )
+    data["median_unsuccessful_imaging_slew_time_sec"] = _safe_median(
+        unsuccessful_imaging_slew_times
     )
     data["mean_attempted_target_priority"] = _safe_mean(attempted_priorities)
     data["mean_successful_capture_priority"] = _safe_mean(
@@ -345,9 +419,23 @@ def env_metrics_callback(env):
     data["useful_downlink_fraction"] = (
         useful_downlinks / total_downlinks if total_downlinks > 0 else 0.0
     )
-    data["cooldown_target_count"] = len(
-        getattr(env.satellites[0].data_store.data, "cooldown_until_by_id", {})
-    )
+    cooldown_until_by_id = getattr(reward_data, "cooldown_until_by_id", {})
+    pending_by_id = getattr(reward_data, "pending_image_records_by_id", {})
+    active_cooldown_ids = {
+        int(target_id)
+        for target_id, cooldown_until in cooldown_until_by_id.items()
+        if float(episode_duration) < float(cooldown_until)
+    }
+    pending_target_ids = {
+        int(target_id) for target_id, records in pending_by_id.items() if records
+    }
+    temporarily_ineligible_ids = set(active_cooldown_ids)
+    if getattr(reward_data, "hide_pending_targets", True):
+        temporarily_ineligible_ids.update(pending_target_ids)
+    data["cooldown_target_count_legacy"] = len(cooldown_until_by_id)
+    data["cooldown_target_count"] = len(active_cooldown_ids)
+    data["pending_verification_target_count"] = len(pending_target_ids)
+    data["temporarily_ineligible_target_count"] = len(temporarily_ineligible_ids)
 
     # Target azimuth
     if hasattr(SS1_actions_spec, "chosen_target_azimuth") and SS1_actions_spec.chosen_target_azimuth:
@@ -548,6 +636,13 @@ if __name__ == "__main__":
                 dict(prop="battery_charge_fraction"),
                 dict(prop="wheel_speeds_fraction")
             ),
+            obs.Eclipse(norm=5700),
+            obs.OpportunityProperties(
+                dict(prop="opportunity_open", norm = 5700.0),
+                dict(prop="opportunity_close", norm = 5700.0),
+                type="ground_station",
+                n_ahead_observe=2,
+            ),
 
             #observation space 1
             # obs.PolarisScTargetProperties(
@@ -569,13 +664,7 @@ if __name__ == "__main__":
                 dict(prop="target_shadowFactor", norm=1.0),
                 n_ahead_observe=n_targets_ahead,
                                            ),
-            obs.Eclipse(norm=5700),
-            obs.OpportunityProperties(
-                dict(prop="opportunity_open", norm = 5700.0),
-                dict(prop="opportunity_close", norm = 5700.0),
-                type="ground_station",
-                n_ahead_observe=2,
-            )
+
         ]
         action_spec = [
             act.ImageRSO(
@@ -587,9 +676,9 @@ if __name__ == "__main__":
                 require_illumination_during_hold=sim_cfg.require_illumination_during_hold,
                 hold_illumination_threshold=sim_cfg.hold_illumination_threshold,
             ),  # Scan for 5 minute
-            act.Charge(duration=300.0),  # Charge for 5 minutes
-            make_downlink_action(300.0), # Downlink for 3 min
-            act.Desat(duration=150), # Desat for 2.5 min
+            # act.Charge(duration=300.0),  # Charge for 5 minutes
+            # make_downlink_action(300.0), # Downlink for 3 min
+            # act.Desat(duration=150), # Desat for 2.5 min
 
         ]
         dyn_type = dyn.ImagingSCDynModel
@@ -607,8 +696,8 @@ if __name__ == "__main__":
     sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
     # Power
-    sat_args["batteryStorageCapacity"] = 500 * 3600 # *1000000 # W*s
-    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.10, 0.4) * 500 * 3600 #*1000000
+    sat_args["batteryStorageCapacity"] = 500 * 3600 *1000000 # W*s
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.10, 0.4) * 500 * 3600 *1000000
     sat_args["basePowerDraw"] = -10.0  # W
     sat_args["instrumentPowerDraw"] = -30.0  # W
     sat_args["transmitterPowerDraw"] = -25.0  # W
@@ -745,17 +834,40 @@ if __name__ == "__main__":
     batch_multiplier = 150
     batch_size = int(batch_multiplier * n_envs)
     run_tag = (
-        f"amos2026_LEO_wGAE_{batch_size}batch_restrictedResources_obsv7_"
-        "1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2"
+        f"amos2026_LEO_wGAE_{batch_size}batch_restrictedResources_obsv8_"
+        "1e-5lr_0.05cp_gradclip0.5_gamma9997"
     )
     model_name = f"{run_tag}.out_{N}"
     print('n_envs', n_envs, 'therefore batch size is ', batch_multiplier*n_envs)
 
-    output_dir = (
-        Path("/scratch/alpine/dahu1128/rllib_results").expanduser()
-        / f"{run_tag}_{time.time()}"
-    )
-    output_dir = Path(output_dir)
+    if os.environ.get("SLURM_JOB_ID"):
+        scratch_root = Path(
+            os.environ.get("BSK_RL_SCRATCH", f"/scratch/alpine/{os.environ.get('USER', 'dahu1128')}")
+        ).expanduser()
+        output_root = Path(
+            os.environ.get("BSK_RL_OUTPUT_DIR", scratch_root / "rllib_results")
+        ).expanduser()
+        ray_tmpdir = Path(
+            os.environ.get(
+                "BSK_RL_RAY_TMPDIR",
+                os.environ.get(
+                    "TMPDIR",
+                    f"/tmp/bskray_{os.environ.get('SLURM_JOB_ID')}_{N}",
+                ),
+            )
+        ).expanduser()
+    else:
+        output_root = Path(
+            os.environ.get(
+                "BSK_RL_OUTPUT_DIR",
+                "~/rllib_results/may_results/may6rllib_results",
+            )
+        ).expanduser()
+        ray_tmpdir = Path(os.environ.get("BSK_RL_RAY_TMPDIR", f"/tmp/bskrl_{N}"))
+
+    output_dir = output_root / f"may7_GNN_network_00d100i_{run_tag}_{time.time()}"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    ray_tmpdir.mkdir(parents=True, exist_ok=True)
 
     print(f"Tensorboard logging: tensorboard --logdir {output_dir}")
 
@@ -813,7 +925,7 @@ if __name__ == "__main__":
         total_timesteps=20_000_000,
         reload_frequency=500_000,
         n_envs=n_envs,
-        temp_dir="/scratch/alpine/dahu1128/tmp",
+        temp_dir=str(ray_tmpdir),
         **job_args,
     )
 
