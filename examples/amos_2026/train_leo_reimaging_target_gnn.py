@@ -594,13 +594,14 @@ if __name__ == "__main__":
     # enough that resource depletion is not the dominant learning problem.
     baseline_storage_bits = 50 * 8e6 / 2
     baseline_battery_ws = 500 * 3600
+    battery_life_multiplier = _env_float("BSK_RL_BATTERY_LIFE_MULTIPLIER", 1000.0)
     sat_args["dataStorageCapacity"] = 10 * baseline_storage_bits
     sat_args["storageInit"] = lambda: 0.0
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
     sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
-    sat_args["batteryStorageCapacity"] = 10 * baseline_battery_ws
-    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.8, 1.0) * 10 * baseline_battery_ws
+    sat_args["batteryStorageCapacity"] = battery_life_multiplier * baseline_battery_ws
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.8, 1.0) * battery_life_multiplier * baseline_battery_ws
     sat_args["basePowerDraw"] = -10.0
     sat_args["instrumentPowerDraw"] = -30.0
     sat_args["transmitterPowerDraw"] = -25.0
@@ -688,6 +689,8 @@ if __name__ == "__main__":
             regime = np.random.choice(regimes, p=probs)
         return _sample_for_regime(regime.upper(), altitude_bounds, min_perigee_alt)
 
+    # Keep target satellites passive/alive in this standalone GNN entrypoint.
+    # The scanner is the only learned agent; targets define imaging opportunities.
     target_args = dict(
         oe=custom_oe_randomizer,
         batteryStorageCapacity=1.0,
@@ -797,6 +800,7 @@ if __name__ == "__main__":
             "batch_multiplier": batch_multiplier,
             "batch_size": batch_size,
             "total_timesteps": total_timesteps,
+            "battery_life_multiplier": battery_life_multiplier,
             "ray_tmpdir": str(ray_tmpdir),
             "torch_threads": _TORCH_THREADS,
         },

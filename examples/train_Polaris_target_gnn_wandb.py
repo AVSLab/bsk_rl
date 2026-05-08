@@ -305,9 +305,18 @@ def train_model(
 
         while True:
             prev_step = step
+            print(
+                f"[train] starting iteration {iteration} at sampled_steps={step}",
+                flush=True,
+            )
             results = ppo.train()
             step = results["num_env_steps_sampled_lifetime"]
             step_return = results["env_runners"].get("episode_return_mean", -np.inf)
+            print(
+                "[train] finished iteration "
+                f"{iteration}: sampled_steps={step}, episode_return_mean={step_return}",
+                flush=True,
+            )
 
             if wandb_logger is not None:
                 wandb_logger.log(results)
@@ -665,13 +674,14 @@ if __name__ == "__main__":
     # enough that resource depletion is not the dominant learning problem.
     baseline_storage_bits = 50 * 8e6 / 2
     baseline_battery_ws = 500 * 3600
+    battery_life_multiplier = _env_float("BSK_RL_BATTERY_LIFE_MULTIPLIER", 1000.0)
     sat_args["dataStorageCapacity"] = 10 * baseline_storage_bits  # local/cluster: large enough for image-only runs
     sat_args["storageInit"] = lambda: 0.0
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
     sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
-    sat_args["batteryStorageCapacity"] = 10 * baseline_battery_ws  # local/cluster: avoid learning mostly battery survival
-    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.8, 1.0) * 10 * baseline_battery_ws
+    sat_args["batteryStorageCapacity"] = battery_life_multiplier * baseline_battery_ws  # keep scanner alive without charge
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.8, 1.0) * battery_life_multiplier * baseline_battery_ws
     sat_args["basePowerDraw"] = -10.0
     sat_args["instrumentPowerDraw"] = -30.0
     sat_args["transmitterPowerDraw"] = -25.0
@@ -759,7 +769,15 @@ if __name__ == "__main__":
             regime = np.random.choice(regimes, p=probs)
         return _sample_for_regime(regime.upper(), altitude_bounds, min_perigee_alt)
 
-    target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 0.1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )
+    # Keep target satellites passive/alive in this training entrypoint. The
+    # scanner is the only learned agent, and killing all target sats at t=0 adds
+    # a lot of Ray log noise without changing the target-selection objective.
+    target_args = dict(
+        oe=custom_oe_randomizer,
+        batteryStorageCapacity=1.0,
+        storedCharge_Init=1.0,
+        basePowerDraw=0.0,
+    )
 
     sat = MyScanningSatellite(name="SS1", sat_args=sat_args)
     targets = [
@@ -789,7 +807,7 @@ if __name__ == "__main__":
     )
 
     run_tag = (
-        f"amos2026_LEO_targetGNN_imagingOnly_obsv8_{batch_size}batch_"
+        f"amos2026_LEO_targetGNN_imagingOnly_obsB8_{batch_size}batch_"
         "hold10s_reimage2orb_prioritySum100"
     )
     model_name = f"{run_tag}.out_{job_index}"
@@ -862,6 +880,7 @@ if __name__ == "__main__":
             "batch_multiplier": batch_multiplier,
             "batch_size": batch_size,
             "total_timesteps": total_timesteps,
+            "battery_life_multiplier": battery_life_multiplier,
             "ray_tmpdir": str(ray_tmpdir),
             "torch_threads": _TORCH_THREADS,
         },
@@ -869,7 +888,7 @@ if __name__ == "__main__":
             "enabled": _env_bool("BSK_RL_USE_WANDB", True),
             "key_path": str(_wandb_key_path()),
             "project": os.environ.get("BSK_RL_WANDB_PROJECT", "amos2026-bsk-rl"),
-            "group": os.environ.get("BSK_RL_WANDB_GROUP", "polaris-target-gnn-obs-v8"),
+            "group": os.environ.get("BSK_RL_WANDB_GROUP", "polaris-target-gnn-obsB8"),
         },
     }
     with open(output_dir / f"{model_name}_config.yaml", "w") as file:

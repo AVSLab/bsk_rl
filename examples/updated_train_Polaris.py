@@ -10,15 +10,27 @@ import torch
 from dataclasses import asdict
 from sim_config import SimConfig
 
-torch.set_num_threads(11)
-os.environ["MKL_NUM_THREADS"] = "11" # 11 on the cluster historically
+_DEFAULT_TORCH_THREADS = "11"
+_TORCH_THREADS = int(os.environ.get("BSK_RL_TORCH_THREADS", _DEFAULT_TORCH_THREADS))
+torch.set_num_threads(_TORCH_THREADS)
+os.environ["MKL_NUM_THREADS"] = str(_TORCH_THREADS) # 11 on the cluster historically
+PPO_MIN_TRAIN_BATCH_SIZE = 128
+
+
+def _env_int(name: str, default: int) -> int:
+    raw_value = os.environ.get(name)
+    return int(default if raw_value is None else raw_value)
+
+
+def _env_float(name: str, default: float) -> float:
+    raw_value = os.environ.get(name)
+    return float(default if raw_value is None else raw_value)
 
 import ray
 from bsk_rl.utils.utils import get_available_cores
 from ray.rllib.algorithms.ppo import PPO, PPOConfig
 from ray.tune.logger import UnifiedLogger
 from bsk_rl.sim import dyn, fsw, world
-from bsk_rl.utils.rllib.target_gnn_module import GNNModule
 
 # from bsk_rl.data import FuelPenalty, RSOInspectionReward
 # from bsk_rl.scene import FibonacciSphereRSOPoints
@@ -41,6 +53,34 @@ except (ImportError, ModuleNotFoundError):  # Older versions of RLlib
     from ray.rllib.core.rl_module.rl_module import (
         SingleAgentRLModuleSpec as RLModuleSpec,
     )
+
+import warnings
+
+try:
+    from ray.util import RayDeprecationWarning
+
+    warnings.filterwarnings(
+        "ignore",
+        category=RayDeprecationWarning,
+        message=".*UnifiedLogger.*",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        category=RayDeprecationWarning,
+        message=".*JsonLogger.*",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        category=RayDeprecationWarning,
+        message=".*CSVLogger.*",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        category=RayDeprecationWarning,
+        message=".*TBXLogger.*",
+    )
+except Exception:
+    pass
 
 # os.environ["RAY_DEDUP_LOGS"] = "0"
 
@@ -104,30 +144,10 @@ def train_model(
             rl_module_spec=MultiRLModuleSpec(
                 module_specs={
                     "inspector": RLModuleSpec(
-                        module_class=GNNModule,
                         model_config_dict={
-                            "n_targets": 10,
-                            "obs_sat": 11,
-                            "width_f": 256, #network targeted for imaging
-                            "depth_f": 2,
-                            "block_f": False,
-                            "width_g": 128,
-                            "depth_g": 4, #second network for extra actions
-                            "tgt_encoded_dim": 128,
-                            "attention_depth": 1,
-                            "num_heads": 2,
-                            "attention_dim": 128, #self attention model
-                            "dropout_rate": 0,
-                            "act_function": "ReLU",
-                            "critic_tgt_encoded_dim": 128,
-                            "critic_width_f": 256,
-                            "critic_depth_f": 2,
-                            "critic_block_f": False,
-                            "critic_width_g": 64,
-                            "critic_depth_g": 3,
-                            "critic_block_g": False,
-                            "critic_pooling_std": False,
-                            "non_imaging_actions": 0, # it will create some output for 3 extra actiins effectively disregarding them
+                            "use_lstm": False,
+                            "fcnet_hiddens": [2048, 2048],
+                            "vf_share_layers": False,
                         },
                     ),
                     "rso": RLModuleSpec(
@@ -163,9 +183,15 @@ def train_model(
 
     while True:
         prev_step = step
+        print(f"[train] starting iteration {iter} at sampled_steps={step}", flush=True)
         results = ppo.train()
         step = results["num_env_steps_sampled_lifetime"]
         step_return = results["env_runners"].get("episode_return_mean", -np.inf)
+        print(
+            "[train] finished iteration "
+            f"{iter}: sampled_steps={step}, episode_return_mean={step_return}",
+            flush=True,
+        )
 
         if step_return > current_best_return:
             checkpoint_path = output_directory / model_name / "checkpoint_best"
@@ -584,10 +610,10 @@ if __name__ == "__main__":
     # Shared AMOS sim configuration. Priority distribution defaults live in SimConfig:
     # uniform priorities are rescaled so each episode sums to priority_sum=100.
     sim_cfg = SimConfig(
-        n_targets=100,
-        n_targets_ahead=10,
-        imaging_duration=300.0,
-        extra_time_factor=1.5,
+        n_targets=_env_int("BSK_RL_N_TARGETS", 100),
+        n_targets_ahead=_env_int("BSK_RL_N_TARGETS_AHEAD", 10),
+        imaging_duration=_env_float("BSK_RL_IMAGING_DURATION", 300.0),
+        extra_time_factor=_env_float("BSK_RL_EXTRA_TIME_FACTOR", 1.5),
         obs_v=7.0,
         just_imaging=False,
     )
@@ -636,13 +662,6 @@ if __name__ == "__main__":
                 dict(prop="battery_charge_fraction"),
                 dict(prop="wheel_speeds_fraction")
             ),
-            obs.Eclipse(norm=5700),
-            obs.OpportunityProperties(
-                dict(prop="opportunity_open", norm = 5700.0),
-                dict(prop="opportunity_close", norm = 5700.0),
-                type="ground_station",
-                n_ahead_observe=2,
-            ),
 
             #observation space 1
             # obs.PolarisScTargetProperties(
@@ -664,6 +683,13 @@ if __name__ == "__main__":
                 dict(prop="target_shadowFactor", norm=1.0),
                 n_ahead_observe=n_targets_ahead,
                                            ),
+            obs.Eclipse(norm=5700),
+            obs.OpportunityProperties(
+                dict(prop="opportunity_open", norm = 5700.0),
+                dict(prop="opportunity_close", norm = 5700.0),
+                type="ground_station",
+                n_ahead_observe=2,
+            ),
 
         ]
         action_spec = [
@@ -676,9 +702,9 @@ if __name__ == "__main__":
                 require_illumination_during_hold=sim_cfg.require_illumination_during_hold,
                 hold_illumination_threshold=sim_cfg.hold_illumination_threshold,
             ),  # Scan for 5 minute
-            # act.Charge(duration=300.0),  # Charge for 5 minutes
-            # make_downlink_action(300.0), # Downlink for 3 min
-            # act.Desat(duration=150), # Desat for 2.5 min
+            act.Charge(duration=300.0),  # Charge for 5 minutes
+            make_downlink_action(300.0), # Downlink for 3 min
+            act.Desat(duration=150), # Desat for 2.5 min
 
         ]
         dyn_type = dyn.ImagingSCDynModel
@@ -696,8 +722,10 @@ if __name__ == "__main__":
     sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
     # Power
-    sat_args["batteryStorageCapacity"] = 500 * 3600 *1000000 # W*s
-    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.10, 0.4) * 500 * 3600 *1000000
+    battery_life_multiplier = _env_float("BSK_RL_BATTERY_LIFE_MULTIPLIER", 1000.0)
+    baseline_battery_ws = 500 * 3600
+    sat_args["batteryStorageCapacity"] = battery_life_multiplier * baseline_battery_ws # W*s
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.8, 1.0) * battery_life_multiplier * baseline_battery_ws
     sat_args["basePowerDraw"] = -10.0  # W
     sat_args["instrumentPowerDraw"] = -30.0  # W
     sat_args["transmitterPowerDraw"] = -25.0  # W
@@ -811,11 +839,13 @@ if __name__ == "__main__":
 
     # For this first AMOS training pass, keep the science question LEO-to-LEO.
     # Later LEO-to-any can switch oe back to the mixed-regime partial below.
+    # Keep target satellites passive/alive in this baseline entrypoint. The
+    # scanner is the controlled spacecraft; targets only define opportunities.
     target_args = dict(
         oe=custom_oe_randomizer,
-        batteryStorageCapacity=1,
-        storedCharge_Init=0.0,
-        basePowerDraw=-10000.0,
+        batteryStorageCapacity=1.0,
+        storedCharge_Init=1.0,
+        basePowerDraw=0.0,
     )
     # target_args_mixed = dict(oe=partial(custom_oe_randomizer, regime="mixed", mix_weights={"LEO":0.5,"MEO":0.3,"GEO":0.2}), batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )
 
@@ -829,17 +859,18 @@ if __name__ == "__main__":
     all_sat = [sat] + targets
 
     N = 0 # int(sys.argv[1])  # Passed by sweep.sh script
-    n_envs = (
-        get_available_cores() - 4  # leave some extra cores for other processes
-    )
-    batch_multiplier = 150
-    batch_size = int(batch_multiplier * n_envs)
+    default_n_envs = max(1, get_available_cores() - 4)  # leave some extra cores for other processes
+    n_envs = max(1, _env_int("BSK_RL_NUM_ENVS", default_n_envs))
+    batch_multiplier = _env_int("BSK_RL_BATCH_MULTIPLIER", 150)
+    batch_size = max(PPO_MIN_TRAIN_BATCH_SIZE, int(batch_multiplier * n_envs))
+    total_timesteps = _env_int("BSK_RL_TOTAL_TIMESTEPS", 20_000_000)
+    checkpoint_frequency = _env_int("BSK_RL_CHECKPOINT_FREQUENCY", 3)
     run_tag = (
-        f"amos2026_LEO_wGAE_{batch_size}batch_restrictedResources_obsv8_"
-        "1e-5lr_0.05cp_gradclip0.5_gamma9997"
+        f"amos2026_LEO_wGAE_oldNet_fullActions_{batch_size}batch_"
+        "restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2"
     )
     model_name = f"{run_tag}.out_{N}"
-    print('n_envs', n_envs, 'therefore batch size is ', batch_multiplier*n_envs)
+    print(f"n_envs={n_envs}; batch_size={batch_size}; torch_threads={_TORCH_THREADS}")
 
     if os.environ.get("SLURM_JOB_ID"):
         scratch_root = Path(
@@ -866,7 +897,7 @@ if __name__ == "__main__":
         ).expanduser()
         ray_tmpdir = Path(os.environ.get("BSK_RL_RAY_TMPDIR", f"/tmp/bskrl_{N}"))
 
-    output_dir = output_root / f"may7_GNN_network_00d100i_{run_tag}_{time.time()}"
+    output_dir = output_root / f"may7_oldNet_fullActions_20d80i_{run_tag}_{time.time()}"
     output_dir.mkdir(parents=True, exist_ok=True)
     ray_tmpdir.mkdir(parents=True, exist_ok=True)
 
@@ -878,7 +909,7 @@ if __name__ == "__main__":
         training_args=dict(
             lr=[1e-5],
             gamma=[0.9997],
-            train_batch_size=[int(batch_multiplier * n_envs)],  # n_envs on the Mac is 6 eventually; minimum train_batch_size = mini_batch = 128
+            train_batch_size=[batch_size],  # keep at least RLlib's default minibatch size
             num_sgd_iter=[10],
             lambda_=[0.95],
             use_kl_loss=[False],
@@ -912,6 +943,14 @@ if __name__ == "__main__":
     # Save exactly what was used for this run (sim + training/env args)
     run_cfg = {
         "sim": asdict(sim_cfg),
+        "model_family": "old_network_fc_full_actions",
+        "battery_life_multiplier": battery_life_multiplier,
+        "n_envs": n_envs,
+        "batch_multiplier": batch_multiplier,
+        "batch_size": batch_size,
+        "total_timesteps": total_timesteps,
+        "ray_tmpdir": str(ray_tmpdir),
+        "torch_threads": _TORCH_THREADS,
         "job_args": sanitize_np(job_args),
     }
 
@@ -921,9 +960,9 @@ if __name__ == "__main__":
     train_model(
         model_name=model_name,
         output_directory=output_dir,
-        checkpoint_frequency=3, # used to be 2
+        checkpoint_frequency=checkpoint_frequency, # used to be 2
         checkpoints_to_keep=3,
-        total_timesteps=20_000_000,
+        total_timesteps=total_timesteps,
         reload_frequency=500_000,
         n_envs=n_envs,
         temp_dir=str(ray_tmpdir),
