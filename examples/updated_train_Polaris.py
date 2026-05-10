@@ -9,6 +9,9 @@ import numpy as np
 import torch
 from dataclasses import asdict
 from sim_config import SimConfig
+from wandb_config import WandbLogger
+
+EXAMPLES_DIR = Path(__file__).resolve().parent
 
 _DEFAULT_TORCH_THREADS = "11"
 _TORCH_THREADS = int(os.environ.get("BSK_RL_TORCH_THREADS", _DEFAULT_TORCH_THREADS))
@@ -25,6 +28,52 @@ def _env_int(name: str, default: int) -> int:
 def _env_float(name: str, default: float) -> float:
     raw_value = os.environ.get(name)
     return float(default if raw_value is None else raw_value)
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw_value = os.environ.get(name)
+    if raw_value is None:
+        return default
+    return raw_value.strip().lower() not in {"0", "false", "no", "off"}
+
+
+def _wandb_key_path() -> Path:
+    explicit = os.environ.get("BSK_RL_WANDB_KEY_PATH")
+    if explicit:
+        return Path(explicit).expanduser()
+    local_key = EXAMPLES_DIR / "wandb_key.txt"
+    if local_key.exists():
+        return local_key
+    return Path.cwd() / "wandb_key.txt"
+
+
+def _maybe_init_wandb(run_name: str, config: dict[str, Any]):
+    if not _env_bool("BSK_RL_USE_WANDB", True):
+        print("W&B disabled via BSK_RL_USE_WANDB=0")
+        return None
+
+    require_wandb = _env_bool("BSK_RL_REQUIRE_WANDB", False)
+    key_path = _wandb_key_path()
+    if not key_path.exists():
+        message = f"W&B key file not found at {key_path}"
+        if require_wandb:
+            raise FileNotFoundError(message)
+        print(f"W&B disabled: {message}")
+        return None
+
+    try:
+        return WandbLogger(
+            project_name=os.environ.get("BSK_RL_WANDB_PROJECT", "amos2026-bsk-rl"),
+            run_name=run_name,
+            group=os.environ.get("BSK_RL_WANDB_GROUP", "polaris-old-network"),
+            key_path=key_path,
+            config=config,
+        )
+    except Exception as exc:
+        if require_wandb:
+            raise
+        print(f"W&B disabled after initialization failure: {exc}")
+        return None
 
 import ray
 from bsk_rl.utils.utils import get_available_cores
@@ -96,6 +145,7 @@ def train_model(
     total_timesteps=1_000_000,
     training_args={},
     temp_dir="/tmp",
+    wandb_logger=None,
 ):
     os.environ["RAY_TMPDIR"] = os.environ["TMPDIR"] = temp_dir
     output_directory = Path(output_directory)
@@ -181,68 +231,75 @@ def train_model(
 
     current_best_return = -np.inf
 
-    while True:
-        prev_step = step
-        print(f"[train] starting iteration {iter} at sampled_steps={step}", flush=True)
-        results = ppo.train()
-        step = results["num_env_steps_sampled_lifetime"]
-        step_return = results["env_runners"].get("episode_return_mean", -np.inf)
-        print(
-            "[train] finished iteration "
-            f"{iter}: sampled_steps={step}, episode_return_mean={step_return}",
-            flush=True,
-        )
-
-        if step_return > current_best_return:
-            checkpoint_path = output_directory / model_name / "checkpoint_best"
-            # if this directory exists, clear it
-            try:
-                shutil.rmtree(checkpoint_path)
-            except FileNotFoundError:
-                pass
-            checkpoint_path.mkdir(parents=True, exist_ok=True)
-            ppo.save_checkpoint(checkpoint_path)
-            with open(
-                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
-            ) as file:
-                file.write(f"iter: {iter}\n")
-            current_best_return = step_return
-
-        checkpoint_path = (
-            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
-        )
-        if iter % checkpoint_frequency == 0:
-            checkpoint_path.mkdir(parents=True, exist_ok=True)
-            ppo.save_checkpoint(checkpoint_path)
-
-        if step > total_timesteps:
-            break
-
-        if step % reload_frequency < prev_step % reload_frequency:
-            checkpoint_path.mkdir(parents=True, exist_ok=True)
-            ppo.save_checkpoint(checkpoint_path)
-            ray.shutdown()
-            ray.init(
-                ignore_reinit_error=True,
-                num_cpus=get_available_cores(),
-                object_store_memory=3_000_000_000,  # 2 GB
-                _temp_dir=temp_dir,
+    try:
+        while True:
+            prev_step = step
+            print(f"[train] starting iteration {iter} at sampled_steps={step}", flush=True)
+            results = ppo.train()
+            step = results["num_env_steps_sampled_lifetime"]
+            step_return = results["env_runners"].get("episode_return_mean", -np.inf)
+            print(
+                "[train] finished iteration "
+                f"{iter}: sampled_steps={step}, episode_return_mean={step_return}",
+                flush=True,
             )
-            ppo = PPO.from_checkpoint(checkpoint_path)
 
-        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
-            for i in range(checkpoint_frequency):
-                remove_dir = (
-                    output_directory
-                    / model_name
-                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
-                )
+            if wandb_logger is not None:
+                wandb_logger.log(results)
+
+            if step_return > current_best_return:
+                checkpoint_path = output_directory / model_name / "checkpoint_best"
+                # if this directory exists, clear it
                 try:
-                    shutil.rmtree(remove_dir)
+                    shutil.rmtree(checkpoint_path)
                 except FileNotFoundError:
                     pass
+                checkpoint_path.mkdir(parents=True, exist_ok=True)
+                ppo.save_checkpoint(checkpoint_path)
+                with open(
+                    checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+                ) as file:
+                    file.write(f"iter: {iter}\n")
+                current_best_return = step_return
 
-        iter += 1
+            checkpoint_path = (
+                output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+            )
+            if iter % checkpoint_frequency == 0:
+                checkpoint_path.mkdir(parents=True, exist_ok=True)
+                ppo.save_checkpoint(checkpoint_path)
+
+            if step > total_timesteps:
+                break
+
+            if step % reload_frequency < prev_step % reload_frequency:
+                checkpoint_path.mkdir(parents=True, exist_ok=True)
+                ppo.save_checkpoint(checkpoint_path)
+                ray.shutdown()
+                ray.init(
+                    ignore_reinit_error=True,
+                    num_cpus=get_available_cores(),
+                    object_store_memory=3_000_000_000,  # 2 GB
+                    _temp_dir=temp_dir,
+                )
+                ppo = PPO.from_checkpoint(checkpoint_path)
+
+            if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+                for i in range(checkpoint_frequency):
+                    remove_dir = (
+                        output_directory
+                        / model_name
+                        / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+                    )
+                    try:
+                        shutil.rmtree(remove_dir)
+                    except FileNotFoundError:
+                        pass
+
+            iter += 1
+    finally:
+        if wandb_logger is not None:
+            wandb_logger.finish()
 
 
 def _finite_values(values):
@@ -951,11 +1008,19 @@ if __name__ == "__main__":
         "total_timesteps": total_timesteps,
         "ray_tmpdir": str(ray_tmpdir),
         "torch_threads": _TORCH_THREADS,
+        "wandb": {
+            "enabled": _env_bool("BSK_RL_USE_WANDB", True),
+            "key_path": str(_wandb_key_path()),
+            "project": os.environ.get("BSK_RL_WANDB_PROJECT", "amos2026-bsk-rl"),
+            "group": os.environ.get("BSK_RL_WANDB_GROUP", "polaris-old-network"),
+        },
         "job_args": sanitize_np(job_args),
     }
 
     with open(output_dir / f"{model_name}_config.yaml", "w") as file:
         yaml.dump(run_cfg, file)
+
+    wandb_logger = _maybe_init_wandb(model_name, run_cfg)
 
     train_model(
         model_name=model_name,
@@ -966,6 +1031,7 @@ if __name__ == "__main__":
         reload_frequency=500_000,
         n_envs=n_envs,
         temp_dir=str(ray_tmpdir),
+        wandb_logger=wandb_logger,
         **job_args,
     )
 

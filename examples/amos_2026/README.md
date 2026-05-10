@@ -109,7 +109,8 @@ actions exposed to the policy.
 
 Use `examples/updated_train_Polaris.py` for the old fully-connected-network baseline
 with the full action set (`ImageRSO`, `Charge`, `Downlink`, `Desat`). That path remains
-`obsv7` and is intended for comparison runs, not for target-wise GNN training.
+`obsv7` and is intended for comparison runs, not for target-wise GNN training. Its
+debug and 96-hour Slurm wrappers also log to W&B by default.
 
 The real GNN implementation lives in
 `src/bsk_rl/utils/rllib/target_gnn_module.py`. The file
@@ -135,6 +136,8 @@ Useful environment variables:
 - `BSK_RL_TORCH_THREADS`: defaults to `11`, matching the recent cluster script.
 - `BSK_RL_BATTERY_LIFE_MULTIPLIER`: defaults to `1000`, giving the scanner 1000x the
   baseline battery capacity for these training runs.
+- `BSK_RL_WANDB_KEY_PATH`: defaults to `/projects/$USER/bsk_rl/examples/wandb_key.txt`
+  on the Slurm wrappers.
 
 Before the first Slurm submission on CURC:
 

@@ -49,6 +49,12 @@ if command -v gcc >/dev/null 2>&1; then
     export LD_LIBRARY_PATH="$(dirname "$(gcc -print-file-name=libstdc++.so.6)"):${LD_LIBRARY_PATH:-}"
 fi
 
+export BSK_RL_WANDB_KEY_PATH=${BSK_RL_WANDB_KEY_PATH:-/projects/$USER/bsk_rl/examples/wandb_key.txt}
+export BSK_RL_USE_WANDB=${BSK_RL_USE_WANDB:-1}
+export BSK_RL_REQUIRE_WANDB=${BSK_RL_REQUIRE_WANDB:-1}
+export BSK_RL_WANDB_PROJECT=${BSK_RL_WANDB_PROJECT:-amos2026-bsk-rl}
+export BSK_RL_WANDB_GROUP=${BSK_RL_WANDB_GROUP:-polaris-old-network-debug}
+
 export BSK_RL_NUM_ENVS=${BSK_RL_NUM_ENVS:-2}
 export BSK_RL_BATCH_MULTIPLIER=${BSK_RL_BATCH_MULTIPLIER:-32}
 export BSK_RL_TOTAL_TIMESTEPS=${BSK_RL_TOTAL_TIMESTEPS:-10000}
@@ -75,6 +81,7 @@ gcc --version
 echo "libstdc++ path: $(gcc -print-file-name=libstdc++.so.6)"
 strings "$(gcc -print-file-name=libstdc++.so.6)" | grep GLIBCXX_3.4.29 || true
 python3 -c "import bsk_rl; import bsk_rl.sim.simulator; print('bsk_rl import ok')"
+python3 -c "import wandb; print('wandb import ok')"
 
 echo "Running updated_train_Polaris.py old-network debug training script"
 python3 -u examples/updated_train_Polaris.py
