@@ -943,6 +943,7 @@ class StripImagingFSWModel(ImagingFSWModel):
         self.dynamics.imagingStrip.preImagingTime = pre_imaging_time * 1e9 # s to ns
         # self.dynamics.imagingStrip.OldSimNanos = self.simulator.sim_time_ns
         self.dynamics.imagingStrip.isStartPositionUpdated = False
+        self.dynamics.imagingStrip.durationStripImaging = 0
         self.dynamics.instrument.nodeDataName = data_name
         self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
     
