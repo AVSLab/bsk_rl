@@ -7,17 +7,17 @@
 #SBATCH --account=ucb550_asc2
 #SBATCH --job-name=polaris_tgn_dbg
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=32
-#SBATCH --time=01:00:00
+#SBATCH --cpus-per-task=16
+#SBATCH --time=00:20:00
 #SBATCH --array=0-0
 #SBATCH --partition=amilan
-#SBATCH --mem=100G
+#SBATCH --mem=50G
 #SBATCH --constraint=epyc-7713
 #SBATCH --threads-per-core=1
 #SBATCH --nodes=1
 #SBATCH --output=/scratch/alpine/%u/job_output/%x_%A_%a.out
 #SBATCH --mail-type=ALL
-#SBATCH --qos=long
+#SBATCH --qos=normal
 
 set -euo pipefail
 

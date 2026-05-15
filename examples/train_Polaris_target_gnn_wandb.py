@@ -642,6 +642,7 @@ if __name__ == "__main__":
             # Target candidate block. The GNN applies the same encoder to each
             # of these n_targets_ahead chunks, then scores each target action.
             obs.PolarisScTargetProperties(
+                dict(prop="priority", norm=1.0),
                 dict(prop="target_elevation_angle", norm=90.0),
                 dict(prop="rel_pos_vector_r_BR_H", norm=15960 * 1000),
                 dict(prop="angle_to_target", norm=90.0),
@@ -822,7 +823,7 @@ if __name__ == "__main__":
         model_config_dict=inspector_model_config,
     )
 
-    base_lr = 0.00033003435881682255  # current GNN hyperparameter starting point; not yet AMOS-tuned
+    base_lr = 1e-5 #0.00033003435881682255  # current GNN hyperparameter starting point; not yet AMOS-tuned
     jobs = build_job_array(
         training_args=dict(
             lr=[[[0, base_lr], [40000, base_lr / 16.749479444886223]]],
