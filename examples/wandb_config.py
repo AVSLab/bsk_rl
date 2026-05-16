@@ -12,8 +12,8 @@ You can override either with:
 
 from __future__ import annotations
 
-import pathlib
 import numbers
+import pathlib
 from collections.abc import Mapping
 from typing import Any
 
@@ -67,6 +67,55 @@ def _safe_metric(value: Any) -> Any:
     return None
 
 
+def _first_present(metrics: Mapping[str, Any], keys: list[str]) -> Any:
+    for key in keys:
+        if key in metrics:
+            return metrics[key]
+    return None
+
+
+def _per_agent_values(metrics: Mapping[str, Any], key: str) -> list[numbers.Number]:
+    """Prefer top-level per-agent counters, falling back to env_runners aliases."""
+    top_prefix = f"{key}/"
+    env_prefix = f"env_runners/{key}/"
+    top_values = [
+        value
+        for metric_key, value in metrics.items()
+        if metric_key.startswith(top_prefix) and isinstance(value, numbers.Number)
+    ]
+    if top_values:
+        return top_values
+    return [
+        value
+        for metric_key, value in metrics.items()
+        if metric_key.startswith(env_prefix) and isinstance(value, numbers.Number)
+    ]
+
+
+def _add_stable_aliases(metrics: dict[str, Any]) -> None:
+    """Add stable W&B aliases for RLlib counters whose paths shift by API stack."""
+    for key in [
+        "num_env_steps_sampled_lifetime",
+        "num_env_steps_trained_lifetime",
+        "num_env_steps_sampled",
+    ]:
+        value = _first_present(metrics, [key, f"env_runners/{key}"])
+        if value is not None:
+            metrics.setdefault(key, value)
+
+    for key in [
+        "num_agent_steps_sampled_lifetime",
+        "num_agent_steps_sampled",
+    ]:
+        ss1_value = _first_present(metrics, [f"{key}/SS1", f"env_runners/{key}/SS1"])
+        if ss1_value is not None:
+            metrics.setdefault(f"{key}_SS1", ss1_value)
+
+        per_agent_values = _per_agent_values(metrics, key)
+        if per_agent_values:
+            metrics.setdefault(f"total_{key}", sum(per_agent_values))
+
+
 class WandbLogger:
     """Thin W&B wrapper that tolerates optional dependencies and noisy RLlib dicts."""
 
@@ -115,6 +164,7 @@ class WandbLogger:
             safe_value = _safe_metric(value)
             if safe_value is not None:
                 loggable[key] = safe_value
+        _add_stable_aliases(loggable)
         if loggable:
             self.run.log(loggable)
 

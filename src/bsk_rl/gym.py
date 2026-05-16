@@ -440,6 +440,11 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             for satellite in self.satellites
         }
         self.reward_dict = self.rewarder.reward(new_data)
+        if hasattr(self.scenario, "maybe_apply_dynamic_priority_event"):
+            self.scenario.maybe_apply_dynamic_priority_event(
+                self.simulator.sim_time,
+                self.time_limit,
+            )
 
         self.communicator.communicate()
 

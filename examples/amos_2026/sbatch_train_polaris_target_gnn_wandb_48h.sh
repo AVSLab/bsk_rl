@@ -55,13 +55,21 @@ export BSK_RL_WANDB_KEY_PATH=${BSK_RL_WANDB_KEY_PATH:-/projects/$USER/bsk_rl/exa
 export BSK_RL_USE_WANDB=${BSK_RL_USE_WANDB:-1} # set to 0 before sbatch for a no-W&B run.
 export BSK_RL_REQUIRE_WANDB=${BSK_RL_REQUIRE_WANDB:-1} # fail fast if key/dependency is missing on cluster.
 export BSK_RL_WANDB_PROJECT=${BSK_RL_WANDB_PROJECT:-amos2026-bsk-rl}
-export BSK_RL_WANDB_GROUP=${BSK_RL_WANDB_GROUP:-polaris-target-gnn-obsB8}
+export BSK_RL_WANDB_GROUP=${BSK_RL_WANDB_GROUP:-polaris-target-gnn-imaging-only-obs-v9-48h}
+export BSK_RL_DYNAMIC_PRIORITY_EVENT=${BSK_RL_DYNAMIC_PRIORITY_EVENT:-1}
+export BSK_RL_DYNAMIC_PRIORITY_EVENT_FRACTION=${BSK_RL_DYNAMIC_PRIORITY_EVENT_FRACTION:-0.5}
+export BSK_RL_DYNAMIC_PRIORITY_EVENT_TIME_SEC=${BSK_RL_DYNAMIC_PRIORITY_EVENT_TIME_SEC:-}
+export BSK_RL_HIO_COUNT=${BSK_RL_HIO_COUNT:-5}
+export BSK_RL_HIO_PRIORITY=${BSK_RL_HIO_PRIORITY:-5.0}
+export BSK_RL_SHIO_COUNT=${BSK_RL_SHIO_COUNT:-3}
+export BSK_RL_SHIO_PRIORITY=${BSK_RL_SHIO_PRIORITY:-10.0}
 
 export BSK_RL_BATCH_MULTIPLIER=${BSK_RL_BATCH_MULTIPLIER:-150} # local default inside Python: 32
 export BSK_RL_TOTAL_TIMESTEPS=${BSK_RL_TOTAL_TIMESTEPS:-20000000} # full cluster train; local default inside Python: 10000
 export BSK_RL_CHECKPOINT_FREQUENCY=${BSK_RL_CHECKPOINT_FREQUENCY:-3}
 export BSK_RL_TORCH_THREADS=${BSK_RL_TORCH_THREADS:-11}
 export BSK_RL_BATTERY_LIFE_MULTIPLIER=${BSK_RL_BATTERY_LIFE_MULTIPLIER:-1000}
+export BSK_RL_IMAGE_STORAGE_CAPACITY_IMAGES=${BSK_RL_IMAGE_STORAGE_CAPACITY_IMAGES:-500}
 export PYTHONUNBUFFERED=1
 
 mkdir -p /scratch/alpine/$USER/job_output "$BSK_RL_OUTPUT_DIR" "$BSK_RL_RAY_TMPDIR"
@@ -82,7 +90,7 @@ strings "$(gcc -print-file-name=libstdc++.so.6)" | grep GLIBCXX_3.4.29 || true
 python3 -c "import bsk_rl; import bsk_rl.sim.simulator; print('bsk_rl import ok')"
 python3 -c "import wandb; print('wandb import ok')"
 
-echo "Running AMOS 2026 Polaris Target-GNN + W&B training script"
+echo "Running AMOS 2026 Polaris Target-GNN obs-v9 + W&B training script"
 python3 -u examples/train_Polaris_target_gnn_wandb.py
 
 echo "== End of Job =="

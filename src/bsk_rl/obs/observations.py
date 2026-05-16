@@ -310,6 +310,24 @@ def _r_LB_H(sat, opp):
     return HN @ r_TB_N
 
 
+def s_hat_H(sat):
+    """Dimensionless sun unit vector from the spacecraft in the Hill frame."""
+    r_SN_N = (
+        sat.simulator.world.gravFactory.spiceObject.planetStateOutMsgs[
+            sat.simulator.world.sun_index
+        ]
+        .read()
+        .PositionVector
+    )
+    r_BN_N = sat.dynamics.r_BN_N
+    r_SB_N = np.array(r_SN_N) - np.array(r_BN_N)
+    r_SB_H = rv2HN(r_BN_N, sat.dynamics.v_BN_N) @ r_SB_N
+    norm = np.linalg.norm(r_SB_H)
+    if norm == 0.0:
+        return np.zeros(3)
+    return r_SB_H / norm
+
+
 class OpportunityProperties(Observation):
     _fn_map = {
         "priority": lambda sat, opp: opp["object"].priority,
@@ -454,9 +472,17 @@ def _relative_position_H(sat, opp):
     return HN @ los_vector
 
 def _r_BN_H(sat, opp):
-    r_BN_N = opp["object"].target_spacecraft.dynamics.r_BN_N,
+    r_BN_N = opp["object"].target_spacecraft.dynamics.r_BN_N
     HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
     return HN @ r_BN_N
+
+
+def _relative_velocity_H(sat, opp):
+    """Relative target velocity in m/s, expressed in the scanner Hill frame."""
+    sat_vel = np.array(sat.dynamics.v_BN_N, dtype=float)
+    target_vel = np.array(opp["object"].target_spacecraft.dynamics.v_BN_N, dtype=float)
+    HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
+    return HN @ (target_vel - sat_vel)
 
 def _target_elevation_angle(sat, opp):
     sat_pos = np.array(sat.dynamics.r_BN_N)
@@ -476,7 +502,10 @@ def _angle_to_target(sat, opp):
     return np.degrees(np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.c_hat_P)))
 
 def _target_distance(sat, opp):
-    vector_target_spacecraft_N = opp["object"].target_spacecraft.dynamics.r_BN_P - sat.dynamics.r_BN_N
+    vector_target_spacecraft_N = (
+        np.array(opp["object"].target_spacecraft.dynamics.r_BN_N)
+        - np.array(sat.dynamics.r_BN_N)
+    )
     return np.linalg.norm(vector_target_spacecraft_N)
 def _target_id_extracted(sat, opp):
     id= int((opp["object"].target_spacecraft.id).strip("target_"))
@@ -510,11 +539,30 @@ def _target_shadowFactor(sat, opp):
     return sat.simulator.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[opp["object"].target_spacecraft.dynamics.eclipse_index].read().shadowFactor
 
 
+def _record_dynamic_priority_candidate_access(targets, sim_time: float) -> None:
+    """Count candidate-list access for targets after a dynamic priority event."""
+    for target in targets:
+        if not getattr(target, "priority_event_active", False):
+            continue
+        if getattr(target, "priority_event_kind", "") not in {"HIO", "SHIO"}:
+            continue
+        last_time = getattr(target, "priority_event_last_candidate_log_time", None)
+        if last_time == float(sim_time):
+            continue
+        target.priority_event_candidate_count = (
+            int(getattr(target, "priority_event_candidate_count", 0)) + 1
+        )
+        if getattr(target, "priority_event_first_candidate_time", None) is None:
+            target.priority_event_first_candidate_time = float(sim_time)
+        target.priority_event_last_candidate_log_time = float(sim_time)
+
+
 class PolarisScTargetProperties(Observation):
     _fn_map = {
-        # "priority": lambda sat, opp: opp["object"].priority,
+        "priority": lambda sat, opp: opp["object"].priority,
         "rel_pos_vector_r_BR_N": _relative_position,
         "rel_pos_vector_r_BR_H": _relative_position_H,
+        "rel_vel_vector_v_BR_H": _relative_velocity_H,
         "r_BN_N": lambda sat, opp: opp["object"].target_spacecraft.dynamics.r_BN_N,
         "r_BN_H": _r_BN_H,
         # "r_LB_H": _r_LB_H,
@@ -706,6 +754,10 @@ class PolarisScTargetProperties(Observation):
         obs = {}
 
         # Gather and normalize observations for selected targets
+        _record_dynamic_priority_candidate_access(
+            final_targets,
+            float(self.satellite.simulator.sim_time),
+        )
         for i, tgt in enumerate(final_targets):
             opportunity = {"object": tgt, "r_BN_N": np.array(tgt.target_spacecraft.dynamics.r_BN_N)}
             props = {}

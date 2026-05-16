@@ -24,6 +24,7 @@ from bsk_rl.obs.observations import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
+    from bsk_rl.scene.rso_targets import RSOTarget
     from bsk_rl.scene.targets import Target
 
 logger = logging.getLogger(__name__)
@@ -500,6 +501,7 @@ class ImageRSO(DiscreteAction):
         self._capture_passed_illum = False
         self._attempt_start_time = None
         self._attempt_target_id = None
+        self._attempt_target_priority = None
         self._first_capture_time = None
         self._first_capture_shadow_factor = None
         self._attempt_recorded = False
@@ -592,6 +594,7 @@ class ImageRSO(DiscreteAction):
         self._capture_passed_illum = False
         self._attempt_start_time = float(self.simulator.sim_time)
         self._attempt_target_id = target.id
+        self._attempt_target_priority = float(getattr(target, "priority", np.nan))
         self._first_capture_time = None
         self._first_capture_shadow_factor = None
         self._attempt_recorded = False
@@ -610,6 +613,7 @@ class ImageRSO(DiscreteAction):
         self._capture_passed_illum = False
         self._attempt_start_time = None
         self._attempt_target_id = None
+        self._attempt_target_priority = None
         self._first_capture_time = None
         self._first_capture_shadow_factor = None
         self._attempt_recorded = False
@@ -653,6 +657,7 @@ class ImageRSO(DiscreteAction):
 
         record = {
             "target_id": self._attempt_target_id,
+            "target_priority": self._attempt_target_priority,
             "success": bool(success),
             "reason": reason,
             "start_time": float(self._attempt_start_time),

@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# One-hour CURC debug job for updated_train_Polaris.py BigNetwork baseline.
+# 96-hour CURC training job for updated_train_Polaris_ImagingOnly.py BigNetwork image-only baseline.
 # Submit from /projects/$USER/bsk_rl with:
-#   sbatch examples/amos_2026/sbatch_updated_train_polaris_debug.sh
+#   sbatch examples/amos_2026/sbatch_updated_train_polaris_imaging_only_96h.sh
 
 #SBATCH --account=ucb550_asc2
-#SBATCH --job-name=polaris_big_dbg
+#SBATCH --job-name=polaris_big_img_96h
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
-#SBATCH --time=01:00:00
+#SBATCH --time=4-00:00:00
 #SBATCH --array=0-0
 #SBATCH --partition=amilan
 #SBATCH --mem=100G
@@ -53,7 +53,7 @@ export BSK_RL_WANDB_KEY_PATH=${BSK_RL_WANDB_KEY_PATH:-/projects/$USER/bsk_rl/exa
 export BSK_RL_USE_WANDB=${BSK_RL_USE_WANDB:-1}
 export BSK_RL_REQUIRE_WANDB=${BSK_RL_REQUIRE_WANDB:-1}
 export BSK_RL_WANDB_PROJECT=${BSK_RL_WANDB_PROJECT:-amos2026-bsk-rl}
-export BSK_RL_WANDB_GROUP=${BSK_RL_WANDB_GROUP:-polaris-big-network-full-actions-obs-v9-debug}
+export BSK_RL_WANDB_GROUP=${BSK_RL_WANDB_GROUP:-polaris-big-network-imaging-only-obs-v9-96h}
 export BSK_RL_DYNAMIC_PRIORITY_EVENT=${BSK_RL_DYNAMIC_PRIORITY_EVENT:-1}
 export BSK_RL_DYNAMIC_PRIORITY_EVENT_FRACTION=${BSK_RL_DYNAMIC_PRIORITY_EVENT_FRACTION:-0.5}
 export BSK_RL_DYNAMIC_PRIORITY_EVENT_TIME_SEC=${BSK_RL_DYNAMIC_PRIORITY_EVENT_TIME_SEC:-}
@@ -62,14 +62,12 @@ export BSK_RL_HIO_PRIORITY=${BSK_RL_HIO_PRIORITY:-5.0}
 export BSK_RL_SHIO_COUNT=${BSK_RL_SHIO_COUNT:-3}
 export BSK_RL_SHIO_PRIORITY=${BSK_RL_SHIO_PRIORITY:-10.0}
 
-export BSK_RL_NUM_ENVS=${BSK_RL_NUM_ENVS:-2}
-export BSK_RL_BATCH_MULTIPLIER=${BSK_RL_BATCH_MULTIPLIER:-32}
-export BSK_RL_TOTAL_TIMESTEPS=${BSK_RL_TOTAL_TIMESTEPS:-10000}
-export BSK_RL_CHECKPOINT_FREQUENCY=${BSK_RL_CHECKPOINT_FREQUENCY:-1}
-export BSK_RL_TORCH_THREADS=${BSK_RL_TORCH_THREADS:-1}
-export BSK_RL_BATTERY_LIFE_MULTIPLIER=${BSK_RL_BATTERY_LIFE_MULTIPLIER:-1}
-export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-}
-export TF_CPP_MIN_LOG_LEVEL=${TF_CPP_MIN_LOG_LEVEL:-2}
+export BSK_RL_BATCH_MULTIPLIER=${BSK_RL_BATCH_MULTIPLIER:-150}
+export BSK_RL_TOTAL_TIMESTEPS=${BSK_RL_TOTAL_TIMESTEPS:-20000000}
+export BSK_RL_CHECKPOINT_FREQUENCY=${BSK_RL_CHECKPOINT_FREQUENCY:-3}
+export BSK_RL_TORCH_THREADS=${BSK_RL_TORCH_THREADS:-11}
+export BSK_RL_BATTERY_LIFE_MULTIPLIER=${BSK_RL_BATTERY_LIFE_MULTIPLIER:-1000}
+export BSK_RL_IMAGE_STORAGE_CAPACITY_IMAGES=${BSK_RL_IMAGE_STORAGE_CAPACITY_IMAGES:-500}
 export PYTHONUNBUFFERED=1
 
 mkdir -p /scratch/alpine/$USER/job_output "$BSK_RL_OUTPUT_DIR" "$BSK_RL_RAY_TMPDIR"
@@ -90,7 +88,7 @@ strings "$(gcc -print-file-name=libstdc++.so.6)" | grep GLIBCXX_3.4.29 || true
 python3 -c "import bsk_rl; import bsk_rl.sim.simulator; print('bsk_rl import ok')"
 python3 -c "import wandb; print('wandb import ok')"
 
-echo "Running updated_train_Polaris.py BigNetwork obs-v9 debug training script"
-python3 -u examples/updated_train_Polaris.py
+echo "Running updated_train_Polaris_ImagingOnly.py BigNetwork obs-v9 96h training script"
+python3 -u examples/updated_train_Polaris_ImagingOnly.py
 
 echo "== End of Job =="

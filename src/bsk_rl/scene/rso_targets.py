@@ -119,6 +119,14 @@ class RandomSatellites(Scenario):
         priority_gaussian_std: Optional[float] = None,
         priority_min: float = 0.0,
         priority_max: Optional[float] = None,
+        dynamic_priority_event_enabled: bool = False,
+        dynamic_priority_event_time_sec: Optional[float] = None,
+        dynamic_priority_event_fraction: float = 0.5,
+        hio_count: int = 5,
+        hio_priority: float = 5.0,
+        shio_count: int = 3,
+        shio_priority: float = 10.0,
+        dynamic_priority_event_seed: Optional[int] = None,
     ) -> None:
         """Spacecraft-target scenario with configurable target priority generation.
 
@@ -138,6 +146,17 @@ class RandomSatellites(Scenario):
             priority_gaussian_std: Gaussian standard deviation. Defaults to mean/3.
             priority_min: Minimum allowed priority after generation.
             priority_max: Maximum allowed priority after generation.
+            dynamic_priority_event_enabled: If True, boost a fixed set of
+                episode targets during the episode.
+            dynamic_priority_event_time_sec: Absolute event time in seconds. If
+                provided, this takes precedence over ``dynamic_priority_event_fraction``.
+            dynamic_priority_event_fraction: Fraction of the episode time limit
+                at which HIO/SHIO priorities become active.
+            hio_count: Number of high-interest objects to boost.
+            hio_priority: Absolute priority assigned to each HIO after the event.
+            shio_count: Number of super-high-interest objects to boost.
+            shio_priority: Absolute priority assigned to each SHIO after the event.
+            dynamic_priority_event_seed: Optional seed for selecting event targets.
         """
         self.chief_satellite_name = ChiefSatellite
         self.n_targets = int(n_targets)
@@ -151,6 +170,19 @@ class RandomSatellites(Scenario):
         self.priority_gaussian_std = priority_gaussian_std
         self.priority_min = float(priority_min)
         self.priority_max = priority_max
+        self.dynamic_priority_event_enabled = bool(dynamic_priority_event_enabled)
+        self.dynamic_priority_event_time_sec = dynamic_priority_event_time_sec
+        self.dynamic_priority_event_fraction = float(dynamic_priority_event_fraction)
+        self.hio_count = int(hio_count)
+        self.hio_priority = float(hio_priority)
+        self.shio_count = int(shio_count)
+        self.shio_priority = float(shio_priority)
+        self.dynamic_priority_event_seed = dynamic_priority_event_seed
+        self.priority_event_applied = False
+        self.priority_event_time = None
+        self.priority_event_applied_time = None
+        self.hio_target_ids: list[int] = []
+        self.shio_target_ids: list[int] = []
 
         if self.priority_mode not in {"uniform", "gaussian", "constant"}:
             raise ValueError(
@@ -158,6 +190,17 @@ class RandomSatellites(Scenario):
             )
         if self.n_targets < 0:
             raise ValueError("n_targets must be non-negative.")
+        if not 0.0 <= self.dynamic_priority_event_fraction <= 1.0:
+            raise ValueError("dynamic_priority_event_fraction must be in [0, 1].")
+        if (
+            self.dynamic_priority_event_time_sec is not None
+            and float(self.dynamic_priority_event_time_sec) < 0.0
+        ):
+            raise ValueError("dynamic_priority_event_time_sec must be non-negative.")
+        if self.hio_count < 0 or self.shio_count < 0:
+            raise ValueError("hio_count and shio_count must be non-negative.")
+        if self.hio_count + self.shio_count > self.n_targets:
+            raise ValueError("HIO + SHIO target counts cannot exceed n_targets.")
 
     def _generate_raw_priorities(self) -> np.ndarray:
         """Generate nonnegative target priorities according to ``priority_mode``."""
@@ -227,6 +270,93 @@ class RandomSatellites(Scenario):
         """Generate priorities according to configured distribution and scaling."""
         return self._rescale_priorities(self._generate_raw_priorities())
 
+    def _reset_priority_event_state(self) -> None:
+        self.priority_event_applied = False
+        self.priority_event_time = None
+        self.priority_event_applied_time = None
+        self.hio_target_ids = []
+        self.shio_target_ids = []
+
+    def _select_dynamic_priority_targets(self) -> None:
+        """Choose HIO/SHIO targets from the full episode target catalog."""
+        if not self.dynamic_priority_event_enabled:
+            return
+
+        total_event_targets = self.hio_count + self.shio_count
+        if total_event_targets <= 0:
+            return
+
+        rng = (
+            np.random.default_rng(self.dynamic_priority_event_seed)
+            if self.dynamic_priority_event_seed is not None
+            else np.random.default_rng(np.random.randint(0, 2**32 - 1))
+        )
+        selected_ids = rng.choice(
+            self.n_targets,
+            size=total_event_targets,
+            replace=False,
+        ).astype(int)
+        self.hio_target_ids = selected_ids[: self.hio_count].tolist()
+        self.shio_target_ids = selected_ids[self.hio_count :].tolist()
+
+        boost_by_id = {
+            target_id: ("HIO", self.hio_priority) for target_id in self.hio_target_ids
+        }
+        boost_by_id.update(
+            {target_id: ("SHIO", self.shio_priority) for target_id in self.shio_target_ids}
+        )
+
+        for target in self.target_spacecrafts:
+            kind, boosted_priority = boost_by_id.get(int(target.id), ("", None))
+            target.priority_event_kind = kind
+            target.priority_event_priority = boosted_priority
+            target.priority_event_original_priority = float(target.priority)
+            target.priority_event_active = False
+            target.priority_event_candidate_count = 0
+            target.priority_event_first_candidate_time = None
+            target.priority_event_last_candidate_log_time = None
+
+    def maybe_apply_dynamic_priority_event(
+        self, sim_time: float, time_limit: Optional[float] = None
+    ) -> bool:
+        """Activate the HIO/SHIO priority boost once per episode."""
+        if not self.dynamic_priority_event_enabled:
+            return False
+        if self.priority_event_applied:
+            return True
+        if time_limit is None and self.dynamic_priority_event_time_sec is None:
+            return False
+
+        if self.dynamic_priority_event_time_sec is not None:
+            self.priority_event_time = float(self.dynamic_priority_event_time_sec)
+        else:
+            self.priority_event_time = (
+                float(time_limit) * self.dynamic_priority_event_fraction
+            )
+        if float(sim_time) < self.priority_event_time:
+            return False
+
+        boost_ids = set(self.hio_target_ids) | set(self.shio_target_ids)
+        for target in self.target_spacecrafts:
+            if int(target.id) not in boost_ids:
+                continue
+            boosted_priority = getattr(target, "priority_event_priority", None)
+            if boosted_priority is None:
+                continue
+            target.priority = float(boosted_priority)
+            target.priority_event_active = True
+            target.priority_event_applied_time = float(sim_time)
+
+        self.priority_event_applied = True
+        self.priority_event_applied_time = float(sim_time)
+        logger.info(
+            "Applied dynamic priority event at t=%.3f s: HIO ids=%s, SHIO ids=%s",
+            float(sim_time),
+            self.hio_target_ids,
+            self.shio_target_ids,
+        )
+        return True
+
     def link_satellites(self, satellites: list["Satellite"]) -> None:
         super().link_satellites(satellites)
         scanning_sat_name = self.chief_satellite_name
@@ -241,11 +371,14 @@ class RandomSatellites(Scenario):
         )
 
     def reset_pre_sim_init(self):
+        self._reset_priority_event_state()
         priorities = self._generate_priorities()
         for i in range(self.n_targets):
             target_sc_name = f"target_{i}"  # must match buffer name
             sc = RSOTarget(self.satellites[i + 1], target_sc_name, i, float(priorities[i]))
             self.target_spacecrafts.append(sc)
+
+        self._select_dynamic_priority_targets()
 
         if len(priorities) > 0:
             logger.info(
@@ -259,6 +392,7 @@ class RandomSatellites(Scenario):
 
     def reset_overwrite_previous(self) -> None:
         self.target_spacecrafts = []
+        self._reset_priority_event_state()
 
     def reset_during_sim_init(self):
         for i in range(self.n_targets):
@@ -266,10 +400,6 @@ class RandomSatellites(Scenario):
             self.satellites[0].dynamics.targetLocation.addSpacecraftToModel(
                 self.satellites[i + 1].dynamics.scObject.scStateOutMsg
             )
-
-
-
-
 
 
 

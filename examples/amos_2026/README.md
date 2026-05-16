@@ -104,22 +104,31 @@ available through the same config fields.
 
 Use `examples/train_Polaris_target_gnn_wandb.py` for the current AMOS 2026
 target-wise GNN, W&B-tracked, imaging-only training run. It uses observation layout
-`obsB8`: spacecraft/global observations first, then target chunks, with only imaging
-actions exposed to the policy.
+`obs-v9`: target chunks only, with priority, relative target position/velocity in
+Hill frame, target angle/distance, and illumination. Only imaging actions are
+exposed to the policy.
 
-Use `examples/updated_train_Polaris.py` for the old fully-connected-network baseline
+Use `examples/updated_train_Polaris.py` for the BigNetwork fully-connected baseline
 with the full action set (`ImageRSO`, `Charge`, `Downlink`, `Desat`). That path remains
-`obsv7` and is intended for comparison runs, not for target-wise GNN training. Its
-debug and 96-hour Slurm wrappers also log to W&B by default.
+available for comparison runs, now also using the organized `obs-v9` stack:
+spacecraft/resource state with sun vector, eclipse timing, ground-station windows,
+then target chunks. Its debug and 96-hour Slurm wrappers log to W&B by default.
+
+Use `examples/updated_train_Polaris_ImagingOnly.py` for the BigNetwork image-only
+baseline. It also uses target-only `obs-v9` observations, but keeps the scanner at
+1000x baseline battery and 500-image storage so resource depletion does not drive
+the learning signal.
 
 The real GNN implementation lives in
 `src/bsk_rl/utils/rllib/target_gnn_module.py`. The file
 `examples/target_gnn_module.py` is only a compatibility wrapper for older example
 imports.
 
-The scanner gets 1000x baseline battery capacity by default in these training
-entrypoints. Target satellites are kept passive/alive; they are not the learned
-spacecraft, and killing them at `t=0` mostly creates log noise for these runs.
+The full-action BigNetwork resource-restricted entrypoint uses the baseline scanner
+battery by default. The image-only BigNetwork and Target-GNN entrypoints use 1000x
+baseline battery and 500-image storage by default. Target satellites are kept
+passive/alive; they are not the learned spacecraft, and killing them at `t=0`
+mostly creates log noise for these runs.
 
 The AMOS branch makes the cluster-specific pieces configurable through environment
 variables instead of hardcoding them in the Python script.
@@ -135,7 +144,19 @@ Useful environment variables:
   `500000`.
 - `BSK_RL_TORCH_THREADS`: defaults to `11`, matching the recent cluster script.
 - `BSK_RL_BATTERY_LIFE_MULTIPLIER`: defaults to `1000`, giving the scanner 1000x the
-  baseline battery capacity for these training runs.
+  baseline battery capacity for image-only runs. The full-action resource-restricted
+  Slurm wrappers set this to `1`.
+- `BSK_RL_IMAGE_STORAGE_CAPACITY_IMAGES`: defaults to `500` for image-only runs.
+- `BSK_RL_DYNAMIC_PRIORITY_EVENT`: defaults to `1` in the current Slurm wrappers,
+  enabling the half-episode HIO/SHIO priority schedule.
+- `BSK_RL_DYNAMIC_PRIORITY_EVENT_FRACTION`: defaults to `0.5`, so the boost applies
+  after half of `sim_cfg.total_time`.
+- `BSK_RL_DYNAMIC_PRIORITY_EVENT_TIME_SEC`: optional absolute boost time in seconds.
+  If set, this overrides the fraction-based timing.
+- `BSK_RL_HIO_COUNT`, `BSK_RL_HIO_PRIORITY`: default to `5` targets at priority `5`.
+- `BSK_RL_SHIO_COUNT`, `BSK_RL_SHIO_PRIORITY`: default to `3` targets at priority `10`.
+- `BSK_RL_DYNAMIC_PRIORITY_EVENT_SEED`: optional fixed seed for reproducible HIO/SHIO
+  target selection.
 - `BSK_RL_WANDB_KEY_PATH`: defaults to `/projects/$USER/bsk_rl/examples/wandb_key.txt`
   on the Slurm wrappers.
 
@@ -166,15 +187,18 @@ If the debug job starts cleanly, increase the sbatch time and set
 `BSK_RL_TOTAL_TIMESTEPS=20000000` for the real run. The ready-made current runs are:
 
 ```bash
-# Current target-wise GNN obsB8 + W&B, one-hour debug
+# Current target-wise GNN obs-v9 + W&B, one-hour debug
 sbatch examples/amos_2026/sbatch_train_polaris_target_gnn_wandb_debug.sh
 
-# Current target-wise GNN obsB8 + W&B, 24-hour training
+# Current target-wise GNN obs-v9 + W&B, 24-hour training
 sbatch examples/amos_2026/sbatch_train_polaris_target_gnn_wandb_24h.sh
 
-# Old FC-network full-action baseline, one-hour debug
+# BigNetwork full-action baseline obs-v9, one-hour debug
 sbatch examples/amos_2026/sbatch_updated_train_polaris_debug.sh
 
-# Old FC-network full-action baseline, 96-hour training
+# BigNetwork full-action baseline obs-v9, 96-hour training
 sbatch examples/amos_2026/sbatch_updated_train_polaris_96h.sh
+
+# BigNetwork imaging-only baseline obs-v9, 96-hour training
+sbatch examples/amos_2026/sbatch_updated_train_polaris_imaging_only_96h.sh
 ```

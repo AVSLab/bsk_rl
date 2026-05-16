@@ -37,6 +37,15 @@ class SimConfig:
     priority_min: float = 0.0
     priority_max: Optional[float] = None
 
+    dynamic_priority_event_enabled: bool = False
+    dynamic_priority_event_time_sec: Optional[float] = None
+    dynamic_priority_event_fraction: float = 0.5
+    hio_count: int = 5
+    hio_priority: float = 5.0
+    shio_count: int = 3
+    shio_priority: float = 10.0
+    dynamic_priority_event_seed: Optional[int] = None
+
     extra_time_factor: float = 1.5           # multiplier for total_time
     obs_v: float = 2.0                       # default obs version; overwritten for known policies
     just_imaging: bool = False               # allow huge storage/battery if True

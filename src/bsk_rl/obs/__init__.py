@@ -40,7 +40,16 @@ from bsk_rl.obs.observations import (
     SatProperties,
     PolarisScTargetProperties,
     Time,
+    s_hat_H,
 )
 
 __doc_title__ = "Observations"
-__all__ = ["Observation", "SatProperties", "Time", "OpportunityProperties", "Eclipse", "PolarisScTargetProperties"]
+__all__ = [
+    "Observation",
+    "SatProperties",
+    "Time",
+    "OpportunityProperties",
+    "Eclipse",
+    "PolarisScTargetProperties",
+    "s_hat_H",
+]

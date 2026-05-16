@@ -18,6 +18,9 @@ _TORCH_THREADS = int(os.environ.get("BSK_RL_TORCH_THREADS", _DEFAULT_TORCH_THREA
 torch.set_num_threads(_TORCH_THREADS)
 os.environ["MKL_NUM_THREADS"] = str(_TORCH_THREADS) # 11 on the cluster historically
 PPO_MIN_TRAIN_BATCH_SIZE = 128
+PRIORITY_NORM = 2.0  # Most baseline priorities land near [0, 2]; boosted priorities may intentionally exceed 1.
+REL_VEL_NORM_MPS = 16_000.0  # [m/s], about twice circular LEO speed for worst-case retrograde encounters.
+SUN_VECTOR_NORM = 1.0  # s_hat_H is already a dimensionless unit vector with components in [-1, 1].
 
 
 def _env_int(name: str, default: int) -> int:
@@ -25,9 +28,23 @@ def _env_int(name: str, default: int) -> int:
     return int(default if raw_value is None else raw_value)
 
 
+def _env_optional_int(name: str, default: int | None = None) -> int | None:
+    raw_value = os.environ.get(name)
+    if raw_value is None or raw_value.strip() == "":
+        return default
+    return int(raw_value)
+
+
 def _env_float(name: str, default: float) -> float:
     raw_value = os.environ.get(name)
     return float(default if raw_value is None else raw_value)
+
+
+def _env_optional_float(name: str, default: float | None = None) -> float | None:
+    raw_value = os.environ.get(name)
+    if raw_value is None or raw_value.strip() == "":
+        return default
+    return float(raw_value)
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -65,7 +82,9 @@ def _maybe_init_wandb(run_name: str, config: dict[str, Any]):
         return WandbLogger(
             project_name=os.environ.get("BSK_RL_WANDB_PROJECT", "amos2026-bsk-rl"),
             run_name=run_name,
-            group=os.environ.get("BSK_RL_WANDB_GROUP", "polaris-old-network"),
+            group=os.environ.get(
+                "BSK_RL_WANDB_GROUP", "polaris-big-network-full-actions-obs-v9"
+            ),
             key_path=key_path,
             config=config,
         )
@@ -337,6 +356,11 @@ def _safe_max(values, default=-1.0):
     return float(np.max(values)) if values else default
 
 
+def _safe_min(values, default=-1.0):
+    values = _finite_values(values)
+    return float(np.min(values)) if values else default
+
+
 def env_metrics_callback(env):
     data = {}
     reward_data = env.rewarder.data
@@ -385,7 +409,61 @@ def env_metrics_callback(env):
     all_target_priorities = list(target_priority_by_id.values())
     data["target_priority_sum"] = float(np.sum(all_target_priorities)) if all_target_priorities else -1
     data["target_priority_mean"] = _safe_mean(all_target_priorities)
+    data["target_priority_std"] = _safe_std(all_target_priorities)
     data["target_priority_max"] = _safe_max(all_target_priorities)
+    data["mean_target_priority"] = data["target_priority_mean"]
+    data["std_target_priority"] = data["target_priority_std"]
+    data["max_target_priority"] = data["target_priority_max"]
+
+    scenario = getattr(env, "scenario", None)
+    hio_ids = set(getattr(scenario, "hio_target_ids", []))
+    shio_ids = set(getattr(scenario, "shio_target_ids", []))
+    event_time = getattr(scenario, "priority_event_time", None)
+    if event_time is None and scenario is not None:
+        event_time = getattr(scenario, "dynamic_priority_event_time_sec", None)
+    if event_time is None and scenario is not None:
+        event_time = float(env.time_limit) * float(
+            getattr(scenario, "dynamic_priority_event_fraction", 0.5)
+        )
+    event_time = float(event_time) if event_time is not None else -1.0
+    event_applied_time = getattr(scenario, "priority_event_applied_time", None)
+    event_targets = [
+        target
+        for target in getattr(scenario, "target_spacecrafts", [])
+        if getattr(target, "priority_event_kind", "") in {"HIO", "SHIO"}
+    ]
+    hio_targets = [
+        target for target in event_targets if getattr(target, "priority_event_kind", "") == "HIO"
+    ]
+    shio_targets = [
+        target for target in event_targets if getattr(target, "priority_event_kind", "") == "SHIO"
+    ]
+    data["dynamic_priority_event_enabled"] = float(
+        bool(getattr(scenario, "dynamic_priority_event_enabled", False))
+    )
+    data["dynamic_priority_event_applied"] = float(
+        bool(getattr(scenario, "priority_event_applied", False))
+    )
+    data["dynamic_priority_event_time_sec"] = event_time
+    data["dynamic_priority_event_applied_time_sec"] = (
+        float(event_applied_time) if event_applied_time is not None else -1.0
+    )
+    data["hio_target_count"] = len(hio_ids)
+    data["shio_target_count"] = len(shio_ids)
+    data["hio_candidate_access_count"] = int(
+        sum(getattr(target, "priority_event_candidate_count", 0) for target in hio_targets)
+    )
+    data["shio_candidate_access_count"] = int(
+        sum(getattr(target, "priority_event_candidate_count", 0) for target in shio_targets)
+    )
+    data["time_to_first_hio_candidate_access_sec"] = _safe_min(
+        getattr(target, "priority_event_first_candidate_time", None)
+        for target in hio_targets
+    )
+    data["time_to_first_shio_candidate_access_sec"] = _safe_min(
+        getattr(target, "priority_event_first_candidate_time", None)
+        for target in shio_targets
+    )
 
     # These records come from ImageRSO and capture the real variable-duration action
     # time, not the nominal 300 s maximum.
@@ -428,12 +506,18 @@ def env_metrics_callback(env):
         bool(record.get("success")) for record in imaging_attempt_records
     ]
     attempted_priorities = [
-        target_priority_by_id.get(int(record["target_id"]))
+        record.get(
+            "target_priority",
+            target_priority_by_id.get(int(record["target_id"])),
+        )
         for record in imaging_attempt_records
         if record.get("target_id") is not None
     ]
     successful_capture_priorities = [
-        target_priority_by_id.get(int(record["target_id"]))
+        record.get(
+            "target_priority",
+            target_priority_by_id.get(int(record["target_id"])),
+        )
         for record in imaging_attempt_records
         if record.get("success") and record.get("target_id") is not None
     ]
@@ -477,6 +561,42 @@ def env_metrics_callback(env):
     data["mean_successful_capture_priority"] = _safe_mean(
         successful_capture_priorities
     )
+    chosen_pairs = [
+        (int(target_id), float(command_time))
+        for target_id, command_time in zip(
+            getattr(SS1_actions_spec, "chosen_target_ids", []),
+            getattr(SS1_actions_spec, "imaging_times", []),
+        )
+        if command_time is not None and float(command_time) >= event_time
+    ]
+    hio_command_times = [t for target_id, t in chosen_pairs if target_id in hio_ids]
+    shio_command_times = [t for target_id, t in chosen_pairs if target_id in shio_ids]
+    successful_event_records = [
+        record
+        for record in imaging_attempt_records
+        if record.get("success")
+        and record.get("target_id") is not None
+        and float(record.get("first_capture_time") or record.get("end_time") or -1.0)
+        >= event_time
+    ]
+    hio_success_times = [
+        float(record.get("first_capture_time") or record.get("end_time"))
+        for record in successful_event_records
+        if int(record["target_id"]) in hio_ids
+    ]
+    shio_success_times = [
+        float(record.get("first_capture_time") or record.get("end_time"))
+        for record in successful_event_records
+        if int(record["target_id"]) in shio_ids
+    ]
+    data["hio_command_count_after_event"] = len(hio_command_times)
+    data["shio_command_count_after_event"] = len(shio_command_times)
+    data["hio_successful_capture_count_after_event"] = len(hio_success_times)
+    data["shio_successful_capture_count_after_event"] = len(shio_success_times)
+    data["time_to_first_hio_command_sec"] = _safe_min(hio_command_times)
+    data["time_to_first_shio_command_sec"] = _safe_min(shio_command_times)
+    data["time_to_first_hio_success_sec"] = _safe_min(hio_success_times)
+    data["time_to_first_shio_success_sec"] = _safe_min(shio_success_times)
 
     verified_records = list(
         getattr(env.rewarder.data, "verified_useful_records", [])
@@ -587,15 +707,16 @@ def env_metrics_callback(env):
 
     # Target priority
     if hasattr(SS1_actions_spec, "chosen_target_priority") and SS1_actions_spec.chosen_target_priority:
-        data["mean_target_priority"] = np.mean(SS1_actions_spec.chosen_target_priority)
-        data["std_target_priority"] = np.std(SS1_actions_spec.chosen_target_priority)
-        data["max_target_priority"] = np.max(SS1_actions_spec.chosen_target_priority)
-        data["mean_chosen_target_priority"] = data["mean_target_priority"]
+        chosen_priority_mean = np.mean(SS1_actions_spec.chosen_target_priority)
+        chosen_priority_std = np.std(SS1_actions_spec.chosen_target_priority)
+        chosen_priority_max = np.max(SS1_actions_spec.chosen_target_priority)
+        data["mean_chosen_target_priority"] = chosen_priority_mean
+        data["std_chosen_target_priority"] = chosen_priority_std
+        data["max_chosen_target_priority"] = chosen_priority_max
     else:
-        data["mean_target_priority"] = -1
-        data["std_target_priority"] = -1
-        data["max_target_priority"] = -1
         data["mean_chosen_target_priority"] = -1
+        data["std_chosen_target_priority"] = -1
+        data["max_chosen_target_priority"] = -1
 
     # Ever visible flags
     if hasattr(SS1_actions_spec, "ever_visible") and SS1_actions_spec.ever_visible:
@@ -671,8 +792,22 @@ if __name__ == "__main__":
         n_targets_ahead=_env_int("BSK_RL_N_TARGETS_AHEAD", 10),
         imaging_duration=_env_float("BSK_RL_IMAGING_DURATION", 300.0),
         extra_time_factor=_env_float("BSK_RL_EXTRA_TIME_FACTOR", 1.5),
-        obs_v=7.0,
+        obs_v=9.0,
         just_imaging=False,
+        dynamic_priority_event_enabled=_env_bool("BSK_RL_DYNAMIC_PRIORITY_EVENT", True),
+        dynamic_priority_event_time_sec=_env_optional_float(
+            "BSK_RL_DYNAMIC_PRIORITY_EVENT_TIME_SEC"
+        ),
+        dynamic_priority_event_fraction=_env_float(
+            "BSK_RL_DYNAMIC_PRIORITY_EVENT_FRACTION", 0.5
+        ),
+        hio_count=_env_int("BSK_RL_HIO_COUNT", 5),
+        hio_priority=_env_float("BSK_RL_HIO_PRIORITY", 5.0),
+        shio_count=_env_int("BSK_RL_SHIO_COUNT", 3),
+        shio_priority=_env_float("BSK_RL_SHIO_PRIORITY", 10.0),
+        dynamic_priority_event_seed=_env_optional_int(
+            "BSK_RL_DYNAMIC_PRIORITY_EVENT_SEED"
+        ),
     )
 
     n_targets = sim_cfg.n_targets
@@ -694,6 +829,14 @@ if __name__ == "__main__":
             priority_gaussian_std=sim_cfg.priority_gaussian_std,
             priority_min=sim_cfg.priority_min,
             priority_max=sim_cfg.priority_max,
+            dynamic_priority_event_enabled=sim_cfg.dynamic_priority_event_enabled,
+            dynamic_priority_event_time_sec=sim_cfg.dynamic_priority_event_time_sec,
+            dynamic_priority_event_fraction=sim_cfg.dynamic_priority_event_fraction,
+            hio_count=sim_cfg.hio_count,
+            hio_priority=sim_cfg.hio_priority,
+            shio_count=sim_cfg.shio_count,
+            shio_priority=sim_cfg.shio_priority,
+            dynamic_priority_event_seed=sim_cfg.dynamic_priority_event_seed,
         )
 
     def make_rso_rewarder():
@@ -717,37 +860,26 @@ if __name__ == "__main__":
             obs.SatProperties(
                 dict(prop="storage_level_fraction"),
                 dict(prop="battery_charge_fraction"),
-                dict(prop="wheel_speeds_fraction")
+                dict(prop="wheel_speeds_fraction"),
+                dict(prop="s_hat_H", fn=obs.s_hat_H, norm=SUN_VECTOR_NORM),
             ),
-
-            #observation space 1
-            # obs.PolarisScTargetProperties(
-            #     dict(prop="target_elevation_angle", norm=1.0),
-            #     dict(prop="rel_pos_vector_r_BR_N", norm = 1596*1000),
-            #     dict(prop="angle_to_target", norm=1.0),
-            #     dict(prop="target_distance", norm = 1596*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
-            #     dict(prop="target_id_info", norm=1.0),
-            #     dict(prop="target_imaged",  norm=1.0),
-            #     n_ahead_observe=n_targets_ahead,
-            #                                ),
-
-            #observation space 2
-            obs.PolarisScTargetProperties(
-                dict(prop="target_elevation_angle", norm=90.0),
-                dict(prop="rel_pos_vector_r_BR_H", norm = 15960*1000),
-                dict(prop="angle_to_target", norm=90.0),
-                dict(prop="target_distance", norm = 15960*1000), #normalization calculated assuming h = 800 km and min elevation is -14 deg
-                dict(prop="target_shadowFactor", norm=1.0),
-                n_ahead_observe=n_targets_ahead,
-                                           ),
             obs.Eclipse(norm=5700),
             obs.OpportunityProperties(
-                dict(prop="opportunity_open", norm = 5700.0),
-                dict(prop="opportunity_close", norm = 5700.0),
+                dict(prop="opportunity_open", norm=5700.0),
+                dict(prop="opportunity_close", norm=5700.0),
                 type="ground_station",
                 n_ahead_observe=2,
             ),
-
+            obs.PolarisScTargetProperties(
+                dict(prop="priority", norm=PRIORITY_NORM),
+                dict(prop="target_elevation_angle", norm=90.0),
+                dict(prop="rel_pos_vector_r_BR_H", norm=15960 * 1000),
+                dict(prop="rel_vel_vector_v_BR_H", norm=REL_VEL_NORM_MPS),
+                dict(prop="angle_to_target", norm=90.0),
+                dict(prop="target_distance", norm=15960 * 1000), # normalization calculated assuming h = 800 km and min elevation is -14 deg
+                dict(prop="target_shadowFactor", norm=1.0),
+                n_ahead_observe=n_targets_ahead,
+            ),
         ]
         action_spec = [
             act.ImageRSO(
@@ -779,7 +911,7 @@ if __name__ == "__main__":
     sat_args["transmitterBaudRate"] = -0.5 * 8e6
 
     # Power
-    battery_life_multiplier = _env_float("BSK_RL_BATTERY_LIFE_MULTIPLIER", 1000.0)
+    battery_life_multiplier = _env_float("BSK_RL_BATTERY_LIFE_MULTIPLIER", 1.0)
     baseline_battery_ws = 500 * 3600
     sat_args["batteryStorageCapacity"] = battery_life_multiplier * baseline_battery_ws # W*s
     sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.8, 1.0) * battery_life_multiplier * baseline_battery_ws
@@ -923,8 +1055,8 @@ if __name__ == "__main__":
     total_timesteps = _env_int("BSK_RL_TOTAL_TIMESTEPS", 20_000_000)
     checkpoint_frequency = _env_int("BSK_RL_CHECKPOINT_FREQUENCY", 3)
     run_tag = (
-        f"amos2026_LEO_wGAE_oldNet_fullActions_{batch_size}batch_"
-        "restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2"
+        f"amos2026_LEO_wGAE_BigNetwork_fullActions_{batch_size}batch_"
+        "restrictedResources_obs-v9_1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2"
     )
     model_name = f"{run_tag}.out_{N}"
     print(f"n_envs={n_envs}; batch_size={batch_size}; torch_threads={_TORCH_THREADS}")
@@ -954,7 +1086,7 @@ if __name__ == "__main__":
         ).expanduser()
         ray_tmpdir = Path(os.environ.get("BSK_RL_RAY_TMPDIR", f"/tmp/bskrl_{N}"))
 
-    output_dir = output_root / f"may7_oldNet_fullActions_20d80i_{run_tag}_{time.time()}"
+    output_dir = output_root / f"may7_BigNetwork_fullActions_20d80i_{run_tag}_{time.time()}"
     output_dir.mkdir(parents=True, exist_ok=True)
     ray_tmpdir.mkdir(parents=True, exist_ok=True)
 
@@ -1000,7 +1132,31 @@ if __name__ == "__main__":
     # Save exactly what was used for this run (sim + training/env args)
     run_cfg = {
         "sim": asdict(sim_cfg),
-        "model_family": "old_network_fc_full_actions",
+        "model_family": "big_network_fc_full_actions",
+        "observation_layout": {
+            "obs_v": sim_cfg.obs_v,
+            "blocks": [
+                "satellite: storage_level_fraction, battery_charge_fraction, wheel_speeds_fraction[0:3], s_hat_H[0:3]",
+                "eclipse: next start/end",
+                "ground_station: 2 open/close windows",
+                "targets: repeated obs-v9 chunks",
+            ],
+            "target_features_per_target": 11,
+            "target_chunk_order": [
+                "priority",
+                "target_elevation_angle",
+                "rel_pos_vector_r_BR_H[0:3]",
+                "rel_vel_vector_v_BR_H[0:3]",
+                "angle_to_target",
+                "target_distance",
+                "target_shadowFactor",
+            ],
+        },
+        "observation_norms": {
+            "priority": PRIORITY_NORM,
+            "relative_velocity_mps": REL_VEL_NORM_MPS,
+            "sun_vector": SUN_VECTOR_NORM,
+        },
         "battery_life_multiplier": battery_life_multiplier,
         "n_envs": n_envs,
         "batch_multiplier": batch_multiplier,
@@ -1012,7 +1168,9 @@ if __name__ == "__main__":
             "enabled": _env_bool("BSK_RL_USE_WANDB", True),
             "key_path": str(_wandb_key_path()),
             "project": os.environ.get("BSK_RL_WANDB_PROJECT", "amos2026-bsk-rl"),
-            "group": os.environ.get("BSK_RL_WANDB_GROUP", "polaris-old-network"),
+            "group": os.environ.get(
+                "BSK_RL_WANDB_GROUP", "polaris-big-network-full-actions-obs-v9"
+            ),
         },
         "job_args": sanitize_np(job_args),
     }
