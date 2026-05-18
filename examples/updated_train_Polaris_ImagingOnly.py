@@ -793,6 +793,9 @@ if __name__ == "__main__":
         extra_time_factor=_env_float("BSK_RL_EXTRA_TIME_FACTOR", 1.5),
         obs_v=9.0,
         just_imaging=True,
+        # No downlink action exists here; reward/cool down images at capture time.
+        verify_image_quality_on_downlink=False,
+        hide_pending_targets=False,
         dynamic_priority_event_enabled=_env_bool("BSK_RL_DYNAMIC_PRIORITY_EVENT", True),
         dynamic_priority_event_time_sec=_env_optional_float(
             "BSK_RL_DYNAMIC_PRIORITY_EVENT_TIME_SEC"
@@ -841,8 +844,11 @@ if __name__ == "__main__":
     def make_rso_rewarder():
         return data.RSOTargetImageReward(
             reimage_cooldown_orbits=sim_cfg.reimage_cooldown_orbits,
-            verify_image_quality_on_downlink=sim_cfg.verify_image_quality_on_downlink,
-            hide_pending_targets=sim_cfg.hide_pending_targets,
+            # The full AMOS lifecycle verifies useful images at downlink. This
+            # image-only baseline has no downlink action, so match the Target-GNN
+            # image-only setup and give reward/cooldown credit at capture time.
+            verify_image_quality_on_downlink=False,
+            hide_pending_targets=False,
             image_quality_threshold=sim_cfg.image_quality_threshold,
         )
 
@@ -1046,7 +1052,8 @@ if __name__ == "__main__":
     total_timesteps = _env_int("BSK_RL_TOTAL_TIMESTEPS", 20_000_000)
     checkpoint_frequency = _env_int("BSK_RL_CHECKPOINT_FREQUENCY", 3)
     run_tag = (
-        f"amos2026_LEO_wGAE_BigNetwork_ImagingOnly_00d100i_{batch_size}batch_obs-v9_1e-5lr_0.05cp_gradclip0.5_gamma9997"
+        f"amos2026_LEO_wGAE_BigNetwork_ImagingOnly_00d100i_{batch_size}batch_"
+        "obs-v9_captureReward_1e-5lr_0.05cp_gradclip0.5_gamma9997"
     )
     model_name = f"{run_tag}.out_{N}"
     print(f"n_envs={n_envs}; batch_size={batch_size}; torch_threads={_TORCH_THREADS}")
@@ -1154,7 +1161,8 @@ if __name__ == "__main__":
             "key_path": str(_wandb_key_path()),
             "project": os.environ.get("BSK_RL_WANDB_PROJECT", "amos2026-bsk-rl"),
             "group": os.environ.get(
-                "BSK_RL_WANDB_GROUP", "polaris-big-network-imaging-only-obs-v9"
+                "BSK_RL_WANDB_GROUP",
+                "polaris-big-network-imaging-only-obs-v9-capture-reward",
             ),
         },
         "job_args": sanitize_np(job_args),
