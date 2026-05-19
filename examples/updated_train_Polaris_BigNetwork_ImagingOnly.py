@@ -884,7 +884,7 @@ if __name__ == "__main__":
 
     # Storage
     image_bits = 8e6 / 2
-    image_storage_capacity = _env_float("BSK_RL_IMAGE_STORAGE_CAPACITY_IMAGES", 500.0)
+    image_storage_capacity = _env_float("BSK_RL_IMAGE_STORAGE_CAPACITY_IMAGES", 1000.0)
     sat_args["dataStorageCapacity"] = image_storage_capacity * image_bits
     sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * image_bits
     sat_args["instrumentBaudRate"] = 0.5 * 8e6
