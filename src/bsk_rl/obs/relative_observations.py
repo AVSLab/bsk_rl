@@ -111,6 +111,9 @@ def rso_imaged_regions(
     assert frame in ["chief_hill", "chief_body"]
     point_inspect_status = servicer.data_store.data.point_inspect_status
 
+    if all(not inspected for inspected in point_inspect_status.values()):
+        return np.zeros(len(region_centers))
+
     region_centers_C = []
     for region_center in region_centers:
         if frame == "chief_hill":

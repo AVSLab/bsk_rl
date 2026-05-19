@@ -505,7 +505,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
 
         self._eclipse_search_time = t
 
-    def next_eclipse(self, t: float, max_tries: int = 100) -> tuple[float, float]:
+    def next_eclipse(self, t: float, max_tries: int = 2) -> tuple[float, float]:
         """Find the soonest eclipse transitions.
 
         The returned values are not necessarily from the same eclipse event, such as
@@ -519,7 +519,7 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
             eclipse_start: Nearest upcoming eclipse beginning
             eclipse_end:  Nearest upcoming eclipse end
         """
-        for i in range(max_tries):
+        for i in range(max_tries + 1):
             if any([t_start > t for t_start in self._eclipse_starts]) and any(
                 [t_end > t for t_end in self._eclipse_ends]
             ):
@@ -529,8 +529,11 @@ class TrajectorySimulator(SimulationBaseClass.SimBaseClass):
                 eclipse_end = min([t_end for t_end in self._eclipse_ends if t_end > t])
                 return eclipse_start, eclipse_end
 
-            self._generate_eclipses(t + i * self.dt * 10)
+            self._generate_eclipses(t + i * 6000)
 
+        logger.warning(
+            f"Could not find eclipse transitions in next {self._eclipse_search_time - t:.1f} seconds"
+        )
         return 1.0, 1.0
 
     @property
