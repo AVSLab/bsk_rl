@@ -158,7 +158,16 @@ class RSOInspectionDataStore(DataStore):
         for rso_point, log in zip(
             self.data.point_illuminate_status.keys(), illuminated_logs
         ):
-            if any(log):
+            check_log = log
+            start_time = (
+                self.satellite.simulator.sim_time
+                - self.satellite.simulator.sim_rate * len(log)
+            )
+            # Delete first two illumination points to allow forced attitude control to catch up
+            if start_time == 0:
+                check_log = log[2:]
+
+            if any(check_log):
                 point_illuminate_status[rso_point] = True
 
         if len(point_inspect_status) > 0:
