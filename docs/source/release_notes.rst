@@ -4,6 +4,11 @@ Release Notes
 Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
+
+Version 1.3.0
+-------------
+*Release Date: May. 19, 2026*
+
 * Allow communication to be one-way. Adds a :class:`~bsk_rl.act.Broadcast` action
   that can be used with :class:`~bsk_rl.comm.BroadcastCommunication` to only communicate
   data when the action has been called.
