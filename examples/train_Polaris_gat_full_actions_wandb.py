@@ -10,8 +10,8 @@ Local terminal equivalent:
         /Users/dahu1128/Repositories/bsk_rl/examples/train_Polaris_gat_full_actions_wandb.py
 
 Cluster use:
-    Submit one of the alpha-specific Slurm wrappers, not the Python file directly:
-        sbatch examples/amos_2026/sbatch_train_polaris_gat_full_actions_alpha0p2_24h.sh
+    Submit one of the reward-split Slurm wrappers, not the Python file directly:
+        sbatch examples/amos_2026/sbatch_train_polaris_gat_full_actions_20d80i_48h.sh
 
 Cluster comments:
     # Put the W&B key at /projects/$USER/bsk_rl/examples/wandb_key.txt, or set
@@ -978,7 +978,7 @@ if __name__ == "__main__":
 
     run_tag = (
         f"amos2026_LEO_GAT_fullActions_{reward_split_tag}_{batch_size}batch_"
-        f"restrictedResources_obs-v9_hold10s_reimage2orb_prioritySum100_{alpha_tag}"
+        "restrictedResources_obs-v9_hold10s_reimage2orb_prioritySum100"
     )
     model_name = f"{run_tag}.out_{job_index}"
     output_dir = _default_output_root() / f"{run_tag}_{time.time()}"  # local: ~/rllib_results/...; cluster: /scratch/alpine/$USER/rllib_results/...
