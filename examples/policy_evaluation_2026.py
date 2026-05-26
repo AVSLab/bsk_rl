@@ -73,6 +73,37 @@ def _safe(s: str) -> str:
     """Filesystem-safe string."""
     return "".join(c if c.isalnum() or c in "-_." else "_" for c in str(s))
 
+
+def _unique_path(path: Path) -> Path:
+    """Return a non-existing sibling path by appending a counter if needed."""
+    if not path.exists():
+        return path
+    stem = path.stem
+    suffix = path.suffix
+    for i in range(1, 1000):
+        candidate = path.with_name(f"{stem}_{i}{suffix}")
+        if not candidate.exists():
+            return candidate
+    raise RuntimeError(f"Could not find a unique path for {path}")
+
+
+def retag_new_vizard_outputs(vizard_dir: str, existing_paths: set[Path], tag: str) -> list[Path]:
+    """Prefix any Vizard files created during this run with a stable run tag."""
+    root = Path(vizard_dir).expanduser()
+    if not root.exists():
+        return []
+
+    renamed = []
+    current_paths = {p.resolve() for p in root.rglob("*") if p.is_file()}
+    for path in sorted(current_paths - existing_paths):
+        if path.name.startswith(f"{tag}_"):
+            renamed.append(path)
+            continue
+        new_path = _unique_path(path.with_name(f"{tag}_{path.name}"))
+        path.rename(new_path)
+        renamed.append(new_path)
+    return renamed
+
 def parse_args():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=20)
@@ -254,6 +285,32 @@ def parse_args():
     p.add_argument("--shio_count", type=int, default=3)
     p.add_argument("--shio_priority", type=float, default=10.0)
     p.add_argument("--dynamic_priority_event_seed", type=int, default=None)
+    p.add_argument(
+        "--save_vizard",
+        action="store_true",
+        help="Save a Vizard playback for this evaluation run.",
+    )
+    p.add_argument(
+        "--vizard_dir",
+        type=str,
+        default="/Users/dahu1128/Documents",
+        help="Directory where Basilisk/Vizard playback files are written.",
+    )
+    p.add_argument(
+        "--vizard_rate",
+        type=float,
+        default=5.0,
+        help="Vizard sampling rate in seconds.",
+    )
+    p.add_argument(
+        "--vizard_tag",
+        type=str,
+        default=None,
+        help=(
+            "Optional tag prefixed onto newly-created Vizard files. Defaults to "
+            "policy name plus seed, policy mode, reward mix, and target env."
+        ),
+    )
 
     return p.parse_args()
 
@@ -425,10 +482,12 @@ elif args.save_data:
 
 policy_mode = args.policy_mode
 eclipse_norm = 5700
-save_vizard = False
-viz_rate = 5.0
+save_vizard = bool(args.save_vizard)
+vizard_dir = os.path.expanduser(args.vizard_dir)
+viz_rate = float(args.vizard_rate)
 
-# Orbit / GS constants
+# Legacy flat-index GS constants. The plotting path below now prefers named
+# observations, but these are kept for old debugging snippets in this file.
 ORBIT_PERIOD_SEC = 95 * 60
 ECL_SLICE  = slice(75, 77)
 GS_START   = 77     # will be refined based on obs_v below
@@ -865,11 +924,25 @@ if run_tag is None:
 run_dir = make_run_dir(base_data_dir, seed_number, policy_tag, run_tag)
 print(f"\n=== Run outputs will be saved to: {run_dir} ===\n")
 
+vizard_tag = _safe(
+    args.vizard_tag
+    or f"{policy_name}_seed{seed_number}_{policy_mode}_{reward_mix_tag}_{TARGET_ENV}"
+)
+vizard_existing_paths: set[Path] = set()
+if save_vizard:
+    Path(vizard_dir).expanduser().mkdir(parents=True, exist_ok=True)
+    vizard_existing_paths = {
+        p.resolve() for p in Path(vizard_dir).expanduser().rglob("*") if p.is_file()
+    }
+    print(f"Vizard output dir: {vizard_dir}")
+    print(f"Vizard output tag: {vizard_tag}")
+
 policy = Policy(policy_path, policy_mode=policy_mode)
 
 
 
-# Ground-station settings as a function of obs_v
+# Legacy ground-station settings as a function of obs_v. Actual plotting uses
+# the named nested observation so reordered obs-v9 layouts stay correct.
 GS_BY_OBS = {
     1:   dict(gs_start=87, n_gs=None),
     1.1: dict(gs_start=97, n_gs=None),
@@ -879,7 +952,7 @@ GS_BY_OBS = {
     0:   dict(gs_start=74, n_gs=None),
     7:   dict(gs_start=77, n_gs=2),
     8:   dict(gs_start=0, n_gs=0),
-    9:   dict(gs_start=77, n_gs=2),
+    9:   dict(gs_start=10, n_gs=2),
 }
 
 gs_cfg = GS_BY_OBS.get(obs_v, dict(gs_start=GS_START, n_gs=None))
@@ -1447,7 +1520,7 @@ if save_vizard == True:
         time_limit=total_time,
         log_level="WARNING", #ERROR or DEBUG
         disable_env_checker=True,
-        vizard_dir="/Users/dahu1128/Documents",
+        vizard_dir=vizard_dir,
         vizard_settings=dict(vizard_rate=viz_rate), # in seconds
         # max_step_duration=700,
     )
@@ -1483,6 +1556,74 @@ def get_image_action_spec(env):
     )
 
 
+def _ground_station_opportunity_norms(satellite) -> dict[str, float]:
+    """Read the exact normalization used by the active GS observation spec."""
+    norms = {"opportunity_open": 1.0, "opportunity_close": 1.0}
+    for obs_spec in satellite.observation_builder.observation_spec:
+        if not isinstance(obs_spec, obs.OpportunityProperties):
+            continue
+        if getattr(obs_spec, "type", None) != "ground_station":
+            continue
+        for prop_spec in obs_spec.target_properties:
+            prop = prop_spec.get("prop")
+            if prop in norms:
+                norms[prop] = float(prop_spec.get("norm", 1.0))
+    return norms
+
+
+def _denormalized_opportunity_value(
+    props: dict,
+    prop: str,
+    norm: float,
+) -> float | None:
+    """Return a relative opportunity time in seconds from raw or normalized obs."""
+    if prop in props:
+        return float(props[prop])
+    normd_key = f"{prop}_normd"
+    if normd_key in props:
+        return float(props[normd_key]) * float(norm)
+    return None
+
+
+def current_ground_station_window_pairs(satellite) -> list[tuple[str, np.ndarray]]:
+    """Extract absolute GS windows from the nested observation dictionary.
+
+    Older plotting code assumed fixed flat indices (for example GS_START=77).
+    That broke once obs-v9 moved ground-station opportunities before the target
+    block. Reading the named observation keeps the plot aligned with whatever
+    observation layout was actually configured for the evaluated policy.
+    """
+    try:
+        obs_dict = satellite.observation_builder.obs_dict()
+    except Exception as exc:
+        print(f"WARNING: Could not read ground-station observation dictionary: {exc}")
+        return []
+
+    gs_obs = obs_dict.get("ground_station")
+    if not isinstance(gs_obs, dict):
+        return []
+
+    norms = _ground_station_opportunity_norms(satellite)
+    sim_time = float(satellite.simulator.sim_time)
+    windows = []
+    for gs_name in sorted(gs_obs):
+        props = gs_obs.get(gs_name, {})
+        if not isinstance(props, dict):
+            continue
+        open_dt = _denormalized_opportunity_value(
+            props, "opportunity_open", norms["opportunity_open"]
+        )
+        close_dt = _denormalized_opportunity_value(
+            props, "opportunity_close", norms["opportunity_close"]
+        )
+        if open_dt is None or close_dt is None:
+            continue
+        pair_abs = np.asarray([sim_time + open_dt, sim_time + close_dt], dtype=float)
+        if np.all(np.isfinite(pair_abs)):
+            windows.append((gs_name, pair_abs))
+    return windows
+
+
 SS1_actions_spec = get_image_action_spec(env)
 print(
     "Image action spec:",
@@ -1490,6 +1631,16 @@ print(
     "from action order",
     [type(spec).__name__ for spec in sat0.action_builder.action_spec],
 )
+gs_obs_keys = [
+    key
+    for key in sat0.observation_builder.obs_array_keys()
+    if "ground_station" in str(key)
+]
+if gs_obs_keys:
+    print("Ground-station observation keys used for shaded windows:", gs_obs_keys)
+    print("Ground-station opportunity norms:", _ground_station_opportunity_norms(sat0))
+else:
+    print("No ground-station observation block in this policy layout; no green GS spans will be plotted.")
 
 try:
     ins_cmd_rec = sat0.fsw.ins_cmd_recorder
@@ -1665,14 +1816,7 @@ for target_id in range(n_targets*6 *100 ):
         if '_last_gs_pair' not in globals():
             _last_gs_pair = {}
 
-        for i in range(N_GS):
-            s = GS_START + i * PAIR_STRIDE
-            pair = np.asarray(observation[sat.name][s:s+PAIR_STRIDE], dtype=float)  # [open_i, close_i]
-            if pair.size < 2:
-                continue  # robust against short obs
-            pair_abs = (pair * ORBIT_PERIOD_SEC + simtime) if GS_NORMALIZED else pair
-
-            gs_name = f"ground_station_{i}"
+        for gs_name, pair_abs in current_ground_station_window_pairs(sat0):
             if gs_name not in ground_station_windows:
                 ground_station_windows[gs_name] = []
                 _last_gs_pair[gs_name] = None
@@ -2923,5 +3067,26 @@ try:
     print(f"Saved metrics JSON to {json_path}")
 except Exception as e:
     print("WARNING: Failed to save metrics JSON:", e)
+
+if save_vizard:
+    try:
+        env.close()
+    except Exception:
+        pass
+    try:
+        tagged_vizard_files = retag_new_vizard_outputs(
+            vizard_dir,
+            vizard_existing_paths,
+            vizard_tag,
+        )
+        if tagged_vizard_files:
+            print("Tagged Vizard files:")
+            for path in tagged_vizard_files:
+                print(f"  {path}")
+        else:
+            print("WARNING: No new Vizard files were found to tag.")
+    except Exception as exc:
+        print(f"WARNING: Failed to tag Vizard output files: {exc}")
+
 print(f"good images #:{illuminated_image_count(env)} out of {target_imaging_count}")
 print(f"imaging success percentage {illuminated_image_count(env)/target_imaging_count*100}%")
