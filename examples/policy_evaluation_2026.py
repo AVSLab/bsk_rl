@@ -223,6 +223,37 @@ def parse_args():
         default=None,
         help="Evaluation reward mix tag such as 20d80i or 00d100i. Overrides --reward_alpha.",
     )
+    p.add_argument(
+        "--no_shield",
+        action="store_true",
+        help="Disable the evaluation safety shield that can override charge/downlink actions.",
+    )
+    p.add_argument(
+        "--dynamic_priority_event",
+        choices=["auto", "on", "off"],
+        default="auto",
+        help=(
+            "Enable the HIO/SHIO priority event. 'auto' enables it for obs-v8/v9 "
+            "policies and leaves older obs-v7 policies unchanged."
+        ),
+    )
+    p.add_argument(
+        "--dynamic_priority_event_fraction",
+        type=float,
+        default=0.5,
+        help="Fraction of total episode time when the HIO/SHIO priority event fires.",
+    )
+    p.add_argument(
+        "--dynamic_priority_event_time_sec",
+        type=float,
+        default=None,
+        help="Absolute HIO/SHIO event time in seconds. Overrides the fraction when set.",
+    )
+    p.add_argument("--hio_count", type=int, default=5)
+    p.add_argument("--hio_priority", type=float, default=5.0)
+    p.add_argument("--shio_count", type=int, default=3)
+    p.add_argument("--shio_priority", type=float, default=10.0)
+    p.add_argument("--dynamic_priority_event_seed", type=int, default=None)
 
     return p.parse_args()
 
@@ -282,7 +313,7 @@ class Policy:
         return action
 
 
-use_shield = True
+use_shield = not ARGS.no_shield
 act_random = False
 use_heuristic = False
 heuristic_mode = "angle"  # not used unless use_heuristic is True. heuristic modes: {"angle", "distance"}
@@ -320,6 +351,15 @@ total_time = sim_cfg.total_time
 obs_v = sim_cfg.obs_v
 just_imaging = sim_cfg.just_imaging
 
+PRIORITY_NORM = 2.0
+REL_VEL_NORM_MPS = 16000.0
+SUN_VECTOR_NORM = 1.0
+
+LAYOUT_BIG_FULL = "big_full"
+LAYOUT_TARGET_IMAGE_ONLY = "target_image_only"
+LAYOUT_GAT_IMAGE_CHARGE = "gat_image_charge"
+LAYOUT_GAT_FULL = "gat_full"
+
 def make_rso_scenario():
     return scene.RandomSatellites(
         "SS1",
@@ -334,6 +374,14 @@ def make_rso_scenario():
         priority_gaussian_std=sim_cfg.priority_gaussian_std,
         priority_min=sim_cfg.priority_min,
         priority_max=sim_cfg.priority_max,
+        dynamic_priority_event_enabled=sim_cfg.dynamic_priority_event_enabled,
+        dynamic_priority_event_time_sec=sim_cfg.dynamic_priority_event_time_sec,
+        dynamic_priority_event_fraction=sim_cfg.dynamic_priority_event_fraction,
+        hio_count=sim_cfg.hio_count,
+        hio_priority=sim_cfg.hio_priority,
+        shio_count=sim_cfg.shio_count,
+        shio_priority=sim_cfg.shio_priority,
+        dynamic_priority_event_seed=sim_cfg.dynamic_priority_event_seed,
     )
 
 
@@ -402,6 +450,16 @@ GS_NORMALIZED = True    # set True if GS values are normalized offsets; False if
 #May5 2048-2048 network
 may5_2026_obsv7_1e_5lr_batch4200_gamma9997_20d80i = "/Users/dahu1128/rllib_results/cluster2026/may2026/amos2026_LEO_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2_1778031984.626593/amos2026_LEO_wGAE_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2.out_0"
 
+# May 2026 AMOS 2026 comparison policies
+may7_2026_oldNet_fullActions_obsv7_20d80i = "/Users/dahu1128/rllib_results/cluster2026/may2026/may7_oldNet_fullActions_20d80i_amos2026_LEO_wGAE_oldNet_fullActions_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2_1778418070.1211967/amos2026_LEO_wGAE_oldNet_fullActions_4200batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_alpha0p2.out_0"
+may13_2026_targetGNN_imagingOnly_obsB8_4200batch = "/Users/dahu1128/rllib_results/cluster2026/may2026/amos2026_LEO_targetGNN_imagingOnly_obsB8_4200batch_hold10s_reimage2orb_prioritySum100_1778537154.9201577/amos2026_LEO_targetGNN_imagingOnly_obsB8_4200batch_hold10s_reimage2orb_prioritySum100.out_0"
+may15_2026_BigNetwork_ImagingOnly_obs_v9_00d100i = "/Users/dahu1128/rllib_results/cluster2026/may2026/may15_BigNetwork_ImagingOnly_00d100i_amos2026_LEO_wGAE_BigNetwork_ImagingOnly_00d100i_4200batch_obs-v9_1e-5lr_0.05cp_gradclip0.5_gamma9997_1779110555.9058516/amos2026_LEO_wGAE_BigNetwork_ImagingOnly_00d100i_4200batch_obs-v9_1e-5lr_0.05cp_gradclip0.5_gamma9997.out_0"
+may19_2026_BigNetwork_ImagingOnlyFromFull_targetOnly_obs_v9_00d100i = "/Users/dahu1128/rllib_results/cluster2026/may2026/may19_BigNetwork_ImagingOnlyFromFull_00d100i_amos2026_LEO_wGAE_BigNetwork_ImagingOnlyFromFull_00d100i_4200batch_targetOnly_obs-v9_captureReward_1e-5lr_0.05cp_gradclip0.5_gamma9997_1779390989.6233594/amos2026_LEO_wGAE_BigNetwork_ImagingOnlyFromFull_00d100i_4200batch_targetOnly_obs-v9_captureReward_1e-5lr_0.05cp_gradclip0.5_gamma9997.out_0"
+may19_2026_GAT_imagingCharge_obs_v9_00d100i = "/Users/dahu1128/rllib_results/cluster2026/may2026/amos2026_LEO_GAT_imagingCharge_obs-v9_4200batch_hold10s_reimage2orb_prioritySum100_1779394386.10629/amos2026_LEO_GAT_imagingCharge_obs-v9_4200batch_hold10s_reimage2orb_prioritySum100.out_0"
+may23_2026_GAT_fullActions_obs_v9_00d100i_alpha0p0 = "/Users/dahu1128/rllib_results/cluster2026/may2026/amos2026_LEO_GAT_fullActions_00d100i_4200batch_restrictedResources_obs-v9_hold10s_reimage2orb_prioritySum100_alpha0p0_1779475444.7861521/amos2026_LEO_GAT_fullActions_00d100i_4200batch_restrictedResources_obs-v9_hold10s_reimage2orb_prioritySum100_alpha0p0.out_0"
+may23_2026_GAT_fullActions_obs_v9_20d80i_alpha0p2 = "/Users/dahu1128/rllib_results/cluster2026/may2026/amos2026_LEO_GAT_fullActions_20d80i_4200batch_restrictedResources_obs-v9_hold10s_reimage2orb_prioritySum100_alpha0p2_1779481313.4108462/amos2026_LEO_GAT_fullActions_20d80i_4200batch_restrictedResources_obs-v9_hold10s_reimage2orb_prioritySum100_alpha0p2.out_0"
+may23_2026_GAT_fullActions_obs_v9_50d50i_alpha0p5 = "/Users/dahu1128/rllib_results/cluster2026/may2026/amos2026_LEO_GAT_fullActions_50d50i_4200batch_restrictedResources_obs-v9_hold10s_reimage2orb_prioritySum100_alpha0p5_1779481494.0157375/amos2026_LEO_GAT_fullActions_50d50i_4200batch_restrictedResources_obs-v9_hold10s_reimage2orb_prioritySum100_alpha0p5.out_0"
+may23_2026_GAT_fullActions_obs_v9_100d00i_alpha1p0 = "/Users/dahu1128/rllib_results/cluster2026/may2026/amos2026_LEO_GAT_fullActions_100d00i_4200batch_restrictedResources_obs-v9_hold10s_reimage2orb_prioritySum100_alpha1p0_1779515715.437387/amos2026_LEO_GAT_fullActions_100d00i_4200batch_restrictedResources_obs-v9_hold10s_reimage2orb_prioritySum100_alpha1p0.out_0"
 
 # September/October Policies
 # October 14 – batch5000, gamma9997, reducedFailurePenalty
@@ -566,6 +624,15 @@ policy_path = globals()[policy_name]
 # Define all known policy paths with associated obs values
 policy_obs_map = {
     "may5_2026_obsv7_1e_5lr_batch4200_gamma9997_20d80i": 7,
+    "may7_2026_oldNet_fullActions_obsv7_20d80i": 7,
+    "may13_2026_targetGNN_imagingOnly_obsB8_4200batch": 8,
+    "may15_2026_BigNetwork_ImagingOnly_obs_v9_00d100i": 9,
+    "may19_2026_BigNetwork_ImagingOnlyFromFull_targetOnly_obs_v9_00d100i": 9,
+    "may19_2026_GAT_imagingCharge_obs_v9_00d100i": 9,
+    "may23_2026_GAT_fullActions_obs_v9_00d100i_alpha0p0": 9,
+    "may23_2026_GAT_fullActions_obs_v9_20d80i_alpha0p2": 9,
+    "may23_2026_GAT_fullActions_obs_v9_50d50i_alpha0p5": 9,
+    "may23_2026_GAT_fullActions_obs_v9_100d00i_alpha1p0": 9,
     "oct14_obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i": 7,
     "oct14_obsv7_1e_5lr_batch5000_gamma9997_100d00i": 7,
     "oct14_obsv7_1e_5lr_batch5000_gamma9997_90d10i": 7,
@@ -659,6 +726,17 @@ policy_obs_map = {
     "imaging_unlimitedResources_baseline": 0,
 }
 
+policy_layout_map = {
+    "may13_2026_targetGNN_imagingOnly_obsB8_4200batch": LAYOUT_TARGET_IMAGE_ONLY,
+    "may15_2026_BigNetwork_ImagingOnly_obs_v9_00d100i": LAYOUT_TARGET_IMAGE_ONLY,
+    "may19_2026_BigNetwork_ImagingOnlyFromFull_targetOnly_obs_v9_00d100i": LAYOUT_TARGET_IMAGE_ONLY,
+    "may19_2026_GAT_imagingCharge_obs_v9_00d100i": LAYOUT_GAT_IMAGE_CHARGE,
+    "may23_2026_GAT_fullActions_obs_v9_00d100i_alpha0p0": LAYOUT_GAT_FULL,
+    "may23_2026_GAT_fullActions_obs_v9_20d80i_alpha0p2": LAYOUT_GAT_FULL,
+    "may23_2026_GAT_fullActions_obs_v9_50d50i_alpha0p5": LAYOUT_GAT_FULL,
+    "may23_2026_GAT_fullActions_obs_v9_100d00i_alpha1p0": LAYOUT_GAT_FULL,
+}
+
 # Compare policy_path to known variables
 for name, val in list(globals().items()):
     if isinstance(val, str) and val == policy_path and name in policy_obs_map:
@@ -690,6 +768,87 @@ else:
     # fall back to whatever was in SimConfig
     obs_v = sim_cfg.obs_v
 
+policy_layout = policy_layout_map.get(policy_name, LAYOUT_BIG_FULL)
+
+if policy_layout == LAYOUT_TARGET_IMAGE_ONLY:
+    sim_cfg.just_imaging = True
+    sim_cfg.verify_image_quality_on_downlink = False
+    sim_cfg.hide_pending_targets = False
+    # No charge/downlink/desat actions exist in target-only image policies.
+    use_shield = False
+elif policy_layout == LAYOUT_GAT_IMAGE_CHARGE:
+    sim_cfg.just_imaging = False
+    sim_cfg.verify_image_quality_on_downlink = False
+    sim_cfg.hide_pending_targets = False
+else:
+    sim_cfg.just_imaging = False
+    sim_cfg.verify_image_quality_on_downlink = True
+    sim_cfg.hide_pending_targets = True
+
+if args.dynamic_priority_event == "on":
+    sim_cfg.dynamic_priority_event_enabled = True
+elif args.dynamic_priority_event == "off":
+    sim_cfg.dynamic_priority_event_enabled = False
+else:
+    sim_cfg.dynamic_priority_event_enabled = obs_v in {8, 9}
+sim_cfg.dynamic_priority_event_fraction = args.dynamic_priority_event_fraction
+sim_cfg.dynamic_priority_event_time_sec = args.dynamic_priority_event_time_sec
+sim_cfg.hio_count = args.hio_count
+sim_cfg.hio_priority = args.hio_priority
+sim_cfg.shio_count = args.shio_count
+sim_cfg.shio_priority = args.shio_priority
+sim_cfg.dynamic_priority_event_seed = args.dynamic_priority_event_seed
+just_imaging = sim_cfg.just_imaging
+
+
+def action_info_for_layout(layout: str, n_image_actions: int) -> dict:
+    if layout == LAYOUT_GAT_FULL:
+        image_ids = list(range(3, 3 + n_image_actions))
+        labels = ["Charge", "Downlink", "Desat"] + [
+            f"Target {i}" for i in range(n_image_actions)
+        ]
+        return {
+            "image_ids": image_ids,
+            "charge": 0,
+            "downlink": 1,
+            "desat": 2,
+            "num_actions": 3 + n_image_actions,
+            "labels": labels,
+        }
+    if layout == LAYOUT_GAT_IMAGE_CHARGE:
+        image_ids = list(range(1, 1 + n_image_actions))
+        labels = ["Charge"] + [f"Target {i}" for i in range(n_image_actions)]
+        return {
+            "image_ids": image_ids,
+            "charge": 0,
+            "downlink": None,
+            "desat": None,
+            "num_actions": 1 + n_image_actions,
+            "labels": labels,
+        }
+    image_ids = list(range(n_image_actions))
+    labels = [f"Target {i}" for i in range(n_image_actions)]
+    if layout != LAYOUT_TARGET_IMAGE_ONLY:
+        labels += ["Charging", "Downlink", "Desat"]
+    return {
+        "image_ids": image_ids,
+        "charge": None if layout == LAYOUT_TARGET_IMAGE_ONLY else n_image_actions,
+        "downlink": None if layout == LAYOUT_TARGET_IMAGE_ONLY else n_image_actions + 1,
+        "desat": None if layout == LAYOUT_TARGET_IMAGE_ONLY else n_image_actions + 2,
+        "num_actions": n_image_actions
+        if layout == LAYOUT_TARGET_IMAGE_ONLY
+        else n_image_actions + 3,
+        "labels": labels,
+    }
+
+
+ACTION_INFO = action_info_for_layout(policy_layout, n_targets_ahead)
+print(
+    f"Evaluation layout: {policy_layout}; obs_v={obs_v}; "
+    f"actions={ACTION_INFO['num_actions']}; shield={use_shield}; "
+    f"dynamic_priority_event={sim_cfg.dynamic_priority_event_enabled}"
+)
+
 VALID_POLICY_MODES = {"best", "smallest", "latest"}
 
 if policy_mode not in VALID_POLICY_MODES:
@@ -719,12 +878,16 @@ GS_BY_OBS = {
     4:   dict(gs_start=74, n_gs=1),
     0:   dict(gs_start=74, n_gs=None),
     7:   dict(gs_start=77, n_gs=2),
+    8:   dict(gs_start=0, n_gs=0),
+    9:   dict(gs_start=77, n_gs=2),
 }
 
 gs_cfg = GS_BY_OBS.get(obs_v, dict(gs_start=GS_START, n_gs=None))
 GS_START = gs_cfg["gs_start"]
 if gs_cfg["n_gs"] is not None:
     N_GS = gs_cfg["n_gs"]
+if policy_layout in {LAYOUT_TARGET_IMAGE_ONLY, LAYOUT_GAT_IMAGE_CHARGE}:
+    N_GS = 0
 
 
 class MyScanningSatellite(sats.AccessSatellite):
@@ -994,6 +1157,99 @@ class MyScanningSatellite(sats.AccessSatellite):
                 n_ahead_observe=2,
             )
         ]
+    elif obs_v == 8:
+        observation_spec = [
+            obs.PolarisScTargetProperties(
+                dict(prop="priority", norm=PRIORITY_NORM),
+                dict(prop="target_elevation_angle", norm=90.0),
+                dict(prop="rel_pos_vector_r_BR_H", norm=15960 * 1000),
+                dict(prop="angle_to_target", norm=90.0),
+                dict(prop="target_distance", norm=15960 * 1000),
+                dict(prop="target_shadowFactor", norm=1.0),
+                n_ahead_observe=n_targets_ahead,
+            ),
+        ]
+    elif obs_v == 9:
+        target_obs = obs.PolarisScTargetProperties(
+            dict(prop="priority", norm=PRIORITY_NORM),
+            dict(prop="target_elevation_angle", norm=90.0),
+            dict(prop="rel_pos_vector_r_BR_H", norm=15960 * 1000),
+            dict(prop="rel_vel_vector_v_BR_H", norm=REL_VEL_NORM_MPS),
+            dict(prop="angle_to_target", norm=90.0),
+            dict(prop="target_distance", norm=15960 * 1000),
+            dict(prop="target_shadowFactor", norm=1.0),
+            n_ahead_observe=n_targets_ahead,
+        )
+        if policy_layout == LAYOUT_TARGET_IMAGE_ONLY:
+            observation_spec = [target_obs]
+        elif policy_layout == LAYOUT_GAT_IMAGE_CHARGE:
+            observation_spec = [
+                obs.SatProperties(
+                    dict(prop="storage_level_fraction"),
+                    dict(prop="battery_charge_fraction"),
+                    dict(prop="wheel_speeds_fraction"),
+                    dict(prop="s_hat_H", fn=obs.s_hat_H, norm=SUN_VECTOR_NORM),
+                ),
+                obs.Eclipse(norm=5700),
+                target_obs,
+            ]
+        else:
+            observation_spec = [
+                obs.SatProperties(
+                    dict(prop="storage_level_fraction"),
+                    dict(prop="battery_charge_fraction"),
+                    dict(prop="wheel_speeds_fraction"),
+                    dict(prop="s_hat_H", fn=obs.s_hat_H, norm=SUN_VECTOR_NORM),
+                ),
+                obs.Eclipse(norm=5700),
+                obs.OpportunityProperties(
+                    dict(prop="opportunity_open", norm=5700.0),
+                    dict(prop="opportunity_close", norm=5700.0),
+                    type="ground_station",
+                    n_ahead_observe=2,
+                ),
+                target_obs,
+            ]
+    if policy_layout == LAYOUT_TARGET_IMAGE_ONLY:
+        action_spec = [
+            act.ImageRSO(
+                n_ahead_image=n_targets_ahead,
+                duration=imaging_duration,
+                variable_duration_imaging=variable_duration_imaging,
+                min_pointing_hold_s=sim_cfg.min_pointing_hold_s,
+                hold_mode=sim_cfg.hold_mode,
+                require_illumination_during_hold=sim_cfg.require_illumination_during_hold,
+                hold_illumination_threshold=sim_cfg.hold_illumination_threshold,
+            ),
+        ]
+    elif policy_layout == LAYOUT_GAT_IMAGE_CHARGE:
+        action_spec = [
+            act.Charge(duration=300.0),
+            act.ImageRSO(
+                n_ahead_image=n_targets_ahead,
+                duration=imaging_duration,
+                variable_duration_imaging=variable_duration_imaging,
+                min_pointing_hold_s=sim_cfg.min_pointing_hold_s,
+                hold_mode=sim_cfg.hold_mode,
+                require_illumination_during_hold=sim_cfg.require_illumination_during_hold,
+                hold_illumination_threshold=sim_cfg.hold_illumination_threshold,
+            ),
+        ]
+    elif policy_layout == LAYOUT_GAT_FULL:
+        action_spec = [
+            act.Charge(duration=300.0),
+            make_downlink_action(300.0),
+            act.Desat(duration=150),
+            act.ImageRSO(
+                n_ahead_image=n_targets_ahead,
+                duration=imaging_duration,
+                variable_duration_imaging=variable_duration_imaging,
+                min_pointing_hold_s=sim_cfg.min_pointing_hold_s,
+                hold_mode=sim_cfg.hold_mode,
+                require_illumination_during_hold=sim_cfg.require_illumination_during_hold,
+                hold_illumination_threshold=sim_cfg.hold_illumination_threshold,
+            ),
+        ]
     dyn_type = dyn.ImagingSCDynModel
     fsw_type = fsw.ImagingSCFSWModel
 
@@ -1004,12 +1260,22 @@ sat_args = {}
 # Set some parameters as constants
 sat_args["imageAttErrorRequirement"] = 0.0025
 sat_args["imageRateErrorRequirement"] = 0.01
-sat_args["dataStorageCapacity"] = 50 * 8e6 / 2
-sat_args["storageInit"] = lambda: np.random.uniform(0.0, 0.0) * 50 * 8e6 / 2
+image_bits = 8e6 / 2
+if policy_layout in {LAYOUT_TARGET_IMAGE_ONLY, LAYOUT_GAT_IMAGE_CHARGE}:
+    image_storage_capacity = 1000.0
+else:
+    image_storage_capacity = 50.0
+sat_args["dataStorageCapacity"] = image_storage_capacity * image_bits
+sat_args["storageInit"] = lambda: 0.0
 sat_args["instrumentBaudRate"] = 0.5 * 8e6
 sat_args["transmitterBaudRate"] = -0.5 * 8e6
-sat_args["batteryStorageCapacity"] = 500 * 3600
-sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.3, 0.3) * 500 * 3600
+baseline_battery_ws = 500 * 3600
+battery_life_multiplier = 1000.0 if policy_layout == LAYOUT_TARGET_IMAGE_ONLY else 1.0
+sat_args["batteryStorageCapacity"] = battery_life_multiplier * baseline_battery_ws
+if policy_layout == LAYOUT_TARGET_IMAGE_ONLY:
+    sat_args["storedCharge_Init"] = lambda: battery_life_multiplier * baseline_battery_ws
+else:
+    sat_args["storedCharge_Init"] = lambda: np.random.uniform(0.8, 1.0) * battery_life_multiplier * baseline_battery_ws
 sat_args["basePowerDraw"] = -10.0
 sat_args["instrumentPowerDraw"] = -30.0
 sat_args["transmitterPowerDraw"] = -25.0
@@ -1025,12 +1291,13 @@ sat_args["full_storage_penalty"] = 0
 sat_args["low_battery_penalty"] = 0
 sat_args["eclipse_threshold_for_imaging"] = 0.5
 sat_args["eclipse_threshold_for_reward"] = sat_args["eclipse_threshold_for_imaging"]
+sat_args["empty_downlink_penalty"] = -1
 
 # if just_imaging:
 if sim_cfg.just_imaging:
-    sat_args["dataStorageCapacity"] = 50 * 8e6 / 2 *1000000
-    sat_args["batteryStorageCapacity"] = 500 * 3600 *1000000
-    sat_args["storedCharge_Init"] = lambda: np.random.uniform(1.0, 1.0) * 500 * 3600 *1000000
+    sat_args["dataStorageCapacity"] = 1000.0 * image_bits
+    sat_args["batteryStorageCapacity"] = 1000.0 * baseline_battery_ws
+    sat_args["storedCharge_Init"] = lambda: 1000.0 * baseline_battery_ws
 
 
 
@@ -1203,6 +1470,27 @@ observation, info = env.reset(seed=seed_number) #5
 
 sat0 = env.unwrapped.satellites[0]
 
+
+def get_image_action_spec(env):
+    """Return the ImageRSO action spec regardless of action ordering."""
+    specs = env.unwrapped.satellites[0].action_builder.action_spec
+    for spec in specs:
+        if hasattr(spec, "imaging_times") and hasattr(spec, "chosen_target_ids"):
+            return spec
+    raise AttributeError(
+        "Could not find ImageRSO action spec. "
+        f"Available action specs: {[type(spec).__name__ for spec in specs]}"
+    )
+
+
+SS1_actions_spec = get_image_action_spec(env)
+print(
+    "Image action spec:",
+    type(SS1_actions_spec).__name__,
+    "from action order",
+    [type(spec).__name__ for spec in sat0.action_builder.action_spec],
+)
+
 try:
     ins_cmd_rec = sat0.fsw.ins_cmd_recorder
     print('ins_cmd_rec set up in fsw!')
@@ -1272,11 +1560,9 @@ for target_id in range(n_targets*6 *100 ):
     if isinstance(policy_action, np.ndarray):  # Handle vector action output
         policy_action = policy_action.item()  # conversion
     if act_random:
-        random_action = np.random.randint(0,13)
-        action_dict = {sat.name: random_action}
-        action_counts[random_action] += 1
+        policy_action = int(np.random.randint(0, ACTION_INFO["num_actions"]))
     else:
-        action_counts[policy_action] += 1
+        policy_action = int(policy_action)
 
 
     # action_dict = {sat.name: target_id}  # Assign the main satellite to observe `target_idx` # sequentially observing each target
@@ -1288,30 +1574,37 @@ for target_id in range(n_targets*6 *100 ):
         action_dict = {sat.name: policy_action}
     else:
         action_dict = {sat.name: policy_action}
-    if policy_action == 11:
+    if ACTION_INFO["downlink"] is not None and policy_action == ACTION_INFO["downlink"]:
         print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
         downlink_times.append(env.simulator.sim_time)
 
-    elif policy_action == 10:
+    elif ACTION_INFO["charge"] is not None and policy_action == ACTION_INFO["charge"]:
         print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
         charging_times.append(env.simulator.sim_time)
-    elif policy_action == 12:
+    elif ACTION_INFO["desat"] is not None and policy_action == ACTION_INFO["desat"]:
         print('tasking DESAT now: at t=',simtime," and wheel_speeds --> "+str(env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction))
         desat_times.append(env.simulator.sim_time)
     if use_shield == True:
-        if env.unwrapped.satellites[0].dynamics.storage_level_fraction > critical_storage_level:  # downlink if storage is more than 0.95
+        if (
+            ACTION_INFO["downlink"] is not None
+            and env.unwrapped.satellites[0].dynamics.storage_level_fraction > critical_storage_level
+        ):  # downlink if storage is more than 0.95
             print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
-            chosen_action_id = 11
+            chosen_action_id = ACTION_INFO["downlink"]
             action_dict = {sat.name: chosen_action_id} # tasking downlink
             last_downlink_time = simtime
             downlink_times.append(env.simulator.sim_time)
 
-        if env.unwrapped.satellites[0].dynamics.battery_charge_fraction < critical_battery_level:  # charge if battery is less than 0.05
+        if (
+            ACTION_INFO["charge"] is not None
+            and env.unwrapped.satellites[0].dynamics.battery_charge_fraction < critical_battery_level
+        ):  # charge if battery is less than 0.05
             print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
-            chosen_action_id = 10
+            chosen_action_id = ACTION_INFO["charge"]
             action_dict = {sat.name: chosen_action_id} # tasking charging
             charging_times.append(env.simulator.sim_time)
 
+    action_counts[int(action_dict[sat.name])] += 1
     action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
     print('current action_dict to be executed', action_dict['SS1'], "eclipse status of SS1:",env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
     eclipse_status.append(env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
@@ -1362,7 +1655,7 @@ for target_id in range(n_targets*6 *100 ):
             print('ALL targets imaged!')
         else:
             simtime = env.simulator.sim_time
-            print("Episode terminated at time: {simtime}")
+            print(f"Episode terminated at time: {simtime}")
         break
         # --- Ground stations from flat obs ---
     # Build/extend per-station lists in ground_station_windows dict
@@ -1422,7 +1715,7 @@ else:
 acq_event_times = t_dev[edges]  # "capture triggered" times
 
 # Command times from your ImageRSO action spec (these are when you issued the imaging action)
-SS1_actions_spec = env.unwrapped.satellites[0].action_builder.action_spec[0]
+SS1_actions_spec = get_image_action_spec(env)
 cmd_times = np.asarray(SS1_actions_spec.imaging_times, dtype=float).ravel()
 cmd_target_ids = np.asarray(SS1_actions_spec.chosen_target_ids, dtype=int).ravel()
 assert cmd_times.size == cmd_target_ids.size, "cmd_times and cmd_target_ids must align"
@@ -1536,7 +1829,7 @@ data_dict["unsuccessful_imaging_slew_times_sec"] = unsuccessful_imaging_slew_tim
 
 # build images.csv table
 
-SS1_actions_spec = env.unwrapped.satellites[0].action_builder.action_spec[0]
+SS1_actions_spec = get_image_action_spec(env)
 
 img_cmd_times = np.asarray(SS1_actions_spec.imaging_times, dtype=float).ravel()
 img_target_ids = np.asarray(SS1_actions_spec.chosen_target_ids, dtype=int).ravel()
@@ -1806,7 +2099,7 @@ print(f"and number of imaged targets {len(env.env.unwrapped.satellites[0].data_s
 print(f"Total downlinked {env.env.unwrapped.rewarder.total_downlinks} out of those useful downlinks were: {env.env.unwrapped.rewarder.useful_downlinks}")
 # print(f"mean and std of chosen_target_azimuth {env.env.unwrapped.satellites[0].action_builder.action_spec[0].chosen_target_azimuth}")
 
-SS1_actions_spec = env.unwrapped.satellites[0].action_builder.action_spec[0]
+SS1_actions_spec = get_image_action_spec(env)
 print(f"mean and std of chosen_target_azimuth: {np.mean(SS1_actions_spec.chosen_target_azimuth):.2f}, {np.std(SS1_actions_spec.chosen_target_azimuth):.2f}")
 print(f"mean and std of chosen_target_elevation: {np.mean(SS1_actions_spec.chosen_target_elevation_angle):.2f}, {np.std(SS1_actions_spec.chosen_target_elevation_angle):.2f}")
 print(f"mean and std of chosen_target_elevation_local: {np.mean(SS1_actions_spec.chosen_target_elevation_local):.2f}, {np.std(SS1_actions_spec.chosen_target_elevation_local):.2f}")
@@ -1849,12 +2142,9 @@ for l in range (len(targets)):
 
 # ---- Plotting ----
 total_actions = sum(action_counts.values())
-num_actions = 13 # 13
+num_actions = ACTION_INFO["num_actions"]
 actions = list(range(num_actions))  # Actions 0–12
-action_labels = [
-    f"Target {i}" if i <= 9 else ["Charging", "Downlink", "Desat"][i - 10]
-    for i in actions
-]
+action_labels = ACTION_INFO["labels"]
 # action_labels = [
 #     f"Target {i+1}" for i in actions
 # ]
@@ -1862,11 +2152,13 @@ counts = [action_counts[a] for a in actions]
 percentages = [100 * count / total_actions for count in counts]
 
 # Compute total target-imaging and non-target-imaging actions
-target_imaging_count = sum(counts[i] for i in range(10))     # Actions 0–9
-charge_action_count = counts[10]
-downlink_action_count = counts[11]
-desat_action_count = counts[12]
-non_target_count = sum(counts[i] for i in range(10, 13))     # Actions 10–12
+target_imaging_count = sum(
+    counts[i] for i in ACTION_INFO["image_ids"] if i < len(counts)
+)
+charge_action_count = counts[ACTION_INFO["charge"]] if ACTION_INFO["charge"] is not None else 0
+downlink_action_count = counts[ACTION_INFO["downlink"]] if ACTION_INFO["downlink"] is not None else 0
+desat_action_count = counts[ACTION_INFO["desat"]] if ACTION_INFO["desat"] is not None else 0
+non_target_count = total_actions - target_imaging_count
 
 # Compute percentages
 target_imaging_pct = 100 * target_imaging_count / total_actions
@@ -1874,8 +2166,8 @@ non_target_pct = 100 * non_target_count / total_actions
 
 # Print summary
 print("\n=== Imaging vs Non-Imaging Summary ===")
-print(f"Target Imaging Actions (0–9): {target_imaging_count} ({target_imaging_pct:.2f}%)")
-print(f"Other Actions (10–12): {non_target_count} ({non_target_pct:.2f}%)")
+print(f"Target imaging actions: {target_imaging_count} ({target_imaging_pct:.2f}%)")
+print(f"Other actions: {non_target_count} ({non_target_pct:.2f}%)")
 print(f"Downlink actions: {downlink_action_count}")
 print(f"Charge actions: {charge_action_count}")
 print(f"Desat actions: {desat_action_count}")
@@ -2330,7 +2622,7 @@ plt.show()
 # plt.show()
 
 
-SS1_actions_spec = env.unwrapped.satellites[0].action_builder.action_spec[0]
+SS1_actions_spec = get_image_action_spec(env)
 fields = [
     "chosen_target_azimuth",
     "chosen_target_elevation_angle",
@@ -2444,7 +2736,7 @@ data.update(image_metrics)
 # data["Total Images Downlinked"] = env.unwrapped.satellites[0].dynamics.total_downlinks
 # data["Useful Images Downlinked"] = env.unwrapped.satellites[0].dynamics.useful_downlinks
 
-SS1_actions_spec = env.unwrapped.satellites[0].action_builder.action_spec[0]
+SS1_actions_spec = get_image_action_spec(env)
 # -----------------------------
 # Umbra "smart decision" metrics (if ImageRSO collected them)
 # -----------------------------
@@ -2608,13 +2900,20 @@ try:
 
 
     run_meta = {
-    "seed": seed_number,
-    "policy_tag": policy_tag,
-    "policy_mode": policy_mode,
-    "policy_name": policy_name,
-    "act_random": bool(act_random),
-    "use_heuristic": bool(use_heuristic),
-    "run_dir": run_dir,
+        "seed": seed_number,
+        "policy_tag": policy_tag,
+        "policy_mode": policy_mode,
+        "policy_name": policy_name,
+        "policy_layout": policy_layout,
+        "obs_v": obs_v,
+        "reward_mix_tag": reward_mix_tag,
+        "use_shield": bool(use_shield),
+        "dynamic_priority_event_enabled": bool(sim_cfg.dynamic_priority_event_enabled),
+        "dynamic_priority_event_fraction": sim_cfg.dynamic_priority_event_fraction,
+        "dynamic_priority_event_time_sec": sim_cfg.dynamic_priority_event_time_sec,
+        "act_random": bool(act_random),
+        "use_heuristic": bool(use_heuristic),
+        "run_dir": run_dir,
     }
 
 
