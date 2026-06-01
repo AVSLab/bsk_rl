@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -84,6 +85,11 @@ def model_dirs_for_tag(policy_root: Path, tag: str) -> list[Path]:
     for run_dir in policy_root.glob(f"{prefix}_*"):
         if not run_dir.is_dir():
             continue
+        # The later 48-hour sweep uses a timestamp directly after the prefix.
+        # Exclude earlier 24-hour pilot folders such as *_alpha0p2_<timestamp>.
+        run_suffix = run_dir.name[len(prefix) :]
+        if re.fullmatch(r"_\d+(?:\.\d+)?", run_suffix) is None:
+            continue
         model_dirs.extend(path for path in run_dir.glob("*.out_0") if path.is_dir())
     return model_dirs
 
@@ -109,7 +115,8 @@ def latest_checkpoint_for_tag(policy_root: Path, tag: str) -> dict[str, Any]:
         prefix = RUN_PREFIX_TEMPLATE.format(tag=tag)
         raise FileNotFoundError(
             f"No checkpoint-bearing model directory found for {tag!r} below "
-            f"{policy_root}. Expected a run starting with {prefix!r}."
+            f"{policy_root}. Expected a non-alpha 48-hour run named like "
+            f"{prefix!r}_<timestamp>."
         )
 
     _, _, iteration, model_dir, checkpoint = max(candidates)
@@ -131,6 +138,7 @@ def build_manifest(policy_root: Path) -> dict[str, Any]:
         "created_at_utc": timestamp(),
         "policy_root": str(policy_root.resolve()),
         "evaluation_reward_mix": DEFAULT_EVALUATION_REWARD_MIX,
+        "training_run_selection": "non_alpha_48h",
         "obs_v": 9,
         "policy_layout": "gat_full",
         "policy_tags": list(POLICY_TAGS),

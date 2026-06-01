@@ -209,14 +209,29 @@ Use the AMOS 2026 Monte Carlo workflow to compare the full-action GAT policies
 trained with `00d100i`, `10d90i`, `20d80i`, `30d70i`, `40d60i`, `50d50i`,
 `75d25i`, and `100d00i` reward mixes. Every policy is scored with the same
 `100d00i` evaluation reward, representing the value of images delivered to the
-ground.
+ground. Checkpoint discovery intentionally excludes earlier `_alpha...`
+24-hour pilot folders and selects only the later non-alpha 48-hour sweep runs.
 
 Each Slurm array task runs one policy and one seed in a fresh Python process.
 This is intentionally different from the older local batch scripts, which ran
 many Basilisk episodes sequentially inside one process and were vulnerable to
 memory growth and CSPICE teardown issues.
 
-Submit the first smoke-test block, covering seeds `0..9` for every policy:
+To run an immediate two-hour smoke test without waiting for active training,
+submit one array job covering seeds `0..10` inclusive for every policy:
+
+```bash
+cd /projects/$USER/bsk_rl
+git pull --ff-only origin amos-2026-space-imaging
+bash examples/amos_2026/submit_gat_reward_sweep_mc_smoke_2h.sh
+```
+
+This snapshots the latest complete checkpoint that exists at submission time
+for each non-alpha policy. It submits `88` isolated tasks (`8 policies x 11
+seeds`) with at most `4` running simultaneously. Each task has a two-hour limit.
+The helper prints its timestamped output folder and exact analysis command.
+
+For the later full `0..99` campaign, submit its first ten-seed block:
 
 ```bash
 cd /projects/$USER/bsk_rl
@@ -231,7 +246,7 @@ prevents different seeds from silently loading different checkpoints while a
 training job is still advancing. Submit only after the desired training runs
 have finished, and inspect the printed manifest if checkpoint choice matters.
 
-After the smoke block is healthy, submit the remaining ten-seed blocks:
+After the first full-campaign block is healthy, submit its remaining blocks:
 
 ```bash
 for start in 10 20 30 40 50 60 70 80 90; do
@@ -266,7 +281,7 @@ Results are organized below:
   analysis/
 ```
 
-Aggregate the first smoke block with:
+Aggregate the first full-campaign block with:
 
 ```bash
 python3 examples/amos_2026/analyze_gat_reward_sweep_mc.py --expected-seeds 0:10
