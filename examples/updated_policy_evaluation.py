@@ -269,6 +269,16 @@ def parse_args():
         help="Do not write or display plots. Useful for cluster Monte Carlo collection.",
     )
     p.add_argument(
+        "--no_show_plots",
+        action="store_true",
+        help="Write plots without opening interactive windows. Useful for headless cluster evaluation.",
+    )
+    p.add_argument(
+        "--plots_in_run_dir",
+        action="store_true",
+        help="Write plots below this evaluation run's data directory instead of the shared plots/ folder.",
+    )
+    p.add_argument(
         "--policy_mode",
         choices=["best", "smallest", "latest"],
         default="latest",
@@ -347,7 +357,7 @@ def parse_args():
     return p.parse_args()
 
 ARGS = parse_args()
-if ARGS.skip_plots:
+if ARGS.skip_plots or ARGS.no_show_plots:
     plt.show = lambda *args, **kwargs: None
 
 def _print(*a, **k):
@@ -377,6 +387,11 @@ def save_plot_unique(fig, base_filename, folder="plots", extension=".pdf"):
     if ARGS.skip_plots:
         plt.close(fig)
         return
+
+    if ARGS.plots_in_run_dir and folder == "plots":
+        current_run_dir = globals().get("run_dir")
+        if current_run_dir:
+            folder = os.path.join(current_run_dir, folder)
 
     os.makedirs(folder, exist_ok=True)
     full_path = os.path.join(folder, base_filename + extension)

@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # AMOS 2026 immediate GAT full-action Monte Carlo smoke test:
-#   8 non-alpha 48-hour reward-sweep policies x seeds 0..10 = 88 isolated tasks.
+#   8 non-alpha 48-hour reward-sweep policies x seeds 0..9 = 80 evaluations.
+# Each array task owns one policy and launches ten fresh evaluator subprocesses.
 # Use submit_gat_reward_sweep_mc_smoke_2h.sh so the current complete checkpoints
 # are frozen immediately and the timestamped output folder is exported.
 
@@ -10,7 +11,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --time=02:00:00
-#SBATCH --array=0-87%4
+#SBATCH --array=0-7%4
 #SBATCH --partition=amilan
 #SBATCH --mem=24G
 #SBATCH --constraint=epyc-7713
@@ -42,13 +43,14 @@ if command -v gcc >/dev/null 2>&1; then
 fi
 
 export BSK_RL_MC_SEED_START=${BSK_RL_MC_SEED_START:-0}
-export BSK_RL_MC_SEEDS_PER_BLOCK=${BSK_RL_MC_SEEDS_PER_BLOCK:-11}
+export BSK_RL_MC_SEEDS_PER_BLOCK=${BSK_RL_MC_SEEDS_PER_BLOCK:-10}
 export BSK_RL_MC_OUTPUT_ROOT=${BSK_RL_MC_OUTPUT_ROOT:?Set BSK_RL_MC_OUTPUT_ROOT to the timestamped smoke-test folder}
 export BSK_RL_MC_MANIFEST=${BSK_RL_MC_MANIFEST:?Set BSK_RL_MC_MANIFEST to a frozen checkpoint manifest}
 export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1}
 export MKL_NUM_THREADS=${MKL_NUM_THREADS:-1}
 export OPENBLAS_NUM_THREADS=${OPENBLAS_NUM_THREADS:-1}
 export NUMEXPR_NUM_THREADS=${NUMEXPR_NUM_THREADS:-1}
+export MPLBACKEND=${MPLBACKEND:-Agg}
 export PYTHONUNBUFFERED=1
 
 mkdir -p /scratch/alpine/$USER/job_output "$BSK_RL_MC_OUTPUT_ROOT"
@@ -66,5 +68,18 @@ echo "branch: $(git rev-parse --abbrev-ref HEAD)"
 echo "commit: $(git rev-parse --short HEAD)"
 git status --short --untracked-files=no
 
-python3 -u examples/amos_2026/evaluate_gat_reward_sweep_mc.py \
-    --seeds-per-block "$BSK_RL_MC_SEEDS_PER_BLOCK"
+policy_task_id=${SLURM_ARRAY_TASK_ID:-0}
+overall_status=0
+for ((seed_offset = 0; seed_offset < BSK_RL_MC_SEEDS_PER_BLOCK; seed_offset++)); do
+    evaluator_task_id=$((policy_task_id * BSK_RL_MC_SEEDS_PER_BLOCK + seed_offset))
+    echo
+    echo "===== Running policy task $policy_task_id seed offset $seed_offset ====="
+    if ! python3 -u examples/amos_2026/evaluate_gat_reward_sweep_mc.py \
+        --task-id "$evaluator_task_id" \
+        --seeds-per-block "$BSK_RL_MC_SEEDS_PER_BLOCK"; then
+        echo "WARNING: evaluator task $evaluator_task_id failed; continuing with the remaining seeds" >&2
+        overall_status=1
+    fi
+done
+
+exit "$overall_status"

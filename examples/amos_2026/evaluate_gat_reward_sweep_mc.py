@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Run one frozen-checkpoint AMOS 2026 GAT Monte Carlo evaluation task.
 
-Each Slurm array task evaluates exactly one policy and one seed in a fresh
-interpreter. This avoids the Basilisk/CSPICE state accumulation and memory
-pressure seen when many episodes are run sequentially in one Python process.
+Each invocation evaluates exactly one policy and one seed in a fresh
+interpreter. The Slurm wrapper may invoke this script repeatedly inside one
+policy-level allocation, but every Basilisk episode still runs in its own
+subprocess. This avoids the CSPICE state accumulation and memory pressure seen
+when many episodes are run sequentially in one Python process.
 """
 
 from __future__ import annotations
@@ -310,7 +312,8 @@ def main() -> int:
         str(seed_dir),
         "--save_data",
         "--quiet",
-        "--skip_plots",
+        "--no_show_plots",
+        "--plots_in_run_dir",
     ]
     if not args.use_shield:
         command.append("--no_shield")

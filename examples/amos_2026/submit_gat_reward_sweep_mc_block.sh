@@ -47,6 +47,6 @@ echo "Submitting $JOB_NAME with campaign manifest:"
 echo "  $MANIFEST"
 sbatch \
     --job-name="$JOB_NAME" \
-    --array="0-79%${MAX_CONCURRENT}" \
-    --export=ALL,BSK_RL_MC_SEED_START="$SEED_START",BSK_RL_MC_OUTPUT_ROOT="$OUTPUT_ROOT",BSK_RL_MC_MANIFEST="$MANIFEST" \
+    --array="0-7%${MAX_CONCURRENT}" \
+    --export=ALL,BSK_RL_MC_SEED_START="$SEED_START",BSK_RL_MC_SEEDS_PER_BLOCK=10,BSK_RL_MC_OUTPUT_ROOT="$OUTPUT_ROOT",BSK_RL_MC_MANIFEST="$MANIFEST" \
     examples/amos_2026/sbatch_evaluate_gat_reward_sweep_mc_10seeds.sh

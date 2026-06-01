@@ -212,13 +212,15 @@ trained with `00d100i`, `10d90i`, `20d80i`, `30d70i`, `40d60i`, `50d50i`,
 ground. Checkpoint discovery intentionally excludes earlier `_alpha...`
 24-hour pilot folders and selects only the later non-alpha 48-hour sweep runs.
 
-Each Slurm array task runs one policy and one seed in a fresh Python process.
-This is intentionally different from the older local batch scripts, which ran
-many Basilisk episodes sequentially inside one process and were vulnerable to
-memory growth and CSPICE teardown issues.
+Each Slurm array task owns one policy and runs a ten-seed block. Every seed is
+still launched as a fresh Python evaluator subprocess. This keeps the queue
+compact while avoiding the memory growth and CSPICE teardown issues seen when
+many Basilisk episodes were evaluated sequentially inside one Python process.
+Plots, tabular data, and summary metrics are saved below each seed's uniquely
+named evaluation run folder.
 
 To run an immediate two-hour smoke test without waiting for active training,
-submit one array job covering seeds `0..10` inclusive for every policy:
+submit one array job covering seeds `0..9` inclusive for every policy:
 
 ```bash
 cd /projects/$USER/bsk_rl
@@ -227,9 +229,12 @@ bash examples/amos_2026/submit_gat_reward_sweep_mc_smoke_2h.sh
 ```
 
 This snapshots the latest complete checkpoint that exists at submission time
-for each non-alpha policy. It submits `88` isolated tasks (`8 policies x 11
-seeds`) with at most `4` running simultaneously. Each task has a two-hour limit.
-The helper prints its timestamped output folder and exact analysis command.
+for each non-alpha policy. It submits `8` policy-level array tasks, each of
+which evaluates `10` seeds using fresh subprocesses (`80` evaluations total).
+At most `4` policy tasks run simultaneously, and each policy task has a
+two-hour limit, `4` allocated CPUs, and `24G` of memory shared by its sequential
+seed subprocesses. The helper prints its timestamped output folder and exact
+analysis command.
 
 For the later full `0..99` campaign, submit its first ten-seed block:
 
@@ -240,8 +245,9 @@ bash examples/amos_2026/submit_gat_reward_sweep_mc_block.sh 0
 ```
 
 The helper freezes one exact checkpoint per policy before the first submission,
-then reuses that campaign manifest for later seed blocks. It submits `80` array
-tasks (`8 policies x 10 seeds`) with at most `4` concurrent episodes. Freezing
+then reuses that campaign manifest for later seed blocks. It submits `8`
+policy-level array tasks, each running `10` fresh seed subprocesses (`80`
+evaluations total), with at most `4` policy tasks active at once. Freezing
 prevents different seeds from silently loading different checkpoints while a
 training job is still advancing. Submit only after the desired training runs
 have finished, and inspect the printed manifest if checkpoint choice matters.
@@ -276,6 +282,7 @@ Results are organized below:
   manifests/
   seeds_000_009/
     00d100i/seed_000/
+      <unique-evaluation-run>/plots/
     ...
     100d00i/seed_009/
   analysis/
