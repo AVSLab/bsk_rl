@@ -24,12 +24,22 @@ set -euo pipefail
 
 module purge
 if ! module --ignore_cache load gcc/14.2.0; then
+    echo "WARNING: gcc/14.2.0 module not found; falling back to /curc/sw/install/gcc/14.2.0"
     export PATH="/curc/sw/install/gcc/14.2.0/bin:${PATH}"
 fi
-module --ignore_cache load python/3.10.2 || true
+if ! module --ignore_cache load python/3.10.2; then
+    echo "WARNING: python/3.10.2 module not found; continuing with the virtualenv python"
+fi
 source /projects/$USER/.venv/bin/activate
 
 cd /projects/$USER/bsk_rl
+
+if [ -d /curc/sw/install/gcc/14.2.0/lib64 ]; then
+    export LD_LIBRARY_PATH="/curc/sw/install/gcc/14.2.0/lib64:${LD_LIBRARY_PATH:-}"
+fi
+if command -v gcc >/dev/null 2>&1; then
+    export LD_LIBRARY_PATH="$(dirname "$(gcc -print-file-name=libstdc++.so.6)"):${LD_LIBRARY_PATH:-}"
+fi
 
 export BSK_RL_MC_SEED_START=${BSK_RL_MC_SEED_START:-0}
 export BSK_RL_MC_OUTPUT_ROOT=${BSK_RL_MC_OUTPUT_ROOT:-/scratch/alpine/$USER/amos2026_mc/gat_full_actions_eval_100d00i}
@@ -54,5 +64,4 @@ echo "branch: $(git rev-parse --abbrev-ref HEAD)"
 echo "commit: $(git rev-parse --short HEAD)"
 git status --short --untracked-files=no
 
-srun --ntasks=1 --cpus-per-task="${SLURM_CPUS_PER_TASK:-4}" --acctg-freq=task=30 \
-    python3 -u examples/amos_2026/evaluate_gat_reward_sweep_mc.py
+python3 -u examples/amos_2026/evaluate_gat_reward_sweep_mc.py
