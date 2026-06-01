@@ -29,7 +29,10 @@ JOB_NAME="gat_mc_s$(printf '%03d' "$SEED_START")_$(printf '%03d' "$SEED_END")"
 
 mkdir -p "$MANIFEST_DIR" /scratch/alpine/$USER/job_output
 if [[ "${BSK_RL_MC_REFRESH_MANIFEST:-0}" == "1" && -e "$MANIFEST" ]]; then
-    MANIFEST="$MANIFEST_DIR/gat_full_actions_obs_v9_eval100d00i_$(date -u +%Y%m%dT%H%M%SZ).json"
+    ARCHIVED_MANIFEST="${MANIFEST%.json}_archived_$(date -u +%Y%m%dT%H%M%SZ).json"
+    mv "$MANIFEST" "$ARCHIVED_MANIFEST"
+    echo "Archived previous checkpoint manifest:"
+    echo "  $ARCHIVED_MANIFEST"
 fi
 if [[ -f "$MANIFEST" ]]; then
     echo "Reusing frozen checkpoint manifest:"
