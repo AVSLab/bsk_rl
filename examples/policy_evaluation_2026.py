@@ -237,6 +237,38 @@ def parse_args():
         help="Policy variable name to evaluate, e.g. oct14_obsv7_1e_5lr_batch5000_gamma9997_20d80i.",
     )
     p.add_argument(
+        "--policy_path",
+        type=str,
+        default=None,
+        help=(
+            "Direct policy model directory. This bypasses the historical named-policy "
+            "lookup and is intended for reproducible batch evaluation."
+        ),
+    )
+    p.add_argument(
+        "--policy_layout",
+        choices=["big_full", "target_image_only", "gat_image_charge", "gat_full"],
+        default=None,
+        help="Explicit observation/action layout override for a direct policy path.",
+    )
+    p.add_argument(
+        "--obs_v",
+        type=float,
+        default=None,
+        help="Explicit observation version override for a direct policy path.",
+    )
+    p.add_argument(
+        "--output_dir",
+        type=str,
+        default=None,
+        help="Directory under which this run's uniquely named data folder is created.",
+    )
+    p.add_argument(
+        "--skip_plots",
+        action="store_true",
+        help="Do not write or display plots. Useful for cluster Monte Carlo collection.",
+    )
+    p.add_argument(
         "--policy_mode",
         choices=["best", "smallest", "latest"],
         default="latest",
@@ -315,6 +347,8 @@ def parse_args():
     return p.parse_args()
 
 ARGS = parse_args()
+if ARGS.skip_plots:
+    plt.show = lambda *args, **kwargs: None
 
 def _print(*a, **k):
     if not ARGS.quiet:
@@ -340,6 +374,10 @@ def save_plot_unique(fig, base_filename, folder="plots", extension=".pdf"):
     - folder: Directory to save the plots (default is "plots")
     - extension: File extension (default is ".pdf")
     """
+    if ARGS.skip_plots:
+        plt.close(fig)
+        return
+
     os.makedirs(folder, exist_ok=True)
     full_path = os.path.join(folder, base_filename + extension)
 
@@ -497,7 +535,8 @@ PAIR_STRIDE = 2
 run_tag = None
 
 
-base_data_dir = os.path.join(os.path.dirname(__file__), "data")  # examples/data
+base_data_dir = args.output_dir or os.path.join(os.path.dirname(__file__), "data")
+os.makedirs(base_data_dir, exist_ok=True)
 
 
 
@@ -673,12 +712,15 @@ imaging_rewarded_noeclipse_1e_6lr_failure_penalties = "/Users/dahu1128/rllib_res
 # policy_path = obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i #DEPRECATED... now the globals() line is used below...    #balance00d100i_obs2_gamma9995_1e6lr
 # Choose which policy to evaluate by NAME
 policy_name = args.policy_name or "may5_2026_obsv7_1e_5lr_batch4200_gamma9997_20d80i"
-if policy_name not in globals():
-    raise ValueError(
-        f"Unknown policy_name '{policy_name}'. Add it to the policy path block or "
-        "choose one of the existing policy variable names."
-    )
-policy_path = globals()[policy_name]
+if args.policy_path:
+    policy_path = os.path.abspath(os.path.expanduser(args.policy_path))
+else:
+    if policy_name not in globals():
+        raise ValueError(
+            f"Unknown policy_name '{policy_name}'. Add it to the policy path block, "
+            "choose an existing policy variable name, or pass --policy_path."
+        )
+    policy_path = globals()[policy_name]
 
 # Define all known policy paths with associated obs values
 policy_obs_map = {
@@ -820,14 +862,17 @@ print(
 )
 
 # Update obs_v both locally and in the shared sim config
-if policy_name in policy_obs_map:
+if args.obs_v is not None:
+    obs_v = args.obs_v
+    sim_cfg.obs_v = obs_v
+elif policy_name in policy_obs_map:
     obs_v = policy_obs_map[policy_name]
     sim_cfg.obs_v = obs_v
 else:
     # fall back to whatever was in SimConfig
     obs_v = sim_cfg.obs_v
 
-policy_layout = policy_layout_map.get(policy_name, LAYOUT_BIG_FULL)
+policy_layout = args.policy_layout or policy_layout_map.get(policy_name, LAYOUT_BIG_FULL)
 
 if policy_layout == LAYOUT_TARGET_IMAGE_ONLY:
     sim_cfg.just_imaging = True

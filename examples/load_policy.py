@@ -134,8 +134,13 @@ def load_policy(
     Returns:
         A function that takes observations and returns actions.
     """
-    # The selection mode is passed here from the global flag
-    path_checkpoint = find_latest_checkpoint(policy_path_general, mode=policy_mode)
+    policy_path_general = Path(policy_path_general)
+    # Batch campaigns may freeze an exact checkpoint so every seed evaluates the
+    # same policy even if training continues in the background.
+    if policy_path_general.name.startswith("checkpoint_"):
+        path_checkpoint = policy_path_general
+    else:
+        path_checkpoint = find_latest_checkpoint(policy_path_general, mode=policy_mode)
     print(f"✅ Loading policy from '{policy_mode}' checkpoint: {path_checkpoint}")
 
     rl_module = RLModule.from_checkpoint(

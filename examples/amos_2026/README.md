@@ -202,3 +202,82 @@ sbatch examples/amos_2026/sbatch_updated_train_polaris_96h.sh
 # BigNetwork imaging-only baseline obs-v9, 96-hour training
 sbatch examples/amos_2026/sbatch_updated_train_polaris_imaging_only_96h.sh
 ```
+
+## GAT Reward-Sweep Monte Carlo Evaluation
+
+Use the AMOS 2026 Monte Carlo workflow to compare the full-action GAT policies
+trained with `00d100i`, `10d90i`, `20d80i`, `30d70i`, `40d60i`, `50d50i`,
+`75d25i`, and `100d00i` reward mixes. Every policy is scored with the same
+`100d00i` evaluation reward, representing the value of images delivered to the
+ground.
+
+Each Slurm array task runs one policy and one seed in a fresh Python process.
+This is intentionally different from the older local batch scripts, which ran
+many Basilisk episodes sequentially inside one process and were vulnerable to
+memory growth and CSPICE teardown issues.
+
+Submit the first smoke-test block, covering seeds `0..9` for every policy:
+
+```bash
+cd /projects/$USER/bsk_rl
+git pull --ff-only origin amos-2026-space-imaging
+bash examples/amos_2026/submit_gat_reward_sweep_mc_block.sh 0
+```
+
+The helper freezes one exact checkpoint per policy before the first submission,
+then reuses that campaign manifest for later seed blocks. It submits `80` array
+tasks (`8 policies x 10 seeds`) with at most `4` concurrent episodes. Freezing
+prevents different seeds from silently loading different checkpoints while a
+training job is still advancing. Submit only after the desired training runs
+have finished, and inspect the printed manifest if checkpoint choice matters.
+
+After the smoke block is healthy, submit the remaining ten-seed blocks:
+
+```bash
+for start in 10 20 30 40 50 60 70 80 90; do
+    bash examples/amos_2026/submit_gat_reward_sweep_mc_block.sh "$start"
+done
+```
+
+To lower or raise the concurrency cap, pass a second argument. For example,
+this runs the first block with at most two simultaneous episodes:
+
+```bash
+bash examples/amos_2026/submit_gat_reward_sweep_mc_block.sh 0 2
+```
+
+To intentionally begin a new campaign with freshly discovered checkpoints,
+refresh the manifest on the first block:
+
+```bash
+BSK_RL_MC_REFRESH_MANIFEST=1 \
+    bash examples/amos_2026/submit_gat_reward_sweep_mc_block.sh 0
+```
+
+Results are organized below:
+
+```text
+/scratch/alpine/$USER/amos2026_mc/gat_full_actions_eval_100d00i/
+  manifests/
+  seeds_000_009/
+    00d100i/seed_000/
+    ...
+    100d00i/seed_009/
+  analysis/
+```
+
+Aggregate the first smoke block with:
+
+```bash
+python3 examples/amos_2026/analyze_gat_reward_sweep_mc.py --expected-seeds 0:10
+```
+
+Aggregate the eventual full `0..99` campaign with:
+
+```bash
+python3 examples/amos_2026/analyze_gat_reward_sweep_mc.py --expected-seeds 0:100
+```
+
+The analysis folder contains `per_run.csv`, `summary_by_policy.csv`,
+`missing_runs.csv`, `failed_runs.csv`, `analysis_report.json`, and a
+ground-value comparison plot.
