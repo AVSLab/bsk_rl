@@ -156,6 +156,44 @@ def load_manifest(path: Path) -> dict[str, Any]:
     return manifest
 
 
+def completed_status_for(
+    output_root: Path,
+    policy_tag: str,
+    seed: int,
+    evaluation_reward_mix: str,
+    target_env: str,
+    dynamic_priority_event: str,
+    use_shield: bool,
+) -> Path | None:
+    """Return an existing completed policy/seed status, if one is safe to reuse."""
+    if not output_root.exists():
+        return None
+
+    for status_path in sorted(output_root.rglob("mc_status.json")):
+        try:
+            status = json.loads(status_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        if status.get("state") != "completed":
+            continue
+        if status.get("returncode", 0) not in (0, None):
+            continue
+        if status.get("policy_tag") != policy_tag or int(status.get("seed", -1)) != seed:
+            continue
+        if status.get("evaluation_reward_mix") != evaluation_reward_mix:
+            continue
+        if status.get("target_env") != target_env:
+            continue
+        if status.get("dynamic_priority_event") != dynamic_priority_event:
+            continue
+        if bool(status.get("use_shield", False)) != bool(use_shield):
+            continue
+        if not list(status_path.parent.rglob("metrics_*.json")):
+            continue
+        return status_path
+    return None
+
+
 def task_assignment(task_id: int, seed_start: int, seeds_per_block: int) -> tuple[str, int]:
     task_count = len(POLICY_TAGS) * seeds_per_block
     if not 0 <= task_id < task_count:
@@ -280,6 +318,22 @@ def main() -> int:
     manifest = load_manifest(args.manifest)
     policy_tag, seed = task_assignment(args.task_id, args.seed_start, args.seeds_per_block)
     policy = manifest["policies"][policy_tag]
+    existing_status = completed_status_for(
+        args.output_root,
+        policy_tag,
+        seed,
+        args.evaluation_reward_mix,
+        args.target_env,
+        args.dynamic_priority_event,
+        args.use_shield,
+    )
+    if existing_status is not None:
+        print(
+            f"Skipping policy={policy_tag}, seed={seed}: completed run already exists at "
+            f"{existing_status}"
+        )
+        return 0
+
     block_name = f"seeds_{args.seed_start:03d}_{args.seed_start + args.seeds_per_block - 1:03d}"
     seed_dir = args.output_root / block_name / policy_tag / f"seed_{seed:03d}"
     status_path = seed_dir / "mc_status.json"

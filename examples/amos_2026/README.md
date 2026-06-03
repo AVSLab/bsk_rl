@@ -260,6 +260,21 @@ for start in 10 20 30 40 50 60 70 80 90; do
 done
 ```
 
+If you are continuing from a successful smoke folder, reuse that exact output
+root and frozen manifest. The remaining-block helper chains blocks `10..99` so
+only one ten-seed block is active at a time, and completed matching policy/seed
+runs already present under the root are skipped. This is useful when the smoke
+folder already contains seed `10`:
+
+```bash
+ROOT=/scratch/alpine/$USER/amos2026_mc/gat_full_actions_eval_100d00i_smoke_2h_20260601T184244Z
+MANIFEST=$ROOT/manifests/gat_full_actions_obs_v9_eval100d00i_nonalpha48h_frozen.json
+
+BSK_RL_MC_OUTPUT_ROOT="$ROOT" \
+BSK_RL_MC_MANIFEST="$MANIFEST" \
+    bash examples/amos_2026/submit_gat_reward_sweep_mc_remaining_blocks.sh 2
+```
+
 To lower or raise the concurrency cap, pass a second argument. For example,
 this runs the first block with at most two simultaneous episodes:
 
