@@ -173,6 +173,52 @@ class HybridFSWAction(HybridAction):
 
         return self.fsw_action
     
+class HybridCharge(HybridAction):
+    def __init__(self, name: Optional[str] = None, duration: float = 60.0):
+        """Charging action for use within a hybrid action spec.
+
+        Shares ``HybridActionBuilder`` with :class:`HybridImageStrip` so both can
+        appear in the same ``action_spec`` without triggering the heterogeneous-builder
+        error. The continuous component of the hybrid action is ignored; charging always
+        runs for a fixed ``duration``.
+
+        Args:
+            name: Action name.
+            duration: Fixed charging duration in seconds.
+        """
+        if name is None:
+            name = "action_charge"
+        super().__init__(name=name, n_actions=1)
+        self.fsw_action = "action_charge"
+        self.duration = duration
+
+    def set_action(
+        self,
+        action: tuple[int, Union[float, np.ndarray, list]],
+        prev_action_key=None,
+    ) -> str:
+        """Activate charging mode for the fixed duration.
+
+        The continuous component is ignored — duration is always ``self.duration``.
+
+        Args:
+            action: (local_index, continuous_value) — local_index must be 0.
+            prev_action_key: Previous action key.
+
+        Returns:
+            The name of the activated FSW action.
+        """
+        action = clean_action(action)
+        assert action[0] == 0
+        self.satellite.logger.info(f"{self.name} tasked for {self.duration} seconds")
+        self.satellite.update_timed_terminal_event(
+            self.simulator.sim_time + self.duration, info=f"for {self.fsw_action}"
+        )
+        if prev_action_key != self.fsw_action:
+            getattr(self.satellite.fsw, self.fsw_action)()
+        return self.fsw_action
+
+
 class HybridImageStrip(HybridAction):
     def __init__(
         self,

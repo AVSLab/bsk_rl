@@ -528,11 +528,7 @@ def _compute_total_attitude_error(sat, opp):
     # Step 4: Current orientation matrix
     d_hat_desired, p_hat_current, c_hat_current, d_hat_current = _compute_R(c_hat_desired, p_hat_desired, sat.fsw.p_hat_P, sat.fsw.c_hat_P)
 
-    # Match Basilisk locationPointing sign selection: both +/- c_hat_desired are valid,
-    # choose the one closest to the current c-axis to avoid an unnecessary 180 deg flip.
-    # if np.dot(c_hat_current, c_hat_desired) < 0.0:
-    #     c_hat_desired = -c_hat_desired
-    #     d_hat_desired = -d_hat_desired
+    
 
     # Assemble desired rotation matrix
     R_desired = np.column_stack((c_hat_desired, d_hat_desired, p_hat_desired))
