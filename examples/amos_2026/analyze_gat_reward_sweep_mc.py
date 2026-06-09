@@ -65,6 +65,18 @@ def latest_file(paths: list[Path]) -> Path | None:
     return max(paths, key=lambda path: path.stat().st_mtime) if paths else None
 
 
+def status_paths_under_root(input_root: Path) -> list[Path]:
+    """Find MC status files using the known campaign layout without deep scans."""
+    return sorted(input_root.glob("seeds_*/*/seed_*/mc_status.json"))
+
+
+def metrics_files_for_seed(seed_dir: Path) -> list[Path]:
+    """Find metrics files one level below a seed dir without walking plots/data."""
+    return sorted(seed_dir.glob("metrics_*.json")) + sorted(
+        seed_dir.glob("*/metrics_*.json")
+    )
+
+
 def parse_expected_seeds(spec: str) -> list[int]:
     try:
         start_text, stop_text = spec.split(":", 1)
@@ -122,7 +134,7 @@ def load_record(status_path: Path) -> dict[str, Any]:
         "evaluation_reward_mix": status.get("evaluation_reward_mix"),
         "score_ground_value_100d00i": np.nan,
     }
-    metrics_path = latest_file(list(seed_dir.rglob("metrics_*.json")))
+    metrics_path = latest_file(metrics_files_for_seed(seed_dir))
     if metrics_path is None:
         return row
 
@@ -251,7 +263,7 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     expected_seeds = parse_expected_seeds(args.expected_seeds)
 
-    status_paths = sorted(args.input_root.rglob("mc_status.json"))
+    status_paths = status_paths_under_root(args.input_root)
     records = pd.DataFrame(load_record(path) for path in status_paths)
     if records.empty:
         print(f"No mc_status.json files found below {args.input_root}")

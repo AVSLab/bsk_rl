@@ -222,10 +222,28 @@ def latest_file(paths: list[Path]) -> Path | None:
     return max(paths, key=lambda path: path.stat().st_mtime) if paths else None
 
 
+def status_paths_under_root(input_root: Path) -> list[Path]:
+    """Find MC status files using the known campaign layout without deep scans."""
+    return sorted(input_root.glob("seeds_*/*/seed_*/mc_status.json"))
+
+
+def metrics_files_for_seed(seed_dir: Path) -> list[Path]:
+    """Find metrics files one level below a seed dir without walking plots/data."""
+    return sorted(seed_dir.glob("metrics_*.json")) + sorted(
+        seed_dir.glob("*/metrics_*.json")
+    )
+
+
 def numeric_series(frame: pd.DataFrame, column: str) -> pd.Series:
     if column not in frame:
         return pd.Series(dtype=float)
     return pd.to_numeric(frame[column], errors="coerce").dropna()
+
+
+def numeric_column(frame: pd.DataFrame, column: str, default: float = np.nan) -> pd.Series:
+    if column not in frame:
+        return pd.Series(default, index=frame.index, dtype=float)
+    return pd.to_numeric(frame[column], errors="coerce")
 
 
 def safe_mean(values: np.ndarray) -> float:
@@ -258,7 +276,7 @@ def status_sort_key(status_path: Path) -> tuple[int, float]:
     except Exception:
         return (0, status_path.stat().st_mtime)
     completed = 1 if status.get("state") == "completed" else 0
-    has_metrics = 1 if list(status_path.parent.rglob("metrics_*.json")) else 0
+    has_metrics = 1 if metrics_files_for_seed(status_path.parent) else 0
     return (completed + has_metrics, status_path.stat().st_mtime)
 
 
@@ -266,7 +284,7 @@ def selected_status_paths(input_root: Path) -> list[Path]:
     """Select one best status per policy/seed, preferring completed runs."""
     grouped: dict[tuple[str, int], list[Path]] = defaultdict(list)
     unknown: list[Path] = []
-    for status_path in sorted(input_root.rglob("mc_status.json")):
+    for status_path in status_paths_under_root(input_root):
         try:
             status = json.loads(status_path.read_text())
             key = (str(status.get("policy_tag")), int(status.get("seed")))
@@ -280,7 +298,7 @@ def selected_status_paths(input_root: Path) -> list[Path]:
 
 
 def read_metrics(seed_dir: Path) -> tuple[Path | None, dict[str, Any] | None]:
-    metrics_path = latest_file(list(seed_dir.rglob("metrics_*.json")))
+    metrics_path = latest_file(metrics_files_for_seed(seed_dir))
     if metrics_path is None:
         return None, None
     try:
@@ -356,14 +374,14 @@ def step_metrics(
         )
         return result, downlink
 
-    reward_step = pd.to_numeric(downlink.get("reward_step"), errors="coerce").fillna(0.0)
-    storage_cmd = pd.to_numeric(downlink.get("storage_frac_cmd"), errors="coerce")
-    storage_after = pd.to_numeric(downlink.get("storage_frac_after"), errors="coerce")
-    storage_drop = (storage_cmd - storage_after).clip(lower=0.0)
+    reward_step = numeric_column(downlink, "reward_step", 0.0).fillna(0.0)
+    storage_cmd = numeric_column(downlink, "storage_frac_cmd")
+    storage_after = numeric_column(downlink, "storage_frac_after")
+    storage_drop = (storage_cmd - storage_after).clip(lower=0.0).fillna(0.0)
 
     positive_reward = reward_step > reward_eps
     storage_reduced = storage_drop > storage_eps
-    started_nonempty = storage_cmd > storage_eps
+    started_nonempty = storage_cmd.fillna(0.0) > storage_eps
     downlink = downlink.assign(
         action_name="downlink",
         positive_reward_proxy=positive_reward.to_numpy(dtype=bool),

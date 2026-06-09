@@ -156,6 +156,13 @@ def load_manifest(path: Path) -> dict[str, Any]:
     return manifest
 
 
+def metrics_files_for_seed(seed_dir: Path) -> list[Path]:
+    """Find metrics files one level below a seed dir without walking plots/data."""
+    return sorted(seed_dir.glob("metrics_*.json")) + sorted(
+        seed_dir.glob("*/metrics_*.json")
+    )
+
+
 def completed_status_for(
     output_root: Path,
     policy_tag: str,
@@ -169,7 +176,10 @@ def completed_status_for(
     if not output_root.exists():
         return None
 
-    for status_path in sorted(output_root.rglob("mc_status.json")):
+    status_paths = sorted(
+        output_root.glob(f"seeds_*/{policy_tag}/seed_{seed:03d}/mc_status.json")
+    )
+    for status_path in status_paths:
         try:
             status = json.loads(status_path.read_text())
         except (OSError, json.JSONDecodeError):
@@ -188,7 +198,7 @@ def completed_status_for(
             continue
         if bool(status.get("use_shield", False)) != bool(use_shield):
             continue
-        if not list(status_path.parent.rglob("metrics_*.json")):
+        if not metrics_files_for_seed(status_path.parent):
             continue
         return status_path
     return None
