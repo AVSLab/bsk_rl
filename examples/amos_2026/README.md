@@ -318,3 +318,20 @@ python3 examples/amos_2026/analyze_gat_reward_sweep_mc.py --expected-seeds 0:100
 The analysis folder contains `per_run.csv`, `summary_by_policy.csv`,
 `missing_runs.csv`, `failed_runs.csv`, `analysis_report.json`, and a
 ground-value comparison plot.
+
+For a richer AMOS 2026 policy comparison, run the detailed analyzer:
+
+```bash
+ROOT=/scratch/alpine/$USER/amos2026_mc/gat_full_actions_eval_100d00i_smoke_2h_20260601T184244Z
+
+python examples/amos_2026/analyze_gat_reward_sweep_mc_detailed.py \
+    --input-root "$ROOT" \
+    --expected-seeds 0:100 \
+    --storage-capacity-images 50
+```
+
+This writes `analysis_detailed/` with per-run and policy-level metrics,
+including target priority/illumination summaries, action distributions,
+downlink-usefulness proxies, image-to-next-downlink latency proxies, and plots.
+The latency metrics are labeled as proxies because the current evaluation files
+do not store packet IDs tying each captured image to its exact downlink event.
