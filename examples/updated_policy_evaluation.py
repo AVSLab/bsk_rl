@@ -233,6 +233,16 @@ def parse_args():
         default=float(os.environ.get("BSK_RL_EXTRA_TIME_FACTOR", "1.5")),
         help="Episode length multiplier: total_time = factor * n_targets * imaging_duration.",
     )
+    p.add_argument(
+        "--total_time_sec",
+        type=float,
+        default=(
+            float(os.environ["BSK_RL_TOTAL_TIME_SEC"])
+            if os.environ.get("BSK_RL_TOTAL_TIME_SEC")
+            else None
+        ),
+        help="Absolute episode duration in seconds. Overrides --extra_time_factor.",
+    )
     p.add_argument("--save_data", action="store_true", default=None, help="Force save_data=True")
     p.add_argument("--no_save_data", action="store_true", help="Force save_data=False")
     p.add_argument("--quiet", action="store_true", help="Reduce printing")
@@ -458,12 +468,19 @@ else:
 
 
 # Base simulation configuration (shared between training & evaluation)
+imaging_duration_cfg = 300.0
+extra_time_factor_cfg = ARGS.extra_time_factor
+if ARGS.total_time_sec is not None:
+    extra_time_factor_cfg = (
+        float(ARGS.total_time_sec) / (float(ARGS.n_targets) * imaging_duration_cfg)
+    )
+
 sim_cfg = SimConfig(
     n_targets=ARGS.n_targets,
     n_targets_ahead=ARGS.n_targets_ahead,
-    imaging_duration=300.0,
+    imaging_duration=imaging_duration_cfg,
     variable_duration_imaging=True,  # AMOS 2026: stop after successful hold-gated image
-    extra_time_factor=ARGS.extra_time_factor,
+    extra_time_factor=extra_time_factor_cfg,
     obs_v=7.0,          # default obs version; will be overwritten if policy_name known
     just_imaging=False,
 )
@@ -3246,6 +3263,10 @@ try:
         "policy_name": policy_name,
         "policy_layout": policy_layout,
         "obs_v": obs_v,
+        "n_targets": n_targets,
+        "n_targets_ahead": n_targets_ahead,
+        "total_time_sec": total_time,
+        "extra_time_factor": sim_cfg.extra_time_factor,
         "reward_mix_tag": reward_mix_tag,
         "use_shield": bool(use_shield),
         "dynamic_priority_event_enabled": bool(sim_cfg.dynamic_priority_event_enabled),

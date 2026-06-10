@@ -173,6 +173,7 @@ def completed_status_for(
     use_shield: bool,
     n_targets: int,
     n_targets_ahead: int,
+    total_time_sec: float | None,
 ) -> Path | None:
     """Return an existing completed policy/seed status, if one is safe to reuse."""
     if not output_root.exists():
@@ -200,10 +201,17 @@ def completed_status_for(
             continue
         if bool(status.get("use_shield", False)) != bool(use_shield):
             continue
-        if int(status.get("n_targets", -1)) != int(n_targets):
+        if int(status.get("n_targets", 100)) != int(n_targets):
             continue
-        if int(status.get("n_targets_ahead", -1)) != int(n_targets_ahead):
+        if int(status.get("n_targets_ahead", 10)) != int(n_targets_ahead):
             continue
+        stored_total_time = status.get("total_time_sec")
+        if total_time_sec is not None:
+            try:
+                if abs(float(stored_total_time) - float(total_time_sec)) > 1e-6:
+                    continue
+            except (TypeError, ValueError):
+                continue
         if not metrics_files_for_seed(status_path.parent):
             continue
         return status_path
@@ -318,6 +326,20 @@ def parse_args() -> argparse.Namespace:
         help="Episode length multiplier used by updated_policy_evaluation.py.",
     )
     parser.add_argument(
+        "--total-time-sec",
+        type=float,
+        default=(
+            float(os.environ["BSK_RL_MC_TOTAL_TIME_SEC"])
+            if os.environ.get("BSK_RL_MC_TOTAL_TIME_SEC")
+            else (
+                float(os.environ["BSK_RL_TOTAL_TIME_SEC"])
+                if os.environ.get("BSK_RL_TOTAL_TIME_SEC")
+                else None
+            )
+        ),
+        help="Absolute episode length in seconds. Overrides --extra-time-factor.",
+    )
+    parser.add_argument(
         "--evaluation-reward-mix",
         default=DEFAULT_EVALUATION_REWARD_MIX,
         help="Common reward used to score every trained policy.",
@@ -376,6 +398,7 @@ def main() -> int:
         args.use_shield,
         args.n_targets,
         args.n_targets_ahead,
+        args.total_time_sec,
     )
     if existing_status is not None:
         print(
@@ -425,6 +448,8 @@ def main() -> int:
         "--no_show_plots",
         "--plots_in_run_dir",
     ]
+    if args.total_time_sec is not None:
+        command.extend(["--total_time_sec", str(args.total_time_sec)])
     if not args.use_shield:
         command.append("--no_shield")
 
@@ -446,6 +471,7 @@ def main() -> int:
         "n_targets": args.n_targets,
         "n_targets_ahead": args.n_targets_ahead,
         "extra_time_factor": args.extra_time_factor,
+        "total_time_sec": args.total_time_sec,
         "dynamic_priority_event": args.dynamic_priority_event,
         "use_shield": args.use_shield,
         "command": command,

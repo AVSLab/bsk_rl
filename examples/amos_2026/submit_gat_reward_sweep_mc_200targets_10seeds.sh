@@ -9,6 +9,9 @@
 #   bash examples/amos_2026/submit_gat_reward_sweep_mc_200targets_10seeds.sh 0 5
 #   bash examples/amos_2026/submit_gat_reward_sweep_mc_200targets_10seeds.sh 10 5
 #
+# By default this holds the episode duration at 45,000 s, matching the
+# 100-target study's mission length while doubling the target catalog.
+#
 # Optional resource overrides:
 #   BSK_RL_MC_TIME=06:00:00 BSK_RL_MC_MEM=16G BSK_RL_MC_CPUS_PER_TASK=4 bash ...
 
@@ -20,6 +23,7 @@ SEEDS_PER_BLOCK=${BSK_RL_MC_SEEDS_PER_BLOCK:-10}
 N_TARGETS=${BSK_RL_MC_N_TARGETS:-200}
 N_TARGETS_AHEAD=${BSK_RL_MC_N_TARGETS_AHEAD:-10}
 EXTRA_TIME_FACTOR=${BSK_RL_MC_EXTRA_TIME_FACTOR:-1.5}
+TOTAL_TIME_SEC=${BSK_RL_MC_TOTAL_TIME_SEC:-45000}
 TIME_LIMIT=${BSK_RL_MC_TIME:-04:00:00}
 MEMORY=${BSK_RL_MC_MEM:-12G}
 CPUS_PER_TASK=${BSK_RL_MC_CPUS_PER_TASK:-4}
@@ -42,7 +46,8 @@ source /projects/$USER/.venv/bin/activate
 
 SEED_END=$((SEED_START + SEEDS_PER_BLOCK - 1))
 CAMPAIGN_ID=${BSK_RL_MC_CAMPAIGN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}
-OUTPUT_ROOT=${BSK_RL_MC_OUTPUT_ROOT:-/scratch/alpine/$USER/amos2026_mc/gat_full_actions_eval_100d00i_${N_TARGETS}targets_${CAMPAIGN_ID}}
+duration_tag="${TOTAL_TIME_SEC}s"
+OUTPUT_ROOT=${BSK_RL_MC_OUTPUT_ROOT:-/scratch/alpine/$USER/amos2026_mc/gat_full_actions_eval_100d00i_${N_TARGETS}targets_${duration_tag}_${CAMPAIGN_ID}}
 MANIFEST_DIR="$OUTPUT_ROOT/manifests"
 MANIFEST=${BSK_RL_MC_MANIFEST:-$MANIFEST_DIR/gat_full_actions_obs_v9_eval100d00i_nonalpha48h_frozen.json}
 JOB_NAME="gat_mc_${N_TARGETS}t_s$(printf '%03d' "$SEED_START")_$(printf '%03d' "$SEED_END")"
@@ -62,7 +67,8 @@ echo "  policies:          8 non-alpha 48-hour GAT runs"
 echo "  seeds:             $SEED_START..$SEED_END inclusive"
 echo "  n_targets:         $N_TARGETS"
 echo "  n_targets_ahead:   $N_TARGETS_AHEAD"
-echo "  extra_time_factor: $EXTRA_TIME_FACTOR"
+echo "  total_time_sec:    $TOTAL_TIME_SEC"
+echo "  extra_time_factor: $EXTRA_TIME_FACTOR (ignored by evaluator when total_time_sec is set)"
 echo "  array tasks:       8 policy jobs, each running $SEEDS_PER_BLOCK fresh evaluator subprocesses"
 echo "  max concurrent:    $MAX_CONCURRENT"
 echo "  resources/task:    $CPUS_PER_TASK CPUs, $MEMORY, $TIME_LIMIT"
@@ -81,5 +87,5 @@ sbatch \
     --mem="$MEMORY" \
     --cpus-per-task="$CPUS_PER_TASK" \
     --qos=normal \
-    --export=ALL,BSK_RL_MC_SEED_START="$SEED_START",BSK_RL_MC_SEEDS_PER_BLOCK="$SEEDS_PER_BLOCK",BSK_RL_MC_N_TARGETS="$N_TARGETS",BSK_RL_MC_N_TARGETS_AHEAD="$N_TARGETS_AHEAD",BSK_RL_MC_EXTRA_TIME_FACTOR="$EXTRA_TIME_FACTOR",BSK_RL_MC_OUTPUT_ROOT="$OUTPUT_ROOT",BSK_RL_MC_MANIFEST="$MANIFEST" \
+    --export=ALL,BSK_RL_MC_SEED_START="$SEED_START",BSK_RL_MC_SEEDS_PER_BLOCK="$SEEDS_PER_BLOCK",BSK_RL_MC_N_TARGETS="$N_TARGETS",BSK_RL_MC_N_TARGETS_AHEAD="$N_TARGETS_AHEAD",BSK_RL_MC_EXTRA_TIME_FACTOR="$EXTRA_TIME_FACTOR",BSK_RL_MC_TOTAL_TIME_SEC="$TOTAL_TIME_SEC",BSK_RL_MC_OUTPUT_ROOT="$OUTPUT_ROOT",BSK_RL_MC_MANIFEST="$MANIFEST" \
     examples/amos_2026/sbatch_evaluate_gat_reward_sweep_mc_10seeds.sh
