@@ -215,6 +215,24 @@ import sys
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--seed", type=int, default=None, help="Override seed_number")
+    p.add_argument(
+        "--n_targets",
+        type=int,
+        default=int(os.environ.get("BSK_RL_N_TARGETS", "100")),
+        help="Number of RSO targets in the evaluation catalog.",
+    )
+    p.add_argument(
+        "--n_targets_ahead",
+        type=int,
+        default=int(os.environ.get("BSK_RL_N_TARGETS_AHEAD", "10")),
+        help="Number of candidate targets exposed to the policy.",
+    )
+    p.add_argument(
+        "--extra_time_factor",
+        type=float,
+        default=float(os.environ.get("BSK_RL_EXTRA_TIME_FACTOR", "1.5")),
+        help="Episode length multiplier: total_time = factor * n_targets * imaging_duration.",
+    )
     p.add_argument("--save_data", action="store_true", default=None, help="Force save_data=True")
     p.add_argument("--no_save_data", action="store_true", help="Force save_data=False")
     p.add_argument("--quiet", action="store_true", help="Reduce printing")
@@ -441,11 +459,11 @@ else:
 
 # Base simulation configuration (shared between training & evaluation)
 sim_cfg = SimConfig(
-    n_targets=100,
-    n_targets_ahead=10,
+    n_targets=ARGS.n_targets,
+    n_targets_ahead=ARGS.n_targets_ahead,
     imaging_duration=300.0,
     variable_duration_imaging=True,  # AMOS 2026: stop after successful hold-gated image
-    extra_time_factor=1.5,
+    extra_time_factor=ARGS.extra_time_factor,
     obs_v=7.0,          # default obs version; will be overwritten if policy_name known
     just_imaging=False,
 )
@@ -2043,6 +2061,31 @@ az = np.asarray(getattr(SS1_actions_spec, "chosen_target_azimuth", []), dtype=fl
 el_loc = np.asarray(getattr(SS1_actions_spec, "chosen_target_elevation_angle", []), dtype=float).ravel()
 rng = np.asarray(getattr(SS1_actions_spec, "chosen_target_distance", []), dtype=float).ravel()
 tgt_sf_cmd = np.asarray(getattr(SS1_actions_spec, "chosen_target_illumination_status", []), dtype=float).ravel()
+initial_ang_error = np.asarray(
+    getattr(SS1_actions_spec, "initial_angular_error", []), dtype=float
+).ravel()
+target_priority_cmd = np.asarray(
+    getattr(SS1_actions_spec, "chosen_target_priority", []), dtype=float
+).ravel()
+
+scenario_for_events = getattr(env.unwrapped, "scenario", None)
+event_kind_by_target_id = {
+    int(target.id): str(getattr(target, "priority_event_kind", ""))
+    for target in getattr(scenario_for_events, "target_spacecrafts", [])
+}
+priority_event_kind = np.asarray(
+    [event_kind_by_target_id.get(int(target_id), "") for target_id in img_target_ids],
+    dtype=object,
+)
+action_id_by_command_time = {
+    float(row["t_cmd"]): int(row["action_id"])
+    for row in step_log
+    if row.get("t_cmd") is not None and row.get("action_id") is not None
+}
+image_action_ids = np.asarray(
+    [action_id_by_command_time.get(float(t), -1) for t in img_cmd_times], dtype=int
+)
+image_candidate_slots = np.where(image_action_ids >= 3, image_action_ids - 3, -1)
 
 # Look-ahead index: +1 forward, -1 backward
 # azimuth is in degrees
@@ -2170,7 +2213,7 @@ if regime.size == 0:
     regime = np.array(["UNK"] * img_cmd_times.size, dtype=object)
 
 # Build dataframe (trim to the shortest common length to be safe)
-L = min(img_cmd_times.size, img_target_ids.size, az.size, el_loc.size, rng.size, tgt_sf_cmd.size, t_acq.size, dt_acq.size, look_ahead.size, sat_sf_cmd_img.size, regime.size, alt_km.size, sat_shadow_min_win.size, sat_shadow_max_win.size, win_bucket.size, target_shadow_acq.size)
+L = min(img_cmd_times.size, img_target_ids.size, az.size, el_loc.size, rng.size, tgt_sf_cmd.size, initial_ang_error.size, target_priority_cmd.size, priority_event_kind.size, image_action_ids.size, image_candidate_slots.size, t_acq.size, dt_acq.size, look_ahead.size, sat_sf_cmd_img.size, regime.size, alt_km.size, sat_shadow_min_win.size, sat_shadow_max_win.size, win_bucket.size, target_shadow_acq.size)
 
 df_images = pd.DataFrame({
     "t_cmd": img_cmd_times[:L],
@@ -2179,6 +2222,11 @@ df_images = pd.DataFrame({
     "elevation_local_deg": el_loc[:L],
     "range_m": rng[:L],
     "target_shadow_cmd": tgt_sf_cmd[:L],
+    "initial_angular_error_deg": initial_ang_error[:L],
+    "target_priority_cmd": target_priority_cmd[:L],
+    "priority_event_kind": priority_event_kind[:L],
+    "action_id": image_action_ids[:L],
+    "candidate_slot": image_candidate_slots[:L],
     "sat_shadow_cmd": sat_sf_cmd_img[:L],
     "phase": np.array(phase, dtype=object)[:L],
     "phase_state": np.array(phase_state, dtype=object)[:L],
@@ -3040,6 +3088,94 @@ if hasattr(SS1_actions_spec, "chosen_target_priority") and SS1_actions_spec.chos
 else:
     data["mean_target_priority"] = -1
     data["std_target_priority"] = -1
+
+# Dynamic-priority response metrics. These identifiers are required to measure
+# HIO/SHIO access and capture latency exactly rather than infer it from priority.
+scenario = getattr(env.unwrapped, "scenario", None)
+hio_ids = {int(target_id) for target_id in getattr(scenario, "hio_target_ids", [])}
+shio_ids = {int(target_id) for target_id in getattr(scenario, "shio_target_ids", [])}
+event_time = getattr(scenario, "priority_event_applied_time", None)
+if event_time is None:
+    event_time = getattr(scenario, "priority_event_time", None)
+if event_time is None and getattr(scenario, "dynamic_priority_event_time_sec", None) is not None:
+    event_time = float(scenario.dynamic_priority_event_time_sec)
+if event_time is None and scenario is not None:
+    event_time = float(total_time) * float(
+        getattr(scenario, "dynamic_priority_event_fraction", 0.5)
+    )
+event_time = float(event_time) if event_time is not None else float("nan")
+
+event_targets = {
+    int(target.id): target
+    for target in getattr(scenario, "target_spacecrafts", [])
+    if int(target.id) in hio_ids | shio_ids
+}
+
+def _first_finite(values):
+    finite = [float(value) for value in values if value is not None and np.isfinite(value)]
+    return min(finite) if finite else float("nan")
+
+chosen_pairs = [
+    (int(target_id), float(command_time))
+    for target_id, command_time in zip(
+        getattr(SS1_actions_spec, "chosen_target_ids", []),
+        getattr(SS1_actions_spec, "imaging_times", []),
+    )
+    if command_time is not None
+    and np.isfinite(event_time)
+    and float(command_time) >= event_time
+]
+attempt_records = list(getattr(SS1_actions_spec, "imaging_attempt_records", []))
+successful_records = [
+    record
+    for record in attempt_records
+    if record.get("success") and record.get("target_id") is not None
+]
+
+data["dynamic_priority_event_applied"] = float(
+    bool(getattr(scenario, "priority_event_applied", False))
+)
+data["dynamic_priority_event_time_sec"] = event_time
+event_applied_time = getattr(scenario, "priority_event_applied_time", None)
+data["dynamic_priority_event_applied_time_sec"] = (
+    float(event_applied_time) if event_applied_time is not None else event_time
+)
+data["hio_target_ids"] = sorted(hio_ids)
+data["shio_target_ids"] = sorted(shio_ids)
+data["hio_target_count"] = len(hio_ids)
+data["shio_target_count"] = len(shio_ids)
+
+for kind, target_ids in (("hio", hio_ids), ("shio", shio_ids)):
+    targets = [event_targets[target_id] for target_id in target_ids if target_id in event_targets]
+    candidate_times = [
+        getattr(target, "priority_event_first_candidate_time", None) for target in targets
+    ]
+    command_times = [time for target_id, time in chosen_pairs if target_id in target_ids]
+    capture_times = [
+        float(record.get("first_capture_time") or record.get("end_time"))
+        for record in successful_records
+        if int(record["target_id"]) in target_ids
+        and (record.get("first_capture_time") is not None or record.get("end_time") is not None)
+        and np.isfinite(event_time)
+        and float(record.get("first_capture_time") or record.get("end_time")) >= event_time
+    ]
+    first_candidate = _first_finite(candidate_times)
+    first_command = _first_finite(command_times)
+    first_capture = _first_finite(capture_times)
+    data[f"{kind}_candidate_access_count"] = int(
+        sum(getattr(target, "priority_event_candidate_count", 0) for target in targets)
+    )
+    data[f"{kind}_command_count_after_event"] = len(command_times)
+    data[f"{kind}_successful_capture_count_after_event"] = len(capture_times)
+    data[f"time_to_first_{kind}_candidate_access_sec"] = (
+        first_candidate - event_time if np.isfinite(first_candidate) else float("nan")
+    )
+    data[f"time_to_first_{kind}_command_sec"] = (
+        first_command - event_time if np.isfinite(first_command) else float("nan")
+    )
+    data[f"time_to_first_{kind}_success_sec"] = (
+        first_capture - event_time if np.isfinite(first_capture) else float("nan")
+    )
 
 # Ever visible flags
 if hasattr(SS1_actions_spec, "ever_visible") and SS1_actions_spec.ever_visible:

@@ -91,7 +91,6 @@ python3 -c "import bsk_rl; import bsk_rl.sim.simulator; print('bsk_rl import ok'
 python3 -c "import wandb; print('wandb import ok')"
 
 echo "Running AMOS 2026 Polaris GAT full-action obs-v9 50d50i 48h + W&B training script"
-srun --ntasks=1 --cpus-per-task="${SLURM_CPUS_PER_TASK:-32}" --acctg-freq=task=30 \
-    python3 -u examples/train_Polaris_gat_full_actions_50d50i_wandb.py
+python3 -u examples/train_Polaris_gat_full_actions_50d50i_wandb.py
 
 echo "== End of Job =="

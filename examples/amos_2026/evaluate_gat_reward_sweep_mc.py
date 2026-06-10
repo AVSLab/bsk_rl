@@ -171,6 +171,8 @@ def completed_status_for(
     target_env: str,
     dynamic_priority_event: str,
     use_shield: bool,
+    n_targets: int,
+    n_targets_ahead: int,
 ) -> Path | None:
     """Return an existing completed policy/seed status, if one is safe to reuse."""
     if not output_root.exists():
@@ -197,6 +199,10 @@ def completed_status_for(
         if status.get("dynamic_priority_event") != dynamic_priority_event:
             continue
         if bool(status.get("use_shield", False)) != bool(use_shield):
+            continue
+        if int(status.get("n_targets", -1)) != int(n_targets):
+            continue
+        if int(status.get("n_targets_ahead", -1)) != int(n_targets_ahead):
             continue
         if not metrics_files_for_seed(status_path.parent):
             continue
@@ -280,6 +286,38 @@ def parse_args() -> argparse.Namespace:
         default="leo",
     )
     parser.add_argument(
+        "--n-targets",
+        type=int,
+        default=int(
+            os.environ.get(
+                "BSK_RL_MC_N_TARGETS", os.environ.get("BSK_RL_N_TARGETS", "100")
+            )
+        ),
+        help="Number of RSO targets for the evaluation episode.",
+    )
+    parser.add_argument(
+        "--n-targets-ahead",
+        type=int,
+        default=int(
+            os.environ.get(
+                "BSK_RL_MC_N_TARGETS_AHEAD",
+                os.environ.get("BSK_RL_N_TARGETS_AHEAD", "10"),
+            )
+        ),
+        help="Number of candidate targets exposed to the GAT policy.",
+    )
+    parser.add_argument(
+        "--extra-time-factor",
+        type=float,
+        default=float(
+            os.environ.get(
+                "BSK_RL_MC_EXTRA_TIME_FACTOR",
+                os.environ.get("BSK_RL_EXTRA_TIME_FACTOR", "1.5"),
+            )
+        ),
+        help="Episode length multiplier used by updated_policy_evaluation.py.",
+    )
+    parser.add_argument(
         "--evaluation-reward-mix",
         default=DEFAULT_EVALUATION_REWARD_MIX,
         help="Common reward used to score every trained policy.",
@@ -336,6 +374,8 @@ def main() -> int:
         args.target_env,
         args.dynamic_priority_event,
         args.use_shield,
+        args.n_targets,
+        args.n_targets_ahead,
     )
     if existing_status is not None:
         print(
@@ -370,6 +410,12 @@ def main() -> int:
         args.evaluation_reward_mix,
         "--target_env",
         args.target_env,
+        "--n_targets",
+        str(args.n_targets),
+        "--n_targets_ahead",
+        str(args.n_targets_ahead),
+        "--extra_time_factor",
+        str(args.extra_time_factor),
         "--dynamic_priority_event",
         args.dynamic_priority_event,
         "--output_dir",
@@ -397,6 +443,9 @@ def main() -> int:
         "output_dir": str(seed_dir.resolve()),
         "evaluation_reward_mix": args.evaluation_reward_mix,
         "target_env": args.target_env,
+        "n_targets": args.n_targets,
+        "n_targets_ahead": args.n_targets_ahead,
+        "extra_time_factor": args.extra_time_factor,
         "dynamic_priority_event": args.dynamic_priority_event,
         "use_shield": args.use_shield,
         "command": command,
