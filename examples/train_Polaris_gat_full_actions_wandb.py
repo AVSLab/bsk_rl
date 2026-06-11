@@ -864,6 +864,8 @@ def env_metrics_callback(env):
     scenario = getattr(env, "scenario", None)
     hio_ids = set(getattr(scenario, "hio_target_ids", []))
     shio_ids = set(getattr(scenario, "shio_target_ids", []))
+    active_n_targets = int(getattr(scenario, "n_targets", n_targets))
+    data["n_targets"] = active_n_targets
     event_enabled = bool(getattr(scenario, "dynamic_priority_event_enabled", False))
     event_time = getattr(scenario, "priority_event_time", None)
     if event_time is None and scenario is not None:
@@ -1056,7 +1058,9 @@ def env_metrics_callback(env):
         data["mean_target_illumination_status"] = -1.0
 
     if getattr(ss1_actions, "ever_visible", None):
-        data["target_ever_visible_fraction"] = len(ss1_actions.ever_visible) / n_targets
+        data["target_ever_visible_fraction"] = (
+            len(ss1_actions.ever_visible) / max(1, active_n_targets)
+        )
     else:
         data["target_ever_visible_fraction"] = -1.0
 
@@ -1120,9 +1124,44 @@ if __name__ == "__main__":
     n_targets_ahead = sim_cfg.n_targets_ahead
     imaging_duration = sim_cfg.imaging_duration
     total_time = sim_cfg.total_time
+    randomize_n_targets = _env_bool("BSK_RL_RANDOMIZE_N_TARGETS", False)
+    n_targets_min = _env_int("BSK_RL_N_TARGETS_MIN", n_targets)
+    n_targets_max = _env_int("BSK_RL_N_TARGETS_MAX", n_targets)
+    if randomize_n_targets:
+        if n_targets_min < sim_cfg.hio_count + sim_cfg.shio_count:
+            raise ValueError("BSK_RL_N_TARGETS_MIN must cover HIO + SHIO targets.")
+        if n_targets_min > n_targets_max:
+            raise ValueError("BSK_RL_N_TARGETS_MIN cannot exceed BSK_RL_N_TARGETS_MAX.")
+        n_targets = n_targets_max
+
+    class RandomCountSatellites(scene.RandomSatellites):
+        def __init__(
+            self,
+            *args,
+            n_targets: int,
+            n_targets_min: int,
+            n_targets_max: int,
+            **kwargs,
+        ):
+            self.n_targets_min = int(n_targets_min)
+            self.n_targets_max = int(n_targets_max)
+            super().__init__(*args, n_targets=self.n_targets_max, **kwargs)
+
+        def reset_overwrite_previous(self) -> None:
+            super().reset_overwrite_previous()
+            self.n_targets = int(
+                np.random.randint(self.n_targets_min, self.n_targets_max + 1)
+            )
 
     def make_rso_scenario():
-        return scene.RandomSatellites(
+        scenario_type = RandomCountSatellites if randomize_n_targets else scene.RandomSatellites
+        scenario_kwargs = {}
+        if randomize_n_targets:
+            scenario_kwargs.update(
+                n_targets_min=n_targets_min,
+                n_targets_max=n_targets_max,
+            )
+        return scenario_type(
             "SS1",
             n_targets=n_targets,
             priority_mode=sim_cfg.priority_mode,
@@ -1143,6 +1182,7 @@ if __name__ == "__main__":
             shio_count=sim_cfg.shio_count,
             shio_priority=sim_cfg.shio_priority,
             dynamic_priority_event_seed=sim_cfg.dynamic_priority_event_seed,
+            **scenario_kwargs,
         )
 
     def make_rso_rewarder():
@@ -1439,6 +1479,11 @@ if __name__ == "__main__":
         run_tag = run_tag.replace(
             "_restrictedResources_", "_randomMixLEOMEOFirst_restrictedResources_"
         )
+    if randomize_n_targets:
+        run_tag = run_tag.replace(
+            "_restrictedResources_",
+            f"_random{n_targets_min}to{n_targets_max}targets_restrictedResources_",
+        )
     model_name = f"{run_tag}.out_{job_index}"
     output_dir = _default_output_root() / f"{run_tag}_{time.time()}"  # local: ~/rllib_results/...; cluster: /scratch/alpine/$USER/rllib_results/...
     ray_tmpdir = _default_ray_tmpdir()  # local: /tmp/bskrl_0; cluster: /tmp/bskray_${SLURM_JOB_ID}_...
@@ -1555,6 +1600,12 @@ if __name__ == "__main__":
                 if target_env == "mixed" and randomize_mix_weights
                 else None
             ),
+        },
+        "target_count": {
+            "capacity_n_targets": n_targets,
+            "randomize_n_targets": randomize_n_targets,
+            "n_targets_min": n_targets_min if randomize_n_targets else n_targets,
+            "n_targets_max": n_targets_max if randomize_n_targets else n_targets,
         },
         "gat_model_config": inspector_model_config,
         "job_args": sanitize_np(
