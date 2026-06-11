@@ -117,9 +117,13 @@ def _satellite_tasking_env_creator(env_config):
         satellite_data_callback = env_config.pop("satellite_data_callback")
     else:
         satellite_data_callback = None
+    env_wrapper = env_config.pop("env_wrapper", None)
 
+    env = SatelliteTasking(**env_config)
+    if env_wrapper is not None:
+        env = env_wrapper(env)
     return EpisodeDataWrapper(
-        SatelliteTasking(**env_config),
+        env,
         episode_data_callback=episode_data_callback,
         satellite_data_callback=satellite_data_callback,
     )
@@ -137,10 +141,14 @@ def _constellation_tasking_env_creator(env_config):
         satellite_data_callback = env_config.pop("satellite_data_callback")
     else:
         satellite_data_callback = None
+    env_wrapper = env_config.pop("env_wrapper", None)
 
+    env = ConstellationTasking(**env_config)
+    if env_wrapper is not None:
+        env = env_wrapper(env)
     return ParallelPettingZooEnv(
         EpisodeDataParallelWrapper(
-            ConstellationTasking(**env_config),
+            env,
             episode_data_callback=episode_data_callback,
             satellite_data_callback=satellite_data_callback,
         )

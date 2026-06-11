@@ -34,7 +34,7 @@ import sys
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 # Keep imports such as `from sim_config import SimConfig` working from repo-root,
 # from `examples/`, and from a Slurm working directory.
@@ -59,6 +59,7 @@ from bsk_rl.sim import dyn, fsw, world
 from bsk_rl.utils.rllib.callbacks import WrappedEpisodeDataCallbacks
 from bsk_rl.utils.rllib.discounting import TimeDiscountedGAEPPOTorchLearner
 from bsk_rl.utils.utils import build_job_array, get_available_cores, sanitize_np
+from pettingzoo.utils import BaseParallelWrapper
 from ray.rllib.algorithms.ppo import PPO, PPOConfig
 from ray.tune.logger import UnifiedLogger
 from gat_module_complete import GATModule
@@ -229,6 +230,321 @@ def gat_model_config(n_targets_ahead: int) -> dict[str, Any]:
     }
 
 
+def _clamp01(value: float) -> float:
+    return min(1.0, max(0.0, float(value)))
+
+
+def _curriculum_alpha(
+    difficulty: float,
+    *,
+    start_alpha: float,
+    end_alpha: float,
+    power: float = 1.0,
+) -> float:
+    """Map a normalized curriculum difficulty to the downlink reward weight."""
+    difficulty = _clamp01(difficulty)
+    power = max(float(power), 1e-12)
+    return float(start_alpha) + (float(end_alpha) - float(start_alpha)) * (
+        difficulty**power
+    )
+
+
+def _unwrap_bsk_env(env: Any) -> Any | None:
+    """Find the underlying bsk_rl env below RLlib/PettingZoo/Gym wrappers."""
+    seen: set[int] = set()
+    stack = [env]
+    while stack:
+        candidate = stack.pop()
+        if candidate is None or id(candidate) in seen:
+            continue
+        seen.add(id(candidate))
+        if hasattr(candidate, "satellites") and hasattr(candidate, "rewarder"):
+            return candidate
+        for attr in ("par_env", "env", "unwrapped"):
+            try:
+                child = getattr(candidate, attr)
+            except Exception:
+                child = None
+            if child is not None and child is not candidate:
+                stack.append(child)
+        for attr in ("envs", "vector_env"):
+            try:
+                children = getattr(candidate, attr)
+            except Exception:
+                children = None
+            if isinstance(children, (list, tuple)):
+                stack.extend(children)
+            elif children is not None and children is not candidate:
+                stack.append(children)
+    return None
+
+
+def _apply_reward_alpha_to_env(env: Any, alpha: float) -> bool:
+    """Apply alpha to the scanner reward split without changing the action space."""
+    bsk_env = _unwrap_bsk_env(env)
+    if bsk_env is None:
+        return False
+
+    alpha = _clamp01(alpha)
+    imaging_bonus = 1.0 - alpha
+    setattr(bsk_env, "curriculum_alpha", alpha)
+    setattr(bsk_env, "curriculum_imaging_bonus", imaging_bonus)
+    if hasattr(bsk_env, "rewarder"):
+        setattr(bsk_env.rewarder, "alpha", alpha)
+        setattr(bsk_env.rewarder, "curriculum_alpha", alpha)
+
+    satellites = getattr(bsk_env, "satellites", [])
+    if not satellites:
+        return True
+    scanner = satellites[0]
+
+    for args_name in ("sat_args_generator", "sat_args"):
+        args = getattr(scanner, args_name, None)
+        if isinstance(args, dict):
+            args["downlink_bonus"] = alpha
+            args["imaging_bonus"] = imaging_bonus
+
+    dynamics = getattr(scanner, "dynamics", None)
+    if dynamics is not None:
+        dynamics.downlink_bonus = alpha
+        dynamics.imaging_bonus = imaging_bonus
+
+    return True
+
+
+class WrapperCurriculumLearning(BaseParallelWrapper):
+    """PettingZoo wrapper that ramps the AMOS reward alpha during training.
+
+    The training reward split lives on the scanner dynamics as
+    ``downlink_bonus`` and ``imaging_bonus``. This wrapper keeps those values in
+    sync with a curriculum difficulty, while preserving the existing wrapped
+    BSK-RL/PettingZoo observation and action spaces.
+    """
+
+    def __init__(
+        self,
+        env,
+        difficulty: float = 0.0,
+        difficulty_function: Callable[[float], float] | None = None,
+        local_step_increment: float = 0.0,
+    ):
+        super().__init__(env)
+        self.difficulty = _clamp01(difficulty)
+        self.difficulty_function = difficulty_function or (lambda x: x)
+        self.local_step_increment = max(0.0, float(local_step_increment))
+        self.current_alpha = float(self.difficulty_function(self.difficulty))
+
+    def _apply(self) -> None:
+        self.current_alpha = _clamp01(self.difficulty_function(self.difficulty))
+        _apply_reward_alpha_to_env(self.env, self.current_alpha)
+
+    def reset(self, *args, **kwargs):
+        result = self.env.reset(*args, **kwargs)
+        # Dynamics are reconstructed during reset, so apply again afterwards.
+        self._apply()
+        return result
+
+    def step(self, actions):
+        self._apply()
+        result = self.env.step(actions)
+        if self.local_step_increment > 0.0:
+            self.difficulty = _clamp01(self.difficulty + self.local_step_increment)
+        return result
+
+    def set_task(self, difficulty: float) -> None:
+        self.difficulty = _clamp01(difficulty)
+        self._apply()
+
+    def get_task(self) -> float:
+        return self.difficulty
+
+
+def _make_alpha_curriculum_wrapper(
+    *,
+    start_alpha: float,
+    end_alpha: float,
+    ramp_steps_per_env: int,
+    power: float,
+):
+    local_step_increment = 1.0 / max(1, int(ramp_steps_per_env))
+
+    def wrap(env):
+        return WrapperCurriculumLearning(
+            env,
+            difficulty=0.0,
+            difficulty_function=lambda difficulty: _curriculum_alpha(
+                difficulty,
+                start_alpha=start_alpha,
+                end_alpha=end_alpha,
+                power=power,
+            ),
+            local_step_increment=local_step_increment,
+        )
+
+    return wrap
+
+
+def _peek_curriculum_steps(metrics_logger) -> float:
+    """Read the best available sampled-step counter from an RLlib MetricsLogger."""
+    if metrics_logger is None:
+        return 0.0
+    keys = (
+        ("env_runners", "num_module_steps_sampled_lifetime", "inspector"),
+        ("env_runners", "num_agent_steps_sampled_lifetime", "SS1"),
+        ("num_module_steps_sampled_lifetime", "inspector"),
+        ("num_agent_steps_sampled_lifetime", "SS1"),
+        "num_env_steps_sampled_lifetime",
+    )
+    for key in keys:
+        try:
+            value = metrics_logger.peek(key, default=None)
+        except Exception:
+            continue
+        try:
+            if value is not None and np.isfinite(float(value)):
+                return float(value)
+        except (TypeError, ValueError):
+            continue
+    return 0.0
+
+
+def _curriculum_steps_from_results(results: dict[str, Any]) -> float:
+    env_runner_results = results.get("env_runners", {})
+    for source, key in (
+        (env_runner_results.get("num_module_steps_sampled_lifetime", {}), "inspector"),
+        (env_runner_results.get("num_agent_steps_sampled_lifetime", {}), "SS1"),
+    ):
+        if isinstance(source, dict) and key in source:
+            try:
+                return float(source[key])
+            except (TypeError, ValueError):
+                pass
+    for key in ("num_env_steps_sampled_lifetime", "num_env_steps_sampled"):
+        if key in results:
+            try:
+                return float(results[key])
+            except (TypeError, ValueError):
+                pass
+    return 0.0
+
+
+def initialize_alpha_curriculum_callbacks(
+    *,
+    ramp_steps: int,
+    start_alpha: float,
+    end_alpha: float,
+    power: float = 1.0,
+):
+    class CLCallbacks(WrappedEpisodeDataCallbacks):
+        def _difficulty_from_metrics(self, metrics_logger) -> float:
+            return _clamp01(_peek_curriculum_steps(metrics_logger) / max(1, ramp_steps))
+
+        def _set_env_task(self, env, env_index: int, difficulty: float) -> None:
+            candidates = []
+            if env is not None:
+                candidates.append(env)
+                try:
+                    envs = getattr(env, "envs", None)
+                except Exception:
+                    envs = None
+                if isinstance(envs, (list, tuple)) and 0 <= env_index < len(envs):
+                    candidates.insert(0, envs[env_index])
+            for candidate in candidates:
+                task_env = self._find_task_env(candidate)
+                if task_env is not None:
+                    task_env.set_task(difficulty)
+                    return
+                alpha = _curriculum_alpha(
+                    difficulty,
+                    start_alpha=start_alpha,
+                    end_alpha=end_alpha,
+                    power=power,
+                )
+                if _apply_reward_alpha_to_env(candidate, alpha):
+                    return
+
+        def _find_task_env(self, env) -> Any | None:
+            seen: set[int] = set()
+            stack = [env]
+            while stack:
+                candidate = stack.pop()
+                if candidate is None or id(candidate) in seen:
+                    continue
+                seen.add(id(candidate))
+                if hasattr(candidate, "set_task") and hasattr(candidate, "get_task"):
+                    return candidate
+                for attr in ("par_env", "env", "unwrapped"):
+                    try:
+                        child = getattr(candidate, attr, None)
+                    except Exception:
+                        child = None
+                    if child is not None and child is not candidate:
+                        stack.append(child)
+                try:
+                    envs = getattr(candidate, "envs", None)
+                except Exception:
+                    envs = None
+                if isinstance(envs, (list, tuple)):
+                    stack.extend(envs)
+            return None
+
+        def on_environment_created(self, *, env=None, metrics_logger=None, **kwargs):
+            super().on_environment_created(
+                env=env, metrics_logger=metrics_logger, **kwargs
+            )
+            self._set_env_task(env, 0, 0.0)
+
+        def on_episode_start(
+            self,
+            *,
+            metrics_logger=None,
+            env=None,
+            env_index,
+            **kwargs,
+        ) -> None:
+            difficulty = self._difficulty_from_metrics(metrics_logger)
+            self._set_env_task(env, env_index, difficulty)
+            alpha = _curriculum_alpha(
+                difficulty,
+                start_alpha=start_alpha,
+                end_alpha=end_alpha,
+                power=power,
+            )
+            if metrics_logger is not None:
+                metrics_logger.log_value(
+                    "curriculum_alpha", alpha, clear_on_reduce=True
+                )
+                metrics_logger.log_value(
+                    "curriculum_difficulty", difficulty, clear_on_reduce=True
+                )
+
+    return CLCallbacks
+
+
+def _push_curriculum_alpha_to_envs(ppo: PPO, alpha: float) -> None:
+    """Best-effort alpha update for already-created env runners."""
+
+    def set_on_runner(env_runner):
+        if hasattr(env_runner, "foreach_env"):
+            return env_runner.foreach_env(
+                lambda env: _apply_reward_alpha_to_env(env, alpha)
+            )
+        env = getattr(env_runner, "env", None)
+        if env is not None:
+            return _apply_reward_alpha_to_env(env, alpha)
+        return False
+
+    try:
+        ppo.env_runner_group.foreach_worker(
+            set_on_runner,
+            local_env_runner=True,
+            healthy_only=True,
+            timeout_seconds=30,
+        )
+    except Exception as exc:
+        print(f"[curriculum] warning: failed to push alpha to env runners: {exc}")
+
+
 def train_model(
     model_name: str,
     output_directory: Path,
@@ -242,6 +558,7 @@ def train_model(
     total_timesteps: int = 1_000_000,
     temp_dir: str = "/tmp",
     wandb_logger=None,
+    curriculum_config: dict[str, Any] | None = None,
 ) -> None:
     os.environ["RAY_TMPDIR"] = os.environ["TMPDIR"] = temp_dir
     output_directory = Path(output_directory)
@@ -260,6 +577,17 @@ def train_model(
         _temp_dir=temp_dir,
     )
 
+    curriculum_config = curriculum_config or {}
+    curriculum_enabled = bool(curriculum_config.get("enabled", False))
+    callback_class = WrappedEpisodeDataCallbacks
+    if curriculum_enabled:
+        callback_class = initialize_alpha_curriculum_callbacks(
+            ramp_steps=int(curriculum_config["ramp_steps"]),
+            start_alpha=float(curriculum_config["start_alpha"]),
+            end_alpha=float(curriculum_config["end_alpha"]),
+            power=float(curriculum_config.get("power", 1.0)),
+        )
+
     config = (
         PPOConfig()
         .training(**training_args)
@@ -271,7 +599,7 @@ def train_model(
             env="ConstellationTasking-RLlib",
             env_config=env_args,
         )
-        .callbacks(WrappedEpisodeDataCallbacks)
+        .callbacks(callback_class)
         .reporting(
             metrics_num_episodes_for_smoothing=1,
             metrics_episode_collection_timeout_s=180,
@@ -328,6 +656,28 @@ def train_model(
             results = ppo.train()
             step = results["num_env_steps_sampled_lifetime"]
             step_return = results["env_runners"].get("episode_return_mean", -np.inf)
+            if curriculum_enabled:
+                curriculum_steps = _curriculum_steps_from_results(results)
+                curriculum_difficulty = _clamp01(
+                    curriculum_steps / max(1, int(curriculum_config["ramp_steps"]))
+                )
+                curriculum_alpha = _curriculum_alpha(
+                    curriculum_difficulty,
+                    start_alpha=float(curriculum_config["start_alpha"]),
+                    end_alpha=float(curriculum_config["end_alpha"]),
+                    power=float(curriculum_config.get("power", 1.0)),
+                )
+                _push_curriculum_alpha_to_envs(ppo, curriculum_alpha)
+                results["curriculum_alpha"] = curriculum_alpha
+                results["curriculum_difficulty"] = curriculum_difficulty
+                results["curriculum_sampled_steps"] = curriculum_steps
+                print(
+                    "[curriculum] "
+                    f"sampled_steps={curriculum_steps:.0f}, "
+                    f"difficulty={curriculum_difficulty:.4f}, "
+                    f"alpha={curriculum_alpha:.4f}",
+                    flush=True,
+                )
             print(
                 "[train] finished iteration "
                 f"{iteration}: sampled_steps={step}, episode_return_mean={step_return}",
@@ -465,6 +815,20 @@ def env_metrics_callback(env):
     data["rw_valid"] = env.satellites[0].dynamics.rw_speeds_valid()
     data["cumulativeRewardSS1"] = env.rewarder.cum_reward["SS1"]
     data["illuminated_images"] = len(getattr(env.rewarder, "imaged_illuminated", []))
+    data["curriculum_alpha"] = float(
+        getattr(
+            env,
+            "curriculum_alpha",
+            getattr(env.satellites[0].dynamics, "downlink_bonus", -1.0),
+        )
+    )
+    data["curriculum_imaging_bonus"] = float(
+        getattr(
+            env,
+            "curriculum_imaging_bonus",
+            getattr(env.satellites[0].dynamics, "imaging_bonus", -1.0),
+        )
+    )
 
     target_priority_by_id = {}
     try:
@@ -856,11 +1220,25 @@ if __name__ == "__main__":
     sat_args["wheelSpeeds"] = lambda: np.random.uniform(-500, 500, 3)
     sat_args["desatAttitude"] = "sun"
 
+    curriculum_enabled = _env_bool("BSK_RL_ALPHA_CURRICULUM", False)
     downlink_bonus = _env_float("BSK_RL_DOWNLINK_BONUS", 0.2)
+    curriculum_start_alpha = _env_float(
+        "BSK_RL_ALPHA_CURRICULUM_START", downlink_bonus
+    )
+    curriculum_end_alpha = _env_float("BSK_RL_ALPHA_CURRICULUM_END", downlink_bonus)
+    curriculum_power = _env_float("BSK_RL_ALPHA_CURRICULUM_POWER", 1.0)
+    if curriculum_enabled:
+        downlink_bonus = curriculum_start_alpha
     if not 0.0 <= downlink_bonus <= 1.0:
         raise ValueError("BSK_RL_DOWNLINK_BONUS must be in [0, 1].")
+    if not 0.0 <= curriculum_start_alpha <= 1.0:
+        raise ValueError("BSK_RL_ALPHA_CURRICULUM_START must be in [0, 1].")
+    if not 0.0 <= curriculum_end_alpha <= 1.0:
+        raise ValueError("BSK_RL_ALPHA_CURRICULUM_END must be in [0, 1].")
     imaging_bonus = 1.0 - downlink_bonus
-    reward_split_tag = _reward_split_tag(downlink_bonus)
+    reward_split_tag = os.environ.get(
+        "BSK_RL_REWARD_SPLIT_TAG", _reward_split_tag(downlink_bonus)
+    )
     alpha_tag = os.environ.get("BSK_RL_ALPHA_TAG", _alpha_tag(downlink_bonus))
 
     sat_args["downlink_bonus"] = downlink_bonus
@@ -975,6 +1353,23 @@ if __name__ == "__main__":
     checkpoint_frequency = _env_int(
         "BSK_RL_CHECKPOINT_FREQUENCY", default_checkpoint_frequency
     )
+    curriculum_ramp_steps = _env_int(
+        "BSK_RL_ALPHA_CURRICULUM_RAMP_STEPS", total_timesteps
+    )
+    # With one env per RLlib env runner, this local increment lets each worker
+    # finish its own ramp at about the same time as the global callback ramp.
+    curriculum_ramp_steps_per_env = _env_int(
+        "BSK_RL_ALPHA_CURRICULUM_RAMP_STEPS_PER_ENV",
+        max(1, int(np.ceil(curriculum_ramp_steps / max(1, n_envs)))),
+    )
+    curriculum_config = {
+        "enabled": curriculum_enabled,
+        "start_alpha": curriculum_start_alpha,
+        "end_alpha": curriculum_end_alpha,
+        "power": curriculum_power,
+        "ramp_steps": curriculum_ramp_steps,
+        "ramp_steps_per_env": curriculum_ramp_steps_per_env,
+    }
 
     run_tag = (
         f"amos2026_LEO_GAT_fullActions_{reward_split_tag}_{batch_size}batch_"
@@ -993,6 +1388,28 @@ if __name__ == "__main__":
     )
 
     base_lr = 1e-5 #0.00033003435881682255  # current GNN hyperparameter starting point; not yet AMOS-tuned
+    env_args = dict(
+        satellites=[all_sat],
+        scenario=[make_rso_scenario()],
+        rewarder=[make_rso_rewarder()],
+        world_type=[world.GroundStationWorldModel],  # ImagingSCDynModel expects this AMOS world type.
+        time_limit=[total_time],
+        failure_penalty=[-100.0],
+        terminate_on_time_limit=[False],
+        generate_obs_retasking_only=[False],
+        episode_data_callback=[env_metrics_callback],
+        satellite_data_callback=[sat_metrics_callback],
+    )
+    if curriculum_enabled:
+        env_args["env_wrapper"] = [
+            _make_alpha_curriculum_wrapper(
+                start_alpha=curriculum_start_alpha,
+                end_alpha=curriculum_end_alpha,
+                ramp_steps_per_env=curriculum_ramp_steps_per_env,
+                power=curriculum_power,
+            )
+        ]
+
     jobs = build_job_array(
         training_args=dict(
             lr=[[[0, base_lr], [40000, base_lr / 16.749479444886223]]],
@@ -1005,18 +1422,7 @@ if __name__ == "__main__":
             grad_clip=[0.3104924935285628],
             entropy_coeff=[0.023694512589767867],
         ),
-        env_args=dict(
-            satellites=[all_sat],
-            scenario=[make_rso_scenario()],
-            rewarder=[make_rso_rewarder()],
-            world_type=[world.GroundStationWorldModel],  # ImagingSCDynModel expects this AMOS world type.
-            time_limit=[total_time],
-            failure_penalty=[-100.0],
-            terminate_on_time_limit=[False],
-            generate_obs_retasking_only=[False],
-            episode_data_callback=[env_metrics_callback],
-            satellite_data_callback=[sat_metrics_callback],
-        ),
+        env_args=env_args,
     )
 
     print(f"n_envs={n_envs}; batch_size={batch_size}; torch_threads={_TORCH_THREADS}")
@@ -1072,9 +1478,23 @@ if __name__ == "__main__":
             "imaging_bonus": imaging_bonus,
             "tag": reward_split_tag,
             "alpha_tag": alpha_tag,
+            "curriculum_enabled": curriculum_enabled,
         },
         "gat_model_config": inspector_model_config,
-        "job_args": sanitize_np(job_args),
+        "job_args": sanitize_np(
+            {
+                **job_args,
+                "env_args": {
+                    **job_args["env_args"],
+                    **(
+                        {"env_wrapper": "WrapperCurriculumLearning"}
+                        if "env_wrapper" in job_args["env_args"]
+                        else {}
+                    ),
+                },
+            }
+        ),
+        "curriculum": curriculum_config,
         "cluster": {
             "on_cluster": on_cluster,
             "job_index": job_index,
@@ -1116,5 +1536,6 @@ if __name__ == "__main__":
         n_envs=n_envs,
         temp_dir=str(ray_tmpdir),
         wandb_logger=wandb_logger,
+        curriculum_config=curriculum_config,
         **job_args,
     )
