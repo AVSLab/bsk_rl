@@ -20,12 +20,14 @@ from matplotlib.collections import PolyCollection
 from sim_config import SimConfig
 try:
     from evaluation_image_metrics import (
+        imaging_attempt_series,
         imaging_attempt_metrics,
         illuminated_image_count,
         illuminated_image_metrics,
     )
 except ModuleNotFoundError:
     from examples.evaluation_image_metrics import (
+        imaging_attempt_series,
         imaging_attempt_metrics,
         illuminated_image_count,
         illuminated_image_metrics,
@@ -1960,12 +1962,14 @@ cmd_target_ids = np.asarray(SS1_actions_spec.chosen_target_ids, dtype=int).ravel
 assert cmd_times.size == cmd_target_ids.size, "cmd_times and cmd_target_ids must align"
 
 
-# Align each command with the next acquisition event within the imaging window
+# Align each command with the next raw device-command rising edge. These are
+# diagnostic only: the accepted AMOS-2026 acquisition is the hold-gated action
+# success/end time from ImageRSO.imaging_attempt_records below.
 imaging_window = float(imaging_duration)  # 300s in your sim config
 
-acq_times_for_cmd = np.full(cmd_times.shape, np.nan, dtype=float)
-acq_dt_for_cmd = np.full(cmd_times.shape, np.nan, dtype=float)
-acq_success = np.zeros(cmd_times.shape, dtype=bool)
+raw_device_cmd_acq_times_for_cmd = np.full(cmd_times.shape, np.nan, dtype=float)
+raw_device_cmd_acq_dt_for_cmd = np.full(cmd_times.shape, np.nan, dtype=float)
+raw_device_cmd_acq_success = np.zeros(cmd_times.shape, dtype=bool)
 
 j = 0
 for i, t0 in enumerate(cmd_times):
@@ -1975,23 +1979,18 @@ for i, t0 in enumerate(cmd_times):
 
     # accept the next event if it occurs within the imaging window
     if j < acq_event_times.size and acq_event_times[j] <= (t0 + imaging_window + 1e-6):
-        acq_times_for_cmd[i] = acq_event_times[j]
-        acq_dt_for_cmd[i] = acq_event_times[j] - t0
-        acq_success[i] = True
+        raw_device_cmd_acq_times_for_cmd[i] = acq_event_times[j]
+        raw_device_cmd_acq_dt_for_cmd[i] = acq_event_times[j] - t0
+        raw_device_cmd_acq_success[i] = True
         j += 1
 
-# Convenience aliases used by later logging
-t_acq  = np.asarray(acq_times_for_cmd, dtype=float).ravel()
-dt_acq = np.asarray(acq_dt_for_cmd, dtype=float).ravel()
-acq_ok = np.asarray(acq_success, dtype=bool).ravel()
-# --- target shadowFactor at acquisition time (per command index) ---
-target_shadow_acq = np.full_like(t_acq, np.nan, dtype=float)
-
-if np.any(acq_ok):
+def _target_shadow_at_times(times_for_cmd, success_mask):
+    target_shadow = np.full(np.asarray(times_for_cmd, dtype=float).shape, np.nan, dtype=float)
+    if not np.any(success_mask):
+        return target_shadow
     _t_cache = {}
     _sf_cache = {}
-
-    for i in np.where(acq_ok)[0]:
+    for i in np.where(success_mask)[0]:
         tid = int(cmd_target_ids[i])  # must align with cmd_times indexing
 
         # mapping: sat[0] is inspector, targets are sat[tid+1]
@@ -2014,20 +2013,11 @@ if np.any(acq_ok):
 
         tt = _t_cache[tid]
         sf = _sf_cache[tid]
-        target_shadow_acq[i] = float(np.interp(float(t_acq[i]), tt, sf))
+        target_shadow[i] = float(np.interp(float(times_for_cmd[i]), tt, sf))
+    return target_shadow
 
-
-# Compute spacecraft shadowFactor at command and at acquisition (interpolate eclipse recorder)
-sat_sf_cmd = np.interp(cmd_times, ecl_t, ecl_sf) if cmd_times.size else np.array([])
-sat_sf_acq = np.interp(acq_times_for_cmd[acq_success], ecl_t, ecl_sf) if np.any(acq_success) else np.array([])
-
-# Summary metrics
-successful_acq_dt = np.asarray(acq_dt_for_cmd[acq_success], dtype=float)
-successful_acq_dt = successful_acq_dt[np.isfinite(successful_acq_dt)]
-avg_acq_time_sec = float(np.mean(successful_acq_dt)) if successful_acq_dt.size else float("nan")
-median_acq_time_sec = float(np.median(successful_acq_dt)) if successful_acq_dt.size else float("nan")
-acq_success_rate = float(np.mean(acq_success)) if cmd_times.size else float("nan")
 image_action_metrics = imaging_attempt_metrics(SS1_actions_spec)
+image_attempt_timing = imaging_attempt_series(SS1_actions_spec, cmd_times)
 imaging_action_durations_sec = np.asarray(
     image_action_metrics["imaging_action_durations_sec"], dtype=float
 )
@@ -2047,6 +2037,78 @@ unsuccessful_imaging_slew_times_sec = np.asarray(
     image_action_metrics["unsuccessful_imaging_slew_times_sec"], dtype=float
 )
 
+# Accepted hold-gated acquisition timing. For successful attempts this is the
+# same event that terminates the imaging action, so dt_acq should match the
+# successful action duration. The lower-level first/raw capture fields remain
+# available below for diagnostics.
+acq_times_for_cmd = np.asarray(
+    image_attempt_timing["accepted_acq_times"], dtype=float
+).ravel()
+acq_dt_for_cmd = np.asarray(
+    image_attempt_timing["accepted_acq_dt"], dtype=float
+).ravel()
+acq_success = np.asarray(
+    image_attempt_timing["accepted_acq_success"], dtype=bool
+).ravel()
+first_capture_times_for_cmd = np.asarray(
+    image_attempt_timing["first_capture_times"], dtype=float
+).ravel()
+first_capture_dt_for_cmd = np.asarray(
+    image_attempt_timing["first_capture_dt"], dtype=float
+).ravel()
+action_end_times_for_cmd = np.asarray(
+    image_attempt_timing["action_end_times"], dtype=float
+).ravel()
+action_durations_for_cmd = np.asarray(
+    image_attempt_timing["action_durations_sec"], dtype=float
+).ravel()
+hold_valid_times_for_cmd = np.asarray(
+    image_attempt_timing["hold_valid_times_sec"], dtype=float
+).ravel()
+
+# Convenience aliases used by later logging
+t_acq  = np.asarray(acq_times_for_cmd, dtype=float).ravel()
+dt_acq = np.asarray(acq_dt_for_cmd, dtype=float).ravel()
+acq_ok = np.asarray(acq_success, dtype=bool).ravel()
+
+# --- target shadowFactor at accepted acquisition time (per command index) ---
+target_shadow_acq = _target_shadow_at_times(t_acq, acq_ok)
+
+# Compute spacecraft shadowFactor at command and at acquisition (interpolate eclipse recorder)
+sat_sf_cmd = np.interp(cmd_times, ecl_t, ecl_sf) if cmd_times.size else np.array([])
+sat_sf_acq = np.interp(acq_times_for_cmd[acq_success], ecl_t, ecl_sf) if np.any(acq_success) else np.array([])
+
+# Summary metrics
+successful_acq_dt = np.asarray(acq_dt_for_cmd[acq_success], dtype=float)
+successful_acq_dt = successful_acq_dt[np.isfinite(successful_acq_dt)]
+avg_acq_time_sec = float(np.mean(successful_acq_dt)) if successful_acq_dt.size else float("nan")
+median_acq_time_sec = float(np.median(successful_acq_dt)) if successful_acq_dt.size else float("nan")
+acq_success_rate = float(np.mean(acq_success)) if cmd_times.size else float("nan")
+
+raw_successful_acq_dt = np.asarray(
+    raw_device_cmd_acq_dt_for_cmd[raw_device_cmd_acq_success], dtype=float
+)
+raw_successful_acq_dt = raw_successful_acq_dt[np.isfinite(raw_successful_acq_dt)]
+raw_avg_acq_time_sec = (
+    float(np.mean(raw_successful_acq_dt)) if raw_successful_acq_dt.size else float("nan")
+)
+raw_median_acq_time_sec = (
+    float(np.median(raw_successful_acq_dt)) if raw_successful_acq_dt.size else float("nan")
+)
+raw_acq_success_rate = (
+    float(np.mean(raw_device_cmd_acq_success)) if cmd_times.size else float("nan")
+)
+accepted_action_duration_delta = np.asarray(
+    acq_dt_for_cmd[acq_success] - action_durations_for_cmd[acq_success], dtype=float
+)
+accepted_action_duration_delta = accepted_action_duration_delta[
+    np.isfinite(accepted_action_duration_delta)
+]
+max_abs_accepted_acq_action_duration_delta_sec = (
+    float(np.max(np.abs(accepted_action_duration_delta)))
+    if accepted_action_duration_delta.size
+    else float("nan")
+)
 
 tau_umbra = 0.05
 pct_acq_in_umbra = float(np.mean(sat_sf_acq <= tau_umbra)) if sat_sf_acq.size else float("nan")
@@ -2059,6 +2121,15 @@ data_dict["image_acq_times"] = acq_times_for_cmd.tolist()
 data_dict["image_acq_dt"] = acq_dt_for_cmd.tolist()
 data_dict["image_acq_success"] = acq_success.astype(int).tolist()
 data_dict["successful_image_acq_dt"] = successful_acq_dt.tolist()
+data_dict["first_capture_times"] = first_capture_times_for_cmd.tolist()
+data_dict["first_capture_dt"] = first_capture_dt_for_cmd.tolist()
+data_dict["action_end_times"] = action_end_times_for_cmd.tolist()
+data_dict["action_durations_for_command_sec"] = action_durations_for_cmd.tolist()
+data_dict["hold_valid_times_sec"] = hold_valid_times_for_cmd.tolist()
+data_dict["raw_device_cmd_acq_times"] = raw_device_cmd_acq_times_for_cmd.tolist()
+data_dict["raw_device_cmd_acq_dt"] = raw_device_cmd_acq_dt_for_cmd.tolist()
+data_dict["raw_device_cmd_acq_success"] = raw_device_cmd_acq_success.astype(int).tolist()
+data_dict["accepted_acq_minus_action_duration_sec"] = accepted_action_duration_delta.tolist()
 data_dict["imaging_action_durations_sec"] = imaging_action_durations_sec.tolist()
 data_dict["successful_imaging_action_durations_sec"] = successful_imaging_action_durations_sec.tolist()
 data_dict["unsuccessful_imaging_action_durations_sec"] = unsuccessful_imaging_action_durations_sec.tolist()
@@ -2230,7 +2301,37 @@ if regime.size == 0:
     regime = np.array(["UNK"] * img_cmd_times.size, dtype=object)
 
 # Build dataframe (trim to the shortest common length to be safe)
-L = min(img_cmd_times.size, img_target_ids.size, az.size, el_loc.size, rng.size, tgt_sf_cmd.size, initial_ang_error.size, target_priority_cmd.size, priority_event_kind.size, image_action_ids.size, image_candidate_slots.size, t_acq.size, dt_acq.size, look_ahead.size, sat_sf_cmd_img.size, regime.size, alt_km.size, sat_shadow_min_win.size, sat_shadow_max_win.size, win_bucket.size, target_shadow_acq.size)
+L = min(
+    img_cmd_times.size,
+    img_target_ids.size,
+    az.size,
+    el_loc.size,
+    rng.size,
+    tgt_sf_cmd.size,
+    initial_ang_error.size,
+    target_priority_cmd.size,
+    priority_event_kind.size,
+    image_action_ids.size,
+    image_candidate_slots.size,
+    t_acq.size,
+    dt_acq.size,
+    first_capture_times_for_cmd.size,
+    first_capture_dt_for_cmd.size,
+    action_end_times_for_cmd.size,
+    action_durations_for_cmd.size,
+    hold_valid_times_for_cmd.size,
+    raw_device_cmd_acq_times_for_cmd.size,
+    raw_device_cmd_acq_dt_for_cmd.size,
+    raw_device_cmd_acq_success.size,
+    look_ahead.size,
+    sat_sf_cmd_img.size,
+    regime.size,
+    alt_km.size,
+    sat_shadow_min_win.size,
+    sat_shadow_max_win.size,
+    win_bucket.size,
+    target_shadow_acq.size,
+)
 
 df_images = pd.DataFrame({
     "t_cmd": img_cmd_times[:L],
@@ -2253,6 +2354,14 @@ df_images = pd.DataFrame({
     "t_acq": t_acq[:L],
     "dt_acq": dt_acq[:L],
     "acq_success": acq_ok[:L].astype(int),
+    "first_capture_time": first_capture_times_for_cmd[:L],
+    "first_capture_dt": first_capture_dt_for_cmd[:L],
+    "action_end_time": action_end_times_for_cmd[:L],
+    "action_duration_sec": action_durations_for_cmd[:L],
+    "hold_valid_time_s": hold_valid_times_for_cmd[:L],
+    "raw_device_cmd_acq_time": raw_device_cmd_acq_times_for_cmd[:L],
+    "raw_device_cmd_acq_dt": raw_device_cmd_acq_dt_for_cmd[:L],
+    "raw_device_cmd_acq_success": raw_device_cmd_acq_success[:L].astype(int),
     "sat_shadow_acq": sat_sf_acq_img[:L],
     "target_alt_km": alt_km[:L],
     "target_regime": regime[:L],
@@ -2375,7 +2484,7 @@ print(f"mean and std of chosen_target_elevation_local: {np.mean(SS1_actions_spec
 print(f"mean and std of chosen_target_distance: {np.mean(SS1_actions_spec.chosen_target_distance):.2f}, {np.std(SS1_actions_spec.chosen_target_distance):.2f}")
 print(f"mean and std of initial angular error: {np.mean(SS1_actions_spec.initial_angular_error):.2f}, {np.std(SS1_actions_spec.initial_angular_error):.2f}")
 print(f"mean and std of chosen_target_priority: {np.mean(SS1_actions_spec.chosen_target_priority):.2f}, {np.std(SS1_actions_spec.chosen_target_priority):.2f}")
-print("\n=== Imaging Acquisition Timing (actual capture trigger) ===")
+print("\n=== Imaging Acquisition Timing (accepted hold-gated action success) ===")
 print(f"Imaging commands issued: {cmd_times.size}")
 print(f"Acquisition success rate: {acq_success_rate:.3f}")
 print(f"Average acquisition time [s]: {avg_acq_time_sec:.2f}")
@@ -2386,6 +2495,13 @@ print(f"Average imaging action duration [s]: {image_action_metrics['mean_imaging
 print(f"Median imaging action duration [s]: {image_action_metrics['median_imaging_action_duration_sec']:.2f}")
 print(f"Average imaging slew duration [s]: {image_action_metrics['mean_imaging_slew_time_sec']:.2f}")
 print(f"Median imaging slew duration [s]: {image_action_metrics['median_imaging_slew_time_sec']:.2f}")
+print(
+    "Max |accepted acquisition dt - action duration| [s]: "
+    f"{max_abs_accepted_acq_action_duration_delta_sec:.6f}"
+)
+print(f"Raw device-trigger success rate: {raw_acq_success_rate:.3f}")
+print(f"Raw average device-trigger time [s]: {raw_avg_acq_time_sec:.2f}")
+print(f"Raw median device-trigger time [s]: {raw_median_acq_time_sec:.2f}")
 print(f"% commands in umbra (SF<=0.05): {pct_cmd_in_umbra:.3f}")
 print(f"% acquisitions in umbra (SF<=0.05): {pct_acq_in_umbra:.3f}")
 print("==========================================================\n")
@@ -2941,6 +3057,15 @@ if save_data:
     save_npy(run_dir, "image_acq_dt", acq_dt_for_cmd)
     save_npy(run_dir, "image_acq_success", acq_success.astype(int))
     save_npy(run_dir, "successful_image_acq_dt", successful_acq_dt)
+    save_npy(run_dir, "first_capture_times", first_capture_times_for_cmd)
+    save_npy(run_dir, "first_capture_dt", first_capture_dt_for_cmd)
+    save_npy(run_dir, "action_end_times", action_end_times_for_cmd)
+    save_npy(run_dir, "action_durations_for_command_sec", action_durations_for_cmd)
+    save_npy(run_dir, "hold_valid_times_sec", hold_valid_times_for_cmd)
+    save_npy(run_dir, "raw_device_cmd_acq_times", raw_device_cmd_acq_times_for_cmd)
+    save_npy(run_dir, "raw_device_cmd_acq_dt", raw_device_cmd_acq_dt_for_cmd)
+    save_npy(run_dir, "raw_device_cmd_acq_success", raw_device_cmd_acq_success.astype(int))
+    save_npy(run_dir, "accepted_acq_minus_action_duration_sec", accepted_action_duration_delta)
     save_npy(run_dir, "imaging_action_durations_sec", imaging_action_durations_sec)
     save_npy(run_dir, "successful_imaging_action_durations_sec", successful_imaging_action_durations_sec)
     save_npy(run_dir, "unsuccessful_imaging_action_durations_sec", unsuccessful_imaging_action_durations_sec)
@@ -3169,12 +3294,12 @@ for kind, target_ids in (("hio", hio_ids), ("shio", shio_ids)):
     ]
     command_times = [time for target_id, time in chosen_pairs if target_id in target_ids]
     capture_times = [
-        float(record.get("first_capture_time") or record.get("end_time"))
+        float(record.get("end_time"))
         for record in successful_records
         if int(record["target_id"]) in target_ids
-        and (record.get("first_capture_time") is not None or record.get("end_time") is not None)
+        and record.get("end_time") is not None
         and np.isfinite(event_time)
-        and float(record.get("first_capture_time") or record.get("end_time")) >= event_time
+        and float(record.get("end_time")) >= event_time
     ]
     first_candidate = _first_finite(candidate_times)
     first_command = _first_finite(command_times)
@@ -3234,6 +3359,10 @@ try:
     "acq_success_rate": acq_success_rate,
     "avg_acquisition_time_sec": avg_acq_time_sec,
     "median_acquisition_time_sec": median_acq_time_sec,
+    "raw_device_cmd_acq_success_rate": raw_acq_success_rate,
+    "raw_device_cmd_avg_acquisition_time_sec": raw_avg_acq_time_sec,
+    "raw_device_cmd_median_acquisition_time_sec": raw_median_acq_time_sec,
+    "max_abs_accepted_acq_action_duration_delta_sec": max_abs_accepted_acq_action_duration_delta_sec,
     "pct_cmd_in_umbra": pct_cmd_in_umbra,
     "pct_acq_in_umbra": pct_acq_in_umbra,
     "num_imaging_attempts": image_action_metrics["num_imaging_attempts"],

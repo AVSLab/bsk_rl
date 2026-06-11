@@ -48,6 +48,13 @@ export BSK_RL_MC_N_TARGETS=${BSK_RL_MC_N_TARGETS:-100}
 export BSK_RL_MC_N_TARGETS_AHEAD=${BSK_RL_MC_N_TARGETS_AHEAD:-10}
 export BSK_RL_MC_EXTRA_TIME_FACTOR=${BSK_RL_MC_EXTRA_TIME_FACTOR:-1.5}
 export BSK_RL_MC_TOTAL_TIME_SEC=${BSK_RL_MC_TOTAL_TIME_SEC:-}
+export BSK_RL_MC_TARGET_ENV=${BSK_RL_MC_TARGET_ENV:-leo}
+export BSK_RL_MC_MIX_WEIGHTS=${BSK_RL_MC_MIX_WEIGHTS:-'{"LEO":0.5,"MEO":0.3,"GEO":0.2}'}
+export BSK_RL_MC_DYNAMIC_PRIORITY_EVENT=${BSK_RL_MC_DYNAMIC_PRIORITY_EVENT:-on}
+export BSK_RL_MC_HIO_COUNT=${BSK_RL_MC_HIO_COUNT:-5}
+export BSK_RL_MC_HIO_PRIORITY=${BSK_RL_MC_HIO_PRIORITY:-5.0}
+export BSK_RL_MC_SHIO_COUNT=${BSK_RL_MC_SHIO_COUNT:-3}
+export BSK_RL_MC_SHIO_PRIORITY=${BSK_RL_MC_SHIO_PRIORITY:-10.0}
 export BSK_RL_MC_OUTPUT_ROOT=${BSK_RL_MC_OUTPUT_ROOT:-/scratch/alpine/$USER/amos2026_mc/gat_full_actions_eval_100d00i}
 export BSK_RL_MC_MANIFEST=${BSK_RL_MC_MANIFEST:?Set BSK_RL_MC_MANIFEST to a frozen checkpoint manifest}
 export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1}
@@ -70,6 +77,13 @@ echo "BSK_RL_MC_N_TARGETS=$BSK_RL_MC_N_TARGETS"
 echo "BSK_RL_MC_N_TARGETS_AHEAD=$BSK_RL_MC_N_TARGETS_AHEAD"
 echo "BSK_RL_MC_EXTRA_TIME_FACTOR=$BSK_RL_MC_EXTRA_TIME_FACTOR"
 echo "BSK_RL_MC_TOTAL_TIME_SEC=$BSK_RL_MC_TOTAL_TIME_SEC"
+echo "BSK_RL_MC_TARGET_ENV=$BSK_RL_MC_TARGET_ENV"
+echo "BSK_RL_MC_MIX_WEIGHTS=$BSK_RL_MC_MIX_WEIGHTS"
+echo "BSK_RL_MC_DYNAMIC_PRIORITY_EVENT=$BSK_RL_MC_DYNAMIC_PRIORITY_EVENT"
+echo "BSK_RL_MC_HIO_COUNT=$BSK_RL_MC_HIO_COUNT"
+echo "BSK_RL_MC_HIO_PRIORITY=$BSK_RL_MC_HIO_PRIORITY"
+echo "BSK_RL_MC_SHIO_COUNT=$BSK_RL_MC_SHIO_COUNT"
+echo "BSK_RL_MC_SHIO_PRIORITY=$BSK_RL_MC_SHIO_PRIORITY"
 echo "BSK_RL_MC_MANIFEST=$BSK_RL_MC_MANIFEST"
 echo "BSK_RL_MC_OUTPUT_ROOT=$BSK_RL_MC_OUTPUT_ROOT"
 echo "branch: $(git rev-parse --abbrev-ref HEAD)"
@@ -84,7 +98,14 @@ for ((seed_offset = 0; seed_offset < BSK_RL_MC_SEEDS_PER_BLOCK; seed_offset++));
     echo "===== Running policy task $policy_task_id seed offset $seed_offset ====="
     if ! python3 -u examples/amos_2026/evaluate_gat_reward_sweep_mc.py \
         --task-id "$evaluator_task_id" \
-        --seeds-per-block "$BSK_RL_MC_SEEDS_PER_BLOCK"; then
+        --seeds-per-block "$BSK_RL_MC_SEEDS_PER_BLOCK" \
+        --target-env "$BSK_RL_MC_TARGET_ENV" \
+        --mix-weights "$BSK_RL_MC_MIX_WEIGHTS" \
+        --dynamic-priority-event "$BSK_RL_MC_DYNAMIC_PRIORITY_EVENT" \
+        --hio-count "$BSK_RL_MC_HIO_COUNT" \
+        --hio-priority "$BSK_RL_MC_HIO_PRIORITY" \
+        --shio-count "$BSK_RL_MC_SHIO_COUNT" \
+        --shio-priority "$BSK_RL_MC_SHIO_PRIORITY"; then
         echo "WARNING: evaluator task $evaluator_task_id failed; continuing with the remaining seeds" >&2
         overall_status=1
     fi

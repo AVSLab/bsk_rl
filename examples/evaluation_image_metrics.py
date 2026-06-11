@@ -224,6 +224,127 @@ def _duration_from_record(record: dict[str, Any]) -> float | None:
     return duration if math.isfinite(duration) and duration >= 0.0 else None
 
 
+def imaging_attempt_series(
+    action_spec: Any, command_times: Any | None = None
+) -> dict[str, Any]:
+    """Return per-command timing arrays from ImageRSO attempt records.
+
+    The accepted AMOS-2026 acquisition event is the hold-gated image-success
+    action termination. A lower-level instrument/storage trigger can occur
+    earlier, but that raw first-capture time should not be used as the headline
+    acquisition duration because the policy cannot retask until the action ends.
+    """
+
+    records = list(getattr(action_spec, "imaging_attempt_records", []))
+    command_times_list = None
+    if command_times is not None:
+        try:
+            command_times_list = [float(value) for value in command_times]
+        except TypeError:
+            command_times_list = None
+
+    n_rows = len(command_times_list) if command_times_list is not None else len(records)
+
+    def nan_list() -> list[float]:
+        return [float("nan")] * n_rows
+
+    accepted_acq_times = nan_list()
+    accepted_acq_dt = nan_list()
+    first_capture_times = nan_list()
+    first_capture_dt = nan_list()
+    action_end_times = nan_list()
+    action_durations = nan_list()
+    slew_times = nan_list()
+    hold_valid_times = nan_list()
+    target_ids = [None] * n_rows
+    reasons = [None] * n_rows
+    success_flags = [False] * n_rows
+
+    used_indices: set[int] = set()
+
+    def row_index(record_index: int, record: dict[str, Any]) -> int | None:
+        if command_times_list is None:
+            return record_index if record_index < n_rows else None
+        if len(records) == n_rows:
+            return record_index
+
+        start_time = _finite_float(record.get("start_time"))
+        if start_time is None:
+            return None
+        best_index = None
+        best_abs_error = float("inf")
+        for index, command_time in enumerate(command_times_list):
+            if index in used_indices:
+                continue
+            abs_error = abs(command_time - start_time)
+            if abs_error < best_abs_error:
+                best_abs_error = abs_error
+                best_index = index
+        # Times are normally exact. Keep a small tolerance for recorder/event
+        # scheduling differences without accidentally matching the next command.
+        if best_index is not None and best_abs_error <= 1.0:
+            return best_index
+        return None
+
+    for record_index, record in enumerate(records):
+        index = row_index(record_index, record)
+        if index is None or not 0 <= index < n_rows:
+            continue
+        used_indices.add(index)
+
+        start_time = _finite_float(record.get("start_time"))
+        if start_time is None and command_times_list is not None:
+            start_time = command_times_list[index]
+        end_time = _finite_float(record.get("end_time"))
+        first_capture_time = _finite_float(record.get("first_capture_time"))
+        duration = _duration_from_record(record)
+        success = bool(record.get("success"))
+
+        target_ids[index] = record.get("target_id")
+        reasons[index] = record.get("reason")
+        success_flags[index] = success
+
+        if end_time is not None:
+            action_end_times[index] = end_time
+            if start_time is not None:
+                action_durations[index] = end_time - start_time
+        elif duration is not None and start_time is not None:
+            action_end_times[index] = start_time + duration
+            action_durations[index] = duration
+
+        if first_capture_time is not None:
+            first_capture_times[index] = first_capture_time
+            if start_time is not None:
+                first_capture_dt[index] = first_capture_time - start_time
+
+        slew_time = _finite_float(record.get("slew_time_s"))
+        if slew_time is not None:
+            slew_times[index] = slew_time
+
+        hold_valid_time = _finite_float(record.get("hold_valid_time_s"))
+        if hold_valid_time is not None:
+            hold_valid_times[index] = hold_valid_time
+
+        if success and action_end_times[index] == action_end_times[index]:
+            accepted_acq_times[index] = action_end_times[index]
+            if start_time is not None:
+                accepted_acq_dt[index] = action_end_times[index] - start_time
+
+    return {
+        "accepted_acq_times": accepted_acq_times,
+        "accepted_acq_dt": accepted_acq_dt,
+        "accepted_acq_success": [int(flag) for flag in success_flags],
+        "first_capture_times": first_capture_times,
+        "first_capture_dt": first_capture_dt,
+        "action_end_times": action_end_times,
+        "action_durations_sec": action_durations,
+        "slew_times_sec": slew_times,
+        "hold_valid_times_sec": hold_valid_times,
+        "target_ids": target_ids,
+        "reasons": reasons,
+    }
+
+
 def imaging_attempt_metrics(action_spec: Any) -> dict[str, Any]:
     """Summarize ImageRSO's per-attempt timing records.
 
@@ -261,6 +382,13 @@ def imaging_attempt_metrics(action_spec: Any) -> dict[str, Any]:
             else:
                 unsuccessful_slew_times.append(slew_time)
 
+    accepted_series = imaging_attempt_series(action_spec)
+    accepted_acq_dt = [
+        value
+        for value in accepted_series["accepted_acq_dt"]
+        if _finite_float(value) is not None
+    ]
+
     return {
         "num_imaging_attempts": int(len(records)),
         "imaging_attempt_success_rate": (
@@ -271,6 +399,8 @@ def imaging_attempt_metrics(action_spec: Any) -> dict[str, Any]:
         "total_imaging_action_time_sec": float(sum(durations)),
         "mean_imaging_action_duration_sec": _mean(durations),
         "median_imaging_action_duration_sec": _median(durations),
+        "mean_accepted_acquisition_time_sec": _mean(accepted_acq_dt),
+        "median_accepted_acquisition_time_sec": _median(accepted_acq_dt),
         "mean_successful_imaging_action_duration_sec": _mean(successful_durations),
         "median_successful_imaging_action_duration_sec": _median(successful_durations),
         "mean_unsuccessful_imaging_action_duration_sec": _mean(unsuccessful_durations),

@@ -169,7 +169,12 @@ def completed_status_for(
     seed: int,
     evaluation_reward_mix: str,
     target_env: str,
+    mix_weights: str,
     dynamic_priority_event: str,
+    hio_count: int,
+    hio_priority: float,
+    shio_count: int,
+    shio_priority: float,
     use_shield: bool,
     n_targets: int,
     n_targets_ahead: int,
@@ -197,7 +202,17 @@ def completed_status_for(
             continue
         if status.get("target_env") != target_env:
             continue
+        if target_env == "mixed" and status.get("mix_weights") != mix_weights:
+            continue
         if status.get("dynamic_priority_event") != dynamic_priority_event:
+            continue
+        if int(status.get("hio_count", hio_count)) != int(hio_count):
+            continue
+        if float(status.get("hio_priority", hio_priority)) != float(hio_priority):
+            continue
+        if int(status.get("shio_count", shio_count)) != int(shio_count):
+            continue
+        if float(status.get("shio_priority", shio_priority)) != float(shio_priority):
             continue
         if bool(status.get("use_shield", False)) != bool(use_shield):
             continue
@@ -291,7 +306,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--target-env",
         choices=["leo", "mixed"],
-        default="leo",
+        default=os.environ.get("BSK_RL_MC_TARGET_ENV", "leo"),
+    )
+    parser.add_argument(
+        "--mix-weights",
+        default=os.environ.get("BSK_RL_MC_MIX_WEIGHTS", '{"LEO":0.5,"MEO":0.3,"GEO":0.2}'),
+        help='JSON regime weights used when --target-env mixed, e.g. \'{"LEO":0.5,"MEO":0.3,"GEO":0.2}\'.',
     )
     parser.add_argument(
         "--n-targets",
@@ -347,7 +367,27 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--dynamic-priority-event",
         choices=["on", "off"],
-        default="on",
+        default=os.environ.get("BSK_RL_MC_DYNAMIC_PRIORITY_EVENT", "on"),
+    )
+    parser.add_argument(
+        "--hio-count",
+        type=int,
+        default=int(os.environ.get("BSK_RL_MC_HIO_COUNT", "5")),
+    )
+    parser.add_argument(
+        "--hio-priority",
+        type=float,
+        default=float(os.environ.get("BSK_RL_MC_HIO_PRIORITY", "5.0")),
+    )
+    parser.add_argument(
+        "--shio-count",
+        type=int,
+        default=int(os.environ.get("BSK_RL_MC_SHIO_COUNT", "3")),
+    )
+    parser.add_argument(
+        "--shio-priority",
+        type=float,
+        default=float(os.environ.get("BSK_RL_MC_SHIO_PRIORITY", "10.0")),
     )
     parser.add_argument(
         "--use-shield",
@@ -394,7 +434,12 @@ def main() -> int:
         seed,
         args.evaluation_reward_mix,
         args.target_env,
+        args.mix_weights,
         args.dynamic_priority_event,
+        args.hio_count,
+        args.hio_priority,
+        args.shio_count,
+        args.shio_priority,
         args.use_shield,
         args.n_targets,
         args.n_targets_ahead,
@@ -433,6 +478,8 @@ def main() -> int:
         args.evaluation_reward_mix,
         "--target_env",
         args.target_env,
+        "--mix_weights",
+        args.mix_weights,
         "--n_targets",
         str(args.n_targets),
         "--n_targets_ahead",
@@ -441,6 +488,14 @@ def main() -> int:
         str(args.extra_time_factor),
         "--dynamic_priority_event",
         args.dynamic_priority_event,
+        "--hio_count",
+        str(args.hio_count),
+        "--hio_priority",
+        str(args.hio_priority),
+        "--shio_count",
+        str(args.shio_count),
+        "--shio_priority",
+        str(args.shio_priority),
         "--output_dir",
         str(seed_dir),
         "--save_data",
@@ -468,11 +523,16 @@ def main() -> int:
         "output_dir": str(seed_dir.resolve()),
         "evaluation_reward_mix": args.evaluation_reward_mix,
         "target_env": args.target_env,
+        "mix_weights": args.mix_weights,
         "n_targets": args.n_targets,
         "n_targets_ahead": args.n_targets_ahead,
         "extra_time_factor": args.extra_time_factor,
         "total_time_sec": args.total_time_sec,
         "dynamic_priority_event": args.dynamic_priority_event,
+        "hio_count": args.hio_count,
+        "hio_priority": args.hio_priority,
+        "shio_count": args.shio_count,
+        "shio_priority": args.shio_priority,
         "use_shield": args.use_shield,
         "command": command,
     }

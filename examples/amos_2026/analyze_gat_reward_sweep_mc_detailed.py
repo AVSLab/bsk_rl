@@ -83,6 +83,24 @@ DATA_FIELDS = [
     "std_rel_pos_H_x",
     "std_rel_pos_H_y",
     "std_rel_pos_H_z",
+    # Available in newly instrumented evaluations. Older MC outputs retain NaN.
+    "dynamic_priority_event_applied",
+    "dynamic_priority_event_time_sec",
+    "dynamic_priority_event_applied_time_sec",
+    "hio_target_count",
+    "shio_target_count",
+    "hio_candidate_access_count",
+    "shio_candidate_access_count",
+    "time_to_first_hio_candidate_access_sec",
+    "time_to_first_shio_candidate_access_sec",
+    "hio_command_count_after_event",
+    "shio_command_count_after_event",
+    "hio_successful_capture_count_after_event",
+    "shio_successful_capture_count_after_event",
+    "time_to_first_hio_command_sec",
+    "time_to_first_shio_command_sec",
+    "time_to_first_hio_success_sec",
+    "time_to_first_shio_success_sec",
 ]
 SUMMARY_FIELDS = [
     "target_imaging_count",
@@ -96,6 +114,10 @@ SUMMARY_FIELDS = [
     "acq_success_rate",
     "avg_acquisition_time_sec",
     "median_acquisition_time_sec",
+    "raw_device_cmd_acq_success_rate",
+    "raw_device_cmd_avg_acquisition_time_sec",
+    "raw_device_cmd_median_acquisition_time_sec",
+    "max_abs_accepted_acq_action_duration_delta_sec",
     "pct_cmd_in_umbra",
     "pct_acq_in_umbra",
     "num_imaging_attempts",
@@ -141,6 +163,18 @@ CORE_SUMMARY_METRICS = [
     "downlink_positive_reward_count",
     "downlink_storage_reduction_count",
     "downlink_empty_or_noop_count_storage_proxy",
+    "downlink_empty_at_command_count",
+    "downlink_empty_at_command_fraction",
+    "downlink_nonempty_no_transfer_count",
+    "downlink_nonempty_no_transfer_fraction",
+    "mean_downlink_duration_sec",
+    "median_downlink_duration_sec",
+    "mean_successful_downlink_duration_sec",
+    "median_successful_downlink_duration_sec",
+    "mean_empty_downlink_duration_sec",
+    "median_empty_downlink_duration_sec",
+    "mean_nonempty_no_transfer_downlink_duration_sec",
+    "median_nonempty_no_transfer_downlink_duration_sec",
     "mean_ground_value_per_positive_downlink",
     "mean_est_images_removed_per_storage_downlink",
     "image_to_next_reward_downlink_latency_mean_sec",
@@ -155,6 +189,27 @@ CORE_SUMMARY_METRICS = [
     "final_storage_fraction",
     "final_sim_time_sec",
     "elapsed_seconds",
+    "mean_imaging_action_duration_sec",
+    "mean_successful_imaging_action_duration_sec",
+    "mean_unsuccessful_imaging_action_duration_sec",
+    "mean_imaging_slew_time_sec",
+    "mean_successful_imaging_slew_time_sec",
+    "mean_unsuccessful_imaging_slew_time_sec",
+    "raw_device_cmd_avg_acquisition_time_sec",
+    "max_abs_accepted_acq_action_duration_delta_sec",
+    "mean_initial_ang_error",
+    "mean_target_elevation_local",
+    "mean_target_distance",
+    "time_to_first_hio_candidate_access_sec",
+    "time_to_first_shio_candidate_access_sec",
+    "time_to_first_hio_command_sec",
+    "time_to_first_shio_command_sec",
+    "time_to_first_hio_success_sec",
+    "time_to_first_shio_success_sec",
+    "hio_command_count_after_event",
+    "shio_command_count_after_event",
+    "hio_successful_capture_count_after_event",
+    "shio_successful_capture_count_after_event",
 ]
 
 
@@ -331,14 +386,20 @@ def step_metrics(
     storage_capacity_images: float,
     storage_eps: float,
     reward_eps: float,
-) -> tuple[dict[str, Any], pd.DataFrame]:
+) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
     result: dict[str, Any] = {}
     if steps.empty:
-        return result, pd.DataFrame()
+        return result, pd.DataFrame(), pd.DataFrame()
 
     action = pd.to_numeric(steps.get("action_id"), errors="coerce")
     action = action.fillna(-999).astype(int)
+    action_duration = (
+        numeric_column(steps, "t_after") - numeric_column(steps, "t_cmd")
+    ).clip(lower=0.0)
     total = int(len(action))
+    for action_id in range(IMAGE_ACTION_MAX + 1):
+        result[f"action_id_{action_id}_count"] = int((action == action_id).sum())
+
     result["num_steps"] = total
     for action_label in ("image", "charge", "downlink", "desat"):
         if action_label == "image":
@@ -349,6 +410,23 @@ def step_metrics(
         count = int(mask.sum())
         result[f"{action_label}_action_count_steps_csv"] = count
         result[f"frac_{action_label}_actions"] = count / total if total else np.nan
+
+    image_steps = steps.loc[
+        (action >= IMAGE_ACTION_MIN) & (action <= IMAGE_ACTION_MAX)
+    ].copy()
+    if not image_steps.empty:
+        image_steps["action_name"] = "image"
+        image_steps["candidate_slot"] = (
+            pd.to_numeric(image_steps["action_id"], errors="coerce") - IMAGE_ACTION_MIN
+        ).astype("Int64")
+        image_steps["action_duration_sec"] = action_duration.loc[image_steps.index]
+        image_count = len(image_steps)
+        for slot in range(IMAGE_ACTION_MAX - IMAGE_ACTION_MIN + 1):
+            slot_count = int((image_steps["candidate_slot"] == slot).sum())
+            result[f"image_candidate_slot_{slot}_count"] = slot_count
+            result[f"image_candidate_slot_{slot}_fraction"] = (
+                slot_count / image_count if image_count else np.nan
+            )
 
     for source, output in (
         ("battery_frac_after", "final_battery_fraction"),
@@ -368,25 +446,52 @@ def step_metrics(
                 "downlink_positive_reward_count": 0,
                 "downlink_storage_reduction_count": 0,
                 "downlink_empty_or_noop_count_storage_proxy": 0,
+                "downlink_empty_at_command_count": 0,
+                "downlink_empty_at_command_fraction": np.nan,
+                "downlink_nonempty_no_transfer_count": 0,
+                "downlink_nonempty_no_transfer_fraction": np.nan,
+                "mean_downlink_duration_sec": np.nan,
+                "median_downlink_duration_sec": np.nan,
+                "mean_successful_downlink_duration_sec": np.nan,
+                "median_successful_downlink_duration_sec": np.nan,
+                "mean_empty_downlink_duration_sec": np.nan,
+                "median_empty_downlink_duration_sec": np.nan,
+                "mean_nonempty_no_transfer_downlink_duration_sec": np.nan,
+                "median_nonempty_no_transfer_downlink_duration_sec": np.nan,
                 "mean_ground_value_per_positive_downlink": np.nan,
                 "mean_est_images_removed_per_storage_downlink": np.nan,
             }
         )
-        return result, downlink
+        return result, downlink, image_steps
 
     reward_step = numeric_column(downlink, "reward_step", 0.0).fillna(0.0)
     storage_cmd = numeric_column(downlink, "storage_frac_cmd")
     storage_after = numeric_column(downlink, "storage_frac_after")
     storage_drop = (storage_cmd - storage_after).clip(lower=0.0).fillna(0.0)
+    downlink_duration = action_duration.loc[downlink.index].fillna(0.0)
 
     positive_reward = reward_step > reward_eps
     storage_reduced = storage_drop > storage_eps
     started_nonempty = storage_cmd.fillna(0.0) > storage_eps
+    empty_at_command = ~started_nonempty
+    nonempty_no_transfer = started_nonempty & ~storage_reduced
     downlink = downlink.assign(
         action_name="downlink",
+        action_duration_sec=downlink_duration,
         positive_reward_proxy=positive_reward.to_numpy(dtype=bool),
         storage_reduced_proxy=storage_reduced.to_numpy(dtype=bool),
         started_nonempty_proxy=started_nonempty.to_numpy(dtype=bool),
+        empty_at_command=empty_at_command.to_numpy(dtype=bool),
+        nonempty_no_transfer=nonempty_no_transfer.to_numpy(dtype=bool),
+        outcome=np.select(
+            [
+                empty_at_command.to_numpy(dtype=bool),
+                storage_reduced.to_numpy(dtype=bool),
+                nonempty_no_transfer.to_numpy(dtype=bool),
+            ],
+            ["empty_at_command", "storage_reduced", "nonempty_no_transfer"],
+            default="other",
+        ),
         storage_drop_fraction=storage_drop,
         estimated_images_removed=storage_drop * float(storage_capacity_images),
     )
@@ -398,8 +503,32 @@ def step_metrics(
             "downlink_storage_reduction_count": int(storage_reduced.sum()),
             "downlink_started_nonempty_count": int(started_nonempty.sum()),
             "downlink_empty_or_noop_count_storage_proxy": int((~storage_reduced).sum()),
+            "downlink_empty_at_command_count": int(empty_at_command.sum()),
+            "downlink_empty_at_command_fraction": float(empty_at_command.mean()),
+            "downlink_nonempty_no_transfer_count": int(nonempty_no_transfer.sum()),
+            "downlink_nonempty_no_transfer_fraction": float(nonempty_no_transfer.mean()),
             "downlink_success_rate_reward_proxy": float(positive_reward.mean()),
             "downlink_success_rate_storage_proxy": float(storage_reduced.mean()),
+            "mean_downlink_duration_sec": safe_mean(downlink_duration.to_numpy(dtype=float)),
+            "median_downlink_duration_sec": safe_median(downlink_duration.to_numpy(dtype=float)),
+            "mean_successful_downlink_duration_sec": safe_mean(
+                downlink_duration[storage_reduced].to_numpy(dtype=float)
+            ),
+            "median_successful_downlink_duration_sec": safe_median(
+                downlink_duration[storage_reduced].to_numpy(dtype=float)
+            ),
+            "mean_empty_downlink_duration_sec": safe_mean(
+                downlink_duration[empty_at_command].to_numpy(dtype=float)
+            ),
+            "median_empty_downlink_duration_sec": safe_median(
+                downlink_duration[empty_at_command].to_numpy(dtype=float)
+            ),
+            "mean_nonempty_no_transfer_downlink_duration_sec": safe_mean(
+                downlink_duration[nonempty_no_transfer].to_numpy(dtype=float)
+            ),
+            "median_nonempty_no_transfer_downlink_duration_sec": safe_median(
+                downlink_duration[nonempty_no_transfer].to_numpy(dtype=float)
+            ),
             "mean_ground_value_per_downlink_action": float(reward_step.mean()),
             "mean_ground_value_per_positive_downlink": safe_mean(
                 reward_step[positive_reward].to_numpy(dtype=float)
@@ -418,7 +547,7 @@ def step_metrics(
             "downlink_action_count_steps_csv": total_downlinks,
         }
     )
-    return result, downlink
+    return result, downlink, image_steps
 
 
 def next_event_latency(event_times: np.ndarray, image_times: np.ndarray) -> np.ndarray:
@@ -506,6 +635,27 @@ def image_metrics(images: pd.DataFrame, downlink_events: pd.DataFrame) -> dict[s
     return result
 
 
+def build_image_events(images: pd.DataFrame, image_steps: pd.DataFrame) -> pd.DataFrame:
+    """Attach policy action-slot and duration data to each saved image command."""
+    if images.empty:
+        return pd.DataFrame()
+    events = images.copy()
+    if image_steps.empty:
+        events["action_id"] = np.nan
+        events["candidate_slot"] = np.nan
+        events["action_duration_sec"] = np.nan
+        return events
+
+    step_columns = [
+        column
+        for column in ("t_cmd", "action_id", "candidate_slot", "action_duration_sec")
+        if column in image_steps
+    ]
+    step_data = image_steps[step_columns].copy()
+    # Command times originate from the same step loop, so this is an exact join.
+    return events.merge(step_data, on="t_cmd", how="left", validate="one_to_one")
+
+
 def flatten_metrics_payload(payload: dict[str, Any] | None) -> dict[str, Any]:
     row: dict[str, Any] = {}
     if payload is None:
@@ -526,12 +676,19 @@ def flatten_metrics_payload(payload: dict[str, Any] | None) -> dict[str, Any]:
     for field in SUMMARY_FIELDS:
         row[field] = summary.get(field, np.nan)
 
+    def flatten_group(prefix: str, value: Any) -> None:
+        if isinstance(value, dict):
+            for key, nested_value in value.items():
+                flatten_group(f"{prefix}_{key}", nested_value)
+            return
+        if isinstance(value, (int, float, str)) or value is None:
+            row[prefix] = value
+
     for group_name in ("look_metrics", "regime_metrics"):
         group = summary.get(group_name, {})
         if isinstance(group, dict):
             for key, value in group.items():
-                if isinstance(value, (int, float, str)) or value is None:
-                    row[f"{group_name}_{key}"] = value
+                flatten_group(f"{group_name}_{key}", value)
 
     for field in (
         "policy_layout",
@@ -552,20 +709,21 @@ def load_record(
     storage_capacity_images: float,
     storage_eps: float,
     reward_eps: float,
-) -> tuple[dict[str, Any], pd.DataFrame]:
+) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
     status = json.loads(status_path.read_text())
     seed_dir = status_path.parent
     metrics_path, payload = read_metrics(seed_dir)
     run_dir = metrics_path.parent if metrics_path is not None else None
     steps = load_steps(run_dir)
     images = load_images(run_dir)
-    step_row, downlink_events = step_metrics(
+    step_row, downlink_events, image_steps = step_metrics(
         steps,
         storage_capacity_images=storage_capacity_images,
         storage_eps=storage_eps,
         reward_eps=reward_eps,
     )
     image_row = image_metrics(images, downlink_events)
+    image_events = build_image_events(images, image_steps)
 
     row: dict[str, Any] = {
         "policy_tag": status.get("policy_tag"),
@@ -594,7 +752,11 @@ def load_record(
         event_rows.insert(2, "status_path", str(status_path))
     else:
         event_rows = pd.DataFrame()
-    return row, event_rows
+    if not image_events.empty:
+        image_events.insert(0, "policy_tag", row["policy_tag"])
+        image_events.insert(1, "seed", row["seed"])
+        image_events.insert(2, "status_path", str(status_path))
+    return row, event_rows, image_events
 
 
 def aggregate_summary(records: pd.DataFrame, metrics: list[str]) -> pd.DataFrame:
@@ -638,6 +800,73 @@ def action_distribution(records: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def action_id_distribution(records: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate every discrete action ID, including each image candidate slot."""
+    rows: list[dict[str, Any]] = []
+    completed = records[records["state"] == "completed"]
+    for tag in POLICY_TAGS:
+        subset = completed[completed["policy_tag"] == tag]
+        counts = {
+            action_id: float(numeric_series(subset, f"action_id_{action_id}_count").sum())
+            for action_id in range(IMAGE_ACTION_MAX + 1)
+        }
+        total = float(sum(counts.values()))
+        for action_id, count in counts.items():
+            rows.append(
+                {
+                    "policy_tag": tag,
+                    "action_id": action_id,
+                    "action_name": action_name(action_id),
+                    "candidate_slot": (
+                        action_id - IMAGE_ACTION_MIN
+                        if IMAGE_ACTION_MIN <= action_id <= IMAGE_ACTION_MAX
+                        else np.nan
+                    ),
+                    "count": count,
+                    "fraction_all_actions": count / total if total else np.nan,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def image_candidate_summary(image_events: pd.DataFrame) -> pd.DataFrame:
+    """Summarize which elevation-ordered image candidate slot the policy selected."""
+    if image_events.empty or "candidate_slot" not in image_events:
+        return pd.DataFrame()
+    events = image_events.copy()
+    events["candidate_slot"] = pd.to_numeric(
+        events["candidate_slot"], errors="coerce"
+    )
+    events = events[events["candidate_slot"].notna()].copy()
+    rows: list[dict[str, Any]] = []
+    for tag in POLICY_TAGS:
+        policy_events = events[events["policy_tag"] == tag]
+        total = len(policy_events)
+        for slot in range(IMAGE_ACTION_MAX - IMAGE_ACTION_MIN + 1):
+            subset = policy_events[policy_events["candidate_slot"] == slot]
+            success = numeric_series(subset, "acq_success")
+            rows.append(
+                {
+                    "policy_tag": tag,
+                    "candidate_slot": slot,
+                    "action_id": slot + IMAGE_ACTION_MIN,
+                    "count": int(len(subset)),
+                    "fraction_image_actions": len(subset) / total if total else np.nan,
+                    "acquisition_success_rate": float(success.mean()) if len(success) else np.nan,
+                    "mean_selected_elevation_deg": safe_mean(
+                        numeric_series(subset, "elevation_local_deg").to_numpy(dtype=float)
+                    ),
+                    "mean_action_duration_sec": safe_mean(
+                        numeric_series(subset, "action_duration_sec").to_numpy(dtype=float)
+                    ),
+                    "mean_range_km": safe_mean(
+                        numeric_series(subset, "range_m").to_numpy(dtype=float) / 1000.0
+                    ),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
 def downlink_summary(records: pd.DataFrame) -> pd.DataFrame:
     metrics = [
         "downlink_action_count_steps_csv",
@@ -645,8 +874,20 @@ def downlink_summary(records: pd.DataFrame) -> pd.DataFrame:
         "downlink_storage_reduction_count",
         "downlink_started_nonempty_count",
         "downlink_empty_or_noop_count_storage_proxy",
+        "downlink_empty_at_command_count",
+        "downlink_empty_at_command_fraction",
+        "downlink_nonempty_no_transfer_count",
+        "downlink_nonempty_no_transfer_fraction",
         "downlink_success_rate_reward_proxy",
         "downlink_success_rate_storage_proxy",
+        "mean_downlink_duration_sec",
+        "median_downlink_duration_sec",
+        "mean_successful_downlink_duration_sec",
+        "median_successful_downlink_duration_sec",
+        "mean_empty_downlink_duration_sec",
+        "median_empty_downlink_duration_sec",
+        "mean_nonempty_no_transfer_downlink_duration_sec",
+        "median_nonempty_no_transfer_downlink_duration_sec",
         "mean_ground_value_per_positive_downlink",
         "mean_est_images_removed_per_storage_downlink",
         "total_est_images_removed_by_downlink",
@@ -796,6 +1037,31 @@ def write_metric_definitions(output_dir: Path) -> None:
             "configured tolerance. This identifies storage-clearing downlinks, including cases where "
             "the delivered packets may have low/no 100d00i value."
         ),
+        "downlink_empty_at_command_fraction": (
+            "Fraction of downlink actions for which storage_frac_cmd is at or below "
+            "--storage-eps. This is the direct empty-storage command metric, distinct "
+            "from a downlink that starts nonempty but transfers no data."
+        ),
+        "downlink_nonempty_no_transfer_fraction": (
+            "Fraction of downlink actions that start with nonzero storage but do not "
+            "reduce storage by more than --storage-eps."
+        ),
+        "*_downlink_duration_sec": (
+            "Wall-clock simulation duration t_after - t_cmd for downlink actions, "
+            "reported for all, storage-reducing, empty-at-command, and nonempty-no-transfer cases."
+        ),
+        "image_candidate_slot": (
+            "For GAT full-action policies, action IDs 3..12 map to candidate slots 0..9. "
+            "The ImageRSO action sorts currently visible eligible targets by ascending local "
+            "elevation before taking the first ten. If fewer than ten are visible, remaining "
+            "slots are padded by closest eligible targets, so the slot is not always a pure "
+            "elevation rank."
+        ),
+        "HIO_SHIO_metrics": (
+            "Exact HIO/SHIO access, command, and capture latency requires event target IDs. "
+            "These fields are available only for evaluations produced after explicit priority-event "
+            "logging was added; the existing 800-run archive does not contain those identities."
+        ),
         "mean_est_images_removed_per_storage_downlink": (
             "Mean storage fraction decrease during storage-reducing downlinks multiplied by "
             "--storage-capacity-images. This is image-equivalent throughput, not an exact packet count."
@@ -828,8 +1094,9 @@ def main() -> int:
 
     records: list[dict[str, Any]] = []
     downlink_event_frames: list[pd.DataFrame] = []
+    image_event_frames: list[pd.DataFrame] = []
     for status_path in status_paths:
-        row, downlink_events = load_record(
+        row, downlink_events, image_events = load_record(
             status_path,
             storage_capacity_images=args.storage_capacity_images,
             storage_eps=args.storage_eps,
@@ -838,6 +1105,8 @@ def main() -> int:
         records.append(row)
         if not downlink_events.empty:
             downlink_event_frames.append(downlink_events)
+        if not image_events.empty:
+            image_event_frames.append(image_events)
 
     records_df = pd.DataFrame(records)
     records_df["seed"] = pd.to_numeric(records_df["seed"], errors="coerce")
@@ -850,6 +1119,9 @@ def main() -> int:
     actions = action_distribution(records_df)
     actions.to_csv(output_dir / "action_distribution_by_policy.csv", index=False)
 
+    action_ids = action_id_distribution(records_df)
+    action_ids.to_csv(output_dir / "action_id_distribution_by_policy.csv", index=False)
+
     downlinks = downlink_summary(records_df)
     downlinks.to_csv(output_dir / "downlink_summary_by_policy.csv", index=False)
 
@@ -859,6 +1131,18 @@ def main() -> int:
         )
     else:
         pd.DataFrame().to_csv(output_dir / "downlink_events.csv", index=False)
+
+    if image_event_frames:
+        image_events_df = pd.concat(image_event_frames, ignore_index=True)
+        image_events_df.to_csv(output_dir / "image_events.csv", index=False)
+    else:
+        image_events_df = pd.DataFrame()
+        image_events_df.to_csv(output_dir / "image_events.csv", index=False)
+
+    candidate_summary = image_candidate_summary(image_events_df)
+    candidate_summary.to_csv(
+        output_dir / "image_candidate_slot_summary_by_policy.csv", index=False
+    )
 
     observed = {
         (str(row.policy_tag), int(row.seed))
