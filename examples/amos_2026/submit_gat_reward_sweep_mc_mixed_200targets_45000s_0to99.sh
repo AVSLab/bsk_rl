@@ -70,6 +70,7 @@ print(len(tags))
 PY
 )
 ARRAY_END=$((POLICY_COUNT - 1))
+POLICY_TAGS_EXPORT=${POLICY_TAGS//,/:}
 
 cd /projects/$USER/bsk_rl
 source /projects/$USER/.venv/bin/activate
@@ -131,7 +132,7 @@ for ((seed_start = START_BLOCK; seed_start <= END_BLOCK; seed_start += SEEDS_PER
         --mem="$MEMORY"
         --cpus-per-task="$CPUS_PER_TASK"
         --qos=normal
-        --export=ALL,BSK_RL_MC_SEED_START="$seed_start",BSK_RL_MC_SEEDS_PER_BLOCK="$SEEDS_PER_BLOCK",BSK_RL_MC_POLICY_TAGS="$POLICY_TAGS",BSK_RL_MC_N_TARGETS="$N_TARGETS",BSK_RL_MC_N_TARGETS_AHEAD="$N_TARGETS_AHEAD",BSK_RL_MC_EXTRA_TIME_FACTOR="$EXTRA_TIME_FACTOR",BSK_RL_MC_TOTAL_TIME_SEC="$TOTAL_TIME_SEC",BSK_RL_MC_OUTPUT_ROOT="$OUTPUT_ROOT",BSK_RL_MC_MANIFEST="$MANIFEST"
+        --export=ALL,BSK_RL_MC_SEED_START="$seed_start",BSK_RL_MC_SEEDS_PER_BLOCK="$SEEDS_PER_BLOCK",BSK_RL_MC_POLICY_TAGS="$POLICY_TAGS_EXPORT",BSK_RL_MC_N_TARGETS="$N_TARGETS",BSK_RL_MC_N_TARGETS_AHEAD="$N_TARGETS_AHEAD",BSK_RL_MC_EXTRA_TIME_FACTOR="$EXTRA_TIME_FACTOR",BSK_RL_MC_TOTAL_TIME_SEC="$TOTAL_TIME_SEC",BSK_RL_MC_OUTPUT_ROOT="$OUTPUT_ROOT",BSK_RL_MC_MANIFEST="$MANIFEST"
     )
     if [[ -n "$previous_job_id" ]]; then
         sbatch_args+=(--dependency="afterany:$previous_job_id")

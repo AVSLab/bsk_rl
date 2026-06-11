@@ -139,7 +139,11 @@ def latest_checkpoint_for_tag(policy_root: Path, tag: str) -> dict[str, Any]:
 def parse_policy_tags(raw_value: str | None) -> tuple[str, ...]:
     if raw_value is None or raw_value.strip() == "":
         return DEFAULT_POLICY_TAGS
-    tags = tuple(tag.strip() for tag in raw_value.split(",") if tag.strip())
+    tags = tuple(
+        tag.strip()
+        for tag in re.split(r"[,;:]", raw_value)
+        if tag.strip()
+    )
     if not tags:
         raise ValueError("Policy tag list cannot be empty.")
     unknown = [tag for tag in tags if tag not in ALL_POLICY_TAGS]
