@@ -22,7 +22,7 @@ import tempfile
 from typing import Any
 
 
-POLICY_TAGS = (
+ALL_POLICY_TAGS = (
     "00d100i",
     "10d90i",
     "20d80i",
@@ -36,6 +36,7 @@ POLICY_TAGS = (
     "90d10i",
     "100d00i",
 )
+DEFAULT_POLICY_TAGS = ALL_POLICY_TAGS
 RUN_PREFIX_TEMPLATE = (
     "amos2026_LEO_GAT_fullActions_{tag}_4200batch_restrictedResources_"
     "obs-v9_hold10s_reimage2orb_prioritySum100"
@@ -135,9 +136,24 @@ def latest_checkpoint_for_tag(policy_root: Path, tag: str) -> dict[str, Any]:
     }
 
 
-def build_manifest(policy_root: Path) -> dict[str, Any]:
+def parse_policy_tags(raw_value: str | None) -> tuple[str, ...]:
+    if raw_value is None or raw_value.strip() == "":
+        return DEFAULT_POLICY_TAGS
+    tags = tuple(tag.strip() for tag in raw_value.split(",") if tag.strip())
+    if not tags:
+        raise ValueError("Policy tag list cannot be empty.")
+    unknown = [tag for tag in tags if tag not in ALL_POLICY_TAGS]
+    if unknown:
+        raise ValueError(f"Unknown policy tags: {unknown}. Known tags: {ALL_POLICY_TAGS}")
+    duplicates = sorted({tag for tag in tags if tags.count(tag) > 1})
+    if duplicates:
+        raise ValueError(f"Duplicate policy tags are not allowed: {duplicates}")
+    return tags
+
+
+def build_manifest(policy_root: Path, policy_tags: tuple[str, ...]) -> dict[str, Any]:
     policies = {
-        tag: latest_checkpoint_for_tag(policy_root, tag) for tag in POLICY_TAGS
+        tag: latest_checkpoint_for_tag(policy_root, tag) for tag in policy_tags
     }
     return {
         "schema_version": 1,
@@ -147,14 +163,20 @@ def build_manifest(policy_root: Path) -> dict[str, Any]:
         "training_run_selection": "non_alpha_48h",
         "obs_v": 9,
         "policy_layout": "gat_full",
-        "policy_tags": list(POLICY_TAGS),
+        "policy_tags": list(policy_tags),
         "policies": policies,
     }
 
 
-def load_manifest(path: Path) -> dict[str, Any]:
+def load_manifest(path: Path, policy_tags: tuple[str, ...]) -> dict[str, Any]:
     manifest = json.loads(path.read_text())
-    missing = [tag for tag in POLICY_TAGS if tag not in manifest.get("policies", {})]
+    manifest_tags = tuple(manifest.get("policy_tags", []))
+    if manifest_tags and manifest_tags != policy_tags:
+        raise ValueError(
+            f"Manifest {path} has policy tags {manifest_tags}, but this run requested "
+            f"{policy_tags}. Use a fresh manifest/output root for a different subset."
+        )
+    missing = [tag for tag in policy_tags if tag not in manifest.get("policies", {})]
     if missing:
         raise ValueError(f"Manifest {path} is missing policies: {missing}")
     return manifest
@@ -237,12 +259,17 @@ def completed_status_for(
     return None
 
 
-def task_assignment(task_id: int, seed_start: int, seeds_per_block: int) -> tuple[str, int]:
-    task_count = len(POLICY_TAGS) * seeds_per_block
+def task_assignment(
+    task_id: int,
+    seed_start: int,
+    seeds_per_block: int,
+    policy_tags: tuple[str, ...],
+) -> tuple[str, int]:
+    task_count = len(policy_tags) * seeds_per_block
     if not 0 <= task_id < task_count:
         raise ValueError(f"task_id must be in [0, {task_count - 1}], got {task_id}")
     policy_index, seed_offset = divmod(task_id, seeds_per_block)
-    return POLICY_TAGS[policy_index], seed_start + seed_offset
+    return policy_tags[policy_index], seed_start + seed_offset
 
 
 def parse_args() -> argparse.Namespace:
@@ -273,6 +300,14 @@ def parse_args() -> argparse.Namespace:
         "--policy-root",
         type=Path,
         default=Path(os.environ.get("BSK_RL_MC_POLICY_ROOT", default_policy_root)),
+    )
+    parser.add_argument(
+        "--policy-tags",
+        default=os.environ.get("BSK_RL_MC_POLICY_TAGS", ",".join(DEFAULT_POLICY_TAGS)),
+        help=(
+            "Comma-separated trained policy tags to evaluate. Defaults to the full "
+            "12-policy alpha set."
+        ),
     )
     parser.add_argument(
         "--output-root",
@@ -408,14 +443,15 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    policy_tags = parse_policy_tags(args.policy_tags)
     if args.seeds_per_block <= 0:
         raise ValueError("--seeds-per-block must be positive")
 
     if args.write_manifest:
-        manifest = build_manifest(args.policy_root)
+        manifest = build_manifest(args.policy_root, policy_tags)
         atomic_write_json(args.write_manifest, manifest)
         print(f"Wrote frozen checkpoint manifest: {args.write_manifest}")
-        for tag in POLICY_TAGS:
+        for tag in policy_tags:
             policy = manifest["policies"][tag]
             print(
                 f"  {tag}: checkpoint_{policy['checkpoint_iteration']:06d} "
@@ -429,8 +465,13 @@ def main() -> int:
             "--write-manifest before submitting the Slurm array."
         )
 
-    manifest = load_manifest(args.manifest)
-    policy_tag, seed = task_assignment(args.task_id, args.seed_start, args.seeds_per_block)
+    manifest = load_manifest(args.manifest, policy_tags)
+    policy_tag, seed = task_assignment(
+        args.task_id,
+        args.seed_start,
+        args.seeds_per_block,
+        policy_tags,
+    )
     policy = manifest["policies"][policy_tag]
     existing_status = completed_status_for(
         args.output_root,

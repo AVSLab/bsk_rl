@@ -30,6 +30,7 @@ MAX_CONCURRENT=${1:-5}
 START_BLOCK=${BSK_RL_MC_START_BLOCK:-0}
 END_BLOCK=${BSK_RL_MC_END_BLOCK:-90}
 SEEDS_PER_BLOCK=${BSK_RL_MC_SEEDS_PER_BLOCK:-10}
+POLICY_TAGS=${BSK_RL_MC_POLICY_TAGS:-00d100i,10d90i,20d80i,30d70i,40d60i,50d50i,60d40i,70d30i,75d25i,80d20i,90d10i,100d00i}
 N_TARGETS=${BSK_RL_MC_N_TARGETS:-200}
 N_TARGETS_AHEAD=${BSK_RL_MC_N_TARGETS_AHEAD:-10}
 TOTAL_TIME_SEC=${BSK_RL_MC_TOTAL_TIME_SEC:-45000}
@@ -61,10 +62,19 @@ if [[ "$TARGET_ENV" != "mixed" ]]; then
     echo "This submitter is intended for BSK_RL_MC_TARGET_ENV=mixed." >&2
     exit 2
 fi
+POLICY_COUNT=$(python3 - <<PY
+tags = [tag.strip() for tag in """$POLICY_TAGS""".split(",") if tag.strip()]
+if not tags:
+    raise SystemExit("BSK_RL_MC_POLICY_TAGS cannot be empty")
+print(len(tags))
+PY
+)
+ARRAY_END=$((POLICY_COUNT - 1))
 
 cd /projects/$USER/bsk_rl
 source /projects/$USER/.venv/bin/activate
 
+export BSK_RL_MC_POLICY_TAGS="$POLICY_TAGS"
 export BSK_RL_MC_TARGET_ENV="$TARGET_ENV"
 export BSK_RL_MC_MIX_WEIGHTS="$MIX_WEIGHTS"
 export BSK_RL_MC_DYNAMIC_PRIORITY_EVENT="$DYNAMIC_PRIORITY_EVENT"
@@ -84,6 +94,7 @@ if [[ -f "$MANIFEST" ]]; then
     echo "  $MANIFEST"
 else
     python3 -u examples/amos_2026/evaluate_gat_reward_sweep_mc.py \
+        --policy-tags "$POLICY_TAGS" \
         --write-manifest "$MANIFEST"
 fi
 
@@ -91,7 +102,8 @@ echo
 echo "Submitting mixed AMOS 2026 GAT MC campaign"
 echo "  output root:       $OUTPUT_ROOT"
 echo "  manifest:          $MANIFEST"
-echo "  policy set:        12 non-alpha 48-hour GAT runs"
+echo "  policy tags:       $POLICY_TAGS"
+echo "  policy count:      $POLICY_COUNT"
 echo "  seed blocks:       $START_BLOCK..$END_BLOCK"
 echo "  seeds/block:       $SEEDS_PER_BLOCK"
 echo "  target env:        $TARGET_ENV"
@@ -114,12 +126,12 @@ for ((seed_start = START_BLOCK; seed_start <= END_BLOCK; seed_start += SEEDS_PER
     sbatch_args=(
         --parsable
         --job-name="$job_name"
-        --array="0-11%${MAX_CONCURRENT}"
+        --array="0-${ARRAY_END}%${MAX_CONCURRENT}"
         --time="$TIME_LIMIT"
         --mem="$MEMORY"
         --cpus-per-task="$CPUS_PER_TASK"
         --qos=normal
-        --export=ALL,BSK_RL_MC_SEED_START="$seed_start",BSK_RL_MC_SEEDS_PER_BLOCK="$SEEDS_PER_BLOCK",BSK_RL_MC_N_TARGETS="$N_TARGETS",BSK_RL_MC_N_TARGETS_AHEAD="$N_TARGETS_AHEAD",BSK_RL_MC_EXTRA_TIME_FACTOR="$EXTRA_TIME_FACTOR",BSK_RL_MC_TOTAL_TIME_SEC="$TOTAL_TIME_SEC",BSK_RL_MC_OUTPUT_ROOT="$OUTPUT_ROOT",BSK_RL_MC_MANIFEST="$MANIFEST"
+        --export=ALL,BSK_RL_MC_SEED_START="$seed_start",BSK_RL_MC_SEEDS_PER_BLOCK="$SEEDS_PER_BLOCK",BSK_RL_MC_POLICY_TAGS="$POLICY_TAGS",BSK_RL_MC_N_TARGETS="$N_TARGETS",BSK_RL_MC_N_TARGETS_AHEAD="$N_TARGETS_AHEAD",BSK_RL_MC_EXTRA_TIME_FACTOR="$EXTRA_TIME_FACTOR",BSK_RL_MC_TOTAL_TIME_SEC="$TOTAL_TIME_SEC",BSK_RL_MC_OUTPUT_ROOT="$OUTPUT_ROOT",BSK_RL_MC_MANIFEST="$MANIFEST"
     )
     if [[ -n "$previous_job_id" ]]; then
         sbatch_args+=(--dependency="afterany:$previous_job_id")
