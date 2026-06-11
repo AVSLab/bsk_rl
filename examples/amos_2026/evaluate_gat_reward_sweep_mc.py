@@ -29,7 +29,11 @@ POLICY_TAGS = (
     "30d70i",
     "40d60i",
     "50d50i",
+    "60d40i",
+    "70d30i",
     "75d25i",
+    "80d20i",
+    "90d10i",
     "100d00i",
 )
 RUN_PREFIX_TEMPLATE = (

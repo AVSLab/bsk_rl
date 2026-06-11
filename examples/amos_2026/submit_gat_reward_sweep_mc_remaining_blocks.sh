@@ -60,7 +60,7 @@ for ((seed_start = START_BLOCK; seed_start <= END_BLOCK; seed_start += 10)); do
     sbatch_args=(
         --parsable
         --job-name="$job_name"
-        --array="0-7%${MAX_CONCURRENT}"
+        --array="0-11%${MAX_CONCURRENT}"
         --export=ALL,BSK_RL_MC_SEED_START="$seed_start",BSK_RL_MC_SEEDS_PER_BLOCK=10,BSK_RL_MC_OUTPUT_ROOT="$OUTPUT_ROOT",BSK_RL_MC_MANIFEST="$MANIFEST"
     )
     if [[ -n "$previous_job_id" ]]; then

@@ -11,7 +11,7 @@
 #
 # This submits ten Slurm array jobs:
 #   seeds 000..009, 010..019, ..., 090..099
-# Each array job has eight tasks, one per trained policy. Each task runs the ten
+# Each array job has twelve tasks, one per trained policy. Each task runs the ten
 # seeds for that policy as fresh evaluator subprocesses. Blocks are chained by
 # dependency so only one ten-seed block is active at a time; within an active
 # block, up to MAX_CONCURRENT policy tasks run at once.
@@ -91,7 +91,7 @@ echo
 echo "Submitting mixed AMOS 2026 GAT MC campaign"
 echo "  output root:       $OUTPUT_ROOT"
 echo "  manifest:          $MANIFEST"
-echo "  policy set:        8 non-alpha 48-hour GAT runs"
+echo "  policy set:        12 non-alpha 48-hour GAT runs"
 echo "  seed blocks:       $START_BLOCK..$END_BLOCK"
 echo "  seeds/block:       $SEEDS_PER_BLOCK"
 echo "  target env:        $TARGET_ENV"
@@ -114,7 +114,7 @@ for ((seed_start = START_BLOCK; seed_start <= END_BLOCK; seed_start += SEEDS_PER
     sbatch_args=(
         --parsable
         --job-name="$job_name"
-        --array="0-7%${MAX_CONCURRENT}"
+        --array="0-11%${MAX_CONCURRENT}"
         --time="$TIME_LIMIT"
         --mem="$MEMORY"
         --cpus-per-task="$CPUS_PER_TASK"

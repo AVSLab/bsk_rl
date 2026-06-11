@@ -63,13 +63,13 @@ fi
 
 echo
 echo "Submitting one AMOS 2026 GAT MC block: $JOB_NAME"
-echo "  policies:          8 non-alpha 48-hour GAT runs"
+echo "  policies:          12 non-alpha 48-hour GAT runs"
 echo "  seeds:             $SEED_START..$SEED_END inclusive"
 echo "  n_targets:         $N_TARGETS"
 echo "  n_targets_ahead:   $N_TARGETS_AHEAD"
 echo "  total_time_sec:    $TOTAL_TIME_SEC"
 echo "  extra_time_factor: $EXTRA_TIME_FACTOR (ignored by evaluator when total_time_sec is set)"
-echo "  array tasks:       8 policy jobs, each running $SEEDS_PER_BLOCK fresh evaluator subprocesses"
+echo "  array tasks:       12 policy jobs, each running $SEEDS_PER_BLOCK fresh evaluator subprocesses"
 echo "  max concurrent:    $MAX_CONCURRENT"
 echo "  resources/task:    $CPUS_PER_TASK CPUs, $MEMORY, $TIME_LIMIT"
 echo "  common score:      100d00i"
@@ -82,7 +82,7 @@ echo
 
 sbatch \
     --job-name="$JOB_NAME" \
-    --array="0-7%${MAX_CONCURRENT}" \
+    --array="0-11%${MAX_CONCURRENT}" \
     --time="$TIME_LIMIT" \
     --mem="$MEMORY" \
     --cpus-per-task="$CPUS_PER_TASK" \

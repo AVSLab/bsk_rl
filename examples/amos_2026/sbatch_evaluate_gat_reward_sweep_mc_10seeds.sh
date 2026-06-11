@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # AMOS 2026 GAT full-action Monte Carlo block:
-#   8 trained reward mixes x 10 seeds = 80 isolated evaluations.
+#   12 trained reward mixes x 10 seeds = 120 isolated evaluations.
 # Each array task owns one policy and launches ten fresh evaluator subprocesses.
 # Use submit_gat_reward_sweep_mc_block.sh so a frozen manifest is created first
 # and the job name stays aligned with the selected ten-seed block.
@@ -11,7 +11,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --time=04:00:00
-#SBATCH --array=0-7%4
+#SBATCH --array=0-11%4
 #SBATCH --partition=amilan
 #SBATCH --mem=24G
 #SBATCH --constraint=epyc-7713

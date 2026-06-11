@@ -29,9 +29,9 @@ python3 -u examples/amos_2026/evaluate_gat_reward_sweep_mc.py \
 
 echo
 echo "Submitting one Slurm array job: $JOB_NAME"
-echo "  policies:       8 non-alpha 48-hour GAT runs"
+echo "  policies:       12 non-alpha 48-hour GAT runs"
 echo "  seeds:          0..9 inclusive"
-echo "  array tasks:    8 policy jobs, each running 10 fresh evaluator subprocesses"
+echo "  array tasks:    12 policy jobs, each running 10 fresh evaluator subprocesses"
 echo "  max concurrent: $MAX_CONCURRENT"
 echo "  task time cap:  02:00:00"
 echo "  common score:   100d00i"
@@ -44,6 +44,6 @@ echo
 
 sbatch \
     --job-name="$JOB_NAME" \
-    --array="0-7%${MAX_CONCURRENT}" \
+    --array="0-11%${MAX_CONCURRENT}" \
     --export=ALL,BSK_RL_MC_SEED_START=0,BSK_RL_MC_SEEDS_PER_BLOCK=10,BSK_RL_MC_OUTPUT_ROOT="$OUTPUT_ROOT",BSK_RL_MC_MANIFEST="$MANIFEST" \
     examples/amos_2026/sbatch_evaluate_gat_reward_sweep_mc_smoke_2h.sh

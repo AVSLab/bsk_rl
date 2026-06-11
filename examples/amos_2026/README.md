@@ -207,7 +207,7 @@ sbatch examples/amos_2026/sbatch_updated_train_polaris_imaging_only_96h.sh
 
 Use the AMOS 2026 Monte Carlo workflow to compare the full-action GAT policies
 trained with `00d100i`, `10d90i`, `20d80i`, `30d70i`, `40d60i`, `50d50i`,
-`75d25i`, and `100d00i` reward mixes. Every policy is scored with the same
+`60d40i`, `70d30i`, `75d25i`, `80d20i`, `90d10i`, and `100d00i` reward mixes. Every policy is scored with the same
 `100d00i` evaluation reward, representing the value of images delivered to the
 ground. Checkpoint discovery intentionally excludes earlier `_alpha...`
 24-hour pilot folders and selects only the later non-alpha 48-hour sweep runs.
@@ -229,8 +229,8 @@ bash examples/amos_2026/submit_gat_reward_sweep_mc_smoke_2h.sh
 ```
 
 This snapshots the latest complete checkpoint that exists at submission time
-for each non-alpha policy. It submits `8` policy-level array tasks, each of
-which evaluates `10` seeds using fresh subprocesses (`80` evaluations total).
+for each non-alpha policy. It submits `12` policy-level array tasks, each of
+which evaluates `10` seeds using fresh subprocesses (`120` evaluations total).
 At most `4` policy tasks run simultaneously, and each policy task has a
 two-hour limit, `4` allocated CPUs, and `24G` of memory shared by its sequential
 seed subprocesses. The helper prints its timestamped output folder and exact
@@ -245,7 +245,7 @@ bash examples/amos_2026/submit_gat_reward_sweep_mc_block.sh 0
 ```
 
 The helper freezes one exact checkpoint per policy before the first submission,
-then reuses that campaign manifest for later seed blocks. It submits `8`
+then reuses that campaign manifest for later seed blocks. It submits `12`
 policy-level array tasks, each running `10` fresh seed subprocesses (`80`
 evaluations total), with at most `4` policy tasks active at once. Freezing
 prevents different seeds from silently loading different checkpoints while a

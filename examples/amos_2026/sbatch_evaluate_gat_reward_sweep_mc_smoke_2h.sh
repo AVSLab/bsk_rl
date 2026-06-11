@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # AMOS 2026 immediate GAT full-action Monte Carlo smoke test:
-#   8 non-alpha 48-hour reward-sweep policies x seeds 0..9 = 80 evaluations.
+#   12 non-alpha 48-hour reward-sweep policies x seeds 0..9 = 120 evaluations.
 # Each array task owns one policy and launches ten fresh evaluator subprocesses.
 # Use submit_gat_reward_sweep_mc_smoke_2h.sh so the current complete checkpoints
 # are frozen immediately and the timestamped output folder is exported.
@@ -11,7 +11,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --time=02:00:00
-#SBATCH --array=0-7%4
+#SBATCH --array=0-11%4
 #SBATCH --partition=amilan
 #SBATCH --mem=24G
 #SBATCH --constraint=epyc-7713
