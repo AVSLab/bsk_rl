@@ -28,6 +28,7 @@ state block first, followed by repeated target-candidate chunks.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import sys
@@ -115,6 +116,18 @@ def _env_bool(name: str, default: bool) -> bool:
     if raw_value is None:
         return default
     return raw_value.strip().lower() not in {"0", "false", "no", "off"}
+
+
+def _env_mix_weights(
+    name: str, default: dict[str, float] | None = None
+) -> dict[str, float] | None:
+    raw_value = os.environ.get(name)
+    if raw_value is None or raw_value.strip() == "":
+        return default
+    parsed = json.loads(raw_value)
+    if not isinstance(parsed, dict):
+        raise ValueError(f"{name} must be a JSON object keyed by LEO/MEO/GEO.")
+    return {str(key).upper(): float(value) for key, value in parsed.items()}
 
 
 def _cluster_scratch_root() -> Path:
@@ -1317,11 +1330,58 @@ if __name__ == "__main__":
             regime = np.random.choice(regimes, p=probs)
         return _sample_for_regime(regime.upper(), altitude_bounds, min_perigee_alt)
 
+    def _random_simplex_mix_weights() -> dict[str, float]:
+        leo = float(np.random.uniform(0.0, 1.0))
+        meo = float(np.random.uniform(0.0, 1.0 - leo))
+        geo = float(1.0 - leo - meo)
+        return {"LEO": leo, "MEO": meo, "GEO": geo}
+
+    def _make_target_oe_randomizer(
+        *,
+        target_env: str,
+        fixed_mix_weights: dict[str, float] | None,
+        randomize_mix_weights: bool,
+        targets_per_catalog: int,
+    ) -> Callable[[], orbitalMotion.ClassicElements]:
+        target_env = target_env.lower()
+        if target_env not in {"leo", "mixed"}:
+            raise ValueError("BSK_RL_TARGET_ENV must be 'leo' or 'mixed'.")
+        if target_env == "leo":
+            return lambda: custom_oe_randomizer(regime="LEO")
+
+        state = {
+            "remaining": 0,
+            "mix_weights": fixed_mix_weights or {"LEO": 0.6, "MEO": 0.3, "GEO": 0.1},
+        }
+
+        def randomizer() -> orbitalMotion.ClassicElements:
+            if state["remaining"] <= 0:
+                if randomize_mix_weights:
+                    state["mix_weights"] = _random_simplex_mix_weights()
+                state["remaining"] = max(1, targets_per_catalog)
+            state["remaining"] -= 1
+            return custom_oe_randomizer(
+                regime="mixed",
+                mix_weights=state["mix_weights"],
+            )
+
+        return randomizer
+
+    target_env = os.environ.get("BSK_RL_TARGET_ENV", "LEO").strip().lower()
+    randomize_mix_weights = _env_bool("BSK_RL_RANDOMIZE_MIX_WEIGHTS", False)
+    fixed_mix_weights = _env_mix_weights("BSK_RL_MIX_WEIGHTS")
+    target_oe_randomizer = _make_target_oe_randomizer(
+        target_env=target_env,
+        fixed_mix_weights=fixed_mix_weights,
+        randomize_mix_weights=randomize_mix_weights,
+        targets_per_catalog=n_targets,
+    )
+
     # Keep target satellites passive/alive in this training entrypoint. The
     # scanner is the only learned agent, and killing all target sats at t=0 adds
     # a lot of Ray log noise without changing the target-selection objective.
     target_args = dict(
-        oe=custom_oe_randomizer,
+        oe=target_oe_randomizer,
         batteryStorageCapacity=1.0,
         storedCharge_Init=1.0,
         basePowerDraw=0.0,
@@ -1372,9 +1432,13 @@ if __name__ == "__main__":
     }
 
     run_tag = (
-        f"amos2026_LEO_GAT_fullActions_{reward_split_tag}_{batch_size}batch_"
+        f"amos2026_{target_env.upper()}_GAT_fullActions_{reward_split_tag}_{batch_size}batch_"
         "restrictedResources_obs-v9_hold10s_reimage2orb_prioritySum100"
     )
+    if target_env == "mixed" and randomize_mix_weights:
+        run_tag = run_tag.replace(
+            "_restrictedResources_", "_randomMixLEOMEOFirst_restrictedResources_"
+        )
     model_name = f"{run_tag}.out_{job_index}"
     output_dir = _default_output_root() / f"{run_tag}_{time.time()}"  # local: ~/rllib_results/...; cluster: /scratch/alpine/$USER/rllib_results/...
     ray_tmpdir = _default_ray_tmpdir()  # local: /tmp/bskrl_0; cluster: /tmp/bskray_${SLURM_JOB_ID}_...
@@ -1479,6 +1543,18 @@ if __name__ == "__main__":
             "tag": reward_split_tag,
             "alpha_tag": alpha_tag,
             "curriculum_enabled": curriculum_enabled,
+        },
+        "target_regime": {
+            "target_env": target_env,
+            "randomize_mix_weights": randomize_mix_weights,
+            "fixed_mix_weights": fixed_mix_weights,
+            "random_mix_sampling": (
+                "LEO=x~Uniform(0,1); "
+                "MEO=y~Uniform(0,1-x); "
+                "GEO=1-x-y"
+                if target_env == "mixed" and randomize_mix_weights
+                else None
+            ),
         },
         "gat_model_config": inspector_model_config,
         "job_args": sanitize_np(
