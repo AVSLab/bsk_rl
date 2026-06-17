@@ -26,6 +26,7 @@ BONUS="${BONUSES[$SLURM_ARRAY_TASK_ID]}"
 LABEL="${LABELS[$SLURM_ARRAY_TASK_ID]}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRAIN_SCRIPT="$SCRIPT_DIR/train_Polaris_gnc_mixed_oldnet.py"
+JOB_TMPDIR="/scratch/alpine/$USER/tmp/gnc_mixed_oldnet_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 
 module purge
 
@@ -35,8 +36,8 @@ module load gcc
 
 echo "Activating virtual environment"
 source /projects/$USER/.venv/bin/activate
-export TMPDIR=/scratch/alpine/$USER/temp_dir
-mkdir -p "$TMPDIR" /scratch/alpine/$USER/tmp /scratch/alpine/$USER/job_output
+export TMPDIR="$JOB_TMPDIR"
+mkdir -p "$TMPDIR" /scratch/alpine/$USER/job_output
 
 echo "Running mixed old-network GNC training for ${LABEL}"
 python3 "$TRAIN_SCRIPT" \
@@ -47,6 +48,7 @@ python3 "$TRAIN_SCRIPT" \
   --batch-multiplier 350 \
   --checkpoint-frequency 3 \
   --checkpoints-to-keep 3 \
-  --failure-penalty -100.0
+  --failure-penalty -100.0 \
+  --temp-dir "$JOB_TMPDIR"
 
 echo "== End of Job =="
