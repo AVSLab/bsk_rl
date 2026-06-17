@@ -24,6 +24,8 @@ LABELS=(0d100i 10d90i 20d80i 30d70i 40d60i 50d50i 60d40i 70d30i 80d20i 90d10i 10
 
 BONUS="${BONUSES[$SLURM_ARRAY_TASK_ID]}"
 LABEL="${LABELS[$SLURM_ARRAY_TASK_ID]}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TRAIN_SCRIPT="$SCRIPT_DIR/train_Polaris_gnc_mixed_oldnet.py"
 
 module purge
 
@@ -37,7 +39,7 @@ export TMPDIR=/scratch/alpine/$USER/temp_dir
 mkdir -p "$TMPDIR" /scratch/alpine/$USER/tmp /scratch/alpine/$USER/job_output
 
 echo "Running mixed old-network GNC training for ${LABEL}"
-python3 /projects/$USER/bsk_rl/examples/train_Polaris_gnc_mixed_oldnet.py \
+python3 "$TRAIN_SCRIPT" \
   --downlink-bonus "$BONUS" \
   --mix-weights "LEO=0.5,MEO=0.3,GEO=0.2" \
   --run-prefix "gnc_MIXED_oldnet" \
