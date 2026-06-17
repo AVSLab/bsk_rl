@@ -1,0 +1,1276 @@
+examples/cluster_train_Polaris.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/cluster_train_Polaris.py:48:    checkpoint_frequency=1,
+examples/cluster_train_Polaris.py:49:    checkpoints_to_keep=2,
+examples/cluster_train_Polaris.py:71:        PPOConfig()
+examples/cluster_train_Polaris.py:87:        .checkpointing(export_native_model_files=True)
+examples/cluster_train_Polaris.py:122:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/cluster_train_Polaris.py:146:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/cluster_train_Polaris.py:149:                shutil.rmtree(checkpoint_path)
+examples/cluster_train_Polaris.py:152:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/cluster_train_Polaris.py:153:            ppo.save_checkpoint(checkpoint_path)
+examples/cluster_train_Polaris.py:155:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/cluster_train_Polaris.py:160:        checkpoint_path = (
+examples/cluster_train_Polaris.py:161:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/cluster_train_Polaris.py:163:        if iter % checkpoint_frequency == 0:
+examples/cluster_train_Polaris.py:164:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/cluster_train_Polaris.py:165:            ppo.save_checkpoint(checkpoint_path)
+examples/cluster_train_Polaris.py:171:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/cluster_train_Polaris.py:172:            ppo.save_checkpoint(checkpoint_path)
+examples/cluster_train_Polaris.py:180:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/cluster_train_Polaris.py:182:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/cluster_train_Polaris.py:183:            for i in range(checkpoint_frequency):
+examples/cluster_train_Polaris.py:187:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/cluster_train_Polaris.py:395:    model_name = f"1e-5lr_0005torque_{sat_args["downlink_bonus"]*100}d{sat_args["imaging_bonus"]*100}i_reward_new_penalties_smallest_storage_{N}"
+examples/cluster_train_Polaris.py:400:        Path("/scratch/alpine/dahu1128/july10rllib_results").expanduser() / f"july10_1e-5lr_0005torque_{sat_args["downlink_bonus"]*100}d{sat_args["imaging_bonus"]*100}i_reward_new_penalties_smallest_storage_Polaris_simulation_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/cluster_train_Polaris.py:410:            lr=[1e-5],
+examples/cluster_train_Polaris.py:411:            gamma=[0.9995],
+examples/cluster_train_Polaris.py:412:            train_batch_size=[int(50 * n_envs)],
+examples/cluster_train_Polaris.py:443:        checkpoint_frequency=5,
+examples/cluster_train_Polaris.py:444:        checkpoints_to_keep=3,
+examples/retrain_Polaris.py:11:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/retrain_Polaris.py:39:    checkpoint_frequency=1,
+examples/retrain_Polaris.py:40:    checkpoints_to_keep=2,
+examples/retrain_Polaris.py:59:        PPOConfig()
+examples/retrain_Polaris.py:75:        .checkpointing(export_native_model_files=True)
+examples/retrain_Polaris.py:86:        #     MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/retrain_Polaris.py:96:        checkpoint_path_dir = (
+examples/retrain_Polaris.py:99:        checkpoints = glob.glob(str(checkpoint_path_dir) + "/checkpoint_*")
+examples/retrain_Polaris.py:100:        if len(checkpoints) == 0:
+examples/retrain_Polaris.py:103:        checkpoint_number_str = ""
+examples/retrain_Polaris.py:104:        checkpoint_number_int = 0
+examples/retrain_Polaris.py:105:        #Figure out the most recent checkpoint
+examples/retrain_Polaris.py:106:        for checkpoint_number in checkpoints:
+examples/retrain_Polaris.py:107:            checkpoint_folder_i = checkpoint_number.split("/")[-1]
+examples/retrain_Polaris.py:108:            checkpoint_number_i = int(checkpoint_folder_i.split("_")[-1])
+examples/retrain_Polaris.py:109:            if checkpoint_number_i > checkpoint_number_int:
+examples/retrain_Polaris.py:110:                checkpoint_number_int = checkpoint_number_i
+examples/retrain_Polaris.py:111:                checkpoint_number_str = checkpoint_folder_i.split("_")[-1]
+examples/retrain_Polaris.py:112:        latest_checkpoint_dir = checkpoint_path_dir / f"checkpoint_{checkpoint_number_str}"
+examples/retrain_Polaris.py:114:            print(f"Selected path does not exist: {latest_checkpoint_dir}")
+examples/retrain_Polaris.py:118:        print(str(latest_checkpoint_dir))
+examples/retrain_Polaris.py:119:        ppo.restore(str(latest_checkpoint_dir))
+examples/retrain_Polaris.py:120:        iter = checkpoint_number_int + 1
+examples/retrain_Polaris.py:125:            checkpoint_saved = True
+examples/retrain_Polaris.py:128:            checkpoint_saved = True
+examples/retrain_Polaris.py:131:            checkpoint_saved = False
+examples/retrain_Polaris.py:139:            checkpoint_saved = False
+examples/retrain_Polaris.py:142:            checkpoint_saved = True
+examples/retrain_Polaris.py:147:        checkpoint_path = (
+examples/retrain_Polaris.py:148:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/retrain_Polaris.py:150:        if iter % checkpoint_frequency == 0:
+examples/retrain_Polaris.py:151:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/retrain_Polaris.py:152:            ppo.save_checkpoint(checkpoint_path)
+examples/retrain_Polaris.py:158:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/retrain_Polaris.py:159:            ppo.save_checkpoint(checkpoint_path)
+examples/retrain_Polaris.py:160:            if cond_switch and checkpoint_saved is False:
+examples/retrain_Polaris.py:161:                checkpoint_saved = True
+examples/retrain_Polaris.py:170:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/retrain_Polaris.py:171:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/retrain_Polaris.py:172:            for i in range(checkpoint_frequency):
+examples/retrain_Polaris.py:176:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/retrain_Polaris.py:214:    #We need to check which parameters we are going to use for training (gamma etc)
+examples/retrain_Polaris.py:217:            lr=[0.00003],
+examples/retrain_Polaris.py:218:            gamma=[0.997],
+examples/retrain_Polaris.py:219:            train_batch_size=[int(100 * n_envs)],
+examples/retrain_Polaris.py:236:        checkpoint_frequency=2,
+examples/retrain_Polaris.py:237:        checkpoints_to_keep=2,
+examples/train_Polaris1000.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1000.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1000.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1000.py:72:        PPOConfig()
+examples/train_Polaris1000.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1000.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1000.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1000.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1000.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1000.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1000.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1000.py:161:        checkpoint_path = (
+examples/train_Polaris1000.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1000.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1000.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1000.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1000.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1000.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1000.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1000.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1000.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1000.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1000.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch10k_gamma9997_100d00i_reducedFailurePenalty.out_{N}"
+examples/train_Polaris1000.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch10k_gamma9997_100d00i_reducedFailurePenalty_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1000.py:522:            lr=[1e-5],
+examples/train_Polaris1000.py:523:            gamma=[0.9997],
+examples/train_Polaris1000.py:524:            train_batch_size=[int(312 * n_envs)],
+examples/train_Polaris1000.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1000.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris100.py:18:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris100.py:52:    checkpoint_frequency=1,
+examples/train_Polaris100.py:53:    checkpoints_to_keep=2,
+examples/train_Polaris100.py:75:        PPOConfig()
+examples/train_Polaris100.py:91:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris100.py:126:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris100.py:150:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris100.py:153:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris100.py:156:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris100.py:157:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris100.py:159:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris100.py:164:        checkpoint_path = (
+examples/train_Polaris100.py:165:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris100.py:167:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris100.py:168:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris100.py:169:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris100.py:175:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris100.py:176:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris100.py:184:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris100.py:186:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris100.py:187:            for i in range(checkpoint_frequency):
+examples/train_Polaris100.py:191:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris100.py:579:    model_name = f"jan26_MIXED_wGAE_{batch_size}batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i.out_{N}"
+examples/train_Polaris100.py:582:        Path("/scratch/alpine/dahu1128/rllib_results").expanduser() / f"jan26_MIXED_wGAE_{batch_size}batch_restrictedResources_obsv7_1e-5lr_0.05cp_gradclip0.5_gamma9997_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris100.py:592:            lr=[1e-5],
+examples/train_Polaris100.py:593:            gamma=[0.9997],
+examples/train_Polaris100.py:594:            train_batch_size=[int(batch_multiplier * n_envs)],  #n_envs on the Mac is 6 eventually   minimum train_batch_size = mini_batch = 128
+examples/train_Polaris100.py:633:        checkpoint_frequency=3, # used to be 2
+examples/train_Polaris100.py:634:        checkpoints_to_keep=3,
+examples/train_Polaris100.py:646:    #     checkpoint_frequency=3, # used to be 2
+examples/train_Polaris100.py:647:    #     checkpoints_to_keep=3,
+examples/train_Polaris1100.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1100.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1100.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1100.py:72:        PPOConfig()
+examples/train_Polaris1100.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1100.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1100.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1100.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1100.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1100.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1100.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1100.py:161:        checkpoint_path = (
+examples/train_Polaris1100.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1100.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1100.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1100.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1100.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1100.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1100.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1100.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1100.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1100.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1100.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch10k_gamma9997_00d100i_reducedFailurePenalty.out_{N}"
+examples/train_Polaris1100.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch10k_gamma9997_00d100i_reducedFailurePenalty_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1100.py:522:            lr=[1e-5],
+examples/train_Polaris1100.py:523:            gamma=[0.9997],
+examples/train_Polaris1100.py:524:            train_batch_size=[int(312 * n_envs)],
+examples/train_Polaris1100.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1100.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris1110.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1110.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1110.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1110.py:72:        PPOConfig()
+examples/train_Polaris1110.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1110.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1110.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1110.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1110.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1110.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1110.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1110.py:161:        checkpoint_path = (
+examples/train_Polaris1110.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1110.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1110.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1110.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1110.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1110.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1110.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1110.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1110.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1110.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1110.py:507:    model_name = f"aug18_restrictedResources_obsv7_5e-4lr_batch1600_gamma9995_0d100i.out_{N}"
+examples/train_Polaris1110.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_5e-4lr_batch1600_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1110.py:522:            lr=[5e-4],
+examples/train_Polaris1110.py:523:            gamma=[0.9995],
+examples/train_Polaris1110.py:524:            train_batch_size=[int(50 * n_envs)],
+examples/train_Polaris1110.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1110.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris1200.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1200.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1200.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1200.py:72:        PPOConfig()
+examples/train_Polaris1200.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1200.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1200.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1200.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1200.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1200.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1200.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1200.py:161:        checkpoint_path = (
+examples/train_Polaris1200.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1200.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1200.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1200.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1200.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1200.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1200.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1200.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1200.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1200.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1200.py:507:    model_name = f"aug18_restrictedResources_obsv7_5e-4lr_batch1600_gamma999_0d100i.out_{N}"
+examples/train_Polaris1200.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aaug18_restrictedResources_obsv7_5e-4lr_batch1600_gamma999_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1200.py:522:            lr=[5e-4],
+examples/train_Polaris1200.py:523:            gamma=[0.999],
+examples/train_Polaris1200.py:524:            train_batch_size=[int(50 * n_envs)],
+examples/train_Polaris1200.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1200.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris1210.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1210.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1210.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1210.py:72:        PPOConfig()
+examples/train_Polaris1210.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1210.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1210.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1210.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1210.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1210.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1210.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1210.py:161:        checkpoint_path = (
+examples/train_Polaris1210.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1210.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1210.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1210.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1210.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1210.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1210.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1210.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1210.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1210.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1210.py:507:    model_name = f"aug18_restrictedResources_obsv7_1e-7lr_batch1600_gradclip0.1_cp0.01_gamma9995_0d100i.out_{N}"
+examples/train_Polaris1210.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_1e-7lr_batch1600_gradclip0.1_cp0.01_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1210.py:522:            lr=[1e-7],
+examples/train_Polaris1210.py:523:            gamma=[0.9995],
+examples/train_Polaris1210.py:524:            train_batch_size=[int(50 * n_envs)],
+examples/train_Polaris1210.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1210.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris1300.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1300.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1300.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1300.py:72:        PPOConfig()
+examples/train_Polaris1300.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1300.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1300.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1300.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1300.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1300.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1300.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1300.py:161:        checkpoint_path = (
+examples/train_Polaris1300.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1300.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1300.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1300.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1300.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1300.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1300.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1300.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1300.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1300.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1300.py:507:    model_name = f"aug18_restrictedResources_obsv7_5e-6lr_batch640_gradclip0.1_cp0.01_gamma9995_0d100i.out_{N}"
+examples/train_Polaris1300.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_5e-6lr_batch640_gradclip0.1_cp0.01_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1300.py:522:            lr=[5e-6],
+examples/train_Polaris1300.py:523:            gamma=[0.9995],
+examples/train_Polaris1300.py:524:            train_batch_size=[int(20 * n_envs)],
+examples/train_Polaris1300.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1300.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris1400.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1400.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1400.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1400.py:72:        PPOConfig()
+examples/train_Polaris1400.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1400.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1400.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1400.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1400.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1400.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1400.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1400.py:161:        checkpoint_path = (
+examples/train_Polaris1400.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1400.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1400.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1400.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1400.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1400.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1400.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1400.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1400.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1400.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1400.py:507:    model_name = f"aug18_restrictedResources_obsv7_1e-3lr_batch3200_gamma9995_0d100i.out_{N}"
+examples/train_Polaris1400.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_1e-3lr_batch3200_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1400.py:522:            lr=[1e-3],
+examples/train_Polaris1400.py:523:            gamma=[0.9995],
+examples/train_Polaris1400.py:524:            train_batch_size=[int(100 * n_envs)],
+examples/train_Polaris1400.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1400.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris1500.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1500.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1500.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1500.py:72:        PPOConfig()
+examples/train_Polaris1500.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1500.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1500.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1500.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1500.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1500.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1500.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1500.py:161:        checkpoint_path = (
+examples/train_Polaris1500.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1500.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1500.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1500.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1500.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1500.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1500.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1500.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1500.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1500.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1500.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch10k_gamma9997_50d50i_reducedFailurePenalty.out_{N}"
+examples/train_Polaris1500.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch10k_gamma9997_50d50i_reducedFailurePenalty_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1500.py:522:            lr=[1e-5],
+examples/train_Polaris1500.py:523:            gamma=[0.9997],
+examples/train_Polaris1500.py:524:            train_batch_size=[int(312 * n_envs)],
+examples/train_Polaris1500.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1500.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris1600.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1600.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1600.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1600.py:72:        PPOConfig()
+examples/train_Polaris1600.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1600.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1600.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1600.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1600.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1600.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1600.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1600.py:161:        checkpoint_path = (
+examples/train_Polaris1600.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1600.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1600.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1600.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1600.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1600.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1600.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1600.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1600.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1600.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1600.py:507:    model_name = f"aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma997_0d100i.out_{N}"
+examples/train_Polaris1600.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma997_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1600.py:522:            lr=[1e-5],
+examples/train_Polaris1600.py:523:            gamma=[0.997],
+examples/train_Polaris1600.py:524:            train_batch_size=[int(100 * n_envs)],
+examples/train_Polaris1600.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1600.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris1700.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1700.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1700.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1700.py:72:        PPOConfig()
+examples/train_Polaris1700.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1700.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1700.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1700.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1700.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1700.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1700.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1700.py:161:        checkpoint_path = (
+examples/train_Polaris1700.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1700.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1700.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1700.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1700.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1700.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1700.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1700.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1700.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1700.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1700.py:507:    model_name = f"aug18_restrictedResources_obsv7_1e-6lr_batch3200_gamma997_0d100i.out_{N}"
+examples/train_Polaris1700.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_1e-6lr_batch3200_gamma997_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1700.py:522:            lr=[1e-6],
+examples/train_Polaris1700.py:523:            gamma=[0.997],
+examples/train_Polaris1700.py:524:            train_batch_size=[int(100 * n_envs)],
+examples/train_Polaris1700.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1700.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris1800.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1800.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1800.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1800.py:72:        PPOConfig()
+examples/train_Polaris1800.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1800.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1800.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1800.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1800.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1800.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1800.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1800.py:161:        checkpoint_path = (
+examples/train_Polaris1800.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1800.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1800.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1800.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1800.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1800.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1800.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1800.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1800.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1800.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1800.py:507:    model_name = f"aug18_restrictedResources_obsv7_5e-6lr_batch160_gamma9995_0d100i.out_{N}"
+examples/train_Polaris1800.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_5e-6lr_batch160_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1800.py:522:            lr=[5e-6],
+examples/train_Polaris1800.py:523:            gamma=[0.9995],
+examples/train_Polaris1800.py:524:            train_batch_size=[int(5 * n_envs)],
+examples/train_Polaris1800.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1800.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris1900.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris1900.py:49:    checkpoint_frequency=1,
+examples/train_Polaris1900.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris1900.py:72:        PPOConfig()
+examples/train_Polaris1900.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris1900.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris1900.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris1900.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris1900.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1900.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1900.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris1900.py:161:        checkpoint_path = (
+examples/train_Polaris1900.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris1900.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris1900.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1900.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1900.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris1900.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris1900.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris1900.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris1900.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris1900.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris1900.py:507:    model_name = f"aug18_restrictedResources_obsv7_1e-6lr_batch3200_gradclip0.001_cp0.005_gamma997_0d100i.out_{N}"
+examples/train_Polaris1900.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_1e-6lr_batch3200_gradclip0.001_cp0.005_gamma997_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris1900.py:522:            lr=[1e-6],
+examples/train_Polaris1900.py:523:            gamma=[0.997],
+examples/train_Polaris1900.py:524:            train_batch_size=[int(100 * n_envs)],
+examples/train_Polaris1900.py:556:        checkpoint_frequency=5,
+examples/train_Polaris1900.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris200.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris200.py:49:    checkpoint_frequency=1,
+examples/train_Polaris200.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris200.py:72:        PPOConfig()
+examples/train_Polaris200.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris200.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris200.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris200.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris200.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris200.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris200.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris200.py:161:        checkpoint_path = (
+examples/train_Polaris200.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris200.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris200.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris200.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris200.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris200.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris200.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris200.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris200.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris200.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris200.py:507:    model_name = f"aug18_restrictedResources_obsv7_1e-6lr_batch320_gamma999_0d100i.out_{N}"
+examples/train_Polaris200.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_1e-6lr_batch320_gamma999_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris200.py:522:            lr=[1e-6],
+examples/train_Polaris200.py:523:            gamma=[0.999],
+examples/train_Polaris200.py:524:            train_batch_size=[int(10 * n_envs)],
+examples/train_Polaris200.py:556:        checkpoint_frequency=5,
+examples/train_Polaris200.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2100.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2100.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2100.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2100.py:72:        PPOConfig()
+examples/train_Polaris2100.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2100.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2100.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2100.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2100.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2100.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2100.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2100.py:161:        checkpoint_path = (
+examples/train_Polaris2100.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2100.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2100.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2100.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2100.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2100.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2100.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2100.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2100.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2100.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2100.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_0d100i_reducedFailurePenalty.out_{N}"
+examples/train_Polaris2100.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_0d100i_reducedFailurePenalty_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2100.py:522:            lr=[1e-5],
+examples/train_Polaris2100.py:523:            gamma=[0.9997],
+examples/train_Polaris2100.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2100.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2100.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2110.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2110.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2110.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2110.py:72:        PPOConfig()
+examples/train_Polaris2110.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2110.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2110.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2110.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2110.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2110.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2110.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2110.py:161:        checkpoint_path = (
+examples/train_Polaris2110.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2110.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2110.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2110.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2110.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2110.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2110.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2110.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2110.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2110.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2110.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i_reducedFailurePenalty_lowBatPenalty.out_{N}"
+examples/train_Polaris2110.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_10d90i_reducedFailurePenalty_lowBatPenalty_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2110.py:522:            lr=[1e-5],
+examples/train_Polaris2110.py:523:            gamma=[0.9997],
+examples/train_Polaris2110.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2110.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2110.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2120.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2120.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2120.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2120.py:72:        PPOConfig()
+examples/train_Polaris2120.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2120.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2120.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2120.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2120.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2120.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2120.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2120.py:161:        checkpoint_path = (
+examples/train_Polaris2120.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2120.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2120.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2120.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2120.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2120.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2120.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2120.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2120.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2120.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2120.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_20d80i.out_{N}"
+examples/train_Polaris2120.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_20d80i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2120.py:522:            lr=[1e-5],
+examples/train_Polaris2120.py:523:            gamma=[0.9997],
+examples/train_Polaris2120.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2120.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2120.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2130.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2130.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2130.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2130.py:72:        PPOConfig()
+examples/train_Polaris2130.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2130.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2130.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2130.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2130.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2130.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2130.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2130.py:161:        checkpoint_path = (
+examples/train_Polaris2130.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2130.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2130.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2130.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2130.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2130.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2130.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2130.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2130.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2130.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2130.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_30d70i.out_{N}"
+examples/train_Polaris2130.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_30d70i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2130.py:522:            lr=[1e-5],
+examples/train_Polaris2130.py:523:            gamma=[0.9997],
+examples/train_Polaris2130.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2130.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2130.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2140.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2140.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2140.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2140.py:72:        PPOConfig()
+examples/train_Polaris2140.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2140.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2140.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2140.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2140.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2140.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2140.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2140.py:161:        checkpoint_path = (
+examples/train_Polaris2140.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2140.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2140.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2140.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2140.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2140.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2140.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2140.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2140.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2140.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2140.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_40d60i.out_{N}"
+examples/train_Polaris2140.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_40d60i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2140.py:522:            lr=[1e-5],
+examples/train_Polaris2140.py:523:            gamma=[0.9997],
+examples/train_Polaris2140.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2140.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2140.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2150.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2150.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2150.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2150.py:72:        PPOConfig()
+examples/train_Polaris2150.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2150.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2150.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2150.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2150.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2150.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2150.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2150.py:161:        checkpoint_path = (
+examples/train_Polaris2150.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2150.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2150.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2150.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2150.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2150.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2150.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2150.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2150.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2150.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2150.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_50d50i_reducedFailurePenalty.out_{N}"
+examples/train_Polaris2150.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_50d50i_reducedFailurePenalty_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2150.py:522:            lr=[1e-5],
+examples/train_Polaris2150.py:523:            gamma=[0.9997],
+examples/train_Polaris2150.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2150.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2150.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2160.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2160.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2160.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2160.py:72:        PPOConfig()
+examples/train_Polaris2160.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2160.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2160.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2160.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2160.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2160.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2160.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2160.py:161:        checkpoint_path = (
+examples/train_Polaris2160.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2160.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2160.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2160.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2160.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2160.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2160.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2160.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2160.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2160.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2160.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_60d40i_reducedFailurePenalty_lowBatPenalty.out_{N}"
+examples/train_Polaris2160.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_60d40i_reducedFailurePenalty_lowBatPenalty_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2160.py:522:            lr=[1e-5],
+examples/train_Polaris2160.py:523:            gamma=[0.9997],
+examples/train_Polaris2160.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2160.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2160.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2170.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2170.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2170.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2170.py:72:        PPOConfig()
+examples/train_Polaris2170.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2170.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2170.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2170.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2170.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2170.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2170.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2170.py:161:        checkpoint_path = (
+examples/train_Polaris2170.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2170.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2170.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2170.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2170.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2170.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2170.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2170.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2170.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2170.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2170.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_70d30i.out_{N}"
+examples/train_Polaris2170.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_70d30i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2170.py:522:            lr=[1e-5],
+examples/train_Polaris2170.py:523:            gamma=[0.9997],
+examples/train_Polaris2170.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2170.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2170.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2180.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2180.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2180.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2180.py:72:        PPOConfig()
+examples/train_Polaris2180.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2180.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2180.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2180.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2180.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2180.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2180.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2180.py:161:        checkpoint_path = (
+examples/train_Polaris2180.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2180.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2180.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2180.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2180.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2180.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2180.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2180.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2180.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2180.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2180.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_80d20i.out_{N}"
+examples/train_Polaris2180.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_80d20i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2180.py:522:            lr=[1e-5],
+examples/train_Polaris2180.py:523:            gamma=[0.9997],
+examples/train_Polaris2180.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2180.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2180.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2190.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2190.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2190.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2190.py:72:        PPOConfig()
+examples/train_Polaris2190.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2190.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2190.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2190.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2190.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2190.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2190.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2190.py:161:        checkpoint_path = (
+examples/train_Polaris2190.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2190.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2190.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2190.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2190.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2190.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2190.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2190.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2190.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2190.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2190.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_90d10i_reducedFailurePenalty.out_{N}"
+examples/train_Polaris2190.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_90d10i_reducedFailurePenalty_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2190.py:522:            lr=[1e-5],
+examples/train_Polaris2190.py:523:            gamma=[0.9997],
+examples/train_Polaris2190.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2190.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2190.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2200.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2200.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2200.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2200.py:72:        PPOConfig()
+examples/train_Polaris2200.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2200.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2200.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2200.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2200.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2200.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2200.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2200.py:161:        checkpoint_path = (
+examples/train_Polaris2200.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2200.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2200.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2200.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2200.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2200.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2200.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2200.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2200.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2200.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2200.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_100d00i_reducedFailurePenalty.out_{N}"
+examples/train_Polaris2200.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_100d00i_reducedFailurePenalty_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2200.py:522:            lr=[1e-5],
+examples/train_Polaris2200.py:523:            gamma=[0.9997],
+examples/train_Polaris2200.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2200.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2200.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2300.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2300.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2300.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2300.py:72:        PPOConfig()
+examples/train_Polaris2300.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2300.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2300.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2300.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2300.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2300.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2300.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2300.py:161:        checkpoint_path = (
+examples/train_Polaris2300.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2300.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2300.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2300.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2300.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2300.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2300.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2300.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2300.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2300.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2300.py:507:    model_name = f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_100d00i_reducedFailurePenalty_lowBatPenalty.out_{N}"
+examples/train_Polaris2300.py:512:        Path("/scratch/alpine/dahu1128/oct14rllib_results").expanduser() / f"oct14_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_100d00i_reducedFailurePenalty_lowBatPenalty_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2300.py:522:            lr=[1e-5],
+examples/train_Polaris2300.py:523:            gamma=[0.9997],
+examples/train_Polaris2300.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2300.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2300.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2400.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2400.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2400.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2400.py:72:        PPOConfig()
+examples/train_Polaris2400.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2400.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2400.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2400.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2400.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2400.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2400.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2400.py:161:        checkpoint_path = (
+examples/train_Polaris2400.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2400.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2400.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2400.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2400.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2400.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2400.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2400.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2400.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2400.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2400.py:493:    model_name = f"aug19_justimaging_obsv5_1e-5lr_batch5000_gamma999_0d100i.out_{N}"
+examples/train_Polaris2400.py:498:        Path("/scratch/alpine/dahu1128/aug19rllib_results").expanduser() / f"aug19_justimaging_obsv5_1e-5lr_batch5000_gamma999_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2400.py:508:            lr=[1e-5],
+examples/train_Polaris2400.py:509:            gamma=[0.999],
+examples/train_Polaris2400.py:510:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2400.py:542:        checkpoint_frequency=5,
+examples/train_Polaris2400.py:543:        checkpoints_to_keep=3,
+examples/train_Polaris2500.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2500.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2500.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2500.py:72:        PPOConfig()
+examples/train_Polaris2500.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2500.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2500.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2500.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2500.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2500.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2500.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2500.py:161:        checkpoint_path = (
+examples/train_Polaris2500.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2500.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2500.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2500.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2500.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2500.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2500.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2500.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2500.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2500.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2500.py:507:    model_name = f"aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_100d0i.out_{N}"
+examples/train_Polaris2500.py:512:        Path("/scratch/alpine/dahu1128/aug19rllib_results").expanduser() / f"aug19_restrictedResources_obsv7_1e-5lr_batch5000_gamma9997_100d0i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2500.py:522:            lr=[1e-5],
+examples/train_Polaris2500.py:523:            gamma=[0.9997],
+examples/train_Polaris2500.py:524:            train_batch_size=[int(156 * n_envs)],
+examples/train_Polaris2500.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2500.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2600.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2600.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2600.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2600.py:72:        PPOConfig()
+examples/train_Polaris2600.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2600.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2600.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2600.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2600.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2600.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2600.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2600.py:161:        checkpoint_path = (
+examples/train_Polaris2600.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2600.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2600.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2600.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2600.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2600.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2600.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2600.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2600.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2600.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2600.py:507:    model_name = f"aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma9995_0d100i.out_{N}"
+examples/train_Polaris2600.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2600.py:522:            lr=[1e-5],
+examples/train_Polaris2600.py:523:            gamma=[0.9995],
+examples/train_Polaris2600.py:524:            train_batch_size=[int(100 * n_envs)],
+examples/train_Polaris2600.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2600.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris2700.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris2700.py:49:    checkpoint_frequency=1,
+examples/train_Polaris2700.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris2700.py:72:        PPOConfig()
+examples/train_Polaris2700.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris2700.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris2700.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris2700.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris2700.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2700.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2700.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris2700.py:161:        checkpoint_path = (
+examples/train_Polaris2700.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris2700.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris2700.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2700.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2700.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris2700.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris2700.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris2700.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris2700.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris2700.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris2700.py:507:    model_name = f"aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma9995_0d100i.out_{N}"
+examples/train_Polaris2700.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_1e-5lr_batch3200_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris2700.py:522:            lr=[1e-5],
+examples/train_Polaris2700.py:523:            gamma=[0.9995],
+examples/train_Polaris2700.py:524:            train_batch_size=[int(100 * n_envs)],
+examples/train_Polaris2700.py:556:        checkpoint_frequency=5,
+examples/train_Polaris2700.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris300.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris300.py:49:    checkpoint_frequency=1,
+examples/train_Polaris300.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris300.py:72:        PPOConfig()
+examples/train_Polaris300.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris300.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris300.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris300.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris300.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris300.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris300.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris300.py:161:        checkpoint_path = (
+examples/train_Polaris300.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris300.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris300.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris300.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris300.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris300.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris300.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris300.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris300.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris300.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris300.py:507:    model_name = f"aug18_restrictedResources_obsv7_5e-7lr_batch320_gamma999_0d100i.out_{N}"
+examples/train_Polaris300.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_5e-7lr_batch320_gamma999_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris300.py:522:            lr=[5e-7],
+examples/train_Polaris300.py:523:            gamma=[0.999],
+examples/train_Polaris300.py:524:            train_batch_size=[int(10 * n_envs)],
+examples/train_Polaris300.py:556:        checkpoint_frequency=5,
+examples/train_Polaris300.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris400.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris400.py:49:    checkpoint_frequency=1,
+examples/train_Polaris400.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris400.py:72:        PPOConfig()
+examples/train_Polaris400.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris400.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris400.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris400.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris400.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris400.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris400.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris400.py:161:        checkpoint_path = (
+examples/train_Polaris400.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris400.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris400.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris400.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris400.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris400.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris400.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris400.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris400.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris400.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris400.py:507:    model_name = f"aug18_restrictedResources_obsv7_1e-5lr_batch320_gamma9995_0d100i.out_{N}"
+examples/train_Polaris400.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_1e-5lr_0.1cp_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris400.py:522:            lr=[1e-5],
+examples/train_Polaris400.py:523:            gamma=[0.9995],
+examples/train_Polaris400.py:524:            train_batch_size=[int(10 * n_envs)],
+examples/train_Polaris400.py:556:        checkpoint_frequency=5,
+examples/train_Polaris400.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris500.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris500.py:49:    checkpoint_frequency=1,
+examples/train_Polaris500.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris500.py:72:        PPOConfig()
+examples/train_Polaris500.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris500.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris500.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris500.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris500.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris500.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris500.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris500.py:161:        checkpoint_path = (
+examples/train_Polaris500.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris500.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris500.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris500.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris500.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris500.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris500.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris500.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris500.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris500.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris500.py:507:    model_name = f"aug18_restrictedResources_obsv7_5e-6lr_batch320_gamma9995_0d100i.out_{N}"
+examples/train_Polaris500.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_5e-6lr_batch320_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris500.py:522:            lr=[5e-6],
+examples/train_Polaris500.py:523:            gamma=[0.9995],
+examples/train_Polaris500.py:524:            train_batch_size=[int(10 * n_envs)],
+examples/train_Polaris500.py:556:        checkpoint_frequency=5,
+examples/train_Polaris500.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris600.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris600.py:49:    checkpoint_frequency=1,
+examples/train_Polaris600.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris600.py:72:        PPOConfig()
+examples/train_Polaris600.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris600.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris600.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris600.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris600.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris600.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris600.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris600.py:161:        checkpoint_path = (
+examples/train_Polaris600.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris600.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris600.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris600.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris600.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris600.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris600.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris600.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris600.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris600.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris600.py:507:    model_name = f"aug18_restrictedResources_obsv7_1e-6lr_batch320_gamma9995_0d100i.out_{N}"
+examples/train_Polaris600.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_1e-6lr_batch320_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris600.py:522:            lr=[1e-6],
+examples/train_Polaris600.py:523:            gamma=[0.9995],
+examples/train_Polaris600.py:524:            train_batch_size=[int(10 * n_envs)],
+examples/train_Polaris600.py:556:        checkpoint_frequency=5,
+examples/train_Polaris600.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris700.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris700.py:49:    checkpoint_frequency=1,
+examples/train_Polaris700.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris700.py:72:        PPOConfig()
+examples/train_Polaris700.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris700.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris700.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris700.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris700.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris700.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris700.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris700.py:161:        checkpoint_path = (
+examples/train_Polaris700.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris700.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris700.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris700.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris700.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris700.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris700.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris700.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris700.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris700.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris700.py:507:    model_name = f"aug18_restrictedResources_obsv7_5e-7lr_batch320_gamma9995_0d100i.out_{N}"
+examples/train_Polaris700.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_5e-7lr_batch320_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris700.py:522:            lr=[5e-7],
+examples/train_Polaris700.py:523:            gamma=[0.9995],
+examples/train_Polaris700.py:524:            train_batch_size=[int(10 * n_envs)],
+examples/train_Polaris700.py:556:        checkpoint_frequency=5,
+examples/train_Polaris700.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris800.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris800.py:49:    checkpoint_frequency=1,
+examples/train_Polaris800.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris800.py:72:        PPOConfig()
+examples/train_Polaris800.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris800.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris800.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris800.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris800.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris800.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris800.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris800.py:161:        checkpoint_path = (
+examples/train_Polaris800.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris800.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris800.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris800.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris800.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris800.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris800.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris800.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris800.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris800.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris800.py:507:    model_name = f"aug18_restrictedResources_obsv7_5e-6lr_batch1600_gamma999_0d100i.out_{N}"
+examples/train_Polaris800.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_5e-6lr_batch1600_gamma999_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris800.py:522:            lr=[5e-6],
+examples/train_Polaris800.py:523:            gamma=[0.999],
+examples/train_Polaris800.py:524:            train_batch_size=[int(50 * n_envs)],
+examples/train_Polaris800.py:556:        checkpoint_frequency=5,
+examples/train_Polaris800.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris900.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris900.py:49:    checkpoint_frequency=1,
+examples/train_Polaris900.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris900.py:72:        PPOConfig()
+examples/train_Polaris900.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris900.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris900.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris900.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris900.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris900.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris900.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris900.py:161:        checkpoint_path = (
+examples/train_Polaris900.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris900.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris900.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris900.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris900.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris900.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris900.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris900.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris900.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris900.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris900.py:507:    model_name = f"aug18_restrictedResources_obsv7_5e-6lr_batch1600_gamma9995_0d100i.out_{N}"
+examples/train_Polaris900.py:512:        Path("/scratch/alpine/dahu1128/aug18rllib_results").expanduser() / f"aug18_restrictedResources_obsv7_5e-6lr_batch1600_gamma9995_0d100i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris900.py:522:            lr=[5e-6],
+examples/train_Polaris900.py:523:            gamma=[0.9995],
+examples/train_Polaris900.py:524:            train_batch_size=[int(50 * n_envs)],
+examples/train_Polaris900.py:556:        checkpoint_frequency=5,
+examples/train_Polaris900.py:557:        checkpoints_to_keep=3,
+examples/train_Polaris_gat_full_actions_wandb.py:64:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris_gat_full_actions_wandb.py:85:SUN_VECTOR_NORM = 1.0  # s_hat_H is already a dimensionless unit vector.
+examples/train_Polaris_gat_full_actions_wandb.py:159:        return Path(os.environ["TMPDIR"]).expanduser()  # cluster fallback if TMPDIR is already set
+examples/train_Polaris_gat_full_actions_wandb.py:538:    """Best-effort alpha update for already-created env runners."""
+examples/train_Polaris_gat_full_actions_wandb.py:568:    checkpoint_frequency: int = 1,
+examples/train_Polaris_gat_full_actions_wandb.py:569:    checkpoints_to_keep: int = 2,
+examples/train_Polaris_gat_full_actions_wandb.py:605:        PPOConfig()
+examples/train_Polaris_gat_full_actions_wandb.py:620:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris_gat_full_actions_wandb.py:704:                checkpoint_path = run_directory / "checkpoint_best"
+examples/train_Polaris_gat_full_actions_wandb.py:706:                    shutil.rmtree(checkpoint_path)
+examples/train_Polaris_gat_full_actions_wandb.py:709:                checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris_gat_full_actions_wandb.py:710:                ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris_gat_full_actions_wandb.py:712:                    checkpoint_path / f"iteration_{str(iteration).zfill(6)}.txt", "w"
+examples/train_Polaris_gat_full_actions_wandb.py:717:            checkpoint_path = run_directory / f"checkpoint_{str(iteration).zfill(6)}"
+examples/train_Polaris_gat_full_actions_wandb.py:718:            if iteration % checkpoint_frequency == 0:
+examples/train_Polaris_gat_full_actions_wandb.py:719:                checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris_gat_full_actions_wandb.py:720:                ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris_gat_full_actions_wandb.py:726:                checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris_gat_full_actions_wandb.py:727:                ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris_gat_full_actions_wandb.py:737:                ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris_gat_full_actions_wandb.py:739:            if iteration > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris_gat_full_actions_wandb.py:740:                for i in range(checkpoint_frequency):
+examples/train_Polaris_gat_full_actions_wandb.py:743:                        / f"checkpoint_{str(iteration - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris_gat_full_actions_wandb.py:1445:    default_checkpoint_frequency = 3 if on_cluster else 1  # local: checkpoint every iter; cluster: less often
+examples/train_Polaris_gat_full_actions_wandb.py:1451:    )  # keep train_batch_size >= RLlib's default sgd_minibatch_size
+examples/train_Polaris_gat_full_actions_wandb.py:1453:    checkpoint_frequency = _env_int(
+examples/train_Polaris_gat_full_actions_wandb.py:1454:        "BSK_RL_CHECKPOINT_FREQUENCY", default_checkpoint_frequency
+examples/train_Polaris_gat_full_actions_wandb.py:1499:    base_lr = 1e-5 #0.00033003435881682255  # current GNN hyperparameter starting point; not yet AMOS-tuned
+examples/train_Polaris_gat_full_actions_wandb.py:1524:            lr=[[[0, base_lr], [40000, base_lr / 16.749479444886223]]],
+examples/train_Polaris_gat_full_actions_wandb.py:1525:            gamma=[0.9915045428565076],
+examples/train_Polaris_gat_full_actions_wandb.py:1526:            train_batch_size=[batch_size],
+examples/train_Polaris_gat_full_actions_wandb.py:1659:        checkpoint_frequency=checkpoint_frequency,
+examples/train_Polaris_gat_full_actions_wandb.py:1660:        checkpoints_to_keep=3,
+examples/train_Polaris_gat_imaging_charge_wandb.py:63:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris_gat_imaging_charge_wandb.py:84:SUN_VECTOR_NORM = 1.0  # s_hat_H is already a dimensionless unit vector.
+examples/train_Polaris_gat_imaging_charge_wandb.py:146:        return Path(os.environ["TMPDIR"]).expanduser()  # cluster fallback if TMPDIR is already set
+examples/train_Polaris_gat_imaging_charge_wandb.py:240:    checkpoint_frequency: int = 1,
+examples/train_Polaris_gat_imaging_charge_wandb.py:241:    checkpoints_to_keep: int = 2,
+examples/train_Polaris_gat_imaging_charge_wandb.py:265:        PPOConfig()
+examples/train_Polaris_gat_imaging_charge_wandb.py:280:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris_gat_imaging_charge_wandb.py:342:                checkpoint_path = run_directory / "checkpoint_best"
+examples/train_Polaris_gat_imaging_charge_wandb.py:344:                    shutil.rmtree(checkpoint_path)
+examples/train_Polaris_gat_imaging_charge_wandb.py:347:                checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris_gat_imaging_charge_wandb.py:348:                ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris_gat_imaging_charge_wandb.py:350:                    checkpoint_path / f"iteration_{str(iteration).zfill(6)}.txt", "w"
+examples/train_Polaris_gat_imaging_charge_wandb.py:355:            checkpoint_path = run_directory / f"checkpoint_{str(iteration).zfill(6)}"
+examples/train_Polaris_gat_imaging_charge_wandb.py:356:            if iteration % checkpoint_frequency == 0:
+examples/train_Polaris_gat_imaging_charge_wandb.py:357:                checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris_gat_imaging_charge_wandb.py:358:                ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris_gat_imaging_charge_wandb.py:364:                checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris_gat_imaging_charge_wandb.py:365:                ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris_gat_imaging_charge_wandb.py:375:                ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris_gat_imaging_charge_wandb.py:377:            if iteration > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris_gat_imaging_charge_wandb.py:378:                for i in range(checkpoint_frequency):
+examples/train_Polaris_gat_imaging_charge_wandb.py:381:                        / f"checkpoint_{str(iteration - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris_gat_imaging_charge_wandb.py:940:    default_checkpoint_frequency = 3 if on_cluster else 1  # local: checkpoint every iter; cluster: less often
+examples/train_Polaris_gat_imaging_charge_wandb.py:946:    )  # keep train_batch_size >= RLlib's default sgd_minibatch_size
+examples/train_Polaris_gat_imaging_charge_wandb.py:948:    checkpoint_frequency = _env_int(
+examples/train_Polaris_gat_imaging_charge_wandb.py:949:        "BSK_RL_CHECKPOINT_FREQUENCY", default_checkpoint_frequency
+examples/train_Polaris_gat_imaging_charge_wandb.py:968:    base_lr = 1e-5 #0.00033003435881682255  # current GNN hyperparameter starting point; not yet AMOS-tuned
+examples/train_Polaris_gat_imaging_charge_wandb.py:971:            lr=[[[0, base_lr], [40000, base_lr / 16.749479444886223]]],
+examples/train_Polaris_gat_imaging_charge_wandb.py:972:            gamma=[0.9915045428565076],
+examples/train_Polaris_gat_imaging_charge_wandb.py:973:            train_batch_size=[batch_size],
+examples/train_Polaris_gat_imaging_charge_wandb.py:1066:        checkpoint_frequency=checkpoint_frequency,
+examples/train_Polaris_gat_imaging_charge_wandb.py:1067:        checkpoints_to_keep=3,
+examples/train_Polaris.py:15:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris.py:49:    checkpoint_frequency=1,
+examples/train_Polaris.py:50:    checkpoints_to_keep=2,
+examples/train_Polaris.py:72:        PPOConfig()
+examples/train_Polaris.py:88:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris.py:123:            # MakeAddedStepActionValid(expected_train_batch_size=config.train_batch_size),
+examples/train_Polaris.py:147:            checkpoint_path = output_directory / model_name / "checkpoint_best"
+examples/train_Polaris.py:150:                shutil.rmtree(checkpoint_path)
+examples/train_Polaris.py:153:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris.py:154:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris.py:156:                checkpoint_path / f"iteration_{str(iter).zfill(6)}.txt", "w"
+examples/train_Polaris.py:161:        checkpoint_path = (
+examples/train_Polaris.py:162:            output_directory / model_name / f"checkpoint_{str(iter).zfill(6)}"
+examples/train_Polaris.py:164:        if iter % checkpoint_frequency == 0:
+examples/train_Polaris.py:165:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris.py:166:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris.py:172:            checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris.py:173:            ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris.py:181:            ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris.py:183:        if iter > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris.py:184:            for i in range(checkpoint_frequency):
+examples/train_Polaris.py:188:                    / f"checkpoint_{str(iter - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris.py:484:    model_name = f"aug18_restrictedResources_obsv21_1e-3lr_0.1cp_gamma9995_100d0i.out_{N}"
+examples/train_Polaris.py:489:        Path("~/rllib_results/july_results/july30rllib_results").expanduser() / f"aug18_restrictedResources_obsv21_1e-3lr_0.1cp_gamma9995_100d0i_{time.time()}" #change this when running on cluster (add /scratch/alpine/dahu1128/rllib_results as directory)
+examples/train_Polaris.py:499:            lr=[1e-3],
+examples/train_Polaris.py:500:            gamma=[0.9995],
+examples/train_Polaris.py:501:            train_batch_size=[int(50 * n_envs)],
+examples/train_Polaris.py:533:        checkpoint_frequency=5,
+examples/train_Polaris.py:534:        checkpoints_to_keep=3,
+examples/train_Polaris_target_gnn_wandb.py:67:from ray.rllib.algorithms.ppo import PPO, PPOConfig
+examples/train_Polaris_target_gnn_wandb.py:149:        return Path(os.environ["TMPDIR"]).expanduser()  # cluster fallback if TMPDIR is already set
+examples/train_Polaris_target_gnn_wandb.py:238:    checkpoint_frequency: int = 1,
+examples/train_Polaris_target_gnn_wandb.py:239:    checkpoints_to_keep: int = 2,
+examples/train_Polaris_target_gnn_wandb.py:263:        PPOConfig()
+examples/train_Polaris_target_gnn_wandb.py:278:        .checkpointing(export_native_model_files=True)
+examples/train_Polaris_target_gnn_wandb.py:340:                checkpoint_path = run_directory / "checkpoint_best"
+examples/train_Polaris_target_gnn_wandb.py:342:                    shutil.rmtree(checkpoint_path)
+examples/train_Polaris_target_gnn_wandb.py:345:                checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris_target_gnn_wandb.py:346:                ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris_target_gnn_wandb.py:348:                    checkpoint_path / f"iteration_{str(iteration).zfill(6)}.txt", "w"
+examples/train_Polaris_target_gnn_wandb.py:353:            checkpoint_path = run_directory / f"checkpoint_{str(iteration).zfill(6)}"
+examples/train_Polaris_target_gnn_wandb.py:354:            if iteration % checkpoint_frequency == 0:
+examples/train_Polaris_target_gnn_wandb.py:355:                checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris_target_gnn_wandb.py:356:                ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris_target_gnn_wandb.py:362:                checkpoint_path.mkdir(parents=True, exist_ok=True)
+examples/train_Polaris_target_gnn_wandb.py:363:                ppo.save_checkpoint(checkpoint_path)
+examples/train_Polaris_target_gnn_wandb.py:373:                ppo = PPO.from_checkpoint(checkpoint_path)
+examples/train_Polaris_target_gnn_wandb.py:375:            if iteration > checkpoints_to_keep * checkpoint_frequency - 1:
+examples/train_Polaris_target_gnn_wandb.py:376:                for i in range(checkpoint_frequency):
+examples/train_Polaris_target_gnn_wandb.py:379:                        / f"checkpoint_{str(iteration - checkpoints_to_keep * checkpoint_frequency - i).zfill(6)}"
+examples/train_Polaris_target_gnn_wandb.py:922:    default_checkpoint_frequency = 3 if on_cluster else 1  # local: checkpoint every iter; cluster: less often
+examples/train_Polaris_target_gnn_wandb.py:928:    )  # keep train_batch_size >= RLlib's default sgd_minibatch_size
+examples/train_Polaris_target_gnn_wandb.py:930:    checkpoint_frequency = _env_int(
+examples/train_Polaris_target_gnn_wandb.py:931:        "BSK_RL_CHECKPOINT_FREQUENCY", default_checkpoint_frequency
+examples/train_Polaris_target_gnn_wandb.py:950:    base_lr = 1e-5 #0.00033003435881682255  # current GNN hyperparameter starting point; not yet AMOS-tuned
+examples/train_Polaris_target_gnn_wandb.py:953:            lr=[[[0, base_lr], [40000, base_lr / 16.749479444886223]]],
+examples/train_Polaris_target_gnn_wandb.py:954:            gamma=[0.9915045428565076],
+examples/train_Polaris_target_gnn_wandb.py:955:            train_batch_size=[batch_size],
+examples/train_Polaris_target_gnn_wandb.py:1039:        checkpoint_frequency=checkpoint_frequency,
+examples/train_Polaris_target_gnn_wandb.py:1040:        checkpoints_to_keep=3,
