@@ -344,7 +344,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--temp-dir",
         default=None,
-        help="Ray temp directory. Defaults to ~/ray_tmp/breckenridge2026_<pid>.",
+        help="Ray temp directory. Defaults to /tmp/br26_<pid>.",
     )
     parser.add_argument(
         "--run-prefix",
