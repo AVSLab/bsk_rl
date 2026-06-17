@@ -59,7 +59,7 @@ the archived training artifacts.
 Use:
 
 ```bash
-cd /Users/dahu1128/Repositories/bsk_rl_breckenridge2026
+cd /Users/dahu1128/Repositories/bsk_rl
 python3 examples/train_Breckenridge2026_LEOAny_oldnet_local.py
 ```
 
@@ -74,18 +74,19 @@ Defaults:
 - targets ahead: `10`
 - fixed action durations, no fast/variable action stopping
 - uniform target priorities from the January `RandomSatellites` implementation
+- umbra smart-decision metrics exported through the episode callback
 
 Recommended first smoke test:
 
 ```bash
-cd /Users/dahu1128/Repositories/bsk_rl_breckenridge2026
+cd /Users/dahu1128/Repositories/bsk_rl
 python3 examples/train_Breckenridge2026_LEOAny_oldnet_local.py --smoke-test --n-envs 2
 ```
 
 Full local run, keeping exact old batch size:
 
 ```bash
-cd /Users/dahu1128/Repositories/bsk_rl_breckenridge2026
+cd /Users/dahu1128/Repositories/bsk_rl
 python3 examples/train_Breckenridge2026_LEOAny_oldnet_local.py \
   --downlink-bonus 0.1 \
   --mix-weights LEO=0.5,MEO=0.3,GEO=0.2 \
@@ -94,3 +95,31 @@ python3 examples/train_Breckenridge2026_LEOAny_oldnet_local.py \
 
 If local memory is tight, reduce `--n-envs`; keep `--train-batch-size 4992` for
 the closest reproduction of the old training setup.
+
+## Umbra smart-decision training metrics
+
+During each imaging decision, the `ImageRSO` action tracks whether the inspector
+spacecraft is in umbra. When it is, a decision is counted as smart if the chosen
+target is illuminated, is in a higher regime (MEO/GEO), or is a LEO target on the
+sunward side according to the Hill-frame sun/target dot product.
+
+The training callback logs both cumulative and per-episode metrics:
+
+- `umbra_imaging_decisions`
+- `umbra_smart_decisions`
+- `umbra_not_smart_decisions`
+- `umbra_smart_fraction`
+- `episode_umbra_imaging_decisions`
+- `episode_umbra_smart_decisions`
+- `episode_umbra_not_smart_decisions`
+- `episode_umbra_smart_fraction`
+- `umbra_smart_reason_illum_target`
+- `umbra_smart_reason_high_regime`
+- `umbra_smart_reason_sunward_leo`
+- `episode_umbra_smart_reason_illum_target`
+- `episode_umbra_smart_reason_high_regime`
+- `episode_umbra_smart_reason_sunward_leo`
+
+For TensorBoard, the main curve to watch is
+`episode_umbra_smart_fraction`, alongside
+`episode_umbra_imaging_decisions` so empty-denominator episodes are easy to spot.

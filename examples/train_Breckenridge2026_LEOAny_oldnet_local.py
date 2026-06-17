@@ -247,6 +247,51 @@ def env_metrics_callback(env):
     data["illuminated_images"] = len(env.rewarder.imaged_illuminated)
 
     image_action = env.satellites[0].action_builder.action_spec[0]
+
+    umbra_total = int(getattr(image_action, "umbra_imaging_decisions", 0) or 0)
+    umbra_smart = int(getattr(image_action, "umbra_smart_decisions", 0) or 0)
+    umbra_not_smart = int(getattr(image_action, "umbra_regular_decisions", 0) or 0)
+    last_umbra_total = int(getattr(image_action, "_last_logged_umbra_total", 0) or 0)
+    last_umbra_smart = int(getattr(image_action, "_last_logged_umbra_smart", 0) or 0)
+    last_umbra_not_smart = int(
+        getattr(image_action, "_last_logged_umbra_not_smart", 0) or 0
+    )
+    episode_umbra_total = max(0, umbra_total - last_umbra_total)
+    episode_umbra_smart = max(0, umbra_smart - last_umbra_smart)
+    episode_umbra_not_smart = max(0, umbra_not_smart - last_umbra_not_smart)
+
+    data["umbra_imaging_decisions"] = umbra_total
+    data["umbra_smart_decisions"] = umbra_smart
+    data["umbra_not_smart_decisions"] = umbra_not_smart
+    data["umbra_smart_fraction"] = (
+        umbra_smart / umbra_total if umbra_total > 0 else 0.0
+    )
+    data["episode_umbra_imaging_decisions"] = episode_umbra_total
+    data["episode_umbra_smart_decisions"] = episode_umbra_smart
+    data["episode_umbra_not_smart_decisions"] = episode_umbra_not_smart
+    data["episode_umbra_smart_fraction"] = (
+        episode_umbra_smart / episode_umbra_total
+        if episode_umbra_total > 0
+        else 0.0
+    )
+
+    reason_counts = dict(getattr(image_action, "umbra_smart_reason_counts", {}) or {})
+    last_reason_counts = dict(
+        getattr(image_action, "_last_logged_umbra_smart_reason_counts", {}) or {}
+    )
+    for reason in ("illum_target", "high_regime", "sunward_leo"):
+        current_reason_count = int(reason_counts.get(reason, 0) or 0)
+        last_reason_count = int(last_reason_counts.get(reason, 0) or 0)
+        data[f"umbra_smart_reason_{reason}"] = current_reason_count
+        data[f"episode_umbra_smart_reason_{reason}"] = max(
+            0, current_reason_count - last_reason_count
+        )
+
+    image_action._last_logged_umbra_total = umbra_total
+    image_action._last_logged_umbra_smart = umbra_smart
+    image_action._last_logged_umbra_not_smart = umbra_not_smart
+    image_action._last_logged_umbra_smart_reason_counts = reason_counts
+
     if getattr(image_action, "chosen_target_elevation", None):
         data["mean_target_elevation"] = np.mean(image_action.chosen_target_elevation)
         data["std_target_elevation"] = np.std(image_action.chosen_target_elevation)
