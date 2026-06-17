@@ -191,6 +191,10 @@ class EpisodeDataLogger:
     def log_data_on_reset(self):
         if self.metrics_logger is not None:
             episode_data = self.episode_data_callback(self)
+            env_profiler = getattr(getattr(self, "env", None), "profiler", None)
+            if env_profiler is not None and getattr(env_profiler, "enabled", False):
+                env_profiler.print_episode_summary()
+                episode_data.update(env_profiler.metrics())
             for k, v in episode_data.items():
                 self.metrics_logger.log_value(k, v, clear_on_reduce=True)
 

@@ -11,6 +11,7 @@ from gymnasium import spaces
 
 from bsk_rl.utils.functional import vectorize_nested_dict
 from bsk_rl.utils.orbital import rv2HN
+from bsk_rl.utils.profiling import env_flag, profile_section
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -84,20 +85,22 @@ class ObservationBuilder:
 
         Cached so only computed once per timestep.
         """
-        if (
-            self.obs_dict_cache is None
-            or self.simulator.sim_time != self.obs_cache_time
-        ):
-            self.obs_dict_cache = {
-                obs.name: obs.get_obs() for obs in self.observation_spec
-            }
-            self.obs_cache_time = self.simulator.sim_time
-        return deepcopy(self.obs_dict_cache)
+        with profile_section(self.simulator, "obs.builder.obs_dict"):
+            if (
+                self.obs_dict_cache is None
+                or self.simulator.sim_time != self.obs_cache_time
+            ):
+                self.obs_dict_cache = {
+                    obs.name: obs.get_obs() for obs in self.observation_spec
+                }
+                self.obs_cache_time = self.simulator.sim_time
+            return deepcopy(self.obs_dict_cache)
 
     def obs_ndarray(self) -> np.ndarray:
         """Numpy vector observation format."""
-        _, obs = vectorize_nested_dict(self.obs_dict())
-        return obs
+        with profile_section(self.simulator, "obs.builder.obs_ndarray"):
+            _, obs = vectorize_nested_dict(self.obs_dict())
+            return obs
 
     def obs_array_keys(self) -> list[str]:
         """Get the keys of the obs_ndarray."""
@@ -459,12 +462,16 @@ class OpportunityProperties(Observation):
 
 ###ADD a class similar to OpportunityProperties and change that loop of find_next_opportunities
 def _relative_position(sat, opp):
+    if "_polaris_cache" in opp:
+        return opp["_polaris_cache"]["rel_pos_N"]
     sat_pos = np.array(sat.dynamics.r_BN_N)
     target_pos = np.array(opp["object"].target_spacecraft.dynamics.r_BN_N)
     los_vector = target_pos - sat_pos
     return los_vector
 
 def _relative_position_H(sat, opp):
+    if "_polaris_cache" in opp:
+        return opp["_polaris_cache"]["rel_pos_H"]
     sat_pos = np.array(sat.dynamics.r_BN_N)
     target_pos = np.array(opp["object"].target_spacecraft.dynamics.r_BN_N)
     los_vector = target_pos - sat_pos
@@ -472,19 +479,31 @@ def _relative_position_H(sat, opp):
     return HN @ los_vector
 
 def _r_BN_H(sat, opp):
+    if "_polaris_cache" in opp:
+        return opp["_polaris_cache"]["target_pos_H"]
     r_BN_N = opp["object"].target_spacecraft.dynamics.r_BN_N
     HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
     return HN @ r_BN_N
 
 
+def _target_r_BN_N(sat, opp):
+    if "_polaris_cache" in opp:
+        return opp["_polaris_cache"]["target_pos_N"]
+    return opp["object"].target_spacecraft.dynamics.r_BN_N
+
+
 def _relative_velocity_H(sat, opp):
     """Relative target velocity in m/s, expressed in the scanner Hill frame."""
+    if "_polaris_cache" in opp:
+        return opp["_polaris_cache"]["rel_vel_H"]
     sat_vel = np.array(sat.dynamics.v_BN_N, dtype=float)
     target_vel = np.array(opp["object"].target_spacecraft.dynamics.v_BN_N, dtype=float)
     HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
     return HN @ (target_vel - sat_vel)
 
 def _target_elevation_angle(sat, opp):
+    if "_polaris_cache" in opp:
+        return opp["_polaris_cache"]["target_elevation_angle"]
     sat_pos = np.array(sat.dynamics.r_BN_N)
     target_pos = np.array(opp["object"].target_spacecraft.dynamics.r_BN_N)
     los_vector = target_pos - sat_pos
@@ -495,6 +514,8 @@ def _target_elevation_angle(sat, opp):
     return elevation_deg
 
 def _angle_to_target(sat, opp):
+    if "_polaris_cache" in opp:
+        return opp["_polaris_cache"]["angle_to_target"]
     vector_target_spacecraft_P = opp["object"].target_spacecraft.dynamics.r_BN_P - sat.dynamics.r_BN_P
     vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(
         vector_target_spacecraft_P
@@ -502,6 +523,8 @@ def _angle_to_target(sat, opp):
     return np.degrees(np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.c_hat_P)))
 
 def _target_distance(sat, opp):
+    if "_polaris_cache" in opp:
+        return opp["_polaris_cache"]["target_distance"]
     vector_target_spacecraft_N = (
         np.array(opp["object"].target_spacecraft.dynamics.r_BN_N)
         - np.array(sat.dynamics.r_BN_N)
@@ -536,6 +559,8 @@ def _target_imaged(sat, opp):
     imaged_ids = {tgt.id for tgt in imaged_targets}
     return int(target.id in imaged_ids)
 def _target_shadowFactor(sat, opp):
+    if "_polaris_cache" in opp:
+        return opp["_polaris_cache"]["target_shadowFactor"]
     return sat.simulator.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[opp["object"].target_spacecraft.dynamics.eclipse_index].read().shadowFactor
 
 
@@ -563,7 +588,7 @@ class PolarisScTargetProperties(Observation):
         "rel_pos_vector_r_BR_N": _relative_position,
         "rel_pos_vector_r_BR_H": _relative_position_H,
         "rel_vel_vector_v_BR_H": _relative_velocity_H,
-        "r_BN_N": lambda sat, opp: opp["object"].target_spacecraft.dynamics.r_BN_N,
+        "r_BN_N": _target_r_BN_N,
         "r_BN_H": _r_BN_H,
         # "r_LB_H": _r_LB_H,
         # "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time,
@@ -672,37 +697,18 @@ class PolarisScTargetProperties(Observation):
 
         :meta private:
         """
-        # # old loop
-        # from bsk_rl.sats import AccessSatellite
-        #
-        # if not isinstance(self.satellite, AccessSatellite):
-        #     logger.warning(
-        #         "OpportunityProperties observation requires an AccessSatellite"
-        #     )
-        # obs = {}
-        # for i, opportunity in enumerate(
-        #     self.satellite.find_next_opportunities(
-        #         n=self.n_ahead_observe,
-        #         types=self.type,
-        #         pad=True,
-        #     )
-        # ):
-        #     props = {}
-        #     for prop_spec in self.target_properties:
-        #         name = prop_spec["name"]
-        #         norm = prop_spec["norm"]
-        #         value = prop_spec["fn"](self.satellite, opportunity)
-        #         props[name] = value / norm
-        #     obs[f"{self.name}_{i}"] = props
+        with profile_section(self.simulator, "obs.polaris_targets.total"):
+            if not env_flag("BSK_RL_POLARIS_OBS_CACHE", True):
+                return self._get_obs_legacy()
+            return self._get_obs_cached()
 
-        # # new loop
-
+    def _get_obs_legacy(self):
+        """Original target observation path, retained for A/B validation."""
         scanner_pos = np.array(self.satellite.dynamics.r_BN_N)
         known_targets = self.satellite.data_store.data.known
         eligible_targets = _eligible_targets_now(self.satellite, known_targets)
         eligible_ids = {tgt.id for tgt in eligible_targets}
 
-        # Compute elevation angles for currently eligible targets
         target_elevations = []
         for target in eligible_targets:
             target_pos = np.array(target.target_spacecraft.dynamics.r_BN_N)
@@ -716,7 +722,8 @@ class PolarisScTargetProperties(Observation):
             target_elevations.append((target, elev))
 
         visible_eligible_targets = [
-            (tgt, elev) for tgt, elev in target_elevations
+            (tgt, elev)
+            for tgt, elev in target_elevations
             if -21.0 <= elev <= 90.0 and tgt.id in eligible_ids
         ]
 
@@ -728,38 +735,45 @@ class PolarisScTargetProperties(Observation):
         if len(final_targets) < num_actions:
             remaining = num_actions - len(final_targets)
             selected_ids = {tgt.id for tgt in final_targets}
-            remaining_eligible = [tgt for tgt in eligible_targets if tgt.id not in selected_ids]
+            remaining_eligible = [
+                tgt for tgt in eligible_targets if tgt.id not in selected_ids
+            ]
             remaining_eligible.sort(
-                key=lambda tgt: np.linalg.norm(np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos)
+                key=lambda tgt: np.linalg.norm(
+                    np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos
+                )
             )
-            final_targets += remaining_eligible[:remaining]  # pad with closest eligible targets
+            final_targets += remaining_eligible[:remaining]
 
         if len(final_targets) < num_actions:
             if len(final_targets) < 1:
                 print("no eligible targets available!")
             try:
-                final_targets += [final_targets[-1]] * (num_actions - len(final_targets))
+                final_targets += [final_targets[-1]] * (
+                    num_actions - len(final_targets)
+                )
             except IndexError:
                 print("No eligible targets available; using closest known targets fallback")
                 sorted_fallback = sorted(
                     known_targets,
                     key=lambda tgt: np.linalg.norm(
                         np.array(tgt.target_spacecraft.dynamics.r_BN_N) - scanner_pos
-                    )
+                    ),
                 )
-                final_targets = sorted_fallback[:self.n_ahead_observe]
+                final_targets = sorted_fallback[: self.n_ahead_observe]
                 if not final_targets:
                     raise RuntimeError("No targets available.")
 
         obs = {}
-
-        # Gather and normalize observations for selected targets
         _record_dynamic_priority_candidate_access(
             final_targets,
             float(self.satellite.simulator.sim_time),
         )
         for i, tgt in enumerate(final_targets):
-            opportunity = {"object": tgt, "r_BN_N": np.array(tgt.target_spacecraft.dynamics.r_BN_N)}
+            opportunity = {
+                "object": tgt,
+                "r_BN_N": np.array(tgt.target_spacecraft.dynamics.r_BN_N),
+            }
             props = {}
             for prop_spec in self.target_properties:
                 name = prop_spec["name"]
@@ -767,6 +781,143 @@ class PolarisScTargetProperties(Observation):
                 value = prop_spec["fn"](self.satellite, opportunity)
                 props[name] = value / norm
             obs[f"{self.name}_{i}"] = props
+        return obs
+
+    def _get_obs_cached(self):
+        """Build Polaris target observations with one state read per target."""
+        scanner_pos = np.array(self.satellite.dynamics.r_BN_N, dtype=float)
+        scanner_vel = np.array(self.satellite.dynamics.v_BN_N, dtype=float)
+        scanner_pos_P = np.array(self.satellite.dynamics.r_BN_P, dtype=float)
+        c_hat_P = np.array(self.satellite.fsw.c_hat_P, dtype=float)
+        HN = rv2HN(scanner_pos, scanner_vel)
+        zenith = scanner_pos / np.linalg.norm(scanner_pos)
+
+        with profile_section(self.simulator, "access.polaris_candidate_generation"):
+            with profile_section(self.simulator, "obs.polaris_targets.eligible"):
+                known_targets = self.satellite.data_store.data.known
+                eligible_targets = _eligible_targets_now(self.satellite, known_targets)
+                eligible_ids = {tgt.id for tgt in eligible_targets}
+
+            target_cache = {}
+
+            def cache_for_target(target):
+                if target in target_cache:
+                    return target_cache[target]
+
+                target_pos_N = np.array(
+                    target.target_spacecraft.dynamics.r_BN_N, dtype=float
+                )
+                target_vel_N = np.array(
+                    target.target_spacecraft.dynamics.v_BN_N, dtype=float
+                )
+                target_pos_P = np.array(
+                    target.target_spacecraft.dynamics.r_BN_P, dtype=float
+                )
+                rel_pos_N = target_pos_N - scanner_pos
+                rel_vel_N = target_vel_N - scanner_vel
+                target_distance = np.linalg.norm(rel_pos_N)
+                los_unit = rel_pos_N / target_distance
+                elevation_rad = np.arcsin(np.clip(np.dot(los_unit, zenith), -1.0, 1.0))
+                vector_target_spacecraft_P = target_pos_P - scanner_pos_P
+                vector_target_spacecraft_P_hat = (
+                    vector_target_spacecraft_P
+                    / np.linalg.norm(vector_target_spacecraft_P)
+                )
+                angle_to_target = np.degrees(
+                    np.arccos(np.dot(vector_target_spacecraft_P_hat, c_hat_P))
+                )
+                target_shadow_factor = (
+                    self.satellite.simulator.satellites[0]
+                    .dynamics.world.eclipseObject.eclipseOutMsgs[
+                        target.target_spacecraft.dynamics.eclipse_index
+                    ]
+                    .read()
+                    .shadowFactor
+                )
+                target_cache[target] = {
+                    "target_pos_N": target_pos_N,
+                    "target_pos_H": HN @ target_pos_N,
+                    "rel_pos_N": rel_pos_N,
+                    "rel_pos_H": HN @ rel_pos_N,
+                    "rel_vel_H": HN @ rel_vel_N,
+                    "target_elevation_angle": np.degrees(elevation_rad),
+                    "angle_to_target": angle_to_target,
+                    "target_distance": target_distance,
+                    "target_shadowFactor": target_shadow_factor,
+                }
+                return target_cache[target]
+
+            with profile_section(self.simulator, "obs.polaris_targets.geometry"):
+                target_elevations = [
+                    (target, cache_for_target(target)["target_elevation_angle"])
+                    for target in eligible_targets
+                ]
+
+            with profile_section(self.simulator, "obs.polaris_targets.sort_pad"):
+                visible_eligible_targets = [
+                    (tgt, elev)
+                    for tgt, elev in target_elevations
+                    if -21.0 <= elev <= 90.0 and tgt.id in eligible_ids
+                ]
+
+                visible_eligible_targets.sort(key=lambda x: x[1])
+
+                num_actions = self.n_ahead_observe
+                final_targets = [
+                    tgt for tgt, _ in visible_eligible_targets[:num_actions]
+                ]
+
+                if len(final_targets) < num_actions:
+                    remaining = num_actions - len(final_targets)
+                    selected_ids = {tgt.id for tgt in final_targets}
+                    remaining_eligible = [
+                        tgt
+                        for tgt in eligible_targets
+                        if tgt.id not in selected_ids
+                    ]
+                    remaining_eligible.sort(
+                        key=lambda tgt: cache_for_target(tgt)["target_distance"]
+                    )
+                    final_targets += remaining_eligible[:remaining]
+
+                if len(final_targets) < num_actions:
+                    if len(final_targets) < 1:
+                        print("no eligible targets available!")
+                    try:
+                        final_targets += [final_targets[-1]] * (
+                            num_actions - len(final_targets)
+                        )
+                    except IndexError:
+                        print(
+                            "No eligible targets available; using closest known targets fallback"
+                        )
+                        sorted_fallback = sorted(
+                            known_targets,
+                            key=lambda tgt: cache_for_target(tgt)["target_distance"],
+                        )
+                        final_targets = sorted_fallback[: self.n_ahead_observe]
+                        if not final_targets:
+                            raise RuntimeError("No targets available.")
+
+        obs = {}
+        _record_dynamic_priority_candidate_access(
+            final_targets,
+            float(self.satellite.simulator.sim_time),
+        )
+        with profile_section(self.simulator, "obs.polaris_targets.properties"):
+            for i, tgt in enumerate(final_targets):
+                opportunity = {
+                    "object": tgt,
+                    "r_BN_N": cache_for_target(tgt)["target_pos_N"],
+                    "_polaris_cache": cache_for_target(tgt),
+                }
+                props = {}
+                for prop_spec in self.target_properties:
+                    name = prop_spec["name"]
+                    norm = prop_spec["norm"]
+                    value = prop_spec["fn"](self.satellite, opportunity)
+                    props[name] = value / norm
+                obs[f"{self.name}_{i}"] = props
         return obs
 
 class Eclipse(Observation):

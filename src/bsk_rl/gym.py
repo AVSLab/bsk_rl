@@ -19,6 +19,7 @@ from bsk_rl.scene import Scenario
 from bsk_rl.sim import Simulator
 from bsk_rl.sim.world import WorldModel
 from bsk_rl.utils import logging_config, vizard
+from bsk_rl.utils.profiling import PerformanceProfiler
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         self.latest_step_duration = 0.0
         self.render_mode = render_mode
         self.generate_obs_retasking_only = generate_obs_retasking_only
+        self.profiler = PerformanceProfiler(label=self.__class__.__name__)
 
     def _minimum_world_model(self) -> type[WorldModel]:
         """Determine the minimum world model required by the satellites."""
@@ -260,67 +262,91 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         Returns:
             observation, info
         """
+        self.profiler.reset_episode()
+        with self.profiler.section("env.reset.total"):
+            return self._reset_profiled(seed=seed, options=options)
+
+    def _reset_profiled(
+        self,
+        seed: Optional[int] = None,
+        options=None,
+    ) -> tuple[MultiSatObs, dict[str, Any]]:
+        """Implementation body for :meth:`reset` so the total timer stays small."""
         # Explicitly delete the Basilisk simulation before creating a new one.
-        self.delete_simulator()
+        with self.profiler.section("env.reset.delete_simulator"):
+            self.delete_simulator()
 
         if seed is None:
             seed = time_ns() % 2**32
         logger.info(f"Resetting environment with seed={seed}")
         self.seed = seed
-        super().reset(seed=self.seed)
-        np.random.seed(self.seed)
+        with self.profiler.section("env.reset.seed"):
+            super().reset(seed=self.seed)
+            np.random.seed(self.seed)
 
-        self.scenario.reset_overwrite_previous()
-        self.rewarder.reset_overwrite_previous()
-        self.communicator.reset_overwrite_previous()
-        for i, satellite in enumerate(self.satellites):
-            satellite.reset_overwrite_previous()
-            satellite.create_vizard_data(color=vizard.get_color(i))
+        with self.profiler.section("env.reset.overwrite_previous"):
+            self.scenario.reset_overwrite_previous()
+            self.rewarder.reset_overwrite_previous()
+            self.communicator.reset_overwrite_previous()
+            for i, satellite in enumerate(self.satellites):
+                satellite.reset_overwrite_previous()
+                satellite.create_vizard_data(color=vizard.get_color(i))
         self.latest_step_duration = 0.0
 
-        self._generate_world_args()
-        overrides = self.sat_arg_randomizer(self.satellites)
-        for satellite in self.satellites:
-            sat_overrides = overrides.get(satellite, {})
-            satellite.generate_sat_args(
-                utc_init=self.world_args["utc_init"], **sat_overrides
-            )
+        with self.profiler.section("env.reset.generate_args"):
+            self._generate_world_args()
+            overrides = self.sat_arg_randomizer(self.satellites)
+            for satellite in self.satellites:
+                sat_overrides = overrides.get(satellite, {})
+                satellite.generate_sat_args(
+                    utc_init=self.world_args["utc_init"], **sat_overrides
+                )
 
         self.scenario.utc_init = self.world_args["utc_init"]
 
-        self.scenario.reset_pre_sim_init()
-        self.rewarder.reset_pre_sim_init()
-        self.communicator.reset_pre_sim_init()
+        with self.profiler.section("env.reset.pre_sim_init"):
+            self.scenario.reset_pre_sim_init()
+            self.rewarder.reset_pre_sim_init()
+            self.communicator.reset_pre_sim_init()
 
-        for satellite in self.satellites:
-            self.rewarder.create_data_store(satellite)
-            satellite.reset_pre_sim_init()
+        with self.profiler.section("env.reset.create_data_store"):
+            for satellite in self.satellites:
+                self.rewarder.create_data_store(satellite)
+                satellite.reset_pre_sim_init()
 
-        self.simulator = Simulator(
-            self.satellites,
-            self.world_type,
-            self.world_args,
-            sim_rate=self.sim_rate,
-            max_step_duration=self.max_step_duration,
-            time_limit=self.time_limit,
-        )
-        self.simulator.setup_vizard(**self.vizard_settings)
+        with self.profiler.section("env.reset.simulator_construct"):
+            self.simulator = Simulator(
+                self.satellites,
+                self.world_type,
+                self.world_args,
+                sim_rate=self.sim_rate,
+                max_step_duration=self.max_step_duration,
+                time_limit=self.time_limit,
+            )
+            self.simulator.profiler = self.profiler
+        with self.profiler.section("env.reset.setup_vizard"):
+            self.simulator.setup_vizard(**self.vizard_settings)
 
-        self.scenario.reset_during_sim_init()
-        self.rewarder.reset_during_sim_init()
-        self.communicator.reset_during_sim_init()
+        with self.profiler.section("env.reset.during_sim_init"):
+            self.scenario.reset_during_sim_init()
+            self.rewarder.reset_during_sim_init()
+            self.communicator.reset_during_sim_init()
 
-        self.simulator.finish_init()
+        with self.profiler.section("env.reset.finish_init"):
+            self.simulator.finish_init()
 
-        self.scenario.reset_post_sim_init()
-        self.rewarder.reset_post_sim_init()
-        self.communicator.reset_post_sim_init()
+        with self.profiler.section("env.reset.post_sim_init"):
+            self.scenario.reset_post_sim_init()
+            self.rewarder.reset_post_sim_init()
+            self.communicator.reset_post_sim_init()
 
-        for satellite in self.satellites:
-            satellite.reset_post_sim_init()
-            satellite.data_store.update_from_logs()
+        with self.profiler.section("env.reset.satellite_post_sim_init"):
+            for satellite in self.satellites:
+                satellite.reset_post_sim_init()
+                satellite.data_store.update_from_logs()
 
-        observation = self._get_obs()
+        with self.profiler.section("env.reset.get_obs"):
+            observation = self._get_obs()
         info = self._get_info()
         logger.info("Environment reset")
         return observation, info
@@ -343,17 +369,18 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         Returns:
             tuple: Joint observation
         """
-        if self.generate_obs_retasking_only:
-            return tuple(
-                (
-                    satellite.get_obs()
-                    if satellite.requires_retasking
-                    else satellite.observation_space.sample() * 0
+        with self.profiler.section("env.get_obs"):
+            if self.generate_obs_retasking_only:
+                return tuple(
+                    (
+                        satellite.get_obs()
+                        if satellite.requires_retasking
+                        else satellite.observation_space.sample() * 0
+                    )
+                    for satellite in self.satellites
                 )
-                for satellite in self.satellites
-            )
-        else:
-            return tuple(satellite.get_obs() for satellite in self.satellites)
+            else:
+                return tuple(satellite.get_obs() for satellite in self.satellites)
 
     def _get_info(self) -> dict[str, Any]:
         """Compose satellite info into a single info dict.
@@ -415,38 +442,46 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         )
 
     def _step(self, actions: MultiSatAct) -> None:
+        self.profiler.begin_step()
         logger.debug(f"Stepping environment with actions: {actions}")
         if len(actions) != len(self.satellites):
             raise ValueError("There must be the same number of actions and satellites")
-        for satellite, action in zip(self.satellites, actions):
-            satellite.info = []  # reset satellite info log
-            if action is not None and action != NO_ACTION:
-                satellite.requires_retasking = False
-                satellite.set_action(action)
-            if not satellite.is_alive():
-                satellite.requires_retasking = False
-            else:
-                if satellite.requires_retasking:
-                    satellite.logger.warning(
-                        f"Requires retasking but received no task."
-                    )
+        with self.profiler.section("env.step.apply_actions"):
+            for satellite, action in zip(self.satellites, actions):
+                satellite.info = []  # reset satellite info log
+                if action is not None and action != NO_ACTION:
+                    satellite.requires_retasking = False
+                    with self.profiler.section("env.step.satellite_set_action"):
+                        satellite.set_action(action)
+                if not satellite.is_alive():
+                    satellite.requires_retasking = False
+                else:
+                    if satellite.requires_retasking:
+                        satellite.logger.warning(
+                            f"Requires retasking but received no task."
+                        )
 
         previous_time = self.simulator.sim_time  # should these be recorded in simulator
-        self.simulator.run()
+        with self.profiler.section("env.step.simulator_run"):
+            self.simulator.run()
         self.latest_step_duration = self.simulator.sim_time - previous_time
 
-        new_data = {
-            satellite.name: satellite.data_store.update_from_logs()
-            for satellite in self.satellites
-        }
-        self.reward_dict = self.rewarder.reward(new_data)
-        if hasattr(self.scenario, "maybe_apply_dynamic_priority_event"):
-            self.scenario.maybe_apply_dynamic_priority_event(
-                self.simulator.sim_time,
-                self.time_limit,
-            )
+        with self.profiler.section("env.step.data_store_update"):
+            new_data = {
+                satellite.name: satellite.data_store.update_from_logs()
+                for satellite in self.satellites
+            }
+        with self.profiler.section("env.step.reward"):
+            self.reward_dict = self.rewarder.reward(new_data)
+        with self.profiler.section("env.step.dynamic_priority"):
+            if hasattr(self.scenario, "maybe_apply_dynamic_priority_event"):
+                self.scenario.maybe_apply_dynamic_priority_event(
+                    self.simulator.sim_time,
+                    self.time_limit,
+                )
 
-        self.communicator.communicate()
+        with self.profiler.section("env.step.communicate"):
+            self.communicator.communicate()
 
         for satellite in self.satellites:
             if satellite.requires_retasking:
@@ -466,11 +501,14 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         logger.info("=== STARTING STEP ===")
         self._step(actions)
 
-        observation = self._get_obs()
-        reward = self._get_reward()
+        with self.profiler.section("env.step.get_obs"):
+            observation = self._get_obs()
+        with self.profiler.section("env.step.get_reward"):
+            reward = self._get_reward()
         terminated = self._get_terminated()
         truncated = self._get_truncated()
         info = self._get_info()
+        self.profiler.finish_step(self.simulator.sim_time, self.latest_step_duration)
         logger.info(f"Step reward: {reward}")
         if terminated or truncated:
             logger.info(f"Episode terminated: {terminated}")
@@ -629,22 +667,23 @@ class ConstellationTasking(
 
     def _get_obs(self) -> dict[AgentID, SatObs]:
         """Format the observation per the PettingZoo Parallel API."""
-        if self.generate_obs_retasking_only:
-            return {
-                agent: (
-                    satellite.get_obs()
-                    if satellite.requires_retasking
-                    else self.observation_space(agent).sample() * 0
-                )
-                for agent, satellite in zip(self.possible_agents, self.satellites)
-                if agent not in self.previously_dead
-            }
-        else:
-            return {
-                agent: satellite.get_obs()
-                for agent, satellite in zip(self.possible_agents, self.satellites)
-                if agent not in self.previously_dead
-            }
+        with self.profiler.section("env.get_obs"):
+            if self.generate_obs_retasking_only:
+                return {
+                    agent: (
+                        satellite.get_obs()
+                        if satellite.requires_retasking
+                        else self.observation_space(agent).sample() * 0
+                    )
+                    for agent, satellite in zip(self.possible_agents, self.satellites)
+                    if agent not in self.previously_dead
+                }
+            else:
+                return {
+                    agent: satellite.get_obs()
+                    for agent, satellite in zip(self.possible_agents, self.satellites)
+                    if agent not in self.previously_dead
+                }
 
     def _get_reward(self) -> dict[AgentID, float]:
         """Format the reward per the PettingZoo Parallel API."""
@@ -732,6 +771,7 @@ class ConstellationTasking(
         terminated = self._get_terminated()
         truncated = self._get_truncated()
         info = self._get_info()
+        self.profiler.finish_step(self.simulator.sim_time, self.latest_step_duration)
         nonzero_reward = {k: v for k, v in reward.items() if v != 0}
         logger.info(f"Step reward: {nonzero_reward}")
         if any(terminated.values()):

@@ -14,6 +14,7 @@ from bsk_rl.sim import dyn, fsw
 from bsk_rl.utils import vizard
 from bsk_rl.utils.functional import valid_func_name
 from bsk_rl.utils.orbital import elevation
+from bsk_rl.utils.profiling import profile_section
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.data.unique_image_data import UniqueImageStore
@@ -108,6 +109,11 @@ class AccessSatellite(Satellite):
         Args:
             duration: Time to calculate windows from end of previous window.
         """
+        with profile_section(getattr(self, "simulator", None), "access.calculate_additional_windows"):
+            return self._calculate_additional_windows_profiled(duration)
+
+    def _calculate_additional_windows_profiled(self, duration: float) -> None:
+        """Implementation body for profiled window generation."""
         if duration <= 0:
             return
 
@@ -125,8 +131,9 @@ class AccessSatellite(Satellite):
         )
 
         # Get discrete times and positions for next trajectory segment
-        self.trajectory.extend_to(calculation_end)
-        r_BP_P_interp = self.trajectory.r_BP_P
+        with profile_section(getattr(self, "simulator", None), "access.trajectory_extend"):
+            self.trajectory.extend_to(calculation_end)
+            r_BP_P_interp = self.trajectory.r_BP_P
         window_calc_span = np.logical_and(
             r_BP_P_interp.x >= calculation_start - 1e-9,
             r_BP_P_interp.x <= calculation_end + 1e-9,
@@ -136,33 +143,34 @@ class AccessSatellite(Satellite):
 
         r_max = np.max(np.linalg.norm(positions, axis=-1))
         access_dist_thresh_multiplier = 1.1
-        for location in self.locations_for_access_checking:
-            alt_est = r_max - np.linalg.norm(location["r_LP_P"])
-            access_dist_threshold = (
-                access_dist_thresh_multiplier * alt_est / np.sin(location["min_elev"])
-            )
-            candidate_windows = self._find_candidate_windows(
-                location["r_LP_P"], times, positions, access_dist_threshold
-            )
+        with profile_section(getattr(self, "simulator", None), "access.window_roots"):
+            for location in self.locations_for_access_checking:
+                alt_est = r_max - np.linalg.norm(location["r_LP_P"])
+                access_dist_threshold = (
+                    access_dist_thresh_multiplier * alt_est / np.sin(location["min_elev"])
+                )
+                candidate_windows = self._find_candidate_windows(
+                    location["r_LP_P"], times, positions, access_dist_threshold
+                )
 
-            for candidate_window in candidate_windows:
-                roots = self._find_elevation_roots(
-                    r_BP_P_interp,
-                    location["r_LP_P"],
-                    location["min_elev"],
-                    candidate_window,
-                )
-                new_windows = self._refine_window(
-                    roots, candidate_window, (times[0], times[-1])
-                )
-                for new_window in new_windows:
-                    self._add_window(
-                        location["object"],
-                        new_window,
-                        type=location["type"],
-                        r_LP_P=location["r_LP_P"],
-                        merge_time=times[0],
+                for candidate_window in candidate_windows:
+                    roots = self._find_elevation_roots(
+                        r_BP_P_interp,
+                        location["r_LP_P"],
+                        location["min_elev"],
+                        candidate_window,
                     )
+                    new_windows = self._refine_window(
+                        roots, candidate_window, (times[0], times[-1])
+                    )
+                    for new_window in new_windows:
+                        self._add_window(
+                            location["object"],
+                            new_window,
+                            type=location["type"],
+                            r_LP_P=location["r_LP_P"],
+                            merge_time=times[0],
+                        )
 
         self.window_calculation_time = calculation_end
 
@@ -309,6 +317,24 @@ class AccessSatellite(Satellite):
             filter: Function that takes an opportunity dictionary and returns a boolean
                 if the opportunity should be included in the output.
         """
+        with profile_section(getattr(self, "simulator", None), "access.find_next_opportunities"):
+            return self._find_next_opportunities_profiled(
+                n=n,
+                pad=pad,
+                max_lookahead=max_lookahead,
+                types=types,
+                filter=filter,
+            )
+
+    def _find_next_opportunities_profiled(
+        self,
+        n: int,
+        pad: bool = True,
+        max_lookahead: int = 100,
+        types: Optional[Union[str, list[str]]] = None,
+        filter: Union[Optional[Callable], list] = None,
+    ) -> list[dict]:
+        """Implementation body for profiled opportunity lookup."""
         if isinstance(types, str):
             types = [types]
 

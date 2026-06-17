@@ -20,6 +20,7 @@ from Basilisk.utilities import orbitalMotion
 from Basilisk.utilities import simIncludeGravBody
 
 from bsk_rl.utils import vizard
+from bsk_rl.utils.profiling import profile_section
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -61,6 +62,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self.max_step_duration = max_step_duration
         self.time_limit = time_limit
         self.logger = logger
+        self.profiler = None
 
         self.world: WorldModel
 
@@ -162,21 +164,24 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         Propagates for a duration up to the ``max_step_duration``, stopping if the
         environment time limit is reached or an event is triggered.
         """
-        if "max_step_duration" in self.eventMap:
-            self.delete_event("max_step_duration")
+        with profile_section(self, "simulator.run.total"):
+            if "max_step_duration" in self.eventMap:
+                self.delete_event("max_step_duration")
 
-        self.createNewEvent(
-            "max_step_duration",
-            mc.sec2nano(self.sim_rate),
-            True,
-            [
-                f"self.TotalSim.CurrentNanos * {mc.NANO2SEC} >= {self.sim_time + self.max_step_duration}"
-            ],
-            ["self.logger.info('Max step duration reached')"],
-            terminal=True,
-        )
-        self.ConfigureStopTime(mc.sec2nano(min(self.time_limit, 2**31)))
-        self.ExecuteSimulation()
+            with profile_section(self, "simulator.run.create_max_step_event"):
+                self.createNewEvent(
+                    "max_step_duration",
+                    mc.sec2nano(self.sim_rate),
+                    True,
+                    [
+                        f"self.TotalSim.CurrentNanos * {mc.NANO2SEC} >= {self.sim_time + self.max_step_duration}"
+                    ],
+                    ["self.logger.info('Max step duration reached')"],
+                    terminal=True,
+                )
+            with profile_section(self, "simulator.run.execute"):
+                self.ConfigureStopTime(mc.sec2nano(min(self.time_limit, 2**31)))
+                self.ExecuteSimulation()
 
     def delete_event(self, event_name) -> None:
         """Remove an event from the event map.

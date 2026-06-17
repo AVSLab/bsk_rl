@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from bsk_rl.utils.functional import Resetable
+from bsk_rl.utils.profiling import profile_section
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -90,15 +91,27 @@ class DataStore(ABC):
         Returns:
             New data from the previous step.
         """
-        if not hasattr(self, "log_state"):
-            self.log_state = self.get_log_state()
-            return self.data_type()
-        old_log_state = self.log_state
-        self.log_state = self.get_log_state()
-        new_data = self.compare_log_states(old_log_state, self.log_state)
-        self.data += new_data
-        self.new_data = new_data
-        return new_data
+        simulator = getattr(getattr(self, "satellite", None), "simulator", None)
+        data_store_name = self.__class__.__name__
+        with profile_section(simulator, f"data_store.{data_store_name}.total"):
+            if not hasattr(self, "log_state"):
+                with profile_section(
+                    simulator, f"data_store.{data_store_name}.get_log_state"
+                ):
+                    self.log_state = self.get_log_state()
+                return self.data_type()
+            old_log_state = self.log_state
+            with profile_section(
+                simulator, f"data_store.{data_store_name}.get_log_state"
+            ):
+                self.log_state = self.get_log_state()
+            with profile_section(
+                simulator, f"data_store.{data_store_name}.compare_log_states"
+            ):
+                new_data = self.compare_log_states(old_log_state, self.log_state)
+            self.data += new_data
+            self.new_data = new_data
+            return new_data
 
     def stage_communicated_data(self, external_data: "Data") -> None:
         """Prepare data to be added from another source, but don't add it yet.
@@ -185,12 +198,17 @@ class GlobalReward(ABC, Resetable):
 
     def reward(self, new_data_dict: dict[str, Data]) -> dict[str, float]:
         """Call :class:`calculate_reward` and log cumulative reward."""
-        reward = self.calculate_reward(new_data_dict)
+        simulator = None
+        if hasattr(self, "scenario") and getattr(self.scenario, "satellites", None):
+            simulator = getattr(self.scenario.satellites[0], "simulator", None)
+        with profile_section(simulator, f"rewarder.{self.__class__.__name__}.calculate"):
+            reward = self.calculate_reward(new_data_dict)
         for satellite_id, sat_reward in reward.items():
             self.cum_reward[satellite_id] += sat_reward
 
-        for new_data in new_data_dict.values():
-            self.data += new_data
+        with profile_section(simulator, f"rewarder.{self.__class__.__name__}.merge_data"):
+            for new_data in new_data_dict.values():
+                self.data += new_data
 
         nonzero_reward = {k: v for k, v in reward.items() if v != 0}
         logger.info(f"Total reward: {nonzero_reward}")

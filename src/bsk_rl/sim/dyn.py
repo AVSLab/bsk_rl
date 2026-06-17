@@ -74,6 +74,7 @@ from bsk_rl.utils.functional import (
     valid_func_name,
 )
 from bsk_rl.utils.orbital import random_orbit, rv2HN, rv2omega
+from bsk_rl.utils.profiling import env_flag
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -628,6 +629,7 @@ class BasicDynamicsModel(DynamicsModel):
         Args:
             batteryStorageCapacity: [W*s] Maximum battery charge.
             storedCharge_Init: [W*s] Initial battery charge.
+            target_recorders_enabled: Attach passive target state/eclipse recorders.
             priority: Model priority.
             kwargs: Passed to other setup functions.
         """
@@ -1082,11 +1084,13 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
     @default_args(
         batteryStorageCapacity=80.0 * 3600.0,
         storedCharge_Init=lambda: np.random.uniform(30.0 * 3600.0, 70.0 * 3600.0),
+        target_recorders_enabled=True,
     )
     def setup_battery(
         self,
         batteryStorageCapacity: float,
         storedCharge_Init: float,
+        target_recorders_enabled: bool,
         priority: int = 799,
         **kwargs,
     ) -> None:
@@ -1111,15 +1115,21 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
             self.task_name, self.powerMonitor, ModelPriority=priority
         )
 
-        self.target_state_recorder = self.scObject.scStateOutMsg.recorder(macros.sec2nano(1.0)) # state recorder for target
-        self.simulator.AddModelToTask(
-            self.task_name, self.target_state_recorder, ModelPriority=priority
+        self.target_state_recorder = None
+        self.target_eclipse_recorder = None
+        recorders_enabled = target_recorders_enabled and env_flag(
+            "BSK_RL_TARGET_RECORDERS", True
         )
+        if recorders_enabled:
+            self.target_state_recorder = self.scObject.scStateOutMsg.recorder(macros.sec2nano(1.0)) # state recorder for target
+            self.simulator.AddModelToTask(
+                self.task_name, self.target_state_recorder, ModelPriority=priority
+            )
 
-        self.target_eclipse_recorder = self.world.eclipseObject.eclipseOutMsgs[0].recorder(macros.sec2nano(1.0)) # eclipse recorder for target
-        self.simulator.AddModelToTask(
-            self.task_name, self.target_eclipse_recorder, ModelPriority=priority
-        )
+            self.target_eclipse_recorder = self.world.eclipseObject.eclipseOutMsgs[0].recorder(macros.sec2nano(1.0)) # eclipse recorder for target
+            self.simulator.AddModelToTask(
+                self.task_name, self.target_eclipse_recorder, ModelPriority=priority
+            )
 
 
     @default_args(instrumentBaudRate=8e6)
