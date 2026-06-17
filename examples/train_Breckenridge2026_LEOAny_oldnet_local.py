@@ -528,7 +528,7 @@ def main() -> None:
 
     temp_dir = args.temp_dir
     if temp_dir is None:
-        temp_dir = f"~/ray_tmp/breckenridge2026_{os.getpid()}"
+        temp_dir = f"/tmp/br26_{os.getpid()}"
 
     model_name = (
         f"{args.run_prefix}_{args.train_batch_size}batch_mix{target_mix_label}_"
