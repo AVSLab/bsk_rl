@@ -23,6 +23,9 @@ cd /projects/$USER/bsk_rl
 source /projects/$USER/.venv/bin/activate
 VENV_PYTHON=/projects/$USER/.venv/bin/python
 
+source examples/breckenridge2026/alpine_runtime.sh
+configure_breckenridge_alpine_runtime "$VENV_PYTHON"
+
 MIXED_POLICY=${BRECK_MC_MIXED_POLICY:-$PWD/policies/breckenridge2026_mixed_10d90i/checkpoint_000160}
 CAMPAIGN_ID=${BRECK_MC_CAMPAIGN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}
 OUTPUT_ROOT=${BRECK_MC_OUTPUT_ROOT:-/scratch/alpine/$USER/breckenridge2026_mc/mixed_trained_row_10d90i_${CAMPAIGN_ID}}
@@ -55,7 +58,7 @@ PY
 if [[ -f "$MANIFEST" ]]; then
     echo "Reusing frozen manifest: $MANIFEST"
 else
-    python3 -u examples/breckenridge2026/prepare_mc_manifest.py \
+    "$VENV_PYTHON" -u examples/breckenridge2026/prepare_mc_manifest.py \
         --mixed-policy "$MIXED_POLICY" \
         --output "$MANIFEST"
 fi

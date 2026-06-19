@@ -98,8 +98,9 @@ bash examples/breckenridge2026/submit_2x2_mc.sh 10
 
 The submit script first loads the bundled checkpoint through RLlib using
 `/projects/$USER/.venv/bin/python`. It submits no jobs if that preflight fails.
-The compute-node wrapper uses the same Python executable directly and does not
-depend on Alpine module names.
+It also loads Alpine's unversioned default `gcc` module and verifies that its
+`libstdc++.so.6` provides `GLIBCXX_3.4.29`, which the installed Basilisk wheel
+requires. The same Basilisk runtime preflight runs again on every compute node.
 
 The final argument limits each cell to 10 concurrent seeds. Because there are
 two independent arrays, up to 20 seed evaluations can run at once if the

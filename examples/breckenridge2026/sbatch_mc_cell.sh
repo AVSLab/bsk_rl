@@ -27,6 +27,9 @@ if [[ ! -x "$VENV_PYTHON" ]]; then
     exit 1
 fi
 
+source examples/breckenridge2026/alpine_runtime.sh
+configure_breckenridge_alpine_runtime "$VENV_PYTHON"
+
 export MPLBACKEND=Agg
 export PYTHONUNBUFFERED=1
 export OMP_NUM_THREADS=1
