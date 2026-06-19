@@ -95,5 +95,6 @@ echo
 echo "Monitor:"
 echo "  squeue -u $USER"
 echo
-echo "Summarize after both arrays finish:"
+echo "Audit and summarize after both arrays finish:"
+echo "  python3 examples/breckenridge2026/audit_mc_campaign.py --input-root \"$OUTPUT_ROOT\""
 echo "  python3 examples/breckenridge2026/summarize_2x2_mc.py --input-root \"$OUTPUT_ROOT\""

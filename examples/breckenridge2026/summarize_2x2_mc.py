@@ -83,7 +83,7 @@ def main() -> None:
                 statistics.mean(values) if values else None
             )
             summary[f"{output_name}_std"] = (
-                statistics.pstdev(values) if values else None
+                statistics.stdev(values) if len(values) > 1 else None
             )
         summary_rows.append(summary)
 

@@ -58,6 +58,17 @@ def print_log_tail(log_path: Path, line_count: int = 120) -> None:
     print("===== End evaluator log =====\n", file=sys.stderr)
 
 
+def git_commit(repo_root: Path) -> str | None:
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", required=True)
@@ -71,6 +82,7 @@ def main() -> None:
     manifest_path = Path(args.manifest).expanduser().resolve()
     output_root = Path(args.output_root).expanduser().resolve()
     manifest = json.loads(manifest_path.read_text())
+    source_commit = git_commit(repo_root)
 
     if args.cell not in manifest["cells"]:
         raise ValueError(
@@ -126,6 +138,7 @@ def main() -> None:
             "manifest": str(manifest_path),
             "cell": args.cell,
             "seed": args.seed,
+            "git_commit": source_commit,
             "started_at_utc": timestamp(),
         },
     )
@@ -136,6 +149,7 @@ def main() -> None:
             "manifest": str(manifest_path),
             "cell": args.cell,
             "seed": args.seed,
+            "git_commit": source_commit,
             "policy": policy,
             "evaluation_environment": target_env,
             "started_at_utc": timestamp(),
@@ -171,6 +185,7 @@ def main() -> None:
         "manifest": str(manifest_path),
         "cell": args.cell,
         "seed": args.seed,
+        "git_commit": source_commit,
         "policy": policy,
         "evaluation_environment": target_env,
         "returncode": result.returncode,

@@ -117,15 +117,50 @@ squeue -u "$USER"
 No `--dependency` options are used. Re-running the same campaign with the same
 `BRECK_MC_OUTPUT_ROOT` skips completed seeds.
 
-## Summarize
+## Audit and summarize
 
 Use the output root printed by the submit script:
 
 ```bash
+python3 examples/breckenridge2026/audit_mc_campaign.py \
+  --input-root /scratch/alpine/$USER/breckenridge2026_mc/mixed_trained_row_10d90i_<campaign-id>
+
 python3 examples/breckenridge2026/summarize_2x2_mc.py \
   --input-root /scratch/alpine/$USER/breckenridge2026_mc/mixed_trained_row_10d90i_<campaign-id>
 ```
 
+The audit must report `PASS` and `200 / 200` validated seed rows. It verifies
+the manifest, cells, seeds, completed statuses, one metrics JSON per seed,
+Git commit, policy identity and checkpoint hash, target environment and mix,
+target counts, action durations, 45,000-second horizon, uniform priority,
+safety shield, required finite metrics, and final episode time.
+
 This writes a per-seed CSV and a two-row mean/std summary CSV for the new
 mixed-trained evaluations. Join those rows to the archived LEO-trained
-baselines during paper analysis; do not rerun the old campaigns.
+baselines during paper analysis. The optional independent reproduction below
+checks that the archived baseline can still be regenerated exactly.
+
+## Reproduce the October alpha-0.1 baseline
+
+The exact October LEO-trained `10d90i` inference checkpoint is bundled at
+`policies/breckenridge2026_leo_trained_10d90i/checkpoint_000145`. Submit its
+LEO and mixed evaluations as two independent arrays:
+
+```bash
+bash examples/breckenridge2026/submit_leo_baseline_mc.sh 10
+```
+
+After completion, use the output root printed by that command:
+
+```bash
+python3 examples/breckenridge2026/audit_mc_campaign.py \
+  --input-root /scratch/alpine/$USER/breckenridge2026_mc/leo_trained_baseline_10d90i_<campaign-id>
+
+python3 examples/breckenridge2026/summarize_2x2_mc.py \
+  --input-root /scratch/alpine/$USER/breckenridge2026_mc/leo_trained_baseline_10d90i_<campaign-id>
+```
+
+For the LEO-trained-to-mixed cell, the audit compares all 100 seeds and five
+paper metrics against the archived alpha-0.1 per-seed data at a tolerance of
+`1e-6`. A successful exact reproduction reports zero mismatches. Summary
+standard deviations use the paper's sample convention (`ddof=1`).
