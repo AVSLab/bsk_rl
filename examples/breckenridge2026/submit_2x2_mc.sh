@@ -3,9 +3,7 @@
 # Submit only the missing mixed-trained row of the 2x2 comparison.
 #
 # Usage:
-#   bash examples/breckenridge2026/submit_2x2_mc.sh \
-#       /path/to/new_mixed_policy_or_checkpoint \
-#       [max-concurrent-per-cell]
+#   bash examples/breckenridge2026/submit_2x2_mc.sh [max-concurrent-per-cell]
 #
 # The existing LEO-trained Monte Carlos are retained as published baselines.
 # Two independent arrays are submitted, with no Slurm dependencies:
@@ -14,8 +12,7 @@
 
 set -euo pipefail
 
-MIXED_POLICY=${1:?First argument must be the new mixed-trained policy/checkpoint}
-MAX_CONCURRENT=${2:-10}
+MAX_CONCURRENT=${1:-10}
 
 if ! [[ "$MAX_CONCURRENT" =~ ^[1-9][0-9]*$ ]]; then
     echo "max-concurrent-per-cell must be a positive integer" >&2
@@ -25,6 +22,7 @@ fi
 cd /projects/$USER/bsk_rl
 source /projects/$USER/.venv/bin/activate
 
+MIXED_POLICY=${BRECK_MC_MIXED_POLICY:-$PWD/policies/breckenridge2026_mixed_10d90i/checkpoint_000160}
 CAMPAIGN_ID=${BRECK_MC_CAMPAIGN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}
 OUTPUT_ROOT=${BRECK_MC_OUTPUT_ROOT:-/scratch/alpine/$USER/breckenridge2026_mc/mixed_trained_row_10d90i_${CAMPAIGN_ID}}
 MANIFEST=${BRECK_MC_MANIFEST:-$OUTPUT_ROOT/breckenridge2026_2x2_manifest.json}
@@ -34,6 +32,11 @@ CPUS_PER_TASK=${BRECK_MC_CPUS_PER_TASK:-4}
 ARRAY_SPEC="0-99%${MAX_CONCURRENT}"
 
 mkdir -p "$OUTPUT_ROOT" /scratch/alpine/$USER/job_output
+
+if [[ ! -f "$MIXED_POLICY/learner_group/learner/rl_module/inspector/module_state.pt" ]]; then
+    echo "Bundled mixed-trained policy is missing or incomplete: $MIXED_POLICY" >&2
+    exit 1
+fi
 
 if [[ -f "$MANIFEST" ]]; then
     echo "Reusing frozen manifest: $MANIFEST"

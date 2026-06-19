@@ -56,26 +56,20 @@ created the existing `examples/data/GNC26_data/RL10d90i_mixed` seed outputs.
 The new campaign freezes the explicit numeric checkpoint in a JSON manifest so
 a later checkpoint cannot silently change the comparison.
 
-## Copy the mixed-trained checkpoint to Alpine
+## Bundled mixed-trained checkpoint
 
-The completed local run reached 813,696 sampled environment steps. Its latest
-saved numeric checkpoint is `checkpoint_000160`.
+The completed local run reached 813,696 sampled environment steps over 163
+training iterations. Its `checkpoint_000160` inspector inference module is
+committed directly to this branch under:
 
-On the Mac:
-
-```bash
-MIXED_CHECKPOINT=$(find \
-  "$HOME/rllib_results/breckenridge2026_leo_any_oldnet" \
-  -type d -name checkpoint_000160 -path '*4992batch*' | head -1)
-
-ssh dahu1128@login.rc.colorado.edu \
-  'mkdir -p /projects/dahu1128/breckenridge2026_policies'
-
-rsync -avh --progress "$MIXED_CHECKPOINT" \
-  dahu1128@login.rc.colorado.edu:/projects/dahu1128/breckenridge2026_policies/
+```text
+policies/breckenridge2026_mixed_10d90i/checkpoint_000160
 ```
 
-The checkpoint is about 101 MB.
+The bundle contains the loadable RL module weights and metadata plus the
+training run configuration, RLlib parameters, progress CSV, and SHA-256
+checksums. The optimizer and learner state are deliberately omitted because
+they are not needed for policy evaluation.
 
 ## Pull the branch
 
@@ -88,9 +82,9 @@ git switch breckenridge2026-leo-any-local
 git pull --ff-only
 source /projects/dahu1128/.venv/bin/activate
 
-MIXED_CHECKPOINT=/projects/dahu1128/breckenridge2026_policies/checkpoint_000160
-printf 'Mixed checkpoint: %s\n' "$MIXED_CHECKPOINT"
-test -d "$MIXED_CHECKPOINT"
+test -f \
+  policies/breckenridge2026_mixed_10d90i/checkpoint_000160/learner_group/learner/rl_module/inspector/module_state.pt \
+  && echo "Bundled checkpoint ready"
 ```
 
 ## Submit the two missing arrays
@@ -99,9 +93,7 @@ test -d "$MIXED_CHECKPOINT"
 cd /projects/dahu1128/bsk_rl
 source /projects/dahu1128/.venv/bin/activate
 
-bash examples/breckenridge2026/submit_2x2_mc.sh \
-  "$MIXED_CHECKPOINT" \
-  10
+bash examples/breckenridge2026/submit_2x2_mc.sh 10
 ```
 
 The final argument limits each cell to 10 concurrent seeds. Because there are

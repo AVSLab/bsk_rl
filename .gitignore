@@ -156,3 +156,7 @@ updated_batch_policy_evaluation.py
 *.json
 *.csv
 *.npz
+!policies/breckenridge2026_mixed_10d90i/checkpoint_000160/learner_group/learner/rl_module/inspector/class_and_ctor_args.pkl
+!policies/breckenridge2026_mixed_10d90i/checkpoint_000160/learner_group/learner/rl_module/inspector/metadata.json
+!policies/breckenridge2026_mixed_10d90i/training_artifacts/rllib_params.json
+!policies/breckenridge2026_mixed_10d90i/training_artifacts/training_progress.csv

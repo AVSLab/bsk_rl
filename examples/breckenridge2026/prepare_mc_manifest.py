@@ -15,6 +15,12 @@ REQUIRED_MODULE_FILES = (
     "metadata.json",
     "module_state.pt",
 )
+DEFAULT_MIXED_POLICY = (
+    Path(__file__).resolve().parents[2]
+    / "policies"
+    / "breckenridge2026_mixed_10d90i"
+    / "checkpoint_000160"
+)
 
 
 def checkpoint_iteration(path: Path) -> int:
@@ -67,7 +73,7 @@ def main() -> None:
         "--leo-policy",
         help="Optional LEO-trained checkpoint for an explicitly requested rerun",
     )
-    parser.add_argument("--mixed-policy", required=True)
+    parser.add_argument("--mixed-policy", default=str(DEFAULT_MIXED_POLICY))
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
