@@ -21,6 +21,7 @@ fi
 
 cd /projects/$USER/bsk_rl
 source /projects/$USER/.venv/bin/activate
+VENV_PYTHON=/projects/$USER/.venv/bin/python
 
 MIXED_POLICY=${BRECK_MC_MIXED_POLICY:-$PWD/policies/breckenridge2026_mixed_10d90i/checkpoint_000160}
 CAMPAIGN_ID=${BRECK_MC_CAMPAIGN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}
@@ -37,6 +38,19 @@ if [[ ! -f "$MIXED_POLICY/learner_group/learner/rl_module/inspector/module_state
     echo "Bundled mixed-trained policy is missing or incomplete: $MIXED_POLICY" >&2
     exit 1
 fi
+
+echo "Checking the bundled policy with the Alpine virtual environment..."
+"$VENV_PYTHON" - "$MIXED_POLICY" <<'PY'
+from pathlib import Path
+import sys
+
+from ray.rllib.core.rl_module.rl_module import RLModule
+
+checkpoint = Path(sys.argv[1])
+module_dir = checkpoint / "learner_group" / "learner" / "rl_module" / "inspector"
+module = RLModule.from_checkpoint(module_dir)
+print(f"Loaded {type(module).__name__} from {module_dir}")
+PY
 
 if [[ -f "$MANIFEST" ]]; then
     echo "Reusing frozen manifest: $MANIFEST"

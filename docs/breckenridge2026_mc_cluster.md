@@ -96,6 +96,11 @@ source /projects/dahu1128/.venv/bin/activate
 bash examples/breckenridge2026/submit_2x2_mc.sh 10
 ```
 
+The submit script first loads the bundled checkpoint through RLlib using
+`/projects/$USER/.venv/bin/python`. It submits no jobs if that preflight fails.
+The compute-node wrapper uses the same Python executable directly and does not
+depend on Alpine module names.
+
 The final argument limits each cell to 10 concurrent seeds. Because there are
 two independent arrays, up to 20 seed evaluations can run at once if the
 account and QOS allow it. Change `10` to a lower number if desired.

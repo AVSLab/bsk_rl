@@ -46,6 +46,18 @@ def completed_status(status_path: Path, manifest_path: Path, cell: str, seed: in
     )
 
 
+def print_log_tail(log_path: Path, line_count: int = 120) -> None:
+    try:
+        lines = log_path.read_text(errors="replace").splitlines()
+    except OSError as error:
+        print(f"Could not read evaluator log {log_path}: {error}", file=sys.stderr)
+        return
+    print(f"\n===== Last {line_count} lines of {log_path} =====", file=sys.stderr)
+    for line in lines[-line_count:]:
+        print(line, file=sys.stderr)
+    print("===== End evaluator log =====\n", file=sys.stderr)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", required=True)
@@ -169,6 +181,7 @@ def main() -> None:
     }
     atomic_write_json(status_path, status)
     if state != "completed":
+        print_log_tail(log_path)
         raise SystemExit(
             f"{args.cell} seed {args.seed} failed; inspect {log_path}"
         )

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # One independent 100-seed Breckenridge Monte Carlo cell.
-# submit_2x2_mc.sh submits this file four times without dependencies.
+# submit_2x2_mc.sh submits this file twice without dependencies.
 
 #SBATCH --account=ucb550_asc2
 #SBATCH --job-name=br26_mc
@@ -19,14 +19,13 @@
 
 set -euo pipefail
 
-module purge
-if ! module --ignore_cache load gcc/14.2.0; then
-    export PATH="/curc/sw/install/gcc/14.2.0/bin:${PATH}"
-fi
-module --ignore_cache load python/3.10.2 || true
-source /projects/$USER/.venv/bin/activate
-
 cd /projects/$USER/bsk_rl
+VENV_PYTHON=/projects/$USER/.venv/bin/python
+
+if [[ ! -x "$VENV_PYTHON" ]]; then
+    echo "Virtual-environment Python is missing: $VENV_PYTHON" >&2
+    exit 1
+fi
 
 export MPLBACKEND=Agg
 export PYTHONUNBUFFERED=1
@@ -50,8 +49,10 @@ echo "manifest=$BRECK_MC_MANIFEST"
 echo "output_root=$BRECK_MC_OUTPUT_ROOT"
 echo "branch=$(git rev-parse --abbrev-ref HEAD)"
 echo "commit=$(git rev-parse --short HEAD)"
+echo "python=$VENV_PYTHON"
+"$VENV_PYTHON" --version
 
-python3 -u examples/breckenridge2026/run_mc_task.py \
+"$VENV_PYTHON" -u examples/breckenridge2026/run_mc_task.py \
     --manifest "$BRECK_MC_MANIFEST" \
     --cell "$BRECK_MC_CELL" \
     --seed "$SLURM_ARRAY_TASK_ID" \
