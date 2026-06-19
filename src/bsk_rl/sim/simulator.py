@@ -18,7 +18,6 @@ from Basilisk.simulation import spacecraft
 from Basilisk.utilities import macros
 from Basilisk.utilities import orbitalMotion
 from Basilisk.utilities import simIncludeGravBody
-from Basilisk.architecture import astroConstants
 
 from bsk_rl.utils import vizard
 

@@ -61,7 +61,9 @@ configure_breckenridge_alpine_runtime() {
     echo "libstdc++=$libstdcpp"
     "$venv_python" - <<'PY'
 from Basilisk.architecture import sim_model
+from bsk_rl.sim.simulator import Simulator
 
 print(f"Basilisk runtime import succeeded: {sim_model.__file__}")
+print(f"BSK-RL simulator import succeeded: {Simulator.__module__}.{Simulator.__name__}")
 PY
 }
