@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze the two Breckenridge policies used by the 2x2 Monte Carlo study."""
+"""Freeze the mixed-trained policy used to complete the Monte Carlo comparison."""
 
 from __future__ import annotations
 
@@ -63,20 +63,16 @@ def atomic_write_json(path: Path, payload: dict) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--leo-policy", required=True)
+    parser.add_argument(
+        "--leo-policy",
+        help="Optional LEO-trained checkpoint for an explicitly requested rerun",
+    )
     parser.add_argument("--mixed-policy", required=True)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
-    leo_checkpoint = resolve_checkpoint(args.leo_policy)
     mixed_checkpoint = resolve_checkpoint(args.mixed_policy)
     policies = {
-        "leo_trained": {
-            "name": "breckenridge2026_leo_trained_10d90i",
-            "training_environment": "leo",
-            "checkpoint": str(leo_checkpoint),
-            "checkpoint_iteration": checkpoint_iteration(leo_checkpoint),
-        },
         "mixed_trained": {
             "name": "breckenridge2026_mixed_trained_10d90i",
             "training_environment": "mixed",
@@ -84,6 +80,15 @@ def main() -> None:
             "checkpoint_iteration": checkpoint_iteration(mixed_checkpoint),
         },
     }
+    if args.leo_policy:
+        leo_checkpoint = resolve_checkpoint(args.leo_policy)
+        policies["leo_trained"] = {
+            "name": "breckenridge2026_leo_trained_10d90i",
+            "training_environment": "leo",
+            "checkpoint": str(leo_checkpoint),
+            "checkpoint_iteration": checkpoint_iteration(leo_checkpoint),
+        }
+
     cells = {
         f"{policy_key}__{evaluation_environment}_eval": {
             "policy": policy_key,
@@ -95,10 +100,30 @@ def main() -> None:
     manifest = {
         "schema_version": 1,
         "created_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "study": "breckenridge2026_leo_vs_mixed_training_2x2",
+        "study": "breckenridge2026_complete_mixed_trained_row",
         "seeds": list(range(100)),
         "policies": policies,
         "cells": cells,
+        "existing_baselines": {
+            "gnc_paired_alpha_0.5": {
+                "description": (
+                    "Published 100-seed LEO-trained policy evaluated in LEO and "
+                    "mixed environments."
+                ),
+                "per_seed_file": "examples/per_seed_metrics_from_json.csv",
+                "summary_file": "examples/overall_summary.csv",
+            },
+            "gnc_alpha_0.1_mixed": {
+                "description": (
+                    "Published alpha-sweep result for the October LEO-trained "
+                    "10d90i policy evaluated in the mixed environment."
+                ),
+                "per_seed_file": (
+                    "examples/results/"
+                    "per_seed_metrics_allPolicies_20260116_150922.csv"
+                ),
+            },
+        },
         "evaluation": {
             "source": "examples/policy_evaluation_2026.py",
             "reward_mix": "10d90i",
@@ -124,8 +149,9 @@ def main() -> None:
     output = Path(args.output).expanduser().resolve()
     atomic_write_json(output, manifest)
     print(f"Wrote frozen manifest: {output}")
-    print(f"LEO-trained checkpoint:   {leo_checkpoint}")
     print(f"Mixed-trained checkpoint: {mixed_checkpoint}")
+    if args.leo_policy:
+        print(f"LEO-trained checkpoint:   {leo_checkpoint}")
 
 
 if __name__ == "__main__":

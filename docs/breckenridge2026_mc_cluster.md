@@ -1,16 +1,41 @@
-# Breckenridge 2026 2x2 Monte Carlo Campaign
+# Breckenridge 2026 Mixed-Trained Monte Carlo Campaign
 
-This campaign compares the alpha-0.1 (`10d90i`) policies in a 2x2 grid:
+The LEO-trained policy has already been evaluated in LEO and mixed target
+environments. Do not rerun those completed Monte Carlos. This campaign fills
+only the new mixed-trained row:
 
 | Training environment | LEO evaluation | Mixed evaluation |
 |---|---:|---:|
-| October 2025 LEO-trained policy | 100 seeds | 100 seeds |
+| Existing LEO-trained policy | use archived results | use archived results |
 | June 2026 mixed-trained policy | 100 seeds | 100 seeds |
 
-Every cell uses seeds `0` through `99`. The four Slurm arrays are independent
-and have no job dependencies.
+The two new cells use seeds `0` through `99`, matching the archived campaigns.
+The two Slurm arrays are independent and have no job dependencies.
 
-## Evaluation settings recovered from the GNC paper campaign
+## Important alpha provenance
+
+The final GNC/Breckenridge paper contains a paired 100-seed robustness table
+for one LEO-trained policy evaluated in both LEO and mixed environments. That
+paired policy is alpha 0.5 (`50d50i`), not alpha 0.1.
+
+The same paper's alpha sweep separately contains the alpha-0.1 (`10d90i`)
+October LEO-trained policy evaluated in the mixed environment for seeds 0--99.
+That is the clean existing baseline for comparing the new alpha-0.1
+mixed-trained policy in the mixed environment.
+
+Therefore:
+
+- no existing LEO-trained campaign should be rerun just to replace it in the
+  comparison;
+- mixed-trained alpha 0.1 to mixed directly tests whether matching the training
+  distribution improves mixed-environment deployment;
+- mixed-trained alpha 0.1 to LEO measures reverse transfer;
+- a complete alpha-0.1 2x2 table requires a verified October `10d90i`
+  LEO-to-LEO archive. The later `examples/Huterer_JAS/data` runs should not be
+  substituted silently: although their folder names contain `10d90i`, their
+  saved metadata identifies an AMOS legacy `wGAE_balance0d100i...` policy.
+
+## Evaluation settings recovered from the GNC campaign
 
 The executable source of truth is `examples/policy_evaluation_2026.py`, which
 created the existing `examples/data/GNC26_data/RL10d90i_mixed` seed outputs.
@@ -28,9 +53,8 @@ created the existing `examples/data/GNC26_data/RL10d90i_mixed` seed outputs.
   distributions
 - uniform target priority 1
 
-The original policy Monte Carlo used the latest numeric October checkpoint.
-The new campaign freezes explicit numeric checkpoints in a JSON manifest so a
-later checkpoint cannot silently change the comparison.
+The new campaign freezes the explicit numeric checkpoint in a JSON manifest so
+a later checkpoint cannot silently change the comparison.
 
 ## Copy the mixed-trained checkpoint to Alpine
 
@@ -53,7 +77,7 @@ rsync -avh --progress "$MIXED_CHECKPOINT" \
 
 The checkpoint is about 101 MB.
 
-## Pull the branch and locate both checkpoints
+## Pull the branch
 
 On Alpine:
 
@@ -63,41 +87,25 @@ git fetch origin
 git switch breckenridge2026-leo-any-local
 git pull --ff-only
 source /projects/dahu1128/.venv/bin/activate
-```
-
-Locate the October LEO-trained alpha-0.1 checkpoint:
-
-```bash
-LEO_CHECKPOINT=$(find \
-  /projects/dahu1128 /scratch/alpine/dahu1128 \
-  -type d -name checkpoint_000145 \
-  -path '*oct14*10d90i*' 2>/dev/null | head -1)
 
 MIXED_CHECKPOINT=/projects/dahu1128/breckenridge2026_policies/checkpoint_000160
-
-printf 'LEO checkpoint:   %s\n' "$LEO_CHECKPOINT"
 printf 'Mixed checkpoint: %s\n' "$MIXED_CHECKPOINT"
-test -d "$LEO_CHECKPOINT"
 test -d "$MIXED_CHECKPOINT"
 ```
 
-If the October checkpoint is not on Alpine, copy the local
-`checkpoint_000145` to the same `breckenridge2026_policies` directory.
-
-## Submit all four independent arrays
+## Submit the two missing arrays
 
 ```bash
 cd /projects/dahu1128/bsk_rl
 source /projects/dahu1128/.venv/bin/activate
 
 bash examples/breckenridge2026/submit_2x2_mc.sh \
-  "$LEO_CHECKPOINT" \
   "$MIXED_CHECKPOINT" \
   10
 ```
 
 The final argument limits each cell to 10 concurrent seeds. Because there are
-four independent arrays, up to 40 seed evaluations can run at once if the
+two independent arrays, up to 20 seed evaluations can run at once if the
 account and QOS allow it. Change `10` to a lower number if desired.
 
 Monitor:
@@ -115,7 +123,9 @@ Use the output root printed by the submit script:
 
 ```bash
 python3 examples/breckenridge2026/summarize_2x2_mc.py \
-  --input-root /scratch/alpine/$USER/breckenridge2026_mc/leo_vs_mixed_10d90i_<campaign-id>
+  --input-root /scratch/alpine/$USER/breckenridge2026_mc/mixed_trained_row_10d90i_<campaign-id>
 ```
 
-This writes a per-seed CSV and a four-row mean/std summary CSV.
+This writes a per-seed CSV and a two-row mean/std summary CSV for the new
+mixed-trained evaluations. Join those rows to the archived LEO-trained
+baselines during paper analysis; do not rerun the old campaigns.

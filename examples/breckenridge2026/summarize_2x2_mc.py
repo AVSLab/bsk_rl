@@ -40,6 +40,14 @@ def main() -> None:
     args = parser.parse_args()
 
     input_root = Path(args.input_root).expanduser().resolve()
+    manifest_paths = sorted(input_root.glob("*manifest.json"))
+    expected_rows = None
+    if len(manifest_paths) == 1:
+        manifest = json.loads(manifest_paths[0].read_text())
+        expected_rows = len(manifest.get("cells", {})) * len(
+            manifest.get("seeds", [])
+        )
+
     rows = []
     for status_path in sorted(input_root.glob("*/seed_*/mc_status.json")):
         status = json.loads(status_path.read_text())
@@ -88,7 +96,8 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(summary_rows)
 
-    print(f"Completed seed rows: {len(rows)} / 400")
+    expected_text = str(expected_rows) if expected_rows is not None else "unknown"
+    print(f"Completed seed rows: {len(rows)} / {expected_text}")
     print(f"Per-seed CSV: {per_seed_path}")
     print(f"2x2 summary:  {summary_path}")
 
