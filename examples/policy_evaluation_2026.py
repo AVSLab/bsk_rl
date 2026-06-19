@@ -61,25 +61,6 @@ def _safe(s: str) -> str:
     """Filesystem-safe string."""
     return "".join(c if c.isalnum() or c in "-_." else "_" for c in str(s))
 
-def parse_args():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--seed", type=int, default=20)
-
-    # NEW: target environment switch
-    ap.add_argument("--target_env", type=str, default="leo", choices=["leo", "mixed"])
-
-    # NEW: optional mixed weights
-    ap.add_argument("--mix_weights", type=str, default='{"LEO":0.5,"MEO":0.3,"GEO":0.2}',
-                    help='JSON string, e.g. \'{"LEO":0.6,"MEO":0.2,"GEO":0.2}\'')
-
-    # optional: quiet / save_data if you already use those in runner
-    ap.add_argument("--quiet", action="store_true")
-    ap.add_argument("--save_data", action="store_true")
-    ap.add_argument("--no_save_data", action="store_true")
-
-    return ap.parse_args()
-
-
 def make_run_dir(base_dir: str, seed: int, policy_tag: str, run_tag: str = "") -> str:
     """
     Create a unique run directory so nothing is overwritten.
@@ -147,10 +128,50 @@ def parse_args():
         default='{"LEO":0.5,"MEO":0.3,"GEO":0.2}',
         help='JSON dict of regime weights when target_env="mixed"'
     )
+    p.add_argument(
+        "--policy_name",
+        default=None,
+        help="Stable policy label. Include a reward tag such as 10d90i.",
+    )
+    p.add_argument(
+        "--policy_path",
+        default=None,
+        help="Policy model directory or an explicit RLlib checkpoint directory.",
+    )
+    p.add_argument(
+        "--policy_mode",
+        choices=["best", "smallest", "latest"],
+        default="latest",
+        help="Checkpoint selection mode when --policy_path is a model directory.",
+    )
+    p.add_argument(
+        "--obs_v",
+        type=float,
+        default=None,
+        help="Observation version override for direct policy paths.",
+    )
+    p.add_argument(
+        "--output_dir",
+        default=None,
+        help="Root directory for this evaluation's uniquely named output folder.",
+    )
+    p.add_argument(
+        "--total_time_sec",
+        type=float,
+        default=None,
+        help="Optional episode-horizon override for smoke testing.",
+    )
+    p.add_argument(
+        "--skip_plots",
+        action="store_true",
+        help="Do not write or display plots during Monte Carlo collection.",
+    )
 
     return p.parse_args()
 
 ARGS = parse_args()
+if ARGS.skip_plots:
+    plt.show = lambda *args, **kwargs: None
 
 def _print(*a, **k):
     if not ARGS.quiet:
@@ -176,6 +197,9 @@ def save_plot_unique(fig, base_filename, folder="plots", extension=".pdf"):
     - folder: Directory to save the plots (default is "plots")
     - extension: File extension (default is ".pdf")
     """
+    if ARGS.skip_plots:
+        plt.close(fig)
+        return
     os.makedirs(folder, exist_ok=True)
     full_path = os.path.join(folder, base_filename + extension)
 
@@ -237,6 +261,8 @@ n_targets = sim_cfg.n_targets
 n_targets_ahead = sim_cfg.n_targets_ahead
 imaging_duration = sim_cfg.imaging_duration
 total_time = sim_cfg.total_time
+if ARGS.total_time_sec is not None:
+    total_time = float(ARGS.total_time_sec)
 obs_v = sim_cfg.obs_v
 just_imaging = sim_cfg.just_imaging
 
@@ -247,9 +273,8 @@ just_imaging = sim_cfg.just_imaging
 # total_time = n_targets * imaging_duration * 1.5   # 5700.0  # approximately 1 orbit
 
 
-args = parse_args()
+args = ARGS
 TARGET_ENV = args.target_env
-TARGET_ENV = "mixed"
 MIX_WEIGHTS = json.loads(args.mix_weights) if TARGET_ENV == "mixed" else None
 
 
@@ -263,7 +288,7 @@ if args.no_save_data:
 elif args.save_data:
     save_data = True
 
-policy_mode = 'latest'
+policy_mode = args.policy_mode
 eclipse_norm = 5700
 save_vizard = False
 viz_rate = 5.0
@@ -275,15 +300,17 @@ GS_START   = 77     # will be refined based on obs_v below
 N_GS       = 5      # updated for some obs_v
 PAIR_STRIDE = 2
 
+requested_policy_name = args.policy_name or "legacy_10d90i"
 if use_heuristic:
     run_tag = f"HEUR_{heuristic_mode}_{TARGET_ENV}"
 elif act_random:
     run_tag = "RANDOM"
 else:
-    run_tag = f"{policy_tag}_{policy_mode}10d90i_{TARGET_ENV}"
+    run_tag = f"{policy_tag}_{policy_mode}_{_safe(requested_policy_name)}_{TARGET_ENV}"
 
 
-base_data_dir = os.path.join(os.path.dirname(__file__), "data")  # examples/data
+base_data_dir = args.output_dir or os.path.join(os.path.dirname(__file__), "data")
+os.makedirs(base_data_dir, exist_ok=True)
 run_dir = make_run_dir(base_data_dir, seed_number, policy_tag, run_tag)
 print(f"\n=== Run outputs will be saved to: {run_dir} ===\n")
 
@@ -444,9 +471,17 @@ imaging_unlimitedResources_baseline = "/Users/dahu1128/rllib_results/reward_comp
 imaging_rewarded_noeclipse_1e_6lr_failure_penalties = "/Users/dahu1128/rllib_results/june_results/june6rllib_results/1e-6lr_failure_penalties_no_torque_small_battery_small_data_Polaris_sim_1749226596.4501252/model_0"
 
 # policy_path = obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i #DEPRECATED... now the globals() line is used below...    #balance00d100i_obs2_gamma9995_1e6lr
-# Choose which policy to evaluate by NAME
-policy_name = "oct14_obsv7_1e_5lr_batch5000_gamma9997_10d90i"  # <--- EDIT THIS when you switch policies
-policy_path = globals()[policy_name]
+# Choose which policy to evaluate by name, or pass an explicit path for batch use.
+policy_name = args.policy_name or "oct14_obsv7_1e_5lr_batch5000_gamma9997_10d90i"
+if args.policy_path:
+    policy_path = os.path.abspath(os.path.expanduser(args.policy_path))
+else:
+    if policy_name not in globals():
+        raise ValueError(
+            f"Unknown policy_name '{policy_name}'. Pass --policy_path for a direct "
+            "model/checkpoint path."
+        )
+    policy_path = globals()[policy_name]
 
 # Define all known policy paths with associated obs values
 policy_obs_map = {
@@ -554,7 +589,10 @@ alpha = alpha_from_tag(policy_name, default=0.0)
 print_alpha(policy_name,policy_path)
 
 # Update obs_v both locally and in the shared sim config
-if policy_name in policy_obs_map:
+if args.obs_v is not None:
+    obs_v = args.obs_v
+    sim_cfg.obs_v = obs_v
+elif policy_name in policy_obs_map:
     obs_v = policy_obs_map[policy_name]
     sim_cfg.obs_v = obs_v
 else:
@@ -2217,8 +2255,18 @@ print(f"Code execution time: {elapsed_time:.4f} seconds")
 data = {}
 data["cumulativeRewardSS1"] = round(env.unwrapped.rewarder.cum_reward['SS1'], 2)
 data["illuminated_images"] = len(env.unwrapped.rewarder.imaged_illuminated)
-# data["Total Images Downlinked"] = env.unwrapped.satellites[0].dynamics.total_downlinks
-# data["Useful Images Downlinked"] = env.unwrapped.satellites[0].dynamics.useful_downlinks
+data["total_images_downlinked"] = env.unwrapped.rewarder.total_downlinks
+data["useful_images_downlinked"] = env.unwrapped.rewarder.useful_downlinks
+data["targets_imaged_total"] = len(
+    env.unwrapped.satellites[0].data_store.data.imaged
+)
+data["episode_end_time_sec"] = float(env.simulator.sim_time)
+data["final_battery_fraction"] = float(
+    env.unwrapped.satellites[0].dynamics.battery_charge_fraction
+)
+data["final_storage_fraction"] = float(
+    env.unwrapped.satellites[0].dynamics.storage_level_fraction
+)
 
 SS1_actions_spec = env.unwrapped.satellites[0].action_builder.action_spec[0]
 # -----------------------------
@@ -2343,9 +2391,15 @@ try:
             return float(o)
         if isinstance(o, (_np.integer,)):
             return int(o)
+        if isinstance(o, (_np.bool_,)):
+            return bool(o)
         if isinstance(o, _np.ndarray):
             return o.tolist()
-        return o
+        if isinstance(o, set):
+            return sorted(o)
+        if isinstance(o, Path):
+            return str(o)
+        raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
     # Add commonly printed summary fields if present
     summary = {
         "target_imaging_count": 'target_imaging_count' in locals() and target_imaging_count or None,
@@ -2373,6 +2427,17 @@ try:
     "policy_tag": policy_tag,
     "policy_mode": policy_mode,
     "policy_name": policy_name,
+    "policy_path": policy_path,
+    "target_env": TARGET_ENV,
+    "mix_weights": MIX_WEIGHTS,
+    "n_targets": n_targets,
+    "n_targets_ahead": n_targets_ahead,
+    "total_time_sec": total_time,
+    "image_duration_sec": imaging_duration,
+    "charge_duration_sec": 300.0,
+    "downlink_duration_sec": 180.0,
+    "desat_duration_sec": 150.0,
+    "shield_enabled": bool(use_shield),
     "act_random": bool(act_random),
     "use_heuristic": bool(use_heuristic),
     "run_dir": run_dir,
@@ -2387,4 +2452,3 @@ except Exception as e:
     print("WARNING: Failed to save metrics JSON:", e)
 print(f"good images #:{len(env.unwrapped.rewarder.imaged_illuminated)} out of {target_imaging_count}")
 print(f"imaging success percentage {len(env.unwrapped.rewarder.imaged_illuminated)/target_imaging_count*100}%")
-

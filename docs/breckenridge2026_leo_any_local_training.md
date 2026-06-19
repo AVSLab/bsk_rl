@@ -1,6 +1,6 @@
 # Breckenridge 2026 LEO-Any Local Training Notes
 
-This branch/worktree is for old-network GNC/Breckenridge experiments only. It is
+This branch is for old-network GNC/Breckenridge experiments only. It is
 based on `origin/IA_Polaris_SSA` from January 2026, before the AMOS 2026
 variable-duration imaging/downlink and priority/HIO/SHIO changes.
 
@@ -70,6 +70,7 @@ Defaults:
 - alpha/downlink bonus: `0.1`
 - mixed target catalog: `LEO=0.5,MEO=0.3,GEO=0.2`
 - batch size: `4992`
+- training stop: `750,000` sampled steps (the final batch can overshoot slightly)
 - target count: `100`
 - targets ahead: `10`
 - fixed action durations, no fast/variable action stopping
@@ -95,6 +96,9 @@ python3 examples/train_Breckenridge2026_LEOAny_oldnet_local.py \
 
 If local memory is tight, reduce `--n-envs`; keep `--train-batch-size 4992` for
 the closest reproduction of the old training setup.
+
+The completed June 2026 mixed-trained run reached 813,696 sampled steps. Its
+latest saved numeric checkpoint is `checkpoint_000160`.
 
 ## Umbra smart-decision training metrics
 

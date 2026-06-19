@@ -28,6 +28,17 @@ def find_latest_checkpoint(checkpoint_path_dir: Path, mode: str = 'latest') -> P
     Raises:
         ValueError: If no suitable checkpoints are found.
     """
+    checkpoint_path_dir = Path(checkpoint_path_dir).expanduser()
+    direct_module = (
+        checkpoint_path_dir
+        / "learner_group"
+        / "learner"
+        / "rl_module"
+        / "inspector"
+    )
+    if direct_module.is_dir():
+        return checkpoint_path_dir
+
     if mode not in ['latest', 'smallest', 'best']:
         raise ValueError(f"Invalid mode '{mode}'. Choose from 'latest', 'smallest', or 'best'.")
 

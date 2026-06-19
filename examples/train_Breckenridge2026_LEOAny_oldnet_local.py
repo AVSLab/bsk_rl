@@ -83,8 +83,8 @@ def train_model(
     n_envs=1,
     checkpoint_frequency=5,
     checkpoints_to_keep=3,
-    reload_frequency=500_000,
-    total_timesteps=20_000_000,
+    reload_frequency=800_000,
+    total_timesteps=750_000,
     training_args=None,
     temp_dir="/tmp/bsk_rl_ray",
 ):
