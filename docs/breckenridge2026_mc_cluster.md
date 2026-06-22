@@ -184,7 +184,8 @@ cd /Users/dahu1128/Repositories/bsk_rl
 source .venv/bin/activate
 
 python examples/breckenridge2026/analyze_mc_comparison.py \
-  --input-root ~/rllib_results/breckenridge2026_mc
+  --input-root ~/rllib_results/breckenridge2026_mc \
+  --analysis-tag 20260622
 ```
 
 Outputs are written to `~/rllib_results/breckenridge2026_mc/analysis`. The
@@ -205,20 +206,28 @@ The primary output files are:
 - `original_paper_robustness_recomputed.csv` and
   `original_paper_alpha_sweep_recomputed.csv`: recomputed historical tables,
   when the preserved source CSVs are present locally;
+- `gnc_alpha_sweep_20260622_table.csv`, `.md`, and `.tex`: the complete latest
+  11-policy alpha table, with 100 seeds for every alpha;
+- `gnc_alpha_sweep_20260622_numeric.csv`: unrounded values behind that table;
+- `alpha_sweep_jan15_vs_jan16.csv`: per-metric changes between snapshots;
 - `analysis_manifest.json`: source paths, hashes, completeness, and formulas.
 
 Create the viridis publication figures from all four cells:
 
 ```bash
 python examples/breckenridge2026/plot_mc_comparison.py \
-  --input-root ~/rllib_results/breckenridge2026_mc
+  --input-root ~/rllib_results/breckenridge2026_mc \
+  --alpha-per-seed examples/results/per_seed_metrics_allPolicies_20260116_150922.csv \
+  --force-analysis
 ```
 
 The plotter runs the portable analyzer first if needed and writes PNG/PDF
 pairs to `~/rllib_results/breckenridge2026_mc/analysis/plots`. Figures include
 the four-cell overview, 1-sigma/2-sigma Gaussian population contours for
 performance and action allocation, paired same-seed reward comparisons,
-paired effect distributions, and mixed-catalog regime selection.
+paired effect distributions, mixed-catalog regime selection, and three
+complete 100-seed alpha-sweep population landscapes. Alpha is encoded with
+the viridis colormap.
 
 The original paper's full behavioral script,
 `examples/mc_behaviour_analysis_v3.py`, additionally requires `steps.csv` and
@@ -246,13 +255,22 @@ examples/overall_summary.csv
 examples/results/per_seed_metrics_allPolicies_20260115_201523.csv
 examples/results/overall_summary_by_alpha_allPolicies_20260115_201523.csv
 examples/results/per_seed_metrics_allPolicies_20260116_150922.csv
+examples/results/overall_summary_by_alpha_allPolicies_20260116_150922.csv
 ```
 
-The printed paper table uses the January 15 snapshot for alpha values already
-present there, including 50 seeds at alpha 0.6, and the later completed
-snapshot for alpha 0.8 and 0.9. Recomputing means and sample standard
-deviations from that selection reproduces the displayed paper values. A later
-January 16 snapshot contains 100 alpha-0.6 seeds and gives different values
-(`93.32 +/- 2.50` total reward instead of the manuscript's
-`93.63 +/- 2.30`). The saved files establish this provenance mismatch but do
-not establish why the manuscript retained the earlier 50-seed row.
+The January 16 snapshot is the latest complete source: it has 1,100 rows,
+covering all 11 alpha values with 100 seeds each. Recomputing means and sample
+standard deviations from those rows reproduces every displayed cell in the
+saved January 16 summary. The analyzer records that comparison in
+`analysis_manifest.json` and emits the current table with the requested June
+22 label.
+
+Compared with January 15, alpha 0.8 and 0.9 are newly present, while alpha 0.6
+increases from 50 to 100 seeds. For alpha 0.6, total reward changes from
+`93.63 +/- 2.30` to `93.32 +/- 2.50`; useful downlinks from `93.50 +/- 2.32`
+to `93.19 +/- 2.57`; imaging actions from `131.92 +/- 3.58` to
+`132.28 +/- 3.59`; and downlink actions from `29.58 +/- 5.56` to
+`29.17 +/- 5.69`. The shared rows for alpha 0.0--0.5, 0.7, and 1.0 are
+unchanged at displayed precision. The manuscript snapshot remains available
+separately because it retained the earlier 50-seed alpha-0.6 row; the saved
+files establish that fact but do not establish why it was retained.

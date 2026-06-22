@@ -14,6 +14,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
 from matplotlib.lines import Line2D
 from matplotlib.patches import Ellipse
 from matplotlib.ticker import AutoMinorLocator
@@ -50,6 +51,7 @@ TITLE_FONTSIZE = 14
 
 
 def parse_args() -> argparse.Namespace:
+    repo_root = Path(__file__).resolve().parents[2]
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--input-root",
@@ -72,6 +74,17 @@ def parse_args() -> argparse.Namespace:
         "--force-analysis",
         action="store_true",
         help="Regenerate the portable analysis tables before plotting.",
+    )
+    parser.add_argument(
+        "--alpha-per-seed",
+        type=Path,
+        default=(
+            repo_root
+            / "examples"
+            / "results"
+            / "per_seed_metrics_allPolicies_20260116_150922.csv"
+        ),
+        help="Latest complete GNC alpha-sweep per-seed CSV.",
     )
     return parser.parse_args()
 
@@ -519,6 +532,210 @@ def plot_regime_mix(data: pd.DataFrame, output_dir: Path) -> None:
     save_figure(fig, output_dir, "mc_mixed_evaluation_regime_selection")
 
 
+def add_alpha_colorbar(fig: plt.Figure, ax, norm: Normalize) -> None:
+    scalar = plt.cm.ScalarMappable(norm=norm, cmap=plt.get_cmap(COLORMAP))
+    scalar.set_array([])
+    colorbar = fig.colorbar(scalar, ax=ax, pad=0.025, fraction=0.045)
+    colorbar.set_label(r"Downlink reward weight $\alpha$")
+
+
+def latest_alpha_data(path: Path) -> pd.DataFrame:
+    data = pd.read_csv(path)
+    data["alpha"] = pd.to_numeric(data["alpha"], errors="coerce")
+    data["seed"] = pd.to_numeric(data["seed"], errors="coerce")
+    data = data.dropna(subset=["alpha", "seed"]).copy()
+    data = data.drop_duplicates(["alpha", "env", "seed"], keep="first")
+    counts = data.groupby("alpha")["seed"].nunique()
+    if len(counts) != 11 or not counts.eq(100).all():
+        raise ValueError(
+            "Latest alpha sweep must contain 11 policies with 100 unique seeds each"
+        )
+    return data.sort_values(["alpha", "seed"])
+
+
+def plot_latest_alpha_overview(data: pd.DataFrame, output_dir: Path) -> None:
+    metrics = [
+        "total_reward",
+        "illuminated_images",
+        "useful_downlinks_est",
+        "target_imaging_count",
+        "downlink_action_count",
+        "acq_success_rate",
+        "avg_acquisition_time_sec",
+    ]
+    summary = data.groupby("alpha")[metrics].agg(["mean", "std"])
+    alphas = summary.index.to_numpy(dtype=float)
+    cmap = plt.get_cmap(COLORMAP)
+    norm = Normalize(0.0, 1.0)
+    fig, axes = plt.subplots(2, 2, figsize=(11.4, 7.5), constrained_layout=True)
+
+    def series(
+        ax: plt.Axes,
+        metric: str,
+        label: str,
+        marker: str,
+        divisor: float = 1.0,
+    ) -> None:
+        means = summary[(metric, "mean")].to_numpy(dtype=float) / divisor
+        stds = summary[(metric, "std")].to_numpy(dtype=float) / divisor
+        ax.plot(alphas, means, color="0.38", linewidth=1.0, alpha=0.52)
+        ax.errorbar(
+            alphas,
+            means,
+            yerr=stds,
+            fmt="none",
+            ecolor="0.4",
+            alpha=0.45,
+            capsize=3,
+        )
+        ax.scatter(
+            alphas,
+            means,
+            c=alphas,
+            cmap=cmap,
+            norm=norm,
+            marker=marker,
+            s=68,
+            edgecolor="black",
+            linewidth=0.55,
+            label=label,
+            zorder=3,
+        )
+
+    for metric, label, marker in (
+        ("total_reward", "Total reward", "o"),
+        ("illuminated_images", "Illuminated images", "s"),
+        ("useful_downlinks_est", "Useful downlinks", "D"),
+    ):
+        series(axes[0, 0], metric, label, marker)
+    axes[0, 0].set_ylabel("Episode count / reward")
+    axes[0, 0].set_title("Collection and delivery outcomes")
+    axes[0, 0].legend(framealpha=0.94)
+
+    for metric, label, marker in (
+        ("target_imaging_count", "Imaging actions", "o"),
+        ("downlink_action_count", "Downlink actions", "s"),
+    ):
+        series(axes[0, 1], metric, label, marker)
+    axes[0, 1].set_ylabel("Actions per episode")
+    axes[0, 1].set_title("Action allocation")
+    axes[0, 1].legend(framealpha=0.94)
+
+    series(axes[1, 0], "acq_success_rate", "Acquisition success", "o")
+    axes[1, 0].set_ylabel("Acquisition success fraction")
+    axes[1, 0].set_title("Imaging-command effectiveness")
+
+    series(
+        axes[1, 1],
+        "avg_acquisition_time_sec",
+        "Mean acquisition time",
+        "o",
+        divisor=60.0,
+    )
+    axes[1, 1].set_ylabel("Mean acquisition time [min]")
+    axes[1, 1].set_title("Acquisition cadence")
+
+    for ax in axes.flat:
+        ax.set_xlabel(r"Downlink reward weight $\alpha$")
+        ax.set_xlim(-0.03, 1.03)
+        finish_numeric_axis(ax)
+    add_alpha_colorbar(fig, axes, norm)
+    save_figure(fig, output_dir, "alpha_sweep_100seed_overview_20260622")
+
+
+def plot_alpha_gaussian_population(
+    data: pd.DataFrame,
+    output_dir: Path,
+    *,
+    x_metric: str,
+    y_metric: str,
+    x_label: str,
+    y_label: str,
+    title: str,
+    stem: str,
+    identity_line: bool = False,
+) -> None:
+    cmap = plt.get_cmap(COLORMAP)
+    norm = Normalize(0.0, 1.0)
+    fig, ax = plt.subplots(figsize=(8.7, 5.8), constrained_layout=True)
+    stats_rows = []
+
+    for alpha in sorted(data["alpha"].unique()):
+        group = data[data["alpha"] == alpha]
+        x = pd.to_numeric(group[x_metric], errors="coerce").to_numpy(dtype=float)
+        y = pd.to_numeric(group[y_metric], errors="coerce").to_numpy(dtype=float)
+        valid = np.isfinite(x) & np.isfinite(y)
+        x, y = x[valid], y[valid]
+        color = cmap(norm(float(alpha)))
+        ax.scatter(
+            x,
+            y,
+            color=color,
+            s=15,
+            alpha=0.18,
+            edgecolor="none",
+            zorder=2,
+        )
+        stats = add_covariance_ellipses(ax, x, y, color)
+        stats.update({"alpha": float(alpha), "N": len(x)})
+        stats_rows.append(stats)
+        ax.scatter(
+            stats["x_mean"],
+            stats["y_mean"],
+            color=color,
+            marker="*",
+            s=125,
+            edgecolor="black",
+            linewidth=0.65,
+            zorder=4,
+        )
+
+    if identity_line:
+        low = min(ax.get_xlim()[0], ax.get_ylim()[0])
+        high = max(ax.get_xlim()[1], ax.get_ylim()[1])
+        ax.plot(
+            [low, high],
+            [low, high],
+            linestyle="--",
+            linewidth=1.05,
+            color="0.3",
+            alpha=0.65,
+            zorder=0,
+        )
+
+    ax.legend(
+        handles=[
+            Line2D(
+                [0],
+                [0],
+                marker="*",
+                color="none",
+                markerfacecolor="0.55",
+                markeredgecolor="black",
+                markersize=11,
+                label="Policy-population mean",
+            ),
+            Line2D(
+                [0],
+                [0],
+                color="0.3",
+                linewidth=1.5,
+                label=r"1$\sigma$/2$\sigma$ Gaussian contours",
+            ),
+        ],
+        framealpha=0.94,
+    )
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
+    finish_numeric_axis(ax)
+    add_alpha_colorbar(fig, ax, norm)
+    save_figure(fig, output_dir, stem)
+    pd.DataFrame(stats_rows).sort_values("alpha").to_csv(
+        output_dir / f"{stem}_population_stats.csv", index=False
+    )
+
+
 def write_readme(data: pd.DataFrame, output_dir: Path) -> None:
     lines = [
         "# Breckenridge 2026 Four-Cell Monte Carlo Figures",
@@ -548,6 +765,10 @@ def write_readme(data: pd.DataFrame, output_dir: Path) -> None:
             "- `mc_paired_reward_by_evaluation_environment`: same-seed reward comparison.",
             "- `mc_paired_training_effect_distributions`: paired effect distributions.",
             "- `mc_mixed_evaluation_regime_selection`: selected target regimes.",
+            "- `mc_gaussian_acquisition_landscape`: acquisition cadence/effectiveness.",
+            "- `mc_gaussian_umbra_reward_landscape`: umbra behavior versus reward.",
+            "- `alpha_sweep_100seed_overview_20260622`: latest complete alpha sweep.",
+            "- `alpha_sweep_gaussian_*`: 11-policy Gaussian population views.",
         ]
     )
     (output_dir / "README.md").write_text("\n".join(lines) + "\n")
@@ -572,6 +793,10 @@ def main() -> None:
 
     data = ordered_data(pd.read_csv(analysis_dir / "new_mc_per_seed.csv"))
     summary = ordered_data(pd.read_csv(analysis_dir / "new_mc_summary.csv"))
+    alpha_path = args.alpha_per_seed.expanduser().resolve()
+    alpha_data = latest_alpha_data(alpha_path)
+    data["acq_success_percent"] = data["acq_success_rate"] * 100.0
+    data["umbra_smart_percent"] = data["umbra_smart_fraction"] * 100.0
 
     if set(data["cell"].dropna().astype(str)) != set(CELL_ORDER):
         raise ValueError("Analysis does not contain the expected four Monte Carlo cells")
@@ -598,9 +823,61 @@ def main() -> None:
         title="Four-cell action-allocation populations",
         stem="mc_gaussian_action_landscape",
     )
+    plot_gaussian_population(
+        data,
+        output_dir,
+        x_metric="avg_acquisition_time_sec",
+        y_metric="acq_success_percent",
+        x_label="Mean successful acquisition time [s]",
+        y_label="Acquisition success [%]",
+        title="Four-cell acquisition-behavior populations",
+        stem="mc_gaussian_acquisition_landscape",
+    )
+    plot_gaussian_population(
+        data,
+        output_dir,
+        x_metric="umbra_smart_percent",
+        y_metric="total_reward",
+        x_label="Smart umbra decisions [%]",
+        y_label="Total reward",
+        title="Umbra effectiveness and episode return",
+        stem="mc_gaussian_umbra_reward_landscape",
+    )
     plot_paired_reward(data, output_dir)
     plot_paired_delta_distributions(data, output_dir)
     plot_regime_mix(data, output_dir)
+    plot_latest_alpha_overview(alpha_data, output_dir)
+    plot_alpha_gaussian_population(
+        alpha_data,
+        output_dir,
+        x_metric="illuminated_images",
+        y_metric="useful_downlinks_est",
+        x_label="Illuminated images acquired",
+        y_label="Useful images downlinked",
+        title="Latest 100-seed alpha-sweep outcome populations",
+        stem="alpha_sweep_gaussian_outcome_landscape_20260622",
+        identity_line=True,
+    )
+    plot_alpha_gaussian_population(
+        alpha_data,
+        output_dir,
+        x_metric="target_imaging_count",
+        y_metric="downlink_action_count",
+        x_label="Imaging actions",
+        y_label="Downlink actions",
+        title="Latest 100-seed alpha-sweep action populations",
+        stem="alpha_sweep_gaussian_action_landscape_20260622",
+    )
+    plot_alpha_gaussian_population(
+        alpha_data,
+        output_dir,
+        x_metric="avg_acquisition_time_sec",
+        y_metric="acq_success_rate",
+        x_label="Mean successful acquisition time [s]",
+        y_label="Acquisition success fraction",
+        title="Latest 100-seed alpha-sweep acquisition populations",
+        stem="alpha_sweep_gaussian_acquisition_landscape_20260622",
+    )
     write_readme(data, output_dir)
 
     manifest = {
@@ -610,6 +887,8 @@ def main() -> None:
         "colormap": COLORMAP,
         "cells": CELL_ORDER,
         "seed_rows": int(len(data)),
+        "latest_alpha_per_seed": str(alpha_path),
+        "latest_alpha_seed_rows": int(len(alpha_data)),
         "figure_stems": sorted(path.stem for path in output_dir.glob("*.pdf")),
     }
     (output_dir / "plot_manifest.json").write_text(

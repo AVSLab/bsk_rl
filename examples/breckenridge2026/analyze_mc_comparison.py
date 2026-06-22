@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+from datetime import datetime
 import hashlib
 import json
 import math
@@ -307,7 +308,148 @@ def summarize_historical(rows: list[dict], group_fields: tuple[str, ...]) -> lis
     return output
 
 
-def recompute_paper_snapshots(repo_root: Path, output_dir: Path) -> dict:
+def formatted_historical_table(summary: list[dict]) -> list[dict]:
+    def pm(row: dict, metric: str, decimals: int = 2) -> str:
+        mean = row.get(f"{metric}_mean")
+        std = row.get(f"{metric}_std")
+        if mean is None or std is None:
+            return ""
+        return f"{float(mean):.{decimals}f} +/- {float(std):.{decimals}f}"
+
+    return [
+        {
+            "alpha": f"{float(row['alpha']):.1f}",
+            "Env": str(row["env"]),
+            "N": int(row["N"]),
+            "Total reward": pm(row, "total_reward"),
+            "Illuminated images": pm(row, "illuminated_images"),
+            "Useful downlinks (est)": pm(row, "useful_downlinks_est"),
+            "Imaging actions": pm(row, "target_imaging_count"),
+            "Downlink actions": pm(row, "downlink_action_count"),
+            "Acq success rate": pm(row, "acq_success_rate", 3),
+            "Mean dt_acq [s]": pm(row, "avg_acquisition_time_sec"),
+        }
+        for row in sorted(summary, key=lambda item: float(item["alpha"]))
+    ]
+
+
+def write_markdown_table(path: Path, rows: list[dict]) -> None:
+    fields = list(rows[0])
+    lines = [
+        "| " + " | ".join(fields) + " |",
+        "| " + " | ".join("---" for _ in fields) + " |",
+    ]
+    lines.extend(
+        "| " + " | ".join(str(row[field]) for field in fields) + " |"
+        for row in rows
+    )
+    path.write_text("\n".join(lines) + "\n")
+
+
+def write_latex_table(path: Path, rows: list[dict]) -> None:
+    fields = list(rows[0])
+
+    def escaped(value) -> str:
+        text = str(value)
+        for source, replacement in (
+            ("\\", r"\textbackslash{}"),
+            ("_", r"\_"),
+            ("%", r"\%"),
+            ("&", r"\&"),
+            ("#", r"\#"),
+        ):
+            text = text.replace(source, replacement)
+        return text
+
+    lines = [
+        r"\begin{tabular}{c c c c c c c c c c}",
+        r"\toprule",
+        " & ".join(escaped(field) for field in fields) + r" \\",
+        r"\midrule",
+    ]
+    for row in rows:
+        values = [
+            escaped(row[field]).replace("+/-", r"$\pm$") for field in fields
+        ]
+        lines.append(" & ".join(values) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}"])
+    path.write_text("\n".join(lines) + "\n")
+
+
+def compare_historical_summaries(
+    early: list[dict], latest: list[dict]
+) -> list[dict]:
+    early_by_alpha = {float(row["alpha"]): row for row in early}
+    latest_by_alpha = {float(row["alpha"]): row for row in latest}
+    output = []
+    for alpha in sorted(set(early_by_alpha) | set(latest_by_alpha)):
+        early_row = early_by_alpha.get(alpha)
+        latest_row = latest_by_alpha.get(alpha)
+        for metric in HISTORICAL_METRICS:
+            early_mean = early_row.get(f"{metric}_mean") if early_row else None
+            early_std = early_row.get(f"{metric}_std") if early_row else None
+            latest_mean = latest_row.get(f"{metric}_mean") if latest_row else None
+            latest_std = latest_row.get(f"{metric}_std") if latest_row else None
+            output.append(
+                {
+                    "alpha": alpha,
+                    "metric": metric,
+                    "jan15_N": early_row.get("N") if early_row else None,
+                    "jan16_N": latest_row.get("N") if latest_row else None,
+                    "jan15_mean": early_mean,
+                    "jan16_mean": latest_mean,
+                    "mean_delta_jan16_minus_jan15": (
+                        float(latest_mean) - float(early_mean)
+                        if early_mean is not None and latest_mean is not None
+                        else None
+                    ),
+                    "jan15_std": early_std,
+                    "jan16_std": latest_std,
+                    "std_delta_jan16_minus_jan15": (
+                        float(latest_std) - float(early_std)
+                        if early_std is not None and latest_std is not None
+                        else None
+                    ),
+                }
+            )
+    return output
+
+
+def compare_formatted_tables(
+    generated: list[dict], saved: list[dict]
+) -> tuple[int, list[dict]]:
+    """Compare tables after normalizing the saved Unicode plus/minus sign."""
+
+    def normalized(value) -> str:
+        return str(value).replace("\N{PLUS-MINUS SIGN}", "+/-").replace(" ", "")
+
+    saved_by_key = {
+        (normalized(row["alpha"]), normalized(row["Env"])): row for row in saved
+    }
+    mismatches = []
+    comparison_count = 0
+    for row in generated:
+        key = (normalized(row["alpha"]), normalized(row["Env"]))
+        saved_row = saved_by_key.get(key)
+        for field, generated_value in row.items():
+            comparison_count += 1
+            saved_value = saved_row.get(field) if saved_row else None
+            if normalized(generated_value) != normalized(saved_value):
+                mismatches.append(
+                    {
+                        "alpha": row["alpha"],
+                        "Env": row["Env"],
+                        "field": field,
+                        "generated": generated_value,
+                        "saved": saved_value,
+                    }
+                )
+    return comparison_count, mismatches
+
+
+def recompute_paper_snapshots(
+    repo_root: Path, output_dir: Path, analysis_tag: str
+) -> dict:
     source_info = {}
     robustness = repo_root / "examples" / "per_seed_metrics_from_json.csv"
     if robustness.is_file():
@@ -334,15 +476,23 @@ def recompute_paper_snapshots(repo_root: Path, output_dir: Path) -> dict:
         / "results"
         / "per_seed_metrics_allPolicies_20260116_150922.csv"
     )
-    if early.is_file() and late.is_file():
-        rows = read_csv(early)
-        rows.extend(
+    latest_saved = (
+        repo_root
+        / "examples"
+        / "results"
+        / "overall_summary_by_alpha_allPolicies_20260116_150922.csv"
+    )
+    if early.is_file() and late.is_file() and latest_saved.is_file():
+        early_rows = read_csv(early)
+        late_rows = read_csv(late)
+        manuscript_rows = list(early_rows)
+        manuscript_rows.extend(
             row
-            for row in read_csv(late)
+            for row in late_rows
             if finite_number(row.get("alpha")) in (0.8, 0.9)
         )
         unique = {}
-        for row in rows:
+        for row in manuscript_rows:
             key = (
                 round(float(row["alpha"]), 2),
                 str(row["env"]),
@@ -353,12 +503,55 @@ def recompute_paper_snapshots(repo_root: Path, output_dir: Path) -> dict:
             output_dir / "original_paper_alpha_sweep_recomputed.csv",
             summarize_historical(list(unique.values()), ("alpha", "env")),
         )
+        manuscript_summary = summarize_historical(
+            list(unique.values()), ("alpha", "env")
+        )
+        write_csv(
+            output_dir / "manuscript_alpha_sweep_recomputed.csv",
+            manuscript_summary,
+        )
+
+        latest_summary = summarize_historical(late_rows, ("alpha", "env"))
+        numeric_path = output_dir / f"gnc_alpha_sweep_{analysis_tag}_numeric.csv"
+        table_path = output_dir / f"gnc_alpha_sweep_{analysis_tag}_table.csv"
+        markdown_path = output_dir / f"gnc_alpha_sweep_{analysis_tag}_table.md"
+        latex_path = output_dir / f"gnc_alpha_sweep_{analysis_tag}_table.tex"
+        write_csv(numeric_path, latest_summary)
+        formatted = formatted_historical_table(latest_summary)
+        write_csv(table_path, formatted)
+        write_markdown_table(markdown_path, formatted)
+        write_latex_table(latex_path, formatted)
+        comparison_count, mismatches = compare_formatted_tables(
+            formatted, read_csv(latest_saved)
+        )
+
+        early_summary = summarize_historical(early_rows, ("alpha", "env"))
+        differences = compare_historical_summaries(early_summary, latest_summary)
+        difference_path = output_dir / "alpha_sweep_jan15_vs_jan16.csv"
+        write_csv(difference_path, differences)
+
         source_info["alpha_sweep"] = {
             "early_path": str(early),
             "early_sha256": sha256_file(early),
-            "late_path_for_alpha_08_09": str(late),
+            "latest_complete_path": str(late),
             "late_sha256": sha256_file(late),
-            "rows": len(unique),
+            "latest_saved_summary_path": str(latest_saved),
+            "latest_saved_summary_sha256": sha256_file(latest_saved),
+            "manuscript_snapshot_rows": len(unique),
+            "latest_complete_rows": len(late_rows),
+            "latest_complete_all_alphas_have_100_seeds": all(
+                int(row["N"]) == 100 for row in latest_summary
+            ),
+            "latest_displayed_cells_compared": comparison_count,
+            "latest_displayed_cells_match_saved_summary": not mismatches,
+            "latest_displayed_cell_mismatches": mismatches,
+            "latest_outputs": [
+                str(numeric_path),
+                str(table_path),
+                str(markdown_path),
+                str(latex_path),
+                str(difference_path),
+            ],
         }
     return source_info
 
@@ -381,6 +574,11 @@ def main() -> None:
         default=str(Path.home() / "rllib_results" / "breckenridge2026_mc"),
     )
     parser.add_argument("--output-dir", default=None)
+    parser.add_argument(
+        "--analysis-tag",
+        default=datetime.now().strftime("%Y%m%d"),
+        help="Date or label included in regenerated historical table filenames.",
+    )
     parser.add_argument(
         "--paper-alpha01-reference",
         default=str(
@@ -413,7 +611,9 @@ def main() -> None:
     write_csv(
         output_dir / "leo_mixed_rerun_vs_paper_alpha01.csv", paper_comparison
     )
-    historical_sources = recompute_paper_snapshots(repo_root, output_dir)
+    historical_sources = recompute_paper_snapshots(
+        repo_root, output_dir, args.analysis_tag
+    )
 
     expected_cells = {
         "leo_trained__leo_eval",
