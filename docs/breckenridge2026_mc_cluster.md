@@ -162,5 +162,80 @@ python3 examples/breckenridge2026/summarize_2x2_mc.py \
 
 For the LEO-trained-to-mixed cell, the audit compares all 100 seeds and five
 paper metrics against the archived alpha-0.1 per-seed data at a tolerance of
-`1e-6`. A successful exact reproduction reports zero mismatches. Summary
-standard deviations use the paper's sample convention (`ddof=1`).
+`1e-6`. Exact per-seed agreement is a stronger requirement than statistical
+reproduction and can expose numerical/runtime drift even when the campaign is
+complete. Exact-result differences are therefore reported as a warning rather
+than as a campaign-integrity failure. Summary standard deviations use the
+paper's sample convention (`ddof=1`).
+
+## Analyze downloaded campaigns locally
+
+Download the two complete campaign directories below a common root. The
+default expected location is:
+
+```text
+~/rllib_results/breckenridge2026_mc
+```
+
+Run the portable analysis adapter:
+
+```bash
+cd /Users/dahu1128/Repositories/bsk_rl
+source .venv/bin/activate
+
+python examples/breckenridge2026/analyze_mc_comparison.py \
+  --input-root ~/rllib_results/breckenridge2026_mc
+```
+
+Outputs are written to `~/rllib_results/breckenridge2026_mc/analysis`. The
+adapter uses the original paper conventions: reward-derived useful downlinks
+and sample standard deviations (`ddof=1`). It keeps training environment and
+evaluation environment as separate fields, which the historical
+`mc_overall_from_json.py` script did not need and cannot infer reliably from
+the newer directory names.
+
+The primary output files are:
+
+- `new_mc_per_seed.csv`: all 400 seed rows;
+- `new_mc_summary.csv`: the four policy/environment cells;
+- `new_mc_training_effect_paired.csv`: same-seed mixed-trained minus
+  LEO-trained differences;
+- `leo_mixed_rerun_vs_paper_alpha01.csv`: the October mixed-evaluation
+  reproduction comparison;
+- `original_paper_robustness_recomputed.csv` and
+  `original_paper_alpha_sweep_recomputed.csv`: recomputed historical tables,
+  when the preserved source CSVs are present locally;
+- `analysis_manifest.json`: source paths, hashes, completeness, and formulas.
+
+The original paper's full behavioral script,
+`examples/mc_behaviour_analysis_v3.py`, additionally requires `steps.csv` and
+`images.csv`. The compact cluster campaigns were run with `--no_save_data`, so
+they support the performance tables and JSON-recorded regime/umbra metrics but
+not every time-resolved behavioral plot.
+
+## Original paper data provenance
+
+The original raw Monte Carlo layout was rooted at:
+
+```text
+examples/data/GNC26_data/
+```
+
+The robustness table used `RL50d50i_LEO` and `RL50d50i_mixed`; the alpha sweep
+used the `RL<downlink>d<imaging>i_mixed` directories. These were local-machine
+paths, not Alpine campaign paths.
+
+The preserved paper-level source snapshots are:
+
+```text
+examples/per_seed_metrics_from_json.csv
+examples/overall_summary.csv
+examples/results/per_seed_metrics_allPolicies_20260115_201523.csv
+examples/results/overall_summary_by_alpha_allPolicies_20260115_201523.csv
+examples/results/per_seed_metrics_allPolicies_20260116_150922.csv
+```
+
+The printed paper table uses the January 15 snapshot for alpha values already
+present there, including 50 seeds at alpha 0.6, and the later completed
+snapshot for alpha 0.8 and 0.9. Recomputing means and sample standard
+deviations from that selection reproduces the displayed paper values.
