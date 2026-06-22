@@ -207,6 +207,19 @@ The primary output files are:
   when the preserved source CSVs are present locally;
 - `analysis_manifest.json`: source paths, hashes, completeness, and formulas.
 
+Create the viridis publication figures from all four cells:
+
+```bash
+python examples/breckenridge2026/plot_mc_comparison.py \
+  --input-root ~/rllib_results/breckenridge2026_mc
+```
+
+The plotter runs the portable analyzer first if needed and writes PNG/PDF
+pairs to `~/rllib_results/breckenridge2026_mc/analysis/plots`. Figures include
+the four-cell overview, 1-sigma/2-sigma Gaussian population contours for
+performance and action allocation, paired same-seed reward comparisons,
+paired effect distributions, and mixed-catalog regime selection.
+
 The original paper's full behavioral script,
 `examples/mc_behaviour_analysis_v3.py`, additionally requires `steps.csv` and
 `images.csv`. The compact cluster campaigns were run with `--no_save_data`, so
@@ -238,4 +251,8 @@ examples/results/per_seed_metrics_allPolicies_20260116_150922.csv
 The printed paper table uses the January 15 snapshot for alpha values already
 present there, including 50 seeds at alpha 0.6, and the later completed
 snapshot for alpha 0.8 and 0.9. Recomputing means and sample standard
-deviations from that selection reproduces the displayed paper values.
+deviations from that selection reproduces the displayed paper values. A later
+January 16 snapshot contains 100 alpha-0.6 seeds and gives different values
+(`93.32 +/- 2.50` total reward instead of the manuscript's
+`93.63 +/- 2.30`). The saved files establish this provenance mismatch but do
+not establish why the manuscript retained the earlier 50-seed row.
