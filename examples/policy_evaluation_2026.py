@@ -2402,13 +2402,13 @@ try:
         raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
     # Add commonly printed summary fields if present
     summary = {
-        "target_imaging_count": 'target_imaging_count' in locals() and target_imaging_count or None,
-        "non_target_count": 'non_target_count' in locals() and non_target_count or None,
-        "charge_action_count": 'charge_action_count' in locals() and charge_action_count or None,
-        "downlink_action_count": 'downlink_action_count' in locals() and downlink_action_count or None,
-        "desat_action_count": 'desat_action_count' in locals() and desat_action_count or None,
-        "target_imaging_pct": 'target_imaging_pct' in locals() and target_imaging_pct or None,
-        "non_target_pct": 'non_target_pct' in locals() and non_target_pct or None,
+        "target_imaging_count": target_imaging_count if 'target_imaging_count' in locals() else None,
+        "non_target_count": non_target_count if 'non_target_count' in locals() else None,
+        "charge_action_count": charge_action_count if 'charge_action_count' in locals() else None,
+        "downlink_action_count": downlink_action_count if 'downlink_action_count' in locals() else None,
+        "desat_action_count": desat_action_count if 'desat_action_count' in locals() else None,
+        "target_imaging_pct": target_imaging_pct if 'target_imaging_pct' in locals() else None,
+        "non_target_pct": non_target_pct if 'non_target_pct' in locals() else None,
         "imaging_success_percentage": 'env' in locals() and len(env.unwrapped.rewarder.imaged_illuminated)/target_imaging_count*100 if ('env' in locals() and target_imaging_count) else None
     }
     summary.update({

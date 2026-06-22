@@ -9,6 +9,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import statistics
 import sys
 
 
@@ -22,6 +23,13 @@ REQUIRED_METRICS = {
     "downlink_action_count": ("summary", "downlink_action_count"),
     "charge_action_count": ("summary", "charge_action_count"),
     "desat_action_count": ("summary", "desat_action_count"),
+}
+
+ACTION_COUNT_METRICS = {
+    "target_imaging_count",
+    "downlink_action_count",
+    "charge_action_count",
+    "desat_action_count",
 }
 
 PAPER_METRIC_MAP = {
@@ -69,6 +77,14 @@ def close_enough(actual, expected, tolerance: float = 1e-9) -> bool:
         and expected_number is not None
         and math.isclose(actual_number, expected_number, abs_tol=tolerance, rel_tol=0.0)
     )
+
+
+def metric_number(payload: dict, output_name: str, section: str, source_name: str):
+    raw_value = payload.get(section, {}).get(source_name)
+    # Older evaluator output encoded a legitimate action count of zero as null.
+    if raw_value is None and output_name in ACTION_COUNT_METRICS:
+        return 0.0
+    return finite_number(raw_value)
 
 
 def paper_reference(repo_root: Path) -> dict[int, dict[str, str]]:
@@ -234,7 +250,7 @@ def main() -> None:
 
             metric_row: dict[str, float] = {}
             for output_name, (section, source_name) in REQUIRED_METRICS.items():
-                value = finite_number(payload.get(section, {}).get(source_name))
+                value = metric_number(payload, output_name, section, source_name)
                 if value is None:
                     errors.append(f"{cell} seed {seed}: invalid metric {output_name}")
                 else:
@@ -266,6 +282,7 @@ def main() -> None:
     if paper_cell in expected_cells:
         reference = paper_reference(repo_root)
         mismatches = []
+        mismatch_count_by_metric = {metric: 0 for metric in PAPER_METRIC_MAP}
         max_absolute_difference = {metric: 0.0 for metric in PAPER_METRIC_MAP}
         if set(reference) != set(range(100)):
             errors.append(
@@ -285,6 +302,7 @@ def main() -> None:
                         max_absolute_difference[actual_name], difference
                     )
                     if difference > args.paper_tolerance:
+                        mismatch_count_by_metric[actual_name] += 1
                         mismatches.append(
                             {
                                 "seed": seed,
@@ -302,9 +320,28 @@ def main() -> None:
             "reference_seed_count": len(reference),
             "tolerance": args.paper_tolerance,
             "mismatch_count": len(mismatches),
+            "mismatched_seed_count": len({item["seed"] for item in mismatches}),
+            "mismatch_count_by_metric": mismatch_count_by_metric,
             "max_absolute_difference": max_absolute_difference,
             "first_mismatches": mismatches[:20],
         }
+        if set(reference) == set(range(100)):
+            paper_result["aggregate_comparison"] = {}
+            for actual_name, paper_name in PAPER_METRIC_MAP.items():
+                actual_values = [
+                    rows[(paper_cell, seed)].get(actual_name) for seed in range(100)
+                ]
+                expected_values = [
+                    finite_number(reference[seed].get(paper_name)) for seed in range(100)
+                ]
+                actual_values = [value for value in actual_values if value is not None]
+                expected_values = [value for value in expected_values if value is not None]
+                paper_result["aggregate_comparison"][actual_name] = {
+                    "actual_mean": statistics.mean(actual_values),
+                    "actual_std": statistics.stdev(actual_values),
+                    "paper_mean": statistics.mean(expected_values),
+                    "paper_std": statistics.stdev(expected_values),
+                }
 
     report = {
         "passed": not errors,
@@ -330,6 +367,14 @@ def main() -> None:
         print(
             "Paper mixed-baseline mismatches: "
             f"{paper_result['mismatch_count']} at tolerance {args.paper_tolerance:g}"
+        )
+        print(f"Mismatched seeds: {paper_result['mismatched_seed_count']} / 100")
+        print(
+            "Mismatches by metric: "
+            + ", ".join(
+                f"{name}={count}"
+                for name, count in paper_result["mismatch_count_by_metric"].items()
+            )
         )
     print(f"Errors: {len(errors)}; warnings: {len(warnings)}")
     print(f"Report: {report_path}")

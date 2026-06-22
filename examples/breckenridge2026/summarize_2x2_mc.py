@@ -23,6 +23,13 @@ METRICS = (
     ("episode_end_time_sec", "data", "episode_end_time_sec"),
 )
 
+ACTION_COUNT_METRICS = {
+    "target_imaging_count",
+    "downlink_action_count",
+    "charge_action_count",
+    "desat_action_count",
+}
+
 
 def finite_number(value):
     if value is None:
@@ -32,6 +39,14 @@ def finite_number(value):
     except (TypeError, ValueError):
         return None
     return number if number == number and abs(number) != float("inf") else None
+
+
+def metric_number(payload, output_name, section, source_name):
+    raw_value = payload.get(section, {}).get(source_name)
+    # Older evaluator output encoded a legitimate action count of zero as null.
+    if raw_value is None and output_name in ACTION_COUNT_METRICS:
+        return 0.0
+    return finite_number(raw_value)
 
 
 def main() -> None:
@@ -57,8 +72,8 @@ def main() -> None:
         payload = json.loads(metrics_path.read_text())
         row = {"cell": status["cell"], "seed": int(status["seed"])}
         for output_name, section, source_name in METRICS:
-            row[output_name] = finite_number(
-                payload.get(section, {}).get(source_name)
+            row[output_name] = metric_number(
+                payload, output_name, section, source_name
             )
         rows.append(row)
 
