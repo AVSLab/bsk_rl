@@ -447,6 +447,71 @@ def compare_formatted_tables(
     return comparison_count, mismatches
 
 
+def inventory_gnc26_archive(repo_root: Path, output_dir: Path) -> dict:
+    archive = repo_root / "examples" / "data" / "GNC26_data"
+    inventory_path = output_dir / "gnc26_archive_inventory.csv"
+    if not archive.is_dir():
+        return {
+            "path": str(archive),
+            "present": False,
+            "inventory_path": None,
+        }
+
+    rows = []
+    for policy_dir in sorted(path for path in archive.iterdir() if path.is_dir()):
+        run_dirs = [path for path in policy_dir.iterdir() if path.is_dir()]
+        files = [path for path in policy_dir.rglob("*") if path.is_file()]
+        rows.append(
+            {
+                "policy_directory": policy_dir.name,
+                "run_directories": len(run_dirs),
+                "metric_json_files": sum(
+                    path.name.startswith("metrics_") and path.suffix == ".json"
+                    for path in files
+                ),
+                "steps_csv_files": sum(path.name == "steps.csv" for path in files),
+                "images_csv_files": sum(path.name == "images.csv" for path in files),
+                "all_files": len(files),
+                "nonzero_files": sum(path.stat().st_size > 0 for path in files),
+                "bytes": sum(path.stat().st_size for path in files),
+            }
+        )
+    write_csv(inventory_path, rows)
+    result = {
+        "path": str(archive),
+        "present": True,
+        "inventory_path": str(inventory_path),
+        "policy_directories": len(rows),
+        "run_directories": sum(row["run_directories"] for row in rows),
+        "all_files": sum(row["all_files"] for row in rows),
+        "nonzero_files": sum(row["nonzero_files"] for row in rows),
+        "bytes": sum(row["bytes"] for row in rows),
+    }
+    latest_per_seed = (
+        repo_root
+        / "examples"
+        / "results"
+        / "per_seed_metrics_allPolicies_20260116_150922.csv"
+    )
+    if latest_per_seed.is_file():
+        reference_rows = read_csv(latest_per_seed)
+        referenced_paths = [
+            Path(row["resolved_run_dir"])
+            for row in reference_rows
+            if "GNC26_data" in str(row.get("resolved_run_dir", ""))
+        ]
+        result.update(
+            {
+                "january16_reference_path": str(latest_per_seed),
+                "january16_reference_rows": len(referenced_paths),
+                "january16_referenced_run_directories_present": sum(
+                    path.is_dir() for path in referenced_paths
+                ),
+            }
+        )
+    return result
+
+
 def recompute_paper_snapshots(
     repo_root: Path, output_dir: Path, analysis_tag: str
 ) -> dict:
@@ -614,6 +679,7 @@ def main() -> None:
     historical_sources = recompute_paper_snapshots(
         repo_root, output_dir, args.analysis_tag
     )
+    gnc26_archive = inventory_gnc26_archive(repo_root, output_dir)
 
     expected_cells = {
         "leo_trained__leo_eval",
@@ -642,6 +708,7 @@ def main() -> None:
             "sha256": sha256_file(reference_path),
         },
         "historical_sources": historical_sources,
+        "gnc26_archive": gnc26_archive,
         "outputs": sorted(path.name for path in output_dir.glob("*.csv")),
     }
     report_path = output_dir / "analysis_manifest.json"

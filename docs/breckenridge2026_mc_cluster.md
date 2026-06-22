@@ -210,9 +210,11 @@ The primary output files are:
   11-policy alpha table, with 100 seeds for every alpha;
 - `gnc_alpha_sweep_20260622_numeric.csv`: unrounded values behind that table;
 - `alpha_sweep_jan15_vs_jan16.csv`: per-metric changes between snapshots;
+- `gnc26_archive_inventory.csv`: local raw-archive folder and file counts,
+  including whether the files contain data;
 - `analysis_manifest.json`: source paths, hashes, completeness, and formulas.
 
-Create the viridis publication figures from all four cells:
+Create the publication figures from all four cells:
 
 ```bash
 python examples/breckenridge2026/plot_mc_comparison.py \
@@ -222,12 +224,13 @@ python examples/breckenridge2026/plot_mc_comparison.py \
 ```
 
 The plotter runs the portable analyzer first if needed and writes PNG/PDF
-pairs to `~/rllib_results/breckenridge2026_mc/analysis/plots`. Figures include
-the four-cell overview, 1-sigma/2-sigma Gaussian population contours for
-performance and action allocation, paired same-seed reward comparisons,
-paired effect distributions, mixed-catalog regime selection, and three
-complete 100-seed alpha-sweep population landscapes. Alpha is encoded with
-the viridis colormap.
+pairs to `~/rllib_results/breckenridge2026_mc/analysis/plots`. LEO-trained-only
+alpha-sweep plots use the plasma colormap. Four-cell LEO-trained versus
+mixed-trained comparisons are emitted as both viridis versions and plasma
+versions where circles identify LEO-trained policies and triangles identify
+mixed-trained policies. The expanded set includes Gaussian population
+contours, empirical CDFs, same-seed win rates, policy-efficiency plots, and a
+normalized alpha-sweep metric heatmap.
 
 The original paper's full behavioral script,
 `examples/mc_behaviour_analysis_v3.py`, additionally requires `steps.csv` and
@@ -246,6 +249,21 @@ examples/data/GNC26_data/
 The robustness table used `RL50d50i_LEO` and `RL50d50i_mixed`; the alpha sweep
 used the `RL<downlink>d<imaging>i_mixed` directories. These were local-machine
 paths, not Alpine campaign paths.
+
+The January 16 per-seed table contains 1,100 `resolved_run_dir` references into
+this archive, so the archive is the provenance source for the complete
+historical alpha sweep. The portable June analysis reads the preserved
+per-seed CSV instead of reopening all raw runs.
+
+At the time of the June 22 inventory, the local `GNC26_data` copy contained
+eight policy directories and 766 run directories. It included complete
+100-run folder layouts for the heuristic, alpha 0.0--0.3 mixed evaluations,
+alpha 1.0 mixed evaluation, and alpha 0.5 LEO evaluation, plus 66 alpha-0.4
+mixed run directories. However, all 12,244 files were zero bytes, and the
+alpha 0.5--0.9 mixed directories were absent. This copy therefore cannot
+currently rerun `mc_behaviour_analysis_v3.py` or regenerate time-resolved
+plots from `steps.csv`, `images.csv`, and the NumPy histories. Restore or
+rehydrate the original nonzero files before using that behavioral workflow.
 
 The preserved paper-level source snapshots are:
 

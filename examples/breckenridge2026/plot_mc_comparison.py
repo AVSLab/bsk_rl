@@ -41,7 +41,9 @@ CELL_LEGEND_LABELS = {
     "mixed_trained__mixed_eval": "Mixed-trained, mixed evaluation",
 }
 
-COLORMAP = "viridis"
+ALPHA_COLORMAP = "plasma"
+COMPARISON_COLORMAP = "viridis"
+COMPARISON_PLASMA_COLORMAP = "plasma"
 DPI = 320
 GRID_ALPHA = 0.22
 LABEL_FONTSIZE = 15
@@ -109,12 +111,43 @@ def setup_style() -> None:
     )
 
 
-def cell_colors() -> dict[str, tuple[float, float, float, float]]:
-    cmap = plt.get_cmap(COLORMAP)
+def cell_colors(
+    colormap: str = COMPARISON_COLORMAP,
+) -> dict[str, tuple[float, float, float, float]]:
+    cmap = plt.get_cmap(colormap)
     return {
         cell: cmap(value)
         for cell, value in zip(CELL_ORDER, np.linspace(0.08, 0.92, len(CELL_ORDER)))
     }
+
+
+def comparison_encoding(
+    palette: str,
+) -> tuple[
+    dict[str, tuple[float, float, float, float]],
+    dict[str, str],
+]:
+    if palette == "viridis":
+        colors = cell_colors(COMPARISON_COLORMAP)
+        markers = {
+            cell: "s" if "mixed_eval" in cell else "o" for cell in CELL_ORDER
+        }
+        return colors, markers
+    if palette == "plasma_shapes":
+        cmap = plt.get_cmap(COMPARISON_PLASMA_COLORMAP)
+        evaluation_colors = {"leo": cmap(0.24), "mixed": cmap(0.78)}
+        colors = {
+            cell: evaluation_colors[
+                "mixed" if cell.endswith("__mixed_eval") else "leo"
+            ]
+            for cell in CELL_ORDER
+        }
+        markers = {
+            cell: "^" if cell.startswith("mixed_trained__") else "o"
+            for cell in CELL_ORDER
+        }
+        return colors, markers
+    raise ValueError(f"Unknown comparison palette: {palette}")
 
 
 def finish_numeric_axis(ax: plt.Axes) -> None:
@@ -138,6 +171,18 @@ def save_figure(fig: plt.Figure, output_dir: Path, stem: str) -> None:
             pad_inches=0.06,
         )
     plt.close(fig)
+
+
+def clear_previous_figures(output_dir: Path) -> None:
+    manifest_path = output_dir / "plot_manifest.json"
+    if not manifest_path.is_file():
+        return
+    manifest = json.loads(manifest_path.read_text())
+    for stem in manifest.get("figure_stems", []):
+        for suffix in (".png", ".pdf", "_population_stats.csv"):
+            path = output_dir / f"{stem}{suffix}"
+            if path.is_file():
+                path.unlink()
 
 
 def ensure_analysis(input_root: Path, analysis_dir: Path, force: bool) -> None:
@@ -215,10 +260,10 @@ def plot_gaussian_population(
     y_label: str,
     title: str,
     stem: str,
+    palette: str,
     identity_line: bool = False,
 ) -> None:
-    colors = cell_colors()
-    markers = {"leo": "o", "mixed": "s"}
+    colors, markers = comparison_encoding(palette)
     fig, ax = plt.subplots(figsize=(8.5, 5.7), constrained_layout=True)
     stats_rows = []
 
@@ -229,7 +274,7 @@ def plot_gaussian_population(
         valid = np.isfinite(x) & np.isfinite(y)
         x, y = x[valid], y[valid]
         color = colors[cell]
-        marker = markers[str(group["evaluation_environment"].iloc[0])]
+        marker = markers[cell]
         ax.scatter(
             x,
             y,
@@ -272,7 +317,7 @@ def plot_gaussian_population(
         Line2D(
             [0],
             [0],
-            marker=markers["mixed" if "mixed_eval" in cell else "leo"],
+            marker=markers[cell],
             color="none",
             markerfacecolor=colors[cell],
             markeredgecolor="none",
@@ -318,14 +363,33 @@ def metric_mean_std(summary: pd.DataFrame, cell: str, metric: str) -> tuple[floa
     return float(row[f"{metric}_mean"]), float(row[f"{metric}_std"])
 
 
-def plot_overview(summary: pd.DataFrame, output_dir: Path) -> None:
-    colors = cell_colors()
+def plot_overview(
+    summary: pd.DataFrame,
+    output_dir: Path,
+    *,
+    palette: str,
+    stem: str,
+) -> None:
+    colors, _ = comparison_encoding(palette)
+    hatches = [
+        "//"
+        if cell.startswith("mixed_trained__") and palette == "plasma_shapes"
+        else ""
+        for cell in CELL_ORDER
+    ]
     x = np.arange(len(CELL_ORDER))
     fig, axes = plt.subplots(2, 2, figsize=(11.2, 7.4), constrained_layout=True)
 
     reward_mean = [metric_mean_std(summary, cell, "total_reward")[0] for cell in CELL_ORDER]
     reward_std = [metric_mean_std(summary, cell, "total_reward")[1] for cell in CELL_ORDER]
-    axes[0, 0].bar(x, reward_mean, color=[colors[cell] for cell in CELL_ORDER], alpha=0.88)
+    bars = axes[0, 0].bar(
+        x,
+        reward_mean,
+        color=[colors[cell] for cell in CELL_ORDER],
+        alpha=0.88,
+    )
+    for bar, hatch in zip(bars, hatches):
+        bar.set_hatch(hatch)
     axes[0, 0].errorbar(x, reward_mean, yerr=reward_std, fmt="none", color="0.15", capsize=4)
     axes[0, 0].set_ylabel("Total reward")
     axes[0, 0].set_title("Episode return")
@@ -361,12 +425,14 @@ def plot_overview(summary: pd.DataFrame, output_dir: Path) -> None:
 
     success_mean = [metric_mean_std(summary, cell, "acq_success_rate")[0] for cell in CELL_ORDER]
     success_std = [metric_mean_std(summary, cell, "acq_success_rate")[1] for cell in CELL_ORDER]
-    axes[1, 0].bar(
+    bars = axes[1, 0].bar(
         x,
         np.array(success_mean) * 100.0,
         color=[colors[cell] for cell in CELL_ORDER],
         alpha=0.88,
     )
+    for bar, hatch in zip(bars, hatches):
+        bar.set_hatch(hatch)
     axes[1, 0].errorbar(
         x,
         np.array(success_mean) * 100.0,
@@ -380,12 +446,14 @@ def plot_overview(summary: pd.DataFrame, output_dir: Path) -> None:
 
     umbra_mean = [metric_mean_std(summary, cell, "umbra_smart_fraction")[0] for cell in CELL_ORDER]
     umbra_std = [metric_mean_std(summary, cell, "umbra_smart_fraction")[1] for cell in CELL_ORDER]
-    axes[1, 1].bar(
+    bars = axes[1, 1].bar(
         x,
         np.array(umbra_mean) * 100.0,
         color=[colors[cell] for cell in CELL_ORDER],
         alpha=0.88,
     )
+    for bar, hatch in zip(bars, hatches):
+        bar.set_hatch(hatch)
     axes[1, 1].errorbar(
         x,
         np.array(umbra_mean) * 100.0,
@@ -400,7 +468,7 @@ def plot_overview(summary: pd.DataFrame, output_dir: Path) -> None:
     for ax in axes.flat:
         ax.set_xticks(x, [CELL_LABELS[cell] for cell in CELL_ORDER])
         finish_categorical_axis(ax)
-    save_figure(fig, output_dir, "mc_four_cell_overview")
+    save_figure(fig, output_dir, stem)
 
 
 def paired_frame(data: pd.DataFrame, environment: str, metric: str) -> pd.DataFrame:
@@ -416,7 +484,7 @@ def paired_ci(delta: pd.Series) -> tuple[float, float, float]:
 
 
 def plot_paired_reward(data: pd.DataFrame, output_dir: Path) -> None:
-    colors = cell_colors()
+    colors = cell_colors(COMPARISON_COLORMAP)
     fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.8), constrained_layout=True)
     for ax, environment in zip(axes, ("leo", "mixed")):
         pivot = paired_frame(data, environment, "total_reward")
@@ -459,8 +527,8 @@ def plot_paired_delta_distributions(data: pd.DataFrame, output_dir: Path) -> Non
         ("useful_downlinks_paper_estimate", "Useful-downlink difference"),
     ]
     environment_colors = {
-        "leo": cell_colors()["mixed_trained__leo_eval"],
-        "mixed": cell_colors()["mixed_trained__mixed_eval"],
+        "leo": cell_colors(COMPARISON_COLORMAP)["mixed_trained__leo_eval"],
+        "mixed": cell_colors(COMPARISON_COLORMAP)["mixed_trained__mixed_eval"],
     }
     fig, axes = plt.subplots(1, 3, figsize=(12.2, 4.45), constrained_layout=True)
     for ax, (metric, label) in zip(axes, metrics):
@@ -494,7 +562,7 @@ def plot_paired_delta_distributions(data: pd.DataFrame, output_dir: Path) -> Non
 
 def plot_regime_mix(data: pd.DataFrame, output_dir: Path) -> None:
     selected = data[data["evaluation_environment"] == "mixed"]
-    colors = plt.get_cmap(COLORMAP)([0.18, 0.52, 0.86])
+    colors = plt.get_cmap(COMPARISON_COLORMAP)([0.18, 0.52, 0.86])
     labels = ["LEO-trained policy", "Mixed-trained policy", "Catalog draw weights"]
     rows = []
     for training in ("leo", "mixed"):
@@ -533,7 +601,7 @@ def plot_regime_mix(data: pd.DataFrame, output_dir: Path) -> None:
 
 
 def add_alpha_colorbar(fig: plt.Figure, ax, norm: Normalize) -> None:
-    scalar = plt.cm.ScalarMappable(norm=norm, cmap=plt.get_cmap(COLORMAP))
+    scalar = plt.cm.ScalarMappable(norm=norm, cmap=plt.get_cmap(ALPHA_COLORMAP))
     scalar.set_array([])
     colorbar = fig.colorbar(scalar, ax=ax, pad=0.025, fraction=0.045)
     colorbar.set_label(r"Downlink reward weight $\alpha$")
@@ -565,7 +633,7 @@ def plot_latest_alpha_overview(data: pd.DataFrame, output_dir: Path) -> None:
     ]
     summary = data.groupby("alpha")[metrics].agg(["mean", "std"])
     alphas = summary.index.to_numpy(dtype=float)
-    cmap = plt.get_cmap(COLORMAP)
+    cmap = plt.get_cmap(ALPHA_COLORMAP)
     norm = Normalize(0.0, 1.0)
     fig, axes = plt.subplots(2, 2, figsize=(11.4, 7.5), constrained_layout=True)
 
@@ -640,7 +708,11 @@ def plot_latest_alpha_overview(data: pd.DataFrame, output_dir: Path) -> None:
         ax.set_xlim(-0.03, 1.03)
         finish_numeric_axis(ax)
     add_alpha_colorbar(fig, axes, norm)
-    save_figure(fig, output_dir, "alpha_sweep_100seed_overview_20260622")
+    save_figure(
+        fig,
+        output_dir,
+        "alpha_sweep_100seed_overview_plasma_20260622",
+    )
 
 
 def plot_alpha_gaussian_population(
@@ -655,7 +727,7 @@ def plot_alpha_gaussian_population(
     stem: str,
     identity_line: bool = False,
 ) -> None:
-    cmap = plt.get_cmap(COLORMAP)
+    cmap = plt.get_cmap(ALPHA_COLORMAP)
     norm = Normalize(0.0, 1.0)
     fig, ax = plt.subplots(figsize=(8.7, 5.8), constrained_layout=True)
     stats_rows = []
@@ -736,6 +808,203 @@ def plot_alpha_gaussian_population(
     )
 
 
+def plot_comparison_ecdfs(
+    data: pd.DataFrame,
+    output_dir: Path,
+    *,
+    palette: str,
+    stem: str,
+) -> None:
+    colors, markers = comparison_encoding(palette)
+    metrics = (
+        ("total_reward", "Total reward"),
+        ("useful_downlinks_paper_estimate", "Useful downlinks"),
+        ("acq_success_percent", "Acquisition success [%]"),
+        ("umbra_smart_percent", "Smart umbra decisions [%]"),
+    )
+    fig, axes = plt.subplots(2, 2, figsize=(10.8, 7.3), constrained_layout=True)
+    for ax, (metric, label) in zip(axes.flat, metrics):
+        for cell in CELL_ORDER:
+            values = np.sort(
+                pd.to_numeric(
+                    data.loc[data["cell"] == cell, metric], errors="coerce"
+                ).dropna()
+            )
+            probabilities = np.arange(1, len(values) + 1) / len(values)
+            ax.plot(
+                values,
+                probabilities,
+                color=colors[cell],
+                marker=markers[cell],
+                markevery=max(1, len(values) // 9),
+                markersize=4.2,
+                linewidth=1.7,
+                alpha=0.92,
+                label=CELL_LEGEND_LABELS[cell],
+            )
+        ax.set_xlabel(label)
+        ax.set_ylabel("Empirical cumulative probability")
+        finish_numeric_axis(ax)
+    axes[0, 0].legend(framealpha=0.94)
+    fig.suptitle("Monte Carlo outcome distributions")
+    save_figure(fig, output_dir, stem)
+
+
+def plot_policy_win_rates(data: pd.DataFrame, output_dir: Path) -> None:
+    metrics = (
+        ("total_reward", "Reward"),
+        ("illuminated_images", "Images"),
+        ("useful_downlinks_paper_estimate", "Useful\ndownlinks"),
+        ("acq_success_rate", "Acquisition\nsuccess"),
+        ("umbra_smart_fraction", "Smart umbra\ndecisions"),
+    )
+    environments = ("leo", "mixed")
+    cmap = plt.get_cmap(COMPARISON_PLASMA_COLORMAP)
+    colors = {"leo": cmap(0.24), "mixed": cmap(0.78)}
+    x = np.arange(len(metrics))
+    width = 0.36
+    fig, ax = plt.subplots(figsize=(10.2, 5.0), constrained_layout=True)
+    rows = []
+    for offset, environment in zip((-width / 2, width / 2), environments):
+        wins = []
+        for metric, _ in metrics:
+            pivot = paired_frame(data, environment, metric)
+            delta = pivot["mixed"] - pivot["leo"]
+            wins.append(float((delta > 0).mean()))
+            rows.append(
+                {
+                    "evaluation_environment": environment,
+                    "metric": metric,
+                    "mixed_trained_win_fraction": float((delta > 0).mean()),
+                    "tie_fraction": float((delta == 0).mean()),
+                    "leo_trained_win_fraction": float((delta < 0).mean()),
+                }
+            )
+        bars = ax.bar(
+            x + offset,
+            wins,
+            width=width,
+            color=colors[environment],
+            label=f"{environment.upper()} evaluation",
+            alpha=0.9,
+        )
+        ax.bar_label(bars, labels=[f"{100 * value:.0f}%" for value in wins], padding=3)
+    ax.axhline(0.5, color="0.3", linestyle="--", linewidth=1.1)
+    ax.set_xticks(x, [label for _, label in metrics])
+    ax.set_ylim(0.0, 1.03)
+    ax.set_ylabel("Seeds where mixed-trained policy is better")
+    ax.set_title("Same-seed policy win rates")
+    ax.legend(framealpha=0.94)
+    finish_categorical_axis(ax)
+    save_figure(fig, output_dir, "mc_mixed_trained_win_rates_plasma")
+    pd.DataFrame(rows).to_csv(
+        output_dir / "mc_mixed_trained_win_rates_plasma.csv", index=False
+    )
+
+
+def plot_alpha_efficiency(data: pd.DataFrame, output_dir: Path) -> None:
+    derived = data.copy()
+    derived["images_per_imaging_action"] = (
+        derived["illuminated_images"] / derived["target_imaging_count"]
+    )
+    derived["useful_per_downlink_action"] = (
+        derived["useful_downlinks_est"] / derived["downlink_action_count"]
+    )
+    derived["delivery_fraction"] = (
+        derived["useful_downlinks_est"] / derived["illuminated_images"]
+    )
+    derived["downlink_action_fraction"] = derived["downlink_action_count"] / (
+        derived["downlink_action_count"] + derived["target_imaging_count"]
+    )
+    metrics = (
+        ("images_per_imaging_action", "Images per imaging action"),
+        ("useful_per_downlink_action", "Useful images per downlink action"),
+        ("delivery_fraction", "Useful / illuminated images"),
+        ("downlink_action_fraction", "Downlink fraction of image/downlink actions"),
+    )
+    cmap = plt.get_cmap(ALPHA_COLORMAP)
+    norm = Normalize(0.0, 1.0)
+    fig, axes = plt.subplots(2, 2, figsize=(11.0, 7.4), constrained_layout=True)
+    for ax, (metric, label) in zip(axes.flat, metrics):
+        summary = derived.groupby("alpha")[metric].agg(["mean", "std"])
+        alpha = summary.index.to_numpy(dtype=float)
+        mean = summary["mean"].to_numpy(dtype=float)
+        std = summary["std"].to_numpy(dtype=float)
+        ax.plot(alpha, mean, color="0.35", linewidth=1.0, alpha=0.55)
+        ax.errorbar(
+            alpha,
+            mean,
+            yerr=std,
+            fmt="none",
+            ecolor="0.4",
+            alpha=0.45,
+            capsize=3,
+        )
+        ax.scatter(
+            alpha,
+            mean,
+            c=alpha,
+            cmap=cmap,
+            norm=norm,
+            s=68,
+            edgecolor="black",
+            linewidth=0.55,
+            zorder=3,
+        )
+        ax.set_xlabel(r"Downlink reward weight $\alpha$")
+        ax.set_ylabel(label)
+        ax.set_xlim(-0.03, 1.03)
+        finish_numeric_axis(ax)
+    add_alpha_colorbar(fig, axes, norm)
+    fig.suptitle("LEO-trained policy efficiency across reward weights")
+    save_figure(fig, output_dir, "alpha_sweep_efficiency_plasma_20260622")
+
+
+def plot_alpha_metric_heatmap(data: pd.DataFrame, output_dir: Path) -> None:
+    metrics = (
+        ("total_reward", "Reward"),
+        ("illuminated_images", "Illuminated images"),
+        ("useful_downlinks_est", "Useful downlinks"),
+        ("target_imaging_count", "Imaging actions"),
+        ("downlink_action_count", "Downlink actions"),
+        ("acq_success_rate", "Acquisition success"),
+        ("avg_acquisition_time_sec", "Acquisition time"),
+    )
+    summary = data.groupby("alpha")[[metric for metric, _ in metrics]].mean()
+    values = summary.to_numpy(dtype=float).T
+    spread = np.ptp(values, axis=1, keepdims=True)
+    normalized = (values - values.min(axis=1, keepdims=True)) / np.where(
+        spread == 0.0, 1.0, spread
+    )
+    fig, ax = plt.subplots(figsize=(11.0, 5.3), constrained_layout=True)
+    image = ax.imshow(normalized, cmap=ALPHA_COLORMAP, aspect="auto", vmin=0, vmax=1)
+    for row_index in range(values.shape[0]):
+        for column_index in range(values.shape[1]):
+            normalized_value = normalized[row_index, column_index]
+            ax.text(
+                column_index,
+                row_index,
+                f"{values[row_index, column_index]:.2f}",
+                ha="center",
+                va="center",
+                color="white" if normalized_value < 0.48 else "black",
+                fontsize=8,
+            )
+    ax.set_xticks(
+        np.arange(len(summary.index)),
+        [f"{alpha:.1f}" for alpha in summary.index],
+    )
+    ax.set_yticks(
+        np.arange(len(metrics)),
+        [label for _, label in metrics],
+    )
+    ax.set_xlabel(r"Downlink reward weight $\alpha$")
+    ax.set_title("LEO-trained policy metric landscape")
+    colorbar = fig.colorbar(image, ax=ax, pad=0.02)
+    colorbar.set_label("Within-metric normalized mean")
+    save_figure(fig, output_dir, "alpha_sweep_metric_heatmap_plasma_20260622")
+
+
 def write_readme(data: pd.DataFrame, output_dir: Path) -> None:
     lines = [
         "# Breckenridge 2026 Four-Cell Monte Carlo Figures",
@@ -767,8 +1036,15 @@ def write_readme(data: pd.DataFrame, output_dir: Path) -> None:
             "- `mc_mixed_evaluation_regime_selection`: selected target regimes.",
             "- `mc_gaussian_acquisition_landscape`: acquisition cadence/effectiveness.",
             "- `mc_gaussian_umbra_reward_landscape`: umbra behavior versus reward.",
-            "- `alpha_sweep_100seed_overview_20260622`: latest complete alpha sweep.",
-            "- `alpha_sweep_gaussian_*`: 11-policy Gaussian population views.",
+            "- `mc_*_viridis`: four-cell comparisons with one viridis color per cell.",
+            "- `mc_*_plasma_shapes`: evaluation environment in plasma colors, with",
+            "  circles for LEO-trained and triangles for mixed-trained policies.",
+            "- `mc_comparison_ecdfs_*`: complete empirical outcome distributions.",
+            "- `mc_mixed_trained_win_rates_plasma`: same-seed win fractions.",
+            "- `alpha_sweep_100seed_overview_plasma_20260622`: complete alpha sweep.",
+            "- `alpha_sweep_gaussian_*_plasma_*`: alpha-sweep population views.",
+            "- `alpha_sweep_efficiency_plasma_20260622`: derived policy efficiencies.",
+            "- `alpha_sweep_metric_heatmap_plasma_20260622`: normalized metric landscape.",
         ]
     )
     (output_dir / "README.md").write_text("\n".join(lines) + "\n")
@@ -790,6 +1066,7 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     ensure_analysis(input_root, analysis_dir, args.force_analysis)
     setup_style()
+    clear_previous_figures(output_dir)
 
     data = ordered_data(pd.read_csv(analysis_dir / "new_mc_per_seed.csv"))
     summary = ordered_data(pd.read_csv(analysis_dir / "new_mc_summary.csv"))
@@ -801,51 +1078,81 @@ def main() -> None:
     if set(data["cell"].dropna().astype(str)) != set(CELL_ORDER):
         raise ValueError("Analysis does not contain the expected four Monte Carlo cells")
 
-    plot_overview(summary, output_dir)
-    plot_gaussian_population(
-        data,
-        output_dir,
-        x_metric="illuminated_images",
-        y_metric="useful_downlinks_paper_estimate",
-        x_label="Illuminated images acquired",
-        y_label="Useful images downlinked",
-        title="Four-cell collection-delivery populations",
-        stem="mc_gaussian_performance_landscape",
-        identity_line=True,
-    )
-    plot_gaussian_population(
-        data,
-        output_dir,
-        x_metric="target_imaging_count",
-        y_metric="downlink_action_count",
-        x_label="Imaging actions",
-        y_label="Downlink actions",
-        title="Four-cell action-allocation populations",
-        stem="mc_gaussian_action_landscape",
-    )
-    plot_gaussian_population(
-        data,
-        output_dir,
-        x_metric="avg_acquisition_time_sec",
-        y_metric="acq_success_percent",
-        x_label="Mean successful acquisition time [s]",
-        y_label="Acquisition success [%]",
-        title="Four-cell acquisition-behavior populations",
-        stem="mc_gaussian_acquisition_landscape",
-    )
-    plot_gaussian_population(
-        data,
-        output_dir,
-        x_metric="umbra_smart_percent",
-        y_metric="total_reward",
-        x_label="Smart umbra decisions [%]",
-        y_label="Total reward",
-        title="Umbra effectiveness and episode return",
-        stem="mc_gaussian_umbra_reward_landscape",
-    )
+    for palette in ("viridis", "plasma_shapes"):
+        plot_overview(
+            summary,
+            output_dir,
+            palette=palette,
+            stem=f"mc_four_cell_overview_{palette}",
+        )
+        for (
+            x_metric,
+            y_metric,
+            x_label,
+            y_label,
+            title,
+            stem,
+            identity_line,
+        ) in (
+            (
+                "illuminated_images",
+                "useful_downlinks_paper_estimate",
+                "Illuminated images acquired",
+                "Useful images downlinked",
+                "Four-cell collection-delivery populations",
+                "mc_gaussian_performance_landscape",
+                True,
+            ),
+            (
+                "target_imaging_count",
+                "downlink_action_count",
+                "Imaging actions",
+                "Downlink actions",
+                "Four-cell action-allocation populations",
+                "mc_gaussian_action_landscape",
+                False,
+            ),
+            (
+                "avg_acquisition_time_sec",
+                "acq_success_percent",
+                "Mean successful acquisition time [s]",
+                "Acquisition success [%]",
+                "Four-cell acquisition-behavior populations",
+                "mc_gaussian_acquisition_landscape",
+                False,
+            ),
+            (
+                "umbra_smart_percent",
+                "total_reward",
+                "Smart umbra decisions [%]",
+                "Total reward",
+                "Umbra effectiveness and episode return",
+                "mc_gaussian_umbra_reward_landscape",
+                False,
+            ),
+        ):
+            plot_gaussian_population(
+                data,
+                output_dir,
+                x_metric=x_metric,
+                y_metric=y_metric,
+                x_label=x_label,
+                y_label=y_label,
+                title=title,
+                stem=f"{stem}_{palette}",
+                palette=palette,
+                identity_line=identity_line,
+            )
+        plot_comparison_ecdfs(
+            data,
+            output_dir,
+            palette=palette,
+            stem=f"mc_comparison_ecdfs_{palette}",
+        )
     plot_paired_reward(data, output_dir)
     plot_paired_delta_distributions(data, output_dir)
     plot_regime_mix(data, output_dir)
+    plot_policy_win_rates(data, output_dir)
     plot_latest_alpha_overview(alpha_data, output_dir)
     plot_alpha_gaussian_population(
         alpha_data,
@@ -855,7 +1162,7 @@ def main() -> None:
         x_label="Illuminated images acquired",
         y_label="Useful images downlinked",
         title="Latest 100-seed alpha-sweep outcome populations",
-        stem="alpha_sweep_gaussian_outcome_landscape_20260622",
+        stem="alpha_sweep_gaussian_outcome_landscape_plasma_20260622",
         identity_line=True,
     )
     plot_alpha_gaussian_population(
@@ -866,7 +1173,7 @@ def main() -> None:
         x_label="Imaging actions",
         y_label="Downlink actions",
         title="Latest 100-seed alpha-sweep action populations",
-        stem="alpha_sweep_gaussian_action_landscape_20260622",
+        stem="alpha_sweep_gaussian_action_landscape_plasma_20260622",
     )
     plot_alpha_gaussian_population(
         alpha_data,
@@ -876,15 +1183,21 @@ def main() -> None:
         x_label="Mean successful acquisition time [s]",
         y_label="Acquisition success fraction",
         title="Latest 100-seed alpha-sweep acquisition populations",
-        stem="alpha_sweep_gaussian_acquisition_landscape_20260622",
+        stem="alpha_sweep_gaussian_acquisition_landscape_plasma_20260622",
     )
+    plot_alpha_efficiency(alpha_data, output_dir)
+    plot_alpha_metric_heatmap(alpha_data, output_dir)
     write_readme(data, output_dir)
 
     manifest = {
         "input_root": str(input_root),
         "analysis_dir": str(analysis_dir),
         "output_dir": str(output_dir),
-        "colormap": COLORMAP,
+        "alpha_colormap": ALPHA_COLORMAP,
+        "comparison_colormaps": [
+            COMPARISON_COLORMAP,
+            COMPARISON_PLASMA_COLORMAP,
+        ],
         "cells": CELL_ORDER,
         "seed_rows": int(len(data)),
         "latest_alpha_per_seed": str(alpha_path),
