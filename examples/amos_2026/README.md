@@ -203,6 +203,43 @@ sbatch examples/amos_2026/sbatch_updated_train_polaris_96h.sh
 sbatch examples/amos_2026/sbatch_updated_train_polaris_imaging_only_96h.sh
 ```
 
+## Continue GAT Reward-Sweep Training
+
+To add another 24 hours to an already-trained AMOS full-action GAT policy, use
+one of the continuation wrappers and pass the original run/checkpoint through
+`BSK_RL_CONTINUE_FROM`. The Python trainer copies that run directory into a new
+output folder, restores from the checkpoint inside the copy, and writes all new
+checkpoints to the copy.
+
+```bash
+cd /projects/$USER/bsk_rl
+
+# Two-hour smoke test, alpha 0.1 / 10d90i
+sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<old_output>/<old_run> \
+  examples/amos_2026/sbatch_continue_polaris_gat_full_actions_10d90i_2h.sh
+
+# Two-hour smoke test, alpha 0.2 / 20d80i
+sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<old_output>/<old_run> \
+  examples/amos_2026/sbatch_continue_polaris_gat_full_actions_20d80i_2h.sh
+
+# Alpha 0.1 / 10d90i
+sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<old_output>/<old_run> \
+  examples/amos_2026/sbatch_continue_polaris_gat_full_actions_10d90i_24h.sh
+
+# Alpha 0.2 / 20d80i
+sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<old_output>/<old_run> \
+  examples/amos_2026/sbatch_continue_polaris_gat_full_actions_20d80i_24h.sh
+```
+
+`BSK_RL_CONTINUE_FROM` may point directly at a run directory, a specific
+`checkpoint_000123` directory, or a timestamped output directory containing
+exactly one run. The two-hour wrappers set `BSK_RL_TRAIN_TIMEOUT_SEC=5400`;
+the 24-hour wrappers set `BSK_RL_TRAIN_TIMEOUT_SEC=84600`. Both leave room
+before Slurm wall time so the trainer can save a final checkpoint cleanly. Keep
+the same branch, virtualenv, target-regime env vars, and reward-split wrapper as
+the original run; RLlib restore expects the same observation/action spaces and
+module config.
+
 ## GAT Reward-Sweep Monte Carlo Evaluation
 
 Use the AMOS 2026 Monte Carlo workflow to compare the full-action GAT policies

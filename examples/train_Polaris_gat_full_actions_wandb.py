@@ -168,6 +168,120 @@ def _default_ray_tmpdir() -> Path:
     return Path(f"/tmp/bskrl_{array_id}")  # local; outputs still go to ~/rllib_results/...
 
 
+def _timestamp_tag() -> str:
+    return time.strftime("%Y%m%d_%H%M%S")
+
+
+def _checkpoint_iteration(path: Path) -> int | None:
+    if not path.name.startswith("checkpoint_"):
+        return None
+    suffix = path.name.rsplit("_", 1)[-1]
+    if not suffix.isdigit():
+        return None
+    return int(suffix)
+
+
+def _numeric_checkpoints(run_directory: Path) -> list[tuple[int, Path]]:
+    checkpoints = []
+    for path in run_directory.glob("checkpoint_*"):
+        if not path.is_dir():
+            continue
+        iteration = _checkpoint_iteration(path)
+        if iteration is not None:
+            checkpoints.append((iteration, path))
+    return sorted(checkpoints, key=lambda item: item[0])
+
+
+def _latest_numeric_checkpoint(run_directory: Path) -> tuple[int, Path]:
+    checkpoints = _numeric_checkpoints(run_directory)
+    if not checkpoints:
+        raise ValueError(f"No numeric checkpoints found in {run_directory}")
+    return checkpoints[-1]
+
+
+def _resolve_continuation_source(source: str) -> dict[str, Any]:
+    """Resolve a user-provided run/checkpoint path to a concrete checkpoint."""
+    source_path = Path(source).expanduser().resolve()
+    if not source_path.exists():
+        raise FileNotFoundError(f"Continuation source does not exist: {source_path}")
+
+    if source_path.is_dir() and (
+        source_path.name.startswith("checkpoint_")
+        or (source_path / "learner_group").exists()
+    ):
+        run_directory = source_path.parent
+        checkpoint_path = source_path
+    elif source_path.is_dir() and _numeric_checkpoints(source_path):
+        run_directory = source_path
+        _, checkpoint_path = _latest_numeric_checkpoint(run_directory)
+    elif source_path.is_dir():
+        candidate_run_dirs = [
+            child
+            for child in source_path.iterdir()
+            if child.is_dir() and _numeric_checkpoints(child)
+        ]
+        if len(candidate_run_dirs) != 1:
+            raise ValueError(
+                "BSK_RL_CONTINUE_FROM must point to a run directory, checkpoint "
+                f"directory, or output directory with exactly one run. Found "
+                f"{len(candidate_run_dirs)} candidate runs in {source_path}."
+            )
+        run_directory = candidate_run_dirs[0]
+        _, checkpoint_path = _latest_numeric_checkpoint(run_directory)
+    else:
+        raise ValueError(f"Continuation source must be a directory: {source_path}")
+
+    if checkpoint_path.name == "checkpoint_best":
+        numeric_checkpoints = _numeric_checkpoints(run_directory)
+        start_iteration = numeric_checkpoints[-1][0] + 1 if numeric_checkpoints else 0
+    else:
+        checkpoint_iter = _checkpoint_iteration(checkpoint_path)
+        start_iteration = 0 if checkpoint_iter is None else checkpoint_iter + 1
+
+    return {
+        "source_path": source_path,
+        "source_run_directory": run_directory,
+        "source_checkpoint": checkpoint_path,
+        "source_checkpoint_relative": checkpoint_path.relative_to(run_directory),
+        "start_iteration": start_iteration,
+    }
+
+
+def _copy_continuation_run(
+    *,
+    continuation: dict[str, Any],
+    destination_run_directory: Path,
+    overwrite: bool = False,
+) -> dict[str, Any]:
+    """Copy an existing run directory and return the checkpoint inside the copy."""
+    source_run_directory = Path(continuation["source_run_directory"])
+    destination_run_directory = Path(destination_run_directory)
+
+    if destination_run_directory.exists():
+        if not overwrite:
+            raise FileExistsError(
+                f"Continuation destination already exists: {destination_run_directory}. "
+                "Set BSK_RL_CONTINUE_OVERWRITE_COPY=1 only if this copied run can be replaced."
+            )
+        shutil.rmtree(destination_run_directory)
+
+    destination_run_directory.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source_run_directory, destination_run_directory, symlinks=True)
+    copied_checkpoint = (
+        destination_run_directory / continuation["source_checkpoint_relative"]
+    )
+    if not copied_checkpoint.exists():
+        raise FileNotFoundError(
+            f"Copied checkpoint was not found after copy: {copied_checkpoint}"
+        )
+
+    return {
+        **continuation,
+        "copied_run_directory": destination_run_directory,
+        "copied_checkpoint": copied_checkpoint,
+    }
+
+
 def _wandb_key_path() -> Path:
     explicit = os.environ.get("BSK_RL_WANDB_KEY_PATH")
     if explicit:
@@ -568,10 +682,13 @@ def train_model(
     checkpoint_frequency: int = 1,
     checkpoints_to_keep: int = 2,
     reload_frequency: int = 500_000,
-    total_timesteps: int = 1_000_000,
+    total_timesteps: int | None = 1_000_000,
     temp_dir: str = "/tmp",
     wandb_logger=None,
     curriculum_config: dict[str, Any] | None = None,
+    restore_checkpoint_dir: Path | None = None,
+    start_iteration: int = 0,
+    timeout: float | None = None,
 ) -> None:
     os.environ["RAY_TMPDIR"] = os.environ["TMPDIR"] = temp_dir
     output_directory = Path(output_directory)
@@ -653,12 +770,20 @@ def train_model(
     )
     config.logger_config = dict(type=UnifiedLogger, logdir=run_directory)
 
-    iteration = 0
+    iteration = int(start_iteration)
     step = 0
     current_best_return = -np.inf
+    tic = time.monotonic()
 
     try:
         ppo = PPO(config)
+        if restore_checkpoint_dir is not None:
+            restore_checkpoint_dir = Path(restore_checkpoint_dir)
+            print(
+                f"[continue] restoring PPO state from {restore_checkpoint_dir}",
+                flush=True,
+            )
+            ppo.restore(str(restore_checkpoint_dir))
 
         while True:
             prev_step = step
@@ -719,7 +844,17 @@ def train_model(
                 checkpoint_path.mkdir(parents=True, exist_ok=True)
                 ppo.save_checkpoint(checkpoint_path)
 
-            if step > total_timesteps:
+            if total_timesteps is not None and step > total_timesteps:
+                break
+
+            if timeout is not None and time.monotonic() - tic >= timeout:
+                checkpoint_path.mkdir(parents=True, exist_ok=True)
+                ppo.save_checkpoint(checkpoint_path)
+                print(
+                    "[train] timeout reached; saved final checkpoint at "
+                    f"{checkpoint_path}",
+                    flush=True,
+                )
                 break
 
             if step % reload_frequency < prev_step % reload_frequency:
@@ -1450,6 +1585,18 @@ if __name__ == "__main__":
         int(batch_multiplier * n_envs),
     )  # keep train_batch_size >= RLlib's default sgd_minibatch_size
     total_timesteps = _env_int("BSK_RL_TOTAL_TIMESTEPS", default_total_timesteps)
+    continuation_source = os.environ.get("BSK_RL_CONTINUE_FROM", "").strip()
+    continuation = (
+        _resolve_continuation_source(continuation_source)
+        if continuation_source
+        else None
+    )
+    train_timeout = _env_optional_float("BSK_RL_TRAIN_TIMEOUT_SEC")
+    disable_timestep_limit = _env_bool(
+        "BSK_RL_DISABLE_TIMESTEP_LIMIT",
+        bool(continuation is not None and train_timeout is not None),
+    )
+    train_step_limit = None if disable_timestep_limit else total_timesteps
     checkpoint_frequency = _env_int(
         "BSK_RL_CHECKPOINT_FREQUENCY", default_checkpoint_frequency
     )
@@ -1484,11 +1631,26 @@ if __name__ == "__main__":
             "_restrictedResources_",
             f"_random{n_targets_min}to{n_targets_max}targets_restrictedResources_",
         )
-    model_name = f"{run_tag}.out_{job_index}"
-    output_dir = _default_output_root() / f"{run_tag}_{time.time()}"  # local: ~/rllib_results/...; cluster: /scratch/alpine/$USER/rllib_results/...
+    if continuation is None:
+        model_name = f"{run_tag}.out_{job_index}"
+        output_dir = _default_output_root() / f"{run_tag}_{time.time()}"  # local: ~/rllib_results/...; cluster: /scratch/alpine/$USER/rllib_results/...
+    else:
+        continue_suffix = os.environ.get(
+            "BSK_RL_CONTINUE_SUFFIX", f"continue_{_timestamp_tag()}"
+        )
+        source_run_name = Path(continuation["source_run_directory"]).name
+        model_name = os.environ.get(
+            "BSK_RL_CONTINUE_MODEL_NAME", f"{source_run_name}_{continue_suffix}"
+        )
+        explicit_continue_output = os.environ.get("BSK_RL_CONTINUE_OUTPUT_DIR")
+        if explicit_continue_output:
+            output_dir = Path(explicit_continue_output).expanduser()
+        else:
+            output_dir = _default_output_root() / f"{run_tag}_{continue_suffix}"
     ray_tmpdir = _default_ray_tmpdir()  # local: /tmp/bskrl_0; cluster: /tmp/bskray_${SLURM_JOB_ID}_...
     output_dir.mkdir(parents=True, exist_ok=True)
     ray_tmpdir.mkdir(parents=True, exist_ok=True)
+    run_directory = output_dir / model_name
 
     inspector_model_config = gat_model_config(n_targets_ahead)  # n_targets_ahead must match ImageRSO/observation count
     inspector_rl_module_spec = RLModuleSpec(
@@ -1537,10 +1699,35 @@ if __name__ == "__main__":
     print(f"n_envs={n_envs}; batch_size={batch_size}; torch_threads={_TORCH_THREADS}")
     print(f"Tensorboard logging: tensorboard --logdir {output_dir}")
     print(f"Ray temp dir: {ray_tmpdir}")
-    print(f"Total timesteps: {total_timesteps}")
+    print(f"Total timesteps: {train_step_limit if train_step_limit is not None else 'disabled'}")
+    if train_timeout is not None:
+        print(f"Train timeout: {train_timeout} seconds")
+    if continuation is not None:
+        print(f"Continuation source run: {continuation['source_run_directory']}")
+        print(f"Continuation source checkpoint: {continuation['source_checkpoint']}")
+        print(f"Continuation copied run: {run_directory}")
     print(f"Running job {job_index}: {job_index + 1} of {len(jobs)}")
 
     job_args = jobs[job_index]
+    continuation_copy = None
+    dry_run = _env_bool("BSK_RL_DRY_RUN", False)
+    if continuation is not None and not dry_run:
+        continuation_copy = _copy_continuation_run(
+            continuation=continuation,
+            destination_run_directory=run_directory,
+            overwrite=_env_bool("BSK_RL_CONTINUE_OVERWRITE_COPY", False),
+        )
+        print(
+            "[continue] copied original run to "
+            f"{continuation_copy['copied_run_directory']}",
+            flush=True,
+        )
+        print(
+            "[continue] will restore from copied checkpoint "
+            f"{continuation_copy['copied_checkpoint']}",
+            flush=True,
+        )
+
     run_cfg = {
         "sim": asdict(sim_cfg),
         "observation_layout": {
@@ -1628,7 +1815,10 @@ if __name__ == "__main__":
             "n_envs": n_envs,
             "batch_multiplier": batch_multiplier,
             "batch_size": batch_size,
-            "total_timesteps": total_timesteps,
+            "total_timesteps": train_step_limit,
+            "configured_total_timesteps": total_timesteps,
+            "timestep_limit_disabled": disable_timestep_limit,
+            "train_timeout_sec": train_timeout,
             "battery_life_multiplier": battery_life_multiplier,
             "image_storage_capacity_images": image_storage_capacity,
             "ray_tmpdir": str(ray_tmpdir),
@@ -1642,11 +1832,29 @@ if __name__ == "__main__":
                 "BSK_RL_WANDB_GROUP", "polaris-gat-full-actions-obs-v9"
             ),
         },
+        "continuation": None
+        if continuation is None
+        else {
+            "source_path": str(continuation["source_path"]),
+            "source_run_directory": str(continuation["source_run_directory"]),
+            "source_checkpoint": str(continuation["source_checkpoint"]),
+            "copied_run_directory": (
+                str(continuation_copy["copied_run_directory"])
+                if continuation_copy is not None
+                else str(run_directory)
+            ),
+            "copied_checkpoint": (
+                str(continuation_copy["copied_checkpoint"])
+                if continuation_copy is not None
+                else None
+            ),
+            "start_iteration": continuation["start_iteration"],
+        },
     }
     with open(output_dir / f"{model_name}_config.yaml", "w") as file:
         yaml.dump(run_cfg, file)
 
-    if _env_bool("BSK_RL_DRY_RUN", False):
+    if dry_run:
         print("Dry run requested via BSK_RL_DRY_RUN=1; configuration written.")
         raise SystemExit(0)
 
@@ -1658,11 +1866,20 @@ if __name__ == "__main__":
         inspector_rl_module_spec=inspector_rl_module_spec,
         checkpoint_frequency=checkpoint_frequency,
         checkpoints_to_keep=3,
-        total_timesteps=total_timesteps,
+        total_timesteps=train_step_limit,
         reload_frequency=500_000,
         n_envs=n_envs,
         temp_dir=str(ray_tmpdir),
         wandb_logger=wandb_logger,
         curriculum_config=curriculum_config,
+        restore_checkpoint_dir=(
+            continuation_copy["copied_checkpoint"]
+            if continuation_copy is not None
+            else None
+        ),
+        start_iteration=(
+            int(continuation["start_iteration"]) if continuation is not None else 0
+        ),
+        timeout=train_timeout,
         **job_args,
     )
