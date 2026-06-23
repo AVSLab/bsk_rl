@@ -229,6 +229,10 @@ sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<ol
 # Alpha 0.2 / 20d80i
 sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<old_output>/<old_run> \
   examples/amos_2026/sbatch_continue_polaris_gat_full_actions_20d80i_24h.sh
+
+# Final 0.0 -> 1.0 curriculum policy, held at alpha 1.0 for another 24 hours
+sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<curriculum_output>/<curriculum_run> \
+  examples/amos_2026/sbatch_continue_polaris_gat_full_actions_curriculum_final_alpha1p0_24h.sh
 ```
 
 `BSK_RL_CONTINUE_FROM` may point directly at a run directory, a specific
@@ -238,7 +242,10 @@ the 24-hour wrappers set `BSK_RL_TRAIN_TIMEOUT_SEC=84600`. Both leave room
 before Slurm wall time so the trainer can save a final checkpoint cleanly. Keep
 the same branch, virtualenv, target-regime env vars, and reward-split wrapper as
 the original run; RLlib restore expects the same observation/action spaces and
-module config.
+module config. The curriculum continuation wrapper is the intentional exception
+to keeping the reward wrapper: it restores the curriculum policy and optimizer
+state into the same GAT/PPO setup, disables the ramp, and holds the environment
+reward at its final `alpha=1.0` task for the full continuation.
 
 ## GAT Reward-Sweep Monte Carlo Evaluation
 
