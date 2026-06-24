@@ -233,6 +233,18 @@ sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<ol
 # Final 0.0 -> 1.0 curriculum policy, held at alpha 1.0 for another 24 hours
 sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<curriculum_output>/<curriculum_run> \
   examples/amos_2026/sbatch_continue_polaris_gat_full_actions_curriculum_final_alpha1p0_24h.sh
+
+# Randomized LEO/MEO/GEO mix with 100 targets
+sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<mixed_output>/<mixed_run> \
+  examples/amos_2026/sbatch_continue_polaris_gat_full_actions_10d90i_mixed_random_24h.sh
+
+# Recovery test for randomized LEO/MEO/GEO mix with 100-300 targets (200G RAM)
+sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<mixed_n300_output>/<mixed_n300_run> \
+  examples/amos_2026/sbatch_continue_polaris_gat_full_actions_10d90i_mixed_random_100to300targets_2h.sh
+
+# Full 24-hour continuation after the recovery test succeeds (200G RAM)
+sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<mixed_n300_output>/<mixed_n300_run> \
+  examples/amos_2026/sbatch_continue_polaris_gat_full_actions_10d90i_mixed_random_100to300targets_24h.sh
 ```
 
 `BSK_RL_CONTINUE_FROM` may point directly at a run directory, a specific
@@ -246,6 +258,19 @@ module config. The curriculum continuation wrapper is the intentional exception
 to keeping the reward wrapper: it restores the curriculum policy and optimizer
 state into the same GAT/PPO setup, disables the ramp, and holds the environment
 reward at its final `alpha=1.0` task for the full continuation.
+
+The randomized 100-300-target training job `28226894` ended after 1 day,
+9 hours with Slurm state `OUT_OF_MEMORY`, using all `100 GiB` requested. Its
+recovery and continuation wrappers request `200G` while preserving 32 CPUs,
+28 Ray environments, and the 4,200-step training batch. The original 48-hour
+training wrapper now also requests `200G`. Check a completed job and inspect
+the available source checkpoints with:
+
+```bash
+seff <job_id>
+sacct -j <job_id> --format=JobID,JobName,State,ExitCode,Elapsed,ReqMem,MaxRSS
+find <run_directory> -maxdepth 1 -type d -name 'checkpoint_[0-9]*' | sort -V
+```
 
 ## GAT Reward-Sweep Monte Carlo Evaluation
 

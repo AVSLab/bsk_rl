@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# 48-hour CURC training job for AMOS 2026 Polaris GAT full-action trainer.
-# Reward split: 10d90i. Target catalog: mixed LEO/MEO/GEO with randomized
-# catalog-level proportions, and active target count sampled uniformly from
-# 100 through 300 each episode. HIO/SHIO still activate at episode halfway.
-# Job 28226894 exhausted its 100G allocation, so this variant requests 200G.
+# Continue the 100-300-target mixed LEO/MEO/GEO 10d90i policy for 24 hours.
+# The original run is copied before restore/training, so it is not modified.
+# This job doubles the original memory request from 100G to 200G.
+#
 # Submit from /projects/$USER/bsk_rl with:
-#   sbatch examples/amos_2026/sbatch_train_polaris_gat_full_actions_10d90i_mixed_random_100to300targets_48h.sh
+#   sbatch --export=ALL,BSK_RL_CONTINUE_FROM=/scratch/alpine/$USER/rllib_results/<output>/<run> \
+#     examples/amos_2026/sbatch_continue_polaris_gat_full_actions_10d90i_mixed_random_100to300targets_24h.sh
 
 #SBATCH --account=ucb550_asc2
-#SBATCH --job-name=gat_10d90i_mixrand_n100to300_48h
+#SBATCH --job-name=gat_cont_mix_n300_24h
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
-#SBATCH --time=48:00:00
+#SBATCH --time=24:00:00
 #SBATCH --array=0-0
 #SBATCH --partition=amilan
 #SBATCH --mem=200G
@@ -21,9 +21,11 @@
 #SBATCH --nodes=1
 #SBATCH --output=/scratch/alpine/%u/job_output/%x_%A_%a.out
 #SBATCH --mail-type=ALL
-#SBATCH --qos=long
+#SBATCH --qos=normal
 
 set -euo pipefail
+
+: "${BSK_RL_CONTINUE_FROM:?Set BSK_RL_CONTINUE_FROM to the original 100-300-target run or checkpoint directory.}"
 
 module purge
 
@@ -57,7 +59,7 @@ export BSK_RL_WANDB_KEY_PATH=${BSK_RL_WANDB_KEY_PATH:-/projects/$USER/bsk_rl/exa
 export BSK_RL_USE_WANDB=${BSK_RL_USE_WANDB:-1}
 export BSK_RL_REQUIRE_WANDB=${BSK_RL_REQUIRE_WANDB:-1}
 export BSK_RL_WANDB_PROJECT=${BSK_RL_WANDB_PROJECT:-amos2026-bsk-rl}
-export BSK_RL_WANDB_GROUP=polaris-gat-full-actions-obs-v9-10d90i-mixed-random-100to300targets
+export BSK_RL_WANDB_GROUP=polaris-gat-full-actions-obs-v9-10d90i-mixed-random-100to300targets-continue24h
 
 export BSK_RL_DYNAMIC_PRIORITY_EVENT=${BSK_RL_DYNAMIC_PRIORITY_EVENT:-1}
 export BSK_RL_DYNAMIC_PRIORITY_EVENT_FRACTION=${BSK_RL_DYNAMIC_PRIORITY_EVENT_FRACTION:-0.5}
@@ -78,6 +80,9 @@ export BSK_RL_REWARD_SPLIT_TAG=10d90iMixedRandom100to300Targets
 export BSK_RL_ALPHA_TAG=alpha0p1_mixedRandom100to300Targets
 export BSK_RL_BATCH_MULTIPLIER=${BSK_RL_BATCH_MULTIPLIER:-150}
 export BSK_RL_TOTAL_TIMESTEPS=${BSK_RL_TOTAL_TIMESTEPS:-20000000}
+export BSK_RL_DISABLE_TIMESTEP_LIMIT=${BSK_RL_DISABLE_TIMESTEP_LIMIT:-1}
+export BSK_RL_TRAIN_TIMEOUT_SEC=${BSK_RL_TRAIN_TIMEOUT_SEC:-84600}
+export BSK_RL_CONTINUE_SUFFIX=${BSK_RL_CONTINUE_SUFFIX:-continue24h_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID:-0}}
 export BSK_RL_CHECKPOINT_FREQUENCY=${BSK_RL_CHECKPOINT_FREQUENCY:-3}
 export BSK_RL_TORCH_THREADS=${BSK_RL_TORCH_THREADS:-11}
 export BSK_RL_BATTERY_LIFE_MULTIPLIER=${BSK_RL_BATTERY_LIFE_MULTIPLIER:-1}
@@ -92,6 +97,7 @@ hostname
 echo "SLURM_JOB_ID=${SLURM_JOB_ID:-}"
 echo "SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-}"
 echo "SLURM_MEM_PER_NODE=${SLURM_MEM_PER_NODE:-}"
+echo "BSK_RL_CONTINUE_FROM=$BSK_RL_CONTINUE_FROM"
 echo "branch: $(git rev-parse --abbrev-ref HEAD)"
 echo "commit: $(git rev-parse --short HEAD)"
 git status --short --untracked-files=no
@@ -103,9 +109,7 @@ strings "$(gcc -print-file-name=libstdc++.so.6)" | grep GLIBCXX_3.4.29 || true
 python3 -c "import bsk_rl; import bsk_rl.sim.simulator; print('bsk_rl import ok')"
 python3 -c "import wandb; print('wandb import ok')"
 
-echo "Running AMOS 2026 Polaris GAT full-action obs-v9 10d90i mixed-random 100-300 target 48h + W&B training script"
-echo "Target mix sampling: LEO=x~U(0,1), MEO=y~U(0,1-x), GEO=1-x-y"
-echo "Active target count sampling: n_targets~UniformInteger[100,300]"
-python3 -u examples/train_Polaris_gat_full_actions_10d90i_mixed_random_100to300targets_wandb.py
+echo "Continuing copied 100-300-target mixed policy for 24h with 200G RAM"
+python3 -u examples/train_Polaris_gat_full_actions_wandb.py
 
 echo "== End of Job =="
