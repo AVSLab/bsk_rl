@@ -10,6 +10,8 @@ Development - |version|
   corrupted ``bisect``-based opportunity lookups. See issue #205.
 * Fix a bug where taking the charge action would not work properly because of a missing message 
   subscription in the :class:`~bsk_rl.sim.fsw.BasicFSWModel`.
+* Update `Cloud Environment with Re-imaging <examples/cloud_environment_with_reimaging.ipynb>`_ example
+  adding a new network architecture and example heuristics.
 
 Version 1.3.0
 -------------
