@@ -237,6 +237,31 @@ class TestAccessSatellite:
         )
         assert expected_window in sat.opportunities_dict()[tgt]
 
+    def test_add_window_merge_keeps_sorted(self):
+        # Regression test for issue #205: extending a window across a generation
+        # seam via the merge path must keep opportunities sorted by close time.
+        sat = self.make_sat()
+        # Segment 1 left tgt0 truncated at the seam (close time 30).
+        sat.opportunities = [
+            dict(object=self.tgt0, window=(5.0, 30.0), type="target"),
+        ]
+        # Segment 2 generates windows starting at the seam (merge_time=30).
+        # Insert opportunities that close after the seam but before tgt0's
+        # true close time, then extend tgt0 across the seam.
+        sat._add_window(
+            self.tgt1, (31.0, 35.0), merge_time=30.0, type="target", r_LP_P=np.zeros(3)
+        )
+        sat._add_window(
+            self.tgt2, (33.0, 40.0), merge_time=30.0, type="target", r_LP_P=np.zeros(3)
+        )
+        sat._add_window(
+            self.tgt0, (30.0, 50.0), merge_time=30.0, type="target", r_LP_P=np.zeros(3)
+        )
+        close_times = [opp["window"][1] for opp in sat.opportunities]
+        assert close_times == sorted(close_times)
+        # The merge still extends the original tgt0 window rather than duplicating it.
+        assert sat.opportunities_dict()[self.tgt0] == [(5.0, 50.0)]
+
     opportunities = [
         dict(object="downObj1", window=(10, 20), type="downlink"),
         dict(object="tgtObj1", window=(20, 30), type="target"),
