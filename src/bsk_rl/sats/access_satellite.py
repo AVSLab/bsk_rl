@@ -294,7 +294,16 @@ class AccessSatellite(Satellite):
                     and opportunity["object"] == object
                     and opportunity["window"][1] == new_window[0]
                 ):
+                    # Extending the close time changes the opportunity's sort
+                    # position, so re-insert it to keep opportunities ordered by
+                    # close time (see issue #205).
+                    self.opportunities.remove(opportunity)
                     opportunity["window"] = (opportunity["window"][0], new_window[1])
+                    bisect.insort(
+                        self.opportunities,
+                        opportunity,
+                        key=lambda x: x["window"][1],
+                    )
                     return
         bisect.insort(
             self.opportunities,
