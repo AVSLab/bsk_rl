@@ -48,6 +48,19 @@ jobs:
       - name: Run pytest
         run: pytest -v -s -ra --tb=long -o log_cli=true -o log_level=DEBUG
 
+  run-benchmarks:
+    name: Smoke Test Benchmarks
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/build
+        with:
+          python-version: 3.11
+          pip-options: all,rllib
+      - name: Smoke test benchmark envs
+        run: python smoke_test.py
+        working-directory: benchmarks
+
   check-doc-build:
     name: Test Documentation Build
     runs-on: ubuntu-latest
