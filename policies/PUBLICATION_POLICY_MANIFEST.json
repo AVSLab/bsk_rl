@@ -1,0 +1,17 @@
+{
+  "alpha_sweep_policy_count": 11,
+  "alpha_sweep_labels": [
+    "0d100i",
+    "10d90i",
+    "20d80i",
+    "30d70i",
+    "40d60i",
+    "50d50i",
+    "60d40i",
+    "70d30i",
+    "80d20i",
+    "90d10i",
+    "100d00i"
+  ],
+  "mixed_policy": "policies/breckenridge2026_mixed_10d90i/checkpoint_000160"
+}

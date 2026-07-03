@@ -1,0 +1,4 @@
+extend-include = ["*.ipynb"]
+
+[lint.per-file-ignores]
+"docs/build/*" = ["D", "W", "F"]

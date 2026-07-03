@@ -1,0 +1,161 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.cfg
+!.isort.cfg
+*.pkl
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+bin/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Pickles
+*.pkl
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PDFs and Images
+*.jpg
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# dotenv
+.env
+
+# virtualenv
+.venv
+venv/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+\.idea/
+
+# saved models
+*.zip
+
+# results file
+results/
+bsk_rl/results/
+
+# .DS_Store
+.DS_Store
+
+# data files
+src/bsk_rl/_dat/simplemaps_worldcities/
+
+# Sphinx documentation
+/docs/build/*
+/docs/source/api_reference/*
+/docs/source/examples/*
+
+# executed ipynb cache
+!/docs/build/doctrees
+docs/build/doctrees/*
+!/docs/build/doctrees/nbsphinx
+!/docs/build/doctrees/nbsphinx/*
+*.npy
+*.pdf
+data/*.npy
+output
+plot_animation.py
+animation.gif
+interactive_plot.py
+animation.mp4
+random
+*.png
+examples/AMOS_DATA
+examples/data
+examples/batch_results
+examples/plots
+utils.py
+test_sat.py
+hooks_template.py
+copy_
+batch_policy_evaluation*.py
+copy_*.py
+batch_heuristic_evaluation*.py
+env_wrappers.py
+updated_batch_policy_evaluation.py
+*.json
+*.csv
+*.npz
+!policies/**/*.pkl
+!policies/**/*.json
+!policies/**/*.csv

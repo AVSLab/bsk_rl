@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bsk_rl"
+version = "1.1.5"
+authors = [
+    { name = "Adam Herrmann", email = "adam.herrmann@colorado.edu" },
+    { name = "Mark Stephenson", email = "mark.a.stephenson@colorado.edu" },
+]
+description = "RL environments and tools for spacecraft autonomy research, built on Basilisk. Developed by the AVS Lab."
+readme = "README.md"
+requires-python = ">=3.10.0"
+license = { text = "MIT" }
+dependencies = [
+    "Deprecated",
+    "gymnasium",
+    "numpy",
+    "pandas",
+    "pettingzoo",
+    "pytest==7.3.1",
+    "pytest-cov",
+    "pytest-repeat",
+    "requests",
+    "ruff>=0.1.9",
+    "scipy",
+]
+
+[project.optional-dependencies]
+docs = ["ipykernel", "ipywidgets", "nbdime", "nbsphinx", "sphinx-rtd-theme", 'sphinxcontrib-youtube']
+rllib = ["dm_tree", "pyarrow", "ray[rllib]==2.35.0", "scikit-image", "torch", "typer"]
+
+[project.scripts]
+finish_install = "bsk_rl.finish_install:pck_install"

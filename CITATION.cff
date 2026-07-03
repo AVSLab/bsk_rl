@@ -1,0 +1,63 @@
+cff-version: 1.2.0
+title: >-
+  BSK-RL: Modular, High-Fidelity Reinforcement Learning
+  Environments for Spacecraft Tasking
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Mark
+    family-names: Stephenson
+    email: Mark.A.Stephenson@colorado.edu
+    affiliation: 'University of Colorado, Boulder'
+    orcid: 'https://orcid.org/0009-0004-3438-8127'
+  - given-names: Hanspeter
+    family-names: Schaub
+    orcid: 'https://orcid.org/0000-0003-0002-6035'
+    affiliation: 'University of Colorado, Boulder'
+    email: Hanspeter.Schaub@colorado.edu
+identifiers:
+  - type: url
+    value: 'https://hanspeterschaub.info/Papers/Stephenson2024c.pdf'
+repository-code: 'https://github.com/AVSLab/bsk_rl/'
+url: 'https://avslab.github.io/bsk_rl/'
+abstract: >-
+  Reinforcement learning (RL) is a highly adaptable
+  framework for generating autonomous agents across a wide
+  domain of problems. While RL has been successfully applied
+  to highly complex, real-world systems, a significant
+  amount of the literature studies abstractions and
+  idealized versions of problems. This is especially the
+  case for the field of spacecraft tasking, in which even
+  traditional preplanning approaches tend to use highly
+  simplified models of spacecraft dynamics and operations.
+  When simplified methods are tested in a full-fidelity
+  simulation, they often lead to conservative solutions that
+  are suboptimal or aggressive solutions that are
+  infeasible. As a result, there is a need for a
+  high-fidelity spacecraft simulation environment to
+  evaluate RL-based and other tasking algorithms. This paper
+  introduces BSK-RL, an open-source Python package for
+  creating and customizing reinforcement learning
+  environments for spacecraft tasking problems. It combines
+  Basilisk --- a high-speed and high-fidelity spacecraft
+  simulation framework --- with abstractions of satellite
+  tasks and operational objectives within the standard
+  Gymnasium API wrapper for RL environments. The package is
+  designed to meet the needs of RL and spacecraft operations
+  researchers: Environment parameters are easily
+  reproducible, customizable, and randomizable. Environments
+  are highly modular: satellite state and action spaces can
+  be specified, mission objectives and rewards can be
+  defined, and the satellite dynamics and flight software
+  can be configured, implicitly introducing operational
+  limitations and safety constraints. Heterogeneous
+  multi-agent environments can be created for more complex
+  mission scenarios that consider communication and
+  collaboration. Training and deployment using the package
+  are demonstrated for an Earth-observing satellite with
+  resource constraints.
+license: MIT
+version: 1.0.1
+date-released: '2024-08-27'
