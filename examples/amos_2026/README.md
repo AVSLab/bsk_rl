@@ -359,6 +359,23 @@ BSK_RL_MC_REFRESH_MANIFEST=1 \
     bash examples/amos_2026/submit_gat_reward_sweep_mc_block.sh 0
 ```
 
+To evaluate the final `0.0 -> 1.0` curriculum policy on seeds `0..99` using
+the same 200-target, 45,000-second MC setup, submit the dedicated custom-policy
+campaign. It freezes the latest checkpoint from the curriculum run into a
+manifest and records plotting metadata with `alpha=1.0` and color `#5BC5DB`:
+
+```bash
+cd /projects/$USER/bsk_rl
+git pull --ff-only origin amos-2026-space-imaging
+bash examples/amos_2026/submit_gat_curriculum_alpha1p0_mc_200targets_45000s_0to99.sh
+```
+
+If you want those curriculum seed folders to live directly under an existing
+MC output root for later combined plotting, set `BSK_RL_MC_OUTPUT_ROOT` before
+submitting. To evaluate a different curriculum-derived copy later, set
+`BSK_RL_MC_CURRICULUM_FROM` to that run or checkpoint and optionally set a new
+`BSK_RL_MC_CURRICULUM_TAG`.
+
 Results are organized below:
 
 ```text

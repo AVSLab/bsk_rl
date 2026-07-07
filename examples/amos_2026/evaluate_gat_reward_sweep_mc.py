@@ -45,6 +45,18 @@ DEFAULT_EVALUATION_REWARD_MIX = "100d00i"
 DEFAULT_SEEDS_PER_BLOCK = 10
 
 
+def standard_policy_alpha(tag: str) -> float:
+    match = re.fullmatch(r"(\d+)d(\d+)i", tag)
+    if not match:
+        raise ValueError(f"Cannot parse standard reward-mix tag as alpha: {tag}")
+    downlink_weight = float(match.group(1))
+    imaging_weight = float(match.group(2))
+    total = downlink_weight + imaging_weight
+    if total <= 0:
+        raise ValueError(f"Invalid reward-mix tag: {tag}")
+    return downlink_weight / total
+
+
 def timestamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -67,21 +79,25 @@ def checkpoint_iteration(path: Path) -> int:
         return -1
 
 
+def is_valid_numeric_checkpoint(path: Path) -> bool:
+    module_dir = path / "learner_group" / "learner" / "rl_module" / "inspector"
+    required_module_files = (
+        module_dir / "module_state.pt",
+        module_dir / "class_and_ctor_args.pkl",
+        module_dir / "metadata.json",
+    )
+    return (
+        path.is_dir()
+        and module_dir.is_dir()
+        and all(file.is_file() for file in required_module_files)
+        and checkpoint_iteration(path) >= 0
+    )
+
+
 def valid_numeric_checkpoints(model_dir: Path) -> list[Path]:
     checkpoints = []
     for path in model_dir.glob("checkpoint_[0-9]*"):
-        module_dir = path / "learner_group" / "learner" / "rl_module" / "inspector"
-        required_module_files = (
-            module_dir / "module_state.pt",
-            module_dir / "class_and_ctor_args.pkl",
-            module_dir / "metadata.json",
-        )
-        if (
-            path.is_dir()
-            and module_dir.is_dir()
-            and all(file.is_file() for file in required_module_files)
-            and checkpoint_iteration(path) >= 0
-        ):
+        if is_valid_numeric_checkpoint(path):
             checkpoints.append(path)
     return sorted(checkpoints, key=checkpoint_iteration)
 
@@ -133,10 +149,117 @@ def latest_checkpoint_for_tag(policy_root: Path, tag: str) -> dict[str, Any]:
         "model_dir": str(model_dir.resolve()),
         "checkpoint_dir": str(checkpoint.resolve()),
         "checkpoint_iteration": iteration,
+        "alpha": standard_policy_alpha(tag),
+        "label": tag,
+        "custom": False,
     }
 
 
-def parse_policy_tags(raw_value: str | None) -> tuple[str, ...]:
+def read_json_or_path(raw_value: str | None) -> Any:
+    if raw_value is None or raw_value.strip() == "":
+        return {}
+    text = raw_value.strip()
+    if text.startswith("@"):
+        return json.loads(Path(text[1:]).expanduser().read_text())
+    if text[0] not in "[{":
+        possible_path = Path(text).expanduser()
+        if possible_path.exists():
+            return json.loads(possible_path.read_text())
+    return json.loads(text)
+
+
+def parse_custom_policies(raw_value: str | None) -> dict[str, dict[str, Any]]:
+    payload = read_json_or_path(raw_value)
+    if not payload:
+        return {}
+    if isinstance(payload, dict) and "policies" in payload:
+        payload = payload["policies"]
+    if isinstance(payload, list):
+        payload = {str(item["tag"]): item for item in payload}
+    if not isinstance(payload, dict):
+        raise ValueError("--custom-policies-json must be a JSON object or list")
+
+    custom_policies: dict[str, dict[str, Any]] = {}
+    for tag, spec in payload.items():
+        tag = str(tag)
+        if tag in ALL_POLICY_TAGS:
+            raise ValueError(
+                f"Custom policy tag {tag!r} collides with a standard alpha tag."
+            )
+        if isinstance(spec, str):
+            spec = {"checkpoint_dir": spec}
+        if not isinstance(spec, dict):
+            raise ValueError(f"Custom policy {tag!r} must be an object or path string")
+        custom_policies[tag] = dict(spec)
+    return custom_policies
+
+
+def latest_checkpoint_from_path(path: Path) -> tuple[Path, Path]:
+    path = path.expanduser().resolve()
+    if is_valid_numeric_checkpoint(path):
+        return path.parent, path
+
+    if not path.is_dir():
+        raise FileNotFoundError(f"Custom policy path does not exist: {path}")
+
+    checkpoints = valid_numeric_checkpoints(path)
+    if checkpoints:
+        return path, checkpoints[-1]
+
+    candidates = []
+    for model_dir in path.glob("*.out*"):
+        if not model_dir.is_dir():
+            continue
+        checkpoints = valid_numeric_checkpoints(model_dir)
+        if checkpoints:
+            checkpoint = checkpoints[-1]
+            candidates.append(
+                (
+                    checkpoint.stat().st_mtime,
+                    checkpoint_iteration(checkpoint),
+                    model_dir,
+                    checkpoint,
+                )
+            )
+    if candidates:
+        _, _, model_dir, checkpoint = max(candidates)
+        return model_dir, checkpoint
+
+    raise FileNotFoundError(
+        f"No valid RLlib checkpoint found at or one level below {path}"
+    )
+
+
+def custom_policy_from_spec(tag: str, spec: dict[str, Any]) -> dict[str, Any]:
+    raw_path = spec.get("checkpoint_dir") or spec.get("model_dir") or spec.get("run_dir")
+    if raw_path is None:
+        raise ValueError(
+            f"Custom policy {tag!r} needs checkpoint_dir, model_dir, or run_dir."
+        )
+    model_dir, checkpoint = latest_checkpoint_from_path(Path(str(raw_path)))
+    run_dir = model_dir.parent
+    policy: dict[str, Any] = {
+        "tag": tag,
+        "run_dir": str(run_dir.resolve()),
+        "model_dir": str(model_dir.resolve()),
+        "checkpoint_dir": str(checkpoint.resolve()),
+        "checkpoint_iteration": checkpoint_iteration(checkpoint),
+        "custom": True,
+    }
+    for field in ("alpha", "color", "label", "policy_name"):
+        if field in spec and spec[field] is not None:
+            policy[field] = spec[field]
+    if "label" not in policy:
+        policy["label"] = tag
+    return policy
+
+
+def parse_policy_tags(
+    raw_value: str | None,
+    custom_policy_tags: tuple[str, ...] = (),
+    *,
+    allow_custom: bool = False,
+) -> tuple[str, ...]:
     if raw_value is None or raw_value.strip() == "":
         return DEFAULT_POLICY_TAGS
     tags = tuple(
@@ -146,19 +269,40 @@ def parse_policy_tags(raw_value: str | None) -> tuple[str, ...]:
     )
     if not tags:
         raise ValueError("Policy tag list cannot be empty.")
-    unknown = [tag for tag in tags if tag not in ALL_POLICY_TAGS]
+    allowed_custom = set(custom_policy_tags)
+    unknown = [
+        tag
+        for tag in tags
+        if tag not in ALL_POLICY_TAGS and tag not in allowed_custom
+    ]
     if unknown:
-        raise ValueError(f"Unknown policy tags: {unknown}. Known tags: {ALL_POLICY_TAGS}")
+        if not allow_custom:
+            raise ValueError(
+                f"Unknown policy tags: {unknown}. Known standard tags: "
+                f"{ALL_POLICY_TAGS}. Pass --custom-policies-json for non-sweep "
+                "policies such as curriculum checkpoints."
+            )
     duplicates = sorted({tag for tag in tags if tags.count(tag) > 1})
     if duplicates:
         raise ValueError(f"Duplicate policy tags are not allowed: {duplicates}")
     return tags
 
 
-def build_manifest(policy_root: Path, policy_tags: tuple[str, ...]) -> dict[str, Any]:
-    policies = {
-        tag: latest_checkpoint_for_tag(policy_root, tag) for tag in policy_tags
-    }
+def build_manifest(
+    policy_root: Path,
+    policy_tags: tuple[str, ...],
+    custom_policies: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    policies = {}
+    for tag in policy_tags:
+        if tag in custom_policies:
+            policies[tag] = custom_policy_from_spec(tag, custom_policies[tag])
+        elif tag in ALL_POLICY_TAGS:
+            policies[tag] = latest_checkpoint_for_tag(policy_root, tag)
+        else:
+            raise ValueError(
+                f"Policy tag {tag!r} is not a standard tag and has no custom spec."
+            )
     return {
         "schema_version": 1,
         "created_at_utc": timestamp(),
@@ -168,6 +312,7 @@ def build_manifest(policy_root: Path, policy_tags: tuple[str, ...]) -> dict[str,
         "obs_v": 9,
         "policy_layout": "gat_full",
         "policy_tags": list(policy_tags),
+        "custom_policy_tags": sorted(custom_policies),
         "policies": policies,
     }
 
@@ -314,6 +459,14 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--custom-policies-json",
+        default=os.environ.get("BSK_RL_MC_CUSTOM_POLICIES_JSON", ""),
+        help=(
+            "JSON string, JSON path, or @JSON_PATH mapping custom policy tags to "
+            "checkpoint/model/run paths plus optional alpha/color/label metadata."
+        ),
+    )
+    parser.add_argument(
         "--output-root",
         type=Path,
         default=Path(os.environ.get("BSK_RL_MC_OUTPUT_ROOT", default_output_root)),
@@ -447,12 +600,17 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    policy_tags = parse_policy_tags(args.policy_tags)
+    custom_policies = parse_custom_policies(args.custom_policies_json)
+    policy_tags = parse_policy_tags(
+        args.policy_tags,
+        tuple(custom_policies),
+        allow_custom=args.manifest is not None,
+    )
     if args.seeds_per_block <= 0:
         raise ValueError("--seeds-per-block must be positive")
 
     if args.write_manifest:
-        manifest = build_manifest(args.policy_root, policy_tags)
+        manifest = build_manifest(args.policy_root, policy_tags, custom_policies)
         atomic_write_json(args.write_manifest, manifest)
         print(f"Wrote frozen checkpoint manifest: {args.write_manifest}")
         for tag in policy_tags:
@@ -506,7 +664,9 @@ def main() -> int:
     status_path = seed_dir / "mc_status.json"
     seed_dir.mkdir(parents=True, exist_ok=True)
 
-    policy_name = f"amos2026_mc_GAT_fullActions_{policy_tag}_obs_v9"
+    policy_name = policy.get(
+        "policy_name", f"amos2026_mc_GAT_fullActions_{policy_tag}_obs_v9"
+    )
     command = [
         args.python,
         "-u",
