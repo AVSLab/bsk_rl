@@ -241,9 +241,15 @@ class TestAccessSatellite:
         # Regression test for issue #205: extending a window across a generation
         # seam via the merge path must keep opportunities sorted by close time.
         sat = self.make_sat()
-        # Segment 1 left tgt0 truncated at the seam (close time 30).
+        # Segment 1 left tgt0 truncated at the seam (close time 30). Seed with
+        # r_LP_P as a numpy array to match how _add_window stores opportunities.
         sat.opportunities = [
-            dict(object=self.tgt0, window=(5.0, 30.0), type="target"),
+            dict(
+                object=self.tgt0,
+                window=(5.0, 30.0),
+                type="target",
+                r_LP_P=np.zeros(3),
+            ),
         ]
         # Segment 2 generates windows starting at the seam (merge_time=30).
         # Insert opportunities that close after the seam but before tgt0's

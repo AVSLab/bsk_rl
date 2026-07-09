@@ -5,6 +5,10 @@ Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
 
+* Fix a bug where extending an access opportunity window across a generation seam
+  could leave the satellite's ``opportunities`` list out of close-time order, which
+  corrupted ``bisect``-based opportunity lookups. See issue #205.
+
 Version 1.3.0
 -------------
 *Release Date: May. 19, 2026*

@@ -288,7 +288,7 @@ class AccessSatellite(Satellite):
                 check all windows for merges.
         """
         if new_window[0] == merge_time or merge_time is None:
-            for opportunity in self.opportunities:
+            for i, opportunity in enumerate(self.opportunities):
                 if (
                     opportunity["type"] == type
                     and opportunity["object"] == object
@@ -296,8 +296,11 @@ class AccessSatellite(Satellite):
                 ):
                     # Extending the close time changes the opportunity's sort
                     # position, so re-insert it to keep opportunities ordered by
-                    # close time (see issue #205).
-                    self.opportunities.remove(opportunity)
+                    # close time (see issue #205). Remove by index rather than
+                    # value: opportunity dicts hold r_LP_P as a numpy array, so
+                    # list.remove would compare arrays and raise on their
+                    # ambiguous truth value.
+                    del self.opportunities[i]
                     opportunity["window"] = (opportunity["window"][0], new_window[1])
                     bisect.insort(
                         self.opportunities,
