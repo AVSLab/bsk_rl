@@ -431,6 +431,9 @@ class BasicFSWModel(FSWModel):
             messaging.AttGuidMsg_C_addAuthor(
                 self.sunPoint.attGuidOutMsg, self.fsw.attGuidMsg
             )
+            messaging.AttRefMsg_C_addAuthor(
+                self.sunPoint.attRefOutMsg, self.fsw.attRefMsg
+            )
 
             self._add_model_to_task(self.sunPoint, priority=1200)
 
