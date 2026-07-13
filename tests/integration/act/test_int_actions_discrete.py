@@ -106,11 +106,36 @@ class TestChargingAction:
         disable_env_checker=True,
     )
 
+    @staticmethod
+    def _solar_incidence_cosine(satellite):
+        dynamics = satellite.dynamics
+        sun_position_N = np.asarray(
+            dynamics.world.gravFactory.spiceObject.planetStateOutMsgs[
+                dynamics.world.sun_index
+            ]
+            .read()
+            .PositionVector
+        )
+        sun_direction_N = sun_position_N - np.asarray(dynamics.r_BN_N)
+        sun_direction_N /= np.linalg.norm(sun_direction_N)
+
+        panel_normal_B = np.asarray(dynamics.solarPanel.nHat_B).reshape(3)
+        panel_normal_N = dynamics.BN.T @ panel_normal_B
+        return np.clip(np.dot(panel_normal_N, sun_direction_N), -1.0, 1.0)
+
+    @pytest.mark.repeat(5)
     def test_charging_action(self):
         self.env.reset()
         init_charge = self.env.unwrapped.satellite.dynamics.battery_charge
         self.env.step(0)  # Charge
         assert self.env.unwrapped.satellite.dynamics.battery_charge > init_charge
+
+    @pytest.mark.repeat(5)
+    def test_charging_action_sun_alignment(self):
+        self.env.reset()
+        self.env.step(0)  # Charge
+        incidence_cosine = self._solar_incidence_cosine(self.env.unwrapped.satellite)
+        assert incidence_cosine == approx(1.0, abs=1e-3)
 
 
 class TestDesatAction:
