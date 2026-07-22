@@ -58,7 +58,7 @@ jobs:
           python-version: 3.11
           pip-options: all,rllib
       - name: Smoke test benchmark envs
-        run: python smoke_test.py
+        run: pytest -v benchmark_smoke_tests.py
         working-directory: benchmarks
 
   check-doc-build:
