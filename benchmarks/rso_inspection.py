@@ -182,7 +182,7 @@ def satellite_data_callback(env, satellite):
         data["collision"] = not satellite.dynamics.conjunction_valid()
         data["out_of_range"] = not satellite.dynamics.range_valid()
         data["fuel_remaining"] = satellite.fsw.fuel_remaining()
-        chief = [sat for sat in env.satellites if sat.name == "RSO"][0]
+        chief = next(sat for sat in env.satellites if sat.name == "RSO")
         data["distance_to_rso"] = np.linalg.norm(
             np.array(satellite.dynamics.r_BN_N) - np.array(chief.dynamics.r_BN_N)
         )
@@ -198,7 +198,7 @@ def sat_arg_randomizer(satellites):
     chief_orbit = random_orbit(a=a, e=e)
 
     inspectors = [sat for sat in satellites if "Inspector" in sat.name]
-    rso = [satellite for satellite in satellites if satellite.name == "RSO"][0]
+    rso = next(satellite for satellite in satellites if satellite.name == "RSO")
 
     # Generate the inspector initial states.
     args = {}
