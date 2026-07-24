@@ -13,6 +13,7 @@ Development - |version|
 * Update `Cloud Environment with Re-imaging <examples/cloud_environment_with_reimaging.ipynb>`_ example
   adding a new network architecture and example heuristics.
 * Add a CI smoke test that builds and steps each benchmark environment. See issue #340.
+* Update files for compatibility with Ruff 0.16.0's new default lint rules, excluding C408.
 
 Version 1.3.0
 -------------
