@@ -91,7 +91,7 @@ class TestImagingDynModelStorage:
         terminated = False
         truncated = False
         while not terminated and not truncated:
-            observation, reward, terminated, truncated, info = env.step(0)
+            _observation, _reward, terminated, truncated, _info = env.step(0)
 
         assert env.unwrapped.satellite.dynamics.storage_level < initial_storage
 

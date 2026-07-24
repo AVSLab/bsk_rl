@@ -114,9 +114,9 @@ parallel_meta_env = ConstellationTasking(
 def test_reproducibility(env):
     actions = [env.action_space.sample() for _ in range(1000)]
     reward_sum_1 = 0
-    observation_1, info = env.reset(seed=0)
+    observation_1, _ = env.reset(seed=0)
     for action in actions:
-        observation, reward, terminated, truncated, info = env.step(action)
+        _, reward, terminated, truncated, _ = env.step(action)
         reward_sum_1 += reward
         if truncated or terminated:
             break
@@ -124,12 +124,12 @@ def test_reproducibility(env):
     truncated = False
     terminated = False
     reward_sum_2 = 0
-    observation_2, info = env.reset(seed=0)
+    observation_2, _ = env.reset(seed=0)
     for o1, o2 in zip(observation_1, observation_2):
         np.testing.assert_allclose(o1, o2)
 
     for action in actions:
-        observation, reward, terminated, truncated, info = env.step(action)
+        _observation, reward, terminated, truncated, _info = env.step(action)
         reward_sum_2 += reward
         if truncated or terminated:
             break

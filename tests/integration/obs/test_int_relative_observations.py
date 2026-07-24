@@ -45,5 +45,5 @@ class TestRelProperties:
     )
 
     def test_relative_observation(self):
-        observation, info = self.env.reset()
+        observation, _info = self.env.reset()
         assert np.linalg.norm(observation["Deputy"]) == approx(100.0 * 1e3)

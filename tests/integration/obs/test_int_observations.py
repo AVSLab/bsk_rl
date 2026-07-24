@@ -41,7 +41,7 @@ class TestComposedState:
     )
 
     def test_normd_property_state(self):
-        observation, info = self.env.reset()
+        observation, _info = self.env.reset()
         assert observation[0] == 0.0  # Timed observation should be first
         self.env.unwrapped.satellite.observation_builder.obs_type = dict
         eclipse = self.env.unwrapped.satellite.get_obs()["eclipse"]
@@ -82,11 +82,11 @@ class TestSatProperties:
     )
 
     def test_normd_property_state(self):
-        observation, info = self.env.reset()
+        observation, _ = self.env.reset()
         assert np.linalg.norm(observation[0:3]) == approx(7000.0 * 1e3)
         assert np.linalg.norm(observation[3:6]) == approx(1.0)
         assert observation[6] == approx(45)
-        observation, reward, terminated, truncated, info = self.env.step(0)
+        observation, _reward, _terminated, _truncated, _info = self.env.step(0)
         assert observation[6] == approx(45)
 
 
@@ -112,9 +112,9 @@ class TestTime:
     )
 
     def test_normd_property_state(self):
-        observation, info = self.env.reset()
+        observation, _ = self.env.reset()
         assert observation[0] == 0.0
-        observation, reward, terminated, truncated, info = self.env.step(0)
+        observation, _reward, _terminated, _truncated, _info = self.env.step(0)
         assert observation[0] == 0.1
 
 
@@ -143,7 +143,7 @@ class TestOpportunityProperties:
     )
 
     def test_target_state(self):
-        observation, info = self.env.reset()
+        observation, _info = self.env.reset()
         assert "target_1" in observation["target"]
         assert "priority" in observation["target"]["target_1"]
 
@@ -171,8 +171,8 @@ class TestEclipse:
     )
 
     def test_eclipse_state(self):
-        observation1, info = self.env.reset()
-        observation2, reward, terminated, truncated, info = self.env.step(0)
+        observation1, _ = self.env.reset()
+        observation2, _reward, _terminated, _truncated, _info = self.env.step(0)
         assert (observation2[0] - observation1[0]) < 0.05
         assert (observation2[1] - observation1[1]) < 0.05
 
@@ -208,7 +208,7 @@ class TestGroundStationProperties:
     )
 
     def test_ground_station_state(self):
-        observation, info = self.env.reset()
+        observation, _info = self.env.reset()
         assert sum(observation) > 0  # Check that there are downlink opportunities
 
 
@@ -240,7 +240,7 @@ class TestResourceRewardWeight:
     )
 
     def test_resource_reward_weight(self):
-        observation, info = self.env.reset()
-        observation, reward, terminated, truncated, info = self.env.step(0)
+        observation, _ = self.env.reset()
+        observation, reward, _terminated, _truncated, _info = self.env.step(0)
         assert reward == 1.0 + 10.0
         assert (observation["resource_reward_weight"] == [0.1, 1.0]).all()
