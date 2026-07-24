@@ -79,7 +79,7 @@ class TestAccessSatellite:
             r_BP_P=MagicMock(
                 x=np.arange(0, 100, 2),
                 y=np.array([[t - 50.0, 0.0, 2.0] for t in np.arange(0, 100, 2)]),
-                side_effect=(  # noqa: E731
+                side_effect=(
                     lambda t: (
                         np.array([[ti - 50.0, 0.0, 2.0] for ti in t])
                         if isinstance(t, Iterable)
@@ -107,7 +107,7 @@ class TestAccessSatellite:
         )
 
     def test_find_elevation_roots(self):
-        interp = lambda t: (  # noqa: E731
+        interp = lambda t: (
             np.array([[ti, 0.0, 2.0] for ti in t])
             if isinstance(t, Iterable)
             else np.array([t, 0.0, 2.0])
