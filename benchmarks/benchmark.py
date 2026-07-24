@@ -64,10 +64,12 @@ def create_new_model(
     module_specs,
     num_env_runners=1,
     use_async_connectors=False,
-    training_args={},
+    training_args=None,
     temp_dir="/tmp",
 ):
     """Configure a PPO model for training with sMDP discounting and asynchronous multiagent actions."""
+
+    training_args = training_args or {}
 
     os.environ["RAY_TMPDIR"] = os.environ["TMPDIR"] = temp_dir
     output_directory = Path(output_directory)
