@@ -20,7 +20,7 @@ from nbdime.diffing.notebooks import diff_notebooks
 from nbdime.utils import read_notebook
 
 # sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
-now = datetime.datetime.now()
+now = datetime.datetime.now(tz=datetime.timezone.utc)
 
 release = metadata.version("bsk_rl")
 project = "BSK-RL v" + release
