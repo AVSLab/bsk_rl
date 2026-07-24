@@ -149,7 +149,7 @@ def test_parallel_api(env):
             if "agent cannot be revived once dead" in str(e):
                 warn(f"'{e}' is a known issue (#59)")
             else:
-                raise (e)
+                raise
 
     with pytest.warns(UserWarning):
         run_parallel_api_test()
