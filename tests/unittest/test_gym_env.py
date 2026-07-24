@@ -547,7 +547,7 @@ class TestConstellationTasking:
     def test_get_terminated(self, timeout, terminate_on_time_limit):
         mock_sats = [
             MagicMock(
-                is_alive=MagicMock(return_value=True if i != 0 else False),
+                is_alive=MagicMock(return_value=i != 0),
             )
             for i in range(3)
         ]
