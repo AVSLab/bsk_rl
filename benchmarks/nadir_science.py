@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import numpy as np
 from benchmark import BenchmarkEnv
 from ray.rllib.core.rl_module.rl_module import RLModuleSpec
@@ -7,7 +9,7 @@ from bsk_rl.sim import dyn, fsw
 
 
 class ScanningSatellite(sats.AccessSatellite):
-    observation_spec = [
+    observation_spec: ClassVar[list[obs.Observation]] = [
         obs.SatProperties(
             dict(prop="storage_level_fraction"),
             dict(prop="battery_charge_fraction"),
@@ -22,7 +24,7 @@ class ScanningSatellite(sats.AccessSatellite):
         obs.Eclipse(norm=5700),
         obs.Time(),
     ]
-    action_spec = [
+    action_spec: ClassVar[list[act.Action]] = [
         act.Scan(duration=180.0),
         act.Charge(duration=120.0),
         act.Downlink(duration=60.0),

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import gymnasium as gym
 import numpy as np
 from pytest import approx
@@ -11,16 +13,16 @@ class TestRelProperties:
     class BasicSat(sats.Satellite):
         dyn_type = dyn.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
-        observation_spec = [obs.Time()]
-        action_spec = [act.Drift()]
+        observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+        action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
     class RelPropertiesSat(sats.Satellite):
         dyn_type = dyn.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
-        observation_spec = [
+        observation_spec: ClassVar[list[obs.Observation]] = [
             obs.RelativeProperties(dict(prop="r_DC_N"), chief_name="Chief")
         ]
-        action_spec = [act.Drift()]
+        action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
     env = gym.make(
         "ConstellationTasking-v1",

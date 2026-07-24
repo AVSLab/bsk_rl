@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from typing import ClassVar
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -268,7 +269,7 @@ class TestAccessSatellite:
         # The merge still extends the original tgt0 window rather than duplicating it.
         assert sat.opportunities_dict()[self.tgt0] == [(5.0, 50.0)]
 
-    opportunities = [
+    opportunities: ClassVar[list[dict[str, object]]] = [
         dict(object="downObj1", window=(10, 20), type="downlink"),
         dict(object="tgtObj1", window=(20, 30), type="target"),
         dict(object="downObj1", window=(30, 40), type="downlink"),
@@ -380,12 +381,12 @@ class TestImagingSatellite:
     tgt0 = Target("tgt_0", r_LP_P=[0.0, 0.0, 0.0], priority=1.0)
     tgt1 = Target("tgt_1", r_LP_P=[0.0, 0.0, 0.0], priority=1.0)
     tgt2 = Target("tgt_2", r_LP_P=[0.0, 0.0, 0.0], priority=1.0)
-    windows = {
+    windows: ClassVar[dict[Target, list[tuple[float, float]]]] = {
         tgt0: [(0.0, 10.0), (20.0, 30.0), (40.0, 50.0)],
         tgt1: [(10.0, 20.0)],
         tgt2: [(30.0, 40.0)],
     }
-    opportunities = [
+    opportunities: ClassVar[list[dict[str, object]]] = [
         dict(object=tgt0, window=(0.0, 10.0), type="target"),
         dict(object=tgt1, window=(10.0, 20.0), type="target"),
         dict(object=tgt0, window=(20.0, 30.0), type="target"),
@@ -422,7 +423,9 @@ class TestImagingSatellite:
         sat._disable_image_event()
         assert not sat.simulator.delete_event.called
 
-    upcoming_targets = [Target(f"tgt_{i}", [0, 0, 0], 1.0) for i in range(20)]
+    upcoming_targets: ClassVar[list[Target]] = [
+        Target(f"tgt_{i}", [0, 0, 0], 1.0) for i in range(20)
+    ]
 
     @pytest.mark.parametrize(
         "query,expected",

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import gymnasium as gym
 import numpy as np
 from pytest import approx
@@ -15,7 +17,7 @@ class TestComposedState:
     class ComposedPropSat(sats.ImagingSatellite):
         dyn_type = dyn.ImagingDynModel
         fsw_type = fsw.ImagingFSWModel
-        observation_spec = [
+        observation_spec: ClassVar[list[obs.Observation]] = [
             obs.Time(),
             obs.SatProperties(
                 dict(prop="r_BN_N", module="dynamics"),
@@ -24,7 +26,7 @@ class TestComposedState:
             obs.OpportunityProperties(dict(prop="priority"), n_ahead_observe=2),
             obs.Eclipse(),
         ]
-        action_spec = [act.Drift()]
+        action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
     env = gym.make(
         "SatelliteTasking-v1",
@@ -58,14 +60,14 @@ class TestSatProperties:
     class SatPropertiesSat(sats.Satellite):
         dyn_type = dyn.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
-        observation_spec = [
+        observation_spec: ClassVar[list[obs.Observation]] = [
             obs.SatProperties(
                 dict(prop="r_BN_N", module="dynamics"),
                 dict(prop="r_BN_N", norm=7000.0 * 1e3),
                 dict(prop="inclination", module="dynamics", norm=np.pi / 180),
             ),
         ]
-        action_spec = [act.Drift()]
+        action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
     env = gym.make(
         "SatelliteTasking-v1",
@@ -94,8 +96,8 @@ class TestTime:
     class TimedSat(sats.Satellite):
         dyn_type = dyn.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
-        observation_spec = [obs.Time()]
-        action_spec = [act.Drift()]
+        observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+        action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
     env = gym.make(
         "SatelliteTasking-v1",
@@ -122,10 +124,10 @@ class TestOpportunityProperties:
     class TargetSat(sats.ImagingSatellite):
         dyn_type = dyn.ImagingDynModel
         fsw_type = fsw.ImagingFSWModel
-        observation_spec = [
+        observation_spec: ClassVar[list[obs.Observation]] = [
             obs.OpportunityProperties(dict(prop="priority"), n_ahead_observe=2)
         ]
-        action_spec = [act.Drift()]
+        action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
     env = gym.make(
         "SatelliteTasking-v1",
@@ -152,8 +154,8 @@ class TestEclipse:
     class EclipseSat(sats.Satellite):
         dyn_type = dyn.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
-        observation_spec = [obs.Eclipse()]
-        action_spec = [act.Drift()]
+        observation_spec: ClassVar[list[obs.Observation]] = [obs.Eclipse()]
+        action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
     env = gym.make(
         "SatelliteTasking-v1",
@@ -181,7 +183,7 @@ class TestGroundStationProperties:
     class GroundSat(sats.AccessSatellite):
         dyn_type = dyn.GroundStationDynModel
         fsw_type = fsw.ImagingFSWModel
-        observation_spec = [
+        observation_spec: ClassVar[list[obs.Observation]] = [
             obs.OpportunityProperties(
                 dict(
                     prop="opportunity_open",
@@ -190,7 +192,7 @@ class TestGroundStationProperties:
                 type="ground_station",
             ),
         ]
-        action_spec = [act.Drift()]
+        action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
     env = gym.make(
         "SatelliteTasking-v1",
@@ -216,8 +218,8 @@ class TestResourceRewardWeight:
     class ResourceSat(sats.ImagingSatellite):
         dyn_type = dyn.ImagingDynModel
         fsw_type = fsw.ImagingFSWModel
-        observation_spec = [obs.ResourceRewardWeight()]
-        action_spec = [act.Drift()]
+        observation_spec: ClassVar[list[obs.Observation]] = [obs.ResourceRewardWeight()]
+        action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
     env = gym.make(
         "SatelliteTasking-v1",

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import gymnasium as gym
 import pytest
 
@@ -25,8 +27,11 @@ class TestImagingDynModelStorage:
         class ImageSat(sats.ImagingSatellite):
             dyn_type = dyn.ImagingDynModel
             fsw_type = fsw.ImagingFSWModel
-            observation_spec = [obs.Time()]
-            action_spec = [act.Downlink(), act.Image(n_ahead_image=10)]
+            observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+            action_spec: ClassVar[list[act.Action]] = [
+                act.Downlink(),
+                act.Image(n_ahead_image=10),
+            ]
 
         env = gym.make(
             "SatelliteTasking-v1",
@@ -65,8 +70,8 @@ class TestImagingDynModelStorage:
         class ImageSat(sats.ImagingSatellite):
             dyn_type = FullFeaturedDynModel
             fsw_type = fsw.ImagingFSWModel
-            observation_spec = [obs.Time()]
-            action_spec = [act.Downlink()]
+            observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+            action_spec: ClassVar[list[act.Action]] = [act.Downlink()]
 
         env = gym.make(
             "SatelliteTasking-v1",
@@ -110,8 +115,8 @@ class TestConjunctionDynModel:
         class CollisionSat(sats.Satellite):
             fsw_type = fsw.FSWModel
             dyn_type = dyn.ConjunctionDynModel
-            observation_spec = [obs.Time()]
-            action_spec = [act.Drift()]
+            observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+            action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
         env = gym.make(
             "ConstellationTasking-v1",
@@ -179,14 +184,14 @@ class TestMaxRangeDynModel:
         class ChiefSat(sats.Satellite):
             fsw_type = fsw.FSWModel
             dyn_type = dyn.DynamicsModel
-            observation_spec = [obs.Time()]
-            action_spec = [act.Drift()]
+            observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+            action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
         class DeputySat(sats.Satellite):
             fsw_type = fsw.FSWModel
             dyn_type = dyn.MaxRangeDynModel
-            observation_spec = [obs.Time()]
-            action_spec = [act.Drift()]
+            observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+            action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
         env = gym.make(
             "ConstellationTasking-v1",

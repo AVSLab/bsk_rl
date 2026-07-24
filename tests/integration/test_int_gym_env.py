@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
@@ -8,8 +10,8 @@ from bsk_rl.utils.orbital import random_orbit
 
 
 class DoNothingSatellite(sats.ImagingSatellite):
-    observation_spec = [obs.Time()]
-    action_spec = [act.Drift()]
+    observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+    action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
 
 class TestSatelliteTasking:
