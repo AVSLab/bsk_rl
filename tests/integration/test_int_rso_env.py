@@ -1,4 +1,5 @@
 from functools import partial
+from typing import ClassVar
 
 import numpy as np
 import pytest
@@ -10,16 +11,16 @@ from bsk_rl.utils.orbital import fibonacci_sphere, random_circular_orbit
 
 
 class RSOSat(sats.Satellite):
-    observation_spec = [
+    observation_spec: ClassVar[list[obs.Observation]] = [
         obs.SatProperties(dict(prop="one", fn=lambda _: 1.0)),
     ]
-    action_spec = [act.Drift(duration=1e9)]
+    action_spec: ClassVar[list[act.Action]] = [act.Drift(duration=1e9)]
     dyn_type = dyn.RSODynModel
     fsw_type = fsw.FSWModel
 
 
 class InspectorSat(sats.Satellite):
-    observation_spec = [
+    observation_spec: ClassVar[list[obs.Observation]] = [
         obs.RelativeProperties(
             dict(
                 prop="rso_imaged_regions",
@@ -33,7 +34,7 @@ class InspectorSat(sats.Satellite):
         ),
         obs.Eclipse(),
     ]
-    action_spec = [
+    action_spec: ClassVar[list[act.Action]] = [
         act.ImpulsiveThrustHill(
             chief_name="RSO",
             max_dv=1.0,

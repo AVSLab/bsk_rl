@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import gymnasium as gym
 import numpy as np
 import pytest
@@ -12,8 +14,10 @@ class TestImpulsiveThrust:
     class ThrustSat(sats.Satellite):
         dyn_type = dyn.BasicDynamicsModel
         fsw_type = fsw.MagicOrbitalManeuverFSWModel
-        observation_spec = [obs.SatProperties(dict(prop="v_BN_N"))]
-        action_spec = [act.ImpulsiveThrust()]
+        observation_spec: ClassVar[list[obs.Observation]] = [
+            obs.SatProperties(dict(prop="v_BN_N"))
+        ]
+        action_spec: ClassVar[list[act.Action]] = [act.ImpulsiveThrust()]
 
     env = gym.make(
         "SatelliteTasking-v1",
@@ -42,8 +46,12 @@ class TestHillImpulsiveThrust:
     class ThrustSat(sats.Satellite):
         dyn_type = dyn.BasicDynamicsModel
         fsw_type = fsw.MagicOrbitalManeuverFSWModel
-        observation_spec = [obs.SatProperties(dict(prop="v_BN_N"))]
-        action_spec = [act.ImpulsiveThrustHill(chief_name="ThrusterSat")]
+        observation_spec: ClassVar[list[obs.Observation]] = [
+            obs.SatProperties(dict(prop="v_BN_N"))
+        ]
+        action_spec: ClassVar[list[act.Action]] = [
+            act.ImpulsiveThrustHill(chief_name="ThrusterSat")
+        ]
 
     env = gym.make(
         "SatelliteTasking-v1",
@@ -81,8 +89,12 @@ class TestAttitudeSetpoint:
             else:
                 dyn_type = dyn.DynamicsModel
                 fsw_type = fsw.FSWModel
-            observation_spec = [obs.SatProperties(dict(prop="sigma_BN"))]
-            action_spec = [act.AttitudeSetpoint(control_period=540.0)]
+            observation_spec: ClassVar[list[obs.Observation]] = [
+                obs.SatProperties(dict(prop="sigma_BN"))
+            ]
+            action_spec: ClassVar[list[act.Action]] = [
+                act.AttitudeSetpoint(control_period=540.0)
+            ]
 
         env = gym.make(
             "SatelliteTasking-v1",

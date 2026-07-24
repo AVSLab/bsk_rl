@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import numpy as np
 from Basilisk.utilities import orbitalMotion
 from benchmark import BenchmarkEnv
@@ -9,8 +11,8 @@ from bsk_rl.utils.orbital import random_circular_orbit, walker_delta_args
 
 
 class AEOS(sats.ImagingSatellite):
-    action_spec = [act.Image(n_ahead_image=32)]
-    observation_spec = [
+    action_spec: ClassVar[list[act.Action]] = [act.Image(n_ahead_image=32)]
+    observation_spec: ClassVar[list[obs.Observation]] = [
         obs.SatProperties(
             dict(prop="omega_BH_H", norm=0.03),
             dict(prop="c_hat_H"),

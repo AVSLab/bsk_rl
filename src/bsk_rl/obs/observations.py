@@ -2,9 +2,10 @@
 
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Union
 
 import numpy as np
 from gymnasium import spaces
@@ -339,7 +340,7 @@ def _r_LB_H(sat, opp):
 
 
 class OpportunityProperties(Observation):
-    _fn_map = {
+    _fn_map: ClassVar[dict[str, Callable[["Satellite", dict[str, Any]], Any]]] = {
         "priority": lambda sat, opp: opp["object"].priority,
         "r_LP_P": lambda sat, opp: opp["r_LP_P"],
         "r_LB_H": _r_LB_H,

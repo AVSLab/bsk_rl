@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import gymnasium as gym
 
 from bsk_rl import act, data, obs, sats, scene, sim
@@ -14,11 +16,11 @@ from bsk_rl.utils.orbital import random_orbit
 
 
 class FullFeaturedSatellite(sats.ImagingSatellite):
-    observation_spec = [
+    observation_spec: ClassVar[list[obs.Observation]] = [
         obs.SatProperties(dict(prop="r_BN_P", module="dynamics", norm=6e6)),
         obs.Time(),
     ]
-    action_spec = [act.Image(n_ahead_image=10)]
+    action_spec: ClassVar[list[act.Action]] = [act.Image(n_ahead_image=10)]
 
 
 def test_multi_rewarder():
@@ -58,8 +60,8 @@ def test_multi_rewarder():
 
 
 class DriftSat(sats.Satellite):
-    observation_spec = [obs.Time()]
-    action_spec = [act.Drift(duration=100.0)]
+    observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+    action_spec: ClassVar[list[act.Action]] = [act.Drift(duration=100.0)]
     dyn_type = sim.dyn.BasicDynamicsModel
     fsw_type = sim.fsw.BasicFSWModel
 

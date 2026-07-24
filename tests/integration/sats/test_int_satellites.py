@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import gymnasium as gym
 import numpy as np
 import pytest
@@ -13,8 +15,8 @@ class TestImagingSatellite:
     class ImageSat(sats.ImagingSatellite):
         dyn_type = dyn.ImagingDynModel
         fsw_type = fsw.ImagingFSWModel
-        observation_spec = [obs.Time()]
-        action_spec = [act.Image(n_ahead_image=10)]
+        observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+        action_spec: ClassVar[list[act.Action]] = [act.Image(n_ahead_image=10)]
 
     env = gym.make(
         "SatelliteTasking-v1",

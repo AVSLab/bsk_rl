@@ -1,4 +1,5 @@
 from functools import partial
+from typing import ClassVar
 
 import gymnasium as gym
 import numpy as np
@@ -19,8 +20,11 @@ class TestImagingAndDownlink:
     class ImageSat(sats.ImagingSatellite):
         dyn_type = dyn.GroundStationDynModel
         fsw_type = fsw.ImagingFSWModel
-        observation_spec = [obs.Time()]
-        action_spec = [act.Downlink(), act.Image(n_ahead_image=10)]
+        observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+        action_spec: ClassVar[list[act.Action]] = [
+            act.Downlink(),
+            act.Image(n_ahead_image=10),
+        ]
 
     env = gym.make(
         "SatelliteTasking-v1",
@@ -84,8 +88,8 @@ class TestChargingAction:
     class ChargeSat(sats.Satellite):
         dyn_type = dyn.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
-        observation_spec = [obs.Time()]
-        action_spec = [act.Charge()]
+        observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+        action_spec: ClassVar[list[act.Action]] = [act.Charge()]
 
     env = gym.make(
         "SatelliteTasking-v1",
@@ -142,8 +146,8 @@ class TestDesatAction:
     class DesatSat(sats.Satellite):
         dyn_type = dyn.BasicDynamicsModel
         fsw_type = fsw.BasicFSWModel
-        observation_spec = [obs.Time()]
-        action_spec = [act.Desat()]
+        observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+        action_spec: ClassVar[list[act.Action]] = [act.Desat()]
 
     def make_env(self):
         return gym.make(
@@ -204,8 +208,8 @@ class TestNadirImagingActions:
     class ImageSat(sats.Satellite):
         dyn_type = dyn.ContinuousImagingDynModel
         fsw_type = fsw.ContinuousImagingFSWModel
-        observation_spec = [obs.Time()]
-        action_spec = [act.Scan()]
+        observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+        action_spec: ClassVar[list[act.Action]] = [act.Scan()]
 
     env = gym.make(
         "SatelliteTasking-v1",

@@ -1,4 +1,5 @@
 from functools import partial
+from typing import ClassVar
 
 import numpy as np
 from benchmark import BenchmarkEnv
@@ -66,7 +67,7 @@ def h_vec_S(sat):
 
 
 class InspectorSat(sats.Satellite):
-    observation_spec = [
+    observation_spec: ClassVar[list[obs.Observation]] = [
         obs.SatProperties(
             dict(prop="dv_available", norm=10),
             dict(prop="eccentricity_vec_S", fn=eccentricity_vec_S, norm=0.04184),
@@ -95,7 +96,7 @@ class InspectorSat(sats.Satellite):
         obs.Time(),
     ]
 
-    action_spec = [
+    action_spec: ClassVar[list[act.Action]] = [
         act.ImpulsiveThrustHill(
             chief_name="RSO",
             max_dv=1.0,
@@ -130,10 +131,10 @@ inspector_sat_args = dict(
 
 
 class RSOSat(sats.Satellite):
-    observation_spec = [
+    observation_spec: ClassVar[list[obs.Observation]] = [
         obs.SatProperties(dict(prop="one", fn=lambda _: 1.0)),
     ]
-    action_spec = [act.NadirPoint(duration=1e9)]
+    action_spec: ClassVar[list[act.Action]] = [act.NadirPoint(duration=1e9)]
     dyn_type = (dyn.ConjunctionDynModel, dyn.RSODynModel)
     fsw_type = fsw.FSWModel
 
