@@ -141,7 +141,7 @@ def test_reproducibility(env):
 @pytest.mark.repeat(5)
 @pytest.mark.parametrize("env", [parallel_env, parallel_meta_env])
 def test_parallel_api(env):
-    with pytest.warns(UserWarning):
+    def run_parallel_api_test():
         # expect an erroneous warning about the info dict due to our additional info
         try:
             parallel_api_test(env)
@@ -150,3 +150,6 @@ def test_parallel_api(env):
                 warn(f"'{e}' is a known issue (#59)")
             else:
                 raise (e)
+
+    with pytest.warns(UserWarning):
+        run_parallel_api_test()
