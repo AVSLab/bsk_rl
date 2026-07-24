@@ -39,7 +39,7 @@ class TestUniformTargets:
         env = make_env(UniformTargets(n_targets=1000, priority_distribution=lambda: 1))
         env.reset()
         for i in range(10):
-            observation, reward, terminated, truncated, info = env.step(i)
+            _observation, reward, _terminated, _truncated, _info = env.step(i)
             assert reward in [0.0, 1.0]
 
 
@@ -52,6 +52,6 @@ class TestCityTargets:
         env.reset()
         reward_sum = 0.0
         for i in range(10):
-            observation, reward, terminated, truncated, info = env.step(i)
+            _observation, reward, _terminated, _truncated, _info = env.step(i)
             reward_sum += reward
         assert reward_sum > 0

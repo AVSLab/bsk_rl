@@ -29,7 +29,7 @@ class TestSatelliteTasking:
     )
 
     def test_reset(self):
-        observation, info = self.env.reset()
+        observation, _info = self.env.reset()
         assert (observation == np.array([0.0])).all()
 
     def test_action_space(self):
@@ -41,13 +41,13 @@ class TestSatelliteTasking:
         )
 
     def test_step(self):
-        observation, reward, terminated, truncated, info = self.env.step(0)
+        observation, _reward, _terminated, _truncated, _info = self.env.step(0)
         assert (observation == np.array([0.1])).all()
 
     def test_truncate(self):
         terminated = truncated = False
         while not (terminated or truncated):
-            observation, reward, terminated, truncated, info = self.env.step(0)
+            _observation, _reward, terminated, truncated, _info = self.env.step(0)
         assert truncated
         assert self.env.unwrapped.simulator.sim_time == 100.0
 
@@ -86,8 +86,8 @@ class TestSingleSatelliteDeath:
     )
 
     def test_fail(self):
-        observation, info = self.env.reset()
-        observation, reward, terminated, truncated, info = self.env.step(0)
+        _, _ = self.env.reset()
+        _observation, reward, terminated, _truncated, _info = self.env.step(0)
         assert terminated
         assert reward == -1000
 
@@ -118,7 +118,7 @@ class TestGeneralSatelliteTasking:
     )
 
     def test_reset(self):
-        observation, info = self.env.reset()
+        observation, _info = self.env.reset()
         assert (observation == np.array([0.0])).all()
 
     def test_action_space(self):
@@ -135,12 +135,12 @@ class TestGeneralSatelliteTasking:
         )
 
     def test_step(self):
-        observation, reward, terminated, truncated, info = self.env.step([0, 0])
+        observation, _reward, _terminated, _truncated, _info = self.env.step([0, 0])
         assert (observation == np.array([0.1])).all()
 
     def test_truncate(self):
         terminated = truncated = False
         while not (terminated or truncated):
-            observation, reward, terminated, truncated, info = self.env.step([0, 0])
+            _observation, _reward, terminated, truncated, _info = self.env.step([0, 0])
         assert truncated
         assert self.env.unwrapped.simulator.sim_time == 100.0

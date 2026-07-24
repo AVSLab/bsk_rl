@@ -230,7 +230,7 @@ class TestGeneralSatelliteTasking:
         env._randomize_time_limit()
         mock_sats = env.satellites
         env.unwrapped.simulator = MagicMock(sim_time=101.0)
-        _, reward, _, _, info = env.step((0, 10))
+        _, reward, _, _, _info = env.step((0, 10))
         mock_sats[0].set_action.assert_called_once_with(0)
         mock_sats[1].set_action.assert_called_once_with(10)
         env.unwrapped.simulator.run.assert_called_once()
@@ -363,23 +363,23 @@ class TestSatelliteTasking:
         return env, mock_sat
 
     def test_action_space(self):
-        env, mock_sat = self.make_env()
+        env, _mock_sat = self.make_env()
         assert env.action_space == env.satellite.action_space
 
     @patch("bsk_rl.GeneralSatelliteTasking.observation_space")
     def test_observation_space(self, obs_patch):
-        env, mock_sat = self.make_env()
+        env, _mock_sat = self.make_env()
         env.unwrapped.simulator = MagicMock()
         assert env.observation_space == env.satellite.observation_space
 
     @patch("bsk_rl.GeneralSatelliteTasking.step")
     def test_step(self, step_patch):
-        env, mock_sat = self.make_env()
+        env, _mock_sat = self.make_env()
         env.step("action")
         step_patch.assert_called_once_with(["action"])
 
     def test_get_obs(self):
-        env, mock_sat = self.make_env()
+        env, _mock_sat = self.make_env()
         assert env._get_obs() == env.satellite.get_obs()
 
 
@@ -401,7 +401,7 @@ class TestConstellationTasking:
         )
         env.unwrapped.world_args_generator = {"utc_init": "a long time ago"}
         env.communicator = MagicMock()
-        obs, info = env.reset()
+        _obs, _info = env.reset()
         obs_fn.assert_called_once()
         info_fn.assert_called_once()
 
