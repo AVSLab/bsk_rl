@@ -122,7 +122,6 @@ class TestAlivenessChecker:
         d = type()
         d.simulator.sim_time = 0
         d.satellite.id = "SAT"
-        d.satellite._is_alive
         assert functional.check_aliveness_checkers(d, log_failure=True) is False
         d.satellite.logger.warning.assert_called_with("failed is_living check")
 
