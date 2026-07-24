@@ -336,8 +336,6 @@ class PackageCrawler:
                 source_dir=dir_path,
             )
 
-        return
-
 
 sys.path.append(os.path.abspath("../.."))
 nb_cache_dir = Path("../build/doctrees/nbsphinx")
