@@ -359,7 +359,7 @@ if __name__ == "__main__":
                 sanitize_np(
                     {
                         k: getattr(benchmark_env, k)
-                        for k in benchmark_env.__dataclass_fields__.keys()
+                        for k in benchmark_env.__dataclass_fields__
                     }
                 ),
                 file,
@@ -368,7 +368,7 @@ if __name__ == "__main__":
             output_directory=output_dir,
             **{
                 k: getattr(benchmark_env, k)
-                for k in benchmark_env.__dataclass_fields__.keys()
+                for k in benchmark_env.__dataclass_fields__
             },
             num_env_runners=num_env_runners,
             temp_dir=temp_dir,
