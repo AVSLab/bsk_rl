@@ -169,9 +169,9 @@ class PackageCrawler:
         notebooks_in_dir = dir_path.glob("*.ipynb")
 
         return (
-            sorted(list(files_in_dir)),
-            sorted(list(dirs_in_dir)),
-            sorted(list(notebooks_in_dir)),
+            sorted(files_in_dir),
+            sorted(dirs_in_dir),
+            sorted(notebooks_in_dir),
         )
 
     def generate_index(self, index_path, file_paths, dir_paths, source_dir):
