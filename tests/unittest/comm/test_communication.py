@@ -111,7 +111,7 @@ class TestLOSCommunication:
 
     def test_dyn_model_check_invalid(self):
         mock_sats = [MagicMock(dyn_type="NotLOSComm") for i in range(3)]
-        with pytest.raises(Exception):
+        with pytest.raises(TypeError):
             comms = LOSCommunication()
             comms.link_satellites(mock_sats)
 
