@@ -18,8 +18,12 @@ from Basilisk.utilities import (
     RigidBodyKinematics,
     macros,
     orbitalMotion,
-    unitTestSupport,
 )
+
+try:
+    from Basilisk.utilities.simHelpers import np2EigenMatrix3d, np2EigenVectorXd
+except ImportError:
+    from Basilisk.utilities.unitTestSupport import np2EigenMatrix3d, np2EigenVectorXd
 
 from bsk_rl.sim import world
 from bsk_rl.utils import actuator_primitives as aP
@@ -327,13 +331,13 @@ class DynamicsModel(DynamicsModelABC):
         self.I_mat = [Ixx, 0.0, 0.0, 0.0, Iyy, 0.0, 0.0, 0.0, Izz]
 
         self.scObject.hub.mHub = mass  # kg
-        self.scObject.hub.IHubPntBc_B = unitTestSupport.np2EigenMatrix3d(self.I_mat)
+        self.scObject.hub.IHubPntBc_B = np2EigenMatrix3d(self.I_mat)
 
         # Set the initial attitude and position
         self.scObject.hub.sigma_BNInit = sigma_init
         self.scObject.hub.omega_BN_BInit = omega_init
-        self.scObject.hub.r_CN_NInit = unitTestSupport.np2EigenVectorXd(rN)
-        self.scObject.hub.v_CN_NInit = unitTestSupport.np2EigenVectorXd(vN)
+        self.scObject.hub.r_CN_NInit = np2EigenVectorXd(rN)
+        self.scObject.hub.v_CN_NInit = np2EigenVectorXd(vN)
 
         self.simulator.AddModelToTask(
             self.task_name, self.scObject, ModelPriority=priority
@@ -698,7 +702,7 @@ class BasicDynamicsModel(
             self.world.gravFactory.spiceObject.planetStateOutMsgs[self.world.sun_index]
         )
         self.solarPanel.setPanelParameters(
-            unitTestSupport.np2EigenVectorXd(nHat_B),
+            np2EigenVectorXd(nHat_B),
             panelArea,
             panelEfficiency,
         )
