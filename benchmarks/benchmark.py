@@ -38,7 +38,7 @@ def get_available_cores():
     """Returns the number of available CPU cores, accounting for SLURM environment variables if present."""
     try:
         processes = int(os.environ["SLURM_JOB_CPUS_PER_NODE"].split("(")[0])
-    except Exception:
+    except (KeyError, ValueError):
         processes = mp.cpu_count()
     return processes
 
