@@ -130,6 +130,31 @@ def _env_mix_weights(
     return {str(key).upper(): float(value) for key, value in parsed.items()}
 
 
+def _fixed_regime_counts(
+    n_targets: int, mix_weights: dict[str, float]
+) -> dict[str, int]:
+    """Apportion a catalog into deterministic LEO/MEO/GEO counts."""
+    regimes = ("LEO", "MEO", "GEO")
+    weights = np.array([mix_weights.get(regime, 0.0) for regime in regimes])
+    if n_targets <= 0:
+        raise ValueError("n_targets must be positive.")
+    if np.any(weights < 0.0) or weights.sum() <= 0.0:
+        raise ValueError(
+            "mix_weights must contain nonnegative values with a positive sum."
+        )
+
+    raw_counts = n_targets * weights / weights.sum()
+    counts = np.floor(raw_counts).astype(int)
+    remainder = n_targets - int(counts.sum())
+    fractional_order = sorted(
+        range(len(regimes)),
+        key=lambda index: (-(raw_counts[index] - counts[index]), index),
+    )
+    for index in fractional_order[:remainder]:
+        counts[index] += 1
+    return dict(zip(regimes, counts.tolist()))
+
+
 def _cluster_scratch_root() -> Path:
     user = os.environ.get("USER", "dahu1128")
     scratch_root = Path(
@@ -1516,6 +1541,7 @@ if __name__ == "__main__":
         target_env: str,
         fixed_mix_weights: dict[str, float] | None,
         randomize_mix_weights: bool,
+        exact_mix_counts: bool,
         targets_per_catalog: int,
     ) -> Callable[[], orbitalMotion.ClassicElements]:
         target_env = target_env.lower()
@@ -1523,13 +1549,33 @@ if __name__ == "__main__":
             raise ValueError("BSK_RL_TARGET_ENV must be 'leo' or 'mixed'.")
         if target_env == "leo":
             return lambda: custom_oe_randomizer(regime="LEO")
+        if exact_mix_counts and randomize_mix_weights:
+            raise ValueError(
+                "BSK_RL_EXACT_MIX_COUNTS and BSK_RL_RANDOMIZE_MIX_WEIGHTS "
+                "cannot both be enabled."
+            )
 
         state = {
             "remaining": 0,
             "mix_weights": fixed_mix_weights or {"LEO": 0.6, "MEO": 0.3, "GEO": 0.1},
+            "regime_queue": [],
         }
 
         def randomizer() -> orbitalMotion.ClassicElements:
+            if exact_mix_counts:
+                if not state["regime_queue"]:
+                    counts = _fixed_regime_counts(
+                        targets_per_catalog, state["mix_weights"]
+                    )
+                    state["regime_queue"] = [
+                        regime
+                        for regime in ("LEO", "MEO", "GEO")
+                        for _ in range(counts[regime])
+                    ]
+                    np.random.shuffle(state["regime_queue"])
+                regime = state["regime_queue"].pop()
+                return custom_oe_randomizer(regime=regime)
+
             if state["remaining"] <= 0:
                 if randomize_mix_weights:
                     state["mix_weights"] = _random_simplex_mix_weights()
@@ -1545,10 +1591,12 @@ if __name__ == "__main__":
     target_env = os.environ.get("BSK_RL_TARGET_ENV", "LEO").strip().lower()
     randomize_mix_weights = _env_bool("BSK_RL_RANDOMIZE_MIX_WEIGHTS", False)
     fixed_mix_weights = _env_mix_weights("BSK_RL_MIX_WEIGHTS")
+    exact_mix_counts = _env_bool("BSK_RL_EXACT_MIX_COUNTS", False)
     target_oe_randomizer = _make_target_oe_randomizer(
         target_env=target_env,
         fixed_mix_weights=fixed_mix_weights,
         randomize_mix_weights=randomize_mix_weights,
+        exact_mix_counts=exact_mix_counts,
         targets_per_catalog=n_targets,
     )
 
@@ -1570,7 +1618,10 @@ if __name__ == "__main__":
     all_sat = [sat] + targets
 
     default_job_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-    job_index = _env_int("SLURM_ARRAY_TASK_ID", default_job_index)
+    job_index = _env_int(
+        "BSK_RL_JOB_INDEX",
+        _env_int("SLURM_ARRAY_TASK_ID", default_job_index),
+    )
     on_cluster = bool(os.environ.get("SLURM_JOB_ID"))
     default_n_envs = (
         get_available_cores() - 4 if on_cluster else get_available_cores() - 6
@@ -1780,6 +1831,16 @@ if __name__ == "__main__":
             "target_env": target_env,
             "randomize_mix_weights": randomize_mix_weights,
             "fixed_mix_weights": fixed_mix_weights,
+            "exact_mix_counts": exact_mix_counts,
+            "exact_regime_counts": (
+                _fixed_regime_counts(
+                    n_targets,
+                    fixed_mix_weights
+                    or {"LEO": 0.6, "MEO": 0.3, "GEO": 0.1},
+                )
+                if target_env == "mixed" and exact_mix_counts
+                else None
+            ),
             "random_mix_sampling": (
                 "LEO=x~Uniform(0,1); "
                 "MEO=y~Uniform(0,1-x); "
