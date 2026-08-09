@@ -770,5 +770,137 @@ class Eclipse(Observation):
         ]
 
 
+class RiskTokens(Observation):
+    """Patch tokens of the rectified (time x roll) risk map ahead.
+
+    For a satellite in a :class:`~bsk_rl.scene.SweepRiskField` scenario, the
+    risk the satellite will overfly during the next ``obs_window`` seconds is
+    resampled onto a straight (time x cross-track) rectangle: rows are
+    evenly spaced in flight time, columns evenly spaced in ground
+    cross-track distance over the full reachable corridor -- out to the
+    boresight intercept at +-roll_max plus half a swath. Ground distance
+    (not roll) keeps the swath a constant number of columns everywhere:
+    the fixed ``swath_km`` acquired at any roll spans
+    ``swath_km / (2 * corridor_half_width / n_roll)`` columns, centered on
+    the column whose ground offset matches that roll's boresight intercept.
+    The forward map (t, ground offset) -> (lat, lon) is evaluated
+    analytically from the current orbit state (circular two-body propagation
+    over the window), as in sweep_risk_scenario.rectify_observation.
+
+    The rectangle is cut into patch x patch tiles, each flattened into one
+    token; tokens are returned time-major, so token k covers row
+    ``k // (n_roll/patch)`` and column ``k % (n_roll/patch)`` of the token
+    grid.
+
+    The sampled field is the *remaining* importance: ground already covered
+    by the image swath has been zeroed by
+    :class:`~bsk_rl.scene.SweepRiskField.update_coverage`.
+    """
+
+    def __init__(
+        self,
+        obs_window: float = 600.0,
+        n_time: int = 128,
+        n_roll: int = 64,
+        patch: int = 16,
+        roll_max: float = np.radians(30.0),
+        swath_samples: int = 5,
+        name: str = "risk_tokens",
+    ) -> None:
+        """Tokenized future risk map observation.
+
+        Args:
+            obs_window: [s] Flight time covered by the map.
+            n_time: Time rows of the rectified map.
+            n_roll: Roll columns of the rectified map.
+            patch: Side of the square patch tiles (n_time and n_roll must be
+                divisible by it).
+            roll_max: [rad] Roll of the outermost columns; match the action's
+                ``roll_max``.
+            swath_samples: Sub-points averaged across each cell's width,
+                to anti-alias the resampling.
+            name: Name of the observation.
+        """
+        super().__init__(name=name)
+        assert n_time % patch == 0 and n_roll % patch == 0
+        self.obs_window = obs_window
+        self.n_time = n_time
+        self.n_roll = n_roll
+        self.patch = patch
+        self.roll_max = roll_max
+        self.swath_samples = swath_samples
+
+    def rectified_map(self) -> np.ndarray:
+        """(n_time, n_roll) risk rectangle ahead of the satellite."""
+        from bsk_rl.scene.risk_field import (
+            R_EARTH_KM,
+            central_angle_from_roll,
+            eci_to_latlon,
+        )
+
+        scenario = self.satellite.sweep_scene
+        # Consume any not-yet-processed swath coverage first, so ground
+        # already imaged this step shows as zero importance
+        scenario.update_coverage(self.satellite)
+        r_N = np.array(self.satellite.dynamics.r_BN_N)
+        v_N = np.array(self.satellite.dynamics.v_BN_N)
+        t0 = self.simulator.sim_time
+
+        r_mag = np.linalg.norm(r_N)
+        h_N = np.cross(r_N, v_N)
+        h_hat = h_N / np.linalg.norm(h_N)
+        r_hat = r_N / r_mag
+        t_hat = np.cross(h_hat, r_hat)  # along-track (Hill i_theta)
+        omega_orb = np.linalg.norm(h_N) / r_mag**2
+
+        # Cell centers of the rectified grid. Columns are uniform in ground
+        # cross-track distance (not in roll: the roll -> ground map is
+        # non-linear, which would make the fixed 100 km swath span a varying
+        # number of columns) and cover the full reachable corridor: out to
+        # the boresight intercept at +-roll_max plus half a swath, the outer
+        # ground a swath at the roll limit still images.
+        t_rel = (np.arange(self.n_time) + 0.5) * self.obs_window / self.n_time
+        half = 0.5 * scenario.swath_km / R_EARTH_KM
+        lam_corr = central_angle_from_roll(self.roll_max, r_mag) + half
+        lam = (
+            -lam_corr
+            + (np.arange(self.n_roll) + 0.5) * 2.0 * lam_corr / self.n_roll
+        )
+
+        theta = omega_orb * t_rel
+        r_hat_k = np.cos(theta)[:, None] * r_hat + np.sin(theta)[:, None] * t_hat
+
+        # Anti-alias each cell by averaging a few sub-points across its
+        # width. Positive roll about i_theta tilts the boresight toward
+        # +i_h, the same convention as SweepFSWModel.action_sweep.
+        cell_half = lam_corr / self.n_roll
+        lam_s = lam[:, None] + np.linspace(-cell_half, cell_half,
+                                           self.swath_samples)
+        p = (
+            np.cos(lam_s)[None, ..., None] * r_hat_k[:, None, None, :]
+            + np.sin(lam_s)[None, ..., None] * h_hat[None, None, None, :]
+        )
+        lat, lon = eci_to_latlon(p, (t0 + t_rel)[:, None, None])
+        return scenario.sample_risk(lat, lon).mean(axis=2)
+
+    def get_obs(self) -> np.ndarray:
+        """Flattened (n_tokens, patch*patch) token array.
+
+        :meta private:
+        """
+        rect = self.rectified_map()
+        tokens = (
+            rect.reshape(
+                self.n_time // self.patch,
+                self.patch,
+                self.n_roll // self.patch,
+                self.patch,
+            )
+            .swapaxes(1, 2)
+            .reshape(-1, self.patch * self.patch)
+        )
+        return tokens.astype(np.float32).ravel()
+
+
 __doc_title__ = "Backend"
 __all__ = ["ObservationBuilder"]

@@ -40,6 +40,7 @@ import numpy as np
 from Basilisk.architecture import messaging
 from Basilisk.fswAlgorithms import (
     attTrackingError,
+    eulerRotation,
     hillPoint,
     locationPointing,
     mrpFeedback,
@@ -1168,6 +1169,105 @@ class SteeringStripImagerFSWModel(SteeringFSWModel, StripImagingFSWModel):
         """Convenience type that combines the imaging FSW model with MRP steering."""
         super().__init__(*args, **kwargs)
 
+class SweepFSWModel(BasicFSWModel):
+    """FSW with a rate-limited Euler-rotation sweep of the Hill frame.
+
+    Replicates the guidance chain of Basilisk's scenarioSweepingSpacecraft:
+    a hillPoint reference fed through eulerRotation, so the commanded frame
+    is the Hill frame rolled about its along-track axis. The roll target is
+    commanded through :class:`~SweepFSWModel.action_sweep`, which converts
+    it to an ``angleRates`` command clipped to ``maxSweepRate`` so the
+    reference can never slew faster than the limit.
+    """
+
+    def _make_task_list(self) -> list[Task]:
+        return super()._make_task_list() + [self.EulerSweepTask(self)]
+
+    class EulerSweepTask(Task):
+        """Task to generate a rolled Hill-frame reference.
+
+        A private hillPoint feeds eulerRotation; only eulerRotation authors
+        the shared attRefMsg gateway consumed by the tracking error task.
+        """
+
+        name = "eulerSweepTask"
+
+        def __init__(self, fsw, priority=95) -> None:  # noqa: D107
+            """Task to generate a rolled Hill-frame reference."""
+            super().__init__(fsw, priority)
+
+        def _create_module_data(self) -> None:
+            self.sweepHillPoint = self.fsw.sweepHillPoint = hillPoint.hillPoint()
+            self.sweepHillPoint.ModelTag = "sweepHillPoint"
+            self.eulerRotation = self.fsw.eulerRotation = (
+                eulerRotation.eulerRotation()
+            )
+            self.eulerRotation.ModelTag = "eulerRotation"
+
+        def _setup_fsw_objects(self, **kwargs) -> None:
+            self.sweepHillPoint.transNavInMsg.subscribeTo(
+                self.fsw.dynamics.simpleNavObject.transOutMsg
+            )
+            self.sweepHillPoint.celBodyInMsg.subscribeTo(
+                self.fsw.world.ephemConverter.ephemOutMsgs[self.fsw.world.body_index]
+            )
+            self.eulerRotation.attRefInMsg.subscribeTo(
+                self.sweepHillPoint.attRefOutMsg
+            )
+            messaging.AttRefMsg_C_addAuthor(
+                self.eulerRotation.attRefOutMsg, self.fsw.attRefMsg
+            )
+            self._add_model_to_task(self.sweepHillPoint, priority=1199)
+            self._add_model_to_task(self.eulerRotation, priority=1198)
+            self.setup_euler_sweep(**kwargs)
+
+        @default_args(maxSweepRate=0.002, sweepAxis=1)
+        def setup_euler_sweep(
+            self, maxSweepRate: float, sweepAxis: int, **kwargs
+        ) -> None:
+            """Configure the sweep rate limit.
+
+            Args:
+                maxSweepRate: [rad/s] Maximum rate of the reference roll angle.
+                sweepAxis: Index in the 3-2-1 Euler set to sweep about (1 is
+                    the Hill along-track axis: a cross-track roll).
+                kwargs: Passed to other setup functions.
+            """
+            self.fsw.maxSweepRate = maxSweepRate
+            self.fsw.sweepAxis = sweepAxis
+
+    @property
+    def sweep_roll_angle(self) -> float:
+        """[rad] Current reference roll angle of the euler rotation."""
+        return float(np.array(self.eulerRotation.angleSet)[self.sweepAxis])
+
+    @action
+    def action_sweep(self, roll_target: float, duration: float) -> None:
+        """Slew the reference roll toward ``roll_target``, rate-limited.
+
+        The commanded rate is ``(roll_target - current) / duration`` clipped
+        to ``maxSweepRate``, so an unreachable target simply gets as close as
+        the slew limit allows within the step.
+
+        Args:
+            roll_target: [rad] Desired reference roll angle.
+            duration: [s] Time over which to reach the target.
+        """
+        current = self.sweep_roll_angle
+        rate = float(
+            np.clip(
+                (roll_target - current) / duration,
+                -self.maxSweepRate,
+                self.maxSweepRate,
+            )
+        )
+        rates = [0.0, 0.0, 0.0]
+        rates[self.sweepAxis] = rate
+        self.eulerRotation.angleRates = rates
+        self.simulator.enableTask(self.EulerSweepTask.name + self.satellite.name)
+        self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.name)
+
+
 __doc_title__ = "FSW Sims"
 __all__ = [
     "action",
@@ -1178,4 +1278,5 @@ __all__ = [
     "SteeringFSWModel",
     "SteeringImagerFSWModel",
     "SteeringStripImagerFSWModel",
+    "SweepFSWModel",
 ]

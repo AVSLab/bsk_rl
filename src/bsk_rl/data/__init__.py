@@ -92,6 +92,7 @@ handles the combination of multiple reward systems.
 from bsk_rl.data.base import GlobalReward
 from bsk_rl.data.nadir_data import ScanningTimeReward
 from bsk_rl.data.no_data import NoReward
+from bsk_rl.data.swept_risk_data import SweptRiskReward
 from bsk_rl.data.unique_image_data import UniqueImageReward
 from bsk_rl.data.unique_strip_image_data import UniqueStripImageReward
 
@@ -102,4 +103,5 @@ __all__ = [
     "UniqueImageReward",
     "UniqueStripImageReward",
     "ScanningTimeReward",
+    "SweptRiskReward",
 ]

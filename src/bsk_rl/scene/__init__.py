@@ -9,6 +9,7 @@ following scenarios have been implemented:
 """
 
 from bsk_rl.scene.scenario import Scenario, UniformNadirScanning
+from bsk_rl.scene.risk_field import SweepRiskField
 from bsk_rl.scene.targets import CityTargets, UniformTargets, UniformStripTargets
 
 __doc_title__ = "Scenario"
@@ -19,4 +20,5 @@ __all__ = [
     "ClusterStripTargets",
     "CityTargets",
     "UniformNadirScanning",
+    "SweepRiskField",
 ]

@@ -70,6 +70,12 @@ from bsk_rl.act.hybrid_actions_squashed import (
     HybridFSWActionSquashed,
     HybridImageStripSquashed
 )
+
+from bsk_rl.act.continuous_actions import (
+    ContinuousAction,
+    ContinuousActionBuilder,
+    Sweep,
+)
 __doc_title__ = "Actions"
 __all__ = [
     "Action",
@@ -91,5 +97,8 @@ __all__ = [
     "MultiHybridImageStrip",
     "HybridActionSquashed",
     "HybridFSWActionSquashed",
-    "HybridImageStripSquashed"
+    "HybridImageStripSquashed",
+    "ContinuousAction",
+    "ContinuousActionBuilder",
+    "Sweep",
 ]

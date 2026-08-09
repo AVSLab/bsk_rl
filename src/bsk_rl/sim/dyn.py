@@ -1272,6 +1272,22 @@ class FullFeaturedDynModel(GroundStationDynModel, LOSCommDynModel):
         super().__init__(*args, **kwargs)
 
 
+class SweepDynModel(BasicDynamicsModel):
+    """Basic dynamics plus an attitude recorder for the swept-risk reward.
+
+    The attitude recorder is sampled at the same 3 s period as the existing
+    ``navLogtrans`` recorder, so :class:`~bsk_rl.data.SweptRiskReward` can
+    reconstruct the boresight ground track between steps.
+    """
+
+    def _setup_dynamics_objects(self, **kwargs) -> None:
+        super()._setup_dynamics_objects(**kwargs)
+        self.navLogatt = self.simpleNavObject.attOutMsg.recorder(
+            macros.sec2nano(3.0)
+        )
+        self.simulator.AddModelToTask(self.task_name, self.navLogatt)
+
+
 __doc_title__ = "Dynamics Sims"
 __all__ = [
     "DynamicsModel",
@@ -1282,4 +1298,5 @@ __all__ = [
     "ContinuousImagingDynModel",
     "GroundStationDynModel",
     "FullFeaturedDynModel",
+    "SweepDynModel",
 ]
