@@ -29,8 +29,7 @@ N=${NS[$N_INDEX]}
 SEED_START=$((700000 + BLOCK * 25))
 
 module purge
-module --ignore_cache load gcc/14.2.0 || export PATH="/curc/sw/install/gcc/14.2.0/bin:${PATH}"
-module --ignore_cache load python/3.10.2 || true
+module load gcc
 source "/projects/$USER/.venv/bin/activate"
 REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl}
 cd "$REPO_DIR"

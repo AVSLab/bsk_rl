@@ -18,6 +18,8 @@ information-matched heuristic. Read `PROVENANCE.md` for the historical audit.
   48-hour runs or 288 node-hours. These runs do not measure training-seed variance.
 - Alpine resources: `acpu` with the exact `epyc-7713` feature; `cpu-normal` for jobs
   up to 24 hours and `cpu-long` for the 48-hour final runs.
+- Runtime ABI: load Alpine's current default `gcc` module before activating the shared
+  virtual environment; no separate Python module is required.
 - Confirmatory campaign retained in configuration: seeds 10001, 20001, and 30001 after
   the exploratory results identify comparisons worth replicating.
 
