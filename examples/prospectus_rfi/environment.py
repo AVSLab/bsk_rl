@@ -34,6 +34,11 @@ class StudyDiscreteActionBuilder(DiscreteActionBuilder):
 
     def reset_post_sim_init(self) -> None:
         super().reset_post_sim_init()
+        # The archived ImageRSO timeout hook checks this satellite attribute even
+        # in fixed-duration mode, where no success event initializes it.  Keep the
+        # compatibility state local to this study instead of modifying historical
+        # AMOS source files.
+        self.satellite._active_image_rso_action = None
         self.satellite.study_action_counts = {
             "image": 0,
             "charge": 0,
