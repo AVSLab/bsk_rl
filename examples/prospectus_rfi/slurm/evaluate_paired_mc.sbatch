@@ -33,6 +33,7 @@ module --ignore_cache load python/3.10.2 || true
 source "/projects/$USER/.venv/bin/activate"
 REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl}
 cd "$REPO_DIR"
+export PYTHONPATH="$REPO_DIR/src:$REPO_DIR${PYTHONPATH:+:$PYTHONPATH}"
 ROOT="/scratch/alpine/$USER/prospectus_rfi"
 OUT="$ROOT/evaluation/raw/${METHOD}_k${K}_n${N}_block${BLOCK}.csv"
 mkdir -p "$(dirname "$OUT")" "/scratch/alpine/$USER/job_output"

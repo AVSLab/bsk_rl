@@ -30,6 +30,7 @@ module --ignore_cache load python/3.10.2 || true
 source "/projects/$USER/.venv/bin/activate"
 REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl}
 cd "$REPO_DIR"
+export PYTHONPATH="$REPO_DIR/src:$REPO_DIR${PYTHONPATH:+:$PYTHONPATH}"
 RUN_DIR=$(printf "/scratch/alpine/%s/prospectus_rfi/tuning/training/%s_k10_seed%s_tune%02d" "$USER" "$ARCHITECTURE" "$SEED" "$TRIAL")
 python -u examples/prospectus_rfi/validate_checkpoints.py \
     --architecture "$ARCHITECTURE" \

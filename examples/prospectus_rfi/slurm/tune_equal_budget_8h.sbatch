@@ -35,6 +35,7 @@ module --ignore_cache load python/3.10.2 || true
 source "/projects/$USER/.venv/bin/activate"
 REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl}
 cd "$REPO_DIR"
+export PYTHONPATH="$REPO_DIR/src:$REPO_DIR${PYTHONPATH:+:$PYTHONPATH}"
 TASK_TEMP=$(mktemp -d "/tmp/bsk_rfi_tune_${SLURM_JOB_ID}_${INDEX}_XXXXXX")
 trap 'rm -rf "$TASK_TEMP"' EXIT
 export TMPDIR=$TASK_TEMP RAY_TMPDIR=$TASK_TEMP PYTHONUNBUFFERED=1 BSK_RL_NUM_GPUS=0

@@ -54,7 +54,9 @@ Ray 2.35, Torch 2.4, pandas, scipy, matplotlib, and pyarrow. Verify before submi
 ```bash
 source /projects/$USER/.venv/bin/activate
 cd "$BSK_RL_REPO_DIR"
+export PYTHONPATH="$BSK_RL_REPO_DIR/src:$BSK_RL_REPO_DIR${PYTHONPATH:+:$PYTHONPATH}"
 python -c "import Basilisk, bsk_rl, ray, torch; print(ray.__version__, torch.__version__)"
+python -c "import bsk_rl; print(bsk_rl.__file__)"  # Must resolve inside bsk_rl-rfi/src.
 python -m pytest -q tests/unittest/prospectus_rfi tests/integration/prospectus_rfi
 python examples/prospectus_rfi/smoke_test.py \
   --candidate-count 10 \
