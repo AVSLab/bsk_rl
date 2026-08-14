@@ -1,0 +1,13 @@
+trial_index,architecture,candidate_count_for_tuning,learning_rate,train_batch_size,minibatch_size,ppo_epochs,clip_parameter,entropy_coefficient,value_function_coefficient,gradient_clip,gamma,gae_lambda,continuous_time_discount,reward_time,hidden_widths,embedding_dim,attention_heads,attention_blocks,feed_forward_width,status,wall_hours
+0,target_set_attention,10,3.676640729031858e-05,2100,256,5,0.15,0.0,1.0,1.0,0.995,0.9,False,step_end,128,128,2,2,256,pending,8.0
+1,target_set_attention,10,0.00011274314260313248,8400,64,30,0.05,0.025,2.0,1.0,0.9997,0.85,True,step_end,256-256,128,4,1,256,pending,8.0
+2,target_set_attention,10,0.00012453475847305103,4200,64,30,0.2,0.0,2.0,0.25,0.999,0.85,False,step_end,512-256,128,2,1,512,pending,8.0
+3,target_set_attention,10,9.841673497377429e-05,8400,256,20,0.05,0.0,2.0,0.25,0.99,0.98,True,step_start,512-256,64,1,3,128,pending,8.0
+4,target_set_attention,10,0.00010271854477887509,4200,128,20,0.15,0.005,1.0,1.0,0.9997,0.85,False,step_end,512-256,128,8,2,256,pending,8.0
+5,target_set_attention,10,9.870511403189986e-05,2100,128,10,0.2,0.005,0.5,1.0,0.99,0.85,True,step_start,512-256,256,4,3,256,pending,8.0
+6,target_set_attention,10,4.455080874483426e-05,4200,256,20,0.05,0.0,0.5,1.0,0.995,0.95,True,step_end,512-256,128,1,3,256,pending,8.0
+7,target_set_attention,10,7.250900984074561e-06,2100,256,5,0.1,0.005,1.0,1.0,0.99,0.85,True,step_start,256,128,8,2,64,pending,8.0
+8,target_set_attention,10,0.00015834029735165773,2100,128,20,0.15,0.025,2.0,0.5,0.999,0.98,True,step_end,512-256,128,2,3,128,pending,8.0
+9,target_set_attention,10,7.654897113176174e-06,8400,64,10,0.1,0.0,2.0,0.5,0.999,0.98,False,step_end,256,64,8,3,64,pending,8.0
+10,target_set_attention,10,0.00029880659900886046,4200,64,10,0.15,0.01,2.0,0.5,0.99,0.98,True,step_start,256,64,4,3,512,pending,8.0
+11,target_set_attention,10,0.0002551397614800916,8400,64,30,0.05,0.025,0.5,0.5,0.9997,0.98,False,step_start,128,128,1,1,128,pending,8.0
