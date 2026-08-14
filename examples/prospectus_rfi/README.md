@@ -29,8 +29,8 @@ AMOS 2025 physical configuration explicitly.
 First push the study branch from the machine where it was prepared:
 
 ```bash
-git switch codex/amos2025-architecture-comparison-100s
-git push -u origin codex/amos2025-architecture-comparison-100s
+git switch amos2025-architecture-comparison
+git push -u origin amos2025-architecture-comparison
 ```
 
 On Alpine, preserve an existing AMOS 2026 checkout by creating a separate worktree:
@@ -39,10 +39,10 @@ On Alpine, preserve an existing AMOS 2026 checkout by creating a separate worktr
 cd /projects/$USER/bsk_rl
 git fetch origin
 git worktree add /projects/$USER/bsk_rl-rfi \
-  origin/codex/amos2025-architecture-comparison-100s
+  origin/amos2025-architecture-comparison
 cd /projects/$USER/bsk_rl-rfi
-git switch -c codex/amos2025-architecture-comparison-100s \
-  --track origin/codex/amos2025-architecture-comparison-100s
+git switch -c amos2025-architecture-comparison \
+  --track origin/amos2025-architecture-comparison
 export BSK_RL_REPO_DIR=/projects/$USER/bsk_rl-rfi
 git rev-parse HEAD
 git status --short
@@ -169,4 +169,3 @@ python examples/prospectus_rfi/train.py \
   paired differences, resource allocation, and computation cost.
 - `prospectus_results.md`: generated numerical language and figure paths. It deliberately
   labels the one-seed campaign exploratory and does not assert architecture superiority.
-

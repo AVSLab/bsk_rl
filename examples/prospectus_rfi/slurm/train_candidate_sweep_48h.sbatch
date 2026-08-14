@@ -32,7 +32,7 @@ source "/projects/$USER/.venv/bin/activate"
 REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl}
 cd "$REPO_DIR"
 
-if [[ "$(git branch --show-current)" != "codex/amos2025-architecture-comparison-100s" ]]; then
+if [[ "$(git branch --show-current)" != "amos2025-architecture-comparison" ]]; then
     echo "Wrong branch: $(git branch --show-current)" >&2
     exit 2
 fi

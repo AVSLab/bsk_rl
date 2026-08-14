@@ -18,7 +18,7 @@ unrelated AMOS 2026 changes; they were preserved. Research Focus I code is isola
 - Broader public journal snapshot: `amos-journal-public`, commit
   `38022cff03be3207066d1f29bf235ea6487ed39c` (based on
   `07e0bf71529c59f68e8be2910313659b0bdadf8e`).
-- New study branch: `codex/amos2025-architecture-comparison-100s`, created from
+- New study branch: `amos2025-architecture-comparison`, created from
   committed AMOS 2026 branch tip `94ad6cfb1a25460eb886b29bbdceb7c1ee683d7c`.
   This newer base is required for the maintained Ray 2.35 RLModule, fixed-duration
   action, lifecycle, and attention APIs. The physical environment is reconstructed
@@ -126,4 +126,3 @@ environment/connector state, learner state, and per-module PyTorch state. The in
 module is stored below
 `learner_group/learner/rl_module/inspector/module_state.pt` and is loadable with
 `RLModule.from_checkpoint(...)`.
-
