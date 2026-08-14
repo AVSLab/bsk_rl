@@ -26,9 +26,8 @@ CANDIDATE_COUNT=${CANDIDATE_COUNTS[$INDEX]}
 SEED=10001
 
 module purge
-module load gcc
-source "/projects/$USER/.venv/bin/activate"
 REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl}
+source "$REPO_DIR/examples/prospectus_rfi/slurm/alpine_runtime.sh"
 cd "$REPO_DIR"
 export PYTHONPATH="$REPO_DIR/src:$REPO_DIR${PYTHONPATH:+:$PYTHONPATH}"
 

@@ -16,9 +16,8 @@
 set -euo pipefail
 
 module purge
-module load gcc
-source "/projects/$USER/.venv/bin/activate"
 REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl-rfi}
+source "$REPO_DIR/examples/prospectus_rfi/slurm/alpine_runtime.sh"
 cd "$REPO_DIR"
 export PYTHONPATH="$REPO_DIR/src:$REPO_DIR${PYTHONPATH:+:$PYTHONPATH}"
 export PYTHONUNBUFFERED=1
@@ -34,7 +33,6 @@ OUTPUT="$OUTPUT_ROOT/smoke_k${CANDIDATE_COUNT}_job${SLURM_JOB_ID}.csv"
 mkdir -p "/scratch/alpine/$USER/job_output" "$OUTPUT_ROOT"
 
 echo "branch=$(git branch --show-current) commit=$(git rev-parse HEAD)"
-echo "gcc_version=$(gcc -dumpfullversion -dumpversion)"
 python -c "import Basilisk; print('Basilisk source:', Basilisk.__file__)"
 python -c "import bsk_rl; print('bsk_rl source:', bsk_rl.__file__)"
 python -m pytest -q tests/unittest/prospectus_rfi tests/integration/prospectus_rfi
