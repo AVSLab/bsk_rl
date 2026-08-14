@@ -11,9 +11,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from examples.prospectus_rfi.heuristic_mc import CATALOG_SIZES, METHOD
+from examples.prospectus_rfi.heuristic_mc_design import (
+    CATALOG_SIZES,
+    METHOD,
+    SEED_START,
+    SEED_STOP_INCLUSIVE,
+)
 
-EXPECTED_SEEDS = range(100)
+EXPECTED_SEEDS = range(SEED_START, SEED_STOP_INCLUSIVE + 1)
 EXPECTED_PAIRS = {
     (catalog_size, seed) for catalog_size in CATALOG_SIZES for seed in EXPECTED_SEEDS
 }

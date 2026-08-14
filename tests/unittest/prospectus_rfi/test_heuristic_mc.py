@@ -6,10 +6,9 @@ import yaml
 
 from examples.prospectus_rfi.collect_heuristic_mc import validate_campaign
 from examples.prospectus_rfi.heuristic_mc import (
-    CATALOG_SIZES,
-    TOTAL_TASKS,
     task_spec,
 )
+from examples.prospectus_rfi.heuristic_mc_design import CATALOG_SIZES, TOTAL_TASKS
 
 
 def complete_campaign_frame() -> pd.DataFrame:

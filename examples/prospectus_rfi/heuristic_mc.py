@@ -24,14 +24,15 @@ import pandas as pd
 
 from examples.prospectus_rfi.config import git_metadata, load_study_config
 from examples.prospectus_rfi.evaluate import run_episode
-
-CATALOG_SIZES = (100, 200, 400)
-SEEDS_PER_BLOCK = 10
-BLOCKS_PER_CATALOG = 10
-TOTAL_TASKS = len(CATALOG_SIZES) * BLOCKS_PER_CATALOG
-METHOD = "heuristic_historical"
-HEURISTIC_MODE = "angle"
-CANDIDATE_COUNT = 10
+from examples.prospectus_rfi.heuristic_mc_design import (
+    BLOCKS_PER_CATALOG,
+    CANDIDATE_COUNT,
+    CATALOG_SIZES,
+    HEURISTIC_MODE,
+    METHOD,
+    SEEDS_PER_BLOCK,
+    TOTAL_TASKS,
+)
 
 
 @dataclass(frozen=True)

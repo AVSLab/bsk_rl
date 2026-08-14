@@ -1,0 +1,23 @@
+"""Dependency-free constants for the AMOS 2025 heuristic MC design."""
+
+CATALOG_SIZES = (100, 200, 400)
+SEED_START = 0
+SEED_STOP_INCLUSIVE = 99
+SEEDS_PER_BLOCK = 10
+BLOCKS_PER_CATALOG = 10
+TOTAL_TASKS = len(CATALOG_SIZES) * BLOCKS_PER_CATALOG
+METHOD = "heuristic_historical"
+HEURISTIC_MODE = "angle"
+CANDIDATE_COUNT = 10
+
+__all__ = [
+    "BLOCKS_PER_CATALOG",
+    "CANDIDATE_COUNT",
+    "CATALOG_SIZES",
+    "HEURISTIC_MODE",
+    "METHOD",
+    "SEEDS_PER_BLOCK",
+    "SEED_START",
+    "SEED_STOP_INCLUSIVE",
+    "TOTAL_TASKS",
+]
