@@ -1,0 +1,17 @@
+campaign_name: amos2025_closest_angle_mc_100s
+method: heuristic_historical
+heuristic_mode: angle
+information_scope: full_visible_eligible_catalog
+candidate_count: 10
+catalog_sizes: [100, 200, 400]
+seed_start: 0
+seed_stop_inclusive: 99
+seeds_per_catalog_size: 100
+seeds_per_block: 10
+blocks_per_catalog_size: 10
+total_episodes: 300
+episode_duration_s: 45000.0
+imaging_duration_s: 100.0
+shield_enabled: true
+dependencies: none
+environment_config: base.yaml

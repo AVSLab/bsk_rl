@@ -71,6 +71,48 @@ The smoke job completes six full 45,000-second episodes on a compute node: rando
 initialized MLP, random initialized attention, and the historical heuristic at N=100
 and N=400. Do not run this full simulation on an Alpine login node.
 
+## Dependency-free AMOS 2025 heuristic Monte Carlo
+
+The standalone closest-angle campaign is separate from the later paired-policy study.
+It runs the historical full-catalog smallest-pointing-angle heuristic with the resource
+shield at N in {100, 200, 400}, using the exact scenario seeds 0 through 99 at every N.
+The study environment still has a 45,000 s horizon, fixed 100 s imaging actions,
+observation-only alpha=0 reward, no re-imaging, and randomized 20--60% initial battery.
+K=10 remains the action-interface size, but the historical heuristic intentionally sees
+the full eligible target catalog; this information advantage is recorded in every row.
+
+After the smoke job succeeds, submit all 300 episodes as 30 independent array tasks
+(ten seeds per task). The `%12` throttle controls concurrency and is not a dependency:
+
+```bash
+cd "$BSK_RL_REPO_DIR"
+git pull --ff-only
+MC_SUBMISSION=$(bash examples/prospectus_rfi/submit_amos2025_heuristic_mc.sh 12)
+printf '%s\n' "$MC_SUBMISSION"
+```
+
+The submission prints both `JOB_ID` and a timestamped `OUTPUT_ROOT`. Save the output
+root, then monitor the job and logs with:
+
+```bash
+squeue -j <JOB_ID>
+tail -f /scratch/alpine/$USER/job_output/rfi_heur_mc_<JOB_ID>_<ARRAY_TASK>.out
+```
+
+Each episode is committed independently under `raw/n100`, `raw/n200`, or `raw/n400`,
+with adjacent JSON metadata and a separate status record. Re-submitting the same array
+with the same `BSK_RL_HEURISTIC_MC_OUTPUT_ROOT` safely skips completed seeds. After all
+tasks finish, validate the complete 300-pair design and create analysis-ready tables:
+
+```bash
+python examples/prospectus_rfi/collect_heuristic_mc.py \
+  --input-root <OUTPUT_ROOT>
+```
+
+The collector refuses incomplete, duplicate, or mislabeled campaigns. Successful
+collection writes `analysis/episodes_combined.csv`, optional Parquet, summary statistics,
+and `analysis/completion.json`. No W&B login is required for this deterministic baseline.
+
 ## Weights & Biases isolation
 
 Training runs use a dedicated W&B project rather than the AMOS 2026 project:
