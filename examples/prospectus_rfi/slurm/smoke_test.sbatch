@@ -35,6 +35,7 @@ mkdir -p "/scratch/alpine/$USER/job_output" "$OUTPUT_ROOT"
 
 echo "branch=$(git branch --show-current) commit=$(git rev-parse HEAD)"
 python -c "import bsk_rl; print('bsk_rl source:', bsk_rl.__file__)"
+python -m pytest -q tests/unittest/prospectus_rfi tests/integration/prospectus_rfi
 python -u examples/prospectus_rfi/smoke_test.py \
     --candidate-count "$CANDIDATE_COUNT" \
     --output "$OUTPUT"
