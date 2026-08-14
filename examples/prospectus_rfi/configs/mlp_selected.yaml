@@ -1,0 +1,21 @@
+architecture:
+  name: fixed_input_monolithic_mlp
+  hidden_widths: [2048, 2048]
+  activation: relu
+  layer_norm: false
+  dropout: 0.0
+  separate_value_network: true
+
+ppo:
+  learning_rate: 1.0e-5
+  train_batch_size: 4200
+  minibatch_size: 128
+  ppo_epochs: 10
+  clip_parameter: 0.05
+  entropy_coefficient: 0.0
+  value_function_coefficient: 1.0
+  gradient_clip: 0.5
+  gamma: 0.9997
+  gae_lambda: 0.95
+  continuous_time_discount: true
+  reward_time: step_start

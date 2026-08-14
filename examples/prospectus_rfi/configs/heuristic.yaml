@@ -1,0 +1,10 @@
+method: amos2025_smallest_pointing_angle
+historical_information_scope: full_visible_eligible_catalog
+information_matched_scope: configured_candidate_set
+heuristic_mode: angle
+shield:
+  enabled: true
+  battery_charge_threshold: 0.20
+  storage_downlink_threshold: 0.99
+  wheel_desaturation_threshold: 0.90
+environment_config: base.yaml

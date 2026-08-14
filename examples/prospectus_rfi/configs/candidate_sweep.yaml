@@ -1,0 +1,16 @@
+campaign: exploratory_candidate_sweep
+candidate_counts: [5, 10, 20]
+architectures:
+  - fixed_input_monolithic_mlp
+  - target_set_attention
+training_seeds: [10001]
+wall_hours_per_run: 48.0
+run_count: 6
+total_requested_node_hours: 288.0
+notes:
+  - Total episode catalog size remains uniformly sampled from 100 through 400.
+  - Candidate count is the number of target rows and target actions presented per decision.
+  - The MLP input and output dimensions change with candidate count.
+  - Attention encoder/head trainable dimensions do not depend on candidate count.
+  - These single-seed runs are exploratory and cannot establish run-to-run variance.
+  - Promote selected comparisons to the three-seed confirmatory campaign before publication claims.

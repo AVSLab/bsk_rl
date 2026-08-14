@@ -1,0 +1,25 @@
+architecture:
+  name: target_set_attention
+  hidden_widths: [256, 256]
+  activation: relu
+  layer_norm: true
+  embedding_dim: 128
+  attention_heads: 2
+  attention_blocks: 1
+  feed_forward_width: 128
+  dropout: 0.1
+  separate_value_network: true
+
+ppo:
+  learning_rate: 1.0e-5
+  train_batch_size: 4200
+  minibatch_size: 128
+  ppo_epochs: 30
+  clip_parameter: 0.14701727973480344
+  entropy_coefficient: 0.023694512589767867
+  value_function_coefficient: 1.0
+  gradient_clip: 0.3104924935285628
+  gamma: 0.9915045428565076
+  gae_lambda: 0.8713548569911232
+  continuous_time_discount: true
+  reward_time: step_start
