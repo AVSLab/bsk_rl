@@ -5,12 +5,13 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --time=04:00:00
-#SBATCH --partition=amilan
+#SBATCH --partition=acpu
 #SBATCH --mem=80G
+#SBATCH --constraint=epyc-7713
 #SBATCH --nodes=1
 #SBATCH --output=/scratch/alpine/%u/job_output/%x_%j.out
 #SBATCH --mail-type=FAIL,END
-#SBATCH --qos=normal
+#SBATCH --qos=cpu-normal
 
 set -euo pipefail
 

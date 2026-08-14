@@ -6,12 +6,13 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --time=24:00:00
 #SBATCH --array=0-191%32
-#SBATCH --partition=amilan
+#SBATCH --partition=acpu
 #SBATCH --mem=80G
+#SBATCH --constraint=epyc-7713
 #SBATCH --nodes=1
 #SBATCH --output=/scratch/alpine/%u/job_output/%x_%A_%a.out
 #SBATCH --mail-type=FAIL,END
-#SBATCH --qos=normal
+#SBATCH --qos=cpu-normal
 
 set -euo pipefail
 METHODS=(mlp attention heuristic_historical heuristic_matched)

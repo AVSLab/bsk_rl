@@ -6,14 +6,14 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --time=48:00:00
 #SBATCH --array=0-5%6
-#SBATCH --partition=amilan
+#SBATCH --partition=acpu
 #SBATCH --mem=200G
 #SBATCH --constraint=epyc-7713
 #SBATCH --threads-per-core=1
 #SBATCH --nodes=1
 #SBATCH --output=/scratch/alpine/%u/job_output/%x_%A_%a.out
 #SBATCH --mail-type=ALL
-#SBATCH --qos=long
+#SBATCH --qos=cpu-long
 #SBATCH --signal=B:TERM@300
 
 set -euo pipefail

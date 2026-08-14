@@ -16,6 +16,8 @@ information-matched heuristic. Read `PROVENANCE.md` for the historical audit.
 - Re-imaging: disabled for the full episode.
 - Exploratory campaign: one seed (10001) for each architecture/K combination, six
   48-hour runs or 288 node-hours. These runs do not measure training-seed variance.
+- Alpine resources: `acpu` with the exact `epyc-7713` feature; `cpu-normal` for jobs
+  up to 24 hours and `cpu-long` for the 48-hour final runs.
 - Confirmatory campaign retained in configuration: seeds 10001, 20001, and 30001 after
   the exploratory results identify comparisons worth replicating.
 
