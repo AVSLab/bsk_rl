@@ -55,6 +55,11 @@ from examples.prospectus_rfi.models import (
     layout_from_environment,
     model_metadata,
 )
+from examples.prospectus_rfi.wandb_logging import (
+    maybe_init_wandb,
+    public_wandb_metadata,
+    wandb_settings,
+)
 
 
 STOP_REQUESTED = False
@@ -352,7 +357,8 @@ def main() -> None:
     run_name = f"{architecture_slug}_k{args.candidate_count}_seed{args.seed}"
     if args.trial_index is not None:
         run_name += f"_tune{args.trial_index:02d}"
-    run_dir = args.output_root.resolve() / "training" / run_name
+    output_root = args.output_root.resolve()
+    run_dir = output_root / "training" / run_name
     run_dir.mkdir(parents=True, exist_ok=True)
     temp_dir = (
         args.temp_dir.resolve()
@@ -369,6 +375,11 @@ def main() -> None:
         n_env_runners = max(1, allocated - 4)
     wall_hours = min(args.wall_hours, 0.05) if args.smoke else args.wall_hours
     wall_budget_s = wall_hours * 3600.0
+    resolved_wandb = wandb_settings(
+        run_name,
+        output_root,
+        tuning=args.trial_index is not None,
+    )
 
     pure_model = build_actor_critic(
         study.architecture, layout_from_environment(study.environment)
@@ -388,6 +399,7 @@ def main() -> None:
         "environment_contract": environment_contract(study.environment),
         "model": model_metadata(pure_model),
         "git": git_metadata(Path.cwd()),
+        "wandb": public_wandb_metadata(resolved_wandb),
         "checkpoint_format": "RLlib 2.x Algorithm checkpoint with inspector module_state.pt",
     }
     with (run_dir / "metadata.json").open("w") as stream:
@@ -405,6 +417,14 @@ def main() -> None:
     algorithm = PPO(build_ppo_config(study, args.seed, n_env_runners, temp_dir))
     if args.resume:
         algorithm.restore(str(args.resume.resolve()))
+    wandb_logger = maybe_init_wandb(resolved_wandb, metadata)
+    if wandb_logger is not None:
+        wandb_run = {
+            **public_wandb_metadata(resolved_wandb),
+            "url": getattr(wandb_logger.run, "url", None),
+        }
+        with (run_dir / "wandb_run.json").open("w") as stream:
+            json.dump(wandb_run, stream, indent=2, sort_keys=True)
 
     csv_path = run_dir / "training_metrics.csv"
     jsonl_path = run_dir / "training_metrics.jsonl"
@@ -423,6 +443,8 @@ def main() -> None:
             _append_row(csv_path, row)
             with jsonl_path.open("a") as stream:
                 stream.write(json.dumps(row, default=str, sort_keys=True) + "\n")
+            if wandb_logger is not None:
+                wandb_logger.log({**result, "prospectus_rfi": row})
             previous_time, previous_steps = now, steps
 
             if iteration % study.compute.checkpoint_interval_iterations == 0:
@@ -449,6 +471,8 @@ def main() -> None:
         }
         with (run_dir / "status.json").open("w") as stream:
             json.dump(status, stream, indent=2, sort_keys=True)
+        if wandb_logger is not None:
+            wandb_logger.finish()
         algorithm.stop()
         ray.shutdown()
 

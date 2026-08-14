@@ -61,6 +61,28 @@ python examples/prospectus_rfi/smoke_test.py \
   --output /scratch/alpine/$USER/prospectus_rfi/smoke_test.csv
 ```
 
+## Weights & Biases isolation
+
+Training runs use a dedicated W&B project rather than the AMOS 2026 project:
+
+- project: `amos2025-architecture-comparison`;
+- final-run group: `rfi-alpha0-100s-candidate-sweep`;
+- tuning group: `rfi-alpha0-100s-architecture-tuning`;
+- run names: `amos2025-rfi-alpha0-100s__<architecture>_k<K>_seed<seed>`;
+- local W&B files: `/scratch/alpine/$USER/prospectus_rfi/wandb/amos2025-architecture-comparison`.
+
+Run IDs are deterministic, so resuming a checkpoint reconnects to the same W&B run.
+Both training Slurm scripts set `BSK_RL_REQUIRE_WANDB=1`; a missing key or package stops
+the job instead of silently producing an untracked policy. By default they use the
+existing key at `/projects/$USER/bsk_rl/examples/wandb_key.txt`. Override it if needed:
+
+```bash
+export BSK_RL_WANDB_KEY_PATH=/projects/$USER/secure/wandb_key.txt
+```
+
+The project can be redirected deliberately with `BSK_RL_RFI_WANDB_PROJECT`, without
+inheriting an unrelated `BSK_RL_WANDB_PROJECT` left over from an AMOS 2026 campaign.
+
 ## Recommended campaign order
 
 The checked-in `*_selected.yaml` files are historically informed starting points. The
@@ -155,7 +177,9 @@ python examples/prospectus_rfi/train.py \
 ## Outputs
 
 - `training/<method>_k<K>_seed<seed>/metadata.json`: commit, full configuration,
-  observation/action/reward contract, and parameter count.
+  observation/action/reward contract, parameter count, and W&B namespace.
+- `training/<method>_k<K>_seed<seed>/wandb_run.json`: W&B project, group, stable run
+  ID, local directory, and web URL.
 - `training_metrics.csv` and `.jsonl`: raw environment steps, wall time, throughput, and
   RLlib training metrics.
 - `validation_metrics.csv`: held-out physical metrics for retained checkpoints.

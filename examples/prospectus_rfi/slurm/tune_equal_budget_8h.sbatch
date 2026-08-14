@@ -39,7 +39,16 @@ TASK_TEMP=$(mktemp -d "/tmp/bsk_rfi_tune_${SLURM_JOB_ID}_${INDEX}_XXXXXX")
 trap 'rm -rf "$TASK_TEMP"' EXIT
 export TMPDIR=$TASK_TEMP RAY_TMPDIR=$TASK_TEMP PYTHONUNBUFFERED=1 BSK_RL_NUM_GPUS=0
 OUTPUT_ROOT="/scratch/alpine/$USER/prospectus_rfi/tuning"
-mkdir -p "/scratch/alpine/$USER/job_output" "$OUTPUT_ROOT"
+export BSK_RL_USE_WANDB=1
+export BSK_RL_REQUIRE_WANDB=1
+export BSK_RL_WANDB_PROJECT=${BSK_RL_RFI_WANDB_PROJECT:-amos2025-architecture-comparison}
+export BSK_RL_WANDB_GROUP=${BSK_RL_RFI_TUNING_WANDB_GROUP:-rfi-alpha0-100s-architecture-tuning}
+export BSK_RL_WANDB_KEY_PATH=${BSK_RL_WANDB_KEY_PATH:-/projects/$USER/bsk_rl/examples/wandb_key.txt}
+export WANDB_DIR=${BSK_RL_RFI_WANDB_DIR:-/scratch/alpine/$USER/prospectus_rfi/wandb/$BSK_RL_WANDB_PROJECT}
+mkdir -p "/scratch/alpine/$USER/job_output" "$OUTPUT_ROOT" "$WANDB_DIR"
+
+echo "wandb_project=$BSK_RL_WANDB_PROJECT wandb_group=$BSK_RL_WANDB_GROUP"
+python -c "import wandb; print('wandb import ok')"
 
 python -u examples/prospectus_rfi/train.py \
     --architecture "$ARCHITECTURE" \

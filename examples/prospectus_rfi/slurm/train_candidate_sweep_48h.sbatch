@@ -45,10 +45,18 @@ export PYTHONUNBUFFERED=1
 export BSK_RL_NUM_GPUS=0
 export BSK_RL_OBJECT_STORE_MEMORY=${BSK_RL_OBJECT_STORE_MEMORY:-4000000000}
 OUTPUT_ROOT="/scratch/alpine/$USER/prospectus_rfi"
-mkdir -p "/scratch/alpine/$USER/job_output" "$OUTPUT_ROOT"
+export BSK_RL_USE_WANDB=1
+export BSK_RL_REQUIRE_WANDB=1
+export BSK_RL_WANDB_PROJECT=${BSK_RL_RFI_WANDB_PROJECT:-amos2025-architecture-comparison}
+export BSK_RL_WANDB_GROUP=${BSK_RL_RFI_WANDB_GROUP:-rfi-alpha0-100s-candidate-sweep}
+export BSK_RL_WANDB_KEY_PATH=${BSK_RL_WANDB_KEY_PATH:-/projects/$USER/bsk_rl/examples/wandb_key.txt}
+export WANDB_DIR=${BSK_RL_RFI_WANDB_DIR:-$OUTPUT_ROOT/wandb/$BSK_RL_WANDB_PROJECT}
+mkdir -p "/scratch/alpine/$USER/job_output" "$OUTPUT_ROOT" "$WANDB_DIR"
 
 echo "branch=$(git branch --show-current) commit=$(git rev-parse HEAD)"
 echo "architecture=$ARCHITECTURE K=$CANDIDATE_COUNT seed=$SEED"
+echo "wandb_project=$BSK_RL_WANDB_PROJECT wandb_group=$BSK_RL_WANDB_GROUP"
+python -c "import wandb; print('wandb import ok')"
 if [[ "$ARCHITECTURE" == "mlp" ]]; then
     ARCH_CONFIG=${BSK_RL_MLP_CONFIG:-examples/prospectus_rfi/configs/mlp_selected.yaml}
 else
