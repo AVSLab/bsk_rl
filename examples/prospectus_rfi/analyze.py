@@ -32,6 +32,25 @@ COLORS = {
     "heuristic_historical": "#6a6a6a",
     "heuristic_matched": "#009e73",
 }
+LINE_STYLES = {
+    "mlp": "-",
+    "attention": "--",
+    "heuristic_historical": ":",
+    "heuristic_matched": "-.",
+}
+MARKERS = {
+    "mlp": "o",
+    "attention": "s",
+    "heuristic_historical": "^",
+    "heuristic_matched": "D",
+}
+RESOURCE_COLORS = {
+    "image_action_count": "#365f9d",
+    "charge_action_count": "#e69f00",
+    "downlink_action_count": "#56b4e9",
+    "desaturation_action_count": "#8a8a8a",
+    "resource_constraint_interventions": "#cc79a7",
+}
 PRIMARY_METRICS = [
     "successful_observation_fraction",
     "illuminated_observation_fraction",
@@ -47,6 +66,16 @@ def save_figure(fig, directory: Path, stem: str) -> None:
     for suffix in ("pdf", "svg"):
         fig.savefig(directory / f"{stem}.{suffix}", bbox_inches="tight")
     plt.close(fig)
+
+
+def label_figure(
+    fig, title: str, subtitle: str, *, top: float = 0.76, bottom: float = 0.16
+) -> None:
+    """Apply a consistent, publication-readable title and context line."""
+
+    fig.suptitle(title, x=0.04, y=0.99, ha="left", fontsize=11, fontweight="bold")
+    fig.text(0.04, 0.925, subtitle, ha="left", va="top", fontsize=8, color="#4d4d4d")
+    fig.subplots_adjust(top=top, bottom=bottom, wspace=0.25)
 
 
 def read_evaluation(input_dir: Path) -> pd.DataFrame:
@@ -263,6 +292,7 @@ def plot_training_curves(training: pd.DataFrame, figure_dir: Path) -> None:
                         seed_group[x],
                         seed_group["validation_score"],
                         color=COLORS[label_key],
+                        linestyle=LINE_STYLES[label_key],
                         alpha=0.35,
                         linewidth=0.8,
                     )
@@ -293,6 +323,7 @@ def plot_training_curves(training: pd.DataFrame, figure_dir: Path) -> None:
                     grid,
                     median,
                     color=COLORS[label_key],
+                    linestyle=LINE_STYLES[label_key],
                     linewidth=2.0,
                     label=METHOD_LABELS[label_key],
                 )
@@ -309,6 +340,11 @@ def plot_training_curves(training: pd.DataFrame, figure_dir: Path) -> None:
             axis.grid(alpha=0.2)
         axes[0].set_ylabel("Held-out physical validation score")
         axes[-1].legend(frameon=False, fontsize=8)
+        label_figure(
+            fig,
+            "Held-out validation performance by presented candidate count",
+            "Unsmoothed seed traces with pointwise median; IQR bands appear only when multiple training seeds exist.",
+        )
         save_figure(fig, figure_dir, stem)
 
 
@@ -324,7 +360,8 @@ def plot_performance(frame: pd.DataFrame, figure_dir: Path) -> None:
                 statistics.index,
                 statistics["mean"],
                 yerr=1.96 * statistics["sem"],
-                marker="o",
+                marker=MARKERS[method],
+                linestyle=LINE_STYLES[method],
                 capsize=2,
                 color=COLORS[method],
                 label=METHOD_LABELS[method],
@@ -334,6 +371,14 @@ def plot_performance(frame: pd.DataFrame, figure_dir: Path) -> None:
         axis.grid(alpha=0.2)
     axes[0].set_ylabel("Successfully observed fraction")
     axes[-1].legend(frameon=False, fontsize=7)
+    min_episodes = int(
+        frame.groupby(["method", "candidate_count", "catalog_size"]).size().min()
+    )
+    label_figure(
+        fig,
+        "Observation performance across catalog sizes",
+        f"Mean and normal-approximation 95% interval across at least {min_episodes} paired scenarios per cell; panels show presented candidates K.",
+    )
     save_figure(fig, figure_dir, "performance_vs_catalog_size")
 
 
@@ -353,7 +398,7 @@ def plot_differences(paired: pd.DataFrame, figure_dir: Path) -> None:
                 x,
                 y,
                 yerr=yerr,
-                fmt="o",
+                fmt=MARKERS[method],
                 capsize=3,
                 color=COLORS[method],
                 label=METHOD_LABELS[method],
@@ -365,6 +410,11 @@ def plot_differences(paired: pd.DataFrame, figure_dir: Path) -> None:
         axis.grid(alpha=0.2)
     axes[0].set_ylabel("Method − matched heuristic\n(successful fraction)")
     axes[-1].legend(frameon=False, fontsize=7)
+    label_figure(
+        fig,
+        "Paired performance differences from the information-matched heuristic",
+        "Points are mean paired differences with 95% bootstrap intervals; the gray band is the predeclared ±0.02 equivalence margin.",
+    )
     save_figure(fig, figure_dir, "paired_policy_minus_heuristic")
 
 
@@ -387,12 +437,31 @@ def plot_resources(frame: pd.DataFrame, figure_dir: Path) -> None:
                 subset[column],
                 bottom=bottom,
                 label=column.replace("_", " "),
+                color=RESOURCE_COLORS[column],
+                edgecolor="#333333",
+                linewidth=0.35,
             )
             bottom += subset[column].to_numpy()
         axis.set_title(f"K = {candidate_count}")
         axis.tick_params(axis="x", labelrotation=55, labelsize=7)
     axes[0].set_ylabel("Mean episode count")
-    axes[-1].legend(frameon=False, fontsize=7)
+    handles, labels = axes[-1].get_legend_handles_labels()
+    fig.legend(
+        handles,
+        labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 0.86),
+        ncol=len(columns),
+        frameon=False,
+        fontsize=7,
+    )
+    label_figure(
+        fig,
+        "Resource-action allocation and constraint interventions",
+        "Stacked means across paired evaluation episodes; panels show presented candidates K.",
+        top=0.69,
+        bottom=0.29,
+    )
     save_figure(fig, figure_dir, "resource_action_allocation_and_interventions")
 
 
@@ -438,7 +507,8 @@ def plot_computation(frame: pd.DataFrame, input_dir: Path, figure_dir: Path) -> 
             axis.plot(
                 group["candidate_count"],
                 group[metric],
-                marker="o",
+                marker=MARKERS[method],
+                linestyle=LINE_STYLES[method],
                 color=COLORS[method],
                 label=METHOD_LABELS[method],
             )
@@ -446,6 +516,11 @@ def plot_computation(frame: pd.DataFrame, input_dir: Path, figure_dir: Path) -> 
         axis.set_ylabel(ylabel)
         axis.grid(alpha=0.2)
     axes[-1].legend(frameon=False, fontsize=8)
+    label_figure(
+        fig,
+        "Architecture size, inference cost, and training throughput",
+        "Parameters come from run metadata; inference is an episode mean and throughput is the median recorded samples per second.",
+    )
     save_figure(fig, figure_dir, "parameters_inference_and_throughput")
 
 
