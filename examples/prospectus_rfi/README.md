@@ -58,10 +58,13 @@ export PYTHONPATH="$BSK_RL_REPO_DIR/src:$BSK_RL_REPO_DIR${PYTHONPATH:+:$PYTHONPA
 python -c "import Basilisk, bsk_rl, ray, torch; print(ray.__version__, torch.__version__)"
 python -c "import bsk_rl; print(bsk_rl.__file__)"  # Must resolve inside bsk_rl-rfi/src.
 python -m pytest -q tests/unittest/prospectus_rfi tests/integration/prospectus_rfi
-python examples/prospectus_rfi/smoke_test.py \
-  --candidate-count 10 \
-  --output /scratch/alpine/$USER/prospectus_rfi/smoke_test.csv
+SMOKE_JOB=$(sbatch --parsable examples/prospectus_rfi/slurm/smoke_test.sbatch)
+echo "$SMOKE_JOB"
 ```
+
+The smoke job completes six full 45,000-second episodes on a compute node: random
+initialized MLP, random initialized attention, and the historical heuristic at N=100
+and N=400. Do not run this full simulation on an Alpine login node.
 
 ## Weights & Biases isolation
 
