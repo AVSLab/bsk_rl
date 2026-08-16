@@ -230,6 +230,62 @@ def _append_row(path: Path, row: dict[str, Any]) -> None:
         writer.writerow(row)
 
 
+def _load_prior_progress(run_dir: Path) -> dict[str, Any]:
+    """Recover cumulative counters needed for a restartable training segment."""
+
+    progress: dict[str, Any] = {
+        "wall_clock_s": 0.0,
+        "environment_steps": 0,
+        "training_iteration": 0,
+        "segments": [],
+    }
+    status_path = run_dir / "status.json"
+    if status_path.is_file():
+        status = json.loads(status_path.read_text())
+        progress["wall_clock_s"] = float(
+            status.get("cumulative_wall_clock_s", status.get("wall_clock_s", 0.0))
+        )
+        progress["environment_steps"] = int(status.get("environment_steps", 0))
+        progress["training_iteration"] = int(
+            status.get("training_iteration", status.get("iterations", 0))
+        )
+        progress["segments"] = list(status.get("segments", []))
+
+    metrics_path = run_dir / "training_metrics.csv"
+    if metrics_path.is_file():
+        metrics = pd.read_csv(metrics_path)
+        if not metrics.empty:
+            last = metrics.iloc[-1]
+            progress["wall_clock_s"] = max(
+                progress["wall_clock_s"], float(last.get("wall_clock_s", 0.0))
+            )
+            progress["environment_steps"] = max(
+                progress["environment_steps"],
+                int(last.get("environment_steps", 0)),
+            )
+            progress["training_iteration"] = max(
+                progress["training_iteration"],
+                int(last.get("training_iteration", 0)),
+            )
+    return progress
+
+
+def _segment_budget_seconds(
+    *,
+    target_wall_hours: float,
+    prior_wall_seconds: float,
+    segment_wall_hours: float | None,
+) -> float:
+    """Return this allocation's usable training time without exceeding the target."""
+
+    remaining = max(0.0, target_wall_hours * 3600.0 - prior_wall_seconds)
+    if segment_wall_hours is None:
+        return remaining
+    if segment_wall_hours <= 0.0:
+        raise ValueError("segment_wall_hours must be positive")
+    return min(remaining, segment_wall_hours * 3600.0)
+
+
 def _replace_checkpoint(algorithm: PPO, path: Path) -> None:
     if path.exists():
         shutil.rmtree(path)
@@ -250,6 +306,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--seed", type=int, default=10_001)
     parser.add_argument("--wall-hours", type=float, default=48.0)
+    parser.add_argument(
+        "--segment-wall-hours",
+        type=float,
+        help="Maximum time in this allocation; --wall-hours remains cumulative.",
+    )
+    parser.add_argument("--segment-index", type=int)
     parser.add_argument("--n-env-runners", type=int)
     parser.add_argument(
         "--output-root", type=Path, default=Path("results/prospectus_rfi")
@@ -360,6 +422,17 @@ def main() -> None:
     output_root = args.output_root.resolve()
     run_dir = output_root / "training" / run_name
     run_dir.mkdir(parents=True, exist_ok=True)
+    prior_progress = _load_prior_progress(run_dir)
+    has_prior_output = any(
+        (run_dir / name).exists()
+        for name in ("training_metrics.csv", "status.json", "checkpoints")
+    )
+    if args.resume is None and has_prior_output:
+        raise SystemExit(
+            f"{run_dir} already contains training output; pass --resume explicitly"
+        )
+    if args.resume is not None and not args.resume.resolve().exists():
+        raise SystemExit(f"resume checkpoint does not exist: {args.resume.resolve()}")
     temp_dir = (
         args.temp_dir.resolve()
         if args.temp_dir
@@ -374,7 +447,16 @@ def main() -> None:
         allocated = int(os.environ.get("SLURM_CPUS_PER_TASK", get_available_cores()))
         n_env_runners = max(1, allocated - 4)
     wall_hours = min(args.wall_hours, 0.05) if args.smoke else args.wall_hours
-    wall_budget_s = wall_hours * 3600.0
+    segment_wall_hours = (
+        min(args.segment_wall_hours, 0.05)
+        if args.smoke and args.segment_wall_hours is not None
+        else args.segment_wall_hours
+    )
+    wall_budget_s = _segment_budget_seconds(
+        target_wall_hours=wall_hours,
+        prior_wall_seconds=float(prior_progress["wall_clock_s"]),
+        segment_wall_hours=segment_wall_hours,
+    )
     resolved_wandb = wandb_settings(
         run_name,
         output_root,
@@ -394,6 +476,7 @@ def main() -> None:
         ),
         "requested_wall_hours": args.wall_hours,
         "effective_wall_hours": wall_hours,
+        "segment_wall_hours": segment_wall_hours,
         "n_env_runners": n_env_runners,
         "study_config": study.to_dict(),
         "environment_contract": environment_contract(study.environment),
@@ -402,9 +485,42 @@ def main() -> None:
         "wandb": public_wandb_metadata(resolved_wandb),
         "checkpoint_format": "RLlib 2.x Algorithm checkpoint with inspector module_state.pt",
     }
-    with (run_dir / "metadata.json").open("w") as stream:
+    metadata_path = run_dir / "metadata.json"
+    if metadata_path.is_file():
+        existing_metadata = json.loads(metadata_path.read_text())
+        for key in ("run_name", "seed", "candidate_count"):
+            if existing_metadata.get(key) != metadata.get(key):
+                raise SystemExit(
+                    f"resume metadata mismatch for {key}: "
+                    f"{existing_metadata.get(key)!r} != {metadata.get(key)!r}"
+                )
+        metadata = existing_metadata
+        metadata["latest_git"] = git_metadata(Path.cwd())
+    attempts = list(metadata.get("execution_attempts", []))
+    attempts.append(
+        {
+            "segment_index": args.segment_index,
+            "resume_checkpoint": (
+                str(args.resume.resolve()) if args.resume is not None else None
+            ),
+            "prior_wall_clock_s": float(prior_progress["wall_clock_s"]),
+            "segment_budget_s": wall_budget_s,
+            "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
+            "started_at_unix_s": time.time(),
+        }
+    )
+    metadata["execution_attempts"] = attempts
+    with metadata_path.open("w") as stream:
         json.dump(metadata, stream, indent=2, sort_keys=True)
     del pure_model
+
+    if wall_budget_s <= 0.0:
+        print(
+            f"[{run_name}] cumulative target of {wall_hours:.3f} h already reached; "
+            "no additional training required",
+            flush=True,
+        )
+        return
 
     ray.init(
         ignore_reinit_error=True,
@@ -430,16 +546,19 @@ def main() -> None:
     jsonl_path = run_dir / "training_metrics.jsonl"
     start = time.monotonic()
     previous_time = start
-    previous_steps = int(getattr(algorithm, "iteration", 0))
-    iteration = 0
+    prior_wall_s = float(prior_progress["wall_clock_s"])
+    previous_steps = int(prior_progress["environment_steps"])
+    iteration = int(prior_progress["training_iteration"])
+    completed_normally = False
     try:
         while True:
             result = algorithm.train()
-            iteration += 1
+            iteration = int(result.get("training_iteration", iteration + 1))
             now = time.monotonic()
             steps = int(result.get("num_env_steps_sampled_lifetime", 0))
             throughput = (steps - previous_steps) / max(now - previous_time, 1e-9)
-            row = _scalar_metrics(result, now - start, throughput)
+            cumulative_elapsed_s = prior_wall_s + now - start
+            row = _scalar_metrics(result, cumulative_elapsed_s, throughput)
             _append_row(csv_path, row)
             with jsonl_path.open("a") as stream:
                 stream.write(json.dumps(row, default=str, sort_keys=True) + "\n")
@@ -453,21 +572,53 @@ def main() -> None:
                 )
             print(
                 f"[{run_name}] iteration={iteration} steps={steps} "
-                f"wall_h={(now-start)/3600:.3f} samples_s={throughput:.3f}",
+                f"wall_h={cumulative_elapsed_s/3600:.3f} "
+                f"segment_h={(now-start)/3600:.3f} samples_s={throughput:.3f}",
                 flush=True,
             )
             if STOP_REQUESTED or now - start >= wall_budget_s:
                 break
             if args.max_iterations is not None and iteration >= args.max_iterations:
                 break
+        completed_normally = True
     finally:
         _replace_checkpoint(algorithm, run_dir / "checkpoints" / "final")
+        segment_elapsed_s = time.monotonic() - start
+        cumulative_wall_s = prior_wall_s + segment_elapsed_s
+        segments = list(prior_progress["segments"])
+        segments.append(
+            {
+                "segment_index": args.segment_index,
+                "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
+                "resume_checkpoint": (
+                    str(args.resume.resolve()) if args.resume is not None else None
+                ),
+                "wall_clock_s": segment_elapsed_s,
+                "cumulative_wall_clock_s": cumulative_wall_s,
+                "training_iteration": iteration,
+                "environment_steps": previous_steps,
+                "stop_requested": STOP_REQUESTED,
+            }
+        )
         status = {
             "completed_at_unix_s": time.time(),
-            "wall_clock_s": time.monotonic() - start,
+            "state": (
+                "failed"
+                if not completed_normally
+                else (
+                    "target_reached"
+                    if cumulative_wall_s >= wall_hours * 3600.0
+                    else "segment_completed"
+                )
+            ),
+            "wall_clock_s": cumulative_wall_s,
+            "cumulative_wall_clock_s": cumulative_wall_s,
+            "segment_wall_clock_s": segment_elapsed_s,
             "environment_steps": previous_steps,
             "iterations": iteration,
+            "training_iteration": iteration,
             "stop_requested": STOP_REQUESTED,
+            "segments": segments,
         }
         with (run_dir / "status.json").open("w") as stream:
             json.dump(status, stream, indent=2, sort_keys=True)

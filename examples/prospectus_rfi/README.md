@@ -186,6 +186,27 @@ TRAIN_JOB=$(sbatch --parsable \
 echo "$TRAIN_JOB"
 ```
 
+If Alpine's `cpu-long` pool starts only array index 0 and reports
+`QOSGrpNodeLimit` for indexes 1--5, the pending policies can instead use restartable
+`cpu-normal` segments on the same `acpu`/`epyc-7713` hardware. The migration helper
+preserves the running index 0, holds and replaces only pending indexes 1--5, and submits
+an independent continuation chain for each policy. The first two allocations train for
+up to 23.5 hours each; a short cleanup allocation supplies the remaining cumulative time
+needed to reach the common 48-hour target. Checkpoint numbering, environment steps,
+training curves, and the stable W&B run identity continue across segments.
+
+Inspect the original array immediately before migration, then run:
+
+```bash
+squeue -j "$TRAIN_JOB" -o "%.20i %.2t %.10M %R"
+bash examples/prospectus_rfi/submit_pending_candidate_sweep_24h.sh "$TRAIN_JOB"
+```
+
+The helper refuses to proceed unless `${TRAIN_JOB}_0` is running and every index from 1
+through 5 is still pending. It never holds, cancels, or resubmits index 0. Its timestamped
+manifest under `/scratch/alpine/$USER/prospectus_rfi/manifests` records all initial,
+continuation, and cleanup job IDs. Do not submit the helper twice for the same array.
+
 5. Select the best held-out validation checkpoint for each final run:
 
 ```bash
