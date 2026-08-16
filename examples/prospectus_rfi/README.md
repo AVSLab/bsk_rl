@@ -113,6 +113,74 @@ The collector refuses incomplete, duplicate, or mislabeled campaigns. Successful
 collection writes `analysis/episodes_combined.csv`, optional Parquet, summary statistics,
 and `analysis/completion.json`. No W&B login is required for this deterministic baseline.
 
+## Frozen AMOS 2025 policy transfer Monte Carlo
+
+This separate campaign evaluates the archived best alpha=0 policy without retraining.
+The exact artifact is iteration 427 of
+`wGAE_balance0d100i_largepenalties_smallbatch_obs2`. The module has an 87-value input,
+13 actions, `[1024, 1024]` separate actor/value MLPs with tanh, 2,293,774 parameters,
+and inspector-state SHA-256
+`6db5bcd4fda20205977dfab377441f625051ef9e9dfaebde5e8db5ec1ab0e2c4`.
+
+The evaluator restores its exact historical observation order and normalization while
+using the current heuristic's physical evaluation environment and shield. The policy was
+trained at N=100 with 300 s imaging, 180 s downlink, and 10--40% initial battery. The
+transfer test instead uses N in {100,200,400}, fixed 100 s imaging, 300 s downlink, and
+20--60% initial battery. It must be described as a frozen-policy transfer baseline, not
+as a policy trained for 100-second actions.
+
+The self-contained inspector module is only 8.8 MB. From a terminal on the local Mac,
+copy exactly its three files to persistent project storage on Alpine:
+
+```bash
+LOCAL_AMOS2025_MODULE='/Users/dahu1128/rllib_results/july_results/july30rllib_results/aug13_wGAE_smallbatch_halfnetwork_largepenalties_smallerICbattery_restrictedResources_obsv2_1e-6lr_0.15cp_gamma9997_0d100i_1755107128.629914/aug13_wGAE_smallbatch_halfnetwork_largepenalties_smallerICbattery_restrictedResources_obsv2_1e-6lr_0.15cp_gamma9997_0d100i.out_0/checkpoint_best/learner_group/learner/rl_module/inspector'
+REMOTE_AMOS2025_MODULE='/projects/dahu1128/policy_artifacts/amos2025_alpha0_best_iter427/inspector'
+ssh dahu1128@login.rc.colorado.edu "mkdir -p '$REMOTE_AMOS2025_MODULE'"
+rsync -av --checksum "$LOCAL_AMOS2025_MODULE/" \
+  "dahu1128@login.rc.colorado.edu:$REMOTE_AMOS2025_MODULE/"
+```
+
+Then, on an Alpine login node, update only the dedicated worktree and submit 300
+one-episode array tasks. They have no dependencies and use a positive Slurm nice value,
+so they neither alter nor cancel the active training jobs and are lower scheduler
+priority than those jobs:
+
+```bash
+module unload slurm/blanca 2>/dev/null || true
+module load slurm/alpine
+cd /projects/$USER/bsk_rl-rfi
+git pull --ff-only
+export BSK_RL_REPO_DIR=/projects/$USER/bsk_rl-rfi
+export BSK_RL_AMOS2025_POLICY_CHECKPOINT=/projects/$USER/policy_artifacts/amos2025_alpha0_best_iter427/inspector
+
+sha256sum "$BSK_RL_AMOS2025_POLICY_CHECKPOINT/module_state.pt"
+sbatch --test-only \
+  --export=ALL,BSK_RL_REPO_DIR,BSK_RL_AMOS2025_POLICY_CHECKPOINT \
+  examples/prospectus_rfi/slurm/evaluate_amos2025_legacy_policy_mc.sbatch
+
+POLICY_MC_SUBMISSION=$(bash \
+  examples/prospectus_rfi/submit_amos2025_legacy_policy_mc.sh 30)
+printf '%s\n' "$POLICY_MC_SUBMISSION"
+```
+
+The submission prints `JOB_ID` and `OUTPUT_ROOT`. Save both. Array task 0 is N=100,
+seed 0; task 100 is N=200, seed 0; and task 200 is N=400, seed 0. Monitor without
+touching any training allocation:
+
+```bash
+squeue -j <JOB_ID> -o "%.20i %.16j %.10q %.2t %.10M %R"
+tail -f /scratch/alpine/$USER/job_output/rfi_oldpol_<JOB_ID>_0.out
+```
+
+Each task atomically writes one CSV, optional Parquet, metadata JSON, and status JSON.
+Reusing the same `BSK_RL_LEGACY_POLICY_MC_OUTPUT_ROOT` safely skips completed episodes.
+After all 300 tasks finish, validate and combine them:
+
+```bash
+python examples/prospectus_rfi/collect_legacy_policy_mc.py \
+  --input-root <OUTPUT_ROOT>
+```
+
 ## Weights & Biases isolation
 
 Training runs use a dedicated W&B project rather than the AMOS 2026 project:

@@ -48,13 +48,24 @@ The scanner was an `AccessSatellite` with `ImagingSCDynModel` and
 `ImagingSCFSWModel`. Each target used `BasicTargetDynamicsModel`,
 `BasicTargetFSWModel`, a scalar time observation, and one episode-length drift action.
 
-The scanner observation was a flattened NumPy vector with:
+The frozen `d0bcc54...` trainer source shows a flattened NumPy vector with:
 
 - five spacecraft values: storage fraction, battery fraction, three wheel-speed fractions;
 - seven values per presented target: elevation, relative Hill-frame position (three),
   pointing angle, distance, and shadow factor;
 - two eclipse-window values;
 - four ground-station window values (open/close for two opportunities).
+
+The selected August 13 policy artifact is a nearby but distinct `obs2` run. Its saved
+run parameters and RLModule constructor are the authority for policy transfer. They
+record an 87-value observation: the same five spacecraft values, ten seven-value target
+rows, two eclipse values, and ten ground-station values (open/close for five
+opportunities). Its target/eclipsing normalization is also different from the later
+source snapshot: elevation and pointing angle use norm 1, Hill position and distance use
+1,596,000 m, and eclipse uses norm 1. The transfer evaluator reconstructs this exact
+field order and normalization and retains the historical repeated-target padding with no
+validity mask. It does not feed the new 91-value masked K=10 observation into the old
+network.
 
 Research Focus I preserves these physical fields but groups the 11 global values before
 the target rows and appends one `valid_target` bit to each target row. For the new
@@ -88,16 +99,28 @@ the 2025 one-image-per-target behavior.
 
 ### Fixed-input monolithic MLP
 
-The AMOS 2025 RLlib PPO configuration used the standard `PPOTorchRLModule` with separate
-actor and value networks (`vf_share_layers=False`) and `fcnet_hiddens=[2048, 2048]` with
-ReLU. It consumed all presented target features in one fixed flattened vector and emitted
-one fixed logit per presented target plus the non-target actions. In this study, its input
-and output widths therefore vary between the K=5, K=10, and K=20 runs. Invalid rows are
-zeroed and invalid action logits are masked.
+The AMOS 2025 RLlib PPO family used the standard `PPOTorchRLModule` with separate actor
+and value networks (`vf_share_layers=False`). The later historical source snapshot used
+`fcnet_hiddens=[2048, 2048]` with ReLU, which is the starting point for the new
+fixed-input architecture study. It consumed all presented target features in one fixed
+flattened vector and emitted one fixed logit per presented target plus the non-target
+actions. In this study, its input and output widths therefore vary between the K=5,
+K=10, and K=20 runs. Invalid rows are zeroed and invalid action logits are masked.
 
 The archived public evaluator points to the August 13
 `wGAE_balance0d100i_largepenalties_smallbatch_obs2` policy family; the locally archived
-best checkpoint is iteration 427.
+best checkpoint is iteration 427. Inspection of that checkpoint itself shows a
+`PPOTorchRLModule` with 87 inputs, 13 actions, separate `[1024, 1024]` actor and critic
+MLPs, tanh activations, and 2,293,774 trainable parameters. Its inspector
+`module_state.pt` SHA-256 is
+`6db5bcd4fda20205977dfab377441f625051ef9e9dfaebde5e8db5ec1ab0e2c4`.
+
+The corresponding saved run parameters record N=100, K=10, a 300 s image action,
+300 s charge, 180 s downlink, 150 s desaturation, alpha=0 observation reward, and
+10--40% initial battery. Evaluating it in the Research Focus I environment deliberately
+changes image duration to 100 s, downlink to 300 s, battery initialization to 20--60%,
+and N to 100/200/400. Results from this campaign are therefore an out-of-distribution
+transfer baseline, not evidence for a policy trained under the new configuration.
 
 ### Target-set attention policy
 

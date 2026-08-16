@@ -1,0 +1,33 @@
+campaign_name: amos2025_alpha0_policy_transfer_300s_to_100s
+method: legacy_amos2025_alpha0_policy
+policy_family: wGAE_balance0d100i_largepenalties_smallbatch_obs2
+policy_best_iteration: 427
+policy_module_state_sha256: 6db5bcd4fda20205977dfab377441f625051ef9e9dfaebde5e8db5ec1ab0e2c4
+policy_checkpoint_format: RLlib checkpoint 2.0 inspector RLModule
+policy_architecture: fixed-input monolithic MLP
+policy_hidden_widths: [1024, 1024]
+policy_activation: tanh
+policy_trainable_parameters: 2293774
+policy_observation_size: 87
+policy_action_count: 13
+policy_training_catalog_size: 100
+policy_training_candidate_count: 10
+policy_training_imaging_duration_s: 300.0
+policy_training_reward_alpha: 0.0
+evaluation_catalog_sizes: [100, 200, 400]
+evaluation_candidate_count: 10
+evaluation_seed_start: 0
+evaluation_seed_stop_inclusive: 99
+evaluation_seeds_per_catalog_size: 100
+evaluation_total_episodes: 300
+evaluation_episode_duration_s: 45000.0
+evaluation_imaging_duration_s: 100.0
+evaluation_observation_contract: amos2025_obs_v2_checkpoint_exact
+shield_enabled: true
+slurm_tasks: 300
+episodes_per_task: 1
+dependencies: none
+environment_config: base.yaml
+interpretation: >-
+  Out-of-distribution transfer test of the frozen 300-second policy in the
+  updated 100-second environment; it is not a retrained 100-second policy.

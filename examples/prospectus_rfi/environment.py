@@ -28,6 +28,21 @@ TARGET_PHYSICAL_FEATURE_COUNT = 7
 TARGET_FEATURE_COUNT = TARGET_PHYSICAL_FEATURE_COUNT + 1
 TARGET_MASK_INDEX = TARGET_FEATURE_COUNT - 1
 
+# Exact policy I/O recorded in the August 13, 2025 checkpoint artifact.  This
+# deliberately differs from the masked layout used to train the new policies.
+LEGACY_AMOS2025_CANDIDATE_COUNT = 10
+LEGACY_AMOS2025_TARGET_FEATURE_COUNT = 7
+LEGACY_AMOS2025_GROUND_STATION_COUNT = 5
+LEGACY_AMOS2025_OBSERVATION_SIZE = (
+    5
+    + LEGACY_AMOS2025_CANDIDATE_COUNT * LEGACY_AMOS2025_TARGET_FEATURE_COUNT
+    + 2
+    + 2 * LEGACY_AMOS2025_GROUND_STATION_COUNT
+)
+LEGACY_AMOS2025_ACTION_COUNT = LEGACY_AMOS2025_CANDIDATE_COUNT + 3
+LEGACY_AMOS2025_OBSERVATION_CONTRACT = "amos2025_obs_v2_checkpoint_exact"
+STUDY_MASKED_OBSERVATION_CONTRACT = "amos2025_obs_v2_masked"
+
 
 class StudyDiscreteActionBuilder(DiscreteActionBuilder):
     """Record action allocation without changing action execution semantics."""
@@ -170,10 +185,31 @@ def amos2025_target_orbit() -> orbitalMotion.ClassicElements:
     return elements
 
 
-def make_satellite_types(config: EnvironmentConfig):
-    """Construct satellite classes with the study's immutable I/O contract."""
+def make_satellite_types(
+    config: EnvironmentConfig,
+    *,
+    observation_contract: str = STUDY_MASKED_OBSERVATION_CONTRACT,
+):
+    """Construct satellite classes with an explicitly selected I/O contract.
+
+    The legacy contract exists only to evaluate the frozen AMOS 2025 policy.  It
+    reproduces the checkpoint's 87-value input exactly: five spacecraft values,
+    ten seven-value target rows, two eclipse values, and five pairs of ground-
+    station opportunity values.  It intentionally has no validity mask because
+    the historical policy was not trained with one.
+    """
 
     config.validate()
+    if observation_contract not in {
+        STUDY_MASKED_OBSERVATION_CONTRACT,
+        LEGACY_AMOS2025_OBSERVATION_CONTRACT,
+    }:
+        raise ValueError(f"unsupported observation contract: {observation_contract}")
+    if (
+        observation_contract == LEGACY_AMOS2025_OBSERVATION_CONTRACT
+        and config.candidate_count != LEGACY_AMOS2025_CANDIDATE_COUNT
+    ):
+        raise ValueError("the frozen AMOS 2025 policy requires exactly 10 candidates")
 
     class StudyImageRSO(act.ImageRSO):
         builder_type = StudyDiscreteActionBuilder
@@ -188,32 +224,57 @@ def make_satellite_types(config: EnvironmentConfig):
         builder_type = StudyDiscreteActionBuilder
 
     class StudyScanningSatellite(sats.AccessSatellite):
-        observation_spec = [
-            # Five global values: storage, battery, and three wheel speeds.
-            obs.SatProperties(
-                dict(prop="storage_level_fraction"),
-                dict(prop="battery_charge_fraction"),
-                dict(prop="wheel_speeds_fraction"),
-            ),
-            # Two eclipse values.
-            obs.Eclipse(norm=5700.0),
-            # Four ground-station access values (open/close for two passes).
-            obs.OpportunityProperties(
-                dict(prop="opportunity_open", norm=5700.0),
-                dict(prop="opportunity_close", norm=5700.0),
-                type="ground_station",
-                n_ahead_observe=2,
-            ),
-            # Seven physical values plus one binary validity mask per slot.
-            MaskedPolarisTargetProperties(
-                dict(prop="target_elevation_angle", norm=90.0),
-                dict(prop="rel_pos_vector_r_BR_H", norm=15960.0e3),
-                dict(prop="angle_to_target", norm=90.0),
-                dict(prop="target_distance", norm=15960.0e3),
-                dict(prop="target_shadowFactor", norm=1.0),
-                n_ahead_observe=config.candidate_count,
-            ),
-        ]
+        if observation_contract == LEGACY_AMOS2025_OBSERVATION_CONTRACT:
+            # Exact order and normalization recovered from the saved run params.
+            observation_spec = [
+                obs.SatProperties(
+                    dict(prop="storage_level_fraction"),
+                    dict(prop="battery_charge_fraction"),
+                    dict(prop="wheel_speeds_fraction"),
+                ),
+                obs.PolarisScTargetProperties(
+                    dict(prop="target_elevation_angle", norm=1.0),
+                    dict(prop="rel_pos_vector_r_BR_H", norm=1596.0e3),
+                    dict(prop="angle_to_target", norm=1.0),
+                    dict(prop="target_distance", norm=1596.0e3),
+                    dict(prop="target_shadowFactor", norm=1.0),
+                    n_ahead_observe=LEGACY_AMOS2025_CANDIDATE_COUNT,
+                ),
+                obs.Eclipse(norm=1.0),
+                obs.OpportunityProperties(
+                    dict(prop="opportunity_open", norm=5700.0),
+                    dict(prop="opportunity_close", norm=5700.0),
+                    type="ground_station",
+                    n_ahead_observe=LEGACY_AMOS2025_GROUND_STATION_COUNT,
+                ),
+            ]
+        else:
+            observation_spec = [
+                # Five global values: storage, battery, and three wheel speeds.
+                obs.SatProperties(
+                    dict(prop="storage_level_fraction"),
+                    dict(prop="battery_charge_fraction"),
+                    dict(prop="wheel_speeds_fraction"),
+                ),
+                # Two eclipse values.
+                obs.Eclipse(norm=5700.0),
+                # Four ground-station access values (open/close for two passes).
+                obs.OpportunityProperties(
+                    dict(prop="opportunity_open", norm=5700.0),
+                    dict(prop="opportunity_close", norm=5700.0),
+                    type="ground_station",
+                    n_ahead_observe=2,
+                ),
+                # Seven physical values plus one binary validity mask per slot.
+                MaskedPolarisTargetProperties(
+                    dict(prop="target_elevation_angle", norm=90.0),
+                    dict(prop="rel_pos_vector_r_BR_H", norm=15960.0e3),
+                    dict(prop="angle_to_target", norm=90.0),
+                    dict(prop="target_distance", norm=15960.0e3),
+                    dict(prop="target_shadowFactor", norm=1.0),
+                    n_ahead_observe=config.candidate_count,
+                ),
+            ]
         action_spec = [
             StudyImageRSO(
                 n_ahead_image=config.candidate_count,
@@ -250,6 +311,7 @@ def make_environment_args(
     episode_data_callback: Any | None = None,
     satellite_data_callback: Any | None = None,
     historical_heuristic: bool = False,
+    observation_contract: str = STUDY_MASKED_OBSERVATION_CONTRACT,
 ) -> dict[str, Any]:
     """Create one directly usable BSK-RL environment configuration."""
 
@@ -259,7 +321,9 @@ def make_environment_args(
     ):
         raise ValueError("fixed_catalog_size lies outside the study range")
 
-    scanner_type, target_type = make_satellite_types(config)
+    scanner_type, target_type = make_satellite_types(
+        config, observation_contract=observation_contract
+    )
     scanner_args = {
         "imageAttErrorRequirement": config.image_attitude_error_requirement,
         "dataStorageCapacity": config.storage_capacity_bits,
@@ -366,14 +430,45 @@ def environment_contract(config: EnvironmentConfig) -> dict[str, Any]:
     }
 
 
+def legacy_amos2025_policy_contract() -> dict[str, Any]:
+    """Return the exact archived module signature and observation semantics."""
+
+    return {
+        "name": LEGACY_AMOS2025_OBSERVATION_CONTRACT,
+        "flattened_observation_size": LEGACY_AMOS2025_OBSERVATION_SIZE,
+        "action_count": LEGACY_AMOS2025_ACTION_COUNT,
+        "candidate_count": LEGACY_AMOS2025_CANDIDATE_COUNT,
+        "field_order": [
+            "spacecraft[5]",
+            "target_rows[10,7]",
+            "eclipse[2]",
+            "ground_station_windows[5,2]",
+        ],
+        "target_field_order": [
+            "target_elevation_angle/1",
+            "rel_pos_vector_r_BR_H[3]/1596000",
+            "angle_to_target/1",
+            "target_distance/1596000",
+            "target_shadowFactor/1",
+        ],
+        "padding": "historical repeated-target behavior; no validity mask",
+    }
+
+
 __all__ = [
     "GLOBAL_FEATURE_COUNT",
+    "LEGACY_AMOS2025_ACTION_COUNT",
+    "LEGACY_AMOS2025_CANDIDATE_COUNT",
+    "LEGACY_AMOS2025_OBSERVATION_CONTRACT",
+    "LEGACY_AMOS2025_OBSERVATION_SIZE",
     "TARGET_FEATURE_COUNT",
     "TARGET_MASK_INDEX",
     "MaskedPolarisTargetProperties",
     "RandomCatalogSatellites",
+    "STUDY_MASKED_OBSERVATION_CONTRACT",
     "amos2025_target_orbit",
     "environment_contract",
+    "legacy_amos2025_policy_contract",
     "make_environment_args",
     "make_satellite_types",
     "zero_padded_target_rows",

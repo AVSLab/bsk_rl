@@ -135,7 +135,7 @@ def validate_campaign(frame: pd.DataFrame) -> dict[str, object]:
     }
 
 
-def summarize(frame: pd.DataFrame) -> pd.DataFrame:
+def summarize(frame: pd.DataFrame, method: str = METHOD) -> pd.DataFrame:
     rows: list[dict[str, float | int | str]] = []
     for catalog_size, group in frame.groupby("catalog_size", sort=True):
         for metric in SUMMARY_METRICS:
@@ -146,7 +146,7 @@ def summarize(frame: pd.DataFrame) -> pd.DataFrame:
                 continue
             rows.append(
                 {
-                    "method": METHOD,
+                    "method": method,
                     "catalog_size": int(catalog_size),
                     "metric": metric,
                     "n": int(values.size),

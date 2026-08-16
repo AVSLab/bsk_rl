@@ -7,19 +7,35 @@ import pytest
 
 import bsk_rl  # noqa: F401
 from examples.prospectus_rfi.config import load_study_config
-from examples.prospectus_rfi.environment import make_environment_args
+from examples.prospectus_rfi.environment import (
+    LEGACY_AMOS2025_OBSERVATION_CONTRACT,
+    make_environment_args,
+)
 from examples.prospectus_rfi.evaluate import scenario_fingerprint
 
 
 CONFIG_DIR = Path(__file__).parents[3] / "examples" / "prospectus_rfi" / "configs"
 
 
-def make_env(catalog_size, candidate_count=5):
+def make_env(
+    catalog_size,
+    candidate_count=5,
+    observation_contract=None,
+    historical_heuristic=False,
+):
     study = load_study_config(
         CONFIG_DIR / "mlp_selected.yaml", CONFIG_DIR / "base.yaml"
     )
     environment = replace(study.environment, candidate_count=candidate_count)
-    args = make_environment_args(environment, fixed_catalog_size=catalog_size)
+    kwargs = {}
+    if observation_contract is not None:
+        kwargs["observation_contract"] = observation_contract
+    args = make_environment_args(
+        environment,
+        fixed_catalog_size=catalog_size,
+        historical_heuristic=historical_heuristic,
+        **kwargs,
+    )
     args["log_level"] = "ERROR"
     return gym.make("ConstellationTasking-v1", disable_env_checker=True, **args)
 
@@ -56,3 +72,33 @@ def test_identical_seed_produces_matched_scenario_and_initial_battery():
     assert fingerprints[0] == fingerprints[1]
     np.testing.assert_allclose(batteries[0], batteries[1], rtol=0.0, atol=0.0)
     assert 0.20 <= batteries[0] <= 0.60
+
+
+def test_frozen_policy_contract_preserves_scenario_seed_and_100_second_action():
+    study_env = make_env(100, candidate_count=10, historical_heuristic=True)
+    legacy_env = make_env(
+        100,
+        candidate_count=10,
+        observation_contract=LEGACY_AMOS2025_OBSERVATION_CONTRACT,
+    )
+    try:
+        study_observations, _ = study_env.reset(seed=8132025)
+        legacy_observations, _ = legacy_env.reset(seed=8132025)
+        study_base = study_env.unwrapped
+        legacy_base = legacy_env.unwrapped
+
+        assert study_observations["SS1"].shape == (91,)
+        assert legacy_observations["SS1"].shape == (87,)
+        assert legacy_base.satellites[0].action_space.n == 13
+        assert scenario_fingerprint(study_base) == scenario_fingerprint(legacy_base)
+        assert (
+            study_base.satellites[0].dynamics.battery_charge_fraction
+            == legacy_base.satellites[0].dynamics.battery_charge_fraction
+        )
+
+        start = legacy_base.simulator.sim_time
+        legacy_env.step({"SS1": 0})
+        assert legacy_base.simulator.sim_time - start == pytest.approx(100.0)
+    finally:
+        study_env.close()
+        legacy_env.close()

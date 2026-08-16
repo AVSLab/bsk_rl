@@ -26,7 +26,10 @@ from ray.rllib.core import Columns
 from ray.rllib.core.rl_module.rl_module import RLModule
 
 from examples.prospectus_rfi.config import git_metadata, load_study_config
-from examples.prospectus_rfi.environment import make_environment_args
+from examples.prospectus_rfi.environment import (
+    STUDY_MASKED_OBSERVATION_CONTRACT,
+    make_environment_args,
+)
 from examples.prospectus_rfi.metrics import episode_metrics, physical_validation_score
 from examples.prospectus_rfi.models import ObservationLayout
 
@@ -48,6 +51,12 @@ def load_policy(checkpoint: Path) -> tuple[Callable[[np.ndarray], int], dict]:
     module = RLModule.from_checkpoint(module_path)
     module.eval()
     parameter_total = sum(parameter.numel() for parameter in module.parameters())
+    module_config = getattr(module, "config", None)
+    observation_space = getattr(module_config, "observation_space", None)
+    action_space = getattr(module_config, "action_space", None)
+    observation_shape = list(getattr(observation_space, "shape", ()))
+    action_count = getattr(action_space, "n", None)
+    model_config = dict(getattr(module_config, "model_config_dict", {}) or {})
 
     def policy(observation: np.ndarray) -> int:
         tensor = torch.as_tensor(observation, dtype=torch.float32).unsqueeze(0)
@@ -61,6 +70,11 @@ def load_policy(checkpoint: Path) -> tuple[Callable[[np.ndarray], int], dict]:
         "module_path": str(module_path),
         "module_class": type(module).__name__,
         "trainable_parameters": int(parameter_total),
+        "observation_shape": observation_shape,
+        "action_count": None if action_count is None else int(action_count),
+        "hidden_widths": model_config.get("fcnet_hiddens"),
+        "activation": model_config.get("fcnet_activation"),
+        "value_function_shares_layers": model_config.get("vf_share_layers"),
     }
 
 
@@ -109,12 +123,14 @@ def run_episode(
     catalog_size: int,
     learned_policy: Callable[[np.ndarray], int] | None,
     shield: bool,
+    observation_contract: str = STUDY_MASKED_OBSERVATION_CONTRACT,
 ) -> dict[str, float | int | str | bool]:
     historical = method == "heuristic_historical"
     env_args = make_environment_args(
         study.environment,
         fixed_catalog_size=catalog_size,
         historical_heuristic=historical,
+        observation_contract=observation_contract,
     )
     env_args["log_level"] = "ERROR"
     environment = gym.make(
@@ -175,6 +191,7 @@ def run_episode(
                 "catalog_size": catalog_size,
                 "candidate_count": study.environment.candidate_count,
                 "shield_enabled": shield,
+                "observation_contract": observation_contract,
                 "battery_shield_interventions": intervention_reasons["battery"],
                 "storage_shield_interventions": intervention_reasons["storage"],
                 "wheel_shield_interventions": intervention_reasons["reaction_wheel"],
