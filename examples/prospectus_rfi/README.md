@@ -113,6 +113,21 @@ The collector refuses incomplete, duplicate, or mislabeled campaigns. Successful
 collection writes `analysis/episodes_combined.csv`, optional Parquet, summary statistics,
 and `analysis/completion.json`. No W&B login is required for this deterministic baseline.
 
+The completed August 15 campaign can be pulled from a terminal on the local Mac and
+validated in one command. The destination is under the repository's git-ignored
+`results/prospectus_rfi/cluster_downloads/` tree, separate from source code and from the
+historical checkpoint archive:
+
+```bash
+cd /Users/dahu1128/Repositories/bsk_rl
+bash examples/prospectus_rfi/pull_amos2025_heuristic_mc.sh \
+  amos2025_closest_angle_100s_20260815T183838Z
+```
+
+CURC may request the user's password or interactive authentication. On success, the
+validated episode table is at
+`results/prospectus_rfi/cluster_downloads/heuristic_mc/amos2025_closest_angle_100s_20260815T183838Z/analysis/episodes_combined.csv`.
+
 ## Frozen AMOS 2025 policy transfer Monte Carlo
 
 This separate campaign evaluates the archived best alpha=0 policy without retraining.
