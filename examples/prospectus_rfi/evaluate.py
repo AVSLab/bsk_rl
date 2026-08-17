@@ -25,6 +25,7 @@ import bsk_rl  # noqa: F401 - registers Gym environments
 from ray.rllib.core import Columns
 from ray.rllib.core.rl_module.rl_module import RLModule
 
+from examples.prospectus_rfi.acquisition_timeline import append_trajectory_snapshot
 from examples.prospectus_rfi.config import git_metadata, load_study_config
 from examples.prospectus_rfi.environment import (
     STUDY_MASKED_OBSERVATION_CONTRACT,
@@ -124,6 +125,7 @@ def run_episode(
     learned_policy: Callable[[np.ndarray], int] | None,
     shield: bool,
     observation_contract: str = STUDY_MASKED_OBSERVATION_CONTRACT,
+    trajectory_rows: list[dict] | None = None,
 ) -> dict[str, float | int | str | bool]:
     historical = method == "heuristic_historical"
     env_args = make_environment_args(
@@ -143,6 +145,8 @@ def run_episode(
     fingerprint = scenario_fingerprint(base)
     layout = ObservationLayout(target_capacity=study.environment.candidate_count)
     base.study_constraint_interventions = 0
+    if trajectory_rows is not None:
+        append_trajectory_snapshot(trajectory_rows, base)
     intervention_reasons = {"battery": 0, "storage": 0, "reaction_wheel": 0}
     inference_times_ns: list[int] = []
     steps = 0
@@ -177,6 +181,8 @@ def run_episode(
             actions["SS1"] = int(executed_action)
             observation, _, terminated, truncated, _ = environment.step(actions)
             steps += 1
+            if trajectory_rows is not None:
+                append_trajectory_snapshot(trajectory_rows, base)
             if bool(terminated.get("SS1", False)) or bool(truncated.get("SS1", False)):
                 break
             if steps > 1000:
@@ -211,6 +217,17 @@ def run_episode(
         metrics["physical_validation_score"] = physical_validation_score(
             metrics, study.validation
         )
+        if trajectory_rows is not None:
+            for row in trajectory_rows:
+                row.update(
+                    {
+                        "method": method,
+                        "scenario_seed": seed,
+                        "scenario_fingerprint": fingerprint,
+                        "catalog_size": catalog_size,
+                        "candidate_count": study.environment.candidate_count,
+                    }
+                )
         return metrics
     finally:
         environment.close()

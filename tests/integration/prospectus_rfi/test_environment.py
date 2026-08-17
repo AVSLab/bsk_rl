@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 import bsk_rl  # noqa: F401
+from examples.prospectus_rfi.acquisition_timeline import append_trajectory_snapshot
 from examples.prospectus_rfi.config import load_study_config
 from examples.prospectus_rfi.environment import (
     LEGACY_AMOS2025_OBSERVATION_CONTRACT,
@@ -49,9 +50,14 @@ def test_catalog_extremes_and_fixed_100_second_image_action(catalog_size):
         assert base.scenario.sampled_catalog_size == catalog_size
         assert observations["SS1"].shape == (11 + 5 * 8,)
         assert base.satellites[0].action_space.n == 5 + 3
+        timeline = []
+        append_trajectory_snapshot(timeline, base)
         start = base.simulator.sim_time
         env.step({"SS1": 0})
+        append_trajectory_snapshot(timeline, base)
         assert base.simulator.sim_time - start == pytest.approx(100.0)
+        assert [row["sim_time_s"] for row in timeline] == [0.0, 100.0]
+        assert timeline[-1]["cumulative_illuminated_observations"] >= 0.0
     finally:
         env.close()
 

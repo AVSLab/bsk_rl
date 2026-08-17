@@ -216,6 +216,63 @@ python examples/prospectus_rfi/collect_legacy_policy_mc.py \
   --input-root <OUTPUT_ROOT>
 ```
 
+## Saturation-aware acquisition timelines
+
+The one-row episode files above contain final totals, not the time at which each
+illuminated target was acquired. Consequently, final-count CSVs cannot be used to infer
+whether one method reaches a common plateau earlier. Record that evidence with a paired
+timeline replay after both 300-episode campaigns have completed:
+
+```bash
+cd /projects/$USER/bsk_rl-rfi
+git pull --ff-only
+export BSK_RL_REPO_DIR=/projects/$USER/bsk_rl-rfi
+export BSK_RL_AMOS2025_POLICY_CHECKPOINT=/projects/$USER/policy_artifacts/amos2025_alpha0_best_iter427/inspector
+export BSK_RL_HEURISTIC_MC_OUTPUT_ROOT=/scratch/alpine/$USER/prospectus_rfi/heuristic_mc/amos2025_closest_angle_100s_20260815T183838Z
+export BSK_RL_LEGACY_POLICY_MC_OUTPUT_ROOT=/scratch/alpine/$USER/prospectus_rfi/legacy_policy_mc/amos2025_alpha0_300s_to_100s_20260817T004436Z
+
+BSK_RL_TIMELINE_SCAN_ONLY=1 \
+  bash examples/prospectus_rfi/submit_acquisition_timeline_mc.sh \
+  "$BSK_RL_HEURISTIC_MC_OUTPUT_ROOT" \
+  "$BSK_RL_LEGACY_POLICY_MC_OUTPUT_ROOT" 30
+
+TIMELINE_SUBMISSION=$(bash \
+  examples/prospectus_rfi/submit_acquisition_timeline_mc.sh \
+  "$BSK_RL_HEURISTIC_MC_OUTPUT_ROOT" \
+  "$BSK_RL_LEGACY_POLICY_MC_OUTPUT_ROOT" 30)
+printf '%s\n' "$TIMELINE_SUBMISSION"
+```
+
+The 600 tasks are dependency-free and independently map the two methods, three catalog
+sizes, and seeds 0--99. They use positive Slurm nice and do not cancel, modify, or depend
+on training jobs. Every task replays one accepted scenario, records every decision epoch,
+and verifies the scenario fingerprint plus final observation/downlink counts against the
+existing raw row before atomically writing under `<CAMPAIGN_ROOT>/timeline/`. The original
+episode CSV is never overwritten. Re-running the submitter schedules only missing
+timeline sidecars.
+
+The analysis forward-fills those irregular decision epochs onto a shared 100-second grid
+(451 points from 0 through 45,000 seconds) without interpolation or smoothing. The
+15,000-, 30,000-, and 45,000-second values are table endpoints, while the figures use the
+entire grid. After the timeline tasks finish, run on Alpine or after pulling both campaign
+roots locally:
+
+```bash
+python examples/prospectus_rfi/analyze_acquisition_timelines.py \
+  --heuristic-root "$BSK_RL_HEURISTIC_MC_OUTPUT_ROOT" \
+  --policy-root "$BSK_RL_LEGACY_POLICY_MC_OUTPUT_ROOT" \
+  --output-root /scratch/alpine/$USER/prospectus_rfi/acquisition_timeline_analysis/amos2025_frozen_policy_vs_heuristic
+```
+
+Outputs include the raw 100-second analysis grid, per-seed normalized acquisition AUC,
+time to 50/80/90/95% of each episode's final illuminated count, checkpoint tables,
+paired bootstrap intervals and Holm-adjusted tests, and PDF/SVG figures for absolute
+cumulative counts, empirical plateau fractions, and paired policy-minus-heuristic curves.
+The plots show 100-seed means with transparent 95% bootstrap bands. Final-plateau
+normalization is explicitly an empirical saturation diagnostic; it does not assume that
+every unobserved target was geometrically unreachable, and the analysis does not assume
+in advance that the frozen policy is faster.
+
 ## Weights & Biases isolation
 
 Training runs use a dedicated W&B project rather than the AMOS 2026 project:
