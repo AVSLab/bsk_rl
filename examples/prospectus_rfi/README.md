@@ -4,6 +4,9 @@ This directory runs a matched comparison of the fixed-input monolithic MLP, the
 target-set attention policy, the historical smallest-pointing-angle heuristic, and an
 information-matched heuristic. Read `PROVENANCE.md` for the historical audit.
 
+For the live Alpine campaign status, decision gates, and detailed prompts for each
+remaining task, see `CAMPAIGN_TODO_PROMPTS.md`.
+
 ## What is fixed and what is swept
 
 - Episode duration: 45,000 s for every N.
