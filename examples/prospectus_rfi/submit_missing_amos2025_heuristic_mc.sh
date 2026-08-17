@@ -14,18 +14,24 @@ fi
 
 REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl-rfi}
 export BSK_RL_REPO_DIR="$REPO_DIR"
+VENV_ROOT=${BSK_RL_VENV_ROOT:-/projects/$USER/.venv}
+PYTHON="$VENV_ROOT/bin/python"
+if [[ ! -x "$PYTHON" ]]; then
+    echo "Required Python environment not found: $PYTHON" >&2
+    exit 4
+fi
 cd "$REPO_DIR"
 if [[ "$(git branch --show-current)" != "amos2025-architecture-comparison" ]]; then
     echo "Wrong branch: $(git branch --show-current)" >&2
-    exit 4
+    exit 5
 fi
 if [[ ! -s "$OUTPUT_ROOT/manifests/campaign.json" ]]; then
     echo "Not an existing heuristic campaign: $OUTPUT_ROOT" >&2
-    exit 5
+    exit 6
 fi
 
-mapfile -t MISSING_IDS < <(
-    python - "$OUTPUT_ROOT" <<'PY'
+MISSING_OUTPUT=$(
+    "$PYTHON" - "$OUTPUT_ROOT" <<'PY'
 import sys
 from pathlib import Path
 
@@ -40,16 +46,27 @@ for catalog_index, catalog_size in enumerate((100, 200, 400)):
             print(catalog_index * 100 + seed)
 PY
 )
+MISSING_IDS=()
+if [[ -n "$MISSING_OUTPUT" ]]; then
+    while IFS= read -r TASK_ID; do
+        [[ -n "$TASK_ID" ]] && MISSING_IDS+=("$TASK_ID")
+    done <<< "$MISSING_OUTPUT"
+fi
 
 if [[ ${#MISSING_IDS[@]} -eq 0 ]]; then
     echo "Campaign already has all 300 CSV/metadata pairs; nothing to submit."
     exit 0
 fi
 ARRAY_IDS=$(IFS=,; echo "${MISSING_IDS[*]}")
+if [[ ${BSK_RL_RECOVERY_SCAN_ONLY:-0} == 1 ]]; then
+    echo "MISSING_EPISODES=${#MISSING_IDS[@]}"
+    echo "MISSING_TASK_IDS=$ARRAY_IDS"
+    exit 0
+fi
 RECOVERY_ID=$(date -u +%Y%m%dT%H%M%SZ)
 MANIFEST="$OUTPUT_ROOT/manifests/recovery_${RECOVERY_ID}.json"
 COMMIT=$(git rev-parse HEAD)
-python - "$MANIFEST" "$ARRAY_IDS" <<PY
+"$PYTHON" - "$MANIFEST" "$ARRAY_IDS" <<PY
 import json
 import sys
 
@@ -78,7 +95,7 @@ JOB_ID=$(sbatch --parsable \
     --export=ALL,BSK_RL_REPO_DIR,BSK_RL_HEURISTIC_MC_OUTPUT_ROOT \
     examples/prospectus_rfi/slurm/recover_amos2025_heuristic_mc.sbatch)
 
-python - "$MANIFEST" "$JOB_ID" <<'PY'
+"$PYTHON" - "$MANIFEST" "$JOB_ID" <<'PY'
 import json
 import sys
 from pathlib import Path

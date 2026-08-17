@@ -94,3 +94,15 @@ def test_independent_recovery_mapping_covers_every_pair_once() -> None:
     assert set(pairs) == {
         (catalog_size, seed) for catalog_size in (100, 200, 400) for seed in range(100)
     }
+
+
+def test_recovery_submitter_uses_explicit_study_python() -> None:
+    submitter = (
+        Path(__file__).resolve().parents[3]
+        / "examples"
+        / "prospectus_rfi"
+        / "submit_missing_amos2025_heuristic_mc.sh"
+    ).read_text()
+    assert 'PYTHON="$VENV_ROOT/bin/python"' in submitter
+    assert 'MISSING_OUTPUT=$(' in submitter
+    assert "mapfile" not in submitter
