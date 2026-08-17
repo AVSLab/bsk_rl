@@ -71,7 +71,9 @@ def load_episode_rows(input_root: Path) -> pd.DataFrame:
                 f"{path} contains {len(records)} rows; expected exactly one"
             )
         row = dict(records[0])
-        row["source_file"] = str(path.resolve())
+        # input_root is resolved once by main(); resolving every GPFS path here
+        # adds a redundant metadata lookup for each tiny episode file.
+        row["source_file"] = str(path)
         rows.append(row)
         if index % 25 == 0 or index == len(paths):
             print(f"Read {index}/{len(paths)} episode CSVs", flush=True)
