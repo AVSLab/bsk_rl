@@ -8,6 +8,10 @@ from examples.prospectus_rfi.collect_heuristic_mc import validate_campaign
 from examples.prospectus_rfi.heuristic_mc import (
     task_spec,
 )
+from examples.prospectus_rfi.heuristic_mc_independent import (
+    TOTAL_INDEPENDENT_TASKS,
+    independent_task_spec,
+)
 from examples.prospectus_rfi.heuristic_mc_design import CATALOG_SIZES, TOTAL_TASKS
 
 
@@ -75,3 +79,18 @@ def test_machine_readable_campaign_config_matches_array_design() -> None:
     assert config["seed_stop_inclusive"] == 99
     assert config["total_episodes"] == 300
     assert config["dependencies"] == "none"
+
+
+def test_independent_recovery_mapping_covers_every_pair_once() -> None:
+    pairs = [
+        (
+            independent_task_spec(task_id).catalog_size,
+            independent_task_spec(task_id).seed,
+        )
+        for task_id in range(TOTAL_INDEPENDENT_TASKS)
+    ]
+    assert len(pairs) == 300
+    assert len(set(pairs)) == 300
+    assert set(pairs) == {
+        (catalog_size, seed) for catalog_size in (100, 200, 400) for seed in range(100)
+    }

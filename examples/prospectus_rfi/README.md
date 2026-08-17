@@ -128,6 +128,26 @@ CURC may request the user's password or interactive authentication. On success, 
 validated episode table is at
 `results/prospectus_rfi/cluster_downloads/heuristic_mc/amos2025_closest_angle_100s_20260815T183838Z/analysis/episodes_combined.csv`.
 
+If validation reports missing pairs, the original three-hour jobs exhausted their wall
+time while processing ten seeds serially. Preserve every completed file and recover only
+the missing pairs as independent one-seed tasks. On Alpine:
+
+```bash
+cd /projects/$USER/bsk_rl-rfi
+git pull --ff-only
+export BSK_RL_REPO_DIR=/projects/$USER/bsk_rl-rfi
+HEURISTIC_ROOT=/scratch/alpine/$USER/prospectus_rfi/heuristic_mc/amos2025_closest_angle_100s_20260815T183838Z
+
+bash examples/prospectus_rfi/submit_missing_amos2025_heuristic_mc.sh \
+  "$HEURISTIC_ROOT" 30
+```
+
+The recovery submitter scans the existing raw files and schedules only missing
+`(catalog size, seed)` pairs. Each gets its own three-hour allocation, has no dependency,
+and runs with positive Slurm nice so current training remains higher priority. After the
+recovery finishes, rerun the local pull helper; rsync transfers only new/changed files and
+the collector must then validate exactly 300 episodes.
+
 ## Frozen AMOS 2025 policy transfer Monte Carlo
 
 This separate campaign evaluates the archived best alpha=0 policy without retraining.
