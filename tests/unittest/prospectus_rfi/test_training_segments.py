@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from examples.prospectus_rfi.train import (
+    _can_start_iteration,
     _load_prior_progress,
     _segment_budget_seconds,
 )
@@ -71,3 +72,34 @@ def test_empty_run_has_zero_prior_progress(tmp_path) -> None:
         "training_iteration": 0,
         "segments": [],
     }
+
+
+def test_iteration_guard_reserves_shutdown_and_recent_iteration_time() -> None:
+    assert _can_start_iteration(
+        elapsed_s=800.0,
+        budget_s=1_000.0,
+        shutdown_buffer_s=100.0,
+        previous_iteration_s=50.0,
+    )
+    assert not _can_start_iteration(
+        elapsed_s=900.0,
+        budget_s=1_000.0,
+        shutdown_buffer_s=100.0,
+        previous_iteration_s=50.0,
+    )
+    assert not _can_start_iteration(
+        elapsed_s=800.0,
+        budget_s=1_000.0,
+        shutdown_buffer_s=100.0,
+        previous_iteration_s=200.0,
+    )
+
+
+def test_iteration_guard_rejects_negative_shutdown_buffer() -> None:
+    with pytest.raises(ValueError, match="nonnegative"):
+        _can_start_iteration(
+            elapsed_s=0.0,
+            budget_s=100.0,
+            shutdown_buffer_s=-1.0,
+            previous_iteration_s=None,
+        )

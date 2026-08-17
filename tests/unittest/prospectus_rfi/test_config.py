@@ -45,3 +45,24 @@ def test_observation_and_action_contract_dimensions():
     assert contract["observation"]["target_slots"] == 10
     assert contract["observation"]["flattened_size"] == 91
     assert contract["action"]["total_actions"] == 13
+
+
+def test_memorysafe_v2_config_limits_training_catalog_without_changing_actions():
+    mlp = load_study_config(
+        CONFIG_DIR / "mlp_selected.yaml",
+        CONFIG_DIR / "base_memorysafe_100_200.yaml",
+    )
+    attention = load_study_config(
+        CONFIG_DIR / "attention_selected.yaml",
+        CONFIG_DIR / "base_memorysafe_100_200.yaml",
+    )
+
+    assert mlp.environment == attention.environment
+    assert mlp.environment.catalog_min == 100
+    assert mlp.environment.catalog_max == 200
+    assert mlp.validation.catalog_sizes == (100, 150, 200)
+    assert mlp.compute.evaluation_catalog_sizes == (100, 200, 300, 400)
+    assert mlp.environment.episode_duration_s == 45_000.0
+    assert mlp.environment.imaging_duration_s == 100.0
+    assert mlp.environment.alpha == 0.0
+    assert mlp.environment.action_count == 13

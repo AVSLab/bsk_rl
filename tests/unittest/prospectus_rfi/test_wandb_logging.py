@@ -3,6 +3,7 @@ from pathlib import Path
 from examples.prospectus_rfi.wandb_logging import (
     DEFAULT_PROJECT,
     FINAL_GROUP,
+    RUN_PREFIX,
     TUNING_GROUP,
     maybe_init_wandb,
     public_wandb_metadata,
@@ -16,6 +17,7 @@ WANDB_ENVIRONMENT_KEYS = (
     "BSK_RL_WANDB_PROJECT",
     "BSK_RL_WANDB_GROUP",
     "BSK_RL_WANDB_KEY_PATH",
+    "BSK_RL_WANDB_RUN_PREFIX",
     "WANDB_DIR",
 )
 
@@ -70,3 +72,17 @@ def test_tuning_uses_separate_default_group(tmp_path, monkeypatch):
     settings = wandb_settings("mlp_k10_seed50000_tune00", tmp_path, tuning=True)
 
     assert settings["group"] == TUNING_GROUP
+
+
+def test_memorysafe_campaign_can_use_a_noncolliding_run_prefix(tmp_path, monkeypatch):
+    clear_wandb_environment(monkeypatch)
+    monkeypatch.setenv(
+        "BSK_RL_WANDB_RUN_PREFIX",
+        "amos2025-rfi-alpha0-100s-n100-200-v2",
+    )
+
+    settings = wandb_settings("mlp_k5_seed10001", tmp_path, tuning=False)
+
+    assert settings["run_prefix"].endswith("n100-200-v2")
+    assert settings["run_id"].startswith("amos2025-rfi-alpha0-100s-n100-200-v2-")
+    assert settings["run_id"] != f"{RUN_PREFIX}-mlp-k5-seed10001"

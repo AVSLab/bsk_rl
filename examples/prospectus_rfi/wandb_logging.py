@@ -30,8 +30,9 @@ def wandb_settings(
     project = os.environ.get("BSK_RL_WANDB_PROJECT", DEFAULT_PROJECT)
     default_group = TUNING_GROUP if tuning else FINAL_GROUP
     group = os.environ.get("BSK_RL_WANDB_GROUP", default_group)
-    display_name = f"{RUN_PREFIX}__{run_name}"
-    run_id = f"{RUN_PREFIX}-{run_name}".replace("_", "-")
+    run_prefix = os.environ.get("BSK_RL_WANDB_RUN_PREFIX", RUN_PREFIX)
+    display_name = f"{run_prefix}__{run_name}"
+    run_id = f"{run_prefix}-{run_name}".replace("_", "-")
     default_key = Path(__file__).resolve().parents[1] / "wandb_key.txt"
     key_path = Path(os.environ.get("BSK_RL_WANDB_KEY_PATH", default_key)).expanduser()
     local_dir = Path(
@@ -50,6 +51,7 @@ def wandb_settings(
         "local_dir": str(local_dir.resolve()),
         "key_path": str(key_path.resolve()),
         "phase": "tuning" if tuning else "candidate_sweep",
+        "run_prefix": run_prefix,
     }
 
 

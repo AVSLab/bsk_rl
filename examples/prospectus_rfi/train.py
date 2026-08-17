@@ -65,6 +65,22 @@ from examples.prospectus_rfi.wandb_logging import (
 STOP_REQUESTED = False
 
 
+def _configure_cpu_threads(thread_count: int) -> None:
+    """Bound BLAS/PyTorch parallelism inside every Ray process."""
+
+    if thread_count < 1:
+        raise ValueError("thread_count must be positive")
+    value = str(thread_count)
+    for name in (
+        "OMP_NUM_THREADS",
+        "MKL_NUM_THREADS",
+        "OPENBLAS_NUM_THREADS",
+        "NUMEXPR_NUM_THREADS",
+    ):
+        os.environ[name] = value
+    torch.set_num_threads(thread_count)
+
+
 def _request_stop(signum, frame) -> None:  # pragma: no cover - scheduler behavior
     del signum, frame
     global STOP_REQUESTED
@@ -162,6 +178,10 @@ def build_ppo_config(study, seed: int, n_env_runners: int, temp_dir: Path):
         .multi_agent(
             policies={"inspector", "rso"},
             policy_mapping_fn=policy_mapping_fn,
+            # Target spacecraft have one passive drift action.  Their tiny module
+            # remains available for action generation, but their transitions must
+            # not consume learner memory or PPO updates.
+            policies_to_train=["inspector"],
         )
         .rl_module(
             rl_module_spec=MultiRLModuleSpec(
@@ -183,7 +203,12 @@ def build_ppo_config(study, seed: int, n_env_runners: int, temp_dir: Path):
     return config
 
 
-def _scalar_metrics(result: dict[str, Any], elapsed_s: float, throughput: float):
+def _scalar_metrics(
+    result: dict[str, Any],
+    elapsed_s: float,
+    throughput: float,
+    iteration_wall_s: float,
+):
     runners = result.get("env_runners", {})
     row: dict[str, Any] = {
         "training_iteration": result.get("training_iteration"),
@@ -191,6 +216,7 @@ def _scalar_metrics(result: dict[str, Any], elapsed_s: float, throughput: float)
         "wall_clock_s": elapsed_s,
         "wall_clock_h": elapsed_s / 3600.0,
         "samples_per_second": throughput,
+        "iteration_wall_s": iteration_wall_s,
         "episode_return_mean": runners.get("episode_return_mean"),
         "episode_len_mean": runners.get("episode_len_mean"),
     }
@@ -220,6 +246,7 @@ def _append_row(path: Path, row: dict[str, Any]) -> None:
         "wall_clock_s",
         "wall_clock_h",
         "samples_per_second",
+        "iteration_wall_s",
         "episode_return_mean",
         "episode_len_mean",
     ]
@@ -286,6 +313,24 @@ def _segment_budget_seconds(
     return min(remaining, segment_wall_hours * 3600.0)
 
 
+def _can_start_iteration(
+    *,
+    elapsed_s: float,
+    budget_s: float,
+    shutdown_buffer_s: float,
+    previous_iteration_s: float | None,
+) -> bool:
+    """Return whether another PPO iteration fits inside the guarded budget."""
+
+    if shutdown_buffer_s < 0.0:
+        raise ValueError("shutdown_buffer_s must be nonnegative")
+    expected_iteration_s = (
+        0.0 if previous_iteration_s is None else 1.25 * previous_iteration_s
+    )
+    required_s = max(shutdown_buffer_s, expected_iteration_s)
+    return elapsed_s + required_s < budget_s
+
+
 def _replace_checkpoint(algorithm: PPO, path: Path) -> None:
     if path.exists():
         shutil.rmtree(path)
@@ -301,6 +346,7 @@ def parse_args() -> argparse.Namespace:
         required=True,
     )
     parser.add_argument("--architecture-config", type=Path)
+    parser.add_argument("--base-config", type=Path)
     parser.add_argument(
         "--candidate-count", type=int, choices=(5, 10, 20), required=True
     )
@@ -313,6 +359,17 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--segment-index", type=int)
     parser.add_argument("--n-env-runners", type=int)
+    parser.add_argument(
+        "--torch-threads",
+        type=int,
+        default=int(os.environ.get("BSK_RL_TORCH_THREADS", "1")),
+    )
+    parser.add_argument(
+        "--shutdown-buffer-minutes",
+        type=float,
+        default=15.0,
+        help="Do not begin a new PPO iteration inside this end-of-segment buffer.",
+    )
     parser.add_argument(
         "--output-root", type=Path, default=Path("results/prospectus_rfi")
     )
@@ -333,7 +390,7 @@ def main() -> None:
     )
     study = load_study_config(
         architecture_file,
-        root / "configs" / "base.yaml",
+        args.base_config or root / "configs" / "base.yaml",
     )
     study = replace(
         study,
@@ -407,6 +464,7 @@ def main() -> None:
 
     random.seed(args.seed)
     np.random.seed(args.seed)
+    _configure_cpu_threads(args.torch_threads)
     torch.manual_seed(args.seed)
     signal.signal(signal.SIGTERM, _request_stop)
     signal.signal(signal.SIGINT, _request_stop)
@@ -457,6 +515,9 @@ def main() -> None:
         prior_wall_seconds=float(prior_progress["wall_clock_s"]),
         segment_wall_hours=segment_wall_hours,
     )
+    shutdown_buffer_s = 0.0 if args.smoke else args.shutdown_buffer_minutes * 60.0
+    if shutdown_buffer_s < 0.0:
+        raise SystemExit("--shutdown-buffer-minutes must be nonnegative")
     resolved_wandb = wandb_settings(
         run_name,
         output_root,
@@ -478,6 +539,10 @@ def main() -> None:
         "effective_wall_hours": wall_hours,
         "segment_wall_hours": segment_wall_hours,
         "n_env_runners": n_env_runners,
+        "torch_threads": args.torch_threads,
+        "shutdown_buffer_minutes": args.shutdown_buffer_minutes,
+        "policies_to_train": ["inspector"],
+        "physical_target_spacecraft_per_runner": study.environment.catalog_max,
         "study_config": study.to_dict(),
         "environment_contract": environment_contract(study.environment),
         "model": model_metadata(pure_model),
@@ -505,6 +570,9 @@ def main() -> None:
             ),
             "prior_wall_clock_s": float(prior_progress["wall_clock_s"]),
             "segment_budget_s": wall_budget_s,
+            "n_env_runners": n_env_runners,
+            "torch_threads": args.torch_threads,
+            "slurm_mem_per_node": os.environ.get("SLURM_MEM_PER_NODE"),
             "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
             "started_at_unix_s": time.time(),
         }
@@ -549,16 +617,42 @@ def main() -> None:
     prior_wall_s = float(prior_progress["wall_clock_s"])
     previous_steps = int(prior_progress["environment_steps"])
     iteration = int(prior_progress["training_iteration"])
+    previous_iteration_wall_s: float | None = None
     completed_normally = False
     try:
         while True:
+            if STOP_REQUESTED:
+                print(f"[{run_name}] scheduler stop requested", flush=True)
+                break
+            segment_elapsed_s = time.monotonic() - start
+            if not _can_start_iteration(
+                elapsed_s=segment_elapsed_s,
+                budget_s=wall_budget_s,
+                shutdown_buffer_s=shutdown_buffer_s,
+                previous_iteration_s=previous_iteration_wall_s,
+            ):
+                print(
+                    f"[{run_name}] stopping before another PPO iteration: "
+                    f"segment_elapsed_s={segment_elapsed_s:.1f} "
+                    f"segment_budget_s={wall_budget_s:.1f} "
+                    f"previous_iteration_s={previous_iteration_wall_s}",
+                    flush=True,
+                )
+                break
+            iteration_start = time.monotonic()
             result = algorithm.train()
             iteration = int(result.get("training_iteration", iteration + 1))
             now = time.monotonic()
+            previous_iteration_wall_s = now - iteration_start
             steps = int(result.get("num_env_steps_sampled_lifetime", 0))
             throughput = (steps - previous_steps) / max(now - previous_time, 1e-9)
             cumulative_elapsed_s = prior_wall_s + now - start
-            row = _scalar_metrics(result, cumulative_elapsed_s, throughput)
+            row = _scalar_metrics(
+                result,
+                cumulative_elapsed_s,
+                throughput,
+                previous_iteration_wall_s,
+            )
             _append_row(csv_path, row)
             with jsonl_path.open("a") as stream:
                 stream.write(json.dumps(row, default=str, sort_keys=True) + "\n")
@@ -573,7 +667,9 @@ def main() -> None:
             print(
                 f"[{run_name}] iteration={iteration} steps={steps} "
                 f"wall_h={cumulative_elapsed_s/3600:.3f} "
-                f"segment_h={(now-start)/3600:.3f} samples_s={throughput:.3f}",
+                f"segment_h={(now-start)/3600:.3f} "
+                f"iteration_s={previous_iteration_wall_s:.1f} "
+                f"samples_s={throughput:.3f}",
                 flush=True,
             )
             if STOP_REQUESTED or now - start >= wall_budget_s:

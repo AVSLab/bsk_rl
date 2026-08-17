@@ -1,0 +1,69 @@
+study_name: amos2025_architecture_comparison_100s_memorysafe_100_200_v2
+historical_code_commit: d0bcc54c6610643cc946ce92f2ea30314659fe0e
+public_snapshot_commit: c6b9e4310a36476944cfa27b1d02e43c34362952
+output_root: results/prospectus_rfi/memorysafe_100_200_v2
+
+environment:
+  episode_duration_s: 45000.0
+  catalog_min: 100
+  catalog_max: 200
+  candidate_count: 10
+  imaging_duration_s: 100.0
+  variable_duration_imaging: false
+  charge_duration_s: 300.0
+  downlink_duration_s: 300.0
+  desaturation_duration_s: 150.0
+  alpha: 0.0
+  failure_penalty: -100.0
+  battery_capacity_ws: 1800000.0
+  initial_battery_fraction_min: 0.20
+  initial_battery_fraction_max: 0.60
+  image_storage_capacity: 50.0
+  image_size_bits: 4000000.0
+  instrument_baud_rate: 4000000.0
+  transmitter_baud_rate: -4000000.0
+  base_power_draw_w: -10.0
+  instrument_power_draw_w: -30.0
+  transmitter_power_draw_w: -25.0
+  thruster_power_draw_w: -80.0
+  panel_area_m2: 1.0
+  max_wheel_speed_rpm: 6000.0
+  image_attitude_error_requirement: 0.01
+  eclipse_threshold: 0.5
+  allow_reimaging: false
+  target_priority: 1.0
+  target_orbit_distribution: amos2025_leo
+  observation_layout: amos2025_obs_v2_masked
+  action_order:
+    - image_candidate_slots
+    - charge
+    - downlink
+    - desaturate
+
+validation:
+  seeds: [91001, 91002, 91003, 91004, 91005]
+  catalog_sizes: [100, 150, 200]
+  checkpoint_interval_iterations: 5
+  score_weights:
+    successful_observation_fraction: 0.55
+    illuminated_observation_fraction: 0.25
+    survival_fraction: 0.15
+    constraint_intervention_rate: -0.05
+  primary_metric: successful_observation_fraction
+  practical_equivalence_margin: 0.02
+  score_thresholds: [0.25, 0.50, 0.70]
+
+compute:
+  campaign_phase: exploratory_candidate_sweep
+  final_seeds: [10001]
+  confirmatory_seeds: [10001, 20001, 30001]
+  final_wall_hours: 48.0
+  tuning_trials_per_architecture: 12
+  tuning_wall_hours_per_trial: 8.0
+  # N=300 and 400 remain predeclared out-of-distribution evaluation cases.
+  # They are not instantiated by training runners or checkpoint selection.
+  evaluation_catalog_sizes: [100, 200, 300, 400]
+  evaluation_episodes_per_size: 100
+  evaluation_seed_start: 700000
+  checkpoint_interval_iterations: 3
+  checkpoints_to_keep: 5

@@ -27,6 +27,7 @@ def parse_args():
         "--candidate-count", type=int, choices=(5, 10, 20), required=True
     )
     parser.add_argument("--run-dir", type=Path, required=True)
+    parser.add_argument("--base-config", type=Path)
     parser.add_argument("--include-final", action="store_true")
     return parser.parse_args()
 
@@ -38,7 +39,8 @@ def main() -> None:
         "mlp_selected.yaml" if args.architecture == "mlp" else "attention_selected.yaml"
     )
     study = load_study_config(
-        root / "configs" / architecture_file, root / "configs" / "base.yaml"
+        root / "configs" / architecture_file,
+        args.base_config or root / "configs" / "base.yaml",
     )
     study = replace(
         study,

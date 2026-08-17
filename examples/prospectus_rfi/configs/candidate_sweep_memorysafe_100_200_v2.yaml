@@ -1,0 +1,30 @@
+campaign: exploratory_candidate_sweep_memorysafe_100_200_v2
+base_config: base_memorysafe_100_200.yaml
+candidate_counts: [5, 10, 20]
+architectures:
+  - fixed_input_monolithic_mlp
+  - target_set_attention
+training_seeds: [10001]
+catalog_sampling: discrete_uniform_inclusive
+catalog_min: 100
+catalog_max: 200
+physical_target_spacecraft_per_runner: 200
+environment_runners: 12
+torch_threads_per_process: 1
+slurm_cpus_per_task: 16
+slurm_memory_gib: 230
+wall_hours_per_run: 48.0
+segment_training_caps_hours: [22.0, 22.0, 5.0]
+segment_allocation_hours: [24.0, 24.0, 6.0]
+run_count: 6
+total_training_budget_node_hours: 288.0
+maximum_requested_allocation_node_hours: 324.0
+wandb_project: amos2025-architecture-comparison
+wandb_group: rfi-alpha0-100s-n100-200-memorysafe-v2
+wandb_run_prefix: amos2025-rfi-alpha0-100s-n100-200-v2
+output_root: /scratch/alpine/$USER/prospectus_rfi/memorysafe_100_200_v2
+notes:
+  - Only the inspector policy is optimized; target spacecraft retain a passive drift policy.
+  - A two-job worst-case stress gate at K=20 must pass before the six-run campaign.
+  - The original 100-400 pilot outputs and W&B identities are never resumed or overwritten.
+  - N=300 and N=400 are reserved for later out-of-distribution evaluation.

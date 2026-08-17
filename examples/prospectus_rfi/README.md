@@ -298,7 +298,90 @@ export BSK_RL_WANDB_KEY_PATH=/projects/$USER/secure/wandb_key.txt
 The project can be redirected deliberately with `BSK_RL_RFI_WANDB_PROJECT`, without
 inheriting an unrelated `BSK_RL_WANDB_PROJECT` left over from an AMOS 2026 campaign.
 
-## Recommended campaign order
+## Memory-safe N=100--200 v2 campaign
+
+The original N=100--400, 28-runner candidate sweep suffered Ray worker OOM deaths and
+must be treated as a failed pilot. Do not resume its checkpoints for the prospectus
+comparison. The v2 campaign has a separate configuration, scratch root, W&B group, and
+W&B run-ID prefix, so it cannot overwrite or silently resume the pilot.
+
+The v2 training environment samples an integer catalog size uniformly and inclusively
+from 100 through 200 at every episode reset. Each runner physically instantiates 200
+target spacecraft. Training uses 12 environment runners, 16 allocated CPUs, one
+PyTorch/BLAS thread per process, and 230 GiB on an Alpine 240-GiB node. Only the
+`inspector` policy is updated; the target spacecraft retain their passive drift module.
+The AMOS physical/action configuration remains otherwise unchanged, including 45,000 s
+episodes and fixed 100 s image actions.
+
+Do not submit the six long runs until both K=20 stress tasks pass. On Alpine:
+
+```bash
+module unload slurm/blanca 2>/dev/null || true
+module load slurm/alpine
+cd /projects/$USER/bsk_rl-rfi
+git pull --ff-only
+
+export BSK_RL_REPO_DIR=/projects/$USER/bsk_rl-rfi
+export BSK_RL_WANDB_KEY_PATH=/projects/$USER/bsk_rl/examples/wandb_key.txt
+
+STRESS_JOB=$(sbatch --parsable \
+  --export=ALL,BSK_RL_REPO_DIR,BSK_RL_WANDB_KEY_PATH \
+  examples/prospectus_rfi/slurm/stress_candidate_sweep_memorysafe_2h.sbatch)
+echo "Stress job: $STRESS_JOB"
+```
+
+After both array tasks leave `squeue`, run the mandatory gate:
+
+```bash
+bash examples/prospectus_rfi/audit_memorysafe_stress.sh "$STRESS_JOB"
+```
+
+The audit requires two `COMPLETED` task states, final checkpoints, positive environment
+steps, and no detected Ray OOM, worker-death, or actor-unavailable messages. If it prints
+`PASS`, submit all six configurations and their task-correlated continuation chains:
+
+```bash
+SUBMISSION=$(bash \
+  examples/prospectus_rfi/submit_memorysafe_candidate_sweep_24h.sh \
+  "$STRESS_JOB")
+printf '%s\n' "$SUBMISSION"
+CLEANUP_JOB=$(awk -F= '/^CLEANUP_JOB=/{print $2}' <<< "$SUBMISSION")
+echo "Cleanup array: $CLEANUP_JOB"
+```
+
+The submission helper reports `SEGMENT0_JOB`, `SEGMENT1_JOB`, and `CLEANUP_JOB`.
+`aftercorr` makes every policy's continuation depend only on the corresponding policy
+task, so one failed architecture/K cell does not prevent the other independent cells
+from continuing. The three allocation limits are 24, 24, and 6 hours; guarded training
+caps are 22, 22, and at most the remaining 5 hours. Advance signals and the iteration
+duration guard leave time for a complete final checkpoint.
+
+Outputs are under:
+
+```text
+/scratch/alpine/$USER/prospectus_rfi/memorysafe_100_200_v2
+```
+
+W&B uses project `amos2025-architecture-comparison`, group
+`rfi-alpha0-100s-n100-200-memorysafe-v2`, and prefix
+`amos2025-rfi-alpha0-100s-n100-200-v2`. Checkpoint selection uses held-out seeds at
+N=100, 150, and 200. N=300 and 400 remain predeclared out-of-distribution evaluations
+and are not part of training-runner memory load.
+
+After the reported cleanup array completes successfully, submit validation with:
+
+```bash
+VALIDATE_JOB=$(sbatch --parsable \
+  --dependency=afterok:$CLEANUP_JOB \
+  --export=ALL,BSK_RL_REPO_DIR \
+  examples/prospectus_rfi/slurm/validate_candidate_sweep_memorysafe.sbatch)
+echo "Validation job: $VALIDATE_JOB"
+```
+
+## Historical campaign order
+
+The commands below document the original campaign. They are retained for provenance;
+the N=100--400 training launch should not be repeated as the memory-safe v2 campaign.
 
 The checked-in `*_selected.yaml` files are historically informed starting points. The
 prospectus protocol calls for separate tuning before final training.

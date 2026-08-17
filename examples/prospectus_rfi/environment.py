@@ -2,10 +2,10 @@
 
 The only intended physical changes from the archived AMOS setup are the fixed
 100 s imaging action, a 45,000 s episode for every catalog size, a uniformly
-sampled 100--400 target catalog, and a 20--60 percent initial scanner charge.
-Both learned policies consume the exact same padded observation and validity
-mask.  The scenario contains at most 400 target spacecraft; only the first
-``scenario.n_targets`` are exposed as targets in a particular episode.
+sampled configured target-catalog range, and a 20--60 percent initial scanner
+charge. Both learned policies consume the exact same padded observation and
+validity mask. The physical scenario contains ``config.catalog_max`` target
+spacecraft; only the first ``scenario.n_targets`` are exposed in an episode.
 """
 
 from __future__ import annotations
