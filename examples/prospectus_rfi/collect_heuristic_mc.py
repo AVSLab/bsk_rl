@@ -4,13 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 if __package__ in {None, ""}:
-    import sys
-
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import numpy as np
@@ -61,16 +61,28 @@ def load_episode_rows(input_root: Path) -> pd.DataFrame:
         raise FileNotFoundError(
             f"no per-seed CSV files found under {input_root / 'raw'}"
         )
-    rows: list[pd.DataFrame] = []
-    for path in paths:
-        frame = pd.read_csv(path)
-        if len(frame.index) != 1:
+    print(f"Found {len(paths)} episode CSVs; reading one-row files...", flush=True)
+    rows: list[dict[str, object]] = []
+    for index, path in enumerate(paths, start=1):
+        with path.open(newline="") as stream:
+            records = list(csv.DictReader(stream))
+        if len(records) != 1:
             raise ValueError(
-                f"{path} contains {len(frame.index)} rows; expected exactly one"
+                f"{path} contains {len(records)} rows; expected exactly one"
             )
-        frame["source_file"] = str(path.resolve())
-        rows.append(frame)
-    return pd.concat(rows, ignore_index=True)
+        row = dict(records[0])
+        row["source_file"] = str(path.resolve())
+        rows.append(row)
+        if index % 25 == 0 or index == len(paths):
+            print(f"Read {index}/{len(paths)} episode CSVs", flush=True)
+
+    frame = pd.DataFrame.from_records(rows).replace("", np.nan)
+    # Match pandas.read_csv's numeric inference without invoking its parser 300 times.
+    for column in frame.columns:
+        converted = pd.to_numeric(frame[column], errors="coerce")
+        if converted.notna().sum() == frame[column].notna().sum():
+            frame[column] = converted
+    return frame
 
 
 def validate_campaign(frame: pd.DataFrame) -> dict[str, object]:

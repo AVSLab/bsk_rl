@@ -4,7 +4,10 @@ import pandas as pd
 import pytest
 import yaml
 
-from examples.prospectus_rfi.collect_heuristic_mc import validate_campaign
+from examples.prospectus_rfi.collect_heuristic_mc import (
+    load_episode_rows,
+    validate_campaign,
+)
 from examples.prospectus_rfi.heuristic_mc import (
     task_spec,
 )
@@ -104,5 +107,22 @@ def test_recovery_submitter_uses_explicit_study_python() -> None:
         / "submit_missing_amos2025_heuristic_mc.sh"
     ).read_text()
     assert 'PYTHON="$VENV_ROOT/bin/python"' in submitter
-    assert 'MISSING_OUTPUT=$(' in submitter
+    assert "MISSING_OUTPUT=$(" in submitter
     assert "mapfile" not in submitter
+
+
+def test_episode_loader_reads_one_row_files_and_infers_numbers(tmp_path: Path) -> None:
+    raw = tmp_path / "raw" / "n100"
+    raw.mkdir(parents=True)
+    (raw / "episode.csv").write_text(
+        "catalog_size,scenario_seed,method,episode_duration_s\n"
+        "100,7,heuristic_historical,45000.0\n"
+    )
+
+    frame = load_episode_rows(tmp_path)
+
+    assert len(frame.index) == 1
+    assert frame.iloc[0]["catalog_size"] == 100
+    assert frame.iloc[0]["scenario_seed"] == 7
+    assert frame.iloc[0]["episode_duration_s"] == 45_000.0
+    assert frame.iloc[0]["method"] == "heuristic_historical"
