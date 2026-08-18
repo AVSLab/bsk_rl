@@ -88,6 +88,7 @@ class SweepRiskField(Scenario):
         swath_km: float = 100.0,
         earth_map: Optional[str] = None,
         regenerate_each_reset: bool = True,
+        attitude_swath: bool = False,
     ) -> None:
         """Random continuous risk field, following the risk_map.py recipe.
 
@@ -111,6 +112,11 @@ class SweepRiskField(Scenario):
                 biased toward land and coastlines as in risk_map.py. If None,
                 seeds are uniform over the sphere with the same polar taper.
             regenerate_each_reset: Draw a new random field on every reset.
+            attitude_swath: Derive the swath line direction from the flown
+                body attitude instead of the orbit normal. Required for the
+                yaw to affect the reward when the satellite commands it
+                (``Sweep(control_yaw=True)``); at zero yaw both derivations
+                give the same line, so the flag is safe either way.
         """
         super().__init__()
         self.n_seeds = n_seeds
@@ -122,6 +128,7 @@ class SweepRiskField(Scenario):
         self.swath_km = swath_km
         self.earth_map = earth_map
         self.regenerate_each_reset = regenerate_each_reset
+        self.attitude_swath = attitude_swath
         self.risk: Optional[np.ndarray] = None
         self._risk_orig: Optional[np.ndarray] = None
         self._coverage: dict = {}
@@ -316,12 +323,25 @@ class SweepRiskField(Scenario):
         p_hat = r[hits] + s_int[:, None] * b_N[hits]
         p_hat /= np.linalg.norm(p_hat, axis=1, keepdims=True)
 
-        # Cross-track direction on the ground: the orbit normal projected
-        # into the tangent plane at the intercept
-        h_N = np.cross(r[hits], v_N[idx][hits])
-        h_hat = h_N / np.linalg.norm(h_N, axis=1, keepdims=True)
-        c_hat = h_hat - np.sum(h_hat * p_hat, axis=1, keepdims=True) * p_hat
-        c_hat /= np.linalg.norm(c_hat, axis=1, keepdims=True)
+        if self.attitude_swath:
+            # Detector-line axis b3 in inertial, from the flown attitude. At
+            # zero yaw its tangent-plane projection equals the orbit-normal
+            # projection below (b3, the orbit normal and p_hat are coplanar),
+            # so this branch only changes anything once yaw is commanded. The
+            # projection norm is bounded below by cos(incidence), so the
+            # normalization is safe.
+            b3_N = np.array(
+                [rbk.MRP2C(s).T @ np.array([0.0, 0.0, 1.0]) for s in sigma[idx]]
+            )[hits]
+            c_hat = b3_N - np.sum(b3_N * p_hat, axis=1, keepdims=True) * p_hat
+            c_hat /= np.linalg.norm(c_hat, axis=1, keepdims=True)
+        else:
+            # Cross-track direction on the ground: the orbit normal projected
+            # into the tangent plane at the intercept
+            h_N = np.cross(r[hits], v_N[idx][hits])
+            h_hat = h_N / np.linalg.norm(h_N, axis=1, keepdims=True)
+            c_hat = h_hat - np.sum(h_hat * p_hat, axis=1, keepdims=True) * p_hat
+            c_hat /= np.linalg.norm(c_hat, axis=1, keepdims=True)
         t_hit = t_s[idx][hits]
         idx_hit = idx[hits]
 

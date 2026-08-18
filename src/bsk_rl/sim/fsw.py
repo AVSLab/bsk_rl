@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING, Callable, Iterable, Optional
 from weakref import proxy
 
 import numpy as np
-from Basilisk.architecture import messaging
+from Basilisk.architecture import messaging, sysModel
 from Basilisk.fswAlgorithms import (
     attTrackingError,
     eulerRotation,
@@ -1169,6 +1169,74 @@ class SteeringStripImagerFSWModel(SteeringFSWModel, StripImagingFSWModel):
         """Convenience type that combines the imaging FSW model with MRP steering."""
         super().__init__(*args, **kwargs)
 
+class _YawRateProfiler(sysModel.SysModel):
+    """First-order approach law for the sweep yaw, recomputed every FSW tick.
+
+    rate = clip((yaw_target - current_yaw) / tau, +/- max_rate)
+
+    Runs between sweepHillPoint and eulerRotation in the EulerSweepTask, so
+    the rate it writes is integrated by eulerRotation in the same tick. The
+    yaw slews at the rate cap while far from the target, then lands
+    exponentially; convergence is monotone with no overshoot for any
+    tau >= the FSW tick, because the rate always points at the target and
+    shrinks with the remaining error — there is no stop to schedule. (Two
+    discontinuous laws — an instant reference jump and an event-based
+    slew-and-hold — were tried before this and destabilized the closed
+    loop.) Targets are used as-is with no angle wrapping, like the roll law.
+
+    Inert while ``yaw_target`` is None: roll-only use is numerically
+    untouched, since only the yaw component of ``angleRates`` is ever
+    rewritten (read-modify-write of the live value).
+    """
+
+    def __init__(self, euler_rotation) -> None:  # noqa: D107
+        super().__init__()  # required by sysModel director subclasses
+        self.euler_rotation = euler_rotation
+        self.yaw_axis: int = 2
+        self.max_rate: float = 0.0
+        self.tau: float = 1.0
+        self.yaw_target: Optional[float] = None
+
+    def configure(self, yaw_axis: int, max_rate: float, tau: float) -> None:
+        """Set parameters once sat_args are resolved (setup_euler_sweep)."""
+        self.yaw_axis = yaw_axis
+        self.max_rate = max_rate
+        self.tau = tau
+
+    def set_target(self, yaw_target: Optional[float]) -> None:
+        """Set or clear the target, applying the first rate immediately.
+
+        Call only after the action's full ``angleRates`` assignment: the
+        rate write is a read-modify-write of the yaw component on top of it.
+        """
+        self.yaw_target = yaw_target
+        if yaw_target is not None:
+            self._apply_rate()
+
+    def _apply_rate(self) -> None:
+        current = float(self.euler_rotation.angleSet[self.yaw_axis])
+        rate = float(
+            np.clip(
+                (self.yaw_target - current) / self.tau,
+                -self.max_rate,
+                self.max_rate,
+            )
+        )
+        rates = list(self.euler_rotation.angleRates)
+        rates[self.yaw_axis] = rate
+        self.euler_rotation.angleRates = rates
+
+    def Reset(self, CurrentSimNanos) -> None:
+        """Clear the target at simulation initialization."""
+        self.yaw_target = None
+
+    def UpdateState(self, CurrentSimNanos) -> None:
+        """Refresh the yaw rate toward the target; inert without one."""
+        if self.yaw_target is None:
+            return
+        self._apply_rate()
+
+
 class SweepFSWModel(BasicFSWModel):
     """FSW with a rate-limited Euler-rotation sweep of the Hill frame.
 
@@ -1177,7 +1245,9 @@ class SweepFSWModel(BasicFSWModel):
     is the Hill frame rolled about its along-track axis. The roll target is
     commanded through :class:`~SweepFSWModel.action_sweep`, which converts
     it to an ``angleRates`` command clipped to ``maxSweepRate`` so the
-    reference can never slew faster than the limit.
+    reference can never slew faster than the limit. An optional yaw target
+    (about the boresight) is flown by a per-tick :class:`_YawRateProfiler`
+    instead — capped first-order approach, landing well within a decision.
     """
 
     def _make_task_list(self) -> list[Task]:
@@ -1203,6 +1273,10 @@ class SweepFSWModel(BasicFSWModel):
                 eulerRotation.eulerRotation()
             )
             self.eulerRotation.ModelTag = "eulerRotation"
+            self.yawProfiler = self.fsw.yawProfiler = _YawRateProfiler(
+                self.eulerRotation
+            )
+            self.yawProfiler.ModelTag = "yawRateProfiler"
 
         def _setup_fsw_objects(self, **kwargs) -> None:
             self.sweepHillPoint.transNavInMsg.subscribeTo(
@@ -1219,11 +1293,28 @@ class SweepFSWModel(BasicFSWModel):
             )
             self._add_model_to_task(self.sweepHillPoint, priority=1199)
             self._add_model_to_task(self.eulerRotation, priority=1198)
+            # Same priority as sweepHillPoint: equal priorities insert AFTER
+            # existing entries, so the execution order becomes hillPoint ->
+            # profiler -> eulerRotation and the profiler's rate write is
+            # integrated within the same tick.
+            self._add_model_to_task(self.yawProfiler, priority=1199)
             self.setup_euler_sweep(**kwargs)
 
-        @default_args(maxSweepRate=0.002, sweepAxis=1)
+        @default_args(
+            maxSweepRate=0.002,
+            sweepAxis=1,
+            maxYawRate=0.002,
+            yawAxis=2,
+            yawTimeConstant=5.0,
+        )
         def setup_euler_sweep(
-            self, maxSweepRate: float, sweepAxis: int, **kwargs
+            self,
+            maxSweepRate: float,
+            sweepAxis: int,
+            maxYawRate: float,
+            yawAxis: int,
+            yawTimeConstant: float,
+            **kwargs,
         ) -> None:
             """Configure the sweep rate limit.
 
@@ -1231,18 +1322,51 @@ class SweepFSWModel(BasicFSWModel):
                 maxSweepRate: [rad/s] Maximum rate of the reference roll angle.
                 sweepAxis: Index in the 3-2-1 Euler set to sweep about (1 is
                     the Hill along-track axis: a cross-track roll).
+                maxYawRate: [rad/s] Rate cap of the yaw approach law.
+                yawAxis: Index in the 3-2-1 Euler set for the yaw (2 is the
+                    "1"-rotation, applied last, about the rolled boresight
+                    axis: it spins the detector line on the ground without
+                    moving the boresight intercept).
+                yawTimeConstant: [s] Time constant of the first-order yaw
+                    approach law (see :class:`_YawRateProfiler`). Must be at
+                    least the FSW tick for overshoot-free convergence
+                    (>= 2 ticks recommended); clamped to the tick otherwise.
                 kwargs: Passed to other setup functions.
             """
             self.fsw.maxSweepRate = maxSweepRate
             self.fsw.sweepAxis = sweepAxis
+            self.fsw.maxYawRate = maxYawRate
+            self.fsw.yawAxis = yawAxis
+            tau = yawTimeConstant
+            if tau < self.fsw.fsw_rate:
+                self.fsw.logger.warning(
+                    f"yawTimeConstant {tau} < FSW rate {self.fsw.fsw_rate}; "
+                    "clamping to the FSW rate to keep the yaw convergence "
+                    "overshoot-free."
+                )
+                tau = self.fsw.fsw_rate
+            self.fsw.yawTimeConstant = tau
+            self.yawProfiler.configure(
+                yaw_axis=yawAxis, max_rate=maxYawRate, tau=tau
+            )
 
     @property
     def sweep_roll_angle(self) -> float:
         """[rad] Current reference roll angle of the euler rotation."""
         return float(np.array(self.eulerRotation.angleSet)[self.sweepAxis])
 
+    @property
+    def sweep_yaw_angle(self) -> float:
+        """[rad] Current reference yaw (about-boresight) angle."""
+        return float(np.array(self.eulerRotation.angleSet)[self.yawAxis])
+
     @action
-    def action_sweep(self, roll_target: float, duration: float) -> None:
+    def action_sweep(
+        self,
+        roll_target: float,
+        duration: float,
+        yaw_target: Optional[float] = None,
+    ) -> None:
         """Slew the reference roll toward ``roll_target``, rate-limited.
 
         The commanded rate is ``(roll_target - current) / duration`` clipped
@@ -1252,6 +1376,15 @@ class SweepFSWModel(BasicFSWModel):
         Args:
             roll_target: [rad] Desired reference roll angle.
             duration: [s] Time over which to reach the target.
+            yaw_target: [rad] Optional desired reference yaw angle, flown by
+                the task's :class:`_YawRateProfiler`: a per-tick first-order
+                approach (rate = clip(error/yawTimeConstant, +/- maxYawRate))
+                that slews at the cap while far and lands exponentially with
+                no overshoot — unlike the roll, which spreads its slew over
+                the decision. It must ride in the same call as the roll: the
+                rates command below zeroes every axis. When None the profiler
+                is inert and the yaw angle holds, matching the roll-only
+                behavior.
         """
         current = self.sweep_roll_angle
         rate = float(
@@ -1264,6 +1397,7 @@ class SweepFSWModel(BasicFSWModel):
         rates = [0.0, 0.0, 0.0]
         rates[self.sweepAxis] = rate
         self.eulerRotation.angleRates = rates
+        self.yawProfiler.set_target(yaw_target)
         self.simulator.enableTask(self.EulerSweepTask.name + self.satellite.name)
         self.simulator.enableTask(self.TrackingErrorTask.name + self.satellite.name)
 

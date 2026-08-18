@@ -77,6 +77,12 @@ class Sweep(ContinuousAction):
     :class:`~bsk_rl.sim.fsw.SweepFSWModel.action_sweep`, which rate-limits
     the reference slew. Requires the satellite to use
     :class:`~bsk_rl.sim.fsw.SweepFSWModel`.
+
+    With ``control_yaw`` the action gains a second value: a yaw target in
+    [-yaw_max, +yaw_max] about the boresight, orienting the scan line on the
+    ground. Pair it with a scenario that derives the swath from the flown
+    attitude (``SweepRiskField(attitude_swath=True)``), or the yaw has no
+    effect on the reward.
     """
 
     def __init__(
@@ -84,6 +90,9 @@ class Sweep(ContinuousAction):
         roll_max: float = np.radians(30.0),
         duration: float = 120.0,
         name: str = "sweep",
+        *,
+        control_yaw: bool = False,
+        yaw_max: float = np.radians(90.0),
     ) -> None:
         """Continuous sweep action.
 
@@ -92,24 +101,45 @@ class Sweep(ContinuousAction):
             duration: [s] Decision interval; the reference slews toward the
                 target (rate-limited in FSW) over this time.
             name: Name of the action.
+            control_yaw: Add a second action dimension commanding the yaw
+                about the boresight (rate-limited in FSW like the roll).
+            yaw_max: [rad] Yaw angle corresponding to action[1] = +/-1.
         """
         super().__init__(name=name)
         self.roll_max = roll_max
         self.duration = duration
+        self.control_yaw = control_yaw
+        self.yaw_max = yaw_max
 
     @property
     def space(self) -> spaces.Box:
-        """Normalized roll target in [-1, 1]."""
-        return spaces.Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
+        """Normalized roll (and optionally yaw) target in [-1, 1]."""
+        return spaces.Box(
+            low=-1.0,
+            high=1.0,
+            shape=(2,) if self.control_yaw else (1,),
+            dtype=np.float32,
+        )
 
     def set_action(self, action: np.ndarray) -> None:
-        """Denormalize the roll target and task the FSW sweep."""
+        """Denormalize the target(s) and task the FSW sweep."""
         roll_target = float(np.clip(action[0], -1.0, 1.0)) * self.roll_max
-        self.satellite.log_info(
-            f"sweep tasked: roll target {np.degrees(roll_target):.1f} deg "
-            f"for {self.duration:.0f} s"
-        )
-        self.satellite.fsw.action_sweep(roll_target, self.duration)
+        if self.control_yaw:
+            yaw_target = float(np.clip(action[1], -1.0, 1.0)) * self.yaw_max
+            self.satellite.log_info(
+                f"sweep tasked: roll target {np.degrees(roll_target):.1f} deg, "
+                f"yaw target {np.degrees(yaw_target):.1f} deg "
+                f"for {self.duration:.0f} s"
+            )
+            self.satellite.fsw.action_sweep(
+                roll_target, self.duration, yaw_target=yaw_target
+            )
+        else:
+            self.satellite.log_info(
+                f"sweep tasked: roll target {np.degrees(roll_target):.1f} deg "
+                f"for {self.duration:.0f} s"
+            )
+            self.satellite.fsw.action_sweep(roll_target, self.duration)
         self.satellite.update_timed_terminal_event(
             self.simulator.sim_time + self.duration, info="for sweep"
         )

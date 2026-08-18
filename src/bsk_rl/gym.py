@@ -420,7 +420,9 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
             raise ValueError("There must be the same number of actions and satellites")
         for satellite, action in zip(self.satellites, actions):
             satellite.info = []  # reset satellite info log
-            if action is not None and action != NO_ACTION:
+            # np.all keeps the sentinel comparison valid for vector actions
+            # (a 2-element Box action makes the bare != ambiguous).
+            if action is not None and not np.all(action == NO_ACTION):
                 satellite.requires_retasking = False
                 satellite.set_action(action)
             if not satellite.is_alive():
