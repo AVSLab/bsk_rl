@@ -15,7 +15,6 @@
 #SBATCH --mail-type=FAIL,END
 #SBATCH --qos=cpu-normal
 #SBATCH --signal=B:TERM@1800
-#SBATCH --nice=10000
 
 set -euo pipefail
 

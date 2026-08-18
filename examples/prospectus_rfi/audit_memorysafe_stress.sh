@@ -18,7 +18,9 @@ sacct -X -j "$JOB_ID" --format=JobIDRaw,JobName,State,ExitCode,Elapsed,MaxRSS,Ma
 
 TASK_STATES=$(sacct -X -n -P -j "$JOB_ID" --format=JobIDRaw,State | awk -F'|' '$1 ~ /_[01]$/ {print $2}')
 if [[ "$(wc -l <<< "$TASK_STATES" | tr -d ' ')" != "2" ]]; then
-    echo "Expected two stress task states; the array may still be running" >&2
+    echo "Stress array is not ready to audit; no failure is implied." >&2
+    echo "Wait until both tasks leave squeue, then run this audit again." >&2
+    squeue -j "$JOB_ID" -r -o "%.20i %.12j %.2t %.10M %R" >&2 || true
     exit 3
 fi
 while IFS= read -r STATE; do
