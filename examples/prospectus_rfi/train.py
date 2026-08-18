@@ -133,6 +133,8 @@ def _training_args(study) -> dict[str, Any]:
 
 
 def build_ppo_config(study, seed: int, n_env_runners: int, temp_dir: Path):
+    ray_log_dir = temp_dir / "ray_logs"
+    ray_log_dir.mkdir(parents=True, exist_ok=True)
     env_args = make_environment_args(
         study.environment,
         episode_data_callback=episode_metrics,
@@ -198,7 +200,7 @@ def build_ppo_config(study, seed: int, n_env_runners: int, temp_dir: Path):
         )
     config.logger_config = {
         "type": UnifiedLogger,
-        "logdir": str(temp_dir.parent / "ray_logs"),
+        "logdir": str(ray_log_dir),
     }
     return config
 
@@ -592,6 +594,7 @@ def main() -> None:
 
     ray.init(
         ignore_reinit_error=True,
+        include_dashboard=False,
         num_cpus=max(n_env_runners + 4, 1),
         object_store_memory=int(
             os.environ.get("BSK_RL_OBJECT_STORE_MEMORY", "2000000000")

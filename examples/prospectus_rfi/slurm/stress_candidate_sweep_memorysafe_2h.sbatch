@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Worst-case memory/throughput gate: both architectures at K=20 and N<=200.
+# Worst-case one-iteration gate: both architectures at K=20 and N<=200.
 #SBATCH --account=ucb550_asc2
 #SBATCH --job-name=rfi_memstress
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --time=02:00:00
+#SBATCH --time=04:00:00
 #SBATCH --array=0-1%2
 #SBATCH --partition=acpu
 #SBATCH --mem=230G
@@ -14,7 +14,7 @@
 #SBATCH --output=/scratch/alpine/%u/job_output/%x_%A_%a.out
 #SBATCH --mail-type=FAIL,END
 #SBATCH --qos=cpu-normal
-#SBATCH --signal=B:TERM@1800
+#SBATCH --signal=B:TERM@900
 
 set -euo pipefail
 
@@ -76,11 +76,11 @@ exec python -u examples/prospectus_rfi/train.py \
     --base-config examples/prospectus_rfi/configs/base_memorysafe_100_200.yaml \
     --candidate-count 20 \
     --seed "$SEED" \
-    --wall-hours 1.5 \
-    --segment-wall-hours 1.5 \
+    --wall-hours 48 \
     --segment-index 0 \
     --n-env-runners 12 \
     --torch-threads 1 \
-    --shutdown-buffer-minutes 10 \
+    --shutdown-buffer-minutes 0 \
+    --max-iterations 1 \
     --temp-dir "$TASK_TEMP" \
     --output-root "$OUTPUT_ROOT"

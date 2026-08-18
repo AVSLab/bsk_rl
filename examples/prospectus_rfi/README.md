@@ -313,7 +313,11 @@ PyTorch/BLAS thread per process, and 230 GiB on an Alpine 240-GiB node. Only the
 The AMOS physical/action configuration remains otherwise unchanged, including 45,000 s
 episodes and fixed 100 s image actions.
 
-Do not submit the six long runs until both K=20 stress tasks pass. On Alpine:
+Do not submit the six long runs until both K=20 stress tasks complete one full PPO
+iteration and pass. The stress allocation allows up to four hours because constructing
+12 independent 200-target Basilisk environments took about one hour on Alpine; each
+task exits early as soon as iteration 1 and its final checkpoint are complete. On
+Alpine:
 
 ```bash
 module unload slurm/blanca 2>/dev/null || true

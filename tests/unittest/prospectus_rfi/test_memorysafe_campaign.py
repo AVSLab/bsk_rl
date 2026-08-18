@@ -47,3 +47,14 @@ def test_memorysafe_slurm_request_and_namespace_are_explicit():
     assert "rfi-alpha0-100s-n100-200-memorysafe-v2" in script
     assert "--signal=B:TERM@1800" in script
     assert "--n-env-runners 28" not in script
+
+
+def test_stress_gate_requires_one_complete_iteration_before_scheduler_signal():
+    script = (
+        EXPERIMENT_ROOT / "slurm" / "stress_candidate_sweep_memorysafe_2h.sbatch"
+    ).read_text()
+
+    assert "#SBATCH --time=04:00:00" in script
+    assert "#SBATCH --signal=B:TERM@900" in script
+    assert "--max-iterations 1" in script
+    assert "--wall-hours 1.5" not in script
