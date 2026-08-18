@@ -14,21 +14,33 @@ OUTPUT_ROOT="/scratch/alpine/$USER/prospectus_rfi/memorysafe_100_200_v2_stress/$
 LOG_ROOT="/scratch/alpine/$USER/job_output"
 
 echo "===== scheduler states ====="
-sacct -X -j "$JOB_ID" --format=JobIDRaw,JobName,State,ExitCode,Elapsed,MaxRSS,MaxVMSize
+sacct -X -j "$JOB_ID" --format=JobID,JobIDRaw,JobName,State,ExitCode,Elapsed
 
-TASK_STATES=$(sacct -X -n -P -j "$JOB_ID" --format=JobIDRaw,State | awk -F'|' '$1 ~ /_[01]$/ {print $2}')
-if [[ "$(wc -l <<< "$TASK_STATES" | tr -d ' ')" != "2" ]]; then
+TASK_RECORDS=$(sacct -X -n -P -j "$JOB_ID" --format=JobID,State,ExitCode,Elapsed |
+    awk -F'|' -v job="$JOB_ID" '$1 == job "_0" || $1 == job "_1"')
+TASK_COUNT=$(awk 'NF {count++} END {print count+0}' <<< "$TASK_RECORDS")
+if (( TASK_COUNT != 2 )); then
     echo "Stress array is not ready to audit; no failure is implied." >&2
     echo "Wait until both tasks leave squeue, then run this audit again." >&2
     squeue -j "$JOB_ID" -r -o "%.20i %.12j %.2t %.10M %R" >&2 || true
     exit 3
 fi
-while IFS= read -r STATE; do
-    if [[ "$STATE" != "COMPLETED" ]]; then
-        echo "Stress gate failed: task state is $STATE" >&2
-        exit 4
-    fi
-done <<< "$TASK_STATES"
+FAILED_RECORDS=$(awk -F'|' '$2 != "COMPLETED"' <<< "$TASK_RECORDS")
+if [[ -n "$FAILED_RECORDS" ]]; then
+    echo "Stress gate failed; task records are JobID|State|ExitCode|Elapsed:" >&2
+    printf '%s\n' "$TASK_RECORDS" >&2
+    echo "Diagnostic log tails:" >&2
+    for INDEX in 0 1; do
+        LOG="$LOG_ROOT/rfi_memstress_${JOB_ID}_${INDEX}.out"
+        echo "===== $LOG =====" >&2
+        if [[ -s "$LOG" ]]; then
+            tail -80 "$LOG" >&2
+        else
+            echo "missing or empty" >&2
+        fi
+    done
+    exit 4
+fi
 
 FAIL_PATTERN='OutOfMemory|out of memory|OOM|worker (died|was killed)|actor.*unavailable|SYSTEM_ERROR|Ray.*killed'
 for INDEX in 0 1; do
