@@ -36,10 +36,18 @@ def is_no_action(action):
     """Check if the action is a no-action placeholder."""
     if action is None:
         return True
-    if isinstance(action, (int, float, np.integer, np.floating)):
-        return bool(np.isclose(action, NO_ACTION))
-    if isinstance(action, (np.ndarray, list, tuple)) and np.allclose(action, NO_ACTION):
-        return True
+    if isinstance(action, (int, np.integer)):
+        return int(action) == NO_ACTION
+    if isinstance(action, (float, np.floating)):
+        # float32 cannot represent 2**31-1 exactly
+        return bool(np.isclose(action, NO_ACTION, rtol=0.0, atol=1.0))
+    if isinstance(action, (np.ndarray, list, tuple)):
+        arr = np.asarray(action)
+        if arr.size == 0:
+            return False
+        if np.issubdtype(arr.dtype, np.integer):
+            return bool(np.all(arr == NO_ACTION))
+        return bool(np.all(np.isclose(arr, NO_ACTION, rtol=0.0, atol=1.0)))
     return False
 
 
