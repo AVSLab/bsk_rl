@@ -29,7 +29,7 @@ from ray.rllib.utils.postprocessing.zero_padding import unpad_data_if_necessary
 from ray.rllib.utils.typing import EpisodeType
 
 from bsk_rl import NO_ACTION
-from bsk_rl.gym import is_no_action, no_action_like
+from bsk_rl.gym import is_no_action, no_action_keep_indices, no_action_like
 
 logger = getLogger(__name__)
 
@@ -193,13 +193,14 @@ class CondenseMultiStepActions(ConnectorV2):
         for episode in self.single_agent_episode_iterator(
             episodes, agents_that_stepped_only=False
         ):
-            action_idx = list(
-                np.argwhere(
-                    [not is_no_action(action) for action in episode.actions.data]
-                ).flatten()
+            if not any(is_no_action(action) for action in episode.actions.data):
+                continue
+
+            n_actions = len(episode.actions.data)
+            action_idx, obs_idx = no_action_keep_indices(
+                episode.actions.data, len(episode.observations.data)
             )
-            obs_idx = action_idx.copy()
-            obs_idx.append(len(episode) - 1)
+            rewards_data = episode.rewards.data
 
             lookback = episode.actions.data[: episode.actions.lookback]
             new_lookback = episode.actions.lookback
@@ -208,6 +209,22 @@ class CondenseMultiStepActions(ConnectorV2):
                     new_lookback -= 1
                 else:
                     break
+
+            # Associate subsequent rewards with prior action before rewriting t
+            rewards = []
+            requires_retasking = []
+            for i, idx_start in enumerate(action_idx):
+                if i == len(action_idx) - 1:
+                    idx_end = n_actions - 1
+                else:
+                    idx_end = action_idx[i + 1] - 1
+                rewards.append(
+                    sum(rewards_data[idx_start : idx_end + 1])
+                )  # Doesn't discount over course of multistep
+                requires_retasking.append(
+                    episode.infos.data[idx_start]["requires_retasking"]
+                )
+            requires_retasking.append(True)
 
             # Only keep non-None actions
             episode.actions.data = np.array(episode.actions.data)[action_idx]
@@ -225,21 +242,6 @@ class CondenseMultiStepActions(ConnectorV2):
             episode.observations.data = np.array(episode.observations.data)[obs_idx]
             episode.observations.lookback = new_lookback
 
-            # Associate subsequent rewards with prior action
-            rewards = []
-            requires_retasking = []
-            for i, idx_start in enumerate(action_idx):
-                if i == len(action_idx) - 1:
-                    idx_end = len(episode) - 1
-                else:
-                    idx_end = action_idx[i + 1] - 1
-                rewards.append(
-                    sum(episode.rewards[idx_start : idx_end + 1])
-                )  # Doesn't discount over course of multistep
-                requires_retasking.append(
-                    episode.infos.data[idx_start]["requires_retasking"]
-                )
-            requires_retasking.append(True)
             episode.rewards.data = np.array(rewards)
             episode.rewards.lookback = new_lookback
 

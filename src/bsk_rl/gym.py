@@ -36,8 +36,8 @@ def is_no_action(action):
     """Check if the action is a no-action placeholder."""
     if action is None:
         return True
-    if isinstance(action, (int, np.integer)) and action == NO_ACTION:
-        return True
+    if isinstance(action, (int, float, np.integer, np.floating)):
+        return bool(np.isclose(action, NO_ACTION))
     if isinstance(action, (np.ndarray, list, tuple)) and np.allclose(action, NO_ACTION):
         return True
     return False
@@ -48,6 +48,16 @@ def no_action_like(action):
     if isinstance(action, (int, np.integer)):
         return NO_ACTION
     return action * 0 + NO_ACTION  # Aggressively try to convert while retaining type
+
+
+def no_action_keep_indices(actions, n_observations):
+    """Return action and observation indices after dropping ``NO_ACTION`` steps.
+
+    The final observation is always kept so the last ``d_ts`` is not lost when
+    an episode (or chunk) ends on ``NO_ACTION``.
+    """
+    action_idx = [i for i, action in enumerate(actions) if not is_no_action(action)]
+    return action_idx, action_idx + [n_observations - 1]
 
 
 class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
