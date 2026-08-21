@@ -99,6 +99,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         vizard_rate=None,
         amos_hud=False,
         amos_hud_text=True,
+        amos_hud_metric_bars=True,
         amos_hud_image_bars=True,
         amos_target_status_outlines=False,
         amos_rw_display="all",
@@ -142,6 +143,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
                 vizInterface,
                 vizSupport,
                 show_text_hud=bool(amos_hud_text),
+                show_live_metric_bars=bool(amos_hud_metric_bars),
                 show_image_bars=bool(amos_hud_image_bars),
                 show_target_status_outlines=bool(amos_target_status_outlines),
                 rw_display=str(amos_rw_display),
@@ -271,9 +273,11 @@ class Simulator(SimulationBaseClass.SimBaseClass):
                 assets=amos_assets,
             )
             self.AddModelToTask(
-                scanner.dynamics.task_name,
+                viz_task_name,
                 self.amos_vizard_monitor,
-                ModelPriority=1,
+                # Run immediately before the lower-priority Vizard serializer on the
+                # same task, and only at the requested playback sampling cadence.
+                ModelPriority=1000,
             )
             vizSupport.setInstrumentGuiSetting(
                 self.vizInstance,
@@ -282,7 +286,9 @@ class Simulator(SimulationBaseClass.SimBaseClass):
                 showTransceiverFrustum=1,
                 # Restore Vizard's native expandable panel.  Vizard hard-codes its
                 # title as "<spacecraft> Storage" and exposes no title override.
-                showGenericStoragePanel=1,
+                showGenericStoragePanel=(
+                    1 if amos_assets.show_live_metric_bars else -1
+                ),
             )
             show_native_rw = amos_assets.rw_effector_list[0] is not None
             vizSupport.setActuatorGuiSetting(

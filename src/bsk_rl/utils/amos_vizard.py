@@ -1,9 +1,4 @@
-"""AMOS 2026 Vizard overlays and dynamics-cadence catalog metrics.
-
-The monitor in this module is deliberately attached to the scanner dynamics task.  It
-therefore evaluates line of sight and illumination at every simulation cadence instead
-of only when the RL agent reaches a decision epoch or requests an imaging action.
-"""
+"""AMOS 2026 Vizard overlays sampled at the configured recording cadence."""
 
 from __future__ import annotations
 
@@ -55,6 +50,7 @@ class AMOSVizardAssets:
     thr_effector_list: list[Any]
     sprite_list: list[Any]
     bars: dict[str, Any] = field(default_factory=dict)
+    show_live_metric_bars: bool = True
     target_outlines: dict[int, Any] = field(default_factory=dict)
     promotion_halos: dict[int, Any] = field(default_factory=dict)
     target_proxy_messages: dict[int, Any] = field(default_factory=dict)
@@ -67,6 +63,9 @@ class AMOSVizardAssets:
     show_target_status_outlines: bool = False
     downlink_transceiver: Any = None
     desat_transceiver: Any = None
+    desat_state_message: Any = None
+    downlink_state_reader: Any = None
+    desat_state_reader: Any = None
     ground_link_line: Any = None
     scanner_display_name: str = "SS1 Space Surveillance Inspector"
     dialog: Any = None
@@ -89,6 +88,17 @@ def _make_bar(viz_interface, viz_support, label, units, maximum, color="green"):
     bar.color = viz_interface.IntVector(viz_support.toRGBA255(color))
     _disown(bar)
     return bar
+
+
+def _make_transceiver_state_channel(label: str) -> tuple[Any, Any]:
+    """Create a live data-rate message and reader for one Vizard transceiver."""
+    payload = messaging.DataNodeUsageMsgPayload()
+    payload.dataName = str(label)
+    payload.baudRate = 0.0
+    message = messaging.DataNodeUsageMsg().write(payload, 0)
+    reader = messaging.DataNodeUsageMsgReader()
+    reader.subscribeTo(message)
+    return message, reader
 
 
 def ground_station_visibility_geometry(
@@ -178,6 +188,7 @@ def prepare_amos_vizard_assets(
     viz_support: Any,
     *,
     show_text_hud: bool = True,
+    show_live_metric_bars: bool = True,
     show_image_bars: bool = True,
     show_target_status_outlines: bool = False,
     rw_display: str = "all",
@@ -307,6 +318,11 @@ def prepare_amos_vizard_assets(
     downlink_transceiver.label = ""
     downlink_transceiver.animationSpeed = 2
     downlink_transceiver.transceiverState = 0
+    # Drive this visualization directly from the transmitter telemetry.  This keeps
+    # the rings off during mere access windows or empty-buffer downlink commands.
+    downlink_state_reader = messaging.DataNodeUsageMsgReader()
+    downlink_state_reader.subscribeTo(scanner.dynamics.transmitter.nodeDataOutMsg)
+    downlink_transceiver.transceiverStateInMsgs.push_back(downlink_state_reader)
     _disown(downlink_transceiver)
 
     desat_transceiver = viz_interface.Transceiver()
@@ -319,46 +335,85 @@ def prepare_amos_vizard_assets(
     desat_transceiver.label = ""
     desat_transceiver.animationSpeed = 2
     desat_transceiver.transceiverState = 0
+    desat_state_message, desat_state_reader = _make_transceiver_state_channel(
+        "AMOS desaturation"
+    )
+    desat_transceiver.transceiverStateInMsgs.push_back(desat_state_reader)
     _disown(desat_transceiver)
     transceiver_list: list[Any] = [
         [downlink_transceiver, desat_transceiver]
     ] + [None] * n_targets
 
     bars: dict[str, Any] = {}
-    scanner_bars = [
-        ("battery", "Battery", "%", 100.0, "green"),
-        ("storage", "Onboard storage", "%", 100.0, "steelblue"),
-        ("storage_illuminated", "Illuminated", "% capacity", 100.0, "#2a9d8f"),
-        (
-            "storage_nonilluminated",
-            "Non-illuminated",
-            "% capacity",
-            100.0,
-            "#e9a44c",
-        ),
-        ("eligible", "Catalog eligible", "targets", n_targets, "#4c9f70"),
-        ("ever_observable", "Ever observable", "targets", n_targets, "#2a9d8f"),
-    ]
-    if show_image_bars:
+    scanner_bars = []
+    if show_live_metric_bars:
+        scanner_bars = [
+            ("battery", "Battery", "%", 100.0, "green"),
+            ("storage", "Onboard storage", "%", 100.0, "steelblue"),
+            (
+                "storage_illuminated",
+                "Illuminated",
+                "% capacity",
+                100.0,
+                "#2a9d8f",
+            ),
+            (
+                "storage_nonilluminated",
+                "Non-illuminated",
+                "% capacity",
+                100.0,
+                "#e9a44c",
+            ),
+            ("eligible", "Catalog eligible", "targets", n_targets, "#4c9f70"),
+            (
+                "ever_observable",
+                "Ever observable",
+                "targets",
+                n_targets,
+                "#2a9d8f",
+            ),
+        ]
+        if show_image_bars:
+            scanner_bars.extend(
+                [
+                    ("imaged_1", "Imaged 1+", "targets", n_targets, "#2a9d5b"),
+                    ("imaged_2", "Imaged 2+", "targets", n_targets, "#23864d"),
+                    ("imaged_3", "Imaged 3+", "targets", n_targets, "#17653a"),
+                ]
+            )
         scanner_bars.extend(
             [
-                ("imaged_1", "Imaged 1+", "targets", n_targets, "#2a9d5b"),
-                ("imaged_2", "Imaged 2+", "targets", n_targets, "#23864d"),
-                ("imaged_3", "Imaged 3+", "targets", n_targets, "#17653a"),
+                (
+                    "priority_lower",
+                    "Priority: lower third",
+                    "",
+                    1.0,
+                    PRIORITY_TIER_COLORS["lower"],
+                ),
+                (
+                    "priority_middle",
+                    "Priority: middle third",
+                    "",
+                    1.0,
+                    PRIORITY_TIER_COLORS["middle"],
+                ),
+                (
+                    "priority_upper",
+                    "Priority: upper third",
+                    "",
+                    1.0,
+                    PRIORITY_TIER_COLORS["upper"],
+                ),
             ]
         )
-    scanner_bars.extend(
-        [
-            ("priority_lower", "Priority: lower third", "", 1.0, PRIORITY_TIER_COLORS["lower"]),
-            ("priority_middle", "Priority: middle third", "", 1.0, PRIORITY_TIER_COLORS["middle"]),
-            ("priority_upper", "Priority: upper third", "", 1.0, PRIORITY_TIER_COLORS["upper"]),
-        ]
-    )
     for key, label, units, maximum, color in scanner_bars:
         bars[key] = _make_bar(viz_interface, viz_support, label, units, maximum, color)
-    for key in ("priority_lower", "priority_middle", "priority_upper"):
-        bars[key].currentValue = 1.0
-    generic_storage_list: list[Any] = [list(bars.values())] + [None] * n_targets
+    if show_live_metric_bars:
+        for key in ("priority_lower", "priority_middle", "priority_upper"):
+            bars[key].currentValue = 1.0
+    generic_storage_list: list[Any] = [
+        list(bars.values()) if bars else None
+    ] + [None] * n_targets
 
     dialog = None
     if show_text_hud:
@@ -387,6 +442,7 @@ def prepare_amos_vizard_assets(
         thr_effector_list=thr_effector_list,
         sprite_list=sprite_list,
         bars=bars,
+        show_live_metric_bars=bool(show_live_metric_bars),
         target_outlines=target_outlines,
         promotion_halos=promotion_halos,
         target_proxy_messages=target_proxy_messages,
@@ -399,12 +455,15 @@ def prepare_amos_vizard_assets(
         show_target_status_outlines=bool(show_target_status_outlines),
         downlink_transceiver=downlink_transceiver,
         desat_transceiver=desat_transceiver,
+        desat_state_message=desat_state_message,
+        downlink_state_reader=downlink_state_reader,
+        desat_state_reader=desat_state_reader,
         dialog=dialog,
     )
 
 
 class AMOSVizardMonitor(sysModel.SysModel):
-    """Update AMOS catalog metrics and Vizard overlays every dynamics step."""
+    """Update AMOS catalog metrics and overlays at the Vizard sample rate."""
 
     def __init__(
         self,
@@ -792,76 +851,84 @@ class AMOSVizardMonitor(sysModel.SysModel):
             bar.currentValue = float(np.clip(value, 0.0, float(bar.maxValue)))
 
     def _update_action_rings(
-        self, *, downlink_active: bool, current_action: str
+        self,
+        *,
+        desat_active: bool,
+        message_time_ns: int,
     ) -> None:
-        """Show purple rings for data transfer and red rings for desaturation."""
-        self.assets.downlink_transceiver.transceiverState = (
-            1 if downlink_active else 0
-        )
-        self.assets.desat_transceiver.transceiverState = (
-            1 if current_action == "Desat" else 0
-        )
+        """Publish the synthetic data-rate signal used for desaturation rings."""
+        payload = messaging.DataNodeUsageMsgPayload()
+        payload.dataName = "AMOS desaturation"
+        # Vizard interprets a negative data-node rate as outgoing transmission.
+        payload.baudRate = -1.0 if desat_active else 0.0
+        self.assets.desat_state_message.write(payload, int(message_time_ns))
 
     def UpdateState(self, CurrentSimNanos: int) -> None:  # noqa: N802
-        """Sample physics state and refresh every AMOS overlay once per dynamics tick."""
+        """Refresh AMOS overlays once per recorded Vizard sample."""
         sim_time = float(CurrentSimNanos) * macros.NANO2SEC
         targets = self.targets
-        states = {int(target.id): self._target_state(target, sim_time) for target in targets}
-        for target_id, (los, illuminated, _) in states.items():
-            if los:
-                self.ever_los_ids.add(target_id)
-            if los and illuminated:
-                self.ever_observable_ids.add(target_id)
-
-        counts = self._capture_counts()
-        eligible_count = sum(eligible for _, _, eligible in states.values())
-        imageable_count = sum(
-            los and illuminated and eligible
-            for los, illuminated, eligible in states.values()
+        collect_metrics = bool(
+            self.assets.show_live_metric_bars or self.assets.dialog is not None
         )
-        imaged_1 = sum(count >= 1 for count in counts.values())
-        imaged_2 = sum(count >= 2 for count in counts.values())
-        imaged_3 = sum(count >= 3 for count in counts.values())
-        total_bits, illuminated_bits, nonilluminated_bits = self._storage_split_bits()
+        eligible_count = imageable_count = 0
+        imaged_1 = imaged_2 = imaged_3 = 0
+        total_bits = illuminated_bits = nonilluminated_bits = 0.0
         capacity = max(1.0, float(self.scanner.dynamics.storageUnit.storageCapacity))
         battery_pct = 100.0 * float(self.scanner.dynamics.battery_charge_fraction)
-        storage_pct = 100.0 * total_bits / capacity
+        storage_pct = 0.0
+        if collect_metrics:
+            states = {
+                int(target.id): self._target_state(target, sim_time)
+                for target in targets
+            }
+            for target_id, (los, illuminated, _) in states.items():
+                if los:
+                    self.ever_los_ids.add(target_id)
+                if los and illuminated:
+                    self.ever_observable_ids.add(target_id)
 
-        self._set_bar("battery", round(battery_pct, 1))
-        self._set_bar("storage", storage_pct)
-        self._set_bar("storage_illuminated", 100.0 * illuminated_bits / capacity)
-        self._set_bar("storage_nonilluminated", 100.0 * nonilluminated_bits / capacity)
-        self._set_bar("eligible", eligible_count)
-        self._set_bar("ever_observable", len(self.ever_observable_ids))
-        self._set_bar("imaged_1", imaged_1)
-        self._set_bar("imaged_2", imaged_2)
-        self._set_bar("imaged_3", imaged_3)
+            counts = self._capture_counts()
+            eligible_count = sum(eligible for _, _, eligible in states.values())
+            imageable_count = sum(
+                los and illuminated and eligible
+                for los, illuminated, eligible in states.values()
+            )
+            imaged_1 = sum(count >= 1 for count in counts.values())
+            imaged_2 = sum(count >= 2 for count in counts.values())
+            imaged_3 = sum(count >= 3 for count in counts.values())
+            total_bits, illuminated_bits, nonilluminated_bits = (
+                self._storage_split_bits()
+            )
+            storage_pct = 100.0 * total_bits / capacity
+
+            self._set_bar("battery", round(battery_pct, 1))
+            self._set_bar("storage", storage_pct)
+            self._set_bar(
+                "storage_illuminated", 100.0 * illuminated_bits / capacity
+            )
+            self._set_bar(
+                "storage_nonilluminated", 100.0 * nonilluminated_bits / capacity
+            )
+            self._set_bar("eligible", eligible_count)
+            self._set_bar("ever_observable", len(self.ever_observable_ids))
+            self._set_bar("imaged_1", imaged_1)
+            self._set_bar("imaged_2", imaged_2)
+            self._set_bar("imaged_3", imaged_3)
 
         active_station = self._active_ground_station()
         downlink_active = active_station is not None
         self._update_ground_link_line(active_station)
         pointing_state, hold_fraction = self._update_pointing_line()
         current_action = self._current_action()
+        desat_active = bool(
+            getattr(self.scanner.dynamics.thrusterPowerSink, "powerStatus", 0)
+        )
         self._update_action_rings(
-            downlink_active=downlink_active,
-            current_action=current_action,
+            desat_active=desat_active,
+            message_time_ns=CurrentSimNanos,
         )
         self._update_target_visuals(sim_time)
-        wheel_speed_pct = 100.0 * float(
-            np.max(np.abs(np.asarray(self.scanner.dynamics.wheel_speeds_fraction)))
-        )
-        promoted_hio = sum(
-            bool(getattr(target, "priority_event_active", False))
-            and str(getattr(target, "priority_event_kind", "")) == "HIO"
-            for target in targets
-        )
-        promoted_shio = sum(
-            bool(getattr(target, "priority_event_active", False))
-            and str(getattr(target, "priority_event_kind", "")) == "SHIO"
-            for target in targets
-        )
 
-        n_targets = max(1, len(targets))
         self.latest_metrics = {
             "sim_time_s": sim_time,
             "catalog_eligible": eligible_count,
@@ -881,6 +948,20 @@ class AMOSVizardMonitor(sysModel.SysModel):
         }
 
         if self.assets.dialog is not None:
+            wheel_speed_pct = 100.0 * float(
+                np.max(np.abs(np.asarray(self.scanner.dynamics.wheel_speeds_fraction)))
+            )
+            promoted_hio = sum(
+                bool(getattr(target, "priority_event_active", False))
+                and str(getattr(target, "priority_event_kind", "")) == "HIO"
+                for target in targets
+            )
+            promoted_shio = sum(
+                bool(getattr(target, "priority_event_active", False))
+                and str(getattr(target, "priority_event_kind", "")) == "SHIO"
+                for target in targets
+            )
+            n_targets = max(1, len(targets))
             status_summary = (
                 "Status halo: cyan eligible; red cooldown; green onboard"
                 if self.assets.show_target_status_outlines

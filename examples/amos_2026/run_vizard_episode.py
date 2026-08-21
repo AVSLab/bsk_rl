@@ -114,6 +114,14 @@ def parse_args() -> argparse.Namespace:
         "--no-text-hud", action="store_true", help="Hide the live text summary."
     )
     parser.add_argument(
+        "--no-metric-bars",
+        action="store_true",
+        help=(
+            "Hide every live metric bar and skip their 200-target calculations while "
+            "retaining action rings, promotion markers, and pointing overlays."
+        ),
+    )
+    parser.add_argument(
         "--no-image-bars",
         action="store_true",
         help="Hide the targets-imaged >=1, >=2, and >=3 bars.",
@@ -135,6 +143,11 @@ def parse_args() -> argparse.Namespace:
         "--dry-run",
         action="store_true",
         help="Print the exact evaluator command without executing it.",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress the evaluator's per-action simulation-time progress messages.",
     )
     parser.add_argument(
         "--overwrite",
@@ -171,6 +184,7 @@ def build_command(args: argparse.Namespace) -> list[str]:
     python = REPO_ROOT / ".venv" / "bin" / "python"
     command = [
         str(python if python.exists() else Path(sys.executable)),
+        "-u",
         str(EVALUATOR),
         "--policy_path",
         str(args.policy_path.expanduser().resolve()),
@@ -229,17 +243,20 @@ def build_command(args: argparse.Namespace) -> list[str]:
         str(args.plots_dir.expanduser().resolve()),
         "--no_show_plots",
         "--no_save_data",
-        "--quiet",
     ]
     if not args.no_hud:
         command.append("--amos_vizard_hud")
         command.extend(["--amos_vizard_rw_display", args.rw_display])
         if args.no_text_hud:
             command.append("--no_amos_vizard_text")
+        if args.no_metric_bars:
+            command.append("--no_amos_vizard_metric_bars")
         if args.no_image_bars:
             command.append("--no_amos_vizard_image_bars")
         if args.target_status_outlines:
             command.append("--amos_vizard_target_status_outlines")
+    if args.quiet:
+        command.append("--quiet")
     return command
 
 
@@ -263,6 +280,10 @@ def main() -> int:
         else f"ground confirmation + {args.reimage_cooldown_orbits:g} orbit(s)",
     )
     print("Vizard sampling:", f"{args.vizard_rate_hz:g} Hz")
+    print(
+        "Progress logging:",
+        "suppressed" if args.quiet else "enabled once per policy action",
+    )
     print("Output:", args.output_dir.expanduser().resolve())
     print("Plots:", args.plots_dir.expanduser().resolve())
     print("Command:", " ".join(command))

@@ -84,11 +84,15 @@ using that global switch.
 
 The AMOS launcher omits the reaction-wheel panel by default. Use `--rw-display all` for
 Vizard's three-wheel actuator panel or `--rw-display off` to keep it hidden. Use
-`--no-text-hud` or `--no-image-bars` to omit the optional live metric displays, or
+`--no-text-hud` to hide the text dialog, `--no-image-bars` to hide only the three image
+count bars, or `--no-metric-bars` to omit every metric bar and skip the associated
+200-target catalog calculations. Use
 `--target-status-outlines` to restore lifecycle outlines for an A/B diagnostic, or
 `--no-hud` to disable all overlays. Use `--dry-run` to inspect the exact paper-matched
 evaluator command without executing it. Use `--overwrite` to replace the canonical
 playback for the same seed, catalog size, and sampling rate after a successful rerun.
+Per-action simulation-time progress is printed by default; `--quiet` is an explicit
+opt-in when terminal progress is not wanted.
 
 Use `--n-targets 100` or `--n-targets 200` to select the exact 50/30/20 mixed-regime
 catalog size; 200 is the default. `--interest-fraction` changes each of the two disjoint
@@ -111,7 +115,8 @@ retains only the 40 HIO/SHIO promotion halos and the two action-ring transceiver
 reduces scene load without changing target priority fills or simulation behavior.
 
 For a faster review copy, record at `--vizard-rate-hz 0.5` (or `0.25` for rapid
-screening), leave `--rw-display off`, and use `--no-text-hud --no-image-bars`. In the
+screening), leave `--rw-display off`, and use `--no-text-hud --no-metric-bars`. The AMOS
+monitor runs at this recording cadence rather than at every dynamics tick. In the
 Vizard UI, hide osculating/true trajectory lines, spacecraft labels, and location cones
 when they are not being inspected. Keep the 1 Hz full-HUD file as the presentation or
 audit artifact rather than expecting the same file to remain smooth at every playback

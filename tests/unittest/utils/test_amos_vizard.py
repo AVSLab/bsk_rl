@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -56,10 +57,16 @@ def test_ground_station_visibility_geometry_rejects_invalid_geometry(
 
 
 def test_amos_assets_default_to_priority_circles_without_lifecycle_outlines():
+    from Basilisk.architecture import messaging
     from Basilisk.simulation import vizInterface
     from Basilisk.utilities import vizSupport
 
-    scanner = SimpleNamespace(dynamics=SimpleNamespace())
+    transmitter_message = messaging.DataNodeUsageMsg()
+    scanner = SimpleNamespace(
+        dynamics=SimpleNamespace(
+            transmitter=SimpleNamespace(nodeDataOutMsg=transmitter_message)
+        )
+    )
     targets = []
     for target_id, (priority, kind) in enumerate(
         [(1.0, ""), (2.0, "HIO"), (3.0, "SHIO")]
@@ -98,11 +105,16 @@ def test_amos_assets_default_to_priority_circles_without_lifecycle_outlines():
     )
     assert assets.downlink_transceiver.animationSpeed == 2
     assert assets.downlink_transceiver.transceiverState == 0
+    assert len(assets.downlink_transceiver.transceiverStateInMsgs) == 1
+    assert assets.downlink_state_reader.isLinked()
     assert list(assets.desat_transceiver.color) == list(
         vizSupport.toRGBA255(DESAT_COLOR, alpha=1.0)
     )
     assert assets.desat_transceiver.animationSpeed == 2
     assert assets.desat_transceiver.transceiverState == 0
+    assert len(assets.desat_transceiver.transceiverStateInMsgs) == 1
+    assert assets.desat_state_reader.isLinked()
+    assert assets.desat_state_message.read().baudRate == 0.0
     assert assets.transceiver_list[0] == [
         assets.downlink_transceiver,
         assets.desat_transceiver,
@@ -110,10 +122,15 @@ def test_amos_assets_default_to_priority_circles_without_lifecycle_outlines():
 
 
 def test_target_lifecycle_outlines_are_opt_in():
+    from Basilisk.architecture import messaging
     from Basilisk.simulation import vizInterface
     from Basilisk.utilities import vizSupport
 
-    scanner = SimpleNamespace(dynamics=SimpleNamespace())
+    scanner = SimpleNamespace(
+        dynamics=SimpleNamespace(
+            transmitter=SimpleNamespace(nodeDataOutMsg=messaging.DataNodeUsageMsg())
+        )
+    )
     target = SimpleNamespace(id=0, priority=1.0, priority_event_kind="HIO")
     target_satellite = SimpleNamespace(rso_target=target)
 
@@ -150,10 +167,15 @@ def test_promotion_marker_shape_and_purple_fill():
 
 
 def test_desat_uses_red_rings_without_enabling_downlink_rings():
+    from Basilisk.architecture import messaging
+
+    downlink_message = messaging.DataNodeUsageMsg()
+    desat_message = messaging.DataNodeUsageMsg()
     assets = SimpleNamespace(
-        downlink_transceiver=SimpleNamespace(transceiverState=1),
-        desat_transceiver=SimpleNamespace(transceiverState=0),
+        downlink_state_reader=messaging.DataNodeUsageMsgReader(),
+        desat_state_message=desat_message,
     )
+    assets.downlink_state_reader.subscribeTo(downlink_message)
     monitor = AMOSVizardMonitor(
         simulator=SimpleNamespace(),
         scanner=SimpleNamespace(),
@@ -163,10 +185,92 @@ def test_desat_uses_red_rings_without_enabling_downlink_rings():
         assets=assets,
     )
 
-    monitor._update_action_rings(downlink_active=False, current_action="Desat")
+    monitor._update_action_rings(desat_active=True, message_time_ns=123)
 
-    assert assets.downlink_transceiver.transceiverState == 0
-    assert assets.desat_transceiver.transceiverState == 1
+    assert downlink_message.read().baudRate == 0.0
+    assert desat_message.read().baudRate == -1.0
+
+    downlink_payload = messaging.DataNodeUsageMsgPayload()
+    downlink_payload.baudRate = -2.0
+    downlink_message.write(downlink_payload, 456)
+    monitor._update_action_rings(desat_active=False, message_time_ns=456)
+
+    assert assets.downlink_state_reader().baudRate == -2.0
+    assert desat_message.read().baudRate == 0.0
+
+
+def test_live_metric_bars_can_be_omitted_entirely():
+    from Basilisk.architecture import messaging
+    from Basilisk.simulation import vizInterface
+    from Basilisk.utilities import vizSupport
+
+    scanner = SimpleNamespace(
+        dynamics=SimpleNamespace(
+            transmitter=SimpleNamespace(nodeDataOutMsg=messaging.DataNodeUsageMsg())
+        )
+    )
+
+    assets = prepare_amos_vizard_assets(
+        [scanner],
+        vizInterface,
+        vizSupport,
+        show_text_hud=False,
+        show_live_metric_bars=False,
+        rw_display="off",
+    )
+
+    assert assets.show_live_metric_bars is False
+    assert assets.bars == {}
+    assert assets.generic_storage_list == [None]
+
+
+def test_action_only_monitor_skips_catalog_and_storage_metric_scans():
+    from Basilisk.architecture import messaging
+
+    scanner = SimpleNamespace(
+        _current_action_label="Charge",
+        data_store=SimpleNamespace(data=SimpleNamespace(known=[])),
+        dynamics=SimpleNamespace(
+            storageUnit=SimpleNamespace(storageCapacity=1.0),
+            battery_charge_fraction=0.5,
+            transmitterPowerSink=SimpleNamespace(powerStatus=0),
+            thrusterPowerSink=SimpleNamespace(powerStatus=0),
+            world=SimpleNamespace(groundStations=[]),
+        ),
+        fsw=SimpleNamespace(),
+    )
+    monitor = AMOSVizardMonitor(
+        simulator=SimpleNamespace(),
+        scanner=scanner,
+        target_satellites=[],
+        viz_instance=SimpleNamespace(),
+        viz_support=SimpleNamespace(targetLineList=[]),
+        assets=SimpleNamespace(
+            show_live_metric_bars=False,
+            dialog=None,
+            bars={},
+            ground_link_line=None,
+            scanner_display_name="SS1 Space Surveillance Inspector",
+            desat_state_message=messaging.DataNodeUsageMsg(),
+            promotion_marker_messages={},
+            target_proxy_messages={},
+            target_outlines={},
+            promotion_marker_outlines={},
+            promotion_halos={},
+            show_target_status_outlines=False,
+        ),
+    )
+    monitor._target_state = Mock(side_effect=AssertionError("catalog scan"))
+    monitor._capture_counts = Mock(side_effect=AssertionError("capture scan"))
+    monitor._storage_split_bits = Mock(side_effect=AssertionError("storage scan"))
+
+    monitor.UpdateState(2_000_000_000)
+
+    monitor._target_state.assert_not_called()
+    monitor._capture_counts.assert_not_called()
+    monitor._storage_split_bits.assert_not_called()
+    assert monitor.latest_metrics["sim_time_s"] == 2.0
+    assert monitor.latest_metrics["current_action"] == "Charge"
 
 
 def test_active_promotion_marker_swaps_with_blue_target_proxy():

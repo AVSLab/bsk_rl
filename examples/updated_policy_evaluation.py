@@ -526,6 +526,11 @@ def parse_args():
         help="Disable the AMOS text overview while retaining graphical overlays.",
     )
     p.add_argument(
+        "--no_amos_vizard_metric_bars",
+        action="store_true",
+        help="Disable all live metric bars while retaining action overlays.",
+    )
+    p.add_argument(
         "--no_amos_vizard_image_bars",
         action="store_true",
         help="Disable the 1+, 2+, and 3+ successful-image bars.",
@@ -1879,6 +1884,7 @@ if save_vizard == True:
             vizard_rate=viz_rate,
             amos_hud=bool(args.amos_vizard_hud),
             amos_hud_text=not bool(args.no_amos_vizard_text),
+            amos_hud_metric_bars=not bool(args.no_amos_vizard_metric_bars),
             amos_hud_image_bars=not bool(args.no_amos_vizard_image_bars),
             amos_target_status_outlines=bool(
                 args.amos_vizard_target_status_outlines
