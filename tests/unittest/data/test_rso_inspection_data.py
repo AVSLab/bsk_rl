@@ -105,6 +105,7 @@ class TestRSOInspectionReward:
         r = RSOInspectionReward()
         r.scenario = MagicMock(rso_points=list(range(100)))
         r.scenario.satellites[0].simulator.sim_time = 0.0
+        r.scenario.satellites[0].dynamics.orbital_period = 5700.0
         r.data = RSOInspectionData()
         reward = r.calculate_reward({"Sat": RSOInspectionData(dict(a=True, b=False))})
         assert reward == {"Sat": 0.01}
@@ -113,6 +114,7 @@ class TestRSOInspectionReward:
         r = RSOInspectionReward(inspection_reward_scale=10)
         r.scenario = MagicMock(rso_points=list(range(100)))
         r.scenario.satellites[0].simulator.sim_time = 0.0
+        r.scenario.satellites[0].dynamics.orbital_period = 5700.0
         r.data = RSOInspectionData()
         reward = r.calculate_reward({"Sat": RSOInspectionData(dict(a=True, b=False))})
         assert reward == {"Sat": 0.1}
@@ -121,6 +123,7 @@ class TestRSOInspectionReward:
         r = RSOInspectionReward()
         r.scenario = MagicMock(rso_points=list(range(100)))
         r.scenario.satellites[0].simulator.sim_time = 0.0
+        r.scenario.satellites[0].dynamics.orbital_period = 5700.0
         r.data = RSOInspectionData(dict(a=True, b=False))
         reward = r.calculate_reward({"Sat": RSOInspectionData(dict(a=True, b=True))})
         assert reward == {"Sat": 0.01}
@@ -191,3 +194,26 @@ class TestRSOInspectionReward:
         r.calculate_reward({"Sat": RSOInspectionData(dict(a=True, b=True))})
         assert r.is_terminated(MagicMock())
         assert r.bonus_reward_yielded
+
+    def test_time_completion_orbital_period(self):
+        r = RSOInspectionReward(
+            completion_bonus=10.0,
+            min_illuminated_for_completion=1.0,
+            completion_threshold=0.8,
+        )
+        r.bonus_reward_yielded = False
+        r.cum_reward = {"Sat": 0.0}
+        N = 10
+        r.scenario = MagicMock(rso_points=list(range(N)))
+        r.scenario.satellites[0].simulator.sim_time = 101.0
+        r.scenario.satellites[0].dynamics.orbital_period = 100.0
+        r.data = RSOInspectionData({n: False for n in range(N)})
+        reward = r.calculate_reward(
+            {
+                "Sat": RSOInspectionData(
+                    {n: True for n in range(4)},
+                    {n: True for n in range(5)},
+                )
+            }
+        )
+        assert reward == {"Sat": 10.0 + 0.4}

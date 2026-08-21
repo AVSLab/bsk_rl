@@ -135,6 +135,13 @@ class TestSatProperties:
         assert ob.get_obs() == {"hello": 3.0}
         mock_fn.assert_called_once_with(ob.satellite)
 
+    def test_norm_orbital_period(self):
+        ob = obs.SatProperties(
+            dict(prop="dt", module="dynamics", name="dt_normd", norm=None),
+        )
+        ob.satellite = MagicMock(dynamics=MagicMock(dt=11400.0, orbital_period=5700.0))
+        assert ob.get_obs() == {"dt_normd": 2.0}
+
 
 class TestTime:
     def test_detect_norm(self):
@@ -213,12 +220,31 @@ class TestOpportunityProperties:
         with pytest.raises(ValueError):
             obs.OpportunityProperties(dict(prop="not_a_prop"), n_ahead_observe=2)
 
+    def test_norm_orbital_period(self):
+        ob = obs.OpportunityProperties(
+            dict(prop="opportunity_open", norm=None),
+            n_ahead_observe=1,
+        )
+        ob.satellite = MagicMock(dynamics=MagicMock(orbital_period=5700.0))
+        ob.satellite.simulator.sim_time = 10.0
+        ob.satellite.find_next_opportunities.return_value = [
+            {"window": [5710.0, 5810.0], "type": "target"}
+        ]
+        assert ob.get_obs() == {"target_0": {"opportunity_open_normd": 1.0}}
+
 
 class TestEclipse:
     def test_obs(self):
         ob = obs.Eclipse(norm=100.0)
         ob.simulator = MagicMock(sim_time=10.0)
         ob.satellite = MagicMock()
+        ob.satellite.trajectory.next_eclipse.return_value = (20.0, 30.0)
+        assert ob.get_obs() == [0.1, 0.2]
+
+    def test_obs_orbital_period(self):
+        ob = obs.Eclipse()
+        ob.simulator = MagicMock(sim_time=10.0)
+        ob.satellite = MagicMock(dynamics=MagicMock(orbital_period=100.0))
         ob.satellite.trajectory.next_eclipse.return_value = (20.0, 30.0)
         assert ob.get_obs() == [0.1, 0.2]
 
