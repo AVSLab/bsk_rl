@@ -5,6 +5,11 @@ Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
 
+* Add :func:`~bsk_rl.utils.orbital.orbital_period` and use the satellite orbital
+  period for observation time normalization when ``norm`` is ``None``.
+  :class:`~bsk_rl.obs.Eclipse` now defaults to this, and
+  :class:`~bsk_rl.data.RSOInspectionReward` uses one orbital period when
+  ``min_time_for_completion`` is not set. See issue #225.
 * Fix a bug where extending an access opportunity window across a generation seam
   could leave the satellite's ``opportunities`` list out of close-time order, which
   corrupted ``bisect``-based opportunity lookups. See issue #205.
