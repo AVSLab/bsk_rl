@@ -220,7 +220,7 @@ class RSOInspectionReward(GlobalReward):
         """Minimum time before the completion bonus may be awarded."""
         if self.min_time_for_completion is not None:
             return self.min_time_for_completion
-        return self.scenario.satellites[0].dynamics.orbital_period
+        return self.scenario.rso.dynamics.orbital_period
 
     def reset_overwrite_previous(self) -> None:
         """Overwrite attributes from previous episode."""
