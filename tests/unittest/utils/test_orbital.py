@@ -190,15 +190,18 @@ class TestTrajectorySimulator:
 
     def test_eclipse(self):
         ts = orbital.TrajectorySimulator(self.epoch, oe=self.oe, mu=self.mu, dt=500.0)
+        period = orbital.orbital_period(self.oe.a, self.mu)
         start_1, end_1 = ts.next_eclipse(0.0)
         # Verify eclipse start and end are correct (duration is less than 1/2 orbit)
-        assert (end_1 - start_1 % 5700) < 5700 / 2
+        assert (end_1 - start_1 % period) < period / 2
         # With chosen params, start out of eclipse
         assert end_1 > start_1
         # Go into eclipse
         start_2, end_2 = ts.next_eclipse(start_1 + 1.0)
         assert end_2 == end_1  # Soonest close is the same
-        assert abs(start_2 - start_1 - 5700) < 500.0  # Starts are about an orbit apart
+        assert (
+            abs(start_2 - start_1 - period) < 500.0
+        )  # Starts are about an orbit apart
 
     def test_no_eclipse(self):
         ts = orbital.TrajectorySimulator(
@@ -218,6 +221,14 @@ class TestTrajectorySimulator:
 
 
 class TestFunctions:
+    def test_orbital_period(self):
+        a = (6371 + 500) * 1e3
+        mu = 3.986004415e14
+        period = orbital.orbital_period(a, mu)
+        np.testing.assert_allclose(period, 2 * np.pi * np.sqrt(a**3 / mu))
+        # Default LEO is about 95 minutes
+        assert 90 * 60 < period < 100 * 60
+
     def test_rv2HN(self):
         r = np.array([1, 0, 0])
         v = np.array([0, 1, 0])

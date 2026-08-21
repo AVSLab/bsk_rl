@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 from Basilisk.utilities.RigidBodyKinematics import MRP2C
 
-from bsk_rl.obs import Observation
+from bsk_rl.obs.observations import Observation, _norm_or_period
 from bsk_rl.utils.orbital import rv2HN, rv2omega
 
 
@@ -161,6 +161,7 @@ class RelativeProperties(Observation):
 
                 * ``prop``: Name of a function in :ref:`bsk_rl.obs.relative_observations`.
                 * ``norm`` `optional`: Value to normalize property by. Defaults to 1.0.
+                  If ``None``, the satellite orbital period is used.
                 * ``name`` `optional`: Name of the observation element. Defaults to the value of ``prop``.
                 * ``fn`` `optional`: Alternatively, call a function that takes the deputy (self) and chief (other)
                   as arguments.
@@ -214,7 +215,7 @@ class RelativeProperties(Observation):
             value = rel_property["fn"](self.satellite, self.chief)
             if isinstance(value, list):
                 value = np.array(value)
-            norm = rel_property["norm"]
+            norm = _norm_or_period(rel_property["norm"], self.satellite)
             obs[rel_property["name"]] = value / norm
         return obs
 
