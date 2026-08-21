@@ -20,27 +20,43 @@ from matplotlib.collections import PolyCollection
 from sim_config import SimConfig
 try:
     from evaluation_image_metrics import (
+        annotate_downlink_window_alignment,
+        cumulative_count_axis_limit,
+        desat_availability_summary,
+        decision_state_summary,
+        decision_target_state_metrics,
+        ground_station_window_dict,
+        ground_station_window_rows,
         imaging_attempt_metrics,
         illuminated_image_count,
         illuminated_image_metrics,
+        plot_target_availability_desat_diagnostic,
     )
 except ModuleNotFoundError:
     from examples.evaluation_image_metrics import (
+        annotate_downlink_window_alignment,
+        cumulative_count_axis_limit,
+        desat_availability_summary,
+        decision_state_summary,
+        decision_target_state_metrics,
+        ground_station_window_dict,
+        ground_station_window_rows,
         imaging_attempt_metrics,
         illuminated_image_count,
         illuminated_image_metrics,
+        plot_target_availability_desat_diagnostic,
     )
 
 
 size=1
-label_size = 13
-tick_label_size = 13
-legend_fontsize = 11
+label_size = 18
+tick_label_size = 16
+legend_fontsize = 14
 AMOS_FONTS = dict(
-    title=14*size,   # figure/axes titles
-    label=14*size,   # x/y label font size
-    tick=12*size,    # tick label size
-    legend=12*size,  # legend font size
+    title=18*size,
+    label=18*size,
+    tick=16*size,
+    legend=14*size,
 )
 
 matplotlib.rcParams.update({
@@ -219,6 +235,12 @@ def parse_args():
     p.add_argument("--no_save_data", action="store_true", help="Force save_data=False")
     p.add_argument("--quiet", action="store_true", help="Reduce printing")
     p.add_argument(
+        "--reimage_cooldown_orbits",
+        type=float,
+        default=2.0,
+        help="Observer-orbit periods before a successfully imaged target is eligible again.",
+    )
+    p.add_argument(
         "--target_env",
         choices=["leo", "mixed"],
         default="leo",
@@ -279,6 +301,12 @@ def parse_args():
         help="Write plots below this evaluation run's data directory instead of the shared plots/ folder.",
     )
     p.add_argument(
+        "--plot_dir",
+        type=str,
+        default=None,
+        help="Explicit directory for generated plots. Overrides the shared plots/ folder.",
+    )
+    p.add_argument(
         "--policy_mode",
         choices=["best", "smallest", "latest"],
         default="latest",
@@ -300,6 +328,11 @@ def parse_args():
         "--no_shield",
         action="store_true",
         help="Disable the evaluation safety shield that can override charge/downlink actions.",
+    )
+    p.add_argument(
+        "--fixed_duration_actions",
+        action="store_true",
+        help="Disable fast imaging/downlink early stops and use fixed-duration actions.",
     )
     p.add_argument(
         "--dynamic_priority_event",
@@ -324,8 +357,20 @@ def parse_args():
     )
     p.add_argument("--hio_count", type=int, default=5)
     p.add_argument("--hio_priority", type=float, default=5.0)
+    p.add_argument(
+        "--hio_priority_max_multiplier",
+        type=float,
+        default=None,
+        help="Set HIO priority to this multiple of the episode's maximum initial priority.",
+    )
     p.add_argument("--shio_count", type=int, default=3)
     p.add_argument("--shio_priority", type=float, default=10.0)
+    p.add_argument(
+        "--shio_priority_max_multiplier",
+        type=float,
+        default=None,
+        help="Set SHIO priority to this multiple of the episode's maximum initial priority.",
+    )
     p.add_argument("--dynamic_priority_event_seed", type=int, default=None)
     p.add_argument(
         "--save_vizard",
@@ -343,6 +388,35 @@ def parse_args():
         type=float,
         default=5.0,
         help="Vizard sampling rate in seconds.",
+    )
+    p.add_argument(
+        "--amos_vizard_hud",
+        action="store_true",
+        help=(
+            "Enable the space-surveillance HUD, HIO/SHIO markers, priority-tier "
+            "colors, pointing-state line, and action rings."
+        ),
+    )
+    p.add_argument(
+        "--no_amos_vizard_text",
+        action="store_true",
+        help="Disable the AMOS text HUD while retaining graphical panels.",
+    )
+    p.add_argument(
+        "--no_amos_vizard_image_bars",
+        action="store_true",
+        help="Disable the >=1, >=2, and >=3 successful-image bars.",
+    )
+    p.add_argument(
+        "--amos_vizard_target_status_outlines",
+        action="store_true",
+        help="Enable the optional cyan/red/green target lifecycle outlines.",
+    )
+    p.add_argument(
+        "--amos_vizard_rw_display",
+        choices=["all", "off"],
+        default="off",
+        help="Show all reaction wheels in Vizard's native panel or omit the panel.",
     )
     p.add_argument(
         "--vizard_tag",
@@ -392,6 +466,8 @@ def save_plot_unique(fig, base_filename, folder="plots", extension=".pdf"):
         current_run_dir = globals().get("run_dir")
         if current_run_dir:
             folder = os.path.join(current_run_dir, folder)
+    elif ARGS.plot_dir and folder == "plots":
+        folder = os.path.abspath(os.path.expanduser(ARGS.plot_dir))
 
     os.makedirs(folder, exist_ok=True)
     full_path = os.path.join(folder, base_filename + extension)
@@ -445,6 +521,7 @@ sim_cfg = SimConfig(
     n_targets_ahead=10,
     imaging_duration=300.0,
     variable_duration_imaging=True,  # AMOS 2026: stop after successful hold-gated image
+    reimage_cooldown_orbits=ARGS.reimage_cooldown_orbits,
     extra_time_factor=1.5,
     obs_v=7.0,          # default obs version; will be overwritten if policy_name known
     just_imaging=False,
@@ -489,8 +566,10 @@ def make_rso_scenario():
         dynamic_priority_event_fraction=sim_cfg.dynamic_priority_event_fraction,
         hio_count=sim_cfg.hio_count,
         hio_priority=sim_cfg.hio_priority,
+        hio_priority_max_multiplier=sim_cfg.hio_priority_max_multiplier,
         shio_count=sim_cfg.shio_count,
         shio_priority=sim_cfg.shio_priority,
+        shio_priority_max_multiplier=sim_cfg.shio_priority_max_multiplier,
         dynamic_priority_event_seed=sim_cfg.dynamic_priority_event_seed,
     )
 
@@ -914,9 +993,18 @@ sim_cfg.dynamic_priority_event_fraction = args.dynamic_priority_event_fraction
 sim_cfg.dynamic_priority_event_time_sec = args.dynamic_priority_event_time_sec
 sim_cfg.hio_count = args.hio_count
 sim_cfg.hio_priority = args.hio_priority
+sim_cfg.hio_priority_max_multiplier = args.hio_priority_max_multiplier
 sim_cfg.shio_count = args.shio_count
 sim_cfg.shio_priority = args.shio_priority
+sim_cfg.shio_priority_max_multiplier = args.shio_priority_max_multiplier
 sim_cfg.dynamic_priority_event_seed = args.dynamic_priority_event_seed
+legacy_oct14_policy = policy_name.startswith("oct14_obsv7")
+if args.fixed_duration_actions or legacy_oct14_policy:
+    sim_cfg.variable_duration_imaging = False
+    sim_cfg.variable_duration_downlink = False
+
+variable_duration_imaging = sim_cfg.variable_duration_imaging
+variable_duration_downlink = sim_cfg.variable_duration_downlink
 just_imaging = sim_cfg.just_imaging
 
 
@@ -965,7 +1053,9 @@ ACTION_INFO = action_info_for_layout(policy_layout, n_targets_ahead)
 print(
     f"Evaluation layout: {policy_layout}; obs_v={obs_v}; "
     f"actions={ACTION_INFO['num_actions']}; shield={use_shield}; "
-    f"dynamic_priority_event={sim_cfg.dynamic_priority_event_enabled}"
+    f"dynamic_priority_event={sim_cfg.dynamic_priority_event_enabled}; "
+    f"variable_duration_imaging={variable_duration_imaging}; "
+    f"variable_duration_downlink={variable_duration_downlink}"
 )
 
 VALID_POLICY_MODES = {"best", "smallest", "latest"}
@@ -1581,7 +1671,16 @@ if save_vizard == True:
         log_level="WARNING", #ERROR or DEBUG
         disable_env_checker=True,
         vizard_dir=vizard_dir,
-        vizard_settings=dict(vizard_rate=viz_rate), # in seconds
+        vizard_settings=dict(
+            vizard_rate=viz_rate,
+            amos_hud=bool(args.amos_vizard_hud),
+            amos_hud_text=not bool(args.no_amos_vizard_text),
+            amos_hud_image_bars=not bool(args.no_amos_vizard_image_bars),
+            amos_target_status_outlines=bool(
+                args.amos_vizard_target_status_outlines
+            ),
+            amos_rw_display=str(args.amos_vizard_rw_display),
+        ), # in seconds
         # max_step_duration=700,
     )
 else:
@@ -1602,6 +1701,16 @@ else:
 observation, info = env.reset(seed=seed_number) #5
 
 sat0 = env.unwrapped.satellites[0]
+ground_station_windows = ground_station_window_dict(
+    sat0,
+    time_limit_sec=total_time,
+)
+ground_station_windows_csv = os.path.join(run_dir, "ground_station_windows.csv")
+pd.DataFrame(ground_station_window_rows(ground_station_windows)).to_csv(
+    ground_station_windows_csv,
+    index=False,
+)
+print(f"Saved: {ground_station_windows_csv}")
 
 
 def get_image_action_spec(env):
@@ -1751,10 +1860,6 @@ eclipse_status = []
 desat_times = []
 step_log = []  # each element is a dict (one per env.step)
 
-# Ground-station windows: dict[str, list[np.ndarray([open_abs, close_abs])]]
-ground_station_windows = {}         # e.g., {'ground_station_0': [np.array([t_open, t_close]), ...], ...}
-_last_gs_pair = {}                  # e.g., {'ground_station_0': np.array([last_open, last_close])}
-
 # Eclipse windows (from observation 'eclipse' field)
 eclipse_windows = []                # list of np.array([open_abs, close_abs]) for the next eclipse window
 _last_eclipse_pair = None           # np.array([last_open, last_close])
@@ -1765,7 +1870,7 @@ SS1_reward_over_time = []
 
 for target_id in range(n_targets*6 *100 ):
     simtime = env.simulator.sim_time
-    print(f"\n SIMULATION TIME: {simtime:.1f} seconds and current reward: {SS1_reward:.2f}")
+    _print(f"\n SIMULATION TIME: {simtime:.1f} seconds and current reward: {SS1_reward:.2f}")
 
     policy_action = policy.act(observation[sat.name])
     if isinstance(policy_action, np.ndarray):  # Handle vector action output
@@ -1786,21 +1891,21 @@ for target_id in range(n_targets*6 *100 ):
     else:
         action_dict = {sat.name: policy_action}
     if ACTION_INFO["downlink"] is not None and policy_action == ACTION_INFO["downlink"]:
-        print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
+        _print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
         downlink_times.append(env.simulator.sim_time)
 
     elif ACTION_INFO["charge"] is not None and policy_action == ACTION_INFO["charge"]:
-        print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
+        _print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
         charging_times.append(env.simulator.sim_time)
     elif ACTION_INFO["desat"] is not None and policy_action == ACTION_INFO["desat"]:
-        print('tasking DESAT now: at t=',simtime," and wheel_speeds --> "+str(env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction))
+        _print('tasking DESAT now: at t=',simtime," and wheel_speeds --> "+str(env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction))
         desat_times.append(env.simulator.sim_time)
     if use_shield == True:
         if (
             ACTION_INFO["downlink"] is not None
             and env.unwrapped.satellites[0].dynamics.storage_level_fraction > critical_storage_level
         ):  # downlink if storage is more than 0.95
-            print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
+            _print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
             chosen_action_id = ACTION_INFO["downlink"]
             action_dict = {sat.name: chosen_action_id} # tasking downlink
             last_downlink_time = simtime
@@ -1810,25 +1915,41 @@ for target_id in range(n_targets*6 *100 ):
             ACTION_INFO["charge"] is not None
             and env.unwrapped.satellites[0].dynamics.battery_charge_fraction < critical_battery_level
         ):  # charge if battery is less than 0.05
-            print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
+            _print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
             chosen_action_id = ACTION_INFO["charge"]
             action_dict = {sat.name: chosen_action_id} # tasking charging
             charging_times.append(env.simulator.sim_time)
 
     action_counts[int(action_dict[sat.name])] += 1
     action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
-    print('current action_dict to be executed', action_dict['SS1'], "eclipse status of SS1:",env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
+    _print('current action_dict to be executed', action_dict['SS1'], "eclipse status of SS1:",env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
     eclipse_status.append(env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
 
     sat0 = env.satellites[0]
     sat_shadow_cmd = float(sat0.dynamics.world.eclipseObject.eclipseOutMsgs[sat0.dynamics.eclipse_index].read().shadowFactor)
 
+    target_state_metrics = decision_target_state_metrics(sat0)
+    executed_action_id = int(action_dict[sat.name])
+    action_category = (
+        "Imaging"
+        if executed_action_id in ACTION_INFO["image_ids"]
+        else ACTION_INFO["labels"][executed_action_id]
+    )
     step_log.append({
         "t_cmd": float(simtime),
-        "action_id": int(chosen_action_id if "chosen_action_id" in locals() else policy_action),
+        "policy_action_id": int(policy_action),
+        "action_id": executed_action_id,
+        "action_label": ACTION_INFO["labels"][executed_action_id],
+        "action_category": action_category,
         "sat_shadow_cmd": sat_shadow_cmd,
         "battery_frac_cmd": float(sat0.dynamics.battery_charge_fraction),
         "storage_frac_cmd": float(sat0.dynamics.storage_level_fraction),
+        "wheel_speed_max_fraction_cmd": float(
+            np.max(np.abs(np.asarray(sat0.dynamics.wheel_speeds_fraction)))
+        ),
+        "useful_downlinks_cmd": int(env.unwrapped.rewarder.useful_downlinks),
+        "storage_bits_cmd": float(sat0.dynamics.storage_level),
+        **target_state_metrics,
     })
 
     #STEPPING IN THE SIM
@@ -1839,9 +1960,15 @@ for target_id in range(n_targets*6 *100 ):
     sat_shadow_after = float(sat0.dynamics.world.eclipseObject.eclipseOutMsgs[sat0.dynamics.eclipse_index].read().shadowFactor)
     step_log[-1].update({
         "t_after": float(env.simulator.sim_time),
+        "action_duration_sec": float(env.simulator.sim_time - simtime),
         "sat_shadow_after": sat_shadow_after,
         "battery_frac_after": float(sat0.dynamics.battery_charge_fraction),
         "storage_frac_after": float(sat0.dynamics.storage_level_fraction),
+        "wheel_speed_max_fraction_after": float(
+            np.max(np.abs(np.asarray(sat0.dynamics.wheel_speeds_fraction)))
+        ),
+        "useful_downlinks_after": int(env.unwrapped.rewarder.useful_downlinks),
+        "storage_bits_after": float(sat0.dynamics.storage_level),
         "reward_step": float(reward["SS1"]),
         "reward_cum": float(SS1_reward),
     })
@@ -1854,10 +1981,10 @@ for target_id in range(n_targets*6 *100 ):
     num_downlinked.append(env.env.unwrapped.rewarder.useful_downlinks)
 
     SS1_reward_over_time.append(SS1_reward)
-    print("storage_level", env.unwrapped.satellites[0].dynamics.storage_level)
-    print("dynamics.storage_level_fraction", env.unwrapped.satellites[0].dynamics.storage_level_fraction)
-    print("dynamics.battery_charge_fraction", env.unwrapped.satellites[0].dynamics.battery_charge_fraction)
-    print("dynamics.wheel_speeds_fraction", env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction)
+    _print("storage_level", env.unwrapped.satellites[0].dynamics.storage_level)
+    _print("dynamics.storage_level_fraction", env.unwrapped.satellites[0].dynamics.storage_level_fraction)
+    _print("dynamics.battery_charge_fraction", env.unwrapped.satellites[0].dynamics.battery_charge_fraction)
+    _print("dynamics.wheel_speeds_fraction", env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction)
 
     # print('truncated list: ', truncated)
     data_dict["sim_time"].append(env.simulator.sim_time)
@@ -1868,23 +1995,8 @@ for target_id in range(n_targets*6 *100 ):
             simtime = env.simulator.sim_time
             print(f"Episode terminated at time: {simtime}")
         break
-        # --- Ground stations from flat obs ---
-    # Build/extend per-station lists in ground_station_windows dict
-    else:
-        if 'ground_station_windows' not in globals():
-            ground_station_windows = {}
-        if '_last_gs_pair' not in globals():
-            _last_gs_pair = {}
-
-        for gs_name, pair_abs in current_ground_station_window_pairs(sat0):
-            if gs_name not in ground_station_windows:
-                ground_station_windows[gs_name] = []
-                _last_gs_pair[gs_name] = None
-
-            # De-dup per station with 10 s tolerance
-            if (_last_gs_pair[gs_name] is None) or (not np.allclose(_last_gs_pair[gs_name], pair_abs, atol=10.0)):
-                ground_station_windows[gs_name].append(pair_abs.copy())
-                _last_gs_pair[gs_name] = pair_abs.copy()
+    # Ground-station windows are already available continuously from the reset-time
+    # opportunity calculation; no decision-index reconstruction is required here.
 
 rec = env.unwrapped.satellites[0].dynamics.inspector_eclipse_recorder
 ecl_sf = np.asarray(rec.shadowFactor, dtype=float).ravel()   # length ~ 45000
@@ -2548,13 +2660,25 @@ if charging_times:
     for t in charging_times[1:]:
         ax1.axvline(t, color='deepskyblue', linestyle='--', linewidth=0.8, alpha=0.85)
 if downlink_times:
-    ax1.axvline(downlink_times[0], color='magenta', linestyle='--', linewidth=0.8, alpha=0.6, label='Downlink')
+    ax1.axvline(downlink_times[0], color='magenta', linestyle='--', linewidth=0.8, alpha=0.55, label='Downlink command start')
     for t in downlink_times[1:]:
-        ax1.axvline(t, color='magenta', linestyle='--', linewidth=0.8, alpha=0.6)
+        ax1.axvline(t, color='magenta', linestyle='--', linewidth=0.8, alpha=0.55)
+    for row_number, row in enumerate(
+        row for row in step_log if row.get("action_category") == "Downlink"
+    ):
+        ax1.axvspan(
+            float(row["t_cmd"]),
+            float(row.get("t_after", row["t_cmd"])),
+            ymin=0.965,
+            ymax=0.985,
+            color="magenta",
+            alpha=0.75,
+            label="Downlink action duration" if row_number == 0 else "",
+        )
 
 # Create second y-axis for cumulative reward and target counts
 ax2 = ax1.twinx()
-ax2.plot(sim_times, num_imaged, label='Illuminated Images (cumulative)', color='tab:green')
+ax2.step(sim_times, num_imaged, where="post", label='Illuminated Images (cumulative)', color='tab:green')
 
 # Mark DESAT events
 if desat_times:
@@ -2562,14 +2686,17 @@ if desat_times:
     for t in desat_times[1:]:
         ax1.axvline(t, color='crimson', linestyle='--', linewidth=0.8, alpha=0.85)
 
-ax2.plot(sim_times, num_downlinked, label='Downlinked Targets (cumulative)', color='tab:red')
+ax2.step(sim_times, num_downlinked, where="post", label='Downlinked Targets (cumulative)', color='tab:red')
 # ax2.plot(sim_times, SS1_reward_over_time, label='Cumulative SS1 Reward', linestyle=':', linewidth=3.0, color='tab:purple')
 ax2.set_ylabel("Cumulative Count", color='black', fontsize = label_size)
 ax2.tick_params(axis='y', labelcolor='black', labelsize = tick_label_size)
 
-# Align both y-axes at 0 and 1.0/100 respectively
+# Keep fractions on [0, 1] and expand cumulative counts by 100 above a 300 floor.
 ax1.set_ylim(top=1.0, bottom=0.0)
-ax2.set_ylim(top=300, bottom=0.0)
+ax2.set_ylim(
+    top=cumulative_count_axis_limit(num_imaged, num_downlinked),
+    bottom=0.0,
+)
 
 # Combine legends
 lines1, labels1 = ax1.get_legend_handles_labels()
@@ -2590,6 +2717,26 @@ else:
         save_plot_unique(fig3, f"seed{seed_number}_{policy_mode}_{policy_name}_battery_storage_reward_over_time")
 plt.show()
 # plt.close(fig)
+
+cooldown_tag = f"{sim_cfg.reimage_cooldown_orbits:g}orbit"
+special_desat_title = None
+if not np.isclose(sim_cfg.reimage_cooldown_orbits, 2.0):
+    special_desat_title = (
+        f"ONE-ORBIT COOLDOWN ABLATION — seed {seed_number}, {n_targets} targets; "
+        "target availability and Desat decisions"
+    )
+fig_desat = plot_target_availability_desat_diagnostic(
+    step_log,
+    cooldown_orbits=sim_cfg.reimage_cooldown_orbits,
+    seed=seed_number,
+    target_count=n_targets,
+    special_title=special_desat_title,
+)
+save_plot_unique(
+    fig_desat,
+    f"seed{seed_number}_{policy_mode}_{policy_name}_target_availability_desat_{cooldown_tag}_cooldown",
+)
+plt.show()
 
 # Plot 3 Azimuth and Elevation angle (deg) vs time
 # (minutes on x-axis; same merged shading converted to minutes)
@@ -2860,6 +3007,15 @@ if save_data:
     df_steps.to_csv(steps_csv, index=False)
     print(f"Saved: {steps_csv}")
 
+    downlink_alignment_csv = os.path.join(
+        run_dir,
+        "downlink_ground_station_window_alignment.csv",
+    )
+    pd.DataFrame(
+        annotate_downlink_window_alignment(step_log, ground_station_windows)
+    ).to_csv(downlink_alignment_csv, index=False)
+    print(f"Saved: {downlink_alignment_csv}")
+
     # Your existing arrays (save into run_dir, not shared data/)
     save_npy(run_dir, "sim_times", sim_times)
     save_npy(run_dir, "battery_levels", battery_levels)
@@ -2934,6 +3090,8 @@ print(f"Code execution time: {elapsed_time:.4f} seconds")
 
 data = {}
 data["cumulativeRewardSS1"] = round(env.unwrapped.rewarder.cum_reward['SS1'], 2)
+data["decision_state_summary"] = decision_state_summary(step_log)
+data["desat_availability_summary"] = desat_availability_summary(step_log)
 image_metrics = illuminated_image_metrics(env)
 data["illuminated_images"] = image_metrics["total_illuminated_images"]
 data.update(image_metrics)
@@ -3070,9 +3228,9 @@ try:
     summary = {
         "target_imaging_count": 'target_imaging_count' in locals() and target_imaging_count or None,
         "non_target_count": 'non_target_count' in locals() and non_target_count or None,
-        "charge_action_count": 'charge_action_count' in locals() and charge_action_count or None,
-        "downlink_action_count": 'downlink_action_count' in locals() and downlink_action_count or None,
-        "desat_action_count": 'desat_action_count' in locals() and desat_action_count or None,
+        "charge_action_count": charge_action_count if 'charge_action_count' in locals() else None,
+        "downlink_action_count": downlink_action_count if 'downlink_action_count' in locals() else None,
+        "desat_action_count": desat_action_count if 'desat_action_count' in locals() else None,
         "target_imaging_pct": 'target_imaging_pct' in locals() and target_imaging_pct or None,
         "non_target_pct": 'non_target_pct' in locals() and non_target_pct or None,
         "imaging_success_percentage": 'env' in locals() and illuminated_image_count(env)/target_imaging_count*100 if ('env' in locals() and target_imaging_count) else None
@@ -3115,6 +3273,13 @@ try:
         "dynamic_priority_event_enabled": bool(sim_cfg.dynamic_priority_event_enabled),
         "dynamic_priority_event_fraction": sim_cfg.dynamic_priority_event_fraction,
         "dynamic_priority_event_time_sec": sim_cfg.dynamic_priority_event_time_sec,
+        "reimage_cooldown_orbits": sim_cfg.reimage_cooldown_orbits,
+        "estimated_observer_orbit_period_sec": getattr(
+            env.unwrapped.rewarder, "orbit_period_s", None
+        ),
+        "reimage_cooldown_sec": getattr(
+            env.unwrapped.rewarder, "reimage_cooldown_s", None
+        ),
         "act_random": bool(act_random),
         "use_heuristic": bool(use_heuristic),
         "run_dir": run_dir,

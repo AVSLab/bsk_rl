@@ -53,6 +53,11 @@ def parse_args() -> argparse.Namespace:
         default="0:100",
         help="Expected Python-style seed range, for example 0:10 for the smoke block.",
     )
+    parser.add_argument(
+        "--policy-tags",
+        default=",".join(POLICY_TAGS),
+        help="Comma-separated policy tags expected in the campaign.",
+    )
     return parser.parse_args()
 
 
@@ -136,6 +141,12 @@ def load_record(status_path: Path) -> dict[str, Any]:
         "checkpoint_iteration": nested_get(status, "policy", "checkpoint_iteration"),
         "checkpoint_dir": nested_get(status, "policy", "checkpoint_dir", default=None),
         "evaluation_reward_mix": status.get("evaluation_reward_mix"),
+        "target_env": status.get("target_env"),
+        "mix_weights": status.get("mix_weights"),
+        "exact_mix_counts": status.get("exact_mix_counts"),
+        "priority_sum": status.get("priority_sum", 100.0),
+        "n_targets": status.get("n_targets", 100),
+        "n_targets_ahead": status.get("n_targets_ahead", 10),
         "score_ground_value_100d00i": np.nan,
     }
     metrics_path = latest_file(metrics_files_for_seed(seed_dir))
@@ -262,7 +273,13 @@ def write_plot(records: pd.DataFrame, summary: pd.DataFrame, output_dir: Path) -
 
 
 def main() -> int:
+    global POLICY_TAGS
     args = parse_args()
+    POLICY_TAGS = tuple(
+        tag.strip() for tag in args.policy_tags.split(",") if tag.strip()
+    )
+    if not POLICY_TAGS:
+        raise ValueError("--policy-tags cannot be empty")
     output_dir = args.output_dir or args.input_root / "analysis"
     output_dir.mkdir(parents=True, exist_ok=True)
     expected_seeds = parse_expected_seeds(args.expected_seeds)

@@ -20,12 +20,14 @@ from matplotlib.collections import PolyCollection
 from sim_config import SimConfig
 try:
     from evaluation_image_metrics import (
+        cumulative_count_axis_limit,
         imaging_attempt_metrics,
         illuminated_image_count,
         illuminated_image_metrics,
     )
 except ModuleNotFoundError:
     from examples.evaluation_image_metrics import (
+        cumulative_count_axis_limit,
         imaging_attempt_metrics,
         illuminated_image_count,
         illuminated_image_metrics,
@@ -2070,9 +2072,12 @@ ax2.plot(sim_times, num_downlinked, label='Downlinked Targets (cumulative)', col
 ax2.set_ylabel("Cumulative Count", color='black', fontsize = label_size)
 ax2.tick_params(axis='y', labelcolor='black', labelsize = tick_label_size)
 
-# Align both y-axes at 0 and 1.0/100 respectively
+# Keep fractions on [0, 1] and expand cumulative counts by 100 above a 300 floor.
 ax1.set_ylim(top=1.0, bottom=0.0)
-ax2.set_ylim(top=300, bottom=0.0)
+ax2.set_ylim(
+    top=cumulative_count_axis_limit(num_imaged, num_downlinked),
+    bottom=0.0,
+)
 
 # Combine legends
 lines1, labels1 = ax1.get_legend_handles_labels()

@@ -20,17 +20,33 @@ from matplotlib.collections import PolyCollection
 from sim_config import SimConfig
 try:
     from evaluation_image_metrics import (
+        annotate_downlink_window_alignment,
+        cumulative_count_axis_limit,
+        desat_availability_summary,
+        decision_state_summary,
+        decision_target_state_metrics,
+        ground_station_window_dict,
+        ground_station_window_rows,
         imaging_attempt_series,
         imaging_attempt_metrics,
         illuminated_image_count,
         illuminated_image_metrics,
+        plot_target_availability_desat_diagnostic,
     )
 except ModuleNotFoundError:
     from examples.evaluation_image_metrics import (
+        annotate_downlink_window_alignment,
+        cumulative_count_axis_limit,
+        desat_availability_summary,
+        decision_state_summary,
+        decision_target_state_metrics,
+        ground_station_window_dict,
+        ground_station_window_rows,
         imaging_attempt_series,
         imaging_attempt_metrics,
         illuminated_image_count,
         illuminated_image_metrics,
+        plot_target_availability_desat_diagnostic,
     )
 
 
@@ -224,6 +240,30 @@ def parse_args():
         help="Number of RSO targets in the evaluation catalog.",
     )
     p.add_argument(
+        "--priority_sum",
+        type=float,
+        default=float(os.environ.get("BSK_RL_PRIORITY_SUM", "100.0")),
+        help=(
+            "Total baseline priority assigned across the evaluation catalog. "
+            "Use the target count to keep mean initial priority equal to one."
+        ),
+    )
+    p.add_argument(
+        "--priority_uniform_low",
+        type=float,
+        default=0.0,
+        help="Raw lower bound for uniform baseline target priorities.",
+    )
+    p.add_argument(
+        "--priority_uniform_high",
+        type=float,
+        default=None,
+        help=(
+            "Raw upper bound for uniform baseline target priorities. When omitted, "
+            "the scenario derives twice the requested mean priority."
+        ),
+    )
+    p.add_argument(
         "--n_targets_ahead",
         type=int,
         default=int(os.environ.get("BSK_RL_N_TARGETS_AHEAD", "10")),
@@ -245,6 +285,12 @@ def parse_args():
         ),
         help="Absolute episode duration in seconds. Overrides --extra_time_factor.",
     )
+    p.add_argument(
+        "--reimage_cooldown_orbits",
+        type=float,
+        default=2.0,
+        help="Observer-orbit periods before a successfully imaged target is eligible again.",
+    )
     p.add_argument("--save_data", action="store_true", default=None, help="Force save_data=True")
     p.add_argument("--no_save_data", action="store_true", help="Force save_data=False")
     p.add_argument("--quiet", action="store_true", help="Reduce printing")
@@ -259,6 +305,14 @@ def parse_args():
         type=str,
         default='{"LEO":0.5,"MEO":0.3,"GEO":0.2}',
         help='JSON dict of regime weights when target_env="mixed"'
+    )
+    p.add_argument(
+        "--exact_mix_counts",
+        action="store_true",
+        help=(
+            "For a mixed catalog, apportion the requested target count exactly "
+            "according to --mix_weights instead of sampling each regime independently."
+        ),
     )
     p.add_argument(
         "--policy_name",
@@ -294,6 +348,23 @@ def parse_args():
         help="Directory under which this run's uniquely named data folder is created.",
     )
     p.add_argument(
+        "--catalog_only",
+        action="store_true",
+        help=(
+            "Reset the configured scenario, export target_catalog.csv, and exit "
+            "without loading or executing a policy."
+        ),
+    )
+    p.add_argument(
+        "--catalog_seed_range",
+        type=str,
+        default=None,
+        help=(
+            "With --catalog_only, export a half-open seed range START:STOP in "
+            "one process, for example 0:100."
+        ),
+    )
+    p.add_argument(
         "--skip_plots",
         action="store_true",
         help="Do not write or display plots. Useful for cluster Monte Carlo collection.",
@@ -309,10 +380,47 @@ def parse_args():
         help="Write plots below this evaluation run's data directory instead of the shared plots/ folder.",
     )
     p.add_argument(
+        "--plot_dir",
+        type=str,
+        default=None,
+        help="Explicit directory for generated plots. Overrides the shared plots/ folder.",
+    )
+    p.add_argument(
         "--policy_mode",
         choices=["best", "smallest", "latest"],
         default="latest",
         help="Checkpoint selection mode passed to load_policy.",
+    )
+    p.add_argument(
+        "--heuristic_mode",
+        choices=["off", "angle", "priority_angle"],
+        default="off",
+        help=(
+            "Run a full-action heuristic instead of loading a policy. The angle "
+            "mode selects the image-eligible target with minimum slew angle. "
+            "priority_angle minimizes angle divided by current target priority."
+        ),
+    )
+    p.add_argument(
+        "--heuristic_downlink_storage_threshold",
+        type=float,
+        default=1e-6,
+        help=(
+            "For a heuristic run, downlink during an open ground-station window "
+            "when storage fraction exceeds this value."
+        ),
+    )
+    p.add_argument(
+        "--heuristic_battery_threshold",
+        type=float,
+        default=0.25,
+        help="For a heuristic run, charge below this battery fraction.",
+    )
+    p.add_argument(
+        "--heuristic_wheel_threshold",
+        type=float,
+        default=0.80,
+        help="For a heuristic run, desaturate above this wheel-speed fraction.",
     )
     p.add_argument(
         "--reward_alpha",
@@ -354,8 +462,41 @@ def parse_args():
     )
     p.add_argument("--hio_count", type=int, default=5)
     p.add_argument("--hio_priority", type=float, default=5.0)
+    p.add_argument(
+        "--hio_priority_max_multiplier",
+        type=float,
+        default=None,
+        help=(
+            "Set HIO priority to this multiple of the realized maximum initial "
+            "catalog priority. Overrides --hio_priority when provided."
+        ),
+    )
     p.add_argument("--shio_count", type=int, default=3)
     p.add_argument("--shio_priority", type=float, default=10.0)
+    p.add_argument(
+        "--shio_priority_max_multiplier",
+        type=float,
+        default=None,
+        help=(
+            "Set SHIO priority to this multiple of the realized maximum initial "
+            "catalog priority. Overrides --shio_priority when provided."
+        ),
+    )
+    p.add_argument(
+        "--priority_control_count",
+        type=int,
+        default=0,
+        help=(
+            "Number of unboosted targets tracked from the priority-event time as "
+            "a matched response baseline."
+        ),
+    )
+    p.add_argument(
+        "--priority_control_seed",
+        type=int,
+        default=None,
+        help="Independent RNG seed for selecting unboosted response controls.",
+    )
     p.add_argument("--dynamic_priority_event_seed", type=int, default=None)
     p.add_argument(
         "--save_vizard",
@@ -375,6 +516,32 @@ def parse_args():
         help="Vizard sampling rate in seconds.",
     )
     p.add_argument(
+        "--amos_vizard_hud",
+        action="store_true",
+        help="Enable the AMOS space-surveillance Vizard overlays and live metrics.",
+    )
+    p.add_argument(
+        "--no_amos_vizard_text",
+        action="store_true",
+        help="Disable the AMOS text overview while retaining graphical overlays.",
+    )
+    p.add_argument(
+        "--no_amos_vizard_image_bars",
+        action="store_true",
+        help="Disable the 1+, 2+, and 3+ successful-image bars.",
+    )
+    p.add_argument(
+        "--amos_vizard_target_status_outlines",
+        action="store_true",
+        help="Enable the optional cyan/red/green target lifecycle outlines.",
+    )
+    p.add_argument(
+        "--amos_vizard_rw_display",
+        choices=["all", "off"],
+        default="off",
+        help="Show all reaction wheels in Vizard's native panel or omit the panel.",
+    )
+    p.add_argument(
         "--vizard_tag",
         type=str,
         default=None,
@@ -387,6 +554,8 @@ def parse_args():
     return p.parse_args()
 
 ARGS = parse_args()
+if ARGS.priority_sum <= 0.0:
+    raise ValueError("--priority_sum must be positive")
 if ARGS.skip_plots or ARGS.no_show_plots:
     plt.show = lambda *args, **kwargs: None
 
@@ -422,6 +591,8 @@ def save_plot_unique(fig, base_filename, folder="plots", extension=".pdf"):
         current_run_dir = globals().get("run_dir")
         if current_run_dir:
             folder = os.path.join(current_run_dir, folder)
+    elif ARGS.plot_dir and folder == "plots":
+        folder = os.path.abspath(os.path.expanduser(ARGS.plot_dir))
 
     os.makedirs(folder, exist_ok=True)
     full_path = os.path.join(folder, base_filename + extension)
@@ -455,16 +626,16 @@ class Policy:
 
 use_shield = not ARGS.no_shield
 act_random = False
-use_heuristic = False
-heuristic_mode = "angle"  # not used unless use_heuristic is True. heuristic modes: {"angle", "distance"}
+use_heuristic = ARGS.heuristic_mode != "off"
+heuristic_mode = ARGS.heuristic_mode
 if act_random:
     policy_tag = "RANDOM"
 elif use_heuristic:
     policy_tag = "HEUR"
     if heuristic_mode == "angle":
         policy_tag = "HEUR_ANGLE"
-    elif heuristic_mode == "distance":
-        policy_tag = "HEUR_DISTANCE"
+    elif heuristic_mode == "priority_angle":
+        policy_tag = "HEUR_PRIORITY_ANGLE"
 else:
     policy_tag = "RL"
 
@@ -480,8 +651,12 @@ if ARGS.total_time_sec is not None:
 sim_cfg = SimConfig(
     n_targets=ARGS.n_targets,
     n_targets_ahead=ARGS.n_targets_ahead,
+    priority_sum=ARGS.priority_sum,
+    priority_uniform_low=ARGS.priority_uniform_low,
+    priority_uniform_high=ARGS.priority_uniform_high,
     imaging_duration=imaging_duration_cfg,
     variable_duration_imaging=True,  # AMOS 2026: stop after successful hold-gated image
+    reimage_cooldown_orbits=ARGS.reimage_cooldown_orbits,
     extra_time_factor=extra_time_factor_cfg,
     obs_v=7.0,          # default obs version; will be overwritten if policy_name known
     just_imaging=False,
@@ -508,28 +683,35 @@ LAYOUT_GAT_IMAGE_CHARGE = "gat_image_charge"
 LAYOUT_GAT_FULL = "gat_full"
 
 def make_rso_scenario():
-    return scene.RandomSatellites(
-        "SS1",
-        n_targets=n_targets,
-        priority_mode=sim_cfg.priority_mode,
-        priority_sum=sim_cfg.priority_sum,
-        rescale_priorities_to_sum=sim_cfg.rescale_priorities_to_sum,
-        priority_constant=sim_cfg.priority_constant,
-        priority_uniform_low=sim_cfg.priority_uniform_low,
-        priority_uniform_high=sim_cfg.priority_uniform_high,
-        priority_gaussian_mean=sim_cfg.priority_gaussian_mean,
-        priority_gaussian_std=sim_cfg.priority_gaussian_std,
-        priority_min=sim_cfg.priority_min,
-        priority_max=sim_cfg.priority_max,
-        dynamic_priority_event_enabled=sim_cfg.dynamic_priority_event_enabled,
-        dynamic_priority_event_time_sec=sim_cfg.dynamic_priority_event_time_sec,
-        dynamic_priority_event_fraction=sim_cfg.dynamic_priority_event_fraction,
-        hio_count=sim_cfg.hio_count,
-        hio_priority=sim_cfg.hio_priority,
-        shio_count=sim_cfg.shio_count,
-        shio_priority=sim_cfg.shio_priority,
-        dynamic_priority_event_seed=sim_cfg.dynamic_priority_event_seed,
-    )
+    scenario_kwargs = {
+        "n_targets": n_targets,
+        "priority_mode": sim_cfg.priority_mode,
+        "priority_sum": sim_cfg.priority_sum,
+        "rescale_priorities_to_sum": sim_cfg.rescale_priorities_to_sum,
+        "priority_constant": sim_cfg.priority_constant,
+        "priority_uniform_low": sim_cfg.priority_uniform_low,
+        "priority_uniform_high": sim_cfg.priority_uniform_high,
+        "priority_gaussian_mean": sim_cfg.priority_gaussian_mean,
+        "priority_gaussian_std": sim_cfg.priority_gaussian_std,
+        "priority_min": sim_cfg.priority_min,
+        "priority_max": sim_cfg.priority_max,
+        "dynamic_priority_event_enabled": sim_cfg.dynamic_priority_event_enabled,
+        "dynamic_priority_event_time_sec": sim_cfg.dynamic_priority_event_time_sec,
+        "dynamic_priority_event_fraction": sim_cfg.dynamic_priority_event_fraction,
+        "hio_count": sim_cfg.hio_count,
+        "hio_priority": sim_cfg.hio_priority,
+        "hio_priority_max_multiplier": sim_cfg.hio_priority_max_multiplier,
+        "shio_count": sim_cfg.shio_count,
+        "shio_priority": sim_cfg.shio_priority,
+        "shio_priority_max_multiplier": sim_cfg.shio_priority_max_multiplier,
+        "dynamic_priority_event_seed": sim_cfg.dynamic_priority_event_seed,
+    }
+    if sim_cfg.priority_control_count > 0:
+        scenario_kwargs.update(
+            priority_control_count=sim_cfg.priority_control_count,
+            priority_control_seed=sim_cfg.priority_control_seed,
+        )
+    return scene.RandomSatellites("SS1", **scenario_kwargs)
 
 
 def make_rso_rewarder():
@@ -558,6 +740,7 @@ def make_downlink_action(duration: float):
 args = ARGS
 TARGET_ENV = args.target_env
 MIX_WEIGHTS = json.loads(args.mix_weights) if TARGET_ENV == "mixed" else None
+EXACT_MIX_COUNTS = bool(args.exact_mix_counts)
 
 
 seed_number = 99
@@ -763,8 +946,14 @@ imaging_rewarded_noeclipse_1e_6lr_failure_penalties = "/Users/dahu1128/rllib_res
 
 # policy_path = obsv7_48hrs_1e_5lr_batch5000_gamma9997_10d90i #DEPRECATED... now the globals() line is used below...    #balance00d100i_obs2_gamma9995_1e6lr
 # Choose which policy to evaluate by NAME
-policy_name = args.policy_name or "may5_2026_obsv7_1e_5lr_batch4200_gamma9997_20d80i"
-if args.policy_path:
+policy_name = args.policy_name or (
+    f"heuristic_{heuristic_mode}"
+    if use_heuristic
+    else "may5_2026_obsv7_1e_5lr_batch4200_gamma9997_20d80i"
+)
+if use_heuristic:
+    policy_path = None
+elif args.policy_path:
     policy_path = os.path.abspath(os.path.expanduser(args.policy_path))
 else:
     if policy_name not in globals():
@@ -924,7 +1113,14 @@ else:
     # fall back to whatever was in SimConfig
     obs_v = sim_cfg.obs_v
 
-policy_layout = args.policy_layout or policy_layout_map.get(policy_name, LAYOUT_BIG_FULL)
+policy_layout = args.policy_layout or (
+    LAYOUT_GAT_FULL
+    if use_heuristic
+    else policy_layout_map.get(policy_name, LAYOUT_BIG_FULL)
+)
+if use_heuristic and args.obs_v is None:
+    obs_v = 9
+    sim_cfg.obs_v = obs_v
 
 if policy_layout == LAYOUT_TARGET_IMAGE_ONLY:
     sim_cfg.just_imaging = True
@@ -951,8 +1147,12 @@ sim_cfg.dynamic_priority_event_fraction = args.dynamic_priority_event_fraction
 sim_cfg.dynamic_priority_event_time_sec = args.dynamic_priority_event_time_sec
 sim_cfg.hio_count = args.hio_count
 sim_cfg.hio_priority = args.hio_priority
+sim_cfg.hio_priority_max_multiplier = args.hio_priority_max_multiplier
 sim_cfg.shio_count = args.shio_count
 sim_cfg.shio_priority = args.shio_priority
+sim_cfg.shio_priority_max_multiplier = args.shio_priority_max_multiplier
+sim_cfg.priority_control_count = args.priority_control_count
+sim_cfg.priority_control_seed = args.priority_control_seed
 sim_cfg.dynamic_priority_event_seed = args.dynamic_priority_event_seed
 just_imaging = sim_cfg.just_imaging
 
@@ -1034,7 +1234,11 @@ if save_vizard:
     print(f"Vizard output dir: {vizard_dir}")
     print(f"Vizard output tag: {vizard_tag}")
 
-policy = Policy(policy_path, policy_mode=policy_mode)
+policy = (
+    None
+    if args.catalog_only or use_heuristic
+    else Policy(policy_path, policy_mode=policy_mode)
+)
 
 
 
@@ -1462,6 +1666,9 @@ sat_args["low_battery_penalty"] = 0
 sat_args["eclipse_threshold_for_imaging"] = 0.5
 sat_args["eclipse_threshold_for_reward"] = sat_args["eclipse_threshold_for_imaging"]
 sat_args["empty_downlink_penalty"] = -1
+sat_args["use_heuristic"] = use_heuristic
+sat_args["heuristic_mode"] = heuristic_mode
+sat_args["heuristic_top_k"] = n_targets_ahead
 
 # if just_imaging:
 if sim_cfg.just_imaging:
@@ -1577,6 +1784,28 @@ def custom_oe_randomizer(regime: str = "LEO",
     return _sample_for_regime(regime.upper(), altitude_bounds, min_perigee_alt)
 
 
+def exact_regime_counts(
+    count: int, mix_weights: dict[str, float]
+) -> dict[str, int]:
+    """Use largest remainders to convert regime weights into exact counts."""
+    regimes = ("LEO", "MEO", "GEO")
+    weights = np.array([mix_weights.get(regime, 0.0) for regime in regimes])
+    if count <= 0:
+        raise ValueError("Target count must be positive.")
+    if np.any(weights < 0.0) or weights.sum() <= 0.0:
+        raise ValueError("mix_weights must contain nonnegative values with a positive sum.")
+    raw_counts = count * weights / weights.sum()
+    counts = np.floor(raw_counts).astype(int)
+    remainder = count - int(counts.sum())
+    order = sorted(
+        range(len(regimes)),
+        key=lambda index: (-(raw_counts[index] - counts[index]), index),
+    )
+    for index in order[:remainder]:
+        counts[index] += 1
+    return dict(zip(regimes, counts.tolist()))
+
+
 # # target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 80.0 * 3600.0*1000, storedCharge_Init = 80.0 * 3600.0*900 )
 # target_args=dict(oe=custom_oe_randomizer, batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )  # testing to see if sim is faster if the other agents are killed
 # target_args_mixed = dict(oe=partial(custom_oe_randomizer, regime="mixed", mix_weights={"LEO":0.5,"MEO":0.3,"GEO":0.2}), batteryStorageCapacity = 1, storedCharge_Init = 0.0, basePowerDraw = -10000.0 )
@@ -1592,18 +1821,46 @@ base_target_args = dict(
     storedCharge_Init=0.0,
     basePowerDraw=-10000.0,
 )
-if TARGET_ENV == "mixed":
+if TARGET_ENV == "mixed" and EXACT_MIX_COUNTS:
+    regime_counts = exact_regime_counts(n_targets, MIX_WEIGHTS)
+    target_regimes = [
+        regime
+        for regime in ("LEO", "MEO", "GEO")
+        for _ in range(regime_counts[regime])
+    ]
+    target_regimes = list(
+        np.random.default_rng(seed_number).permutation(target_regimes)
+    )
+    targets = [
+        MyTargetSatellite(
+            name=f"target_{index}",
+            sat_args=dict(
+                oe=partial(custom_oe_randomizer, regime=regime),
+                **base_target_args,
+            ),
+        )
+        for index, regime in enumerate(target_regimes)
+    ]
+    print(f"Exact mixed target counts: {regime_counts}")
+elif TARGET_ENV == "mixed":
     target_args = dict(
         oe=partial(custom_oe_randomizer, regime="mixed", mix_weights=MIX_WEIGHTS),
         **base_target_args,
     )
+    targets = [
+        MyTargetSatellite(name=f"target_{i}", sat_args=target_args)
+        for i in range(n_targets)
+    ]
 else:
     # default LEO (or your default oe randomizer)
     target_args = dict(
         oe=custom_oe_randomizer,
         **base_target_args,
     )
-targets = [MyTargetSatellite(name=f"target_{i}", sat_args=target_args) for i in range(n_targets)]
+    targets = [
+        MyTargetSatellite(name=f"target_{i}", sat_args=target_args)
+        for i in range(n_targets)
+    ]
 
 
 all_sat = [sat] + targets   #oe = lambda: random_orbit(alt=np.random.uniform(1000,2000)))
@@ -1618,7 +1875,16 @@ if save_vizard == True:
         log_level="WARNING", #ERROR or DEBUG
         disable_env_checker=True,
         vizard_dir=vizard_dir,
-        vizard_settings=dict(vizard_rate=viz_rate), # in seconds
+        vizard_settings=dict(
+            vizard_rate=viz_rate,
+            amos_hud=bool(args.amos_vizard_hud),
+            amos_hud_text=not bool(args.no_amos_vizard_text),
+            amos_hud_image_bars=not bool(args.no_amos_vizard_image_bars),
+            amos_target_status_outlines=bool(
+                args.amos_vizard_target_status_outlines
+            ),
+            amos_rw_display=str(args.amos_vizard_rw_display),
+        ), # in seconds
         # max_step_duration=700,
     )
 else:
@@ -1636,9 +1902,85 @@ else:
     )
 
 
+def _current_target_catalog(catalog_seed: int) -> pd.DataFrame:
+    rows = []
+    for target in getattr(env.unwrapped.scenario, "target_spacecrafts", []):
+        rows.append(
+            {
+                "seed": int(catalog_seed),
+                "target_id": int(target.id),
+                "initial_priority": float(
+                    getattr(
+                        target,
+                        "priority_event_original_priority",
+                        target.priority,
+                    )
+                ),
+                "priority_event_kind": str(
+                    getattr(target, "priority_event_kind", "")
+                ),
+                "priority_after_event": (
+                    float(target.priority_event_priority)
+                    if getattr(target, "priority_event_priority", None) is not None
+                    else float(target.priority)
+                ),
+                "realized_initial_priority_max": getattr(
+                    env.unwrapped.scenario,
+                    "realized_initial_priority_max",
+                    float("nan"),
+                ),
+            }
+        )
+    return pd.DataFrame(rows).sort_values("target_id")
+
+
+if args.catalog_only and args.catalog_seed_range:
+    start_text, stop_text = args.catalog_seed_range.split(":", maxsplit=1)
+    catalog_start = int(start_text)
+    catalog_stop = int(stop_text)
+    if catalog_stop <= catalog_start:
+        raise ValueError("--catalog_seed_range requires START < STOP.")
+    catalog_frames = []
+    for catalog_seed in range(catalog_start, catalog_stop):
+        env.reset(seed=catalog_seed)
+        catalog_frames.append(_current_target_catalog(catalog_seed))
+    df_target_catalog = pd.concat(catalog_frames, ignore_index=True)
+    target_catalog_csv = os.path.join(
+        base_data_dir,
+        f"target_catalog_seeds_{catalog_start:03d}_{catalog_stop - 1:03d}.csv",
+    )
+    df_target_catalog.to_csv(target_catalog_csv, index=False)
+    print(f"Saved: {target_catalog_csv}")
+    print("Catalog-only seed range complete; exiting before policy execution.")
+    env.close()
+    raise SystemExit(0)
+
 observation, info = env.reset(seed=seed_number) #5
 
 sat0 = env.unwrapped.satellites[0]
+df_target_catalog = _current_target_catalog(seed_number)
+target_catalog_csv = os.path.join(run_dir, "target_catalog.csv")
+df_target_catalog.to_csv(target_catalog_csv, index=False)
+print(f"Saved: {target_catalog_csv}")
+
+# AccessSatellite computes the complete, continuous-elevation ground-station
+# windows during reset.  Save and plot these authoritative intervals instead of
+# reconstructing them from rotating observation slots at decision epochs.
+ground_station_windows = ground_station_window_dict(
+    sat0,
+    time_limit_sec=total_time,
+)
+ground_station_windows_csv = os.path.join(run_dir, "ground_station_windows.csv")
+pd.DataFrame(ground_station_window_rows(ground_station_windows)).to_csv(
+    ground_station_windows_csv,
+    index=False,
+)
+print(f"Saved: {ground_station_windows_csv}")
+
+if args.catalog_only:
+    print("Catalog-only reset complete; exiting before policy execution.")
+    env.close()
+    raise SystemExit(0)
 
 
 def get_image_action_spec(env):
@@ -1721,6 +2063,15 @@ def current_ground_station_window_pairs(satellite) -> list[tuple[str, np.ndarray
     return windows
 
 
+def ground_station_access_open(satellite, tolerance_sec: float = 1.0) -> bool:
+    """Return whether any observed ground-station access contains the current time."""
+    sim_time = float(satellite.simulator.sim_time)
+    return any(
+        float(window[0]) - tolerance_sec <= sim_time <= float(window[1]) + tolerance_sec
+        for _, window in current_ground_station_window_pairs(satellite)
+    )
+
+
 SS1_actions_spec = get_image_action_spec(env)
 print(
     "Image action spec:",
@@ -1788,10 +2139,6 @@ eclipse_status = []
 desat_times = []
 step_log = []  # each element is a dict (one per env.step)
 
-# Ground-station windows: dict[str, list[np.ndarray([open_abs, close_abs])]]
-ground_station_windows = {}         # e.g., {'ground_station_0': [np.array([t_open, t_close]), ...], ...}
-_last_gs_pair = {}                  # e.g., {'ground_station_0': np.array([last_open, last_close])}
-
 # Eclipse windows (from observation 'eclipse' field)
 eclipse_windows = []                # list of np.array([open_abs, close_abs]) for the next eclipse window
 _last_eclipse_pair = None           # np.array([last_open, last_close])
@@ -1802,11 +2149,34 @@ SS1_reward_over_time = []
 
 for target_id in range(n_targets*6 *100 ):
     simtime = env.simulator.sim_time
-    print(f"\n SIMULATION TIME: {simtime:.1f} seconds and current reward: {SS1_reward:.2f}")
+    _print(f"\n SIMULATION TIME: {simtime:.1f} seconds and current reward: {SS1_reward:.2f}")
 
-    policy_action = policy.act(observation[sat.name])
-    if isinstance(policy_action, np.ndarray):  # Handle vector action output
-        policy_action = policy_action.item()  # conversion
+    if use_heuristic:
+        storage_fraction = float(sat0.dynamics.storage_level_fraction)
+        battery_fraction = float(sat0.dynamics.battery_charge_fraction)
+        wheel_fraction = float(
+            np.max(np.abs(np.asarray(sat0.dynamics.wheel_speeds_fraction)))
+        )
+        if ACTION_INFO["charge"] is not None and (
+            battery_fraction < ARGS.heuristic_battery_threshold
+        ):
+            policy_action = ACTION_INFO["charge"]
+        elif ACTION_INFO["desat"] is not None and (
+            wheel_fraction > ARGS.heuristic_wheel_threshold
+        ):
+            policy_action = ACTION_INFO["desat"]
+        elif (
+            ACTION_INFO["downlink"] is not None
+            and storage_fraction > ARGS.heuristic_downlink_storage_threshold
+            and ground_station_access_open(sat0)
+        ):
+            policy_action = ACTION_INFO["downlink"]
+        else:
+            policy_action = ACTION_INFO["image_ids"][0]
+    else:
+        policy_action = policy.act(observation[sat.name])
+        if isinstance(policy_action, np.ndarray):
+            policy_action = policy_action.item()
     if act_random:
         policy_action = int(np.random.randint(0, ACTION_INFO["num_actions"]))
     else:
@@ -1817,27 +2187,23 @@ for target_id in range(n_targets*6 *100 ):
     action_dict = {sat.name: 0}  # Assign the closest target when the list is sorted by distance
     chosen_action_id = policy_action # Assign policy_action to action dictionary for env.step
 
-    if use_heuristic:
-        policy_action=0 #assign action 0 to heuristic
-        action_dict = {sat.name: policy_action}
-    else:
-        action_dict = {sat.name: policy_action}
+    action_dict = {sat.name: policy_action}
     if ACTION_INFO["downlink"] is not None and policy_action == ACTION_INFO["downlink"]:
-        print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
+        _print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
         downlink_times.append(env.simulator.sim_time)
 
     elif ACTION_INFO["charge"] is not None and policy_action == ACTION_INFO["charge"]:
-        print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
+        _print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
         charging_times.append(env.simulator.sim_time)
     elif ACTION_INFO["desat"] is not None and policy_action == ACTION_INFO["desat"]:
-        print('tasking DESAT now: at t=',simtime," and wheel_speeds --> "+str(env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction))
+        _print('tasking DESAT now: at t=',simtime," and wheel_speeds --> "+str(env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction))
         desat_times.append(env.simulator.sim_time)
     if use_shield == True:
         if (
             ACTION_INFO["downlink"] is not None
             and env.unwrapped.satellites[0].dynamics.storage_level_fraction > critical_storage_level
         ):  # downlink if storage is more than 0.95
-            print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
+            _print('tasking DOWNLINKING now: at t=',simtime," and storage level --> "+str(env.unwrapped.satellites[0].dynamics.storage_level_fraction))
             chosen_action_id = ACTION_INFO["downlink"]
             action_dict = {sat.name: chosen_action_id} # tasking downlink
             last_downlink_time = simtime
@@ -1847,25 +2213,41 @@ for target_id in range(n_targets*6 *100 ):
             ACTION_INFO["charge"] is not None
             and env.unwrapped.satellites[0].dynamics.battery_charge_fraction < critical_battery_level
         ):  # charge if battery is less than 0.05
-            print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
+            _print('tasking CHARGING now: at t=',simtime," and battery level --> "+str(env.unwrapped.satellites[0].dynamics.battery_charge_fraction))
             chosen_action_id = ACTION_INFO["charge"]
             action_dict = {sat.name: chosen_action_id} # tasking charging
             charging_times.append(env.simulator.sim_time)
 
     action_counts[int(action_dict[sat.name])] += 1
     action_dict.update({targets[j].name: 0 for j in range(n_targets)})  # Initialize all targets to 0
-    print('current action_dict to be executed', action_dict['SS1'], "eclipse status of SS1:",env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
+    _print('current action_dict to be executed', action_dict['SS1'], "eclipse status of SS1:",env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
     eclipse_status.append(env.unwrapped.satellites[0].dynamics.world.eclipseObject.eclipseOutMsgs[env.unwrapped.satellites[0].dynamics.eclipse_index].read().shadowFactor)
 
     sat0 = env.satellites[0]
     sat_shadow_cmd = float(sat0.dynamics.world.eclipseObject.eclipseOutMsgs[sat0.dynamics.eclipse_index].read().shadowFactor)
 
+    target_state_metrics = decision_target_state_metrics(sat0)
+    executed_action_id = int(action_dict[sat.name])
+    action_category = (
+        "Imaging"
+        if executed_action_id in ACTION_INFO["image_ids"]
+        else ACTION_INFO["labels"][executed_action_id]
+    )
     step_log.append({
         "t_cmd": float(simtime),
-        "action_id": int(chosen_action_id if "chosen_action_id" in locals() else policy_action),
+        "policy_action_id": int(policy_action),
+        "action_id": executed_action_id,
+        "action_label": ACTION_INFO["labels"][executed_action_id],
+        "action_category": action_category,
         "sat_shadow_cmd": sat_shadow_cmd,
         "battery_frac_cmd": float(sat0.dynamics.battery_charge_fraction),
         "storage_frac_cmd": float(sat0.dynamics.storage_level_fraction),
+        "wheel_speed_max_fraction_cmd": float(
+            np.max(np.abs(np.asarray(sat0.dynamics.wheel_speeds_fraction)))
+        ),
+        "useful_downlinks_cmd": int(env.unwrapped.rewarder.useful_downlinks),
+        "storage_bits_cmd": float(sat0.dynamics.storage_level),
+        **target_state_metrics,
     })
 
     #STEPPING IN THE SIM
@@ -1876,9 +2258,15 @@ for target_id in range(n_targets*6 *100 ):
     sat_shadow_after = float(sat0.dynamics.world.eclipseObject.eclipseOutMsgs[sat0.dynamics.eclipse_index].read().shadowFactor)
     step_log[-1].update({
         "t_after": float(env.simulator.sim_time),
+        "action_duration_sec": float(env.simulator.sim_time - simtime),
         "sat_shadow_after": sat_shadow_after,
         "battery_frac_after": float(sat0.dynamics.battery_charge_fraction),
         "storage_frac_after": float(sat0.dynamics.storage_level_fraction),
+        "wheel_speed_max_fraction_after": float(
+            np.max(np.abs(np.asarray(sat0.dynamics.wheel_speeds_fraction)))
+        ),
+        "useful_downlinks_after": int(env.unwrapped.rewarder.useful_downlinks),
+        "storage_bits_after": float(sat0.dynamics.storage_level),
         "reward_step": float(reward["SS1"]),
         "reward_cum": float(SS1_reward),
     })
@@ -1891,10 +2279,10 @@ for target_id in range(n_targets*6 *100 ):
     num_downlinked.append(env.env.unwrapped.rewarder.useful_downlinks)
 
     SS1_reward_over_time.append(SS1_reward)
-    print("storage_level", env.unwrapped.satellites[0].dynamics.storage_level)
-    print("dynamics.storage_level_fraction", env.unwrapped.satellites[0].dynamics.storage_level_fraction)
-    print("dynamics.battery_charge_fraction", env.unwrapped.satellites[0].dynamics.battery_charge_fraction)
-    print("dynamics.wheel_speeds_fraction", env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction)
+    _print("storage_level", env.unwrapped.satellites[0].dynamics.storage_level)
+    _print("dynamics.storage_level_fraction", env.unwrapped.satellites[0].dynamics.storage_level_fraction)
+    _print("dynamics.battery_charge_fraction", env.unwrapped.satellites[0].dynamics.battery_charge_fraction)
+    _print("dynamics.wheel_speeds_fraction", env.unwrapped.satellites[0].dynamics.wheel_speeds_fraction)
 
     # print('truncated list: ', truncated)
     data_dict["sim_time"].append(env.simulator.sim_time)
@@ -1905,23 +2293,8 @@ for target_id in range(n_targets*6 *100 ):
             simtime = env.simulator.sim_time
             print(f"Episode terminated at time: {simtime}")
         break
-        # --- Ground stations from flat obs ---
-    # Build/extend per-station lists in ground_station_windows dict
-    else:
-        if 'ground_station_windows' not in globals():
-            ground_station_windows = {}
-        if '_last_gs_pair' not in globals():
-            _last_gs_pair = {}
-
-        for gs_name, pair_abs in current_ground_station_window_pairs(sat0):
-            if gs_name not in ground_station_windows:
-                ground_station_windows[gs_name] = []
-                _last_gs_pair[gs_name] = None
-
-            # De-dup per station with 10 s tolerance
-            if (_last_gs_pair[gs_name] is None) or (not np.allclose(_last_gs_pair[gs_name], pair_abs, atol=10.0)):
-                ground_station_windows[gs_name].append(pair_abs.copy())
-                _last_gs_pair[gs_name] = pair_abs.copy()
+    # Ground-station windows are already available continuously from the reset-time
+    # opportunity calculation; no decision-index reconstruction is required here.
 
 rec = env.unwrapped.satellites[0].dynamics.inspector_eclipse_recorder
 ecl_sf = np.asarray(rec.shadowFactor, dtype=float).ravel()   # length ~ 45000
@@ -2729,13 +3102,32 @@ if charging_times:
     for t in charging_times[1:]:
         ax1.axvline(t, color='deepskyblue', linestyle='--', linewidth=0.8, alpha=0.85)
 if downlink_times:
-    ax1.axvline(downlink_times[0], color='magenta', linestyle='--', linewidth=0.8, alpha=0.6, label='Downlink')
+    ax1.axvline(downlink_times[0], color='magenta', linestyle='--', linewidth=0.8, alpha=0.55, label='Downlink command start')
     for t in downlink_times[1:]:
-        ax1.axvline(t, color='magenta', linestyle='--', linewidth=0.8, alpha=0.6)
+        ax1.axvline(t, color='magenta', linestyle='--', linewidth=0.8, alpha=0.55)
+    downlink_action_rows = [
+        row for row in step_log if row.get("action_category") == "Downlink"
+    ]
+    for row_number, row in enumerate(downlink_action_rows):
+        ax1.axvspan(
+            float(row["t_cmd"]),
+            float(row.get("t_after", row["t_cmd"])),
+            ymin=0.965,
+            ymax=0.985,
+            color="magenta",
+            alpha=0.75,
+            label="Downlink action duration" if row_number == 0 else "",
+        )
 
 # Create second y-axis for cumulative reward and target counts
 ax2 = ax1.twinx()
-ax2.plot(sim_times, num_imaged, label='Illuminated Images (cumulative)', color='tab:green')
+ax2.step(
+    sim_times,
+    num_imaged,
+    where="post",
+    label='Illuminated Images (cumulative)',
+    color='tab:green',
+)
 
 # Mark DESAT events
 if desat_times:
@@ -2743,14 +3135,23 @@ if desat_times:
     for t in desat_times[1:]:
         ax1.axvline(t, color='crimson', linestyle='--', linewidth=0.8, alpha=0.85)
 
-ax2.plot(sim_times, num_downlinked, label='Downlinked Targets (cumulative)', color='tab:red')
+ax2.step(
+    sim_times,
+    num_downlinked,
+    where="post",
+    label='Downlinked Targets (cumulative)',
+    color='tab:red',
+)
 # ax2.plot(sim_times, SS1_reward_over_time, label='Cumulative SS1 Reward', linestyle=':', linewidth=3.0, color='tab:purple')
 ax2.set_ylabel("Cumulative Count", color='black', fontsize = label_size)
 ax2.tick_params(axis='y', labelcolor='black', labelsize = tick_label_size)
 
-# Align both y-axes at 0 and 1.0/100 respectively
+# Keep fractions on [0, 1] and expand cumulative counts by 100 above a 300 floor.
 ax1.set_ylim(top=1.0, bottom=0.0)
-ax2.set_ylim(top=300, bottom=0.0)
+ax2.set_ylim(
+    top=cumulative_count_axis_limit(num_imaged, num_downlinked),
+    bottom=0.0,
+)
 
 # Combine legends
 lines1, labels1 = ax1.get_legend_handles_labels()
@@ -2771,6 +3172,29 @@ else:
         save_plot_unique(fig3, f"seed{seed_number}_{policy_mode}_{policy_name}_battery_storage_reward_over_time")
 plt.show()
 # plt.close(fig)
+
+# Decision-level diagnostic for the Desat analysis.  The one-orbit ablation gets
+# an explicit title and filename so it cannot be mistaken for the paper's
+# standard two-orbit cooldown configuration.
+cooldown_tag = f"{sim_cfg.reimage_cooldown_orbits:g}orbit"
+special_desat_title = None
+if not np.isclose(sim_cfg.reimage_cooldown_orbits, 2.0):
+    special_desat_title = (
+        f"ONE-ORBIT COOLDOWN ABLATION — seed {seed_number}, {n_targets} targets; "
+        "target availability and Desat decisions"
+    )
+fig_desat = plot_target_availability_desat_diagnostic(
+    step_log,
+    cooldown_orbits=sim_cfg.reimage_cooldown_orbits,
+    seed=seed_number,
+    target_count=n_targets,
+    special_title=special_desat_title,
+)
+save_plot_unique(
+    fig_desat,
+    f"seed{seed_number}_{policy_mode}_{policy_name}_target_availability_desat_{cooldown_tag}_cooldown",
+)
+plt.show()
 
 # Plot 3 Azimuth and Elevation angle (deg) vs time
 # (minutes on x-axis; same merged shading converted to minutes)
@@ -3041,6 +3465,20 @@ if save_data:
     df_steps.to_csv(steps_csv, index=False)
     print(f"Saved: {steps_csv}")
 
+    downlink_alignment_rows = annotate_downlink_window_alignment(
+        step_log,
+        ground_station_windows,
+    )
+    downlink_alignment_csv = os.path.join(
+        run_dir,
+        "downlink_ground_station_window_alignment.csv",
+    )
+    pd.DataFrame(downlink_alignment_rows).to_csv(
+        downlink_alignment_csv,
+        index=False,
+    )
+    print(f"Saved: {downlink_alignment_csv}")
+
     # Your existing arrays (save into run_dir, not shared data/)
     save_npy(run_dir, "sim_times", sim_times)
     save_npy(run_dir, "battery_levels", battery_levels)
@@ -3124,6 +3562,8 @@ print(f"Code execution time: {elapsed_time:.4f} seconds")
 
 data = {}
 data["cumulativeRewardSS1"] = round(env.unwrapped.rewarder.cum_reward['SS1'], 2)
+data["decision_state_summary"] = decision_state_summary(step_log)
+data["desat_availability_summary"] = desat_availability_summary(step_log)
 image_metrics = illuminated_image_metrics(env)
 data["illuminated_images"] = image_metrics["total_illuminated_images"]
 data.update(image_metrics)
@@ -3236,6 +3676,10 @@ else:
 scenario = getattr(env.unwrapped, "scenario", None)
 hio_ids = {int(target_id) for target_id in getattr(scenario, "hio_target_ids", [])}
 shio_ids = {int(target_id) for target_id in getattr(scenario, "shio_target_ids", [])}
+control_ids = {
+    int(target_id)
+    for target_id in getattr(scenario, "priority_control_target_ids", [])
+}
 event_time = getattr(scenario, "priority_event_applied_time", None)
 if event_time is None:
     event_time = getattr(scenario, "priority_event_time", None)
@@ -3250,7 +3694,7 @@ event_time = float(event_time) if event_time is not None else float("nan")
 event_targets = {
     int(target.id): target
     for target in getattr(scenario, "target_spacecrafts", [])
-    if int(target.id) in hio_ids | shio_ids
+    if int(target.id) in hio_ids | shio_ids | control_ids
 }
 
 def _first_finite(values):
@@ -3284,11 +3728,21 @@ data["dynamic_priority_event_applied_time_sec"] = (
 )
 data["hio_target_ids"] = sorted(hio_ids)
 data["shio_target_ids"] = sorted(shio_ids)
+data["priority_control_target_ids"] = sorted(control_ids)
 data["hio_target_count"] = len(hio_ids)
 data["shio_target_count"] = len(shio_ids)
+data["priority_control_target_count"] = len(control_ids)
 
-for kind, target_ids in (("hio", hio_ids), ("shio", shio_ids)):
+for kind, target_ids in (
+    ("hio", hio_ids),
+    ("shio", shio_ids),
+    ("control", control_ids),
+):
     targets = [event_targets[target_id] for target_id in target_ids if target_id in event_targets]
+    visible_times = [
+        getattr(target, "priority_event_first_visible_time", None)
+        for target in targets
+    ]
     candidate_times = [
         getattr(target, "priority_event_first_candidate_time", None) for target in targets
     ]
@@ -3301,16 +3755,23 @@ for kind, target_ids in (("hio", hio_ids), ("shio", shio_ids)):
         and np.isfinite(event_time)
         and float(record.get("end_time")) >= event_time
     ]
+    first_visible = _first_finite(visible_times)
     first_candidate = _first_finite(candidate_times)
     first_command = _first_finite(command_times)
     first_capture = _first_finite(capture_times)
     data[f"{kind}_candidate_access_count"] = int(
         sum(getattr(target, "priority_event_candidate_count", 0) for target in targets)
     )
+    data[f"{kind}_visible_access_count"] = int(
+        sum(getattr(target, "priority_event_visible_count", 0) for target in targets)
+    )
     data[f"{kind}_command_count_after_event"] = len(command_times)
     data[f"{kind}_successful_capture_count_after_event"] = len(capture_times)
     data[f"time_to_first_{kind}_candidate_access_sec"] = (
         first_candidate - event_time if np.isfinite(first_candidate) else float("nan")
+    )
+    data[f"time_to_first_{kind}_visible_access_sec"] = (
+        first_visible - event_time if np.isfinite(first_visible) else float("nan")
     )
     data[f"time_to_first_{kind}_command_sec"] = (
         first_command - event_time if np.isfinite(first_command) else float("nan")
@@ -3318,6 +3779,268 @@ for kind, target_ids in (("hio", hio_ids), ("shio", shio_ids)):
     data[f"time_to_first_{kind}_success_sec"] = (
         first_capture - event_time if np.isfinite(first_capture) else float("nan")
     )
+
+if save_data and event_targets:
+    reward_data = getattr(getattr(env.unwrapped, "rewarder", None), "data", None)
+    useful_delivery_records = list(
+        getattr(reward_data, "verified_useful_records", [])
+    )
+    failed_delivery_records = list(
+        getattr(reward_data, "verified_failed_records", [])
+    )
+
+    target_kind_by_id = {
+        **{target_id: "HIO" for target_id in hio_ids},
+        **{target_id: "SHIO" for target_id in shio_ids},
+        **{target_id: "CONTROL" for target_id in control_ids},
+    }
+
+    def _json_record_value(value):
+        if isinstance(value, np.ndarray):
+            return value.tolist()
+        if isinstance(value, np.floating):
+            return float(value)
+        if isinstance(value, np.integer):
+            return int(value)
+        if isinstance(value, np.bool_):
+            return bool(value)
+        raise TypeError(f"Cannot JSON-encode {type(value).__name__}")
+
+    delivery_rows = []
+    for useful, records in (
+        (True, useful_delivery_records),
+        (False, failed_delivery_records),
+    ):
+        for record in records:
+            row = dict(record)
+            target_id = row.get("target_id")
+            target_id = int(target_id) if target_id is not None else None
+            capture_time = row.get("capture_time")
+            downlink_time = row.get("downlink_time")
+            row.update(
+                {
+                    "policy_tag": policy_tag,
+                    "seed": int(seed_number),
+                    "target_id": target_id,
+                    "priority_event_kind": target_kind_by_id.get(target_id, ""),
+                    "priority_event_time_sec": event_time,
+                    "post_priority_event_capture": bool(
+                        target_id in target_kind_by_id
+                        and capture_time is not None
+                        and np.isfinite(event_time)
+                        and float(capture_time) >= event_time
+                    ),
+                    "useful_delivery": bool(useful),
+                    "capture_to_downlink_sec": (
+                        float(downlink_time) - float(capture_time)
+                        if capture_time is not None and downlink_time is not None
+                        else float("nan")
+                    ),
+                }
+            )
+            for key, value in list(row.items()):
+                if isinstance(value, (list, tuple, dict, np.ndarray)):
+                    row[key] = json.dumps(
+                        value,
+                        sort_keys=True,
+                        default=_json_record_value,
+                    )
+            delivery_rows.append(row)
+
+    df_verified_deliveries = pd.DataFrame(delivery_rows)
+    if not df_verified_deliveries.empty and "record_id" in df_verified_deliveries:
+        df_verified_deliveries = df_verified_deliveries.drop_duplicates(
+            subset=["record_id", "verification_status"],
+            keep="last",
+        )
+    verified_deliveries_csv = os.path.join(run_dir, "verified_deliveries.csv")
+    df_verified_deliveries.to_csv(verified_deliveries_csv, index=False)
+    print(f"Saved: {verified_deliveries_csv}")
+
+    target_response_rows = []
+    for target_id, target in sorted(event_targets.items()):
+        visible_times = np.asarray(
+            getattr(target, "priority_event_visible_times", []),
+            dtype=float,
+        )
+        candidate_times = np.asarray(
+            getattr(target, "priority_event_candidate_times", []),
+            dtype=float,
+        )
+        candidate_slots = np.asarray(
+            getattr(target, "priority_event_candidate_slots", []),
+            dtype=int,
+        )
+        post_event_commands = df_images[
+            (pd.to_numeric(df_images["target_id"], errors="coerce") == target_id)
+            & (pd.to_numeric(df_images["t_cmd"], errors="coerce") >= event_time)
+        ].copy()
+        post_event_successes = post_event_commands[
+            pd.to_numeric(
+                post_event_commands["acq_success"], errors="coerce"
+            ).eq(1)
+        ].copy()
+
+        first_visible_time = (
+            float(visible_times.min()) if visible_times.size else float("nan")
+        )
+        first_candidate_time = (
+            float(candidate_times.min()) if candidate_times.size else float("nan")
+        )
+        first_command_time = (
+            float(post_event_commands["t_cmd"].min())
+            if not post_event_commands.empty
+            else float("nan")
+        )
+        if post_event_successes.empty:
+            first_success_command_time = float("nan")
+            first_success_time = float("nan")
+        else:
+            first_success_row = post_event_successes.sort_values("t_acq").iloc[0]
+            first_success_command_time = float(first_success_row["t_cmd"])
+            first_success_time = float(first_success_row["t_acq"])
+
+        target_deliveries = df_verified_deliveries[
+            (pd.to_numeric(
+                df_verified_deliveries.get("target_id"),
+                errors="coerce",
+            ) == target_id)
+            & df_verified_deliveries.get(
+                "useful_delivery",
+                pd.Series(False, index=df_verified_deliveries.index),
+            ).astype(bool)
+            & (
+                pd.to_numeric(
+                    df_verified_deliveries.get("capture_time"),
+                    errors="coerce",
+                )
+                >= event_time
+            )
+        ] if not df_verified_deliveries.empty else pd.DataFrame()
+        first_delivery_time = (
+            float(
+                pd.to_numeric(
+                    target_deliveries["downlink_time"], errors="coerce"
+                ).min()
+            )
+            if not target_deliveries.empty
+            else float("nan")
+        )
+        if target_deliveries.empty:
+            first_useful_capture_time = float("nan")
+            first_useful_capture_to_downlink = float("nan")
+        else:
+            first_delivery_row = target_deliveries.sort_values(
+                "downlink_time"
+            ).iloc[0]
+            first_useful_capture_time = float(
+                first_delivery_row["capture_time"]
+            )
+            first_useful_capture_to_downlink = float(
+                first_delivery_row["capture_to_downlink_sec"]
+            )
+
+        presentations_through_success = (
+            int(np.count_nonzero(candidate_times <= first_success_command_time + 1e-6))
+            if np.isfinite(first_success_command_time)
+            else int(candidate_times.size)
+        )
+        selected_on_first_presentation = bool(
+            np.isfinite(first_candidate_time)
+            and np.isfinite(first_command_time)
+            and abs(first_command_time - first_candidate_time) <= 1e-6
+        )
+        success_selected_on_first_presentation = bool(
+            np.isfinite(first_candidate_time)
+            and np.isfinite(first_success_command_time)
+            and abs(first_success_command_time - first_candidate_time) <= 1e-6
+        )
+
+        target_response_rows.append(
+            {
+                "policy_tag": policy_tag,
+                "seed": int(seed_number),
+                "target_id": int(target_id),
+                "response_class": target_kind_by_id[target_id],
+                "priority_event_time_sec": event_time,
+                "original_priority": float(
+                    getattr(target, "priority_event_original_priority", np.nan)
+                ),
+                "event_priority": float(target.priority),
+                "realized_initial_priority_max": getattr(
+                    env.unwrapped.scenario,
+                    "realized_initial_priority_max",
+                    float("nan"),
+                ),
+                "eligible_visible_access_count": int(visible_times.size),
+                "eligible_visible_times_sec_json": json.dumps(
+                    visible_times.tolist()
+                ),
+                "first_eligible_visible_time_sec": first_visible_time,
+                "first_eligible_visible_delay_sec": (
+                    first_visible_time - event_time
+                    if np.isfinite(first_visible_time)
+                    else float("nan")
+                ),
+                "candidate_presentation_count": int(candidate_times.size),
+                "candidate_times_sec_json": json.dumps(candidate_times.tolist()),
+                "candidate_slots_json": json.dumps(candidate_slots.tolist()),
+                "first_candidate_time_sec": first_candidate_time,
+                "first_candidate_delay_sec": (
+                    first_candidate_time - event_time
+                    if np.isfinite(first_candidate_time)
+                    else float("nan")
+                ),
+                "first_command_time_sec": first_command_time,
+                "first_command_delay_sec": (
+                    first_command_time - event_time
+                    if np.isfinite(first_command_time)
+                    else float("nan")
+                ),
+                "first_success_command_time_sec": first_success_command_time,
+                "first_successful_image_time_sec": first_success_time,
+                "first_successful_image_delay_sec": (
+                    first_success_time - event_time
+                    if np.isfinite(first_success_time)
+                    else float("nan")
+                ),
+                "first_useful_downlink_time_sec": first_delivery_time,
+                "first_useful_downlink_delay_sec": (
+                    first_delivery_time - event_time
+                    if np.isfinite(first_delivery_time)
+                    else float("nan")
+                ),
+                "first_verified_useful_capture_time_sec": (
+                    first_useful_capture_time
+                ),
+                "first_verified_useful_capture_to_downlink_sec": (
+                    first_useful_capture_to_downlink
+                ),
+                "imaging_command_count_after_event": int(
+                    len(post_event_commands)
+                ),
+                "successful_image_count_after_event": int(
+                    len(post_event_successes)
+                ),
+                "presentations_through_first_success_selection": (
+                    presentations_through_success
+                ),
+                "selected_on_first_presentation": selected_on_first_presentation,
+                "successful_image_selected_on_first_presentation": (
+                    success_selected_on_first_presentation
+                ),
+            }
+        )
+
+    df_priority_response_targets = pd.DataFrame(target_response_rows)
+    priority_response_targets_csv = os.path.join(
+        run_dir, "priority_response_targets.csv"
+    )
+    df_priority_response_targets.to_csv(
+        priority_response_targets_csv,
+        index=False,
+    )
+    print(f"Saved: {priority_response_targets_csv}")
 
 # Ever visible flags
 if hasattr(SS1_actions_spec, "ever_visible") and SS1_actions_spec.ever_visible:
@@ -3348,9 +4071,9 @@ try:
     summary = {
         "target_imaging_count": 'target_imaging_count' in locals() and target_imaging_count or None,
         "non_target_count": 'non_target_count' in locals() and non_target_count or None,
-        "charge_action_count": 'charge_action_count' in locals() and charge_action_count or None,
-        "downlink_action_count": 'downlink_action_count' in locals() and downlink_action_count or None,
-        "desat_action_count": 'desat_action_count' in locals() and desat_action_count or None,
+        "charge_action_count": charge_action_count if 'charge_action_count' in locals() else None,
+        "downlink_action_count": downlink_action_count if 'downlink_action_count' in locals() else None,
+        "desat_action_count": desat_action_count if 'desat_action_count' in locals() else None,
         "target_imaging_pct": 'target_imaging_pct' in locals() and target_imaging_pct or None,
         "non_target_pct": 'non_target_pct' in locals() and non_target_pct or None,
         "imaging_success_percentage": 'env' in locals() and illuminated_image_count(env)/target_imaging_count*100 if ('env' in locals() and target_imaging_count) else None
@@ -3394,15 +4117,59 @@ try:
         "obs_v": obs_v,
         "n_targets": n_targets,
         "n_targets_ahead": n_targets_ahead,
+        "priority_sum": sim_cfg.priority_sum,
+        "priority_uniform_low": sim_cfg.priority_uniform_low,
+        "priority_uniform_high": sim_cfg.priority_uniform_high,
         "total_time_sec": total_time,
+        "reimage_cooldown_orbits": sim_cfg.reimage_cooldown_orbits,
+        "estimated_observer_orbit_period_sec": getattr(
+            env.unwrapped.rewarder,
+            "orbit_period_s",
+            None,
+        ),
+        "reimage_cooldown_sec": getattr(
+            env.unwrapped.rewarder,
+            "reimage_cooldown_s",
+            None,
+        ),
         "extra_time_factor": sim_cfg.extra_time_factor,
         "reward_mix_tag": reward_mix_tag,
         "use_shield": bool(use_shield),
         "dynamic_priority_event_enabled": bool(sim_cfg.dynamic_priority_event_enabled),
         "dynamic_priority_event_fraction": sim_cfg.dynamic_priority_event_fraction,
         "dynamic_priority_event_time_sec": sim_cfg.dynamic_priority_event_time_sec,
+        "priority_control_count": sim_cfg.priority_control_count,
+        "hio_priority": sim_cfg.hio_priority,
+        "hio_priority_max_multiplier": sim_cfg.hio_priority_max_multiplier,
+        "shio_priority": sim_cfg.shio_priority,
+        "shio_priority_max_multiplier": sim_cfg.shio_priority_max_multiplier,
+        "realized_initial_priority_max": getattr(
+            env.unwrapped.scenario,
+            "realized_initial_priority_max",
+            None,
+        ),
+        "effective_hio_priority": getattr(
+            env.unwrapped.scenario,
+            "effective_hio_priority",
+            None,
+        ),
+        "effective_shio_priority": getattr(
+            env.unwrapped.scenario,
+            "effective_shio_priority",
+            None,
+        ),
         "act_random": bool(act_random),
         "use_heuristic": bool(use_heuristic),
+        "heuristic_mode": heuristic_mode if use_heuristic else None,
+        "heuristic_downlink_storage_threshold": (
+            ARGS.heuristic_downlink_storage_threshold if use_heuristic else None
+        ),
+        "heuristic_battery_threshold": (
+            ARGS.heuristic_battery_threshold if use_heuristic else None
+        ),
+        "heuristic_wheel_threshold": (
+            ARGS.heuristic_wheel_threshold if use_heuristic else None
+        ),
         "run_dir": run_dir,
     }
 

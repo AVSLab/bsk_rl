@@ -345,12 +345,19 @@ def completed_status_for(
     evaluation_reward_mix: str,
     target_env: str,
     mix_weights: str,
+    exact_mix_counts: bool,
     dynamic_priority_event: str,
     hio_count: int,
     hio_priority: float,
+    hio_priority_max_multiplier: float | None,
     shio_count: int,
     shio_priority: float,
+    shio_priority_max_multiplier: float | None,
+    priority_control_count: int,
     use_shield: bool,
+    priority_sum: float,
+    priority_uniform_low: float,
+    priority_uniform_high: float | None,
     n_targets: int,
     n_targets_ahead: int,
     total_time_sec: float | None,
@@ -379,17 +386,40 @@ def completed_status_for(
             continue
         if target_env == "mixed" and status.get("mix_weights") != mix_weights:
             continue
+        if bool(status.get("exact_mix_counts", False)) != bool(exact_mix_counts):
+            continue
         if status.get("dynamic_priority_event") != dynamic_priority_event:
             continue
         if int(status.get("hio_count", hio_count)) != int(hio_count):
             continue
         if float(status.get("hio_priority", hio_priority)) != float(hio_priority):
             continue
+        if status.get("hio_priority_max_multiplier") != hio_priority_max_multiplier:
+            continue
         if int(status.get("shio_count", shio_count)) != int(shio_count):
             continue
         if float(status.get("shio_priority", shio_priority)) != float(shio_priority):
             continue
+        if status.get("shio_priority_max_multiplier") != shio_priority_max_multiplier:
+            continue
+        if int(status.get("priority_control_count", 0)) != int(
+            priority_control_count
+        ):
+            continue
+        if priority_control_count and int(
+            status.get("priority_control_seed", -1)
+        ) != 20260729 + int(seed):
+            continue
         if bool(status.get("use_shield", False)) != bool(use_shield):
+            continue
+        if abs(float(status.get("priority_sum", 100.0)) - float(priority_sum)) > 1e-9:
+            continue
+        if abs(
+            float(status.get("priority_uniform_low", priority_uniform_low))
+            - float(priority_uniform_low)
+        ) > 1e-9:
+            continue
+        if status.get("priority_uniform_high") != priority_uniform_high:
             continue
         if int(status.get("n_targets", 100)) != int(n_targets):
             continue
@@ -510,6 +540,13 @@ def parse_args() -> argparse.Namespace:
         help='JSON regime weights used when --target-env mixed, e.g. \'{"LEO":0.5,"MEO":0.3,"GEO":0.2}\'.',
     )
     parser.add_argument(
+        "--exact-mix-counts",
+        action="store_true",
+        default=os.environ.get("BSK_RL_MC_EXACT_MIX_COUNTS", "0").strip().lower()
+        not in {"0", "false", "no", "off"},
+        help="Use exact per-catalog regime counts instead of independent draws.",
+    )
+    parser.add_argument(
         "--n-targets",
         type=int,
         default=int(
@@ -518,6 +555,31 @@ def parse_args() -> argparse.Namespace:
             )
         ),
         help="Number of RSO targets for the evaluation episode.",
+    )
+    parser.add_argument(
+        "--priority-sum",
+        type=float,
+        default=float(os.environ.get("BSK_RL_MC_PRIORITY_SUM", "100.0")),
+        help=(
+            "Total baseline catalog priority. Set equal to --n-targets to keep "
+            "mean initial target priority equal to one."
+        ),
+    )
+    parser.add_argument(
+        "--priority-uniform-low",
+        type=float,
+        default=float(os.environ.get("BSK_RL_MC_PRIORITY_UNIFORM_LOW", "0.0")),
+        help="Raw lower bound for uniform baseline priorities.",
+    )
+    parser.add_argument(
+        "--priority-uniform-high",
+        type=float,
+        default=(
+            float(os.environ["BSK_RL_MC_PRIORITY_UNIFORM_HIGH"])
+            if os.environ.get("BSK_RL_MC_PRIORITY_UNIFORM_HIGH")
+            else None
+        ),
+        help="Raw upper bound for uniform baseline priorities.",
     )
     parser.add_argument(
         "--n-targets-ahead",
@@ -576,6 +638,16 @@ def parse_args() -> argparse.Namespace:
         default=float(os.environ.get("BSK_RL_MC_HIO_PRIORITY", "5.0")),
     )
     parser.add_argument(
+        "--hio-priority-max-multiplier",
+        type=float,
+        default=(
+            float(os.environ["BSK_RL_MC_HIO_PRIORITY_MAX_MULTIPLIER"])
+            if os.environ.get("BSK_RL_MC_HIO_PRIORITY_MAX_MULTIPLIER")
+            else None
+        ),
+        help="Scale HIO priority by the realized maximum initial catalog priority.",
+    )
+    parser.add_argument(
         "--shio-count",
         type=int,
         default=int(os.environ.get("BSK_RL_MC_SHIO_COUNT", "3")),
@@ -584,6 +656,22 @@ def parse_args() -> argparse.Namespace:
         "--shio-priority",
         type=float,
         default=float(os.environ.get("BSK_RL_MC_SHIO_PRIORITY", "10.0")),
+    )
+    parser.add_argument(
+        "--shio-priority-max-multiplier",
+        type=float,
+        default=(
+            float(os.environ["BSK_RL_MC_SHIO_PRIORITY_MAX_MULTIPLIER"])
+            if os.environ.get("BSK_RL_MC_SHIO_PRIORITY_MAX_MULTIPLIER")
+            else None
+        ),
+        help="Scale SHIO priority by the realized maximum initial catalog priority.",
+    )
+    parser.add_argument(
+        "--priority-control-count",
+        type=int,
+        default=int(os.environ.get("BSK_RL_MC_PRIORITY_CONTROL_COUNT", "0")),
+        help="Unboosted targets tracked from the priority-event time.",
     )
     parser.add_argument(
         "--use-shield",
@@ -608,6 +696,19 @@ def main() -> int:
     )
     if args.seeds_per_block <= 0:
         raise ValueError("--seeds-per-block must be positive")
+    if args.priority_sum <= 0.0:
+        raise ValueError("--priority-sum must be positive")
+    if (
+        args.priority_uniform_high is not None
+        and args.priority_uniform_high < args.priority_uniform_low
+    ):
+        raise ValueError("--priority-uniform-high must be >= --priority-uniform-low")
+    for name, multiplier in (
+        ("--hio-priority-max-multiplier", args.hio_priority_max_multiplier),
+        ("--shio-priority-max-multiplier", args.shio_priority_max_multiplier),
+    ):
+        if multiplier is not None and multiplier <= 0.0:
+            raise ValueError(f"{name} must be positive")
 
     if args.write_manifest:
         manifest = build_manifest(args.policy_root, policy_tags, custom_policies)
@@ -642,12 +743,19 @@ def main() -> int:
         args.evaluation_reward_mix,
         args.target_env,
         args.mix_weights,
+        args.exact_mix_counts,
         args.dynamic_priority_event,
         args.hio_count,
         args.hio_priority,
+        args.hio_priority_max_multiplier,
         args.shio_count,
         args.shio_priority,
+        args.shio_priority_max_multiplier,
+        args.priority_control_count,
         args.use_shield,
+        args.priority_sum,
+        args.priority_uniform_low,
+        args.priority_uniform_high,
         args.n_targets,
         args.n_targets_ahead,
         args.total_time_sec,
@@ -691,6 +799,10 @@ def main() -> int:
         args.mix_weights,
         "--n_targets",
         str(args.n_targets),
+        "--priority_sum",
+        str(args.priority_sum),
+        "--priority_uniform_low",
+        str(args.priority_uniform_low),
         "--n_targets_ahead",
         str(args.n_targets_ahead),
         "--extra_time_factor",
@@ -705,6 +817,10 @@ def main() -> int:
         str(args.shio_count),
         "--shio_priority",
         str(args.shio_priority),
+        "--priority_control_count",
+        str(args.priority_control_count),
+        "--priority_control_seed",
+        str(20260729 + seed),
         "--output_dir",
         str(seed_dir),
         "--save_data",
@@ -712,6 +828,26 @@ def main() -> int:
         "--no_show_plots",
         "--plots_in_run_dir",
     ]
+    if args.hio_priority_max_multiplier is not None:
+        command.extend(
+            [
+                "--hio_priority_max_multiplier",
+                str(args.hio_priority_max_multiplier),
+            ]
+        )
+    if args.priority_uniform_high is not None:
+        command.extend(
+            ["--priority_uniform_high", str(args.priority_uniform_high)]
+        )
+    if args.shio_priority_max_multiplier is not None:
+        command.extend(
+            [
+                "--shio_priority_max_multiplier",
+                str(args.shio_priority_max_multiplier),
+            ]
+        )
+    if args.exact_mix_counts:
+        command.append("--exact_mix_counts")
     if args.total_time_sec is not None:
         command.extend(["--total_time_sec", str(args.total_time_sec)])
     if not args.use_shield:
@@ -733,6 +869,10 @@ def main() -> int:
         "evaluation_reward_mix": args.evaluation_reward_mix,
         "target_env": args.target_env,
         "mix_weights": args.mix_weights,
+        "exact_mix_counts": args.exact_mix_counts,
+        "priority_sum": args.priority_sum,
+        "priority_uniform_low": args.priority_uniform_low,
+        "priority_uniform_high": args.priority_uniform_high,
         "n_targets": args.n_targets,
         "n_targets_ahead": args.n_targets_ahead,
         "extra_time_factor": args.extra_time_factor,
@@ -740,8 +880,12 @@ def main() -> int:
         "dynamic_priority_event": args.dynamic_priority_event,
         "hio_count": args.hio_count,
         "hio_priority": args.hio_priority,
+        "hio_priority_max_multiplier": args.hio_priority_max_multiplier,
         "shio_count": args.shio_count,
         "shio_priority": args.shio_priority,
+        "shio_priority_max_multiplier": args.shio_priority_max_multiplier,
+        "priority_control_count": args.priority_control_count,
+        "priority_control_seed": 20260729 + seed,
         "use_shield": args.use_shield,
         "command": command,
     }
@@ -749,7 +893,8 @@ def main() -> int:
 
     print(
         f"MC task {args.task_id}: policy={policy_tag}, seed={seed}, "
-        f"checkpoint={policy['checkpoint_iteration']}, score={args.evaluation_reward_mix}"
+        f"checkpoint={policy['checkpoint_iteration']}, score={args.evaluation_reward_mix}, "
+        f"priority_sum={args.priority_sum:g}"
     )
     print("Evaluator command:")
     print(" ".join(command))

@@ -141,6 +141,10 @@ SUMMARY_FIELDS = [
     "median_unsuccessful_imaging_slew_time_sec",
 ]
 CORE_SUMMARY_METRICS = [
+    "delivered_ground_value_100d00i",
+    "net_evaluation_return_100d00i",
+    "operational_penalty_total_100d00i",
+    "operational_penalty_count_100d00i",
     "score_ground_value_100d00i",
     "illuminated_images",
     "confirmed_illuminated_images",
@@ -234,6 +238,11 @@ def parse_args() -> argparse.Namespace:
         "--expected-seeds",
         default="0:100",
         help="Expected Python-style seed range, for example 0:100.",
+    )
+    parser.add_argument(
+        "--policy-tags",
+        default=",".join(POLICY_TAGS),
+        help="Comma-separated policy tags expected in the campaign.",
     )
     parser.add_argument(
         "--storage-capacity-images",
@@ -400,6 +409,21 @@ def step_metrics(
     action_duration = (
         numeric_column(steps, "t_after") - numeric_column(steps, "t_cmd")
     ).clip(lower=0.0)
+    reward_step_all = numeric_column(steps, "reward_step", 0.0).fillna(0.0)
+    result.update(
+        {
+            "delivered_ground_value_100d00i": float(
+                reward_step_all.clip(lower=0.0).sum()
+            ),
+            "net_evaluation_return_100d00i": float(reward_step_all.sum()),
+            "operational_penalty_total_100d00i": float(
+                reward_step_all.clip(upper=0.0).sum()
+            ),
+            "operational_penalty_count_100d00i": int(
+                (reward_step_all < -reward_eps).sum()
+            ),
+        }
+    )
     total = int(len(action))
     for action_id in range(IMAGE_ACTION_MAX + 1):
         result[f"action_id_{action_id}_count"] = int((action == action_id).sum())
@@ -670,7 +694,12 @@ def flatten_metrics_payload(payload: dict[str, Any] | None) -> dict[str, Any]:
 
     for field in DATA_FIELDS:
         row[field] = data.get(field, np.nan)
-    row["score_ground_value_100d00i"] = data.get("cumulativeRewardSS1", np.nan)
+    row["net_evaluation_return_100d00i"] = data.get(
+        "cumulativeRewardSS1", np.nan
+    )
+    # Deprecated compatibility alias. This quantity includes operational
+    # penalties and is not pure delivered ground value.
+    row["score_ground_value_100d00i"] = row["net_evaluation_return_100d00i"]
 
     reason_counts = data.get("umbra_smart_reason_counts", {})
     if isinstance(reason_counts, dict):
@@ -742,6 +771,11 @@ def load_record(
         "checkpoint_dir": nested_get(status, "policy", "checkpoint_dir", default=None),
         "evaluation_reward_mix": status.get("evaluation_reward_mix"),
         "target_env": status.get("target_env"),
+        "mix_weights": status.get("mix_weights"),
+        "exact_mix_counts": status.get("exact_mix_counts"),
+        "priority_sum": status.get("priority_sum", 100.0),
+        "n_targets": status.get("n_targets", 100),
+        "n_targets_ahead": status.get("n_targets_ahead", 10),
         "dynamic_priority_event": status.get("dynamic_priority_event"),
         "use_shield": status.get("use_shield"),
     }
@@ -904,13 +938,20 @@ def downlink_summary(records: pd.DataFrame) -> pd.DataFrame:
 
 
 def plot_score_box(records: pd.DataFrame, output_dir: Path) -> None:
-    completed = records[(records["state"] == "completed") & records["score_ground_value_100d00i"].notna()]
+    metric = "delivered_ground_value_100d00i"
+    completed = records[
+        (records["state"] == "completed") & records[metric].notna()
+    ]
     if completed.empty:
         return
-    values = [numeric_series(completed[completed["policy_tag"] == tag], "score_ground_value_100d00i") for tag in POLICY_TAGS]
+    values = [
+        numeric_series(completed[completed["policy_tag"] == tag], metric)
+        for tag in POLICY_TAGS
+    ]
     fig, ax = plt.subplots(figsize=(11, 5.5))
     ax.boxplot(values, tick_labels=POLICY_TAGS, showmeans=True)
-    ax.set_ylabel("Ground-value score under 100d00i evaluation")
+    ax.set_ylabel("Delivered ground value under 100d00i evaluation")
+    ax.set_ylim(bottom=0.0)
     ax.set_xlabel("Training reward mix")
     ax.set_title("AMOS 2026 GAT full-action policies, common 100d00i scoring")
     ax.grid(axis="y", alpha=0.25)
@@ -998,19 +1039,23 @@ def plot_latency(records: pd.DataFrame, output_dir: Path) -> None:
 
 
 def plot_priority_vs_score(records: pd.DataFrame, output_dir: Path) -> None:
-    completed = records[(records["state"] == "completed") & records["score_ground_value_100d00i"].notna()].copy()
+    metric = "delivered_ground_value_100d00i"
+    completed = records[
+        (records["state"] == "completed") & records[metric].notna()
+    ].copy()
     if completed.empty or "mean_target_priority" not in completed:
         return
     fig, ax = plt.subplots(figsize=(7, 5.5))
     for tag in POLICY_TAGS:
         subset = completed[completed["policy_tag"] == tag]
         x = numeric_series(subset, "mean_target_priority")
-        y = numeric_series(subset, "score_ground_value_100d00i")
+        y = numeric_series(subset, metric)
         joined = pd.concat([x.rename("x"), y.rename("y")], axis=1).dropna()
         if not joined.empty:
             ax.scatter(joined["x"], joined["y"], s=18, alpha=0.55, label=tag)
     ax.set_xlabel("Mean chosen target priority")
-    ax.set_ylabel("Ground-value score")
+    ax.set_ylabel("Delivered ground value")
+    ax.set_ylim(bottom=0.0)
     ax.set_title("Does selecting higher-priority targets correlate with score?")
     ax.grid(alpha=0.25)
     ax.legend(fontsize=8, ncol=2)
@@ -1035,6 +1080,18 @@ def write_metric_definitions(output_dir: Path) -> None:
         "downlink_success_rate_reward_proxy": (
             "Fraction of downlink actions whose step reward is positive under the common 100d00i "
             "evaluation. This identifies value-bearing downlinks but does not count exact packets."
+        ),
+        "delivered_ground_value_100d00i": (
+            "Sum of positive reward_step values under alpha_eval=1. This is the "
+            "nonnegative priority-weighted value delivered to the ground."
+        ),
+        "net_evaluation_return_100d00i": (
+            "Sum of all reward_step values under alpha_eval=1, including negative "
+            "operational penalties such as an empty-start downlink."
+        ),
+        "operational_penalty_total_100d00i": (
+            "Sum of negative reward_step values. This is reported separately from "
+            "delivered ground value."
         ),
         "downlink_success_rate_storage_proxy": (
             "Fraction of downlink actions that reduced onboard storage fraction by more than the "
@@ -1086,7 +1143,13 @@ def write_metric_definitions(output_dir: Path) -> None:
 
 
 def main() -> int:
+    global POLICY_TAGS
     args = parse_args()
+    POLICY_TAGS = tuple(
+        tag.strip() for tag in args.policy_tags.split(",") if tag.strip()
+    )
+    if not POLICY_TAGS:
+        raise ValueError("--policy-tags cannot be empty")
     output_dir = args.output_dir or args.input_root / "analysis_detailed"
     output_dir.mkdir(parents=True, exist_ok=True)
     expected_seeds = parse_expected_seeds(args.expected_seeds)
@@ -1189,7 +1252,8 @@ def main() -> int:
     display_cols = [
         "policy_tag",
         "n_runs",
-        "score_ground_value_100d00i_mean",
+        "delivered_ground_value_100d00i_mean",
+        "net_evaluation_return_100d00i_mean",
         "illuminated_images_mean",
         "confirmed_illuminated_images_mean",
         "mean_target_priority_mean",
