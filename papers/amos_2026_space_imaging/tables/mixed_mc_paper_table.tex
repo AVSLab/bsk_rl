@@ -1,0 +1,19 @@
+\begin{table}[h!]
+\centering
+\caption{Mixed-orbit AMOS 2026 Monte Carlo reward-sweep results. All policies are evaluated over 100 seeds with 200 targets, 45,000-second episodes, dynamic HIO/SHIO priorities, and common 100d00i ground-value scoring.}
+\label{tab:amos-mixed-reward-sweep}
+\begin{tabular}{lrrrrrr}
+\toprule
+Policy & $\alpha$ & Score & 95\% CI & Confirmed images & Downlinks & HIO/SHIO captures \\
+\midrule
+10d90i & 0.10 & 293.8 & 3.8 & 397.3 & 38.2 & 7.3/4.2 \\
+20d80i & 0.20 & 288.5 & 4.0 & 403.7 & 56.0 & 7.3/4.2 \\
+30d70i & 0.30 & 283.1 & 3.7 & 388.0 & 49.5 & 7.2/4.2 \\
+40d60i & 0.40 & 268.4 & 3.5 & 374.8 & 62.7 & 7.0/4.1 \\
+50d50i & 0.50 & 260.7 & 3.5 & 367.0 & 71.1 & 7.0/4.0 \\
+00d100i & 0.00 & 258.8 & 5.2 & 343.1 & 16.7 & 6.8/3.8 \\
+75d25i & 0.75 & 241.0 & 3.6 & 337.8 & 65.9 & 6.8/4.2 \\
+100d00i & 1.00 & 69.5 & 7.2 & 163.1 & 195.6 & 5.9/3.8 \\
+\bottomrule
+\end{tabular}
+\end{table}

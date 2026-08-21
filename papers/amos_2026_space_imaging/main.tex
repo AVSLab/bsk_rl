@@ -1,0 +1,124 @@
+\documentclass{amos}
+
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{url}
+
+\title{\TitleFont Responsive autonomous RSO imaging and catalog maintenance using reinforcement learning across orbital regimes}
+
+\author{D. Huterer Prats \\ University of Colorado Boulder \and H. Schaub \\ University of Colorado Boulder}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\normalsize
+The rapid growth of resident space objects (RSOs) across low, medium, and geosynchronous Earth orbits motivates autonomous surveillance methods that can operate beyond the limitations of ground-based sensing. This paper develops a reinforcement learning (RL) formulation for space-based RSO imaging in which a low-Earth-orbit observer must select imaging, downlink, charging, and momentum-management actions while satisfying onboard resource and pointing constraints. The work extends prior fixed-duration LEO-to-LEO imaging studies by training directly across LEO, MEO, and GEO targets, separating onboard image acquisition reward from successfully downlinked ground utility, and introducing variable-duration imaging and downlink actions. The resulting architecture supports fast imaging after a successful slew and terminates downlink actions once useful data have been transmitted, improving the connection between commanded actions and operational value. The same formulation also supports repeated re-imaging and dynamic catalog updates, allowing newly identified high-priority objects to be incorporated online without recomputing a fixed observation sequence. We compare fixed-action neural policies, target-wise graph-attention policies, curriculum-trained policies, and heuristic baselines under common Monte Carlo evaluation conditions. The central hypothesis is that a target-wise RL policy can learn a scalable one-action-at-a-time retasking strategy that captures much of the value of lookahead scheduling while remaining responsive to changing geometry, resources, and catalog priorities.
+\end{abstract}
+
+\section{Introduction}
+
+Space Situational Awareness (SSA) and Space Domain Awareness (SDA) increasingly require persistent surveillance across large and diverse RSO populations. Space-based optical sensors are attractive for this role because they avoid atmospheric turbulence, weather, and horizon masking while continually changing their viewing geometry \cite{ackermann2015spaceBased,lal2018global}. These properties can improve revisit opportunities and make smaller or dimmer objects accessible, but they also create a challenging autonomous tasking problem: relative motion, illumination, slew feasibility, onboard storage, downlink availability, battery state, and wheel momentum all vary over time.
+
+Recent work has shown that reinforcement learning can task space-based sensors for RSO observation \cite{siew2022spaceBased} and that RL can solve related agile Earth-observation scheduling problems \cite{stephenson2024eventBased,mantovani2026cloud}. However, RSO imaging differs from nadir or ground-target imaging because the targets move through rapidly changing relative geometries and may require retasking decisions before a conventional precomputed schedule can be updated. Prior AMOS work demonstrated autonomous fixed-duration LEO-to-LEO RSO imaging \cite{hutererPrats2025amos}, while related work investigated imaging-downlink tradeoffs across orbital regimes \cite{hutererPrats2026aas}.
+
+This paper advances that line of work in four ways. First, policies are trained directly on LEO-to-any-orbit scenarios containing LEO, MEO, and GEO targets. Second, the reward separates image acquisition from downlinked ground value so that onboard sensing and communication are treated as coupled mission objectives. Third, imaging and downlink actions are no longer forced to consume a fixed dwell time when useful work has already completed. Fourth, the catalog is treated as a persistent, evolving set of objects that can be re-imaged or reprioritized during the mission.
+
+\section{Problem Formulation}
+
+The observing spacecraft is modeled as a single agile LEO platform tasked with monitoring a catalog of RSOs. At each decision time, the policy chooses from a discrete action set containing target imaging actions, downlink, charging, and desaturation. Imaging actions command the spacecraft toward a selected target and succeed only when access, attitude, and hold-time conditions are satisfied. Downlink actions transmit stored imagery during communication opportunities. Resource and safety terms penalize low battery, full storage, empty downlink attempts, and momentum saturation.
+
+Let $\alpha \in [0,1]$ denote the evaluation weight assigned to downlinked ground utility. The complementary weight $(1-\alpha)$ rewards onboard image acquisition. A policy trained with tag `20d80i', for example, uses $\alpha=0.2$ downlink reward and $0.8$ imaging reward. For the final evaluation campaign, all policies are scored with a common `100d00i' ground-utility reward so that the reported comparison emphasizes images that are actually delivered to operators.
+
+\section{Simulation and Tasking Architecture}
+
+The experiments use Basilisk through the BSK-RL framework \cite{stephenson2024bskrl}. The current AMOS 2026 branch implements the relevant tasking changes in the action, observation, target-data, and target-generation modules. Target observations include geometry and lighting features, while the data store tracks known targets, pending image records, downlink verification, cooldown windows, and repeated re-imaging eligibility.
+
+\subsection{Variable-duration imaging}
+
+In the fixed-duration baseline, an imaging command occupies a fixed interval even if the target is acquired earlier. The AMOS 2026 architecture instead allows an imaging action to terminate after the pointing hold gate has been satisfied and a valid image has been staged. Failed imaging attempts can still consume the maximum imaging duration. This produces an operationally meaningful distinction between easy opportunities, which can be captured quickly after slew completion, and difficult opportunities, which may consume the full action budget.
+
+\subsection{Downlink verification and catalog maintenance}
+
+The downlink reward path can verify whether a stored image is useful before awarding ground value. Useful images enter a cooldown period before re-imaging becomes eligible, while failed or poor-quality captures can remain eligible for future attempts. This turns the task from one-time target collection into catalog maintenance, where repeated observations of high-interest objects can remain valuable over time.
+
+\subsection{Dynamic high-interest objects}
+
+The branch includes a dynamic priority event that can promote selected targets to high-interest object (HIO) or super-high-interest object (SHIO) status during the episode. This is the demonstration case most directly aligned with the submitted abstract: the catalog can change online, and the policy must react without an offline replanning step.
+
+\section{Learning Methods and Baselines}
+
+Two neural policy families are currently represented in the branch. The first is a fixed-size BigNetwork baseline, including a full-action version and an imaging-only variant. The second is a target-wise graph-attention policy that processes a variable number of candidate targets and therefore better matches the desired architecture independence from the number of targets. The current AMOS scripts train reward splits from `00d100i' through `100d00i', including intermediate policies such as `10d90i' and `20d80i'.
+
+The branch also includes curriculum training from image-dominant to downlink-dominant reward. This is intended to test whether policies can first learn feasible imaging behavior and then learn to convert images into ground utility. The curriculum final policy has a dedicated Monte Carlo submitter, but the completed summary must still be confirmed from the cluster results.
+
+The current heuristic baseline selects the closest angular target subject to resource fallback actions. For the paper, two additional heuristic variants should be added or finalized. The first is a priority-weighted closest-angle heuristic that scores each eligible target by priority divided by angular retargeting cost. The second is a short receding-horizon heuristic that plans two to five likely targets ahead, executes the first action, and replans after every action. This latter baseline directly addresses the session-chair suggestion to compare against a schedule-plan approach.
+
+\section{Evaluation Campaigns}
+
+The documented full Monte Carlo campaign evaluates 200-target, 45,000-second episodes over seeds 0 through 99. The reward-sweep policies are evaluated with a common `100d00i' scoring rule so that each run measures downlinked ground value. The cluster output root documented by the branch is:
+
+\begin{center}
+\texttt{/scratch/alpine/\$USER/amos2026\_mc/gat\_full\_actions\_eval\_100d00i/}
+\end{center}
+
+The expected analysis outputs are `per\_run.csv', `summary\_by\_policy.csv', `missing\_runs.csv', `failed\_runs.csv', `analysis\_report.json', and detailed action/priority/illumination/latency summaries under `analysis\_detailed/'. These files are the source of truth for selecting the final best-performing policy.
+
+\section{Preliminary Local Evidence}
+
+Table \ref{tab:local-single-seed} summarizes representative local single-seed outputs that were available on the development machine. These values are useful for orienting the paper, but they should not be treated as final claims until replaced by the full Monte Carlo aggregates.
+
+\begin{table}[h!]
+\centering
+\caption{Representative local single-seed AMOS 2026 evaluation outputs. Final paper values should use full Monte Carlo summaries.}
+\label{tab:local-single-seed}
+\begin{tabular}{lrrrrr}
+\toprule
+Policy family & Targets & Non-target & Downlink & Image success (\%) & Mean successful duration (s) \\
+\midrule
+Closest-angle heuristic, 20d80i setup & 210 & 82 & 81 & 65.7 & 102.0 \\
+Older BigNetwork full-action, 20d80i & 242 & 521 & 517 & 73.6 & 98.7 \\
+BigNetwork imaging-only, target-only obs-v9 & 309 & -- & -- & 60.8 & 95.7 \\
+GAT full-action obs-v9, alpha 0.2 & 279 & 41 & 38 & 74.6 & 106.9 \\
+GAT full-action obs-v9, alpha 0.2 repeat & 276 & 48 & 43 & 73.9 & 107.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The local runs suggest that the target-wise GAT policy produces a cleaner action mix than the older full-action BigNetwork by substantially reducing non-target actions while preserving comparable image success. The table does not yet identify the best reward split, because that decision depends on the full 100-seed reward sweep and the curriculum-policy comparison.
+
+\section{Discussion: Reactive Retasking Versus Schedule Plans}
+
+A natural question is whether the agent should plan a sequence of future targets, execute the first, and then replan. That is a useful comparison, but it is not the core design goal of this architecture. In this formulation, the duration and utility of an action are only partially known before execution: the spacecraft may acquire a target quickly, fail to meet the hold gate, fill storage, drain battery, or find that downlink value changes as imagery is verified. A one-action-at-a-time RL policy is therefore a deliberate online retasking strategy rather than a limitation.
+
+The paper can frame RL as learning an implicit value function over future opportunities while retaining the operational simplicity of issuing a single next command. The receding-horizon heuristic should be included as a baseline, not as the main architecture. If that heuristic performs well, it strengthens the comparison by showing the cost of explicit lookahead. If it performs poorly, it supports the argument that learned policies handle coupled geometry, resources, and catalog changes more robustly than hand-designed schedule rules.
+
+\section{Manuscript Completion Plan}
+
+The following items remain before the AMOS submission draft can be frozen:
+
+\begin{itemize}
+  \item Confirm whether the full 100-seed GAT reward-sweep Monte Carlo campaign completed on Alpine and copy down `summary\_by\_policy.csv' plus detailed analysis outputs.
+  \item Confirm whether the curriculum final policy has matching 100-seed Monte Carlo results.
+  \item Run the closest-angle heuristic under the variable-duration imaging and early-downlink architecture for the same seeds and scoring rule.
+  \item Add a priority-weighted closest-angle heuristic for HIO/SHIO cases.
+  \item Decide whether to include a short receding-horizon heuristic as the schedule-plan response.
+  \item Replace Table \ref{tab:local-single-seed} with final Monte Carlo tables and add plots for reward sweep, action mix, downlink usefulness, target priority response, and variable-duration savings.
+  \item Confirm final author list, affiliations, and release/copyright requirements.
+\end{itemize}
+
+\section{Conclusion}
+
+This draft frames the AMOS 2026 contribution as a shift from fixed-duration, one-time RSO imaging toward scalable online catalog maintenance. The key technical story is that target-wise RL can operate across orbital regimes, balance imaging with downlink utility, exploit variable action durations, and react to priority changes without rebuilding a complete observation schedule. The final result section will determine whether the strongest evidence comes from a single reward split, the curriculum-trained policy, or the comparison between reactive RL and explicit heuristic scheduling.
+
+\bibliographystyle{plain}
+
+\begingroup
+\renewcommand{\section}[2]{}%
+\bibliography{references}
+\endgroup
+
+\end{document}
