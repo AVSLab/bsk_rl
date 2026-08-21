@@ -9,6 +9,7 @@ import bsk_rl  # noqa: F401
 from examples.prospectus_rfi.acquisition_timeline import append_trajectory_snapshot
 from examples.prospectus_rfi.config import load_study_config
 from examples.prospectus_rfi.environment import (
+    AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT,
     LEGACY_AMOS2025_OBSERVATION_CONTRACT,
     make_environment_args,
 )
@@ -108,3 +109,29 @@ def test_frozen_policy_contract_preserves_scenario_seed_and_100_second_action():
     finally:
         study_env.close()
         legacy_env.close()
+
+
+def test_attention_control_has_checkpoint_fields_mask_and_300_second_action():
+    study = load_study_config(
+        CONFIG_DIR / "attention_amos2025_control.yaml",
+        CONFIG_DIR / "base_amos2025_attention_control.yaml",
+    )
+    assert (
+        study.environment.observation_layout
+        == AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT
+    )
+    args = make_environment_args(study.environment, fixed_catalog_size=100)
+    args["log_level"] = "ERROR"
+    env = gym.make("ConstellationTasking-v1", disable_env_checker=True, **args)
+    try:
+        observations, _ = env.reset(seed=8132025)
+        base = env.unwrapped
+        assert observations["SS1"].shape == (97,)
+        assert base.satellites[0].action_space.n == 13
+        assert 0.10 <= base.satellites[0].dynamics.battery_charge_fraction <= 0.40
+
+        start = base.simulator.sim_time
+        env.step({"SS1": 0})
+        assert base.simulator.sim_time - start == pytest.approx(300.0)
+    finally:
+        env.close()

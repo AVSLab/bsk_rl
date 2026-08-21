@@ -66,3 +66,28 @@ def test_memorysafe_v2_config_limits_training_catalog_without_changing_actions()
     assert mlp.environment.imaging_duration_s == 100.0
     assert mlp.environment.alpha == 0.0
     assert mlp.environment.action_count == 13
+
+
+def test_amos2025_attention_control_restores_checkpoint_physical_regime():
+    control = load_study_config(
+        CONFIG_DIR / "attention_amos2025_control.yaml",
+        CONFIG_DIR / "base_amos2025_attention_control.yaml",
+    )
+    env = control.environment
+    contract = environment_contract(env)
+
+    assert env.profile == "amos2025_checkpoint_attention_control"
+    assert (env.catalog_min, env.catalog_max, env.candidate_count) == (100, 100, 10)
+    assert env.imaging_duration_s == 300.0
+    assert env.charge_duration_s == 300.0
+    assert env.downlink_duration_s == 180.0
+    assert env.desaturation_duration_s == 150.0
+    assert (env.initial_battery_fraction_min, env.initial_battery_fraction_max) == (
+        0.10,
+        0.40,
+    )
+    assert control.ppo.train_batch_size == 180
+    assert control.ppo.ppo_epochs == 10
+    assert control.ppo.learning_rate == 1.0e-6
+    assert contract["observation"]["flattened_size"] == 97
+    assert contract["observation"]["target_start"] == 5

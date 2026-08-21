@@ -122,6 +122,17 @@ changes image duration to 100 s, downlink to 300 s, battery initialization to 20
 and N to 100/200/400. Results from this campaign are therefore an out-of-distribution
 transfer baseline, not evidence for a policy trained under the new configuration.
 
+Those saved parameters also record PPO learning rate 1e-6, train batch size 180,
+10 SGD epochs, clip 0.15, entropy 0, gamma 0.9997, GAE lambda 0.95, and gradient clip
+1.0. This matters when reading W&B: one current variable-catalog iteration contains
+4,200 transitions, or 23.3 times the archived run's 180-transition iteration. Iteration
+number is therefore not a valid cross-campaign training-speed axis.
+
+The N=100, K=10, 300-second target-set attention control restores this physical and PPO
+regime while adding the explicit per-target validity mask required by the new
+architecture. It is not a bitwise reproduction because no target-set attention policy
+existed in the AMOS 2025 campaign.
+
 ### Target-set attention policy
 
 The newer source first appears as `examples/gat_module_complete.py` at commit

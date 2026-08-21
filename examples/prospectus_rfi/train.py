@@ -100,6 +100,7 @@ def _module_model_config(study) -> dict[str, Any]:
     layout = layout_from_environment(study.environment)
     return {
         "global_features": layout.global_features,
+        "target_start": layout.target_start,
         "target_features": layout.target_features,
         "target_capacity": layout.target_capacity,
         "target_mask_index": layout.target_mask_index,

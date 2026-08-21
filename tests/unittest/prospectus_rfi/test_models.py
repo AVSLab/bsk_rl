@@ -122,3 +122,22 @@ def test_attention_handles_no_valid_target_without_nan(layout):
     assert torch.all(logits[:, :4] <= INVALID_ACTION_LOGIT)
     assert torch.all(torch.isfinite(logits[:, 4:]))
     assert torch.all(torch.isfinite(value))
+
+
+def test_checkpoint_control_layout_extracts_middle_target_rows():
+    layout = ObservationLayout(
+        global_features=4,
+        target_start=2,
+        target_features=3,
+        target_capacity=2,
+        target_mask_index=2,
+        non_target_actions=3,
+    )
+    # Two global prefix values, two target rows, then two global suffix values.
+    observation = torch.tensor([[10.0, 11.0, 1.0, 2.0, 1.0, 3.0, 4.0, 0.0, 12.0, 13.0]])
+
+    global_values, physical, valid = layout.split(observation)
+
+    torch.testing.assert_close(global_values, torch.tensor([[10.0, 11.0, 12.0, 13.0]]))
+    torch.testing.assert_close(physical, torch.tensor([[[1.0, 2.0], [0.0, 0.0]]]))
+    assert valid.tolist() == [[True, False]]

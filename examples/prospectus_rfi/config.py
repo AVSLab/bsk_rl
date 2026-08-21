@@ -16,6 +16,7 @@ import yaml
 class EnvironmentConfig:
     """Matched physical environment shared by every comparison method."""
 
+    profile: str = "rfi_100s_variable_catalog"
     episode_duration_s: float = 45_000.0
     catalog_min: int = 100
     catalog_max: int = 400
@@ -82,8 +83,38 @@ class EnvironmentConfig:
             )
         if self.episode_duration_s != 45_000.0:
             raise ValueError("The prospectus study requires 45,000-second episodes")
-        if self.imaging_duration_s != 100.0:
-            raise ValueError("The prospectus study requires 100-second imaging actions")
+        if self.profile not in {
+            "rfi_100s_variable_catalog",
+            "amos2025_checkpoint_attention_control",
+        }:
+            raise ValueError(f"unsupported environment profile: {self.profile}")
+        if self.profile == "rfi_100s_variable_catalog":
+            if self.imaging_duration_s != 100.0:
+                raise ValueError(
+                    "The variable-catalog study requires 100-second imaging actions"
+                )
+        else:
+            expected = {
+                "catalog_min": 100,
+                "catalog_max": 100,
+                "candidate_count": 10,
+                "imaging_duration_s": 300.0,
+                "charge_duration_s": 300.0,
+                "downlink_duration_s": 180.0,
+                "desaturation_duration_s": 150.0,
+                "initial_battery_fraction_min": 0.10,
+                "initial_battery_fraction_max": 0.40,
+                "observation_layout": "amos2025_obs_v2_checkpoint_attention_masked",
+            }
+            mismatches = [
+                f"{name}={getattr(self, name)!r} (expected {value!r})"
+                for name, value in expected.items()
+                if getattr(self, name) != value
+            ]
+            if mismatches:
+                raise ValueError(
+                    "AMOS 2025 checkpoint control mismatch: " + "; ".join(mismatches)
+                )
         if self.variable_duration_imaging:
             raise ValueError("Imaging must use a fixed decision interval")
         if not 0.0 <= self.alpha <= 1.0:

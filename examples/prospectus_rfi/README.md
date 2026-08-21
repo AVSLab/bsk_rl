@@ -382,6 +382,62 @@ VALIDATE_JOB=$(sbatch --parsable \
 echo "Validation job: $VALIDATE_JOB"
 ```
 
+## AMOS 2025 N=100, K=10, 300-second attention control
+
+This control isolates the target-set attention policy in the archived August 13, 2025
+physical and PPO regime. It uses N=100, K=10, a 45,000-second episode, fixed
+image/charge/downlink/desaturation actions of 300/300/180/150 seconds, alpha=0,
+10--40% initial battery, and the archived observation fields and normalization. A
+validity bit is appended to each target row because the attention policy requires
+masked target-set semantics. The attention architecture did not exist in 2025, so this
+is a checkpoint-regime control rather than a bitwise historical reproduction.
+
+The historical PPO cadence is restored: batch 180, 10 epochs, learning rate 1e-6,
+clip 0.15, gamma 0.9997, lambda 0.95, entropy 0, and gradient clip 1. One gate job and
+one 48-hour run are submitted. The run is split into 22-, 22-, and at-most-5-hour
+training caps so it fits Alpine's 24-hour `cpu-normal` limit. Each continuation uses
+`afterok`; a failed gate prevents long compute from starting. This submission does not
+cancel, hold, or modify the active N=100--200 six-policy campaign.
+
+```bash
+module unload slurm/blanca 2>/dev/null || true
+module load slurm/alpine
+cd /projects/$USER/bsk_rl-rfi
+git pull --ff-only
+
+export BSK_RL_REPO_DIR=/projects/$USER/bsk_rl-rfi
+export BSK_RL_WANDB_KEY_PATH=/projects/$USER/bsk_rl/examples/wandb_key.txt
+
+CONTROL_SUBMISSION=$(
+  bash examples/prospectus_rfi/submit_amos2025_attention_control_48h.sh
+)
+printf '%s\n' "$CONTROL_SUBMISSION"
+```
+
+W&B uses project `amos2025-architecture-comparison` and the dedicated group
+`rfi-amos2025-attention-k10-300s-control`. Scratch outputs are placed under a unique UTC
+campaign directory below:
+
+```text
+/scratch/alpine/$USER/prospectus_rfi/amos2025_attention_control_300s/
+```
+
+To audit the current N=100--200 training telemetry against environment steps and wall
+time, submit the read-only, low-priority diagnostic from the login node:
+
+```bash
+DIAGNOSTIC_JOB=$(sbatch --parsable \
+  --export=ALL,BSK_RL_REPO_DIR \
+  examples/prospectus_rfi/slurm/diagnose_memorysafe_training.sbatch)
+echo "Diagnostic job: $DIAGNOSTIC_JOB"
+```
+
+The diagnostic writes CSV and Markdown under
+`analysis/training_diagnostic/`. In W&B, use
+`prospectus_rfi/environment_steps` or `prospectus_rfi/wall_clock_h` for the x-axis.
+Raw return should not be the sole y-axis for variable-N runs; use the successful and
+illuminated observation fractions and show episode target count alongside them.
+
 ## Historical campaign order
 
 The commands below document the original campaign. They are retained for provenance;

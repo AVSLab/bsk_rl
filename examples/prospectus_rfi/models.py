@@ -15,6 +15,9 @@ from torch import nn
 
 from .config import ArchitectureConfig, EnvironmentConfig
 from .environment import (
+    AMOS2025_ATTENTION_CONTROL_GLOBAL_FEATURE_COUNT,
+    AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT,
+    AMOS2025_ATTENTION_CONTROL_TARGET_START,
     GLOBAL_FEATURE_COUNT,
     TARGET_FEATURE_COUNT,
     TARGET_MASK_INDEX,
@@ -28,6 +31,7 @@ class ObservationLayout:
     """Flattened observation and action layout shared by both policies."""
 
     global_features: int = GLOBAL_FEATURE_COUNT
+    target_start: int | None = None
     target_features: int = TARGET_FEATURE_COUNT
     target_capacity: int = 10
     target_mask_index: int = TARGET_MASK_INDEX
@@ -41,6 +45,10 @@ class ObservationLayout:
     def action_size(self) -> int:
         return self.target_capacity + self.non_target_actions
 
+    @property
+    def resolved_target_start(self) -> int:
+        return self.global_features if self.target_start is None else self.target_start
+
     def validate(self) -> None:
         if self.global_features < 1 or self.target_features < 2:
             raise ValueError("observation feature dimensions must be positive")
@@ -48,6 +56,10 @@ class ObservationLayout:
             raise ValueError("action dimensions must be positive")
         if not 0 <= self.target_mask_index < self.target_features:
             raise ValueError("target mask index is invalid")
+        target_start = self.resolved_target_start
+        target_stop = target_start + self.target_capacity * self.target_features
+        if target_start < 0 or target_stop > self.observation_size:
+            raise ValueError("target rows lie outside the flattened observation")
 
     def split(self, observation: torch.Tensor) -> tuple[torch.Tensor, ...]:
         """Return global values, physical target values, and a Boolean mask."""
@@ -60,8 +72,12 @@ class ObservationLayout:
                 f"expected [batch, {self.observation_size}] observation, got "
                 f"{tuple(observation.shape)}"
             )
-        global_values = observation[:, : self.global_features]
-        rows = observation[:, self.global_features :].reshape(
+        target_start = self.resolved_target_start
+        target_stop = target_start + self.target_capacity * self.target_features
+        global_values = torch.cat(
+            [observation[:, :target_start], observation[:, target_stop:]], dim=-1
+        )
+        rows = observation[:, target_start:target_stop].reshape(
             observation.shape[0], self.target_capacity, self.target_features
         )
         valid = rows[:, :, self.target_mask_index] > 0.5
@@ -78,7 +94,15 @@ class ObservationLayout:
 
 
 def layout_from_environment(config: EnvironmentConfig) -> ObservationLayout:
+    if config.observation_layout == AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT:
+        return ObservationLayout(
+            global_features=AMOS2025_ATTENTION_CONTROL_GLOBAL_FEATURE_COUNT,
+            target_start=AMOS2025_ATTENTION_CONTROL_TARGET_START,
+            target_capacity=config.candidate_count,
+            non_target_actions=config.non_target_actions,
+        )
     return ObservationLayout(
+        target_start=GLOBAL_FEATURE_COUNT,
         target_capacity=config.candidate_count,
         non_target_actions=config.non_target_actions,
     )
@@ -429,6 +453,7 @@ try:  # pragma: no cover - exercised by integration/training tests
             config = dict(self.config.model_config_dict)
             layout = ObservationLayout(
                 global_features=int(config["global_features"]),
+                target_start=int(config.get("target_start", config["global_features"])),
                 target_features=int(config["target_features"]),
                 target_capacity=int(config["target_capacity"]),
                 target_mask_index=int(config["target_mask_index"]),

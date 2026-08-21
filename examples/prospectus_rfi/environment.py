@@ -42,6 +42,11 @@ LEGACY_AMOS2025_OBSERVATION_SIZE = (
 LEGACY_AMOS2025_ACTION_COUNT = LEGACY_AMOS2025_CANDIDATE_COUNT + 3
 LEGACY_AMOS2025_OBSERVATION_CONTRACT = "amos2025_obs_v2_checkpoint_exact"
 STUDY_MASKED_OBSERVATION_CONTRACT = "amos2025_obs_v2_masked"
+AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT = (
+    "amos2025_obs_v2_checkpoint_attention_masked"
+)
+AMOS2025_ATTENTION_CONTROL_GLOBAL_FEATURE_COUNT = 17
+AMOS2025_ATTENTION_CONTROL_TARGET_START = 5
 
 
 class StudyDiscreteActionBuilder(DiscreteActionBuilder):
@@ -188,7 +193,7 @@ def amos2025_target_orbit() -> orbitalMotion.ClassicElements:
 def make_satellite_types(
     config: EnvironmentConfig,
     *,
-    observation_contract: str = STUDY_MASKED_OBSERVATION_CONTRACT,
+    observation_contract: str | None = None,
 ):
     """Construct satellite classes with an explicitly selected I/O contract.
 
@@ -200,9 +205,11 @@ def make_satellite_types(
     """
 
     config.validate()
+    observation_contract = observation_contract or config.observation_layout
     if observation_contract not in {
         STUDY_MASKED_OBSERVATION_CONTRACT,
         LEGACY_AMOS2025_OBSERVATION_CONTRACT,
+        AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT,
     }:
         raise ValueError(f"unsupported observation contract: {observation_contract}")
     if (
@@ -248,7 +255,7 @@ def make_satellite_types(
                     n_ahead_observe=LEGACY_AMOS2025_GROUND_STATION_COUNT,
                 ),
             ]
-        else:
+        elif observation_contract == STUDY_MASKED_OBSERVATION_CONTRACT:
             observation_spec = [
                 # Five global values: storage, battery, and three wheel speeds.
                 obs.SatProperties(
@@ -275,13 +282,40 @@ def make_satellite_types(
                     n_ahead_observe=config.candidate_count,
                 ),
             ]
+        else:
+            # Same physical fields, order, and normalizations as the archived
+            # August 13 AMOS 2025 checkpoint, with one validity bit appended to
+            # each target row so the target-set attention policy cannot learn
+            # from repeated/padded candidate values.
+            observation_spec = [
+                obs.SatProperties(
+                    dict(prop="storage_level_fraction"),
+                    dict(prop="battery_charge_fraction"),
+                    dict(prop="wheel_speeds_fraction"),
+                ),
+                MaskedPolarisTargetProperties(
+                    dict(prop="target_elevation_angle", norm=1.0),
+                    dict(prop="rel_pos_vector_r_BR_H", norm=1596.0e3),
+                    dict(prop="angle_to_target", norm=1.0),
+                    dict(prop="target_distance", norm=1596.0e3),
+                    dict(prop="target_shadowFactor", norm=1.0),
+                    n_ahead_observe=LEGACY_AMOS2025_CANDIDATE_COUNT,
+                ),
+                obs.Eclipse(norm=1.0),
+                obs.OpportunityProperties(
+                    dict(prop="opportunity_open", norm=5700.0),
+                    dict(prop="opportunity_close", norm=5700.0),
+                    type="ground_station",
+                    n_ahead_observe=LEGACY_AMOS2025_GROUND_STATION_COUNT,
+                ),
+            ]
         action_spec = [
             StudyImageRSO(
                 n_ahead_image=config.candidate_count,
                 duration=config.imaging_duration_s,
                 variable_duration_imaging=False,
                 # These fields only gate the early-success event.  Fixed-duration
-                # mode deliberately retains the complete 100 s tasking interval.
+                # mode deliberately retains the complete configured tasking interval.
                 min_pointing_hold_s=0.0,
                 require_illumination_during_hold=False,
             ),
@@ -311,7 +345,7 @@ def make_environment_args(
     episode_data_callback: Any | None = None,
     satellite_data_callback: Any | None = None,
     historical_heuristic: bool = False,
-    observation_contract: str = STUDY_MASKED_OBSERVATION_CONTRACT,
+    observation_contract: str | None = None,
 ) -> dict[str, Any]:
     """Create one directly usable BSK-RL environment configuration."""
 
@@ -403,15 +437,30 @@ def make_environment_args(
 def environment_contract(config: EnvironmentConfig) -> dict[str, Any]:
     """Machine-readable observation/action/reward contract for run metadata."""
 
+    if config.observation_layout == AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT:
+        global_features = AMOS2025_ATTENTION_CONTROL_GLOBAL_FEATURE_COUNT
+        target_start = AMOS2025_ATTENTION_CONTROL_TARGET_START
+        field_order = [
+            "spacecraft[5]",
+            "masked_target_rows[10,8]",
+            "eclipse[2]",
+            "ground_station_windows[5,2]",
+        ]
+    else:
+        global_features = GLOBAL_FEATURE_COUNT
+        target_start = GLOBAL_FEATURE_COUNT
+        field_order = ["global[11]", "masked_target_rows[K,8]"]
     return {
         "environment": asdict(config),
         "observation": {
-            "global_features": GLOBAL_FEATURE_COUNT,
+            "global_features": global_features,
+            "target_start": target_start,
             "target_slots": config.candidate_count,
             "target_physical_features_per_slot": TARGET_PHYSICAL_FEATURE_COUNT,
             "mask_features_per_slot": 1,
-            "flattened_size": GLOBAL_FEATURE_COUNT
+            "flattened_size": global_features
             + config.candidate_count * TARGET_FEATURE_COUNT,
+            "field_order": field_order,
             "padding": "zero",
             "mask_name": "valid_target",
             "mask_index_within_target_row": TARGET_MASK_INDEX,
@@ -456,6 +505,9 @@ def legacy_amos2025_policy_contract() -> dict[str, Any]:
 
 
 __all__ = [
+    "AMOS2025_ATTENTION_CONTROL_GLOBAL_FEATURE_COUNT",
+    "AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT",
+    "AMOS2025_ATTENTION_CONTROL_TARGET_START",
     "GLOBAL_FEATURE_COUNT",
     "LEGACY_AMOS2025_ACTION_COUNT",
     "LEGACY_AMOS2025_CANDIDATE_COUNT",
