@@ -92,7 +92,7 @@ class InspectorSat(sats.Satellite):
             dict(prop="sun_hat_Hc", fn=sun_hat_chief),
             chief_name="RSO",
         ),
-        obs.Eclipse(norm=5700),
+        obs.Eclipse(),
         obs.Time(),
     ]
 
@@ -231,12 +231,13 @@ def rewarder_config(
             inspection_reward_scale=inspection_reward_scale,
             completion_bonus=completion_bonus,
             completion_threshold=completion_threshold,
-            min_time_for_completion=5700.0,
         ),
         data.ResourceReward(
-            resource_fn=lambda sat: sat.fsw.dv_available
-            if isinstance(sat.fsw, fsw.MagicOrbitalManeuverFSWModel)
-            else 0.0,
+            resource_fn=lambda sat: (
+                sat.fsw.dv_available
+                if isinstance(sat.fsw, fsw.MagicOrbitalManeuverFSWModel)
+                else 0.0
+            ),
             reward_weight=fuel_penalty_weight,
         ),
     )

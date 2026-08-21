@@ -53,6 +53,16 @@ class TestRelativeProperties:
         ob.chief = chief
         assert ob.get_obs() == {"prop": 3.0}
 
+    def test_norm_orbital_period(self):
+        ob = RelativeProperties(
+            dict(name="dt", fn=lambda d, c: 11400.0, norm=None),
+            chief_name="chief",
+        )
+        deputy = MagicMock(dynamics=MagicMock(orbital_period=5700.0))
+        ob.satellite = deputy
+        ob.chief = MagicMock()
+        assert ob.get_obs() == {"dt": 2.0}
+
 
 class TestRSOImagedRegions:
     def test_one_region(self):

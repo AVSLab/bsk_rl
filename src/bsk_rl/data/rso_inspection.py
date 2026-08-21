@@ -187,7 +187,7 @@ class RSOInspectionReward(GlobalReward):
         completion_bonus: float = 0.0,
         completion_threshold: float = 0.90,
         min_illuminated_for_completion: float = 0.4,
-        min_time_for_completion: float = 5700,
+        min_time_for_completion: Optional[float] = None,
         terminate_on_completion: bool = True,
     ):
         """Reward for RSO inspection.
@@ -203,7 +203,8 @@ class RSOInspectionReward(GlobalReward):
             completion_bonus: Bonus reward for completing the inspection.
             completion_threshold: Fraction of illuminated points that must be inspected to complete the task.
             min_illuminated_for_completion: Minimum fraction of illuminated points required for completion.
-            min_time_for_completion: Minimum simulation time required for completion.
+            min_time_for_completion: Minimum simulation time required for completion. If
+                ``None``, one orbital period is used.
             terminate_on_completion: Whether to terminate the episode when the completion bonus is awarded.
         """
         self.scenario: RSOPoints
@@ -214,6 +215,12 @@ class RSOInspectionReward(GlobalReward):
         self.min_illuminated_for_completion = min_illuminated_for_completion
         self.min_time_for_completion = min_time_for_completion
         self.terminate_on_completion = terminate_on_completion
+
+    def _completion_time(self) -> float:
+        """Minimum time before the completion bonus may be awarded."""
+        if self.min_time_for_completion is not None:
+            return self.min_time_for_completion
+        return self.scenario.satellites[0].dynamics.orbital_period
 
     def reset_overwrite_previous(self) -> None:
         """Overwrite attributes from previous episode."""
@@ -316,10 +323,7 @@ class RSOInspectionReward(GlobalReward):
         min_illuminated_met = (
             total_data.num_points_illuminated
             >= (len(self.scenario.rso_points) * self.min_illuminated_for_completion)
-        ) or (
-            self.scenario.satellites[0].simulator.sim_time
-            > self.min_time_for_completion
-        )
+        ) or (self.scenario.satellites[0].simulator.sim_time > self._completion_time())
 
         imaged_fraction_met = (
             total_data.num_points_inspected

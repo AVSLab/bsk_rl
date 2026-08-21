@@ -26,6 +26,19 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def orbital_period(a: float, mu: float) -> float:
+    """Compute the Keplerian orbital period.
+
+    Args:
+        a: Semi-major axis [m].
+        mu: Gravitational parameter [m^3/s^2].
+
+    Returns:
+        Orbital period [s].
+    """
+    return 2 * np.pi * np.sqrt(a**3 / mu)
+
+
 def random_unit_vector() -> np.ndarray:
     """Generate a random unit vector.
 
@@ -704,6 +717,7 @@ def fibonacci_sphere(n_points):
 
 __doc_title__ = "Orbital"
 __all__ = [
+    "orbital_period",
     "random_orbit",
     "random_circular_orbit",
     "random_epoch",

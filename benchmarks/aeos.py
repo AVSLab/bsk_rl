@@ -7,7 +7,13 @@ from ray.rllib.core.rl_module.rl_module import RLModuleSpec
 
 from bsk_rl import act, comm, data, obs, sats, scene
 from bsk_rl.sim import fsw
-from bsk_rl.utils.orbital import random_circular_orbit, walker_delta_args
+from bsk_rl.utils.orbital import (
+    orbital_period,
+    random_circular_orbit,
+    walker_delta_args,
+)
+
+ORBIT_PERIOD = orbital_period((6371 + 800) * 1e3, orbitalMotion.MU_EARTH * 1e9)
 
 
 class AEOS(sats.ImagingSatellite):
@@ -75,7 +81,7 @@ def satellite_data_callback(env, satellite):
     reward = env.rewarder.cum_reward[satellite.name]
 
     duration = max(env.simulator.sim_time, 0.01)
-    orbits = duration / (95 * 60)
+    orbits = duration / ORBIT_PERIOD
 
     data["imaged"] = imaged
     data["imaged_per_orbit"] = imaged / orbits
@@ -108,7 +114,7 @@ def gen_env_args(n_satellites=1):
         communicator=comm.FreeCommunication(min_period=60),
         sim_rate=0.5,
         max_step_duration=300.0,
-        time_limit=5700 * 3,
+        time_limit=ORBIT_PERIOD * 3,
         failure_penalty=0.0,
         terminate_on_time_limit=True,
         episode_data_callback=episode_data_callback,

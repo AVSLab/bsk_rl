@@ -1,11 +1,15 @@
 from typing import ClassVar
 
 import numpy as np
+from Basilisk.utilities import orbitalMotion
 from benchmark import BenchmarkEnv
 from ray.rllib.core.rl_module.rl_module import RLModuleSpec
 
 from bsk_rl import act, data, obs, sats, scene
 from bsk_rl.sim import dyn, fsw
+from bsk_rl.utils.orbital import orbital_period
+
+ORBIT_PERIOD = orbital_period((6371 + 500) * 1e3, orbitalMotion.MU_EARTH * 1e9)
 
 
 class ScanningSatellite(sats.AccessSatellite):
@@ -16,12 +20,12 @@ class ScanningSatellite(sats.AccessSatellite):
             dict(prop="wheel_speeds_fraction"),
         ),
         obs.OpportunityProperties(
-            dict(prop="opportunity_open", norm=5700),
-            dict(prop="opportunity_close", norm=5700),
+            dict(prop="opportunity_open", norm=None),
+            dict(prop="opportunity_close", norm=None),
             type="ground_station",
             n_ahead_observe=1,
         ),
-        obs.Eclipse(norm=5700),
+        obs.Eclipse(),
         obs.Time(),
     ]
     action_spec: ClassVar[list[act.Action]] = [
@@ -57,13 +61,13 @@ sat_args = dict(
     desatAttitude="nadir",
 )
 
-DURATION = 5 * 5700.0  # About 5 orbits
+DURATION = 5 * ORBIT_PERIOD
 
 
 def episode_data_callback(env):
     reward = env.rewarder.cum_reward
     reward = sum(reward.values()) / len(reward)
-    orbits = env.simulator.sim_time / (95 * 60)
+    orbits = env.simulator.sim_time / ORBIT_PERIOD
 
     data = dict(
         reward=reward,
@@ -71,14 +75,14 @@ def episode_data_callback(env):
     )
     if orbits > 0:
         data["reward_per_orbit"] = reward / orbits
-    if orbits < DURATION / (95 * 60):
+    if orbits < DURATION / ORBIT_PERIOD:
         data["orbits_complete_partial_only"] = orbits
 
     return data
 
 
 def satellite_data_callback(env, sat):
-    orbits = env.simulator.sim_time / (95 * 60)
+    orbits = env.simulator.sim_time / ORBIT_PERIOD
     data = dict(
         alive=float(sat.is_alive()),
         rw_status_valid=float(sat.dynamics.rw_speeds_valid()),
@@ -105,8 +109,12 @@ env_args = dict(
 
 
 policies = {"policy"}
+
+
 def policy_mapping_fn(agent_id, *args, **kwargs):
     return "policy"
+
+
 module_specs = {
     "policy": RLModuleSpec(
         model_config_dict={

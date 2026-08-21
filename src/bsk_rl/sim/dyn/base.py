@@ -34,7 +34,7 @@ from bsk_rl.utils.functional import (
     check_aliveness_checkers,
     default_args,
 )
-from bsk_rl.utils.orbital import random_orbit, rv2HN, rv2omega
+from bsk_rl.utils.orbital import orbital_period, random_orbit, rv2HN, rv2omega
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -208,6 +208,11 @@ class DynamicsModel(DynamicsModelABC):
     def semi_major_axis(self):
         """Semimajor axis of the satellite's orbit [km]."""
         return self._compute_oes().a
+
+    @property
+    def orbital_period(self):
+        """Keplerian orbital period [s]."""
+        return orbital_period(self._compute_oes().a, self.mu)
 
     @property
     def eccentricity(self):
