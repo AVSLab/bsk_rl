@@ -94,7 +94,17 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         return self.sim_time_ns * mc.NANO2SEC
 
     @vizard.visualize
-    def setup_vizard(self, vizard_rate=None, vizSupport=None, **vizard_settings):
+    def setup_vizard(
+        self,
+        vizard_rate=None,
+        amos_hud=False,
+        amos_hud_text=True,
+        amos_hud_image_bars=True,
+        amos_target_status_outlines=False,
+        amos_rw_display="all",
+        vizSupport=None,
+        **vizard_settings,
+    ):
         """Setup Vizard for visualization."""
         save_path = Path(vizard.VIZARD_PATH)
         if not save_path.exists():
@@ -115,6 +125,35 @@ class Simulator(SimulationBaseClass.SimBaseClass):
             list_data[customizer] = [
                 sat.vizard_data.get(customizer, None) for sat in self.satellites
             ]
+
+        amos_assets = None
+        if amos_hud:
+            from Basilisk.simulation import vizInterface
+
+            from bsk_rl.utils.amos_vizard import prepare_amos_vizard_assets
+
+            # Basilisk clears static point lines here but not its module-level live
+            # target-line cache. Clear it so another episode in the same process
+            # cannot inherit a stale imaging or ground-link line.
+            del vizSupport.targetLineList[:]
+
+            amos_assets = prepare_amos_vizard_assets(
+                self.satellites,
+                vizInterface,
+                vizSupport,
+                show_text_hud=bool(amos_hud_text),
+                show_image_bars=bool(amos_hud_image_bars),
+                show_target_status_outlines=bool(amos_target_status_outlines),
+                rw_display=str(amos_rw_display),
+            )
+            list_data.update(
+                ellipsoidList=amos_assets.ellipsoid_list,
+                genericStorageList=amos_assets.generic_storage_list,
+                transceiverList=amos_assets.transceiver_list,
+                rwEffectorList=amos_assets.rw_effector_list,
+                thrEffectorList=amos_assets.thr_effector_list,
+                spriteList=amos_assets.sprite_list,
+            )
         self.vizInstance = vizSupport.enableUnityVisualization(
             self,
             viz_task_name,
@@ -123,21 +162,139 @@ class Simulator(SimulationBaseClass.SimBaseClass):
             saveFile=save_path / f"viz_{time()}",
         )
         viz = self.vizInstance
+        if amos_assets is not None:
+            # Vizard derives the generic storage-panel title from the visualized
+            # spacecraft name.  Change only the visualization label; the simulation,
+            # policy, data products, and Basilisk model continue to use SS1.
+            self.vizMessenger.scData[0].spacecraftName = (
+                amos_assets.scanner_display_name
+            )
+            # Promotion candidates use a blue proxy that can be moved inside Earth
+            # when its immutable purple star/triangle proxy becomes active.
+            target_sc_index = {
+                int(sat.rso_target.id): index
+                for index, sat in enumerate(self.satellites[1:], start=1)
+                if getattr(sat, "rso_target", None) is not None
+            }
+            for target_id, proxy_message in amos_assets.target_proxy_messages.items():
+                self.vizMessenger.scData[target_sc_index[target_id]].scStateInMsg.subscribeTo(
+                    proxy_message
+                )
+            # Vizard treats a spacecraft sprite as initialization-only.  Add one
+            # immutable purple sprite for each eventual HIO/SHIO.  Its state message
+            # starts at Earth's center so Vizard initializes the sprite in frame 1;
+            # the monitor moves it to the target only after the midpoint event.
+            for target_id, marker_message in sorted(
+                amos_assets.promotion_marker_messages.items()
+            ):
+                marker_data = vizInterface.VizSpacecraftData()
+                marker_data.spacecraftName = amos_assets.promotion_marker_names[
+                    target_id
+                ]
+                marker_data.scStateInMsg.subscribeTo(marker_message)
+                marker_data.spacecraftSprite = amos_assets.promotion_marker_sprites[
+                    target_id
+                ]
+                # Transparent black is rendered as a dark orbit by Vizard 2.3.1b6.
+                # Match the ordinary catalog's opaque-white orbit line instead.
+                marker_data.oscOrbitLineColor = vizInterface.IntVector(
+                    [255, 255, 255, 255]
+                )
+                marker_data.trueTrajectoryLineColor = vizInterface.IntVector(
+                    [255, 255, 255, 255]
+                )
+                marker_data.ellipsoidList = vizInterface.EllipsoidVector(
+                    amos_assets.promotion_marker_ellipsoids[target_id]
+                )
+                self.vizMessenger.scData.append(marker_data)
 
+        scanner_radius_m = float(
+            np.linalg.norm(self.satellites[0].dynamics.scObject.hub.r_CN_NInit)
+        )
         for i in range(len(self.world.groundStations)):
-            vizSupport.addLocation(viz, stationName=strip_prefix(self.world.groundStations[i].ModelTag)
-                                   , parentBodyName=self.world.planet.displayName
-                                   , r_GP_P=unitTestSupport.EigenVector3d2list(self.world.groundStations[i].r_LP_P_Init)
-                                   , fieldOfView=np.radians(160.)
-                                   , color='green'
-                                   , range=1000.0*1000  # meters
-                                   )
+            station = self.world.groundStations[i]
+            station_radius_m = float(np.linalg.norm(station.r_LP_P_Init))
+            if amos_assets is not None:
+                from bsk_rl.utils.amos_vizard import ground_station_visibility_geometry
+
+                station_fov, station_range, _ = ground_station_visibility_geometry(
+                    station_radius_m,
+                    scanner_radius_m,
+                    station.minimumElevation,
+                )
+            else:
+                station_fov = np.radians(160.0)
+                station_range = 1000.0 * 1000.0
+            vizSupport.addLocation(
+                viz,
+                stationName=strip_prefix(station.ModelTag),
+                parentBodyName=self.world.planet.displayName,
+                r_GP_P=unitTestSupport.EigenVector3d2list(station.r_LP_P_Init),
+                fieldOfView=station_fov,
+                color="green",
+                range=station_range,
+            )
+        if amos_assets is not None:
+            # Replace only the observer's default CAD instance so its local-view model
+            # is visibly larger while retaining its live body attitude.  Vizard's
+            # showSpacecraftAsSprites switch is global: disabling it would replace all
+            # 200 target sprites with CAD models, so a per-observer scale is the safe
+            # way to delay the observer's distant-view sprite transition.
+            vizSupport.createCustomModel(
+                viz,
+                simBodiesToModify=[amos_assets.scanner_display_name],
+                modelPath="bskSat",
+                scale=[1.5, 1.5, 1.5],
+            )
+            viz.settings.spacecraftSizeMultiplier = 2.5
+        else:
             viz.settings.spacecraftSizeMultiplier = 1.5
-            viz.settings.showLocationCommLines = 1
-            viz.settings.showLocationCones = 1
-            viz.settings.showLocationLabels = 1
+        # Vizard uses 0 for "use application default," not false.  Explicitly use
+        # -1 so locations never draw automatic links to every spacecraft in range;
+        # the AMOS monitor owns the single SS1-to-active-station line instead.
+        viz.settings.showLocationCommLines = -1 if amos_assets is not None else 1
+        viz.settings.showLocationCones = 1
+        viz.settings.showLocationLabels = 1
         for key, value in vizard_settings.items():
             setattr(self.vizInstance.settings, key, value)
+
+        if amos_assets is not None:
+            from bsk_rl.utils.amos_vizard import AMOSVizardMonitor
+
+            scanner = self.satellites[0]
+            self.amos_vizard_monitor = AMOSVizardMonitor(
+                simulator=self,
+                scanner=scanner,
+                target_satellites=self.satellites[1:],
+                viz_instance=self.vizInstance,
+                viz_support=vizSupport,
+                assets=amos_assets,
+            )
+            self.AddModelToTask(
+                scanner.dynamics.task_name,
+                self.amos_vizard_monitor,
+                ModelPriority=1,
+            )
+            vizSupport.setInstrumentGuiSetting(
+                self.vizInstance,
+                spacecraftName=amos_assets.scanner_display_name,
+                showTransceiverLabels=-1,
+                showTransceiverFrustum=1,
+                # Restore Vizard's native expandable panel.  Vizard hard-codes its
+                # title as "<spacecraft> Storage" and exposes no title override.
+                showGenericStoragePanel=1,
+            )
+            show_native_rw = amos_assets.rw_effector_list[0] is not None
+            vizSupport.setActuatorGuiSetting(
+                self.vizInstance,
+                spacecraftName=amos_assets.scanner_display_name,
+                viewRWPanel=1 if show_native_rw else -1,
+                viewRWHUD=1 if show_native_rw else -1,
+                viewThrusterPanel=-1,
+                viewThrusterHUD=1,
+                showThrusterLabels=-1,
+                showRWLabels=1 if show_native_rw else -1,
+            )
         vizard.VIZINSTANCE = self.vizInstance
 
 
