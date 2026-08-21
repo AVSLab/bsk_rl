@@ -144,6 +144,7 @@ examples/AMOS_DATA
 examples/data
 examples/batch_results
 examples/plots
+/artifacts/amos_2026/
 utils.py
 test_sat.py
 hooks_template.py

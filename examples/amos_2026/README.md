@@ -2,6 +2,134 @@
 
 This folder is the intended home for the cleaner AMOS 2026 experiment entry points.
 
+## Current workstream layout
+
+- `examples/amos_2026/`: AMOS-only training, evaluation, analysis, campaign, and
+  visualization entry points.
+- `examples/policy_evaluation_2026.py`: the current paper-matched single-episode
+  evaluator.  AMOS entry points should call it rather than copy its environment setup.
+- `src/bsk_rl/`: reusable simulator, action, observation, data, and visualization code.
+- `docs/amos_2026/`: CURC campaign runbooks, audits, synchronization helpers, and
+  reproducibility notes.
+- `artifacts/amos_2026/`: local policy checkpoints, Vizard recordings, and other large
+  generated files.  This folder is intentionally ignored by Git.
+- The paper source and final PDF remain outside the repository in the canonical OneDrive
+  `Conferences/AMOS2026/AMOS_conference_paper_2026/` folder.
+
+The AMOS work is on branch `amos-2026-space-imaging`.  The submitted imaging-versus-
+downlink journal work has its own clean worktree and branch,
+`bsk_rl_breckenridge_public_clean` / `breckenridge2026-publication-clean`; it should not
+be folded into this AMOS checkout.
+
+## Run a smooth Vizard episode
+
+The paper's selected mixed-trained alpha-0.1 checkpoint belongs at:
+
+```text
+artifacts/amos_2026/policies/mixed_a0p1/checkpoint_000119
+```
+
+It can instead be supplied through `--policy-path` or the `AMOS2026_POLICY_PATH`
+environment variable.  From the repository root:
+
+```bash
+.venv/bin/python examples/amos_2026/run_vizard_episode.py --seed 0
+```
+
+The launcher records a 200-target, 45,000-second episode at 1 Hz by default. The
+priority-event threshold is half the episode (22,500 s); at the first policy decision
+boundary at or after that threshold, a reproducible, disjoint 10% of the catalog (20
+targets) becomes HIO and another 10% (20 targets) becomes SHIO. Applying the event at a
+decision boundary avoids pretending that a priority change can interrupt an action that
+is already executing. Their priorities become five and ten times the episode's maximum
+initial priority, respectively. The default additional orbital
+cooldown is zero: a captured target remains unavailable while its image is onboard, then
+becomes eligible as soon as useful ground verification removes that pending record. Use
+`--reimage-cooldown-orbits 2` only to reproduce the older two-orbit behavior. Use
+`--vizard-rate-hz 2` only when a denser playback is specifically needed. Target fill
+uses light, medium, and dark blue for the lower, middle, and upper initial-priority
+thirds. All targets begin as blue circles. Because Vizard treats sprite shape as an
+initialization-only property, dedicated promotion sprites are initialized at Earth's
+center and remain hidden before the midpoint event. They then replace the selected
+targets as medium-purple HIO stars and deep-purple SHIO triangles; matching promotion
+halos turn on at the same time. The launcher also
+saves the action-allocation, resource-history,
+and pointing-history PDFs under `examples/amos_2026/plots/`. The Space Surveillance
+Inspector HUD also shows the current action,
+catalog and image-count metrics, resource state, illuminated/non-illuminated storage
+split sampled when each physical target partition grows, active
+ground link, reaction-wheel state, thruster plumes, and the
+yellow-to-green imaging pointing/hold line.  Ground-station cones use each station's
+minimum elevation and the scanner's initial orbital radius. Automatic location links
+from every target spacecraft are explicitly disabled. The custom green line and slow,
+opaque-purple outward transmission rings appear only while the transmitter reports data
+leaving onboard storage; an access window or downlink command by itself is insufficient.
+During a desaturation action, a separate transceiver emits opaque red rings instead of
+the former spacecraft halo; the purple communication rings remain off unless data is
+actually leaving storage. Each target retains its light-to-dark blue priority-tier
+fill. The cyan eligible, red cooldown, and green onboard lifecycle outlines are omitted
+by default because they are not reliably visible in Vizard and add 240 ellipsoid objects
+to the 200-target/40-promotion scene. Use `--target-status-outlines` to opt into them for
+diagnostics. The native expandable storage panel is visible. Vizard automatically
+appends `Storage` to that panel title and provides no title override. The separate
+operations dialog remains `SPACE SURVEILLANCE`, and the spacecraft display name is
+`SS1 Space Surveillance Inspector`.
+
+The inspector uses a 1.5x body-fixed `bskSat` CAD model and a 2.5x planet-view
+spacecraft scale, so its attitude motion remains easier to see and its distant sprite
+transition occurs farther out. Vizard's sprite-enable setting is global rather than
+per-spacecraft; disabling it would replace all 200 RSO circles/stars/triangles with CAD
+spacecraft. The AMOS setup therefore preserves the target marker semantics instead of
+using that global switch.
+
+The AMOS launcher omits the reaction-wheel panel by default. Use `--rw-display all` for
+Vizard's three-wheel actuator panel or `--rw-display off` to keep it hidden. Use
+`--no-text-hud` or `--no-image-bars` to omit the optional live metric displays, or
+`--target-status-outlines` to restore lifecycle outlines for an A/B diagnostic, or
+`--no-hud` to disable all overlays. Use `--dry-run` to inspect the exact paper-matched
+evaluator command without executing it. Use `--overwrite` to replace the canonical
+playback for the same seed, catalog size, and sampling rate after a successful rerun.
+
+Use `--n-targets 100` or `--n-targets 200` to select the exact 50/30/20 mixed-regime
+catalog size; 200 is the default. `--interest-fraction` changes each of the two disjoint
+promotion groups and must produce an integer target count. Both catalog sizes use the
+paper's 45,000 s horizon, the selected mixed-trained `alpha=0.1` checkpoint, and save
+into the single `artifacts/amos_2026/vizard/` folder. Scenario tags include catalog
+size, interest fractions, cooldown mode, seed, and sampling rate so a new
+ground-confirmation playback cannot overwrite an older two-orbit file accidentally.
+
+### Vizard playback performance
+
+The existing 200-target/1 Hz playback is about 2.5 GB, but RAM capacity is usually not
+the limiting resource. Increasing Vizard's playback multiplier makes its main render
+thread deserialize and update hundreds of spacecraft, promotion proxies, lifecycle
+halos, orbit paths, cones, and HUD elements in less wall-clock time. CPU/GPU frame time
+and Vizard's per-frame scene bookkeeping therefore saturate before system memory.
+
+The default launcher now avoids constructing the 240 lifecycle-outline ellipsoids. It
+retains only the 40 HIO/SHIO promotion halos and the two action-ring transceivers. This
+reduces scene load without changing target priority fills or simulation behavior.
+
+For a faster review copy, record at `--vizard-rate-hz 0.5` (or `0.25` for rapid
+screening), leave `--rw-display off`, and use `--no-text-hud --no-image-bars`. In the
+Vizard UI, hide osculating/true trajectory lines, spacecraft labels, and location cones
+when they are not being inspected. Keep the 1 Hz full-HUD file as the presentation or
+audit artifact rather than expecting the same file to remain smooth at every playback
+multiplier.
+
+## Safe cleanup order
+
+1. Preserve the current dirty AMOS checkout by committing or making a named patch before
+   deleting or moving any experiment files.
+2. Copy the frozen paper checkpoint and its manifest into `artifacts/amos_2026/`, then
+   verify the checkpoint with one Vizard episode.
+3. Keep source code in `examples/amos_2026/` or `src/bsk_rl/`, large outputs in
+   `artifacts/amos_2026/`, campaign notes in `docs/amos_2026/`, and the manuscript in its
+   OneDrive paper folder.
+4. Only after the checkpoint, manifests, and final outputs are verified should redundant
+   downloads, old result bundles, or the detached legacy journal worktree be archived or
+   removed.
+
 The current working baseline still lives in the historical evaluation scripts:
 
 - `examples/policy_evaluation_2026.py`
@@ -421,3 +549,26 @@ including target priority/illumination summaries, action distributions,
 downlink-usefulness proxies, image-to-next-downlink latency proxies, and plots.
 The latency metrics are labeled as proxies because the current evaluation files
 do not store packet IDs tying each captured image to its exact downlink event.
+
+## Seed-level timing diagnostics
+
+Current policy evaluations save exact reset-time ground-station access intervals
+to `ground_station_windows.csv` and, when `--save_data` is enabled, annotate each
+downlink action in `downlink_ground_station_window_alignment.csv`. The resource
+plot uses stepwise cumulative counts and distinguishes the downlink command start
+from the full action interval. A separate target-availability diagnostic plots
+eligible and imageable target counts together with Desat decisions and wheel state.
+
+Use `--reimage_cooldown_orbits 1` for the one-orbit cooldown ablation. Its
+availability plot is automatically titled `ONE-ORBIT COOLDOWN ABLATION`; the
+standard AMOS configuration remains `--reimage_cooldown_orbits 2`.
+
+An older saved run can be replotted without rerunning the episode:
+
+```bash
+python examples/amos_2026/plot_evaluation_timing_diagnostics.py RUN_DIR \
+    --ground-station-windows RUN_DIR/ground_station_windows.csv \
+    --plot-dir examples/amos_2026/plots \
+    --name seed0_corrected_timing \
+    --cooldown-orbits 2
+```
