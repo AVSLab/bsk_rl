@@ -208,6 +208,28 @@ class TestRSOTargetImageReward:
         assert data.target_lifecycle_state(target, sim_time=119.0) == "cooldown"
         assert data.target_lifecycle_state(target, sim_time=2000.0) == "eligible"
 
+    def test_zero_cooldown_releases_target_at_ground_confirmation(self):
+        target = self._target(1, "target_1")
+        data = RSOTargetImageData(known=[target], hide_pending_targets=True)
+        rewarder = RSOTargetImageReward(
+            reimage_cooldown_orbits=0.0,
+            verify_image_quality_on_downlink=True,
+        )
+        rewarder.data = data
+        rewarder.reimage_cooldown_s = 0.0
+
+        scanner = MagicMock()
+        scanner.data_store.data = data
+        rewarder.scenario = MagicMock(satellites=[scanner])
+        data.mark_target_pending(target, {"record_id": "capture-1", "target_id": 1})
+
+        assert not data.is_target_eligible(target, sim_time=200.0)
+        data.pop_pending_record(target)
+        rewarder._start_cooldown_everywhere(target, capture_time=100.0)
+
+        assert data.cooldown_until_by_id[1] == approx(100.0)
+        assert data.is_target_eligible(target, sim_time=200.0)
+
     def test_downlink_verifies_only_decreased_partition(self):
         target_0 = self._target(0, "target_0", priority=3.0)
         target_1 = self._target(1, "target_1", priority=7.0)
@@ -224,6 +246,8 @@ class TestRSOTargetImageReward:
         scanner.simulator.time_limit = 100000.0
         scanner.dynamics.penalties = 0
         scanner.dynamics.eclipse_threshold_for_reward = 0.5
+        scanner.dynamics.imaging_bonus = 0.0
+        scanner.dynamics.downlink_bonus = 1.0
         scanner.data_store.data = RSOTargetImageData(
             known=[target_0, target_1], hide_pending_targets=True
         )
