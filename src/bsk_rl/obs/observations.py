@@ -21,6 +21,16 @@ if TYPE_CHECKING:  # pragma: no cover
 logger = logging.getLogger(__name__)
 
 
+def _norm_or_period(norm, satellite: "Satellite"):
+    """Return ``norm``, or the satellite orbital period if ``norm`` is ``None``.
+
+    :meta private:
+    """
+    if norm is None:
+        return satellite.dynamics.orbital_period
+    return norm
+
+
 def nested_obs_to_space(obs_dict, dtype):
     """Convert a nested observation dictionary to a gym space.
 
@@ -224,6 +234,7 @@ class SatProperties(Observation):
                 * ``prop``: Name of property in ``fsw`` and ``dynamics`` to query
                 * ``module`` `optional`: Module (dynamics or fsw) that holds the property. Can be inferred if ``None``.
                 * ``norm`` `optional`: Value to normalize property by. Defaults to 1.0.
+                  If ``None``, the satellite orbital period is used.
                 * ``name`` `optional`: Name of the observation element. Defaults to the value of ``prop``.
                 * ``fn`` `optional`: Alternatively, call a function that takes the satellite as an argument.
             name: Name of the observation.
@@ -272,7 +283,7 @@ class SatProperties(Observation):
                 value = getattr(getattr(self.satellite, module), prop)
             if isinstance(value, list):
                 value = np.array(value)
-            norm = obs_property["norm"]
+            norm = _norm_or_period(obs_property["norm"], self.satellite)
             obs[obs_property["name"]] = value / norm
         return obs
 
@@ -345,8 +356,9 @@ class OpportunityProperties(Observation):
         "r_LP_P": lambda sat, opp: opp["r_LP_P"],
         "r_LB_H": _r_LB_H,
         "opportunity_open": lambda sat, opp: opp["window"][0] - sat.simulator.sim_time,
-        "opportunity_mid": lambda sat, opp: sum(opp["window"]) / 2
-        - sat.simulator.sim_time,
+        "opportunity_mid": lambda sat, opp: (
+            sum(opp["window"]) / 2 - sat.simulator.sim_time
+        ),
         "opportunity_close": lambda sat, opp: opp["window"][1] - sat.simulator.sim_time,
         "target_angle": _target_angle,
         "target_angle_rate": _target_angle_rate,
@@ -392,6 +404,7 @@ class OpportunityProperties(Observation):
                     * ``target_angle_rate``: Rate difference between the target pointing frame and the body frame.
 
                 * ``norm`` `optional`: Value to normalize property by. Defaults to 1.0.
+                  If ``None``, the satellite orbital period is used.
 
             n_ahead_observe: Number of upcoming targets to consider.
             type: The type of opportunity to consider. Can be ``target``, ``ground_station``,
@@ -461,7 +474,7 @@ class OpportunityProperties(Observation):
             props = {}
             for prop_spec in self.target_properties:
                 name = prop_spec["name"]
-                norm = prop_spec["norm"]
+                norm = _norm_or_period(prop_spec["norm"], self.satellite)
                 value = prop_spec["fn"](self.satellite, opportunity)
                 props[name] = value / norm
             obs[f"{self.name}_{i}"] = props
@@ -469,11 +482,11 @@ class OpportunityProperties(Observation):
 
 
 class Eclipse(Observation):
-    def __init__(self, norm=1.0, name="eclipse"):
+    def __init__(self, norm=None, name="eclipse"):
         """Include a tuple of the next eclipse start and end times in the observation.
 
         Args:
-            norm: Value to normalize by.
+            norm: Value to normalize by. If ``None``, the satellite orbital period is used.
             name: Name of the observation.
         """
         super().__init__(name=name)
@@ -487,9 +500,10 @@ class Eclipse(Observation):
         eclipse_start, eclipse_end = self.satellite.trajectory.next_eclipse(
             self.simulator.sim_time
         )
+        norm = _norm_or_period(self.norm, self.satellite)
         return [
-            (eclipse_start - self.simulator.sim_time) / self.norm,
-            (eclipse_end - self.simulator.sim_time) / self.norm,
+            (eclipse_start - self.simulator.sim_time) / norm,
+            (eclipse_end - self.simulator.sim_time) / norm,
         ]
 
 
