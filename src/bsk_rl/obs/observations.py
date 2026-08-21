@@ -565,12 +565,21 @@ def _target_shadowFactor(sat, opp):
 
 
 def _record_dynamic_priority_candidate_access(targets, sim_time: float) -> None:
-    """Count candidate-list access for targets after a dynamic priority event."""
-    for target in targets:
+    """Record tracked targets presented in the policy candidate list."""
+    seen_target_ids = set()
+    for slot, target in enumerate(targets):
         if not getattr(target, "priority_event_active", False):
             continue
-        if getattr(target, "priority_event_kind", "") not in {"HIO", "SHIO"}:
+        if getattr(target, "priority_event_kind", "") not in {
+            "HIO",
+            "SHIO",
+            "CONTROL",
+        }:
             continue
+        target_id = int(target.id)
+        if target_id in seen_target_ids:
+            continue
+        seen_target_ids.add(target_id)
         last_time = getattr(target, "priority_event_last_candidate_log_time", None)
         if last_time == float(sim_time):
             continue
@@ -579,7 +588,49 @@ def _record_dynamic_priority_candidate_access(targets, sim_time: float) -> None:
         )
         if getattr(target, "priority_event_first_candidate_time", None) is None:
             target.priority_event_first_candidate_time = float(sim_time)
+        candidate_times = getattr(target, "priority_event_candidate_times", None)
+        if candidate_times is None:
+            candidate_times = []
+            target.priority_event_candidate_times = candidate_times
+        candidate_slots = getattr(target, "priority_event_candidate_slots", None)
+        if candidate_slots is None:
+            candidate_slots = []
+            target.priority_event_candidate_slots = candidate_slots
+        candidate_times.append(float(sim_time))
+        candidate_slots.append(int(slot))
         target.priority_event_last_candidate_log_time = float(sim_time)
+
+
+def _record_dynamic_priority_visible_access(targets, sim_time: float) -> None:
+    """Record tracked targets that are eligible and geometrically visible."""
+    seen_target_ids = set()
+    for target in targets:
+        if not getattr(target, "priority_event_active", False):
+            continue
+        if getattr(target, "priority_event_kind", "") not in {
+            "HIO",
+            "SHIO",
+            "CONTROL",
+        }:
+            continue
+        target_id = int(target.id)
+        if target_id in seen_target_ids:
+            continue
+        seen_target_ids.add(target_id)
+        last_time = getattr(target, "priority_event_last_visible_log_time", None)
+        if last_time == float(sim_time):
+            continue
+        target.priority_event_visible_count = (
+            int(getattr(target, "priority_event_visible_count", 0)) + 1
+        )
+        if getattr(target, "priority_event_first_visible_time", None) is None:
+            target.priority_event_first_visible_time = float(sim_time)
+        visible_times = getattr(target, "priority_event_visible_times", None)
+        if visible_times is None:
+            visible_times = []
+            target.priority_event_visible_times = visible_times
+        visible_times.append(float(sim_time))
+        target.priority_event_last_visible_log_time = float(sim_time)
 
 
 class PolarisScTargetProperties(Observation):
@@ -726,6 +777,10 @@ class PolarisScTargetProperties(Observation):
             for tgt, elev in target_elevations
             if -21.0 <= elev <= 90.0 and tgt.id in eligible_ids
         ]
+        _record_dynamic_priority_visible_access(
+            [tgt for tgt, _ in visible_eligible_targets],
+            float(self.satellite.simulator.sim_time),
+        )
 
         visible_eligible_targets.sort(key=lambda x: x[1])
 
@@ -859,6 +914,10 @@ class PolarisScTargetProperties(Observation):
                     for tgt, elev in target_elevations
                     if -21.0 <= elev <= 90.0 and tgt.id in eligible_ids
                 ]
+                _record_dynamic_priority_visible_access(
+                    [tgt for tgt, _ in visible_eligible_targets],
+                    float(self.satellite.simulator.sim_time),
+                )
 
                 visible_eligible_targets.sort(key=lambda x: x[1])
 

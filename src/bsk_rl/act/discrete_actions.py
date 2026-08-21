@@ -58,6 +58,7 @@ class DiscreteActionBuilder(ActionBuilder):
         """Log previous action key."""
         super().reset_post_sim_init()
         self.prev_action_key = None
+        self.satellite._current_action_label = ""
 
     @property
     def action_space(self) -> spaces.Discrete:
@@ -74,6 +75,25 @@ class DiscreteActionBuilder(ActionBuilder):
             else:
                 actions.extend([f"{act.name}_{i}" for i in range(act.n_actions)])
         return actions
+
+    def _set_current_action_label(self, action_spec: "DiscreteAction") -> None:
+        """Expose a compact, visualization-safe name for the active FSW mode."""
+        action_name = str(getattr(action_spec, "name", "")).lower()
+        fsw_action = str(getattr(action_spec, "fsw_action", "")).lower()
+        combined = f"{action_name} {fsw_action}"
+        if "image" in combined:
+            label = "Imaging"
+        elif "downlink" in combined:
+            label = "Downlink"
+        elif "desat" in combined:
+            label = "Desat"
+        elif "charge" in combined:
+            label = "Charge"
+        elif "drift" in combined:
+            label = "Drift"
+        else:
+            label = str(getattr(action_spec, "name", "Action"))
+        self.satellite._current_action_label = label
 
     def set_action(self, action: int) -> None:
         """Sets the action based on the integer index.
@@ -97,6 +117,7 @@ class DiscreteActionBuilder(ActionBuilder):
                     self.prev_action_key = act.set_action_override(
                         action, prev_action_key=self.prev_action_key
                     )
+                    self._set_current_action_label(act)
                     return
                 except AttributeError:
                     pass
@@ -112,6 +133,7 @@ class DiscreteActionBuilder(ActionBuilder):
                 self.prev_action_key = act.set_action(
                     action - index, prev_action_key=self.prev_action_key
                 )
+                self._set_current_action_label(act)
                 return
             index += act.n_actions
         else:
@@ -1303,7 +1325,7 @@ class ImageRSO(DiscreteAction):
             print("using HEURISTIC POLICY")
 
             # Config knobs (with sane defaults)
-            mode = getattr(self.satellite.dynamics, "heuristic_mode", "distance")  # 'distance' or 'angle'
+            mode = getattr(self.satellite.dynamics, "heuristic_mode", "distance")
             top_k = int(getattr(self.satellite.dynamics, "heuristic_top_k", 10))
 
             def _dist_to(tgt):
@@ -1340,7 +1362,13 @@ class ImageRSO(DiscreteAction):
 
                 new_target = heuristic_target
             # ---- Heuristic B: by current angle (smallest initial angular error) ----
-            elif mode == "angle":
+            elif mode in {"angle", "priority_angle"}:
+                def _selection_score(tgt, angle_error):
+                    if mode == "priority_angle":
+                        priority = max(float(getattr(tgt, "priority", 0.0)), 1e-6)
+                        return angle_error / priority
+                    return angle_error
+
                 # 1) visible + eligible first
                 visible_eligible = []
                 for tgt in eligible_targets:
@@ -1350,34 +1378,42 @@ class ImageRSO(DiscreteAction):
                             aerr = _angle_err_of(tgt)
                         except Exception:
                             aerr = float("inf")
-                        visible_eligible.append((tgt, aerr))
+                        visible_eligible.append(
+                            (tgt, _selection_score(tgt, aerr), aerr)
+                        )
 
                 if visible_eligible:
                     # Pick the visible eligible target with the smallest angle
-                    visible_eligible.sort(key=lambda x: x[1])
+                    visible_eligible.sort(key=lambda x: (x[1], x[2], x[0].id))
                     heuristic_target = visible_eligible[0][0]
                 else:
                     # 2) none in LOS → pick overall smallest-angle eligible target (even if not visible)
                     angle_list = []
                     for tgt in eligible_targets:
                         try:
-                            angle_list.append((tgt, _angle_err_of(tgt)))
+                            aerr = _angle_err_of(tgt)
+                            angle_list.append(
+                                (tgt, _selection_score(tgt, aerr), aerr)
+                            )
                         except Exception:
                             pass
 
                     if angle_list:
-                        angle_list.sort(key=lambda x: x[1])
+                        angle_list.sort(key=lambda x: (x[1], x[2], x[0].id))
                         heuristic_target = angle_list[0][0]
                     else:
                         # 3) no eligible targets at all → fallback: best angle among known targets
                         known_angles = []
                         for tgt in known_targets:
                             try:
-                                known_angles.append((tgt, _angle_err_of(tgt)))
+                                aerr = _angle_err_of(tgt)
+                                known_angles.append(
+                                    (tgt, _selection_score(tgt, aerr), aerr)
+                                )
                             except Exception:
                                 pass
                         if known_angles:
-                            known_angles.sort(key=lambda x: x[1])
+                            known_angles.sort(key=lambda x: (x[1], x[2], x[0].id))
                             heuristic_target = known_angles[0][0]
                         else:
                             # last resort: nearest by distance
@@ -1385,7 +1421,10 @@ class ImageRSO(DiscreteAction):
 
                 new_target = heuristic_target
             else:
-                raise ValueError(f"Unknown heuristic_mode '{mode}'. Use 'distance' or 'angle'.")
+                raise ValueError(
+                    f"Unknown heuristic_mode '{mode}'. Use 'distance', 'angle', "
+                    "or 'priority_angle'."
+                )
 
             # Keep your comparison & logging exactly as before
             self.satellite.dynamics.target_selection.append(policy_target)
@@ -1451,10 +1490,10 @@ class ImageRSO(DiscreteAction):
             timeout_time,
             info=timeout_info,
             extra_actions=[
-                f"[{self.satellite._satellite_command}._active_image_rso_action._record_imaging_attempt(False, 'timeout_or_window') "
-                f"if {self.satellite._satellite_command}._active_image_rso_action is not None else None]",
-                f"[{self.satellite._satellite_command}._active_image_rso_action._clear_hold_state() "
-                f"if {self.satellite._satellite_command}._active_image_rso_action is not None else None]",
+                f"[getattr({self.satellite._satellite_command}, '_active_image_rso_action', None)._record_imaging_attempt(False, 'timeout_or_window') "
+                f"if getattr({self.satellite._satellite_command}, '_active_image_rso_action', None) is not None else None]",
+                f"[getattr({self.satellite._satellite_command}, '_active_image_rso_action', None)._clear_hold_state() "
+                f"if getattr({self.satellite._satellite_command}, '_active_image_rso_action', None) is not None else None]",
             ],
         )
 

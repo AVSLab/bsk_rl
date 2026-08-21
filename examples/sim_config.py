@@ -42,8 +42,12 @@ class SimConfig:
     dynamic_priority_event_fraction: float = 0.5
     hio_count: int = 5
     hio_priority: float = 5.0
+    hio_priority_max_multiplier: Optional[float] = None
     shio_count: int = 3
     shio_priority: float = 10.0
+    shio_priority_max_multiplier: Optional[float] = None
+    priority_control_count: int = 0
+    priority_control_seed: Optional[int] = None
     dynamic_priority_event_seed: Optional[int] = None
 
     extra_time_factor: float = 1.5           # multiplier for total_time

@@ -1778,7 +1778,11 @@ class ImagingSCDynModel(ImagingDynModel):
         self.target_selection = []
         self.target_selection_comparison = []
         self.use_heuristic = use_heuristic
-        self.heuristic_mode = heuristic_mode if heuristic_mode in {"angle", "distance"} else "angle"
+        self.heuristic_mode = (
+            heuristic_mode
+            if heuristic_mode in {"angle", "priority_angle", "distance"}
+            else "angle"
+        )
         self.heuristic_top_k = heuristic_top_k
         self.print_info=print_info
         self.last_policy_target_id = None
