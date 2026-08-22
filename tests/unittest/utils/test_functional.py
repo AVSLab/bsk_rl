@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+from weakref import proxy
 
 import numpy as np
 import pytest
@@ -155,3 +156,4 @@ def test_is_property(prop_name, expected):
 
     c = Class()
     assert functional.is_property(c, prop_name) == expected
+    assert functional.is_property(proxy(c), prop_name) == expected
