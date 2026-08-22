@@ -59,6 +59,7 @@ TRAIN_ARGS=(
     --architecture attention
     --architecture-config examples/prospectus_rfi/configs/attention_amos2025_control.yaml
     --base-config examples/prospectus_rfi/configs/base_amos2025_attention_control.yaml
+    --candidate-count 10
     --seed 10001
     --wall-hours 48
     --segment-index "$SEGMENT_INDEX"

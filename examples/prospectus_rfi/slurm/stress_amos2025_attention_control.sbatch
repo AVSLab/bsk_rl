@@ -56,6 +56,7 @@ python -u examples/prospectus_rfi/train.py \
     --architecture attention \
     --architecture-config examples/prospectus_rfi/configs/attention_amos2025_control.yaml \
     --base-config examples/prospectus_rfi/configs/base_amos2025_attention_control.yaml \
+    --candidate-count 10 \
     --seed 99025 \
     --wall-hours 48 \
     --segment-index 0 \
