@@ -125,6 +125,22 @@ class TestAlivenessChecker:
         assert functional.check_aliveness_checkers(d, log_failure=True) is False
         d.satellite.logger.warning.assert_called_with("failed is_living check")
 
+    def test_continuous_defaults(self):
+        a = self.Alive()
+        assert a.is_alive.continuous is False
+        assert a.is_alive.check_rate is None
+
+    def test_continuous_kwargs(self):
+        class Continuous:
+            @functional.aliveness_checker(continuous=True, check_rate=0.5)
+            def still_alive(self):
+                return True
+
+        c = Continuous()
+        assert c.still_alive.continuous is True
+        assert c.still_alive.check_rate == 0.5
+        assert c.still_alive()
+
 
 @pytest.mark.parametrize("prop_name,expected", [("prop", True), ("not_a_prop", False)])
 def test_is_property(prop_name, expected):

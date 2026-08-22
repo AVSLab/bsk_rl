@@ -15,6 +15,8 @@ Development - |version|
 * Add a CI smoke test that builds and steps each benchmark environment. See issue #340.
 * Update files for compatibility with Ruff 0.16.0's new default lint rules, excluding C408.
 * Update ``np2EigenMatrix3d`` and ``np2EigenVectorXd`` import path to prevent deprecation warning while preserving compatibility with older versions of Basilisk.
+* Allow :func:`~bsk_rl.utils.functional.aliveness_checker` to run as a continuous Basilisk
+  event that interrupts the environment step on failure. See issue #337.
 
 Version 1.3.0
 -------------
