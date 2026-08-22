@@ -5,6 +5,7 @@ import pytest
 
 from bsk_rl import act, data, obs, sats, scene
 from bsk_rl.sim import dyn, fsw
+from bsk_rl.utils.functional import aliveness_checker
 from bsk_rl.utils.orbital import random_orbit
 
 
@@ -240,3 +241,34 @@ class TestMaxRangeDynModel:
             assert sat2.dynamics.out_of_ranges == []
             assert not terminated["Chief"]
             assert not terminated["Deputy"]
+
+
+class TestContinuousAlivenessChecker:
+    @pytest.mark.parametrize("continuous,expected_time", [(False, 100.0), (True, 5.0)])
+    def test_step_vs_continuous(self, continuous, expected_time):
+        class BoomDyn(dyn.DynamicsModel):
+            @aliveness_checker(continuous=continuous)
+            def time_valid(self):
+                return self.simulator.sim_time < 5.0
+
+        class BoomSat(sats.Satellite):
+            fsw_type = fsw.FSWModel
+            dyn_type = BoomDyn
+            observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+            action_spec: ClassVar[list[act.Action]] = [act.Drift()]
+
+        env = gym.make(
+            "SatelliteTasking-v1",
+            satellite=BoomSat("Boom", sat_args=dict(oe=random_orbit)),
+            sim_rate=1.0,
+            time_limit=100.0,
+            max_step_duration=100.0,
+            disable_env_checker=True,
+        )
+
+        env.reset()
+        _, _, terminated, _, _ = env.step(0)
+
+        assert env.unwrapped.simulator.sim_time == pytest.approx(expected_time)
+        assert not env.unwrapped.satellite.is_alive()
+        assert terminated

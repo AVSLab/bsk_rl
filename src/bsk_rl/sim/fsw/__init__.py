@@ -25,8 +25,10 @@ Aliveness Checking
 ------------------
 
 Certain functions in the FSW models are decorated with the :func:`~bsk_rl.utils.functional.aliveness_checker`
-decorator. These functions are called at each step to check if the satellite is still
-operational, returning true if the satellite is still alive.
+decorator. These functions are called at each environment step to check if the satellite
+is still operational, returning true if the satellite is still alive. Passing
+``continuous=True`` to the decorator also evaluates the checker during integration and
+stops the environment step if it fails.
 """
 
 from bsk_rl.sim.fsw.base import (
