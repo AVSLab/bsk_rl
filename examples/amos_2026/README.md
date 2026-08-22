@@ -101,6 +101,10 @@ playback, reopen it from Vizard's `Devices` menu for the SS1 spacecraft. The ope
 dialog is refreshed every recorded frame; advancing the timeline reopens a minimized
 copy, while reloading the recording restores it after it has been destroyed.
 
+The launcher forces Matplotlib's file-only `Agg` backend for its evaluator subprocess.
+This prevents macOS from aborting a background recording when post-episode plots create
+their first canvas, while still saving the requested plot files.
+
 Use `--n-targets 100` or `--n-targets 200` to select the exact 50/30/20 mixed-regime
 catalog size; 200 is the default. `--interest-fraction` changes each of the two disjoint
 promotion groups and must produce an integer target count. Both catalog sizes use the

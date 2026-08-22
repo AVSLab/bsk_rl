@@ -43,6 +43,15 @@ def command_value(command, flag):
     return command[command.index(flag) + 1]
 
 
+def test_evaluator_environment_forces_noninteractive_plot_backend():
+    environment = RUNNER.evaluator_environment(
+        {"MPLBACKEND": "macosx", "EXISTING_SETTING": "preserved"}
+    )
+
+    assert environment["MPLBACKEND"] == "Agg"
+    assert environment["EXISTING_SETTING"] == "preserved"
+
+
 def test_default_scenario_is_200_targets_with_two_disjoint_10_percent_tiers():
     args = runner_args()
     command = RUNNER.build_command(args)

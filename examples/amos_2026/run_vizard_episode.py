@@ -28,6 +28,16 @@ DEFAULT_INTEREST_FRACTION = 0.10
 GROUND_CONFIRMATION_COOLDOWN_ORBITS = 0.0
 
 
+def evaluator_environment(environ: dict[str, str] | None = None) -> dict[str, str]:
+    """Return a child environment safe for noninteractive evaluation plots."""
+    child_environment = dict(os.environ if environ is None else environ)
+    # --no_show_plots suppresses plt.show(), but pyplot still constructs canvases.
+    # Force the file-only backend before pyplot imports so a background macOS run
+    # cannot abort while registering an NSApplication after the episode completes.
+    child_environment["MPLBACKEND"] = "Agg"
+    return child_environment
+
+
 def interest_object_count(n_targets: int, fraction: float) -> int:
     """Convert a catalog fraction to an exact, non-overlapping tier count."""
     n_targets = int(n_targets)
@@ -317,7 +327,12 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     args.plots_dir.expanduser().mkdir(parents=True, exist_ok=True)
     existing = {path.resolve() for path in output_dir.rglob("*") if path.is_file()}
-    return_code = subprocess.run(command, cwd=REPO_ROOT, check=False).returncode
+    return_code = subprocess.run(
+        command,
+        cwd=REPO_ROOT,
+        check=False,
+        env=evaluator_environment(),
+    ).returncode
     if return_code != 0 or not args.overwrite:
         return return_code
 
