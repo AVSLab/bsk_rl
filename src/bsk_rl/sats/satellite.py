@@ -281,14 +281,14 @@ class Satellite(ABC, Resetable):
                     def condition(sim, checker=checker):
                         return not checker()
 
-                    def side_effect(sim, checker=checker):
-                        checker(log_failure=True)
+                    def side_effect(sim, name=name):
+                        self.logger.warning(f"failed {name} check")
                         self._is_alive = False
                         self.record_death(sim.sim_time)
 
                     self.simulator.createNewEvent(
                         valid_func_name(
-                            f"aliveness_{self.name}_{type(model).__name__}_{name}"
+                            f"aliveness_{self.name}_{model.__class__.__name__}_{name}"
                         ),
                         macros.sec2nano(check_rate),
                         True,

@@ -1,5 +1,6 @@
 from functools import partial
 from unittest.mock import MagicMock, patch
+from weakref import proxy
 
 import numpy as np
 import pytest
@@ -156,6 +157,10 @@ class TestSatellite:
                 self.satellite = satellite
                 self.fail_continuous = False
 
+            @property
+            def should_not_run(self):
+                raise RuntimeError("property should not be accessed")
+
             @functional.aliveness_checker
             def step_valid(self):
                 return True
@@ -172,16 +177,19 @@ class TestSatellite:
             def fsw_valid(self):
                 return True
 
-        sat.dynamics = Dyn(sat)
-        sat.fsw = Fsw(sat)
+        dyn = Dyn(sat)
+        fsw = Fsw(sat)
+        sat.dynamics = proxy(dyn)
+        sat.fsw = proxy(fsw)
         sat.setup_aliveness_events()
 
         assert sat.simulator.createNewEvent.call_count == 2
         event_names = [
             call.args[0] for call in sat.simulator.createNewEvent.call_args_list
         ]
-        assert any("continuous_valid" in name for name in event_names)
-        assert any("fsw_valid" in name for name in event_names)
+        assert any("continuous_valid" in name and "Dyn" in name for name in event_names)
+        assert any("fsw_valid" in name and "Fsw" in name for name in event_names)
+        assert not any("ProxyType" in name for name in event_names)
 
         dyn_call = sat.simulator.createNewEvent.call_args_list[0]
         assert "continuous_valid" in dyn_call.args[0]

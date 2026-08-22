@@ -176,7 +176,7 @@ def check_aliveness_checkers(model: Any, log_failure=False) -> bool:
 
 def is_property(obj: Any, attr_name: str) -> bool:
     """Check if obj has an ``@property`` called ``attr_name`` without calling it."""
-    cls = type(obj)
+    cls = obj.__class__
     attribute = getattr(cls, attr_name, None)
     return attribute is not None and isinstance(attribute, property)
 
