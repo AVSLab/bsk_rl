@@ -487,6 +487,7 @@ class AMOSVizardMonitor(sysModel.SysModel):
         self.ever_observable_ids: set[int] = set()
         self.latest_metrics: dict[str, Any] = {}
         self._last_line_signature = None
+        self._last_active_ground_station: str | None = None
         self._last_promotion_halo_kind: dict[int, str] = {}
         self._last_target_outline_state: dict[int, str] = {}
         self._storage_quality_state: dict[str, dict[str, float]] = {}
@@ -744,27 +745,40 @@ class AMOSVizardMonitor(sysModel.SysModel):
             getattr(self.scanner.dynamics.transmitterPowerSink, "powerStatus", 0)
         )
         if not commanded:
+            self._last_active_ground_station = None
             return None
         try:
             baud_rate = float(
                 self.scanner.dynamics.transmitter.nodeDataOutMsg.read().baudRate
             )
         except Exception:
+            self._last_active_ground_station = None
             return None
         if baud_rate >= -1e-12:
+            self._last_active_ground_station = None
             return None
-        for ground_station in getattr(self.scanner.dynamics.world, "groundStations", []):
+        access_messages = getattr(
+            self.scanner.dynamics,
+            "ground_station_access_messages",
+            {},
+        )
+        for model_tag, access_message in access_messages.items():
             try:
-                if bool(ground_station.accessOutMsgs[-1].read().hasAccess):
-                    model_tag = str(ground_station.ModelTag)
-                    return (
+                if bool(access_message.read().hasAccess):
+                    model_tag = str(model_tag)
+                    station_name = (
                         model_tag[len("GroundStation") :]
                         if model_tag.startswith("GroundStation")
                         else model_tag
                     )
+                    self._last_active_ground_station = station_name
+                    return station_name
             except Exception:
                 continue
-        return None
+        # Vizard and dynamics tasks can straddle an access-window boundary by one
+        # recorded sample. A negative transmitter rate is the authoritative transfer
+        # signal; retain its last confirmed receiver until that rate returns to zero.
+        return self._last_active_ground_station
 
     def _set_line_visible(self, line: Any, visible: bool) -> None:
         lines = self.viz_support.targetLineList
@@ -786,7 +800,7 @@ class AMOSVizardMonitor(sysModel.SysModel):
                 self.viz_instance,
                 fromBodyName=self.assets.scanner_display_name,
                 toBodyName=station_name,
-                lineColor=[42, 190, 85, 255],
+                lineColor=[0, 255, 0, 255],
             )
             line = self.viz_support.targetLineList[-1]
             self.assets.ground_link_line = line
@@ -796,11 +810,26 @@ class AMOSVizardMonitor(sysModel.SysModel):
         if station_name is not None:
             target_changed = str(line.toBodyName) != station_name
             line.toBodyName = station_name
-            line.lineColor = [42, 190, 85, 255]
+            line.lineColor = [0, 255, 0, 255]
         was_present = any(item is line for item in self.viz_support.targetLineList)
         self._set_line_visible(line, station_name is not None)
         if target_changed and was_present:
             self.viz_support.updateTargetLineList(self.viz_instance)
+
+    def _pointing_target_body_name(self, target: Any) -> str:
+        """Return the Vizard body currently representing an imaging target.
+
+        Promoted targets are drawn with an immutable star/triangle proxy while their
+        original blue-circle proxy is parked at Earth's center.  Guidance continues
+        to use the physical target, so only the visualization line needs the promoted
+        proxy's display name.
+        """
+        target_id = int(target.id)
+        if bool(getattr(target, "priority_event_active", False)):
+            marker_name = self.assets.promotion_marker_names.get(target_id)
+            if marker_name:
+                return str(marker_name)
+        return str(target.target_spacecraft.name)
 
     def _update_pointing_line(self) -> tuple[str, float]:
         fsw = self.scanner.fsw
@@ -809,7 +838,9 @@ class AMOSVizardMonitor(sysModel.SysModel):
         state = "inactive"
         hold_fraction = 0.0
         color = None
+        target_body_name = None
         if line is not None and active is not None and active._hold_target is not None:
+            target_body_name = self._pointing_target_body_name(active._hold_target)
             try:
                 valid, _ = active._pointing_constraints_ok(active._hold_target)
             except Exception:
@@ -822,13 +853,25 @@ class AMOSVizardMonitor(sysModel.SysModel):
                 if required > 0.0
                 else float(valid)
             )
-        signature = (state, tuple(color) if color is not None else None)
+        signature = (
+            state,
+            tuple(color) if color is not None else None,
+            target_body_name,
+        )
         if line is not None:
             line.fromBodyName = self.assets.scanner_display_name
+            target_changed = bool(
+                target_body_name is not None
+                and str(line.toBodyName) != target_body_name
+            )
+            if target_changed:
+                line.toBodyName = target_body_name
             if color is not None:
                 line.lineColor = color
             self._set_line_visible(line, color is not None)
-            if signature != self._last_line_signature and color is not None:
+            if (
+                target_changed or signature != self._last_line_signature
+            ) and color is not None:
                 self.viz_support.updateTargetLineList(self.viz_instance)
             self._last_line_signature = signature
         return state, hold_fraction
@@ -917,7 +960,13 @@ class AMOSVizardMonitor(sysModel.SysModel):
 
         active_station = self._active_ground_station()
         downlink_active = active_station is not None
+        downlink_commanded = bool(
+            getattr(self.scanner.dynamics.transmitterPowerSink, "powerStatus", 0)
+        )
         self._update_ground_link_line(active_station)
+        # Update promotion proxy positions before binding the imaging line to the
+        # visual body that will be serialized in this same Vizard frame.
+        self._update_target_visuals(sim_time)
         pointing_state, hold_fraction = self._update_pointing_line()
         current_action = self._current_action()
         desat_active = bool(
@@ -927,7 +976,6 @@ class AMOSVizardMonitor(sysModel.SysModel):
             desat_active=desat_active,
             message_time_ns=CurrentSimNanos,
         )
-        self._update_target_visuals(sim_time)
 
         self.latest_metrics = {
             "sim_time_s": sim_time,
@@ -941,6 +989,7 @@ class AMOSVizardMonitor(sysModel.SysModel):
             "battery_percent": battery_pct,
             "storage_percent": storage_pct,
             "downlink_active": downlink_active,
+            "downlink_commanded": downlink_commanded,
             "active_ground_station": active_station,
             "current_action": current_action,
             "pointing_state": pointing_state,
@@ -982,7 +1031,16 @@ class AMOSVizardMonitor(sysModel.SysModel):
                 f"{status_summary}\n"
                 f"Promoted: HIO stars {promoted_hio}; SHIO triangles {promoted_shio}\n"
                 f"Imaging: {pointing_state}; hold: {100.0 * hold_fraction:.0f}%\n"
-                f"Ground link: {active_station if downlink_active else 'inactive'}"
+                "Ground link: "
+                + (
+                    f"transmitting to {active_station}"
+                    if downlink_active
+                    else (
+                        "downlink commanded; waiting for contact/data"
+                        if downlink_commanded
+                        else "inactive"
+                    )
+                )
             )
             self.viz_instance.vizEventDialogs.append(self.assets.dialog)
 

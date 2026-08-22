@@ -82,6 +82,30 @@ if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sim.world import WorldModel
 
 
+def _connect_transmitter_to_ground_stations(dynamics) -> None:
+    """Connect one spacecraft and retain its station-specific access messages.
+
+    A ground station owns one access output per spacecraft. Keeping the output
+    selected immediately after this spacecraft is added prevents later spacecraft
+    from changing which output visualization and diagnostics inspect.
+    """
+    dynamics.ground_station_access_messages = {}
+    for ground_station in dynamics.world.groundStations:
+        ground_station.addSpacecraftToModel(dynamics.scObject.scStateOutMsg)
+        access_message = ground_station.accessOutMsgs[-1]
+        station_name = str(ground_station.ModelTag)
+        dynamics.ground_station_access_messages[station_name] = access_message
+        dynamics.transmitter.addAccessMsgToTransmitter(access_message)
+
+        if hasattr(dynamics.satellite, "add_location_for_access_checking"):
+            dynamics.satellite.add_location_for_access_checking(
+                object=station_name,
+                r_LP_P=np.array(ground_station.r_LP_P_Init).flatten(),
+                min_elev=ground_station.minimumElevation,
+                type="ground_station",
+            )
+
+
 class DynamicsModel(ABC):
     """Abstract Basilisk dynamics model."""
 
@@ -1015,17 +1039,7 @@ class BasicTargetDynamicsModel(BasicDynamicsModel):
 
     def setup_ground_station_locations(self) -> None:
         """Connect the transmitter to ground stations."""
-        for groundStation in self.world.groundStations:
-            groundStation.addSpacecraftToModel(self.scObject.scStateOutMsg)
-            self.transmitter.addAccessMsgToTransmitter(groundStation.accessOutMsgs[-1])
-
-            if hasattr(self.satellite, "add_location_for_access_checking"):
-                self.satellite.add_location_for_access_checking(
-                    object=groundStation.ModelTag,
-                    r_LP_P=np.array(groundStation.r_LP_P_Init).flatten(),
-                    min_elev=groundStation.minimumElevation,
-                    type="ground_station",
-                )
+        _connect_transmitter_to_ground_stations(self)
 
     def setup_simple_nav_object(self, priority: int = 699):
         # Set up simple navigation for target SC
@@ -1701,17 +1715,7 @@ class ImagingSCDynModel(ImagingDynModel):
 
     def setup_ground_station_locations(self) -> None:
         """Connect the transmitter to ground stations."""
-        for groundStation in self.world.groundStations:
-            groundStation.addSpacecraftToModel(self.scObject.scStateOutMsg)
-            self.transmitter.addAccessMsgToTransmitter(groundStation.accessOutMsgs[-1])
-
-            if hasattr(self.satellite, "add_location_for_access_checking"):
-                self.satellite.add_location_for_access_checking(
-                    object=groundStation.ModelTag,
-                    r_LP_P=np.array(groundStation.r_LP_P_Init).flatten(),
-                    min_elev=groundStation.minimumElevation,
-                    type="ground_station",
-                )
+        _connect_transmitter_to_ground_stations(self)
 
 
     @default_args(imageTargetMaximumRange=-1)
@@ -1991,17 +1995,7 @@ class GroundStationDynModel(ImagingDynModel):
 
     def setup_ground_station_locations(self) -> None:
         """Connect the transmitter to ground stations."""
-        for groundStation in self.world.groundStations:
-            groundStation.addSpacecraftToModel(self.scObject.scStateOutMsg)
-            self.transmitter.addAccessMsgToTransmitter(groundStation.accessOutMsgs[-1])
-
-            if hasattr(self.satellite, "add_location_for_access_checking"):
-                self.satellite.add_location_for_access_checking(
-                    object=groundStation.ModelTag,
-                    r_LP_P=np.array(groundStation.r_LP_P_Init).flatten(),
-                    min_elev=groundStation.minimumElevation,
-                    type="ground_station",
-                )
+        _connect_transmitter_to_ground_stations(self)
 
 
 class FullFeaturedDynModel(GroundStationDynModel, LOSCommDynModel):

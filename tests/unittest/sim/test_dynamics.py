@@ -237,6 +237,43 @@ class TestImagingDynModel:
         assert dyn.storage_level == 50.0
         assert dyn.storage_level_fraction == 0.5
 
+    def test_ground_station_connection_retains_this_spacecraft_access_message(self):
+        dyn = MagicMock()
+        dyn.ground_station_access_messages = None
+        access_messages = [
+            MagicMock(name="boulder_access"),
+            MagicMock(name="hawaii_access"),
+        ]
+        stations = []
+        for name, access_message in zip(
+            ("GroundStationBoulder", "GroundStationHawaii"),
+            access_messages,
+        ):
+            station = MagicMock()
+            station.ModelTag = name
+            station.r_LP_P_Init = [1.0, 2.0, 3.0]
+            station.minimumElevation = 0.1
+            station.accessOutMsgs = []
+            station.addSpacecraftToModel.side_effect = (
+                lambda _message, station=station, access_message=access_message: (
+                    station.accessOutMsgs.append(access_message)
+                )
+            )
+            stations.append(station)
+        dyn.world.groundStations = stations
+
+        GroundStationDynModel.setup_ground_station_locations(dyn)
+
+        assert dyn.ground_station_access_messages == dict(
+            zip(
+                ("GroundStationBoulder", "GroundStationHawaii"),
+                access_messages,
+            )
+        )
+        dyn.transmitter.addAccessMsgToTransmitter.assert_has_calls(
+            [call(message) for message in access_messages]
+        )
+
     @pytest.mark.parametrize(
         "level,valid_check,valid",
         [

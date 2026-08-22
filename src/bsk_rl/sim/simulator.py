@@ -249,6 +249,16 @@ class Simulator(SimulationBaseClass.SimBaseClass):
                 scale=[1.5, 1.5, 1.5],
             )
             viz.settings.spacecraftSizeMultiplier = 2.5
+            # A 200-target playback is dominated by Vizard rendering hundreds of
+            # orbit histories. Start with these optional histories hidden; they can
+            # still be re-enabled from the View menu during playback.
+            viz.settings.orbitLinesOn = -1
+            viz.settings.trueTrajectoryLinesOn = -1
+            viz.settings.showOsculatingGroundTrackLines = -1
+            viz.settings.showTruePathGroundTrackLines = -1
+            # Keep live imaging and ground-contact lines legible in planet view.
+            viz.settings.linesAndFramesLineWidth = 3.0
+            viz.settings.useLineRenderersForTargetLinesAndFrames = 1
         else:
             viz.settings.spacecraftSizeMultiplier = 1.5
         # Vizard uses 0 for "use application default," not false.  Explicitly use

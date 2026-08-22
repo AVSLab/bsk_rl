@@ -199,6 +199,49 @@ def test_desat_uses_red_rings_without_enabling_downlink_rings():
     assert desat_message.read().baudRate == 0.0
 
 
+def test_active_ground_station_uses_scanner_owned_access_message():
+    transmitter_payload = SimpleNamespace(baudRate=-8e6)
+    scanner_access_payload = SimpleNamespace(hasAccess=True)
+    scanner_access = SimpleNamespace(read=lambda: scanner_access_payload)
+    unrelated_last_access = SimpleNamespace(
+        read=lambda: SimpleNamespace(hasAccess=False)
+    )
+    scanner = SimpleNamespace(
+        dynamics=SimpleNamespace(
+            transmitterPowerSink=SimpleNamespace(powerStatus=1),
+            transmitter=SimpleNamespace(
+                nodeDataOutMsg=SimpleNamespace(read=lambda: transmitter_payload)
+            ),
+            ground_station_access_messages={
+                "GroundStationHawaii": scanner_access
+            },
+            world=SimpleNamespace(
+                groundStations=[
+                    SimpleNamespace(
+                        accessOutMsgs=[scanner_access, unrelated_last_access]
+                    )
+                ]
+            ),
+        )
+    )
+    monitor = AMOSVizardMonitor(
+        simulator=SimpleNamespace(),
+        scanner=scanner,
+        target_satellites=[],
+        viz_instance=SimpleNamespace(),
+        viz_support=SimpleNamespace(),
+        assets=SimpleNamespace(),
+    )
+
+    assert monitor._active_ground_station() == "Hawaii"
+
+    scanner_access_payload.hasAccess = False
+    assert monitor._active_ground_station() == "Hawaii"
+
+    transmitter_payload.baudRate = 0.0
+    assert monitor._active_ground_station() is None
+
+
 def test_live_metric_bars_can_be_omitted_entirely():
     from Basilisk.architecture import messaging
     from Basilisk.simulation import vizInterface
@@ -318,6 +361,80 @@ def test_active_promotion_marker_swaps_with_blue_target_proxy():
 
     assert marker_message.read().r_BN_N == pytest.approx(target_state.r_BN_N)
     assert target_proxy_message.read().r_BN_N == pytest.approx([0.0, 0.0, 0.0])
+
+
+def test_pointing_line_follows_active_promotion_marker_instead_of_hidden_proxy():
+    line = SimpleNamespace(
+        fromBodyName="SS1",
+        toBodyName="target_17",
+        lineColor=[245, 190, 45, 255],
+    )
+    target = SimpleNamespace(
+        id=17,
+        priority_event_active=True,
+        target_spacecraft=SimpleNamespace(name="target_17"),
+    )
+    active_action = SimpleNamespace(
+        _hold_target=target,
+        _hold_valid_time_s=0.0,
+        min_pointing_hold_s=10.0,
+        _pointing_constraints_ok=lambda _target: (False, 1.0),
+    )
+    viz_support = SimpleNamespace(
+        targetLineList=[line],
+        updateTargetLineList=Mock(),
+    )
+    scanner = SimpleNamespace(
+        fsw=SimpleNamespace(_rso_line=line),
+        _active_image_rso_action=active_action,
+    )
+    monitor = AMOSVizardMonitor(
+        simulator=SimpleNamespace(),
+        scanner=scanner,
+        target_satellites=[],
+        viz_instance=SimpleNamespace(),
+        viz_support=viz_support,
+        assets=SimpleNamespace(
+            scanner_display_name="SS1 Space Surveillance Inspector",
+            promotion_marker_names={17: "Promoted HIO target 17"},
+        ),
+    )
+
+    state, hold_fraction = monitor._update_pointing_line()
+
+    assert state == "slewing/aligning"
+    assert hold_fraction == 0.0
+    assert line.fromBodyName == "SS1 Space Surveillance Inspector"
+    assert line.toBodyName == "Promoted HIO target 17"
+    viz_support.updateTargetLineList.assert_called_once()
+
+    # Flight software retasks by the physical spacecraft name.  Even when the
+    # monitor's state signature is unchanged, it must repair that visual endpoint.
+    line.toBodyName = "target_17"
+    monitor._update_pointing_line()
+
+    assert line.toBodyName == "Promoted HIO target 17"
+    assert viz_support.updateTargetLineList.call_count == 2
+
+
+def test_pointing_line_uses_physical_body_name_for_unpromoted_target():
+    target = SimpleNamespace(
+        id=17,
+        priority_event_active=False,
+        target_spacecraft=SimpleNamespace(name="target_17"),
+    )
+    monitor = AMOSVizardMonitor(
+        simulator=SimpleNamespace(),
+        scanner=SimpleNamespace(),
+        target_satellites=[],
+        viz_instance=SimpleNamespace(),
+        viz_support=SimpleNamespace(),
+        assets=SimpleNamespace(
+            promotion_marker_names={17: "Promoted HIO target 17"},
+        ),
+    )
+
+    assert monitor._pointing_target_body_name(target) == "target_17"
 
 
 def test_storage_split_uses_live_illumination_when_partition_grows():

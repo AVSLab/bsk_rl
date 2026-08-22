@@ -281,6 +281,23 @@ def main() -> int:
     )
     print("Vizard sampling:", f"{args.vizard_rate_hz:g} Hz")
     print(
+        "Vizard panels:",
+        (
+            "disabled with all AMOS overlays"
+            if args.no_hud
+            else (
+                f"operations text {'hidden' if args.no_text_hud else 'open'}; "
+                f"metric bars {'hidden' if args.no_metric_bars else 'open'}"
+            )
+        ),
+    )
+    print("Playback startup: orbit and trajectory histories hidden for performance")
+    if args.vizard_rate_hz > 1.0:
+        print(
+            "WARNING: sampling above 1 Hz records more than 45,000 frames and can "
+            "make 200-target playback substantially larger and less responsive."
+        )
+    print(
         "Progress logging:",
         "suppressed" if args.quiet else "enabled once per policy action",
     )

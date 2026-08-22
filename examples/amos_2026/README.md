@@ -94,6 +94,13 @@ playback for the same seed, catalog size, and sampling rate after a successful r
 Per-action simulation-time progress is printed by default; `--quiet` is an explicit
 opt-in when terminal progress is not wanted.
 
+The default run opens both the `SPACE SURVEILLANCE` operations dialog and the `SS1
+Space Surveillance Inspector Storage` metric panel. Do not pass `--no-text-hud` or
+`--no-metric-bars` when those panels are wanted. If the storage panel is closed during
+playback, reopen it from Vizard's `Devices` menu for the SS1 spacecraft. The operations
+dialog is refreshed every recorded frame; advancing the timeline reopens a minimized
+copy, while reloading the recording restores it after it has been destroyed.
+
 Use `--n-targets 100` or `--n-targets 200` to select the exact 50/30/20 mixed-regime
 catalog size; 200 is the default. `--interest-fraction` changes each of the two disjoint
 promotion groups and must produce an integer target count. Both catalog sizes use the
@@ -109,6 +116,9 @@ the limiting resource. Increasing Vizard's playback multiplier makes its main re
 thread deserialize and update hundreds of spacecraft, promotion proxies, lifecycle
 halos, orbit paths, cones, and HUD elements in less wall-clock time. CPU/GPU frame time
 and Vizard's per-frame scene bookkeeping therefore saturate before system memory.
+The AMOS recording starts with osculating orbit, true-trajectory, and ground-track
+histories hidden because rendering histories for 241 visualized spacecraft is the
+largest avoidable playback cost. They can still be enabled from Vizard's `View` menu.
 
 The default launcher now avoids constructing the 240 lifecycle-outline ellipsoids. It
 retains only the 40 HIO/SHIO promotion halos and the two action-ring transceivers. This
@@ -121,6 +131,12 @@ Vizard UI, hide osculating/true trajectory lines, spacecraft labels, and locatio
 when they are not being inspected. Keep the 1 Hz full-HUD file as the presentation or
 audit artifact rather than expecting the same file to remain smooth at every playback
 multiplier.
+
+`--vizard-rate-hz` is recording density, not playback speed. A 2.5 Hz, 45,000-second
+episode contains 112,500 frames—five times the frames in a 0.5 Hz recording. The larger
+file increases disk decoding and gives Vizard more scene updates to process when the `+`
+playback multiplier is used, even though Vizard buffers the file instead of loading all
+of it into RAM.
 
 ## Safe cleanup order
 
