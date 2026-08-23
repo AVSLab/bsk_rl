@@ -150,12 +150,14 @@ def test_target_lifecycle_outlines_are_opt_in():
     assert len(assets.promotion_marker_ellipsoids[0]) == 2
 
 
-def test_promotion_marker_shape_and_purple_fill():
+def test_promotion_markers_use_high_visibility_value_ordered_colors():
     from Basilisk.utilities import vizSupport
 
     hio = SimpleNamespace(priority_event_kind="HIO")
     shio = SimpleNamespace(priority_event_kind="SHIO")
 
+    assert HIO_COLOR == "#00e676"
+    assert SHIO_COLOR == "#c6ff00"
     assert _promotion_marker_style(hio, vizSupport) == (
         "STAR",
         list(vizSupport.toRGBA255(HIO_COLOR)),

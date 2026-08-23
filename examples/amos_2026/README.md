@@ -51,7 +51,7 @@ uses light, medium, and dark blue for the lower, middle, and upper initial-prior
 thirds. All targets begin as blue circles. Because Vizard treats sprite shape as an
 initialization-only property, dedicated promotion sprites are initialized at Earth's
 center and remain hidden before the midpoint event. They then replace the selected
-targets as medium-purple HIO stars and deep-purple SHIO triangles; matching promotion
+targets as vivid-green HIO stars and electric-lime SHIO triangles; matching promotion
 halos turn on at the same time. The launcher also
 saves the action-allocation, resource-history,
 and pointing-history PDFs under `examples/amos_2026/plots/`. The Space Surveillance

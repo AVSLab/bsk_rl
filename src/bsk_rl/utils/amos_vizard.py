@@ -13,9 +13,10 @@ from Basilisk.utilities import macros
 
 
 # Promotion colors are intentionally outside the ordinary light-to-dark blue
-# priority scale.  HIO receives a medium purple and SHIO the deeper purple.
-HIO_COLOR = "#8f63a7"
-SHIO_COLOR = "#542788"
+# priority scale. HIO uses vivid green; the still-brighter electric lime makes
+# SHIO read as the highest-value tier against Vizard's black space background.
+HIO_COLOR = "#00e676"
+SHIO_COLOR = "#c6ff00"
 LIFECYCLE_COLORS = {
     # Cyan is deliberately separated from the light/medium/dark blue priority
     # fills so the lifecycle ring remains legible around every target sprite.
@@ -252,9 +253,9 @@ def prepare_amos_vizard_assets(
             shape, promotion_color = _promotion_marker_style(target, viz_support)
             target_id = int(target.id)
 
-            # Vizard reads sprite shape only when a spacecraft first appears.  Both
+            # Vizard reads sprite shape only when a spacecraft first appears. Both
             # proxies are therefore initialized in frame 1: the blue target proxy at
-            # the target, and its eventual purple replacement hidden inside Earth.
+            # the target, and its high-visibility replacement hidden inside Earth.
             # At promotion the monitor swaps their positions, preventing the blue
             # circle from being drawn over the star or triangle.
             target_proxy = messaging.SCStatesMsg().write(

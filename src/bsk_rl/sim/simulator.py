@@ -182,8 +182,8 @@ class Simulator(SimulationBaseClass.SimBaseClass):
                 self.vizMessenger.scData[target_sc_index[target_id]].scStateInMsg.subscribeTo(
                     proxy_message
                 )
-            # Vizard treats a spacecraft sprite as initialization-only.  Add one
-            # immutable purple sprite for each eventual HIO/SHIO.  Its state message
+            # Vizard treats a spacecraft sprite as initialization-only. Add one
+            # immutable promotion sprite for each eventual HIO/SHIO. Its state message
             # starts at Earth's center so Vizard initializes the sprite in frame 1;
             # the monitor moves it to the target only after the midpoint event.
             for target_id, marker_message in sorted(
