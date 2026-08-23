@@ -269,31 +269,28 @@ class SweepRiskField(Scenario):
             f"{self.n_seeds} seeds, mean risk {self.risk.mean():.3f}"
         )
 
-    def update_coverage(self, satellite) -> float:
-        """Consume the risk under the satellite's swath since the last call.
+    def _new_swath_cells(self, satellite, state):
+        """Grid cells newly covered by the swath since the last call.
 
         The logged navigation states are used to intersect the instrument
         boresight (-b1) with the Earth; at each sample, the swath spans
         ``swath_km`` on the ground across-track, centered on the intercept
         (simplified swath model: the native swath translated to the
-        boresight intercept). Grid cells touched by the swath contribute
-        ``risk * cell_area`` to the satellite's collected total exactly
-        once, and their risk is zeroed in place -- so subsequent rewards
-        and :class:`~bsk_rl.obs.RiskTokens` observations both see the
-        reduced importance.
-
-        Idempotent within a step: safe to call from both the observation
-        and the reward path, whichever comes first does the work.
+        boresight intercept). Consumes the log watermark in
+        ``state["idx"]``, so each nav sample is processed exactly once per
+        episode; how the cells are scored is the caller's business, which
+        lets :class:`CategorizedSweepRiskField` reuse the geometry with a
+        per-category tally.
 
         Args:
-            satellite: Satellite whose coverage to update.
+            satellite: Satellite whose logs to sweep.
+            state: The satellite's ``_coverage`` entry (``idx`` watermark).
 
         Returns:
-            [risk * km^2] Cumulative risk collected this episode.
+            ``(ri, ci, cell_km2)`` row/column indices of the newly swept
+            grid cells and their areas, or None when there is no new
+            coverage.
         """
-        state = self._coverage.setdefault(
-            satellite.name, {"idx": 1, "collected": 0.0}
-        )
         dynamics = satellite.dynamics
         t_s = dynamics.navLogtrans.times() * macros.NANO2SEC
         r_N = np.array(dynamics.navLogtrans.r_BN_N)
@@ -301,7 +298,7 @@ class SweepRiskField(Scenario):
         sigma = np.array(dynamics.navLogatt.sigma_BN)
         n = min(len(t_s), len(sigma))
         if state["idx"] >= n:
-            return state["collected"]
+            return None
         # Start one sample early so the along-track densification below also
         # bridges the gap across the step boundary. Cells are zeroed once
         # collected, so re-covering one contributes nothing.
@@ -318,7 +315,7 @@ class SweepRiskField(Scenario):
         disc = rb**2 - (np.sum(r * r, axis=1) - R_EARTH_M**2)
         hits = disc > 0.0
         if not np.any(hits):
-            return state["collected"]
+            return None
         s_int = -rb[hits] - np.sqrt(disc[hits])
         p_hat = r[hits] + s_int[:, None] * b_N[hits]
         p_hat /= np.linalg.norm(p_hat, axis=1, keepdims=True)
@@ -406,6 +403,33 @@ class SweepRiskField(Scenario):
             * np.radians(res) ** 2
             * np.cos(np.radians(self.lats[ri]))
         )
+        return ri, ci, cell_km2
+
+    def update_coverage(self, satellite) -> float:
+        """Consume the risk under the satellite's swath since the last call.
+
+        Grid cells touched by the swath (:meth:`_new_swath_cells`)
+        contribute ``risk * cell_area`` to the satellite's collected total
+        exactly once, and their risk is zeroed in place -- so subsequent
+        rewards and :class:`~bsk_rl.obs.RiskTokens` observations both see
+        the reduced importance.
+
+        Idempotent within a step: safe to call from both the observation
+        and the reward path, whichever comes first does the work.
+
+        Args:
+            satellite: Satellite whose coverage to update.
+
+        Returns:
+            [risk * km^2] Cumulative risk collected this episode.
+        """
+        state = self._coverage.setdefault(
+            satellite.name, {"idx": 1, "collected": 0.0}
+        )
+        cells = self._new_swath_cells(satellite, state)
+        if cells is None:
+            return state["collected"]
+        ri, ci, cell_km2 = cells
         state["collected"] += float(np.sum(self.risk[ri, ci] * cell_km2))
         self.risk[ri, ci] = 0.0
         self.covered[ri, ci] = True
