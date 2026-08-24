@@ -13,6 +13,7 @@
 #SBATCH --output=/scratch/alpine/%u/job_output/%x_%A_%a.out
 #SBATCH --mail-type=FAIL,END
 #SBATCH --qos=cpu-normal
+#SBATCH --nice=10000
 
 set -euo pipefail
 METHODS=(mlp attention heuristic_historical heuristic_matched)
@@ -29,11 +30,12 @@ N=${NS[$N_INDEX]}
 SEED_START=$((700000 + BLOCK * 25))
 
 module purge
-REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl}
+REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl-rfi}
 source "$REPO_DIR/examples/prospectus_rfi/slurm/alpine_runtime.sh"
 cd "$REPO_DIR"
 export PYTHONPATH="$REPO_DIR/src:$REPO_DIR${PYTHONPATH:+:$PYTHONPATH}"
-ROOT="/scratch/alpine/$USER/prospectus_rfi"
+ROOT=${BSK_RL_RFI_EVALUATION_ROOT:-/scratch/alpine/$USER/prospectus_rfi/memorysafe_100_200_v2}
+BASE_CONFIG=${BSK_RL_RFI_EVALUATION_BASE_CONFIG:-examples/prospectus_rfi/configs/base_memorysafe_100_200.yaml}
 OUT="$ROOT/evaluation/raw/${METHOD}_k${K}_n${N}_block${BLOCK}.csv"
 mkdir -p "$(dirname "$OUT")" "/scratch/alpine/$USER/job_output"
 
@@ -50,5 +52,6 @@ python -u examples/prospectus_rfi/evaluate.py \
     --catalog-sizes "$N" \
     --episodes 25 \
     --seed-start "$SEED_START" \
+    --base-config "$BASE_CONFIG" \
     --output "$OUT" \
     "${CHECKPOINT_ARGS[@]}"

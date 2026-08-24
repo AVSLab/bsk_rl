@@ -58,3 +58,25 @@ def test_stress_gate_requires_one_complete_iteration_before_scheduler_signal():
     assert "#SBATCH --signal=B:TERM@900" in script
     assert "--max-iterations 1" in script
     assert "--wall-hours 1.5" not in script
+
+
+def test_paired_mc_uses_memorysafe_checkpoints_and_configuration():
+    script = (EXPERIMENT_ROOT / "slurm" / "evaluate_paired_mc.sbatch").read_text()
+
+    assert "/projects/$USER/bsk_rl-rfi" in script
+    assert "prospectus_rfi/memorysafe_100_200_v2" in script
+    assert "base_memorysafe_100_200.yaml" in script
+    assert "--base-config \"$BASE_CONFIG\"" in script
+    assert "#SBATCH --nice=10000" in script
+    assert 'CHECKPOINT="$ROOT/training/${METHOD}_k${K}_seed10001/checkpoints/best_validation"' in script
+
+
+def test_memorysafe_paired_mc_submission_is_checkpoint_gated():
+    script = (EXPERIMENT_ROOT / "submit_memorysafe_paired_mc.sh").read_text()
+
+    assert 'for METHOD in mlp attention' in script
+    assert 'for K in 5 10 20' in script
+    assert 'checkpoints/best_validation' in script
+    assert 'sbatch --test-only' in script
+    assert 'expected_episode_rows\": 4800' in script
+    assert 'Refusing to overwrite an existing paired evaluation' in script

@@ -233,7 +233,7 @@ def run_episode(
         environment.close()
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--method",
@@ -250,8 +250,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--episodes", type=int, default=100)
     parser.add_argument("--seed-start", type=int, default=700_000)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--base-config",
+        type=Path,
+        help=(
+            "Common physical-study configuration. Defaults to configs/base.yaml; "
+            "the memory-safe campaign must pass base_memorysafe_100_200.yaml."
+        ),
+    )
     parser.add_argument("--no-shield", action="store_true")
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def main() -> None:
@@ -264,8 +272,9 @@ def main() -> None:
     )
     if args.method.startswith("heuristic"):
         architecture = "mlp_selected.yaml"  # physical config only
+    base_config = (args.base_config or root / "configs" / "base.yaml").resolve()
     study = load_study_config(
-        root / "configs" / architecture, root / "configs" / "base.yaml"
+        root / "configs" / architecture, base_config
     )
     study = replace(
         study,
@@ -318,6 +327,8 @@ def main() -> None:
             else f"same {args.candidate_count}-candidate list as learned policies"
         ),
         "checkpoint": checkpoint_metadata,
+        "base_config": str(base_config),
+        "base_config_sha256": hashlib.sha256(base_config.read_bytes()).hexdigest(),
         "git": git_metadata(Path.cwd()),
         "study_config": study.to_dict(),
     }
