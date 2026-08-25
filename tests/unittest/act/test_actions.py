@@ -100,7 +100,7 @@ class TestDiscreteFSWAction:
 
 
 class TestDownlink:
-    def test_empty_storage_event_waits_one_cadence(self):
+    def test_empty_storage_event_waits_minimum_guard_duration(self):
         downlink = act.Downlink(duration=180.0, variable_duration_downlink=True)
         downlink.simulator = MagicMock(sim_time=100.0, sim_rate=1.0, eventMap={})
         downlink.satellite = MagicMock()
@@ -115,7 +115,9 @@ class TestDownlink:
         assert not downlink._downlink_empty_event_ready()
         downlink.simulator.sim_time = 100.5
         assert not downlink._downlink_empty_event_ready()
-        downlink.simulator.sim_time = 101.0
+        downlink.simulator.sim_time = 109.999
+        assert not downlink._downlink_empty_event_ready()
+        downlink.simulator.sim_time = 110.0
         assert downlink._downlink_empty_event_ready()
 
 

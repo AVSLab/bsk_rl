@@ -317,24 +317,6 @@ class AccessSatellite(Satellite):
             filter: Function that takes an opportunity dictionary and returns a boolean
                 if the opportunity should be included in the output.
         """
-        with profile_section(getattr(self, "simulator", None), "access.find_next_opportunities"):
-            return self._find_next_opportunities_profiled(
-                n=n,
-                pad=pad,
-                max_lookahead=max_lookahead,
-                types=types,
-                filter=filter,
-            )
-
-    def _find_next_opportunities_profiled(
-        self,
-        n: int,
-        pad: bool = True,
-        max_lookahead: int = 100,
-        types: Optional[Union[str, list[str]]] = None,
-        filter: Union[Optional[Callable], list] = None,
-    ) -> list[dict]:
-        """Implementation body for profiled opportunity lookup."""
         if isinstance(types, str):
             types = [types]
 
@@ -439,6 +421,26 @@ class AccessSatellite(Satellite):
         Returns:
             ``n`` nearest opportunities, ordered
         """
+        with profile_section(
+            getattr(self, "simulator", None), "access.find_next_opportunities"
+        ):
+            return self._find_next_opportunities_profiled(
+                n=n,
+                pad=pad,
+                max_lookahead=max_lookahead,
+                types=types,
+                filter=filter,
+            )
+
+    def _find_next_opportunities_profiled(
+        self,
+        n: int,
+        pad: bool = True,
+        max_lookahead: int = 100,
+        types: Optional[Union[str, list[str]]] = None,
+        filter: Union[Optional[Callable], list] = None,
+    ) -> list[dict]:
+        """Implementation body for profiled opportunity lookup."""
         if isinstance(types, str):
             types = [types]
 

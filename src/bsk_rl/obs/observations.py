@@ -85,7 +85,9 @@ class ObservationBuilder:
 
         Cached so only computed once per timestep.
         """
-        with profile_section(self.simulator, "obs.builder.obs_dict"):
+        with profile_section(
+            getattr(self, "simulator", None), "obs.builder.obs_dict"
+        ):
             if (
                 self.obs_dict_cache is None
                 or self.simulator.sim_time != self.obs_cache_time
@@ -98,7 +100,9 @@ class ObservationBuilder:
 
     def obs_ndarray(self) -> np.ndarray:
         """Numpy vector observation format."""
-        with profile_section(self.simulator, "obs.builder.obs_ndarray"):
+        with profile_section(
+            getattr(self, "simulator", None), "obs.builder.obs_ndarray"
+        ):
             _, obs = vectorize_nested_dict(self.obs_dict())
             return obs
 

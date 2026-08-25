@@ -50,14 +50,16 @@ class TestSimulator:
         assert sim.world.sim == sim
         assert sim.world.rate == sim.sim_rate
 
-    def test_delete_event(self, simbase_init):
+    def test_delete_event_removes_active_map_entry_only(self, simbase_init):
         sim = self.mock_sim()
         event = MagicMock()
         sim.eventMap = {"event": event, "other": MagicMock()}
         sim.eventList = [MagicMock(), event, MagicMock()]
         sim.delete_event("event")
         assert "event" not in sim.eventMap
-        assert event not in sim.eventList
+        # Basilisk owns eventList. Removing only the active event-map entry avoids
+        # unsafe list mutation while preventing the deleted event from being checked.
+        assert event in sim.eventList
 
     @pytest.mark.parametrize(
         "start_time,step_duration,time_limit,stop_time",

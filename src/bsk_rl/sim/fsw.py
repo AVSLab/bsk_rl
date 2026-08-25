@@ -700,9 +700,11 @@ class ImagingFSWModel(BasicFSWModel):
             self.locPoint.scTransInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
-            # self.locPoint.locationInMsg.subscribeTo(
-            #     self.fsw.dynamics.imagingTarget.currentGroundStateOutMsg
-            # )
+            # Provide a valid target message before Basilisk initialization. The
+            # imaging action updates imagingTarget before enabling this task.
+            self.locPoint.locationInMsg.subscribeTo(
+                self.fsw.dynamics.imagingTarget.currentGroundStateOutMsg
+            )
             self.locPoint.useBoresightRateDamping = 1
             messaging.AttGuidMsg_C_addAuthor(
                 self.locPoint.attGuidOutMsg, self.fsw.attGuidMsg
