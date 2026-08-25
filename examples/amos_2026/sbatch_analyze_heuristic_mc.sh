@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Aggregate the completed closest-angle heuristic campaigns.
+# Aggregate the completed paired AMOS 2026 heuristic campaign.
 
 #SBATCH --account=ucb550_asc2
 #SBATCH --job-name=heur_mc_analyze
@@ -28,7 +28,7 @@ mkdir -p "$MPLCONFIGDIR"
 python3 examples/amos_2026/analyze_gat_reward_sweep_mc_detailed.py \
     --input-root "$root" \
     --expected-seeds 0:100 \
-    --policy-tags heur_angle,heur_priority_angle
+    --policy-tags heur_angle,heur_candidate_priority
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "$root/analysis_detailed/ANALYSIS_COMPLETE_UTC.txt"
 echo "Heuristic analysis complete: $root/analysis_detailed"

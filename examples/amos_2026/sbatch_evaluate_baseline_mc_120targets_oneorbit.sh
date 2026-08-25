@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 
-# AMOS 2026 paired heuristic Monte Carlo:
-#   2 controllers x 10 seed blocks x 10 seeds = 200 evaluations.
-# Each array element owns one controller/seed-block pair and runs its ten
-# episodes sequentially. A single array throttle limits the full campaign.
+# AMOS 2026 paired-controller Monte Carlo campaign:
+#   3 controllers x 10 seed blocks x 10 seeds = 300 evaluations.
+# Each Slurm array element owns one controller/seed-block pair and runs its ten
+# seeds sequentially. The array throttle therefore limits the complete campaign,
+# including when other jobs are already using the same allocation.
 
 #SBATCH --account=ucb550_asc2
-#SBATCH --job-name=heur100_2orb
+#SBATCH --job-name=base120_1orb
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --time=08:00:00
-#SBATCH --array=0-19%4
+#SBATCH --array=0-29%4
 #SBATCH --partition=acpu
 #SBATCH --mem=24G
 #SBATCH --threads-per-core=1
@@ -18,7 +19,6 @@
 #SBATCH --output=/scratch/alpine/%u/job_output/%x_%A_%a.out
 #SBATCH --mail-type=END,FAIL
 #SBATCH --qos=normal
-#SBATCH --nice=10000
 
 set -euo pipefail
 
@@ -53,8 +53,10 @@ if [[ -d /curc/sw/install/gcc/14.2.0/lib64 ]]; then
     export LD_LIBRARY_PATH="/curc/sw/install/gcc/14.2.0/lib64:${LD_LIBRARY_PATH:-}"
 fi
 if command -v gcc >/dev/null 2>&1; then
-    gcc_lib_dir=$(dirname "$(gcc -print-file-name=libstdc++.so.6)")
-    export LD_LIBRARY_PATH="$gcc_lib_dir:${LD_LIBRARY_PATH:-}"
+    gcc_libstdcpp=$(gcc -print-file-name=libstdc++.so.6)
+    gcc_lib_dir=$(dirname "$gcc_libstdcpp")
+    LD_LIBRARY_PATH="$gcc_lib_dir:${LD_LIBRARY_PATH:-}"
+    export LD_LIBRARY_PATH
 fi
 
 export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1}
@@ -64,7 +66,7 @@ export NUMEXPR_NUM_THREADS=${NUMEXPR_NUM_THREADS:-1}
 export MPLBACKEND=Agg
 export PYTHONUNBUFFERED=1
 
-controller_csv=${BSK_RL_HEUR_MODES:-angle,candidate_priority}
+controller_csv=${BSK_RL_HEUR_MODES:-angle,candidate_priority,random}
 seed_origin=${BSK_RL_HEUR_SEED_ORIGIN:-0}
 total_seeds=${BSK_RL_HEUR_TOTAL_SEEDS:-100}
 seeds_per_block=${BSK_RL_HEUR_SEEDS_PER_BLOCK:-10}
@@ -93,7 +95,7 @@ seed_stop=$((seed_start + seeds_per_block - 1))
 
 mkdir -p "/scratch/alpine/$USER/job_output" "$output_root"
 
-echo "===== AMOS 2026 paired heuristic block ====="
+echo "===== AMOS 2026 baseline Monte Carlo block ====="
 date
 hostname
 echo "SLURM_JOB_ID=${SLURM_JOB_ID:-}"
@@ -102,13 +104,15 @@ echo "controller=$controller"
 echo "seeds=$seed_start..$seed_stop"
 echo "output_root=$output_root"
 echo "workdir=$workdir"
+echo "venv_dir=$venv_dir"
 echo "bsk_rl_import=$imported_bsk_rl"
-echo "n_targets=${BSK_RL_HEUR_N_TARGETS:-100}"
+echo "n_targets=${BSK_RL_HEUR_N_TARGETS:-120}"
 echo "candidate_count=${BSK_RL_HEUR_N_TARGETS_AHEAD:-10}"
-echo "cooldown_orbits=${BSK_RL_HEUR_REIMAGE_COOLDOWN_ORBITS:-2}"
-echo "shield_only=${BSK_RL_HEUR_SHIELD_ONLY:-0}"
-echo "branch=$actual_branch"
-echo "commit=$(git rev-parse HEAD)"
+echo "cooldown_orbits=${BSK_RL_HEUR_REIMAGE_COOLDOWN_ORBITS:-1}"
+echo "shield_only=${BSK_RL_HEUR_SHIELD_ONLY:-1}"
+echo "branch: $actual_branch"
+echo "commit: $(git rev-parse --short HEAD)"
+git status --short --untracked-files=no
 
 overall_status=0
 for ((seed_offset = 0; seed_offset < seeds_per_block; seed_offset++)); do
@@ -119,7 +123,8 @@ for ((seed_offset = 0; seed_offset < seeds_per_block; seed_offset++)); do
         --seed-start "$seed_start" \
         --seeds-per-block "$seeds_per_block" \
         --modes "$controller" \
-        --output-root "$output_root"; then
+        --output-root "$output_root" \
+        --shield-only; then
         echo "WARNING: $controller seed $((seed_start + seed_offset)) failed." >&2
         overall_status=1
     fi

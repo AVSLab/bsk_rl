@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one AMOS 2026 heuristic Monte Carlo evaluation."""
+"""Run one AMOS 2026 heuristic or random-baseline Monte Carlo evaluation."""
 
 from __future__ import annotations
 
@@ -14,7 +14,20 @@ import tempfile
 from typing import Any
 
 
-HEURISTIC_MODES = ("angle", "priority_angle")
+CONTROLLER_MODES = ("angle", "priority_angle", "candidate_priority", "random")
+LEGACY_DEFAULT_MODES = ("angle", "priority_angle")
+
+
+def env_flag(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.lower() not in {"0", "false", "no", "off"}
+
+
+def env_optional_float(name: str) -> float | None:
+    raw = os.environ.get(name, "").strip()
+    return None if not raw else float(raw)
 
 
 def timestamp() -> str:
@@ -52,7 +65,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--modes",
-        default=os.environ.get("BSK_RL_HEUR_MODES", ",".join(HEURISTIC_MODES)),
+        default=os.environ.get(
+            "BSK_RL_HEUR_MODES", ",".join(LEGACY_DEFAULT_MODES)
+        ),
+        help=(
+            "Comma-separated controller modes. Supported values are angle, "
+            "priority_angle, candidate_priority, and random."
+        ),
     )
     parser.add_argument(
         "--output-root",
@@ -97,9 +116,31 @@ def parse_args() -> argparse.Namespace:
         default=int(os.environ.get("BSK_RL_HEUR_N_TARGETS_AHEAD", "10")),
     )
     parser.add_argument(
+        "--priority-sum",
+        type=float,
+        default=float(os.environ.get("BSK_RL_HEUR_PRIORITY_SUM", "100.0")),
+    )
+    parser.add_argument(
+        "--priority-uniform-low",
+        type=float,
+        default=float(os.environ.get("BSK_RL_HEUR_PRIORITY_UNIFORM_LOW", "0.0")),
+    )
+    parser.add_argument(
+        "--priority-uniform-high",
+        type=float,
+        default=env_optional_float("BSK_RL_HEUR_PRIORITY_UNIFORM_HIGH"),
+    )
+    parser.add_argument(
         "--total-time-sec",
         type=float,
         default=float(os.environ.get("BSK_RL_HEUR_TOTAL_TIME_SEC", "45000")),
+    )
+    parser.add_argument(
+        "--reimage-cooldown-orbits",
+        type=float,
+        default=float(
+            os.environ.get("BSK_RL_HEUR_REIMAGE_COOLDOWN_ORBITS", "2.0")
+        ),
     )
     parser.add_argument(
         "--evaluation-reward-mix",
@@ -111,6 +152,17 @@ def parse_args() -> argparse.Namespace:
         default=os.environ.get("BSK_RL_HEUR_DYNAMIC_PRIORITY_EVENT", "on"),
     )
     parser.add_argument(
+        "--priority-control-seed-base",
+        type=int,
+        default=int(
+            os.environ.get("BSK_RL_HEUR_PRIORITY_CONTROL_SEED_BASE", "20260729")
+        ),
+        help=(
+            "Base used to reproduce the policy Monte Carlo priority-event "
+            "selection; the evaluator receives BASE + episode seed."
+        ),
+    )
+    parser.add_argument(
         "--hio-count", type=int, default=int(os.environ.get("BSK_RL_HEUR_HIO_COUNT", "5"))
     )
     parser.add_argument(
@@ -119,12 +171,32 @@ def parse_args() -> argparse.Namespace:
         default=float(os.environ.get("BSK_RL_HEUR_HIO_PRIORITY", "5.0")),
     )
     parser.add_argument(
+        "--hio-priority-max-multiplier",
+        type=float,
+        default=env_optional_float("BSK_RL_HEUR_HIO_PRIORITY_MAX_MULTIPLIER"),
+    )
+    parser.add_argument(
         "--shio-count", type=int, default=int(os.environ.get("BSK_RL_HEUR_SHIO_COUNT", "3"))
     )
     parser.add_argument(
         "--shio-priority",
         type=float,
         default=float(os.environ.get("BSK_RL_HEUR_SHIO_PRIORITY", "10.0")),
+    )
+    parser.add_argument(
+        "--shio-priority-max-multiplier",
+        type=float,
+        default=env_optional_float("BSK_RL_HEUR_SHIO_PRIORITY_MAX_MULTIPLIER"),
+    )
+    parser.add_argument(
+        "--shield-only",
+        action="store_true",
+        default=env_flag("BSK_RL_HEUR_SHIELD_ONLY"),
+        help=(
+            "For heuristic controllers, select only the imaging target and let "
+            "the standard safety shield provide all non-imaging actions. Random "
+            "mode always uses the standard shield."
+        ),
     )
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
@@ -139,7 +211,7 @@ def metrics_files(seed_dir: Path) -> list[Path]:
 def main() -> int:
     args = parse_args()
     modes = tuple(mode.strip() for mode in args.modes.split(",") if mode.strip())
-    unknown = sorted(set(modes) - set(HEURISTIC_MODES))
+    unknown = sorted(set(modes) - set(CONTROLLER_MODES))
     if unknown:
         raise ValueError(f"Unknown heuristic modes: {unknown}")
     if args.seeds_per_block <= 0:
@@ -151,7 +223,8 @@ def main() -> int:
     mode_index, seed_offset = divmod(args.task_id, args.seeds_per_block)
     mode = modes[mode_index]
     seed = args.seed_start + seed_offset
-    mode_tag = f"heur_{mode}"
+    priority_control_seed = args.priority_control_seed_base + seed
+    mode_tag = "random_imaging_shield" if mode == "random" else f"heur_{mode}"
     block_name = (
         f"seeds_{args.seed_start:03d}_"
         f"{args.seed_start + args.seeds_per_block - 1:03d}"
@@ -172,8 +245,6 @@ def main() -> int:
         sys.executable,
         "-u",
         str(args.eval_script),
-        "--heuristic_mode",
-        mode,
         "--policy_layout",
         "gat_full",
         "--obs_v",
@@ -190,10 +261,18 @@ def main() -> int:
         str(args.n_targets),
         "--n_targets_ahead",
         str(args.n_targets_ahead),
+        "--priority_sum",
+        str(args.priority_sum),
+        "--priority_uniform_low",
+        str(args.priority_uniform_low),
         "--total_time_sec",
         str(args.total_time_sec),
+        "--reimage_cooldown_orbits",
+        str(args.reimage_cooldown_orbits),
         "--dynamic_priority_event",
         args.dynamic_priority_event,
+        "--priority_control_seed",
+        str(priority_control_seed),
         "--hio_count",
         str(args.hio_count),
         "--hio_priority",
@@ -209,10 +288,37 @@ def main() -> int:
         "--skip_plots",
         "--no_show_plots",
         "--plots_in_run_dir",
-        "--no_shield",
     ]
+    if mode == "random":
+        command.append("--random_imaging")
+    else:
+        command.extend(["--heuristic_mode", mode])
+        if args.shield_only:
+            command.append("--heuristic_shield_only")
+        else:
+            # Preserve the legacy full-action heuristic behavior used by the
+            # older AMOS campaign scripts.
+            command.append("--no_shield")
     if args.exact_mix_counts:
         command.append("--exact_mix_counts")
+    if args.priority_uniform_high is not None:
+        command.extend(
+            ["--priority_uniform_high", str(args.priority_uniform_high)]
+        )
+    if args.hio_priority_max_multiplier is not None:
+        command.extend(
+            [
+                "--hio_priority_max_multiplier",
+                str(args.hio_priority_max_multiplier),
+            ]
+        )
+    if args.shio_priority_max_multiplier is not None:
+        command.extend(
+            [
+                "--shio_priority_max_multiplier",
+                str(args.shio_priority_max_multiplier),
+            ]
+        )
 
     status = {
         "schema_version": 1,
@@ -223,24 +329,35 @@ def main() -> int:
         "seeds_per_block": args.seeds_per_block,
         "seed": seed,
         "policy_tag": mode_tag,
-        "heuristic_mode": mode,
+        "controller_mode": mode,
+        "heuristic_mode": "off" if mode == "random" else mode,
+        "random_imaging": mode == "random",
         "evaluation_reward_mix": args.evaluation_reward_mix,
         "target_env": args.target_env,
         "mix_weights": args.mix_weights,
         "exact_mix_counts": args.exact_mix_counts,
         "n_targets": args.n_targets,
         "n_targets_ahead": args.n_targets_ahead,
+        "priority_sum": args.priority_sum,
+        "priority_uniform_low": args.priority_uniform_low,
+        "priority_uniform_high": args.priority_uniform_high,
         "total_time_sec": args.total_time_sec,
+        "reimage_cooldown_orbits": args.reimage_cooldown_orbits,
         "dynamic_priority_event": args.dynamic_priority_event,
+        "priority_control_seed_base": args.priority_control_seed_base,
+        "priority_control_seed": priority_control_seed,
         "hio_count": args.hio_count,
         "hio_priority": args.hio_priority,
+        "hio_priority_max_multiplier": args.hio_priority_max_multiplier,
         "shio_count": args.shio_count,
         "shio_priority": args.shio_priority,
-        "use_shield": False,
+        "shio_priority_max_multiplier": args.shio_priority_max_multiplier,
+        "shield_only": args.shield_only or mode == "random",
+        "use_shield": args.shield_only or mode == "random",
         "command": command,
     }
     atomic_write_json(status_path, status)
-    print(f"Heuristic MC task {args.task_id}: mode={mode}, seed={seed}")
+    print(f"Baseline MC task {args.task_id}: mode={mode}, seed={seed}")
     print(" ".join(command))
     if args.dry_run:
         return 0
