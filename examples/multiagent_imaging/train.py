@@ -71,6 +71,7 @@ def target_attention_config(config: MultiAgentImagingConfig) -> dict:
         "critic_depth_g": 2,
         "critic_pooling_std": False,
         "non_imaging_actions": NON_IMAGING_ACTIONS,
+        "condition_on_spacecraft": True,
     }
 
 

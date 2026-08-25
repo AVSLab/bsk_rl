@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable, Optional
 
+from bsk_rl.comm.teammate_state import TeammateStatus
 from bsk_rl.data.multiagent_rso_data import LocalCatalogKnowledge
 
 
@@ -24,7 +25,7 @@ class IntentStatusMessage:
 
     sender: str
     sequence_number: int
-    target_id: int
+    target_id: Optional[int]
     action: str
     creation_time: float
     expiry_time: float
@@ -32,11 +33,44 @@ class IntentStatusMessage:
     latest_delivery_time: Optional[float] = None
     cooldown_until: Optional[float] = None
     lifecycle_status: Optional[str] = None
+    sender_position_N: Optional[tuple[float, float, float]] = None
+    sender_velocity_N: Optional[tuple[float, float, float]] = None
+    sender_battery_fraction: Optional[float] = None
+    sender_storage_fraction: Optional[float] = None
+    sender_wheel_speed_fraction: Optional[float] = None
+    sender_action_remaining_s: Optional[float] = None
+    sender_catalog_update_time: Optional[float] = None
 
     @property
     def message_id(self) -> tuple[str, int]:
         """Return the sender-scoped message identity."""
         return self.sender, int(self.sequence_number)
+
+    def teammate_status(self) -> Optional[TeammateStatus]:
+        """Return the compact sender state when the message carries all fields."""
+        required = (
+            self.sender_position_N,
+            self.sender_velocity_N,
+            self.sender_battery_fraction,
+            self.sender_storage_fraction,
+            self.sender_wheel_speed_fraction,
+            self.sender_action_remaining_s,
+        )
+        if any(value is None for value in required):
+            return None
+        return TeammateStatus(
+            source_sensor=self.sender,
+            creation_time=float(self.creation_time),
+            position_N=self.sender_position_N,
+            velocity_N=self.sender_velocity_N,
+            battery_fraction=float(self.sender_battery_fraction),
+            storage_fraction=float(self.sender_storage_fraction),
+            wheel_speed_fraction=float(self.sender_wheel_speed_fraction),
+            action=self.action,
+            action_remaining_s=float(self.sender_action_remaining_s),
+            catalog_update_time=self.sender_catalog_update_time,
+            target_id=self.target_id,
+        )
 
 
 class IntentStatusInbox:
@@ -67,16 +101,17 @@ class IntentStatusInbox:
             self._seen.add(message.message_id)
             self._highest_sequence[message.sender] = int(message.sequence_number)
             self.latest_intent_by_sender[message.sender] = message
-            self.catalog.merge_status(
-                target_id=message.target_id,
-                acquisition_time=message.latest_acquisition_time,
-                delivery_time=message.latest_delivery_time,
-                cooldown_until=message.cooldown_until,
-                lifecycle_status=message.lifecycle_status,
-                update_time=message.creation_time,
-                expiry_time=message.expiry_time,
-                source_sensor=message.sender,
-            )
+            if message.target_id is not None:
+                self.catalog.merge_status(
+                    target_id=message.target_id,
+                    acquisition_time=message.latest_acquisition_time,
+                    delivery_time=message.latest_delivery_time,
+                    cooldown_until=message.cooldown_until,
+                    lifecycle_status=message.lifecycle_status,
+                    update_time=message.creation_time,
+                    expiry_time=message.expiry_time,
+                    source_sensor=message.sender,
+                )
             disposition = MessageDisposition.ACCEPTED
         self.history.append((message, disposition))
         return disposition

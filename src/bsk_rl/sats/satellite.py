@@ -109,6 +109,7 @@ class Satellite(ABC, Resetable):
         self.requires_retasking: bool
         self.variable_interval = variable_interval
         self._timed_terminal_event_name = None
+        self._timed_terminal_time = None
         self.observation_builder = ObservationBuilder(self, obs_type=obs_type)
         self.action_builder = select_action_builder(self)
 
@@ -142,6 +143,7 @@ class Satellite(ABC, Resetable):
         """Overwrite attributes from previous episode."""
         self.requires_retasking = True
         self._timed_terminal_event_name = None
+        self._timed_terminal_time = None
         self._is_alive = True
         self.time_of_death = None
 
@@ -334,6 +336,7 @@ class Satellite(ABC, Resetable):
         """
         self.disable_timed_terminal_event()
         self.logger.info(f"setting timed terminal event at {t_close:.1f}")
+        self._timed_terminal_time = float(t_close)
 
         # Create new timed terminal event
         self._timed_terminal_event_name = valid_func_name(
@@ -360,3 +363,5 @@ class Satellite(ABC, Resetable):
             and self._timed_terminal_event_name in self.simulator.eventMap
         ):
             self.simulator.delete_event(self._timed_terminal_event_name)
+        self._timed_terminal_event_name = None
+        self._timed_terminal_time = None

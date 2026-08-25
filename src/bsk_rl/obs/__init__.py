@@ -41,6 +41,7 @@ from bsk_rl.obs.observations import (
     PolarisScTargetProperties,
     Time,
     TeamKnowledge,
+    TeammateSetSummary,
     s_hat_H,
 )
 
@@ -54,4 +55,5 @@ __all__ = [
     "PolarisScTargetProperties",
     "s_hat_H",
     "TeamKnowledge",
+    "TeammateSetSummary",
 ]

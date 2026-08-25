@@ -149,6 +149,8 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
             "duplicate_attempts": 0.0,
             "successful_duplicates": 0.0,
             "communication_actions": 0.0,
+            "acquisition_credit": 0.0,
+            "delivery_credit": 0.0,
         }
 
         if not getattr(satellite, "_multi_rso_reimage_filter_added", False):
@@ -370,12 +372,14 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
             captures, priorities
         )
         for sensor_id, value in acquisition_credit.items():
+            self.per_sensor_metrics[sensor_id]["acquisition_credit"] += float(value)
             reward[sensor_id] += self.reward_fn((1.0 - self.alpha) * value)
 
         deliveries = self._downlinked_products()
         prior_successful_duplicates = self.team_ledger.successful_duplicate_count
         delivery_credit = self.team_ledger.register_deliveries(deliveries, priorities)
         for sensor_id, value in delivery_credit.items():
+            self.per_sensor_metrics[sensor_id]["delivery_credit"] += float(value)
             reward[sensor_id] += self.reward_fn(self.alpha * value)
         for entry in self.team_ledger.entries:
             if entry.product in deliveries and entry.successful_duplicate:
@@ -387,6 +391,12 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
         self._operational_adjustments(reward)
         self.team_summary = {
             "team_value": float(self.team_ledger.team_value),
+            "team_acquisition_value": float(
+                self.team_ledger.acquisition_team_value
+            ),
+            "unique_acquisition_count": float(
+                self.team_ledger.unique_acquisition_count
+            ),
             "unique_service_count": float(self.team_ledger.unique_service_count),
             "duplicate_attempt_count": float(self.team_ledger.duplicate_attempt_count),
             "successful_duplicate_count": float(

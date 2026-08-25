@@ -73,6 +73,16 @@ def build_environment(config: MultiAgentImagingConfig):
                 n_ahead_observe=2,
             ),
             obs.TeamKnowledge(sensor_count_norm=config.sensor_count_norm),
+            obs.TeammateSetSummary(
+                duration_norm_s=max(
+                    config.imaging_duration_s,
+                    config.downlink_duration_s,
+                    config.charge_duration_s,
+                    config.desat_duration_s,
+                    config.broadcast_duration_s,
+                ),
+                age_norm_s=config.message_ttl_s,
+            ),
             obs.PolarisScTargetProperties(
                 dict(prop="priority", norm=10.0),
                 dict(prop="rel_pos_vector_r_BR_H", norm=15960e3),

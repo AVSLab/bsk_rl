@@ -76,6 +76,8 @@ class LocalTargetKnowledge:
     latest_acquisition_time: Optional[float] = None
     latest_delivery_time: Optional[float] = None
     cooldown_until: float = float("-inf")
+    local_cooldown_until: float = float("-inf")
+    remote_cooldown_until_by_source: dict[str, float] = field(default_factory=dict)
     pending_record_ids: tuple[str, ...] = ()
     remote_pending_sources: tuple[str, ...] = ()
     remote_pending_expiry_by_source: dict[str, float] = field(default_factory=dict)
@@ -103,9 +105,11 @@ class LocalCatalogKnowledge:
         """Return local knowledge for ``target_id``."""
         return self._targets[int(target_id)]
 
-    def is_eligible(self, target_id: int, sim_time: float) -> bool:
-        """Return local-policy eligibility without consulting global truth."""
-        state = self.target(target_id)
+    @staticmethod
+    def _refresh_effective_state(
+        state: LocalTargetKnowledge, sim_time: float
+    ) -> None:
+        """Expire transient remote status and refresh the effective cooldown."""
         active_remote_pending = {
             source: expiry
             for source, expiry in state.remote_pending_expiry_by_source.items()
@@ -113,8 +117,24 @@ class LocalCatalogKnowledge:
         }
         state.remote_pending_expiry_by_source = active_remote_pending
         state.remote_pending_sources = tuple(sorted(active_remote_pending))
+        cooldowns = [state.local_cooldown_until]
+        cooldowns.extend(state.remote_cooldown_until_by_source.values())
+        state.cooldown_until = max(cooldowns, default=float("-inf"))
+
+    def is_privately_eligible(self, target_id: int, sim_time: float) -> bool:
+        """Return eligibility from this sensor's own acquisitions and deliveries."""
+        state = self.target(target_id)
         return (
             not state.pending_record_ids
+            and float(sim_time) >= state.local_cooldown_until
+        )
+
+    def is_eligible(self, target_id: int, sim_time: float) -> bool:
+        """Return local-policy eligibility without consulting global truth."""
+        state = self.target(target_id)
+        self._refresh_effective_state(state, sim_time)
+        return (
+            self.is_privately_eligible(target_id, sim_time)
             and not state.remote_pending_sources
             and float(sim_time) >= state.cooldown_until
         )
@@ -136,7 +156,10 @@ class LocalCatalogKnowledge:
             product.capture_time if prior is None else max(prior, product.capture_time)
         )
         if cooldown_until is not None:
-            state.cooldown_until = max(state.cooldown_until, float(cooldown_until))
+            state.local_cooldown_until = max(
+                state.local_cooldown_until, float(cooldown_until)
+            )
+            self._refresh_effective_state(state, product.capture_time)
         state.last_update_time = float(product.capture_time)
         state.last_update_source = self.sensor_id
 
@@ -161,7 +184,10 @@ class LocalCatalogKnowledge:
             else max(prior, product.delivery_time)
         )
         if cooldown_until is not None:
-            state.cooldown_until = max(state.cooldown_until, float(cooldown_until))
+            state.local_cooldown_until = max(
+                state.local_cooldown_until, float(cooldown_until)
+            )
+            self._refresh_effective_state(state, product.delivery_time)
         state.last_update_time = float(product.delivery_time)
         state.last_update_source = self.sensor_id
 
@@ -197,8 +223,14 @@ class LocalCatalogKnowledge:
                 if prior is None
                 else max(prior, float(delivery_time))
             )
+        remote_cooldowns = dict(state.remote_cooldown_until_by_source)
         if cooldown_until is not None:
-            state.cooldown_until = max(state.cooldown_until, float(cooldown_until))
+            remote_cooldowns[str(source_sensor)] = max(
+                remote_cooldowns.get(str(source_sensor), float("-inf")),
+                float(cooldown_until),
+            )
+        elif lifecycle_status in {"delivered", "eligible"}:
+            remote_cooldowns.pop(str(source_sensor), None)
         remote_pending_expiry = dict(state.remote_pending_expiry_by_source)
         if lifecycle_status == "pending_verification":
             remote_pending_expiry[str(source_sensor)] = float(
@@ -208,6 +240,8 @@ class LocalCatalogKnowledge:
             remote_pending_expiry.pop(str(source_sensor), None)
         state.remote_pending_expiry_by_source = remote_pending_expiry
         state.remote_pending_sources = tuple(sorted(remote_pending_expiry))
+        state.remote_cooldown_until_by_source = remote_cooldowns
+        self._refresh_effective_state(state, update_time)
         state.last_update_time = float(update_time)
         state.last_update_source = str(source_sensor)
         return True
@@ -242,6 +276,8 @@ class TeamServiceLedger:
         self.duplicate_attempt_count = 0
         self.duplicate_attempt_record_ids: set[str] = set()
         self.successful_duplicate_count = 0
+        self._unique_acquisition_count = 0
+        self._acquisition_team_value = 0.0
         self._latest_unique_capture_by_target: dict[int, float] = {}
         self._latest_credited_acquisition_by_target: dict[int, float] = {}
 
@@ -312,7 +348,10 @@ class TeamServiceLedger:
             self._latest_credited_acquisition_by_target[first.target_id] = (
                 first.capture_time
             )
-            share = float(target_priorities[first.target_id]) / len(qualified)
+            team_value = float(target_priorities[first.target_id])
+            self._unique_acquisition_count += 1
+            self._acquisition_team_value += team_value
+            share = team_value / len(qualified)
             for product in qualified:
                 credit[product.source_sensor] = (
                     credit.get(product.source_sensor, 0.0) + share
@@ -401,6 +440,16 @@ class TeamServiceLedger:
     def unique_service_count(self) -> int:
         """Return the number of unique team-service events."""
         return sum(entry.unique_service for entry in self.entries)
+
+    @property
+    def unique_acquisition_count(self) -> int:
+        """Return the number of non-duplicated qualifying team acquisitions."""
+        return self._unique_acquisition_count
+
+    @property
+    def acquisition_team_value(self) -> float:
+        """Return non-double-counted priority value acquired by the team."""
+        return self._acquisition_team_value
 
 
 __all__ = [

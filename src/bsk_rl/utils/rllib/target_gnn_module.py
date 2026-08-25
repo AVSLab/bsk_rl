@@ -317,6 +317,7 @@ class GNNActor(nn.Module):
         obs_sat: int = 38,
         non_imaging_actions: int = 1,
         dropout: float = 0.0,
+        condition_on_spacecraft: bool = False,
     ):
         super(GNNActor, self).__init__()
 
@@ -332,6 +333,7 @@ class GNNActor(nn.Module):
             )
         self.features_per_tgt = target_inputs // n_tgts
         self.block_f = block_f
+        self.condition_on_spacecraft = bool(condition_on_spacecraft)
 
         layers_f = []
         layers_f.append(nn.Linear(self.features_per_tgt, width_f))
@@ -351,6 +353,17 @@ class GNNActor(nn.Module):
 
         self.model_f = nn.Sequential(*layers_f)
         self.out_layer_f = nn.Linear(width_f, tgt_encoded_dim)
+        if self.condition_on_spacecraft:
+            if self.obs_sat <= 0:
+                raise ValueError(
+                    "condition_on_spacecraft requires at least one global feature."
+                )
+            self.spacecraft_context_encoder = nn.Sequential(
+                nn.Linear(self.obs_sat, tgt_encoded_dim),
+                act_function(),
+                nn.Linear(tgt_encoded_dim, tgt_encoded_dim),
+            )
+            self.spacecraft_context_normalization = nn.LayerNorm(tgt_encoded_dim)
 
         self.attention_depth = attention_depth
 
@@ -410,6 +423,11 @@ class GNNActor(nn.Module):
                 x_tgts = block_f(x_tgts)  # (B, n_tgts, width)
 
         latent_tgts = self.out_layer_f(x_tgts)  # (B, n_tgts, tgt_encoded_dim)
+        if self.condition_on_spacecraft:
+            context = self.spacecraft_context_encoder(x_sat).unsqueeze(1)
+            latent_tgts = self.spacecraft_context_normalization(
+                latent_tgts + context
+            )
 
         for i in range(self.attention_depth):
             attention_out = self.attention_layers[i](
@@ -477,6 +495,9 @@ class GNNModule(PPOTorchRLModule, nn.Module):
             dropout=dropout,
             non_imaging_actions=model_config.get(
                 "non_imaging_actions", 1
+            ),
+            condition_on_spacecraft=model_config.get(
+                "condition_on_spacecraft", False
             ),
         )
 

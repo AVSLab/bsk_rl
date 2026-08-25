@@ -62,6 +62,11 @@ from bsk_rl.comm.typed_messages import (
     PerfectMetadataChannel,
 )
 from bsk_rl.comm.rso_communication import InformationCase, IntentStatusCommunication
+from bsk_rl.comm.teammate_state import (
+    TEAMMATE_SUMMARY_KEYS,
+    TeammateStatus,
+    pool_teammate_statuses,
+)
 
 __doc_title__ = "Communication"
 __all__ = [
@@ -78,4 +83,7 @@ __all__ = [
     "PerfectMetadataChannel",
     "InformationCase",
     "IntentStatusCommunication",
+    "TEAMMATE_SUMMARY_KEYS",
+    "TeammateStatus",
+    "pool_teammate_statuses",
 ]

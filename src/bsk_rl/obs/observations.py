@@ -9,6 +9,12 @@ import numpy as np
 from Basilisk.utilities import orbitalMotion
 from gymnasium import spaces
 
+from bsk_rl.comm.teammate_state import (
+    TEAMMATE_SUMMARY_KEYS,
+    current_target_id,
+    pool_teammate_statuses,
+    status_from_sensor,
+)
 from bsk_rl.sats.roles import SpacecraftRole
 from bsk_rl.utils.functional import vectorize_nested_dict
 from bsk_rl.utils.orbital import rv2HN
@@ -618,10 +624,8 @@ def _known_teammate_intent(sat, opp):
                 is not SpacecraftRole.SENSING_AGENT
             ):
                 continue
-            for action in teammate.action_builder.action_spec:
-                chosen = getattr(action, "chosen_target_ids", None)
-                if chosen and int(chosen[-1]) == target_id:
-                    return 1
+            if current_target_id(teammate) == target_id:
+                return 1
         return 0
     if information_case == "intent_status":
         inbox = getattr(sat, "intent_status_inbox", None)
@@ -1099,6 +1103,76 @@ class TeamKnowledge(Observation):
             "known_peer_count": known_peers / self.sensor_count_norm,
             "fresh_intent_count": fresh_intents / self.sensor_count_norm,
         }
+
+
+class TeammateSetSummary(Observation):
+    """Permutation-invariant teammate context with case-specific visibility.
+
+    The actor receives a fixed-size mean/max/action-distribution summary independent
+    of constellation size. Independent agents receive a zero vector. Centralized
+    information reads ideal current metadata. Intent/status agents use only compact,
+    received, unexpired messages. The global service ledger is never consulted.
+    """
+
+    def __init__(
+        self,
+        *,
+        distance_norm_m: float = 15960e3,
+        speed_norm_m_s: float = 12000.0,
+        duration_norm_s: float = 300.0,
+        age_norm_s: float = 600.0,
+        name: str = "teammate_set_summary",
+    ) -> None:
+        super().__init__(name=name)
+        norms = (
+            distance_norm_m,
+            speed_norm_m_s,
+            duration_norm_s,
+            age_norm_s,
+        )
+        if any(float(norm) <= 0.0 for norm in norms):
+            raise ValueError("All teammate-summary normalizations must be positive.")
+        self.distance_norm_m = float(distance_norm_m)
+        self.speed_norm_m_s = float(speed_norm_m_s)
+        self.duration_norm_s = float(duration_norm_s)
+        self.age_norm_s = float(age_norm_s)
+
+    def _available_statuses(self, sim_time: float):
+        information_case = getattr(self.satellite, "information_case", "independent")
+        if information_case == "centralized_information":
+            return [
+                status_from_sensor(peer, sim_time)
+                for peer in self.simulator.satellites
+                if getattr(peer, "role", None) is SpacecraftRole.SENSING_AGENT
+                and peer.name != self.satellite.name
+            ]
+        if information_case == "intent_status":
+            inbox = getattr(self.satellite, "intent_status_inbox", None)
+            if inbox is None:
+                return []
+            statuses = []
+            for message in inbox.latest_intent_by_sender.values():
+                if float(message.expiry_time) < sim_time:
+                    continue
+                status = message.teammate_status()
+                if status is not None and status.source_sensor != self.satellite.name:
+                    statuses.append(status)
+            return statuses
+        return []
+
+    def get_obs(self):
+        sim_time = float(self.simulator.sim_time)
+        summary = pool_teammate_statuses(
+            self._available_statuses(sim_time),
+            receiver_position_N=self.satellite.dynamics.r_BN_N,
+            receiver_velocity_N=self.satellite.dynamics.v_BN_N,
+            sim_time=sim_time,
+            distance_norm_m=self.distance_norm_m,
+            speed_norm_m_s=self.speed_norm_m_s,
+            duration_norm_s=self.duration_norm_s,
+            age_norm_s=self.age_norm_s,
+        )
+        return {key: summary[key] for key in TEAMMATE_SUMMARY_KEYS}
 
 class Eclipse(Observation):
     def __init__(self, norm=1.0, name="eclipse"):

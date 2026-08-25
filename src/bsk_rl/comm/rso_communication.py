@@ -9,6 +9,11 @@ import numpy as np
 from Basilisk.utilities import orbitalMotion
 
 from bsk_rl.comm.communication import CommunicationMethod
+from bsk_rl.comm.teammate_state import (
+    current_target_id,
+    earth_unoccluded,
+    status_from_sensor,
+)
 from bsk_rl.comm.typed_messages import (
     CentralizedInformationView,
     IntentStatusInbox,
@@ -118,14 +123,6 @@ class IntentStatusCommunication(CommunicationMethod):
         return value
 
     @staticmethod
-    def _current_target_id(sensor) -> Optional[int]:
-        for action in sensor.action_builder.action_spec:
-            chosen = getattr(action, "chosen_target_ids", None)
-            if chosen:
-                return int(chosen[-1])
-        return None
-
-    @staticmethod
     def _broadcast_pending(sensor) -> bool:
         return any(
             bool(getattr(action, "broadcast_pending", False))
@@ -138,33 +135,67 @@ class IntentStatusCommunication(CommunicationMethod):
             if hasattr(action, "broadcast_pending"):
                 action.broadcast_pending = False
 
-    def _message_for(self, sensor, target_id: int, sim_time: float):
-        state = self.catalogs[sensor.name].target(target_id)
+    def _latest_catalog_target_id(self, sensor) -> Optional[int]:
+        """Return the most recently updated local target in deterministic order."""
+        states = self.catalogs[sensor.name].targets.values()
+        finite_states = [state for state in states if np.isfinite(state.last_update_time)]
+        if not finite_states:
+            return None
+        return int(
+            max(
+                finite_states,
+                key=lambda state: (state.last_update_time, -state.target_id),
+            ).target_id
+        )
+
+    def _message_for(
+        self, sensor, target_id: Optional[int], sim_time: float
+    ) -> IntentStatusMessage:
+        state = (
+            self.catalogs[sensor.name].target(target_id)
+            if target_id is not None
+            else None
+        )
+        status = status_from_sensor(sensor, sim_time)
         return IntentStatusMessage(
             sender=sensor.name,
             sequence_number=self._next_sequence(sensor.name),
-            target_id=int(target_id),
+            target_id=int(target_id) if target_id is not None else None,
             action=str(getattr(sensor, "_current_action_label", "unknown")),
             creation_time=float(sim_time),
             expiry_time=float(sim_time) + self.message_ttl_s,
-            latest_acquisition_time=state.latest_acquisition_time,
-            latest_delivery_time=state.latest_delivery_time,
+            latest_acquisition_time=(
+                state.latest_acquisition_time if state is not None else None
+            ),
+            latest_delivery_time=(
+                state.latest_delivery_time if state is not None else None
+            ),
             cooldown_until=(
-                state.cooldown_until if state.cooldown_until != float("-inf") else None
+                state.cooldown_until
+                if state is not None and state.cooldown_until != float("-inf")
+                else None
             ),
             lifecycle_status=(
                 "pending_verification"
-                if state.pending_record_ids or state.remote_pending_sources
+                if state is not None
+                and (state.pending_record_ids or state.remote_pending_sources)
                 else (
                     "cooldown"
-                    if state.cooldown_until > float(sim_time)
+                    if state is not None and state.cooldown_until > float(sim_time)
                     else (
                         "delivered"
-                        if state.latest_delivery_time is not None
-                        else "eligible"
+                        if state is not None and state.latest_delivery_time is not None
+                        else ("eligible" if state is not None else None)
                     )
                 )
             ),
+            sender_position_N=status.position_N,
+            sender_velocity_N=status.velocity_N,
+            sender_battery_fraction=status.battery_fraction,
+            sender_storage_fraction=status.storage_fraction,
+            sender_wheel_speed_fraction=status.wheel_speed_fraction,
+            sender_action_remaining_s=status.action_remaining_s,
+            sender_catalog_update_time=status.catalog_update_time,
         )
 
     def _allowed_receivers(self, sender: str, sim_time: float) -> list[str]:
@@ -192,7 +223,6 @@ class IntentStatusCommunication(CommunicationMethod):
         This is intentionally a geometry-only first model: no RF budget, bandwidth,
         packet loss, or delay is implied.
         """
-        earth_radius_m = float(orbitalMotion.REQ_EARTH * 1e3)
         pairs = []
         for sender in self.sensing_satellites:
             r_sender = np.asarray(sender.dynamics.r_BN_N, dtype=float)
@@ -200,15 +230,11 @@ class IntentStatusCommunication(CommunicationMethod):
                 if sender is receiver:
                     continue
                 r_receiver = np.asarray(receiver.dynamics.r_BN_N, dtype=float)
-                segment = r_receiver - r_sender
-                denom = float(segment @ segment)
-                if denom == 0.0:
-                    visible = True
-                else:
-                    fraction = float(np.clip(-(r_sender @ segment) / denom, 0.0, 1.0))
-                    closest = r_sender + fraction * segment
-                    visible = float(np.linalg.norm(closest)) > earth_radius_m
-                if visible:
+                if earth_unoccluded(
+                    r_sender,
+                    r_receiver,
+                    earth_radius_m=float(orbitalMotion.REQ_EARTH * 1e3),
+                ):
                     pairs.append((sender.name, receiver.name))
         return pairs
 
@@ -229,13 +255,13 @@ class IntentStatusCommunication(CommunicationMethod):
             return
         sim_time = self._simulation_time()
         for sensor in sorted(self.sensing_satellites, key=lambda sat: sat.name):
-            target_id = self._current_target_id(sensor)
-            if target_id is None:
-                continue
+            target_id = current_target_id(sensor)
             if not self.perfect_metadata_delivery and not self._broadcast_pending(
                 sensor
             ):
                 continue
+            if target_id is None and not self.perfect_metadata_delivery:
+                target_id = self._latest_catalog_target_id(sensor)
             message = self._message_for(sensor, target_id, sim_time)
             self.channel.send(
                 message,
