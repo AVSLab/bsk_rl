@@ -17,6 +17,7 @@ def main() -> None:
     parser.add_argument("--n-targets", type=int, default=12)
     parser.add_argument("--n-candidates", type=int, default=4)
     parser.add_argument("--duration-s", type=float, default=1800.0)
+    parser.add_argument("--cooldown-orbits", type=float, default=2.0)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--information-case",
@@ -40,6 +41,7 @@ def main() -> None:
         n_targets=args.n_targets,
         n_candidates=args.n_candidates,
         episode_duration_s=args.duration_s,
+        reimage_cooldown_orbits=args.cooldown_orbits,
         information_case=args.information_case,
         perfect_metadata_delivery=not args.los_broadcast,
         seed=args.seed,

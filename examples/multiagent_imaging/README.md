@@ -37,6 +37,7 @@ $PYTHON examples/multiagent_imaging/run_quick_demo.py \
   --n-targets 12 \
   --n-candidates 4 \
   --duration-s 1200 \
+  --cooldown-orbits 2 \
   --seed 0 \
   --output-dir results/multiagent_imaging/quick_demo_3sensors_seed0
 ```
