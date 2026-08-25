@@ -11,9 +11,11 @@ ocean / coastline machinery as the base class.
 The scenario also owns the per-episode *preference* vector over categories,
 drawn on reset (Dirichlet) or pinned with ``fixed_preference`` for
 evaluation. It lives here rather than on the satellite because both the
-reward (:class:`~bsk_rl.data.DiminishingSweptRiskReward`) and the
-observation need the same draw, and both already reach the scenario through
-``satellite.sweep_scene``.
+reward (:class:`~bsk_rl.data.ProportionalSweptRiskReward`, which reads it
+as the operator's required composition, or
+:class:`~bsk_rl.data.DiminishingSweptRiskReward`, which reads it as a
+budget share) and the observation need the same draw, and both already
+reach the scenario through ``satellite.sweep_scene``.
 """
 
 import logging
