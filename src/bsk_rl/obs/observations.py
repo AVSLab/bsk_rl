@@ -9,13 +9,8 @@ import numpy as np
 from Basilisk.utilities import orbitalMotion
 from gymnasium import spaces
 
-from bsk_rl.comm.teammate_state import (
-    TEAMMATE_SUMMARY_KEYS,
-    current_target_id,
-    pool_teammate_statuses,
-    status_from_sensor,
-)
 from bsk_rl.sats.roles import SpacecraftRole
+from bsk_rl.utils.coordination import current_target_id
 from bsk_rl.utils.functional import vectorize_nested_dict
 from bsk_rl.utils.orbital import rv2HN
 from bsk_rl.utils.profiling import env_flag, profile_section
@@ -92,9 +87,7 @@ class ObservationBuilder:
 
         Cached so only computed once per timestep.
         """
-        with profile_section(
-            getattr(self, "simulator", None), "obs.builder.obs_dict"
-        ):
+        with profile_section(getattr(self, "simulator", None), "obs.builder.obs_dict"):
             if (
                 self.obs_dict_cache is None
                 or self.simulator.sim_time != self.obs_cache_time
@@ -471,6 +464,7 @@ class OpportunityProperties(Observation):
             obs[f"{self.name}_{i}"] = props
         return obs
 
+
 ###ADD a class similar to OpportunityProperties and change that loop of find_next_opportunities
 def _relative_position(sat, opp):
     if "_polaris_cache" in opp:
@@ -480,6 +474,7 @@ def _relative_position(sat, opp):
     los_vector = target_pos - sat_pos
     return los_vector
 
+
 def _relative_position_H(sat, opp):
     if "_polaris_cache" in opp:
         return opp["_polaris_cache"]["rel_pos_H"]
@@ -488,6 +483,7 @@ def _relative_position_H(sat, opp):
     los_vector = target_pos - sat_pos
     HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
     return HN @ los_vector
+
 
 def _r_BN_H(sat, opp):
     if "_polaris_cache" in opp:
@@ -512,6 +508,7 @@ def _relative_velocity_H(sat, opp):
     HN = rv2HN(sat.dynamics.r_BN_N, sat.dynamics.v_BN_N)
     return HN @ (target_vel - sat_vel)
 
+
 def _target_elevation_angle(sat, opp):
     if "_polaris_cache" in opp:
         return opp["_polaris_cache"]["target_elevation_angle"]
@@ -524,26 +521,34 @@ def _target_elevation_angle(sat, opp):
     elevation_deg = np.degrees(elevation_rad)
     return elevation_deg
 
+
 def _angle_to_target(sat, opp):
     if "_polaris_cache" in opp:
         return opp["_polaris_cache"]["angle_to_target"]
-    vector_target_spacecraft_P = opp["object"].target_spacecraft.dynamics.r_BN_P - sat.dynamics.r_BN_P
+    vector_target_spacecraft_P = (
+        opp["object"].target_spacecraft.dynamics.r_BN_P - sat.dynamics.r_BN_P
+    )
     vector_target_spacecraft_P_hat = vector_target_spacecraft_P / np.linalg.norm(
         vector_target_spacecraft_P
     )
-    return np.degrees(np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.c_hat_P)))
+    return np.degrees(
+        np.arccos(np.dot(vector_target_spacecraft_P_hat, sat.fsw.c_hat_P))
+    )
+
 
 def _target_distance(sat, opp):
     if "_polaris_cache" in opp:
         return opp["_polaris_cache"]["target_distance"]
-    vector_target_spacecraft_N = (
-        np.array(opp["object"].target_spacecraft.dynamics.r_BN_N)
-        - np.array(sat.dynamics.r_BN_N)
-    )
+    vector_target_spacecraft_N = np.array(
+        opp["object"].target_spacecraft.dynamics.r_BN_N
+    ) - np.array(sat.dynamics.r_BN_N)
     return np.linalg.norm(vector_target_spacecraft_N)
+
+
 def _target_id_extracted(sat, opp):
-    id= int((opp["object"].target_spacecraft.id).strip("target_"))
+    id = int((opp["object"].target_spacecraft.id).strip("target_"))
     return id
+
 
 def _eligible_targets_now(sat, known_targets):
     """Return currently image-eligible targets from the datastore lifecycle state."""
@@ -551,7 +556,7 @@ def _eligible_targets_now(sat, known_targets):
     sim_time = float(sat.simulator.sim_time)
     if hasattr(data_obj, "eligible_targets"):
         eligible = data_obj.eligible_targets(sim_time, known_targets)
-        local_catalog = getattr(sat, "local_catalog", None)
+        local_catalog = getattr(sat.data_store, "catalog", None)
         if local_catalog is not None:
             eligible = [
                 target
@@ -565,6 +570,7 @@ def _eligible_targets_now(sat, known_targets):
     imaged_ids = {tgt.id for tgt in imaged_targets}
     return [tgt for tgt in known_targets if tgt.id not in imaged_ids]
 
+
 def _target_imaged(sat, opp):
     target = opp["object"]
     data_obj = sat.data_store.data
@@ -577,10 +583,18 @@ def _target_imaged(sat, opp):
     imaged_targets = getattr(data_obj, "imaged", [])
     imaged_ids = {tgt.id for tgt in imaged_targets}
     return int(target.id in imaged_ids)
+
+
 def _target_shadowFactor(sat, opp):
     if "_polaris_cache" in opp:
         return opp["_polaris_cache"]["target_shadowFactor"]
-    return sat.dynamics.world.eclipseObject.eclipseOutMsgs[opp["object"].target_spacecraft.dynamics.eclipse_index].read().shadowFactor
+    return (
+        sat.dynamics.world.eclipseObject.eclipseOutMsgs[
+            opp["object"].target_spacecraft.dynamics.eclipse_index
+        ]
+        .read()
+        .shadowFactor
+    )
 
 
 def _known_cooldown_remaining(sat, opp):
@@ -590,7 +604,7 @@ def _known_cooldown_remaining(sat, opp):
     if getattr(sat, "information_case", "independent") == "centralized_information":
         snapshot = sat.centralized_information_view.target_snapshot(target_id)
         return max(0.0, float(snapshot["cooldown_until"]) - sim_time)
-    catalog = getattr(sat, "local_catalog", None)
+    catalog = getattr(sat.data_store, "catalog", None)
     if catalog is None:
         return 0.0
     return max(0.0, float(catalog.target(target_id).cooldown_until) - sim_time)
@@ -605,7 +619,7 @@ def _known_pending(sat, opp):
                 "pending_anywhere"
             ]
         )
-    catalog = getattr(sat, "local_catalog", None)
+    catalog = getattr(sat.data_store, "catalog", None)
     if catalog is None:
         return 0
     state = catalog.target(target_id)
@@ -613,34 +627,46 @@ def _known_pending(sat, opp):
 
 
 def _known_teammate_intent(sat, opp):
-    """Whether available information reports teammate intent for this target."""
+    """Freshness-weighted fraction of known peers imaging this candidate.
+
+    The environment compares arbitrary target IDs internally and exposes only the
+    action-relevant relationship. Raw IDs, peer resources, and general peer actions are
+    intentionally absent from the policy observation.
+    """
     target_id = int(opp["object"].id)
     information_case = getattr(sat, "information_case", "independent")
     if information_case == "centralized_information":
-        for teammate in sat.simulator.satellites:
-            if (
-                teammate is sat
-                or getattr(teammate, "role", None)
-                is not SpacecraftRole.SENSING_AGENT
-            ):
-                continue
-            if current_target_id(teammate) == target_id:
-                return 1
-        return 0
+        sensing_peers = [
+            teammate
+            for teammate in sat.simulator.satellites
+            if teammate is not sat
+            and getattr(teammate, "role", None) is SpacecraftRole.SENSING_AGENT
+        ]
+        peer_count = max(1, len(sensing_peers))
+        matches = sum(
+            current_target_id(teammate) == target_id for teammate in sensing_peers
+        )
+        return matches / peer_count
     if information_case == "intent_status":
         inbox = getattr(sat, "intent_status_inbox", None)
         if inbox is None:
-            return 0
+            return 0.0
         sim_time = float(sat.simulator.sim_time)
-        return int(
-            any(
-                message.target_id == target_id
-                and message.expiry_time >= sim_time
-                and "imag" in message.action.lower()
-                for message in inbox.latest_intent_by_sender.values()
-            )
-        )
-    return 0
+        valid_messages = [
+            message
+            for message in inbox.latest_intent_by_sender.values()
+            if message.expiry_time >= sim_time
+        ]
+        known_peer_count = max(1, len(valid_messages))
+        pressure = 0.0
+        for message in valid_messages:
+            if message.target_id != target_id or "imag" not in message.action.lower():
+                continue
+            lifetime = max(1e-9, message.expiry_time - message.creation_time)
+            freshness = np.clip((message.expiry_time - sim_time) / lifetime, 0.0, 1.0)
+            pressure += float(freshness)
+        return pressure / known_peer_count
+    return 0.0
 
 
 def _record_dynamic_priority_candidate_access(targets, sim_time: float) -> None:
@@ -736,7 +762,6 @@ class PolarisScTargetProperties(Observation):
         "known_cooldown_remaining": _known_cooldown_remaining,
         "known_pending": _known_pending,
         "known_teammate_intent": _known_teammate_intent,
-
     }
 
     def __init__(
@@ -890,7 +915,9 @@ class PolarisScTargetProperties(Observation):
                     num_actions - len(final_targets)
                 )
             except IndexError:
-                print("No eligible targets available; using closest known targets fallback")
+                print(
+                    "No eligible targets available; using closest known targets fallback"
+                )
                 sorted_fallback = sorted(
                     known_targets,
                     key=lambda tgt: np.linalg.norm(
@@ -919,7 +946,6 @@ class PolarisScTargetProperties(Observation):
                 props[name] = value / norm
             obs[f"{self.name}_{i}"] = props
         return obs
-
 
     def _get_obs_cached(self):
         """Build Polaris target observations with one state read per target."""
@@ -1012,9 +1038,7 @@ class PolarisScTargetProperties(Observation):
                     remaining = num_actions - len(final_targets)
                     selected_ids = {tgt.id for tgt in final_targets}
                     remaining_eligible = [
-                        tgt
-                        for tgt in eligible_targets
-                        if tgt.id not in selected_ids
+                        tgt for tgt in eligible_targets if tgt.id not in selected_ids
                     ]
                     remaining_eligible.sort(
                         key=lambda tgt: cache_for_target(tgt)["target_distance"]
@@ -1061,118 +1085,6 @@ class PolarisScTargetProperties(Observation):
                 obs[f"{self.name}_{i}"] = props
         return obs
 
-
-class TeamKnowledge(Observation):
-    """Fixed-size team context suitable for a shared policy.
-
-    The sensor count makes policy conditioning on constellation size explicit rather
-    than encoding it through agent names. ``known_peer_count`` reports only peers whose
-    information is actually available in the configured information case.
-    """
-
-    def __init__(self, sensor_count_norm: float = 10.0, name="team_knowledge"):
-        super().__init__(name=name)
-        if float(sensor_count_norm) <= 0.0:
-            raise ValueError("sensor_count_norm must be positive.")
-        self.sensor_count_norm = float(sensor_count_norm)
-
-    def get_obs(self):
-        sensing = [
-            satellite
-            for satellite in self.simulator.satellites
-            if getattr(satellite, "role", None) is SpacecraftRole.SENSING_AGENT
-        ]
-        information_case = getattr(self.satellite, "information_case", "independent")
-        if information_case == "centralized_information":
-            known_peers = max(0, len(sensing) - 1)
-            fresh_intents = 0
-        elif information_case == "intent_status":
-            inbox = getattr(self.satellite, "intent_status_inbox", None)
-            known_peers = len(inbox.latest_intent_by_sender) if inbox is not None else 0
-            fresh_intents = sum(
-                message.expiry_time >= float(self.simulator.sim_time)
-                for message in (
-                    inbox.latest_intent_by_sender.values() if inbox is not None else []
-                )
-            )
-        else:
-            known_peers = 0
-            fresh_intents = 0
-        return {
-            "sensor_count": len(sensing) / self.sensor_count_norm,
-            "known_peer_count": known_peers / self.sensor_count_norm,
-            "fresh_intent_count": fresh_intents / self.sensor_count_norm,
-        }
-
-
-class TeammateSetSummary(Observation):
-    """Permutation-invariant teammate context with case-specific visibility.
-
-    The actor receives a fixed-size mean/max/action-distribution summary independent
-    of constellation size. Independent agents receive a zero vector. Centralized
-    information reads ideal current metadata. Intent/status agents use only compact,
-    received, unexpired messages. The global service ledger is never consulted.
-    """
-
-    def __init__(
-        self,
-        *,
-        distance_norm_m: float = 15960e3,
-        speed_norm_m_s: float = 12000.0,
-        duration_norm_s: float = 300.0,
-        age_norm_s: float = 600.0,
-        name: str = "teammate_set_summary",
-    ) -> None:
-        super().__init__(name=name)
-        norms = (
-            distance_norm_m,
-            speed_norm_m_s,
-            duration_norm_s,
-            age_norm_s,
-        )
-        if any(float(norm) <= 0.0 for norm in norms):
-            raise ValueError("All teammate-summary normalizations must be positive.")
-        self.distance_norm_m = float(distance_norm_m)
-        self.speed_norm_m_s = float(speed_norm_m_s)
-        self.duration_norm_s = float(duration_norm_s)
-        self.age_norm_s = float(age_norm_s)
-
-    def _available_statuses(self, sim_time: float):
-        information_case = getattr(self.satellite, "information_case", "independent")
-        if information_case == "centralized_information":
-            return [
-                status_from_sensor(peer, sim_time)
-                for peer in self.simulator.satellites
-                if getattr(peer, "role", None) is SpacecraftRole.SENSING_AGENT
-                and peer.name != self.satellite.name
-            ]
-        if information_case == "intent_status":
-            inbox = getattr(self.satellite, "intent_status_inbox", None)
-            if inbox is None:
-                return []
-            statuses = []
-            for message in inbox.latest_intent_by_sender.values():
-                if float(message.expiry_time) < sim_time:
-                    continue
-                status = message.teammate_status()
-                if status is not None and status.source_sensor != self.satellite.name:
-                    statuses.append(status)
-            return statuses
-        return []
-
-    def get_obs(self):
-        sim_time = float(self.simulator.sim_time)
-        summary = pool_teammate_statuses(
-            self._available_statuses(sim_time),
-            receiver_position_N=self.satellite.dynamics.r_BN_N,
-            receiver_velocity_N=self.satellite.dynamics.v_BN_N,
-            sim_time=sim_time,
-            distance_norm_m=self.distance_norm_m,
-            speed_norm_m_s=self.speed_norm_m_s,
-            duration_norm_s=self.duration_norm_s,
-            age_norm_s=self.age_norm_s,
-        )
-        return {key: summary[key] for key in TEAMMATE_SUMMARY_KEYS}
 
 class Eclipse(Observation):
     def __init__(self, norm=1.0, name="eclipse"):

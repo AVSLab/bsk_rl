@@ -16,6 +16,5 @@
   "information_case": "intent_status",
   "perfect_metadata_delivery": false,
   "message_ttl_s": 600.0,
-  "sensor_count_norm": 10.0,
   "seed": 0
 }

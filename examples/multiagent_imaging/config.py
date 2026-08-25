@@ -6,8 +6,6 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from bsk_rl.comm.teammate_state import TEAMMATE_SUMMARY_KEYS
-
 
 @dataclass(frozen=True)
 class MultiAgentImagingConfig:
@@ -28,7 +26,6 @@ class MultiAgentImagingConfig:
     information_case: str = "independent"
     perfect_metadata_delivery: bool = True
     message_ttl_s: float = 600.0
-    sensor_count_norm: float = 10.0
     seed: int = 0
 
     def __post_init__(self) -> None:
@@ -49,15 +46,11 @@ class MultiAgentImagingConfig:
 
 TARGET_FEATURES = 13
 NON_IMAGING_ACTIONS = 4
-BASE_GLOBAL_FEATURES = 17
-TEAMMATE_FEATURES = len(TEAMMATE_SUMMARY_KEYS)
-GLOBAL_FEATURES = BASE_GLOBAL_FEATURES + TEAMMATE_FEATURES
+GLOBAL_FEATURES = 14
 
 
 __all__ = [
     "GLOBAL_FEATURES",
-    "BASE_GLOBAL_FEATURES",
-    "TEAMMATE_FEATURES",
     "MultiAgentImagingConfig",
     "NON_IMAGING_ACTIONS",
     "TARGET_FEATURES",

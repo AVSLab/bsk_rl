@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Optional
+from dataclasses import dataclass
+from typing import Any, Callable, Iterable, Mapping, Optional
 
 import numpy as np
 from Basilisk.utilities import orbitalMotion
@@ -12,8 +13,6 @@ from bsk_rl.data.base import GlobalReward
 from bsk_rl.data.multiagent_rso_data import (
     ImageProductRecord,
     LocalCatalogKnowledge,
-    SensorProductStore,
-    TeamServiceLedger,
 )
 from bsk_rl.data.rso_targets_data import (
     RSOTargetImageData,
@@ -24,8 +23,227 @@ from bsk_rl.sats.roles import SpacecraftRole
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, slots=True)
+class _ServiceEntry:
+    """One ground-verified result retained privately by the global rewarder."""
+
+    product: ImageProductRecord
+    unique_service: bool
+    successful_duplicate: bool
+    credited_value: float
+
+
+class _TeamServiceAccounting:
+    """Private, non-observable team accounting used for reward and diagnostics."""
+
+    def __init__(
+        self,
+        *,
+        cooldown_s: float,
+        quality_threshold: float,
+        simultaneous_tolerance_s: float = 1e-6,
+    ) -> None:
+        self.cooldown_s = float(cooldown_s)
+        self.quality_threshold = float(quality_threshold)
+        self.simultaneous_tolerance_s = float(simultaneous_tolerance_s)
+        self.entries: list[_ServiceEntry] = []
+        self.capture_attempts: list[ImageProductRecord] = []
+        self.duplicate_attempt_count = 0
+        self.duplicate_attempt_record_ids: set[str] = set()
+        self.successful_duplicate_count = 0
+        self._unique_acquisition_count = 0
+        self._acquisition_team_value = 0.0
+        self._latest_unique_capture_by_target: dict[int, float] = {}
+        self._latest_credited_acquisition_by_target: dict[int, float] = {}
+
+    def register_capture_attempt(self, product: ImageProductRecord) -> bool:
+        latest = self._latest_credited_acquisition_by_target.get(product.target_id)
+        duplicate = (
+            latest is not None and product.capture_time < latest + self.cooldown_s
+        )
+        self.capture_attempts.append(product)
+        if duplicate:
+            self.duplicate_attempt_count += 1
+            self.duplicate_attempt_record_ids.add(product.record_id)
+        return duplicate
+
+    def _groups(self, products: Iterable[ImageProductRecord]):
+        ordered = sorted(
+            products,
+            key=lambda product: (
+                product.target_id,
+                product.capture_time,
+                product.source_sensor,
+                product.record_id,
+            ),
+        )
+        index = 0
+        while index < len(ordered):
+            first = ordered[index]
+            group = [first]
+            index += 1
+            while index < len(ordered):
+                candidate = ordered[index]
+                if (
+                    candidate.target_id != first.target_id
+                    or abs(candidate.capture_time - first.capture_time)
+                    > self.simultaneous_tolerance_s
+                ):
+                    break
+                group.append(candidate)
+                index += 1
+            yield first, group
+
+    def register_acquisitions(
+        self,
+        products: Iterable[ImageProductRecord],
+        target_priorities: Mapping[int, float],
+    ) -> dict[str, float]:
+        credit: dict[str, float] = {}
+        for first, group in self._groups(products):
+            qualified = [
+                product
+                for product in group
+                if product.quality >= self.quality_threshold
+            ]
+            for duplicate in qualified[1:]:
+                if duplicate.record_id not in self.duplicate_attempt_record_ids:
+                    self.duplicate_attempt_record_ids.add(duplicate.record_id)
+                    self.duplicate_attempt_count += 1
+            latest = self._latest_credited_acquisition_by_target.get(first.target_id)
+            unique = bool(qualified) and (
+                latest is None or first.capture_time >= latest + self.cooldown_s
+            )
+            if not unique:
+                continue
+            self._latest_credited_acquisition_by_target[first.target_id] = (
+                first.capture_time
+            )
+            team_value = float(target_priorities[first.target_id])
+            self._unique_acquisition_count += 1
+            self._acquisition_team_value += team_value
+            share = team_value / len(qualified)
+            for product in qualified:
+                credit[product.source_sensor] = (
+                    credit.get(product.source_sensor, 0.0) + share
+                )
+        return credit
+
+    def register_deliveries(
+        self,
+        products: Iterable[ImageProductRecord],
+        target_priorities: Mapping[int, float],
+    ) -> dict[str, float]:
+        credit: dict[str, float] = {}
+        for first, group in self._groups(products):
+            qualified = [
+                product
+                for product in group
+                if product.delivery_time is not None
+                and product.quality >= self.quality_threshold
+            ]
+            latest = self._latest_unique_capture_by_target.get(first.target_id)
+            unique = bool(qualified) and (
+                latest is None or first.capture_time >= latest + self.cooldown_s
+            )
+            if unique:
+                self._latest_unique_capture_by_target[first.target_id] = (
+                    first.capture_time
+                )
+            share = (
+                float(target_priorities[first.target_id]) / len(qualified)
+                if unique
+                else 0.0
+            )
+            for product in group:
+                successful_duplicate = product in qualified and not unique
+                if successful_duplicate:
+                    self.successful_duplicate_count += 1
+                value = share if product in qualified and unique else 0.0
+                self.entries.append(
+                    _ServiceEntry(
+                        product=product,
+                        unique_service=bool(
+                            product in qualified and unique and product is qualified[0]
+                        ),
+                        successful_duplicate=successful_duplicate,
+                        credited_value=value,
+                    )
+                )
+                credit[product.source_sensor] = (
+                    credit.get(product.source_sensor, 0.0) + value
+                )
+        return credit
+
+    @property
+    def team_value(self) -> float:
+        return sum(entry.credited_value for entry in self.entries)
+
+    @property
+    def unique_service_count(self) -> int:
+        return sum(entry.unique_service for entry in self.entries)
+
+    @property
+    def unique_acquisition_count(self) -> int:
+        return self._unique_acquisition_count
+
+    @property
+    def acquisition_team_value(self) -> float:
+        return self._acquisition_team_value
+
+
 class MultiSensorRSOTargetImageStore(RSOTargetImageStore):
-    """Per-spacecraft storage logger that is inert for passive propagated targets."""
+    """One sensor's standard datastore, local catalog, and product metadata.
+
+    Basilisk's storage unit remains physical truth. The Python product records below
+    describe only products that this same sensor physically owns; they are never copied
+    by the communication layer.
+    """
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Initialize standard RSO data plus local coordination metadata."""
+        super().__init__(*args, **kwargs)
+        target_ids = [int(target.id) for target in self.data.known]
+        self.catalog = LocalCatalogKnowledge(self.satellite.name, target_ids)
+        self._products: dict[str, ImageProductRecord] = {}
+
+    @property
+    def products(self) -> tuple[ImageProductRecord, ...]:
+        """Return the metadata for products physically onboard this sensor."""
+        return tuple(self._products[key] for key in sorted(self._products))
+
+    def store_product(self, product: ImageProductRecord) -> None:
+        """Register one product after Basilisk storage records its capture."""
+        if product.storage_owner != self.satellite.name:
+            raise ValueError(
+                f"{self.satellite.name} cannot store product owned by "
+                f"{product.storage_owner}."
+            )
+        if product.source_sensor != self.satellite.name:
+            raise ValueError("Image-product relay is disabled in this implementation.")
+        existing = self._products.get(product.record_id)
+        if existing is not None and existing != product:
+            raise ValueError(f"Conflicting product record_id {product.record_id!r}.")
+        self._products[product.record_id] = product
+
+    def records_for_target(self, target_id: int) -> tuple[ImageProductRecord, ...]:
+        """Return onboard products associated with one target."""
+        return tuple(
+            product for product in self.products if product.target_id == int(target_id)
+        )
+
+    def downlink_product(
+        self, record_id: str, delivery_time: float
+    ) -> ImageProductRecord:
+        """Remove and return one locally owned product at ground delivery."""
+        try:
+            product = self._products.pop(str(record_id))
+        except KeyError as exc:
+            raise KeyError(
+                f"{self.satellite.name} cannot downlink non-onboard product "
+                f"{record_id!r}."
+            ) from exc
+        return product.delivered(delivery_time)
 
     def get_log_state(self) -> np.ndarray:
         """Read sensor storage or return an inert passive-target state."""
@@ -118,7 +336,14 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
         self.per_sensor_metrics: dict[str, dict[str, float]] = {}
         self.team_summary: dict[str, float] = {}
         self.reimage_cooldown_s: Optional[float] = None
-        self.team_ledger: Optional[TeamServiceLedger] = None
+        self._team_accounting: Optional[_TeamServiceAccounting] = None
+
+    @property
+    def service_entries(self) -> tuple[_ServiceEntry, ...]:
+        """Read-only team service history for evaluation diagnostics."""
+        if self._team_accounting is None:
+            return ()
+        return tuple(self._team_accounting.entries)
 
     def initial_data(self, satellite) -> RSOTargetImageData:
         """Give catalog knowledge only to sensing spacecraft."""
@@ -160,7 +385,7 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
                     return True
                 sim_time = float(getattr(sat.simulator, "sim_time", 0.0))
                 target = opportunity["object"]
-                local_catalog = getattr(sat, "local_catalog", None)
+                local_catalog = getattr(sat.data_store, "catalog", None)
                 if local_catalog is not None:
                     return local_catalog.is_eligible(target.id, sim_time)
                 return sat.data_store.data.is_target_eligible(target, sim_time)
@@ -210,22 +435,17 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
         return sim_times.pop()
 
     def reset_post_sim_init(self) -> None:
-        """Initialize cooldown, team ledger, local catalogs, and storage baselines."""
+        """Initialize cooldown, team accounting, catalogs, and storage baselines."""
         self.reimage_cooldown_s = max(
             0.0,
             self.reimage_cooldown_orbits * self._estimate_reference_orbit_period_s(),
         )
-        self.team_ledger = TeamServiceLedger(
+        self._team_accounting = _TeamServiceAccounting(
             cooldown_s=self.reimage_cooldown_s,
             quality_threshold=self.quality_threshold,
         )
-        target_ids = [int(target.id) for target in self.scenario.target_spacecrafts]
         for sensor in self.sensing_satellites:
             sensor.data_store.cooldown_duration_s = self.reimage_cooldown_s
-            if not hasattr(sensor, "physical_product_store"):
-                sensor.physical_product_store = SensorProductStore(sensor.name)
-            if not hasattr(sensor, "local_catalog"):
-                sensor.local_catalog = LocalCatalogKnowledge(sensor.name, target_ids)
             storage = np.asarray(
                 sensor.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData,
                 dtype=float,
@@ -279,7 +499,7 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
     def _capture_products(self, new_data_dict) -> list[ImageProductRecord]:
         products = []
         sensors = {sensor.name: sensor for sensor in self.sensing_satellites}
-        assert self.team_ledger is not None
+        assert self._team_accounting is not None
         for sensor_id, new_data in new_data_dict.items():
             sensor = sensors.get(sensor_id)
             if sensor is None:
@@ -287,11 +507,11 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
             for records in new_data.pending_image_records_by_id.values():
                 for record in records:
                     product = self._product_from_record(sensor, record)
-                    sensor.physical_product_store.store(product)
-                    sensor.local_catalog.record_capture(product)
+                    sensor.data_store.store_product(product)
+                    sensor.data_store.catalog.record_capture(product)
                     target = self._target_by_id(product.target_id)
                     sensor.data_store.data.mark_target_pending(target, record)
-                    duplicate = self.team_ledger.register_capture_attempt(product)
+                    duplicate = self._team_accounting.register_capture_attempt(product)
                     self.per_sensor_metrics[sensor_id]["captures"] += 1.0
                     if duplicate:
                         self.per_sensor_metrics[sensor_id]["duplicate_attempts"] += 1.0
@@ -310,13 +530,13 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
                 target = self._target_by_name(target_name)
                 if target is None:
                     continue
-                onboard = sensor.physical_product_store.records_for_target(target.id)
+                onboard = sensor.data_store.records_for_target(target.id)
                 if not onboard:
                     continue
                 product = min(
                     onboard, key=lambda item: (item.capture_time, item.record_id)
                 )
-                delivered = sensor.physical_product_store.downlink(
+                delivered = sensor.data_store.downlink_product(
                     product.record_id, sim_time
                 )
                 cooldown_until = (
@@ -324,7 +544,7 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
                     if delivered.quality >= self.quality_threshold
                     else None
                 )
-                sensor.local_catalog.record_delivery(delivered, cooldown_until)
+                sensor.data_store.catalog.record_delivery(delivered, cooldown_until)
                 pending = sensor.data_store.data.pop_pending_record(target)
                 sensor.data_store.data.mark_record_verified(
                     pending or {"record_id": delivered.record_id},
@@ -361,14 +581,14 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
 
     def calculate_reward(self, new_data_dict) -> dict[str, float]:
         """Return source-assigned rewards whose team sum is not duplicated."""
-        assert self.team_ledger is not None
+        assert self._team_accounting is not None
         reward = {sensor.name: 0.0 for sensor in self.sensing_satellites}
         priorities = {
             int(target.id): float(target.priority)
             for target in self.scenario.target_spacecrafts
         }
         captures = self._capture_products(new_data_dict)
-        acquisition_credit = self.team_ledger.register_acquisitions(
+        acquisition_credit = self._team_accounting.register_acquisitions(
             captures, priorities
         )
         for sensor_id, value in acquisition_credit.items():
@@ -376,12 +596,14 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
             reward[sensor_id] += self.reward_fn((1.0 - self.alpha) * value)
 
         deliveries = self._downlinked_products()
-        prior_successful_duplicates = self.team_ledger.successful_duplicate_count
-        delivery_credit = self.team_ledger.register_deliveries(deliveries, priorities)
+        prior_successful_duplicates = self._team_accounting.successful_duplicate_count
+        delivery_credit = self._team_accounting.register_deliveries(
+            deliveries, priorities
+        )
         for sensor_id, value in delivery_credit.items():
             self.per_sensor_metrics[sensor_id]["delivery_credit"] += float(value)
             reward[sensor_id] += self.reward_fn(self.alpha * value)
-        for entry in self.team_ledger.entries:
+        for entry in self._team_accounting.entries:
             if entry.product in deliveries and entry.successful_duplicate:
                 self.per_sensor_metrics[entry.product.source_sensor][
                     "successful_duplicates"
@@ -390,20 +612,22 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
 
         self._operational_adjustments(reward)
         self.team_summary = {
-            "team_value": float(self.team_ledger.team_value),
+            "team_value": float(self._team_accounting.team_value),
             "team_acquisition_value": float(
-                self.team_ledger.acquisition_team_value
+                self._team_accounting.acquisition_team_value
             ),
             "unique_acquisition_count": float(
-                self.team_ledger.unique_acquisition_count
+                self._team_accounting.unique_acquisition_count
             ),
-            "unique_service_count": float(self.team_ledger.unique_service_count),
-            "duplicate_attempt_count": float(self.team_ledger.duplicate_attempt_count),
+            "unique_service_count": float(self._team_accounting.unique_service_count),
+            "duplicate_attempt_count": float(
+                self._team_accounting.duplicate_attempt_count
+            ),
             "successful_duplicate_count": float(
-                self.team_ledger.successful_duplicate_count
+                self._team_accounting.successful_duplicate_count
             ),
             "new_successful_duplicates": float(
-                self.team_ledger.successful_duplicate_count
+                self._team_accounting.successful_duplicate_count
                 - prior_successful_duplicates
             ),
         }

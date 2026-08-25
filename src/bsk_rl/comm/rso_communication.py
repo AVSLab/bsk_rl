@@ -9,22 +9,14 @@ import numpy as np
 from Basilisk.utilities import orbitalMotion
 
 from bsk_rl.comm.communication import CommunicationMethod
-from bsk_rl.comm.teammate_state import (
-    current_target_id,
-    earth_unoccluded,
-    status_from_sensor,
-)
 from bsk_rl.comm.typed_messages import (
     CentralizedInformationView,
     IntentStatusInbox,
     IntentStatusMessage,
     PerfectMetadataChannel,
 )
-from bsk_rl.data.multiagent_rso_data import (
-    LocalCatalogKnowledge,
-    SensorProductStore,
-)
 from bsk_rl.sats.roles import SpacecraftRole
+from bsk_rl.utils.coordination import current_target_id, earth_unoccluded
 
 
 class InformationCase(str, Enum):
@@ -73,6 +65,8 @@ class IntentStatusCommunication(CommunicationMethod):
             for satellite in satellites
             if satellite.role is SpacecraftRole.PASSIVE_TARGET
         ]
+        for sensor in self.sensing_satellites:
+            sensor.information_case = self.information_case.value
 
     def reset_overwrite_previous(self) -> None:
         """Reset episode message ordering and delivery logs."""
@@ -80,25 +74,10 @@ class IntentStatusCommunication(CommunicationMethod):
         self._sequence_by_sender: dict[str, int] = {}
         self.delivery_history = []
 
-    def reset_pre_sim_init(self) -> None:
-        """Allocate per-sensor catalogs, physical stores, and inboxes."""
-        target_ids = []
-        for target in self.passive_targets:
-            rso_target = getattr(target, "rso_target", None)
-            if rso_target is None:
-                raise RuntimeError(
-                    "Passive targets must be registered by the RSO scenario before "
-                    "communication initialization."
-                )
-            target_ids.append(int(rso_target.id))
-
+    def reset_post_sim_init(self) -> None:
+        """Connect compact communication to each sensor's standard datastore."""
         self.catalogs = {
-            sensor.name: LocalCatalogKnowledge(sensor.name, target_ids)
-            for sensor in self.sensing_satellites
-        }
-        self.product_stores = {
-            sensor.name: SensorProductStore(sensor.name)
-            for sensor in self.sensing_satellites
+            sensor.name: sensor.data_store.catalog for sensor in self.sensing_satellites
         }
         self.inboxes = {
             sensor.name: IntentStatusInbox(sensor.name, self.catalogs[sensor.name])
@@ -107,11 +86,8 @@ class IntentStatusCommunication(CommunicationMethod):
         self.channel = PerfectMetadataChannel(self.inboxes)
         self.centralized_view = CentralizedInformationView(self.catalogs)
         for sensor in self.sensing_satellites:
-            sensor.local_catalog = self.catalogs[sensor.name]
-            sensor.physical_product_store = self.product_stores[sensor.name]
             sensor.intent_status_inbox = self.inboxes[sensor.name]
             sensor.centralized_information_view = self.centralized_view
-            sensor.information_case = self.information_case.value
 
     def communication_pairs(self):
         """Compatibility hook; typed messages use explicit directions instead."""
@@ -137,8 +113,10 @@ class IntentStatusCommunication(CommunicationMethod):
 
     def _latest_catalog_target_id(self, sensor) -> Optional[int]:
         """Return the most recently updated local target in deterministic order."""
-        states = self.catalogs[sensor.name].targets.values()
-        finite_states = [state for state in states if np.isfinite(state.last_update_time)]
+        states = sensor.data_store.catalog.targets.values()
+        finite_states = [
+            state for state in states if np.isfinite(state.last_update_time)
+        ]
         if not finite_states:
             return None
         return int(
@@ -152,11 +130,10 @@ class IntentStatusCommunication(CommunicationMethod):
         self, sensor, target_id: Optional[int], sim_time: float
     ) -> IntentStatusMessage:
         state = (
-            self.catalogs[sensor.name].target(target_id)
+            sensor.data_store.catalog.target(target_id)
             if target_id is not None
             else None
         )
-        status = status_from_sensor(sensor, sim_time)
         return IntentStatusMessage(
             sender=sensor.name,
             sequence_number=self._next_sequence(sensor.name),
@@ -189,13 +166,6 @@ class IntentStatusCommunication(CommunicationMethod):
                     )
                 )
             ),
-            sender_position_N=status.position_N,
-            sender_velocity_N=status.velocity_N,
-            sender_battery_fraction=status.battery_fraction,
-            sender_storage_fraction=status.storage_fraction,
-            sender_wheel_speed_fraction=status.wheel_speed_fraction,
-            sender_action_remaining_s=status.action_remaining_s,
-            sender_catalog_update_time=status.catalog_update_time,
         )
 
     def _allowed_receivers(self, sender: str, sim_time: float) -> list[str]:
@@ -272,4 +242,9 @@ class IntentStatusCommunication(CommunicationMethod):
         self.delivery_history.extend(self.channel.deliver(sim_time))
 
 
-__all__ = ["InformationCase", "IntentStatusCommunication"]
+__all__ = [
+    "InformationCase",
+    "IntentStatusCommunication",
+    "current_target_id",
+    "earth_unoccluded",
+]

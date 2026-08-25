@@ -34,7 +34,7 @@ from examples.multiagent_imaging.config import (
 from examples.multiagent_imaging.environment import build_environment
 
 
-SHARED_POLICY_ID = "shared_sensor_policy"
+SHARED_POLICY_ID = "imager"
 
 
 def make_shared_policy_mapping(sensor_ids: set[str]):

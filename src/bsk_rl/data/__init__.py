@@ -97,8 +97,6 @@ from bsk_rl.data.rso_targets_data import RSOTargetImageReward
 from bsk_rl.data.multiagent_rso_data import (
     ImageProductRecord,
     LocalCatalogKnowledge,
-    SensorProductStore,
-    TeamServiceLedger,
 )
 from bsk_rl.data.multiagent_rso_reward import MultiSensorRSOTargetImageReward
 
@@ -111,7 +109,5 @@ __all__ = [
     "RSOTargetImageReward",
     "ImageProductRecord",
     "LocalCatalogKnowledge",
-    "SensorProductStore",
-    "TeamServiceLedger",
     "MultiSensorRSOTargetImageReward",
 ]

@@ -1,11 +1,9 @@
 import pytest
 
 from examples.multiagent_imaging.config import (
-    BASE_GLOBAL_FEATURES,
     GLOBAL_FEATURES,
     MultiAgentImagingConfig,
     TARGET_FEATURES,
-    TEAMMATE_FEATURES,
 )
 from examples.multiagent_imaging.environment import build_environment
 from examples.multiagent_imaging.evaluate import run_rollout
@@ -63,7 +61,7 @@ def test_all_first_study_information_cases_reset(information_case):
     env.close()
 
 
-def test_information_cases_strictly_separate_teammate_state():
+def test_information_cases_strictly_separate_target_intent():
     summaries = {}
     cases = (
         ("independent", True, "independent"),
@@ -75,7 +73,7 @@ def test_information_cases_strictly_separate_teammate_state():
         config = MultiAgentImagingConfig(
             n_sensors=2,
             n_targets=4,
-            n_candidates=2,
+            n_candidates=4,
             episode_duration_s=120.0,
             max_step_duration_s=60.0,
             imaging_duration_s=60.0,
@@ -85,18 +83,18 @@ def test_information_cases_strictly_separate_teammate_state():
         )
         env = build_environment(config)
         observations, _ = env.reset(seed=config.seed)
-        initial = observations["sensor_0"][
-            BASE_GLOBAL_FEATURES : BASE_GLOBAL_FEATURES + TEAMMATE_FEATURES
-        ]
+        initial = observations["sensor_0"][GLOBAL_FEATURES:].reshape(
+            config.n_candidates, TARGET_FEATURES
+        )[:, 12]
         observations, *_ = env.step({"sensor_0": 4, "sensor_1": 4})
-        after_step = observations["sensor_0"][
-            BASE_GLOBAL_FEATURES : BASE_GLOBAL_FEATURES + TEAMMATE_FEATURES
-        ]
+        after_step = observations["sensor_0"][GLOBAL_FEATURES:].reshape(
+            config.n_candidates, TARGET_FEATURES
+        )[:, 12]
         summaries[label] = (initial, after_step)
         env.close()
     assert (summaries["independent"][0] == 0.0).all()
     assert (summaries["independent"][1] == 0.0).all()
-    assert not (summaries["centralized"][0] == 0.0).all()
+    assert (summaries["centralized"][0] == 0.0).all()
     assert not (summaries["centralized"][1] == 0.0).all()
     assert (summaries["intent_perfect"][0] == 0.0).all()
     assert not (summaries["intent_perfect"][1] == 0.0).all()
@@ -139,7 +137,7 @@ def test_two_agent_rollout_is_deterministic():
         "resource_history",
         "per_sensor_metrics",
         "team_summary",
-        "team_service_ledger",
+        "team_service_history",
         "local_catalogs",
         "onboard_products",
     ):

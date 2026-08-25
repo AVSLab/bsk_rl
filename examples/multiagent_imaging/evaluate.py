@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 
 from bsk_rl import NO_ACTION
-from bsk_rl.comm.teammate_state import current_target_id
+from bsk_rl.utils.coordination import current_target_id
 
 from examples.multiagent_imaging.config import (
     MultiAgentImagingConfig,
@@ -43,7 +43,7 @@ def _shared_knowledge_blocks_target(sensor, target_id: int, sim_time: float) -> 
             snapshot["pending_anywhere"] or float(snapshot["cooldown_until"]) > sim_time
         )
     if case == "intent_status":
-        return not sensor.local_catalog.is_eligible(target_id, sim_time)
+        return not sensor.data_store.catalog.is_eligible(target_id, sim_time)
     return False
 
 
@@ -105,8 +105,8 @@ def run_rollout(config: MultiAgentImagingConfig) -> dict:
                 sim_time = float(env.simulator.sim_time)
                 omission = omission_diagnostics[sensor.name]
                 omission["decision_samples"] += 1
-                for target_id in sensor.local_catalog.targets:
-                    if not sensor.local_catalog.is_privately_eligible(
+                for target_id in sensor.data_store.catalog.targets:
+                    if not sensor.data_store.catalog.is_privately_eligible(
                         target_id, sim_time
                     ):
                         omission["target_samples_omitted_by_local_knowledge"] += 1
@@ -260,7 +260,7 @@ def run_rollout(config: MultiAgentImagingConfig) -> dict:
         "target_omission_diagnostics": omission_output,
         "per_sensor_metrics": env.rewarder.per_sensor_metrics,
         "team_summary": env.rewarder.team_summary,
-        "team_service_ledger": [
+        "team_service_history": [
             {
                 "record_id": entry.product.record_id,
                 "source_sensor": entry.product.source_sensor,
@@ -273,7 +273,7 @@ def run_rollout(config: MultiAgentImagingConfig) -> dict:
                 "successful_duplicate": entry.successful_duplicate,
                 "credited_value": entry.credited_value,
             }
-            for entry in env.rewarder.team_ledger.entries
+            for entry in env.rewarder.service_entries
         ],
         "local_catalogs": {
             sensor.name: {
@@ -286,7 +286,7 @@ def run_rollout(config: MultiAgentImagingConfig) -> dict:
                     "last_update_time": state.last_update_time,
                     "last_update_source": state.last_update_source,
                 }
-                for target_id, state in sensor.local_catalog.targets.items()
+                for target_id, state in sensor.data_store.catalog.targets.items()
             }
             for sensor in env.sensing_satellites
         },
@@ -301,7 +301,7 @@ def run_rollout(config: MultiAgentImagingConfig) -> dict:
                     "quality": product.quality,
                     "storage_owner": product.storage_owner,
                 }
-                for product in sensor.physical_product_store.products
+                for product in sensor.data_store.products
             ]
             for sensor in env.sensing_satellites
         },

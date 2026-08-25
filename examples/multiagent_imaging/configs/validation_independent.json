@@ -16,6 +16,5 @@
   "information_case": "independent",
   "perfect_metadata_delivery": true,
   "message_ttl_s": 300.0,
-  "sensor_count_norm": 10.0,
   "seed": 41
 }

@@ -72,7 +72,7 @@ def test_received_pending_status_stops_filtering_after_message_expiry():
     assert catalog.target(2).remote_pending_sources == ()
 
 
-def test_status_only_message_does_not_mutate_catalog():
+def test_intent_without_target_does_not_mutate_catalog():
     catalog = LocalCatalogKnowledge("sensor_1", [2])
     inbox = IntentStatusInbox("sensor_1", catalog)
     update = IntentStatusMessage(
@@ -82,16 +82,8 @@ def test_status_only_message_does_not_mutate_catalog():
         action="Charge",
         creation_time=10.0,
         expiry_time=20.0,
-        sender_position_N=(7000e3, 0.0, 0.0),
-        sender_velocity_N=(0.0, 7500.0, 0.0),
-        sender_battery_fraction=0.9,
-        sender_storage_fraction=0.1,
-        sender_wheel_speed_fraction=0.2,
-        sender_action_remaining_s=30.0,
-        sender_catalog_update_time=None,
     )
     assert inbox.receive(update, 10.0) is MessageDisposition.ACCEPTED
-    assert update.teammate_status() is not None
     assert catalog.target(2).last_update_time == float("-inf")
 
 
