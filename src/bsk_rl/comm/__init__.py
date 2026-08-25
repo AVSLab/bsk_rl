@@ -54,6 +54,14 @@ from bsk_rl.comm.communication import (
     MultiDegreeCommunication,
     NoCommunication,
 )
+from bsk_rl.comm.typed_messages import (
+    CentralizedInformationView,
+    IntentStatusInbox,
+    IntentStatusMessage,
+    MessageDisposition,
+    PerfectMetadataChannel,
+)
+from bsk_rl.comm.rso_communication import InformationCase, IntentStatusCommunication
 
 __doc_title__ = "Communication"
 __all__ = [
@@ -63,4 +71,11 @@ __all__ = [
     "LOSCommunication",
     "MultiDegreeCommunication",
     "LOSMultiCommunication",
+    "CentralizedInformationView",
+    "IntentStatusInbox",
+    "IntentStatusMessage",
+    "MessageDisposition",
+    "PerfectMetadataChannel",
+    "InformationCase",
+    "IntentStatusCommunication",
 ]

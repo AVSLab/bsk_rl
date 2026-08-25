@@ -94,6 +94,13 @@ from bsk_rl.data.nadir_data import ScanningTimeReward
 from bsk_rl.data.no_data import NoReward
 from bsk_rl.data.unique_image_data import UniqueImageReward
 from bsk_rl.data.rso_targets_data import RSOTargetImageReward
+from bsk_rl.data.multiagent_rso_data import (
+    ImageProductRecord,
+    LocalCatalogKnowledge,
+    SensorProductStore,
+    TeamServiceLedger,
+)
+from bsk_rl.data.multiagent_rso_reward import MultiSensorRSOTargetImageReward
 
 __doc_title__ = "Data & Reward"
 __all__ = [
@@ -102,4 +109,9 @@ __all__ = [
     "UniqueImageReward",
     "ScanningTimeReward",
     "RSOTargetImageReward",
+    "ImageProductRecord",
+    "LocalCatalogKnowledge",
+    "SensorProductStore",
+    "TeamServiceLedger",
+    "MultiSensorRSOTargetImageReward",
 ]
