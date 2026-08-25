@@ -20,7 +20,7 @@ $PYTHON -m pytest -q \
   tests/integration/multiagent/test_rllib_smoke.py
 ```
 
-Result after the observation simplification: **34 passed**. Six warnings are upstream
+Result after adding multi-agent evaluation plotting: **36 passed**. Six warnings are upstream
 Ray/Gymnasium deprecation warnings.
 
 This includes role/passive exclusion, independent access and storage, local-knowledge
@@ -30,6 +30,10 @@ deterministic two-sensor Basilisk rollout, freshness-weighted same-target intent
 peer-message-order invariance, fixed shape for one/two/three sensors, strict
 information-case separation, actor target-permutation equivariance, shared-policy mapping,
 and one short RLlib PPO update.
+
+The focused suite also verifies that every sensing spacecraft receives its own diagnostic
+PDF/PNG and that the combined catalog overview is generated only when more than one
+sensing agent is present.
 
 ## Complete unit regression
 
@@ -126,3 +130,16 @@ git diff --check
 Result: **passed**.
 
 No full Monte Carlo campaign or long training run was launched.
+
+## Quick multi-agent visualization check
+
+```bash
+$PYTHON examples/multiagent_imaging/run_quick_demo.py \
+  --n-sensors 3 --n-targets 12 --n-candidates 4 \
+  --duration-s 1200 --seed 0 \
+  --output-dir results/multiagent_imaging/quick_demo_3sensors_seed0
+```
+
+Result: **passed**. The run produced three per-sensor diagnostic figures and one
+multi-agent catalog overview in both vector PDF and PNG formats. A separate one-sensor
+check produced only its per-sensor figure, confirming the multi-agent-only plot gate.

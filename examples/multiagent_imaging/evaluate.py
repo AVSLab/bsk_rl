@@ -319,6 +319,7 @@ def main() -> None:
     )
     parser.add_argument("--seed", type=int)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--plots-dir", type=Path)
     args = parser.parse_args()
     config = MultiAgentImagingConfig.from_json(args.config)
     if args.seed is not None:
@@ -331,6 +332,11 @@ def main() -> None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(text + "\n")
         print(args.output.resolve())
+    if args.plots_dir is not None:
+        from examples.multiagent_imaging.plot_evaluation import plot_evaluation
+
+        for path in plot_evaluation(result, args.plots_dir):
+            print(path.resolve())
 
 
 if __name__ == "__main__":

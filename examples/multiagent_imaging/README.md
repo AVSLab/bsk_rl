@@ -25,7 +25,34 @@ Run and save the bounded deterministic scenario:
 ```bash
 $PYTHON examples/multiagent_imaging/evaluate.py \
   --config examples/multiagent_imaging/configs/smoke.json \
-  --output results/multiagent_imaging/smoke_seed0.json
+  --output results/multiagent_imaging/smoke_seed0.json \
+  --plots-dir results/multiagent_imaging/smoke_seed0_plots
+```
+
+Run a quick three-sensor demonstration and generate vector PDFs and PNG previews:
+
+```bash
+$PYTHON examples/multiagent_imaging/run_quick_demo.py \
+  --n-sensors 3 \
+  --n-targets 12 \
+  --n-candidates 4 \
+  --duration-s 1200 \
+  --seed 0 \
+  --output-dir results/multiagent_imaging/quick_demo_3sensors_seed0
+```
+
+This produces one reward/resource/action figure per sensor. When more than one sensor is
+present it also produces `multiagent_overview.pdf` and `.png`, containing cumulative
+captures, an RSO capture raster, action-time allocation, per-sensor event counts, and the
+team unique-service/conflict summary. The quick runner uses the deterministic shared
+controller, not a trained PPO checkpoint.
+
+An existing rollout JSON can also be plotted separately:
+
+```bash
+$PYTHON examples/multiagent_imaging/plot_evaluation.py \
+  --input results/multiagent_imaging/quick_demo_3sensors_seed0/rollout.json \
+  --output-dir results/multiagent_imaging/quick_demo_3sensors_seed0/plots
 ```
 
 Run all four matched validation cases:
