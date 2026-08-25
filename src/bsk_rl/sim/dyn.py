@@ -1784,7 +1784,8 @@ class ImagingSCDynModel(ImagingDynModel):
         self.use_heuristic = use_heuristic
         self.heuristic_mode = (
             heuristic_mode
-            if heuristic_mode in {"angle", "priority_angle", "distance"}
+            if heuristic_mode
+            in {"angle", "priority_angle", "candidate_priority", "distance"}
             else "angle"
         )
         self.heuristic_top_k = heuristic_top_k

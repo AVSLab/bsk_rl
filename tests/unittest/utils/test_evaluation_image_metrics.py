@@ -8,11 +8,39 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "examples"))
 
 from evaluation_image_metrics import (  # noqa: E402
     annotate_downlink_window_alignment,
+    cooldown_diagnostic_title,
     cumulative_count_axis_limit,
     desat_availability_summary,
     decision_state_summary,
     ground_station_window_dict,
 )
+
+
+@pytest.mark.parametrize(
+    ("cooldown_orbits", "expected"),
+    [
+        (2.0, None),
+        (
+            0.0,
+            "GROUND-CONFIRMATION RE-IMAGING - seed 0, 100 targets; "
+            "target availability and Desat decisions",
+        ),
+        (
+            1.0,
+            "ONE-ORBIT COOLDOWN ABLATION - seed 0, 100 targets; "
+            "target availability and Desat decisions",
+        ),
+        (
+            0.5,
+            "0.5-ORBIT COOLDOWN SCENARIO - seed 0, 100 targets; "
+            "target availability and Desat decisions",
+        ),
+    ],
+)
+def test_cooldown_diagnostic_title(cooldown_orbits, expected):
+    assert (
+        cooldown_diagnostic_title(cooldown_orbits, seed=0, target_count=100) == expected
+    )
 
 
 @pytest.mark.parametrize(

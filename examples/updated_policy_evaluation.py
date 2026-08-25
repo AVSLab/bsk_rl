@@ -21,6 +21,7 @@ from sim_config import SimConfig
 try:
     from evaluation_image_metrics import (
         annotate_downlink_window_alignment,
+        cooldown_diagnostic_title,
         cumulative_count_axis_limit,
         desat_availability_summary,
         decision_state_summary,
@@ -36,6 +37,7 @@ try:
 except ModuleNotFoundError:
     from examples.evaluation_image_metrics import (
         annotate_downlink_window_alignment,
+        cooldown_diagnostic_title,
         cumulative_count_axis_limit,
         desat_availability_summary,
         decision_state_summary,
@@ -393,12 +395,22 @@ def parse_args():
     )
     p.add_argument(
         "--heuristic_mode",
-        choices=["off", "angle", "priority_angle"],
+        choices=["off", "angle", "priority_angle", "candidate_priority"],
         default="off",
         help=(
             "Run a full-action heuristic instead of loading a policy. The angle "
             "mode selects the image-eligible target with minimum slew angle. "
-            "priority_angle minimizes angle divided by current target priority."
+            "priority_angle minimizes angle divided by current target priority. "
+            "candidate_priority selects the highest-priority target from the same "
+            "candidate set represented by the imaging actions."
+        ),
+    )
+    p.add_argument(
+        "--heuristic_shield_only",
+        action="store_true",
+        help=(
+            "Use the heuristic only to select imaging targets and let the standard "
+            "safety shield provide every non-imaging override."
         ),
     )
     p.add_argument(
@@ -438,6 +450,14 @@ def parse_args():
         "--no_shield",
         action="store_true",
         help="Disable the evaluation safety shield that can override charge/downlink actions.",
+    )
+    p.add_argument(
+        "--random_imaging",
+        action="store_true",
+        help=(
+            "Choose uniformly among imaging actions at every decision. Non-imaging "
+            "actions can then be selected only by the enabled safety shield."
+        ),
     )
     p.add_argument(
         "--dynamic_priority_event",
@@ -630,17 +650,19 @@ class Policy:
 
 
 use_shield = not ARGS.no_shield
-act_random = False
+act_random = bool(ARGS.random_imaging)
 use_heuristic = ARGS.heuristic_mode != "off"
 heuristic_mode = ARGS.heuristic_mode
 if act_random:
-    policy_tag = "RANDOM"
+    policy_tag = "RANDOM_IMAGE"
 elif use_heuristic:
     policy_tag = "HEUR"
     if heuristic_mode == "angle":
         policy_tag = "HEUR_ANGLE"
     elif heuristic_mode == "priority_angle":
         policy_tag = "HEUR_PRIORITY_ANGLE"
+    elif heuristic_mode == "candidate_priority":
+        policy_tag = "HEUR_CANDIDATE_PRIORITY"
 else:
     policy_tag = "RL"
 
@@ -1204,6 +1226,7 @@ def action_info_for_layout(layout: str, n_image_actions: int) -> dict:
 
 
 ACTION_INFO = action_info_for_layout(policy_layout, n_targets_ahead)
+random_action_rng = np.random.default_rng(seed_number) if act_random else None
 print(
     f"Evaluation layout: {policy_layout}; obs_v={obs_v}; "
     f"actions={ACTION_INFO['num_actions']}; shield={use_shield}; "
@@ -1241,7 +1264,7 @@ if save_vizard:
 
 policy = (
     None
-    if args.catalog_only or use_heuristic
+    if args.catalog_only or use_heuristic or act_random
     else Policy(policy_path, policy_mode=policy_mode)
 )
 
@@ -2158,35 +2181,37 @@ for target_id in range(n_targets*6 *100 ):
     _print(f"\n SIMULATION TIME: {simtime:.1f} seconds and current reward: {SS1_reward:.2f}")
 
     if use_heuristic:
-        storage_fraction = float(sat0.dynamics.storage_level_fraction)
-        battery_fraction = float(sat0.dynamics.battery_charge_fraction)
-        wheel_fraction = float(
-            np.max(np.abs(np.asarray(sat0.dynamics.wheel_speeds_fraction)))
-        )
-        if ACTION_INFO["charge"] is not None and (
-            battery_fraction < ARGS.heuristic_battery_threshold
-        ):
-            policy_action = ACTION_INFO["charge"]
-        elif ACTION_INFO["desat"] is not None and (
-            wheel_fraction > ARGS.heuristic_wheel_threshold
-        ):
-            policy_action = ACTION_INFO["desat"]
-        elif (
-            ACTION_INFO["downlink"] is not None
-            and storage_fraction > ARGS.heuristic_downlink_storage_threshold
-            and ground_station_access_open(sat0)
-        ):
-            policy_action = ACTION_INFO["downlink"]
-        else:
+        if ARGS.heuristic_shield_only:
             policy_action = ACTION_INFO["image_ids"][0]
+        else:
+            storage_fraction = float(sat0.dynamics.storage_level_fraction)
+            battery_fraction = float(sat0.dynamics.battery_charge_fraction)
+            wheel_fraction = float(
+                np.max(np.abs(np.asarray(sat0.dynamics.wheel_speeds_fraction)))
+            )
+            if ACTION_INFO["charge"] is not None and (
+                battery_fraction < ARGS.heuristic_battery_threshold
+            ):
+                policy_action = ACTION_INFO["charge"]
+            elif ACTION_INFO["desat"] is not None and (
+                wheel_fraction > ARGS.heuristic_wheel_threshold
+            ):
+                policy_action = ACTION_INFO["desat"]
+            elif (
+                ACTION_INFO["downlink"] is not None
+                and storage_fraction > ARGS.heuristic_downlink_storage_threshold
+                and ground_station_access_open(sat0)
+            ):
+                policy_action = ACTION_INFO["downlink"]
+            else:
+                policy_action = ACTION_INFO["image_ids"][0]
+    elif act_random:
+        policy_action = int(random_action_rng.choice(ACTION_INFO["image_ids"]))
     else:
         policy_action = policy.act(observation[sat.name])
         if isinstance(policy_action, np.ndarray):
             policy_action = policy_action.item()
-    if act_random:
-        policy_action = int(np.random.randint(0, ACTION_INFO["num_actions"]))
-    else:
-        policy_action = int(policy_action)
+    policy_action = int(policy_action)
 
 
     # action_dict = {sat.name: target_id}  # Assign the main satellite to observe `target_idx` # sequentially observing each target
@@ -2937,19 +2962,73 @@ print(f"Charge actions: {charge_action_count}")
 print(f"Desat actions: {desat_action_count}")
 print("======================================\n")
 
+plot_action_labels = action_labels
+plot_action_counts = counts
+plot_action_percentages = percentages
+if use_heuristic:
+    # The evaluator always submits imaging slot zero before ImageRSO applies the
+    # heuristic target override.  Showing Target 0 in the action plot would therefore
+    # misrepresent the commanded target; collapse the imaging slots into one category.
+    plot_action_labels = ["Charge", "Downlink", "Desat", "Imaging"]
+    plot_action_counts = [
+        charge_action_count,
+        downlink_action_count,
+        desat_action_count,
+        target_imaging_count,
+    ]
+    plot_action_percentages = [
+        100 * count / total_actions for count in plot_action_counts
+    ]
+
+cooldown_description = (
+    "ground-confirmation re-imaging"
+    if np.isclose(sim_cfg.reimage_cooldown_orbits, 0.0)
+    else f"{sim_cfg.reimage_cooldown_orbits:g}-orbit cooldown"
+)
+behavior_plot_title = None
+if act_random:
+    behavior_plot_title = (
+        f"Random imaging with safety shield - seed {seed_number}, "
+        f"{n_targets} targets, {cooldown_description}"
+    )
+elif use_heuristic:
+    heuristic_title = {
+        "angle": "Greedy minimum-angle heuristic",
+        "priority_angle": "Greedy angle-to-priority heuristic",
+        "candidate_priority": "Greedy maximum-priority candidate heuristic",
+    }.get(heuristic_mode, f"Greedy {heuristic_mode} heuristic")
+    controller_title = (
+        "safety shield"
+        if ARGS.heuristic_shield_only
+        else "resource-rule controller and safety shield"
+    )
+    behavior_plot_title = (
+        f"{heuristic_title} with {controller_title} - seed {seed_number}, "
+        f"{n_targets} targets, {cooldown_description}"
+    )
+heuristic_file_label = f"HEURISTIC_{heuristic_mode}"
+
 # Combined plot 1
 fig, ax1 = plt.subplots(figsize=(10, 5))
 
 # Plot absolute counts on the left y-axis
-bars1 = ax1.bar(action_labels, counts, color="skyblue", label="Action Count")
+bars1 = ax1.bar(
+    plot_action_labels, plot_action_counts, color="skyblue", label="Action Count"
+)
 ax1.set_ylabel("Number of Times Action Was Taken", color="skyblue")
 ax1.tick_params(axis='y', labelcolor="black")
-ax1.set_xticks(range(len(action_labels)))
-ax1.set_xticklabels(action_labels, rotation=45)
+ax1.set_xticks(range(len(plot_action_labels)))
+ax1.set_xticklabels(plot_action_labels, rotation=45)
 
 # Create a second y-axis for the percentages
 ax2 = ax1.twinx()
-bars2 = ax2.bar(action_labels, percentages, color="mediumseagreen", alpha=0.000, label="Action Percentage")
+bars2 = ax2.bar(
+    plot_action_labels,
+    plot_action_percentages,
+    color="mediumseagreen",
+    alpha=0.000,
+    label="Action Percentage",
+)
 ax2.set_ylabel("Percentage of Total Actions (%)", color="mediumseagreen")
 ax2.tick_params(axis='y', labelcolor="black")
 
@@ -2962,15 +3041,17 @@ lines2, labels2 = bars2, ["Percentage"]
 # ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right")
 
 # plt.title("Action Distribution: Count and Percentage")
+if behavior_plot_title:
+    ax1.set_title(behavior_plot_title)
 plt.tight_layout()
 if use_shield:
     if use_heuristic:
-        save_plot_unique(fig, f"seed{seed_number}_HEURISTIC+SHIELD_action_distribution_combined")
+        save_plot_unique(fig, f"seed{seed_number}_{heuristic_file_label}+SHIELD_action_distribution_combined")
     else:
         save_plot_unique(fig, f"seed{seed_number}_{policy_mode}_{policy_name}+SHIELD_action_distribution_combined")
 else:
     if use_heuristic:
-        save_plot_unique(fig, f"seed{seed_number}_HEURISTIC_action_distribution_combined")
+        save_plot_unique(fig, f"seed{seed_number}_{heuristic_file_label}_action_distribution_combined")
     else:
         save_plot_unique(fig, f"seed{seed_number}_{policy_mode}_{policy_name}_action_distribution_combined")
 plt.show()
@@ -3165,15 +3246,17 @@ lines2, labels2 = ax2.get_legend_handles_labels()
 ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', fontsize=legend_fontsize)
 
 # plt.title("Battery, Storage, Reward, Imaging and Action Events Over Time")
+if behavior_plot_title:
+    ax1.set_title(behavior_plot_title)
 plt.tight_layout()
 if use_shield:
     if use_heuristic:
-        save_plot_unique(fig3, f"seed{seed_number}_HEURISTIC+SHIELD_battery_storage_reward_over_time")
+        save_plot_unique(fig3, f"seed{seed_number}_{heuristic_file_label}+SHIELD_battery_storage_reward_over_time")
     else:
         save_plot_unique(fig3, f"seed{seed_number}_{policy_mode}_{policy_name}+SHIELD_battery_storage_reward_over_time")
 else:
     if use_heuristic:
-        save_plot_unique(fig3, f"seed{seed_number}_HEURISTIC_battery_storage_reward_over_time")
+        save_plot_unique(fig3, f"seed{seed_number}_{heuristic_file_label}_battery_storage_reward_over_time")
     else:
         save_plot_unique(fig3, f"seed{seed_number}_{policy_mode}_{policy_name}_battery_storage_reward_over_time")
 plt.show()
@@ -3183,12 +3266,13 @@ plt.show()
 # an explicit title and filename so it cannot be mistaken for the paper's
 # standard two-orbit cooldown configuration.
 cooldown_tag = f"{sim_cfg.reimage_cooldown_orbits:g}orbit"
-special_desat_title = None
-if not np.isclose(sim_cfg.reimage_cooldown_orbits, 2.0):
-    special_desat_title = (
-        f"ONE-ORBIT COOLDOWN ABLATION — seed {seed_number}, {n_targets} targets; "
-        "target availability and Desat decisions"
-    )
+special_desat_title = cooldown_diagnostic_title(
+    sim_cfg.reimage_cooldown_orbits,
+    seed=seed_number,
+    target_count=n_targets,
+)
+if behavior_plot_title:
+    special_desat_title = behavior_plot_title + "; target availability"
 fig_desat = plot_target_availability_desat_diagnostic(
     step_log,
     cooldown_orbits=sim_cfg.reimage_cooldown_orbits,
@@ -3256,6 +3340,8 @@ ax2.tick_params(axis='y', labelcolor=color2, labelsize = tick_label_size)
 
 
 # plt.title('Pointing Directions During Episode')
+if behavior_plot_title:
+    ax1.set_title(behavior_plot_title)
 
 # Combined legend
 lines1, labels1 = ax1.get_legend_handles_labels()
@@ -3265,12 +3351,12 @@ plt.legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=legen
 plt.tight_layout()
 if use_shield:
     if use_heuristic:
-        save_plot_unique(fig4, f"seed{seed_number}_HEURISTIC+SHIELD_azimuth_and_elevation_pointing_over_time")
+        save_plot_unique(fig4, f"seed{seed_number}_{heuristic_file_label}+SHIELD_azimuth_and_elevation_pointing_over_time")
     else:
         save_plot_unique(fig4, f"seed{seed_number}_{policy_mode}_{policy_name}+SHIELD_azimuth_and_elevation_pointing_over_time")
 else:
     if use_heuristic:
-        save_plot_unique(fig4, f"seed{seed_number}_HEURISTIC_azimuth_and_elevation_pointing_over_time")
+        save_plot_unique(fig4, f"seed{seed_number}_{heuristic_file_label}_azimuth_and_elevation_pointing_over_time")
     else:
         save_plot_unique(fig4, f"seed{seed_number}_{policy_mode}_{policy_name}_azimuth_and_elevation_pointing_over_time")
 
@@ -4167,6 +4253,9 @@ try:
         "act_random": bool(act_random),
         "use_heuristic": bool(use_heuristic),
         "heuristic_mode": heuristic_mode if use_heuristic else None,
+        "heuristic_shield_only": (
+            bool(ARGS.heuristic_shield_only) if use_heuristic else None
+        ),
         "heuristic_downlink_storage_threshold": (
             ARGS.heuristic_downlink_storage_threshold if use_heuristic else None
         ),

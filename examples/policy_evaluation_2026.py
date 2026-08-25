@@ -21,6 +21,7 @@ from sim_config import SimConfig
 try:
     from evaluation_image_metrics import (
         annotate_downlink_window_alignment,
+        cooldown_diagnostic_title,
         cumulative_count_axis_limit,
         desat_availability_summary,
         decision_state_summary,
@@ -35,6 +36,7 @@ try:
 except ModuleNotFoundError:
     from examples.evaluation_image_metrics import (
         annotate_downlink_window_alignment,
+        cooldown_diagnostic_title,
         cumulative_count_axis_limit,
         desat_availability_summary,
         decision_state_summary,
@@ -2725,12 +2727,11 @@ plt.show()
 # plt.close(fig)
 
 cooldown_tag = f"{sim_cfg.reimage_cooldown_orbits:g}orbit"
-special_desat_title = None
-if not np.isclose(sim_cfg.reimage_cooldown_orbits, 2.0):
-    special_desat_title = (
-        f"ONE-ORBIT COOLDOWN ABLATION — seed {seed_number}, {n_targets} targets; "
-        "target availability and Desat decisions"
-    )
+special_desat_title = cooldown_diagnostic_title(
+    sim_cfg.reimage_cooldown_orbits,
+    seed=seed_number,
+    target_count=n_targets,
+)
 fig_desat = plot_target_availability_desat_diagnostic(
     step_log,
     cooldown_orbits=sim_cfg.reimage_cooldown_orbits,

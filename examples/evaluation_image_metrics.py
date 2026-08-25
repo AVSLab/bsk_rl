@@ -185,6 +185,27 @@ def cumulative_count_axis_limit(
     return float(increment * math.ceil(observed_max / increment))
 
 
+def cooldown_diagnostic_title(
+    cooldown_orbits: float,
+    *,
+    seed: int,
+    target_count: int,
+) -> str | None:
+    """Return an explicit diagnostic title for nonstandard cooldown scenarios."""
+    if np.isclose(cooldown_orbits, 2.0):
+        return None
+    if np.isclose(cooldown_orbits, 0.0):
+        scenario = "GROUND-CONFIRMATION RE-IMAGING"
+    elif np.isclose(cooldown_orbits, 1.0):
+        scenario = "ONE-ORBIT COOLDOWN ABLATION"
+    else:
+        scenario = f"{cooldown_orbits:g}-ORBIT COOLDOWN SCENARIO"
+    return (
+        f"{scenario} - seed {seed}, {target_count} targets; "
+        "target availability and Desat decisions"
+    )
+
+
 def decision_target_state_metrics(satellite: Any) -> dict[str, float | int]:
     """Measure target availability at the current policy decision epoch.
 

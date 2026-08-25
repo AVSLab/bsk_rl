@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the 200-RSO AMOS 2026 priority-event scenario in Vizard."""
+"""Run an AMOS 2026 mixed-regime priority-event scenario in Vizard."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -24,8 +25,32 @@ DEFAULT_POLICY = (
 DEFAULT_OUTPUT = REPO_ROOT / "artifacts" / "amos_2026" / "vizard"
 DEFAULT_PLOTS = Path(__file__).resolve().parent / "plots"
 DEFAULT_N_TARGETS = 200
-DEFAULT_INTEREST_FRACTION = 0.10
+DEFAULT_HIO_COUNT = 5
+DEFAULT_SHIO_COUNT = 3
 GROUND_CONFIRMATION_COOLDOWN_ORBITS = 0.0
+HEURISTIC_LABELS = {
+    "angle": (
+        "heuristicMinAngleEligibleShield_",
+        "HEURISTIC_MIN_ANGLE_ELIGIBLE_SHIELD_",
+        "minimum-angle target from the visible eligible catalog; non-imaging "
+        "actions only by shield",
+    ),
+    "candidate_priority": (
+        "heuristicMaxPriorityCandidate10Shield_",
+        "HEURISTIC_MAX_PRIORITY_CANDIDATE10_SHIELD_",
+        "maximum-priority target from the RL policy's 10 candidates; non-imaging "
+        "actions only by shield",
+    ),
+}
+
+
+class PromotionSpec(NamedTuple):
+    """Resolved, disjoint midpoint-promotion groups and filename label."""
+
+    hio_count: int
+    shio_count: int
+    label: str
+    summary: str
 
 
 def evaluator_environment(environ: dict[str, str] | None = None) -> dict[str, str]:
@@ -38,30 +63,110 @@ def evaluator_environment(environ: dict[str, str] | None = None) -> dict[str, st
     return child_environment
 
 
-def interest_object_count(n_targets: int, fraction: float) -> int:
-    """Convert a catalog fraction to an exact, non-overlapping tier count."""
+def promotion_count(n_targets: int, fraction: float, tier: str) -> int:
+    """Convert one catalog fraction to an exact promotion-group count."""
     n_targets = int(n_targets)
     fraction = float(fraction)
     if n_targets <= 0:
         raise ValueError("n_targets must be positive")
-    if not 0.0 <= fraction <= 0.5:
-        raise ValueError("interest fraction must be in [0, 0.5]")
+    if not 0.0 <= fraction <= 1.0:
+        raise ValueError(f"{tier} fraction must be in [0, 1]")
     raw_count = n_targets * fraction
     count = round(raw_count)
     if not math.isclose(raw_count, count, abs_tol=1e-9):
         raise ValueError(
-            f"{fraction:g} of {n_targets} targets is not an integer target count"
+            f"{tier} fraction {fraction:g} of {n_targets} targets does not produce "
+            "an integer target count"
         )
     return int(count)
+
+
+def _percentage_label(fraction: float) -> str:
+    return f"{100.0 * fraction:g}pct".replace(".", "p")
+
+
+def resolve_promotions(args: argparse.Namespace) -> PromotionSpec:
+    """Resolve paper counts or independent catalog fractions into exact counts."""
+    n_targets = int(args.n_targets)
+    if n_targets <= 0:
+        raise ValueError("--n-targets must be positive")
+
+    hio_count_arg = getattr(args, "hio_count", None)
+    shio_count_arg = getattr(args, "shio_count", None)
+    hio_fraction = getattr(args, "hio_fraction", None)
+    shio_fraction = getattr(args, "shio_fraction", None)
+    symmetric_fraction = getattr(args, "interest_fraction", None)
+
+    count_mode = hio_count_arg is not None or shio_count_arg is not None
+    fraction_mode = (
+        hio_fraction is not None
+        or shio_fraction is not None
+        or symmetric_fraction is not None
+    )
+    if count_mode and fraction_mode:
+        raise ValueError("Specify promotion counts or fractions, not both")
+
+    if symmetric_fraction is not None:
+        if hio_fraction is not None or shio_fraction is not None:
+            raise ValueError(
+                "--interest-fraction cannot be combined with --hio-fraction or "
+                "--shio-fraction"
+            )
+        hio_fraction = shio_fraction = float(symmetric_fraction)
+
+    if fraction_mode:
+        if hio_fraction is None or shio_fraction is None:
+            raise ValueError(
+                "Fraction scenarios require both --hio-fraction and --shio-fraction"
+            )
+        hio_fraction = float(hio_fraction)
+        shio_fraction = float(shio_fraction)
+        hio_count = promotion_count(n_targets, hio_fraction, "HIO")
+        shio_count = promotion_count(n_targets, shio_fraction, "SHIO")
+        label = (
+            f"{_percentage_label(hio_fraction)}HIO_"
+            f"{_percentage_label(shio_fraction)}SHIO"
+        )
+        summary = (
+            f"{hio_count} HIO ({100.0 * hio_fraction:g}%) + "
+            f"{shio_count} SHIO ({100.0 * shio_fraction:g}%; disjoint "
+            "fractional scenario)"
+        )
+    else:
+        if count_mode and (hio_count_arg is None or shio_count_arg is None):
+            raise ValueError(
+                "Count scenarios require both --hio-count and --shio-count"
+            )
+        hio_count = DEFAULT_HIO_COUNT if hio_count_arg is None else int(hio_count_arg)
+        shio_count = (
+            DEFAULT_SHIO_COUNT if shio_count_arg is None else int(shio_count_arg)
+        )
+        if hio_count < 0 or shio_count < 0:
+            raise ValueError("Promotion counts must be non-negative")
+        label = f"HIO{hio_count}_SHIO{shio_count}"
+        scenario = (
+            "paper-count scenario"
+            if (hio_count == DEFAULT_HIO_COUNT and shio_count == DEFAULT_SHIO_COUNT)
+            else "explicit-count scenario"
+        )
+        summary = f"{hio_count} HIO + {shio_count} SHIO ({scenario}; disjoint)"
+
+    if hio_count + shio_count > n_targets:
+        raise ValueError(
+            f"HIO + SHIO groups contain {hio_count + shio_count} targets, "
+            f"which exceeds the {n_targets}-target catalog"
+        )
+    return PromotionSpec(hio_count, shio_count, label, summary)
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Save a smooth Vizard playback for the selected mixed-trained alpha=0.1 "
-            "AMOS 2026 policy. The default scenario has 200 targets; at mid-episode "
-            "10% become HIOs and a disjoint 10% become SHIOs. Re-imaging is enabled "
-            "immediately after ground verification."
+            "AMOS 2026 policy. The default midpoint event uses the paper's five HIO "
+            "and three SHIO targets. Independent HIO and SHIO fractions support "
+            "catalog-scaled stress scenarios. Re-imaging is enabled immediately "
+            "after ground verification."
         )
     )
     parser.add_argument(
@@ -78,9 +183,7 @@ def parse_args() -> argparse.Namespace:
         "--vizard-rate-hz",
         type=float,
         default=1.0,
-        help=(
-            "Recorded Vizard samples per simulation second (default: 1 Hz)."
-        ),
+        help=("Recorded Vizard samples per simulation second (default: 1 Hz)."),
     )
     parser.add_argument(
         "--n-targets",
@@ -89,13 +192,44 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_N_TARGETS,
         help="Evaluation catalog size. Both configurations use a 45,000 s episode.",
     )
-    parser.add_argument(
+    promotion_group = parser.add_argument_group("midpoint priority promotions")
+    promotion_group.add_argument(
+        "--hio-count",
+        type=int,
+        default=None,
+        help=f"Exact HIO count (default paper case: {DEFAULT_HIO_COUNT}).",
+    )
+    promotion_group.add_argument(
+        "--shio-count",
+        type=int,
+        default=None,
+        help=f"Exact SHIO count (default paper case: {DEFAULT_SHIO_COUNT}).",
+    )
+    promotion_group.add_argument(
+        "--hio-fraction",
+        type=float,
+        default=None,
+        help=(
+            "Catalog fraction promoted to HIO. Supply together with "
+            "--shio-fraction; each fraction must map to an integer count."
+        ),
+    )
+    promotion_group.add_argument(
+        "--shio-fraction",
+        type=float,
+        default=None,
+        help=(
+            "Catalog fraction promoted to SHIO. Supply together with "
+            "--hio-fraction; the two disjoint groups cannot exceed the catalog."
+        ),
+    )
+    promotion_group.add_argument(
         "--interest-fraction",
         type=float,
-        default=DEFAULT_INTEREST_FRACTION,
+        default=None,
         help=(
-            "Independent catalog fraction promoted to HIO and SHIO at mid-episode "
-            "(default: 0.10 for each tier)."
+            "Compatibility shorthand for equal HIO and SHIO fractions, such as "
+            "0.10 for the earlier 10%/10% stress scenario."
         ),
     )
     parser.add_argument(
@@ -105,6 +239,26 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Additional cooldown after useful ground verification (default: 0; the "
             "image remains ineligible while it is onboard awaiting verification)."
+        ),
+    )
+    parser.add_argument(
+        "--random-imaging",
+        action="store_true",
+        help=(
+            "Choose uniformly among imaging actions at every decision. Charge and "
+            "downlink actions can then occur only through the enabled safety shield."
+        ),
+    )
+    parser.add_argument(
+        "--heuristic-mode",
+        choices=["off", *HEURISTIC_LABELS],
+        default="off",
+        help=(
+            "Replace the RL policy with a greedy imaging-target heuristic. 'angle' "
+            "uses the smallest pointing error among visible eligible targets; "
+            "'candidate_priority' uses the highest priority among the same ten "
+            "candidate targets available to the RL policy. The safety shield remains "
+            "the only source of non-imaging actions."
         ),
     )
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
@@ -172,15 +326,21 @@ def parse_args() -> argparse.Namespace:
 
 def vizard_tag(args: argparse.Namespace) -> str:
     hz_label = f"{args.vizard_rate_hz:g}Hz".replace(".", "p")
-    interest_pct = f"{100.0 * args.interest_fraction:g}pct".replace(".", "p")
+    promotions = resolve_promotions(args)
     cooldown_label = (
         "groundConfirm"
         if math.isclose(args.reimage_cooldown_orbits, 0.0, abs_tol=1e-12)
         else f"{args.reimage_cooldown_orbits:g}orbitCooldown".replace(".", "p")
     )
+    if args.random_imaging:
+        behavior_label = "randomImagingShield_"
+    elif args.heuristic_mode != "off":
+        behavior_label = HEURISTIC_LABELS[args.heuristic_mode][0]
+    else:
+        behavior_label = ""
     return (
         f"AMOS2026_mixed_a0p1_{args.n_targets}targets_"
-        f"{interest_pct}HIO_{interest_pct}SHIO_{cooldown_label}_"
+        f"{behavior_label}{promotions.label}_{cooldown_label}_"
         f"seed{args.seed}_{hz_label}"
     )
 
@@ -190,7 +350,20 @@ def build_command(args: argparse.Namespace) -> list[str]:
         raise ValueError("--vizard-rate-hz must be positive")
     if args.reimage_cooldown_orbits < 0.0:
         raise ValueError("--reimage-cooldown-orbits must be non-negative")
-    interest_count = interest_object_count(args.n_targets, args.interest_fraction)
+    if args.random_imaging and args.heuristic_mode != "off":
+        raise ValueError("--random-imaging and --heuristic-mode are mutually exclusive")
+    promotions = resolve_promotions(args)
+    cooldown_label = (
+        "groundConfirm"
+        if math.isclose(args.reimage_cooldown_orbits, 0.0, abs_tol=1e-12)
+        else f"{args.reimage_cooldown_orbits:g}orbitCooldown".replace(".", "p")
+    )
+    if args.random_imaging:
+        behavior_label = "RANDOM_IMAGING_SHIELD_"
+    elif args.heuristic_mode != "off":
+        behavior_label = HEURISTIC_LABELS[args.heuristic_mode][1]
+    else:
+        behavior_label = ""
     python = REPO_ROOT / ".venv" / "bin" / "python"
     command = [
         str(python if python.exists() else Path(sys.executable)),
@@ -200,8 +373,8 @@ def build_command(args: argparse.Namespace) -> list[str]:
         str(args.policy_path.expanduser().resolve()),
         "--policy_name",
         (
-            "amos2026_MIXED_GAT_fullActions_10d90i_"
-            f"evaluation{args.n_targets}targets"
+            f"amos2026_{behavior_label}MIXED_GAT_fullActions_10d90i_"
+            f"evaluation{args.n_targets}targets_{promotions.label}_{cooldown_label}"
         ),
         "--policy_layout",
         "gat_full",
@@ -231,11 +404,11 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "--dynamic_priority_event_fraction",
         "0.5",
         "--hio_count",
-        str(interest_count),
+        str(promotions.hio_count),
         "--hio_priority_max_multiplier",
         "5",
         "--shio_count",
-        str(interest_count),
+        str(promotions.shio_count),
         "--shio_priority_max_multiplier",
         "10",
         "--dynamic_priority_event_seed",
@@ -254,6 +427,11 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "--no_show_plots",
         "--no_save_data",
     ]
+    if args.random_imaging:
+        command.append("--random_imaging")
+    elif args.heuristic_mode != "off":
+        command.extend(["--heuristic_mode", args.heuristic_mode])
+        command.append("--heuristic_shield_only")
     if not args.no_hud:
         command.append("--amos_vizard_hud")
         command.extend(["--amos_vizard_rw_display", args.rw_display])
@@ -273,15 +451,14 @@ def build_command(args: argparse.Namespace) -> list[str]:
 def main() -> int:
     args = parse_args()
     command = build_command(args)
-    interest_count = interest_object_count(args.n_targets, args.interest_fraction)
+    promotions = resolve_promotions(args)
     print("Vizard episode runner:", Path(__file__).resolve())
     print("Evaluator:", EVALUATOR)
     print("Policy:", args.policy_path.expanduser().resolve())
     print("Catalog:", f"{args.n_targets} targets over 45,000 s")
     print(
         "Midpoint promotion:",
-        f"{interest_count} HIO + {interest_count} SHIO "
-        f"({100.0 * args.interest_fraction:g}% each, disjoint)",
+        promotions.summary,
     )
     print(
         "Re-imaging gate:",
@@ -290,6 +467,18 @@ def main() -> int:
         else f"ground confirmation + {args.reimage_cooldown_orbits:g} orbit(s)",
     )
     print("Vizard sampling:", f"{args.vizard_rate_hz:g} Hz")
+    print(
+        "Decision behavior:",
+        (
+            "uniform random imaging; charge/downlink only by shield"
+            if args.random_imaging
+            else (
+                HEURISTIC_LABELS[args.heuristic_mode][2]
+                if args.heuristic_mode != "off"
+                else "trained mixed alpha=0.1 policy with shield"
+            )
+        ),
+    )
     print(
         "Vizard panels:",
         (

@@ -42,6 +42,26 @@ UMBRA_TAU  = 0.5          # shadowFactor < this  => "in umbra"
 SUN_ALIGN_DOT_TAU = 0.0   # dot(los_H, sun_H) >= this => "sunward"
 
 
+def _select_highest_priority_candidate(candidate_targets):
+    """Return the highest-priority unique target from an action candidate set."""
+    unique_candidates = list(
+        {candidate.id: candidate for candidate in candidate_targets}.values()
+    )
+    if not unique_candidates:
+        raise RuntimeError("No candidate targets available.")
+
+    def _priority_sort_key(target):
+        try:
+            priority = float(getattr(target, "priority", float("-inf")))
+        except (TypeError, ValueError):
+            priority = float("-inf")
+        if not np.isfinite(priority):
+            priority = float("-inf")
+        return (-priority, int(target.id))
+
+    return min(unique_candidates, key=_priority_sort_key)
+
+
 
 class DiscreteActionBuilder(ActionBuilder):
 
@@ -1063,6 +1083,135 @@ class ImageRSO(DiscreteAction):
 
         new_target = final_targets[action]
         policy_target = new_target
+
+        # Heuristic target selection must happen before the commanded-target metrics
+        # below are recorded.  Previously the heuristic override happened after those
+        # metrics were appended, so heuristic plots described candidate slot zero even
+        # when a different target was actually commanded.
+        run_heuristic_policy = self.satellite.dynamics.use_heuristic
+        if run_heuristic_policy:
+            if self.satellite.dynamics.print_info:
+                print("using HEURISTIC POLICY")
+
+            mode = getattr(self.satellite.dynamics, "heuristic_mode", "distance")
+            top_k = int(getattr(self.satellite.dynamics, "heuristic_top_k", 10))
+
+            def _dist_to(tgt):
+                tgt_pos = np.array(tgt.target_spacecraft.dynamics.r_BN_N)
+                return np.linalg.norm(tgt_pos - scanner_pos)
+
+            def _elev_of(tgt):
+                tgt_pos = np.array(tgt.target_spacecraft.dynamics.r_BN_N)
+                return self.elevation_angle(scanner_pos, tgt_pos)
+
+            def _angle_err_of(tgt):
+                return float(_angle_to_target(self.satellite, {"object": tgt}))
+
+            if mode == "distance":
+                distances = [(tgt, _dist_to(tgt)) for tgt in eligible_targets]
+                distances.sort(key=lambda x: x[1])
+
+                if not distances:
+                    sorted_fallback = sorted(known_targets, key=_dist_to)
+                    if not sorted_fallback:
+                        raise RuntimeError("No targets available.")
+                    heuristic_target = sorted_fallback[0]
+                else:
+                    top_list = [t for t, _ in distances[: max(1, top_k)]]
+                    visible_candidates = [
+                        (t, _dist_to(t))
+                        for t in top_list
+                        if -21.0 <= _elev_of(t) <= 90.0
+                    ]
+                    if visible_candidates:
+                        visible_candidates.sort(key=lambda x: x[1])
+                        heuristic_target = visible_candidates[0][0]
+                    else:
+                        heuristic_target = distances[0][0]
+
+            elif mode in {"angle", "priority_angle"}:
+
+                def _selection_score(tgt, angle_error):
+                    if mode == "priority_angle":
+                        priority = max(float(getattr(tgt, "priority", 0.0)), 1e-6)
+                        return angle_error / priority
+                    return angle_error
+
+                visible_eligible = []
+                for tgt in eligible_targets:
+                    if -21.0 <= _elev_of(tgt) <= 90.0:
+                        try:
+                            aerr = _angle_err_of(tgt)
+                        except Exception:
+                            aerr = float("inf")
+                        visible_eligible.append(
+                            (tgt, _selection_score(tgt, aerr), aerr)
+                        )
+
+                if visible_eligible:
+                    visible_eligible.sort(key=lambda x: (x[1], x[2], x[0].id))
+                    heuristic_target = visible_eligible[0][0]
+                else:
+                    angle_list = []
+                    for tgt in eligible_targets:
+                        try:
+                            aerr = _angle_err_of(tgt)
+                            angle_list.append(
+                                (tgt, _selection_score(tgt, aerr), aerr)
+                            )
+                        except Exception:
+                            pass
+
+                    if angle_list:
+                        angle_list.sort(key=lambda x: (x[1], x[2], x[0].id))
+                        heuristic_target = angle_list[0][0]
+                    else:
+                        known_angles = []
+                        for tgt in known_targets:
+                            try:
+                                aerr = _angle_err_of(tgt)
+                                known_angles.append(
+                                    (tgt, _selection_score(tgt, aerr), aerr)
+                                )
+                            except Exception:
+                                pass
+                        if known_angles:
+                            known_angles.sort(key=lambda x: (x[1], x[2], x[0].id))
+                            heuristic_target = known_angles[0][0]
+                        else:
+                            heuristic_target = min(known_targets, key=_dist_to)
+
+            elif mode == "candidate_priority":
+                # Use exactly the same changing candidate set represented by the
+                # imaging actions available to the RL policy.  Duplicate padding is
+                # removed while preserving the candidate-set membership.
+                heuristic_target = _select_highest_priority_candidate(final_targets)
+            else:
+                raise ValueError(
+                    f"Unknown heuristic_mode '{mode}'. Use 'distance', 'angle', "
+                    "'priority_angle', or 'candidate_priority'."
+                )
+
+            new_target = heuristic_target
+            self.satellite.dynamics.target_selection.append(policy_target)
+            if policy_target.id == heuristic_target.id:
+                self.satellite.dynamics.target_selection_comparison.append(
+                    heuristic_target.id
+                )
+            else:
+                if self.satellite.dynamics.print_info:
+                    print(f"heuristic ({mode}) chose target: {heuristic_target.name}")
+                self.satellite.dynamics.target_selection_comparison.append(False)
+            self.satellite.dynamics.last_policy_target_id = int(policy_target.id)
+            self.satellite.dynamics.last_heuristic_target_id = int(
+                heuristic_target.id
+            )
+            self.satellite.dynamics.last_imaging_selection_mode = "heuristic"
+        else:
+            self.satellite.dynamics.last_policy_target_id = int(policy_target.id)
+            self.satellite.dynamics.last_heuristic_target_id = None
+            self.satellite.dynamics.last_imaging_selection_mode = "policy"
+
         if self.satellite.dynamics.print_info:
             if len(visible_eligible_targets) !=0 and action < len(visible_eligible_targets):
                 print(f'chosen target elevation {visible_eligible_targets[action][1]} and shadowFactor {self.satellite.dynamics.world.eclipseObject.eclipseOutMsgs[new_target.target_spacecraft.dynamics.eclipse_index].read().shadowFactor}')
@@ -1319,127 +1468,6 @@ class ImageRSO(DiscreteAction):
                         f"{sorted(unexpected_cooldown_ids)}"
                     )
                 print(f"Never seen targets ({len(never_seen)}): {never_seen} \n")
-
-        run_heuristic_policy = self.satellite.dynamics.use_heuristic
-        if run_heuristic_policy:
-            print("using HEURISTIC POLICY")
-
-            # Config knobs (with sane defaults)
-            mode = getattr(self.satellite.dynamics, "heuristic_mode", "distance")
-            top_k = int(getattr(self.satellite.dynamics, "heuristic_top_k", 10))
-
-            def _dist_to(tgt):
-                tgt_pos = np.array(tgt.target_spacecraft.dynamics.r_BN_N)
-                return np.linalg.norm(tgt_pos - scanner_pos)
-
-            def _elev_of(tgt):
-                tgt_pos = np.array(tgt.target_spacecraft.dynamics.r_BN_N)
-                return self.elevation_angle(scanner_pos, tgt_pos)
-
-            def _angle_err_of(tgt):
-                # Use the same "initial angular error" metric you already record
-                return float(_angle_to_target(self.satellite, {"object": tgt}))
-
-            # ---- Heuristic A: by distance (your current behavior) ----
-            if mode == "distance":
-                distances = [(tgt, _dist_to(tgt)) for tgt in eligible_targets]
-                distances.sort(key=lambda x: x[1])
-
-                if not distances:
-                    # Fall back to nearest known target (nothing currently eligible)
-                    sorted_fallback = sorted(known_targets, key=_dist_to)
-                    if not sorted_fallback:
-                        raise RuntimeError("No targets available.")
-                    heuristic_target = sorted_fallback[0]
-                else:
-                    top_list = [t for t, _ in distances[:max(1, top_k)]]
-                    visible_candidates = [(t, _dist_to(t)) for t in top_list if -21.0 <= _elev_of(t) <= 90.0]
-                    if visible_candidates:
-                        visible_candidates.sort(key=lambda x: x[1])
-                        heuristic_target = visible_candidates[0][0]
-                    else:
-                        heuristic_target = distances[0][0]
-
-                new_target = heuristic_target
-            # ---- Heuristic B: by current angle (smallest initial angular error) ----
-            elif mode in {"angle", "priority_angle"}:
-                def _selection_score(tgt, angle_error):
-                    if mode == "priority_angle":
-                        priority = max(float(getattr(tgt, "priority", 0.0)), 1e-6)
-                        return angle_error / priority
-                    return angle_error
-
-                # 1) visible + eligible first
-                visible_eligible = []
-                for tgt in eligible_targets:
-                    elev = _elev_of(tgt)  # LOS check via elevation
-                    if -21.0 <= elev <= 90.0:
-                        try:
-                            aerr = _angle_err_of(tgt)
-                        except Exception:
-                            aerr = float("inf")
-                        visible_eligible.append(
-                            (tgt, _selection_score(tgt, aerr), aerr)
-                        )
-
-                if visible_eligible:
-                    # Pick the visible eligible target with the smallest angle
-                    visible_eligible.sort(key=lambda x: (x[1], x[2], x[0].id))
-                    heuristic_target = visible_eligible[0][0]
-                else:
-                    # 2) none in LOS → pick overall smallest-angle eligible target (even if not visible)
-                    angle_list = []
-                    for tgt in eligible_targets:
-                        try:
-                            aerr = _angle_err_of(tgt)
-                            angle_list.append(
-                                (tgt, _selection_score(tgt, aerr), aerr)
-                            )
-                        except Exception:
-                            pass
-
-                    if angle_list:
-                        angle_list.sort(key=lambda x: (x[1], x[2], x[0].id))
-                        heuristic_target = angle_list[0][0]
-                    else:
-                        # 3) no eligible targets at all → fallback: best angle among known targets
-                        known_angles = []
-                        for tgt in known_targets:
-                            try:
-                                aerr = _angle_err_of(tgt)
-                                known_angles.append(
-                                    (tgt, _selection_score(tgt, aerr), aerr)
-                                )
-                            except Exception:
-                                pass
-                        if known_angles:
-                            known_angles.sort(key=lambda x: (x[1], x[2], x[0].id))
-                            heuristic_target = known_angles[0][0]
-                        else:
-                            # last resort: nearest by distance
-                            heuristic_target = min(known_targets, key=_dist_to)
-
-                new_target = heuristic_target
-            else:
-                raise ValueError(
-                    f"Unknown heuristic_mode '{mode}'. Use 'distance', 'angle', "
-                    "or 'priority_angle'."
-                )
-
-            # Keep your comparison & logging exactly as before
-            self.satellite.dynamics.target_selection.append(policy_target)
-            if policy_target.id == heuristic_target.id:
-                self.satellite.dynamics.target_selection_comparison.append(heuristic_target.id)
-            else:
-                print(f"heuristic ({mode}) chose target: {heuristic_target.name}")
-                self.satellite.dynamics.target_selection_comparison.append(False)
-            self.satellite.dynamics.last_policy_target_id = int(policy_target.id)
-            self.satellite.dynamics.last_heuristic_target_id = int(heuristic_target.id)
-            self.satellite.dynamics.last_imaging_selection_mode = "heuristic"
-        else:
-            self.satellite.dynamics.last_policy_target_id = int(policy_target.id)
-            self.satellite.dynamics.last_heuristic_target_id = None
-            self.satellite.dynamics.last_imaging_selection_mode = "policy"
 
         # action_satid = new_target.id
         # self.satellite.logger.info(f"target index {action_satid} tasked: {new_target.name}")
