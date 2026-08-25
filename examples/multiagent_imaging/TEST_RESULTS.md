@@ -20,15 +20,16 @@ $PYTHON -m pytest -q \
   tests/integration/multiagent/test_rllib_smoke.py
 ```
 
-Result after the teammate-observation phase: **32 passed**. Six warnings are upstream
+Result after the observation simplification: **34 passed**. Six warnings are upstream
 Ray/Gymnasium deprecation warnings.
 
 This includes role/passive exclusion, independent access and storage, local-knowledge
 separation, global-truth non-leakage, message ordering and expiry, deterministic reward
 credit, asynchronous `d_ts` condensation, all four information/delivery cases,
-deterministic two-sensor Basilisk rollout, teammate-order invariance, fixed shape for
-one/two/three sensors, strict information-case separation, actor target-permutation
-equivariance, shared-policy mapping, and one short RLlib PPO update.
+deterministic two-sensor Basilisk rollout, freshness-weighted same-target intent,
+peer-message-order invariance, fixed shape for one/two/three sensors, strict
+information-case separation, actor target-permutation equivariance, shared-policy mapping,
+and one short RLlib PPO update.
 
 ## Complete unit regression
 
@@ -36,7 +37,7 @@ equivariance, shared-policy mapping, and one short RLlib PPO update.
 $PYTHON -m pytest -q tests/unittest
 ```
 
-Result: **514 passed, 1 skipped**.
+Result: **516 passed, 1 skipped**.
 
 ## Integration regression
 
@@ -83,7 +84,7 @@ directional remote-pending knowledge at both receivers.
 
 ```bash
 $PYTHON examples/multiagent_imaging/run_matched_validation.py \
-  --output-dir results/multiagent_imaging/matched_validation_phase2
+  --output-dir results/multiagent_imaging/matched_validation_simplified_observation
 ```
 
 Result: **passed**. The runner confirmed identical initial sensor states, target states,
@@ -97,10 +98,12 @@ priorities, seeds, reward settings, and 1,800-second horizons across all four ca
 | LOS intent/status | 2 | 49.72 | 763 s | 90 s |
 
 These deterministic shared-controller runs validate information flow and diagnostics, not
-policy performance. No ground delivery completed in the bounded horizon. The saved local
-results include reward/resource histories, action durations, duplicate counts, message
-ages/dispositions, intent conflicts, per-sensor local catalogs and physical products, and
-local-versus-shared omission counts.
+policy performance. No ground delivery completed in the bounded horizon. The revised
+observation contains 14 own-spacecraft/environment features and 13 features per target; it
+contains no generic peer-resource or peer-action vector. The saved local results include
+reward/resource histories, action durations, duplicate counts, message ages/dispositions,
+intent conflicts, per-sensor local catalogs and physical products, and local-versus-shared
+omission counts.
 
 ## Static checks
 
@@ -111,7 +114,7 @@ $PYTHON -m ruff check \
   src/bsk_rl/obs/__init__.py src/bsk_rl/sats/__init__.py \
   src/bsk_rl/gym.py src/bsk_rl/sats/satellite.py \
   src/bsk_rl/obs/observations.py src/bsk_rl/utils/rllib/discounting.py \
-  src/bsk_rl/comm/teammate_state.py \
+  src/bsk_rl/utils/coordination.py \
   src/bsk_rl/sats/roles.py src/bsk_rl/comm/rso_communication.py \
   src/bsk_rl/comm/typed_messages.py src/bsk_rl/data/multiagent_rso_data.py \
   src/bsk_rl/data/multiagent_rso_reward.py examples/multiagent_imaging \

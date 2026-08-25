@@ -66,16 +66,25 @@ link budget, bandwidth, packet loss, propagation delay, and image relay. The
 
 ## Shared policy and timing
 
-Only explicit sensing roles reach PettingZoo and RLlib. Both sensors map to
-`shared_sensor_policy`; passive targets have no policy. `ContinuePreviousAction` emits
+Only explicit sensing roles reach PettingZoo and RLlib. Every sensor maps to the shared
+`imager` module; passive targets have no policy. `ContinuePreviousAction` emits
 `NO_ACTION` for a sensor still executing an action. `CondenseMultiStepActions` removes
 continuation samples, accumulates each sensor's elapsed `d_ts`, and the
 `TimeDiscountedGAEPPOTorchLearner` applies the AMOS per-second discount convention.
 
-The actor observation has 41 spacecraft/environment/team features followed by equal
-13-feature candidate-target chunks. The first 17 are the AMOS spacecraft/environment/team
-features. A 24-feature mean/max/action-distribution pool then summarizes any number of
-information-available teammates without fixed peer slots. `TeamKnowledge` includes the
-configured sensor count, the number of peers actually known in the selected information
-case, and fresh received intents. See `OBSERVATION_VALIDATION.md` for the exact contract,
-boundary rules, matched-rollout results, and cluster-training proposal.
+The actor observation has 14 own-spacecraft/environment features followed by equal
+13-feature candidate-target chunks. No generic teammate resource, orbit, or action vector
+is appended. Coordination is represented only where it is actionable: each candidate has
+known pending and cooldown fields plus a freshness-weighted fraction of known peers
+targeting that same RSO. The comparison uses target IDs internally but never exposes raw
+IDs or fixed peer slots to the policy. See `OBSERVATION_VALIDATION.md` for the exact
+contract, boundary rules, matched-rollout results, and cluster-training proposal.
+
+## Why the adapter remains
+
+The training and asynchronous-policy path otherwise uses the established BSK-RL pattern:
+parallel PettingZoo, one shared RLlib module, standard per-satellite data stores, a global
+rewarder, and a communication-method subclass. The small role-aware tasking adapter remains
+because this space-to-space formulation propagates every RSO as a Basilisk spacecraft.
+Treating 100--200 passive RSOs as learned or dummy PettingZoo agents would not match the
+AEOS multi-sensor pattern and would scale poorly.

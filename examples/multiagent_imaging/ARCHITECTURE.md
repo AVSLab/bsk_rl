@@ -1,131 +1,125 @@
 # Architecture note
 
-## Roles and simulation boundary
+## Design alignment
 
-`SpacecraftRole` is attached explicitly when a spacecraft is constructed. The role-aware
-`SensingAgentConstellationTasking` adapter keeps every spacecraft in Basilisk but exposes
-only `SENSING_AGENT` spacecraft through PettingZoo. `PASSIVE_TARGET` spacecraft receive a
-deterministic drift action when needed. The adapter accepts any positive number of sensing
-agents; no role is inferred from a list index or a substring in a spacecraft name.
+The implementation follows the established BSK-RL multi-spacecraft pattern wherever the
+AMOS RSO formulation permits it:
 
-The AMOS `RandomSatellites` scene now has an explicit-role path that registers every
-passive RSO with every sensing spacecraft's `targetLocation` model. Each sensing spacecraft
-receives its own target-named storage partitions and its own ground-station/access model.
-The shared team cooldown converts the configured orbit count using the order-independent
-median sensing-orbit period, while each sensor maintains its own resulting cooldown
-knowledge. The legacy single-sensor path and its buffer naming are retained for existing
-AMOS runs.
+- a native parallel PettingZoo environment;
+- one shared RLlib module named `imager` for every sensing spacecraft;
+- standard per-spacecraft `DataStore` instances and one `GlobalReward`;
+- a `CommunicationMethod` subclass for information exchange;
+- `ContinuePreviousAction`, `CondenseMultiStepActions`, and the time-discounted PPO
+  learner for asynchronous actions.
 
-## Three different kinds of state
+The role-aware `SensingAgentConstellationTasking` adapter is retained as one narrow
+boundary. Unlike AEOS, the AMOS environment propagates every RSO as a Basilisk spacecraft.
+Hundreds of passive targets therefore cannot be exposed as PettingZoo agents or assigned
+dummy learned policies. Explicit `SpacecraftRole` values identify sensing agents and
+passive targets; the adapter presents only sensing agents to PettingZoo while keeping all
+spacecraft in the simulator. It accepts any positive number of sensors and never infers a
+role from a list index or name substring.
 
-| State | Owner | Purpose | May affect a local policy? |
+## State ownership
+
+There are three owners, but no parallel public datastore or ledger hierarchy:
+
+| State | Owner | Purpose | Actor access |
 |---|---|---|---|
-| `SensorProductStore` | One sensor | Physical onboard image products | Yes, for that owner only |
-| `LocalCatalogKnowledge` | One sensor | Acquisition, delivery, pending, cooldown knowledge | Yes |
-| `TeamServiceLedger` | Environment truth | Unique service, duplicate service, reward and analysis | No |
+| Physical data partitions | Each sensor's Basilisk storage unit | Authoritative onboard image volume | Own resources only |
+| `MultiSensorRSOTargetImageStore` | Standard BSK-RL `DataStore` on each sensor | Product provenance and `LocalCatalogKnowledge` | Own and explicitly received knowledge |
+| `_TeamServiceAccounting` | `MultiSensorRSOTargetImageReward` | Unique team service, duplicates, and deterministic credit | Never |
 
 Every product retains `record_id`, `source_sensor`, `target_id`, `capture_time`,
-`delivery_time`, `quality`, and `storage_owner`. Source and owner must match because image
-relay is disabled. A downlink removes a record only from the executing sensor's physical
-store. The team ledger deliberately has no reference to a local catalog, so it cannot
-silently change observations, candidate filters, or cooldown knowledge.
+`delivery_time`, `quality`, and `storage_owner`. Source and storage owner must match because
+image relay is disabled. A sensor can remove and downlink only its own onboard product.
+Team accounting is private to the global rewarder and is exposed only as read-only
+evaluation history and summary metrics. It cannot modify a local catalog, candidate
+eligibility, cooldown, or observation.
 
-## Shared-policy observation contract
+## Minimal shared-policy observation
 
-The AMOS target-wise contract is preserved: all global/context features precede equal
-13-feature candidate chunks. The original 17 global features are augmented by a
-24-feature, permutation-invariant teammate-set summary. The result is 41 global/team
-features plus 13 features per candidate, independent of the number or ordering of
-sensing agents.
+The actor receives 14 own-spacecraft/environment features followed by equal 13-feature
+candidate chunks:
 
-Each available peer contributes nine compact values: relative distance, relative radial
-rate, battery fraction, storage fraction, maximum wheel-speed fraction, remaining action
-duration, status age, local-catalog age, and Earth-unoccluded link availability. Mean and
-maximum pooling produce 18 values. Six additional values give the fractions of known peers
-currently charging, downlinking, desaturating, broadcasting, imaging, or doing another
-action. Sensor count, known-peer count, and fresh-intent count remain in `TeamKnowledge`.
-The teammate-selected target remains a per-target feature, preserving the target/action
-association that would be lost in a pooled vector.
+| Block | Features |
+|---|---:|
+| Own storage, battery, three wheel fractions, and three Sun-heading components | 8 |
+| Eclipse timing | 2 |
+| Two upcoming ground-window open/close pairs | 4 |
+| Each candidate target | 13 |
 
-The pool is deliberately a minimum coordination interface. Full relative position and
-velocity vectors are not included because duplicate avoidance and first-stage metadata
-communication require proximity, closing geometry, availability, intent, freshness, and
-resource margins rather than formation reconstruction. If later experiments require
-identity-specific multi-hop routing or predictive formation coordination, the replacement
-should be a masked teammate-set attention encoder, not fixed peer slots.
+Thus, for `K` candidates, the flat input size is `14 + 13K`. The per-target features are
+priority, relative position (3), relative velocity (3), pointing angle, range,
+illumination, known cooldown, known pending state, and known teammate intent.
 
-Information boundaries are enforced before pooling:
+The earlier 24-feature pooled teammate vector and three team-count features were removed.
+Peer position, velocity, battery, storage, wheel state, generic current action, action time
+remaining, and action-category fractions did not have a demonstrated decision role in the
+first duplicate-avoidance study. Including them enlarged the policy input and risked making
+the coordination claim harder to interpret.
 
-| Case | Teammate source | Local catalog effect |
+The retained teammate signal is target relational. Raw target IDs are compared internally,
+and the candidate receives a freshness-weighted fraction of known sensing peers currently
+targeting that same RSO. The policy never receives a raw identifier or fixed peer slot. The
+scalar is zero for one sensor and remains the same size for any constellation size.
+
+If a later experiment demonstrates that formation geometry, link scheduling, or peer
+resource allocation is necessary, that information should be represented by a masked
+teammate-set encoder or attention block. It should not be appended as `sensor_1`,
+`sensor_2`, and similar fixed fields.
+
+## Information boundaries
+
+| Case | Candidate pending/cooldown | Same-RSO teammate intent |
 |---|---|---|
-| `independent` | Empty set; all 24 values are zero | Local events only |
-| `centralized_information` | Ideal current status of every peer | Read-only global metadata; no ledger access |
-| perfect `intent_status` | Received, unexpired typed messages | Only explicitly messaged target status merges |
-| LOS `intent_status` | Received, unexpired typed messages after a finite broadcast | Same merge rule, subject to LOS and action time |
+| `independent` | Local events only | Always zero |
+| `centralized_information` | Ideal read-only aggregation of all local catalogs | Current matching peer targets |
+| perfect `intent_status` | Only compact, received, unexpired status | Fresh received matching intents |
+| LOS `intent_status` | Only status received after a finite broadcast | Fresh matching intent if one was actually messaged |
 
-The target-wise actor previously sliced the global vector but did not use it. Multi-agent
-training now opts into a spacecraft-context encoder that adds the encoded global/team
-context to every target embedding. The flag defaults to off, preserving existing AMOS
-checkpoint behavior. The critic already consumed the global vector.
+The centralized view aggregates local catalog metadata, not the global reward accounting.
+The intent/status message contains only sender, sequence number, target ID, action/intent,
+creation and expiry times, and the newest acquisition, delivery, cooldown, and lifecycle
+status for that target. It contains no resource vector, ephemeris, image product, complete
+datastore, or global service data.
 
-## Knowledge and communication
+Receiver handling is deterministic: expired messages are rejected, repeated
+`(sender, sequence_number)` values are duplicates, lower sequences are stale, and accepted
+catalog updates merge by `(creation_time, sender)`. Perfect delivery validates semantics.
+The LOS extension requires a finite `BroadcastIntent` action and Earth-unoccluded
+sender-to-receiver geometry. RF link budget, bandwidth, packet loss, propagation delay,
+multi-hop relay, and image relay remain outside this bounded phase.
 
-An independent sensor updates only its own catalog. The centralized-information case reads
-a separate aggregation view and never writes the result back to the local catalogs. The
-intent/status case uses `IntentStatusMessage`, which contains sender, sequence number,
-target, action/intent, creation and expiry times, and latest acquisition, delivery,
-pending, and cooldown status. It also carries the compact sender state used by the
-teammate-set pool: position, velocity, resource fractions, action time remaining, and
-catalog timestamp. It never carries an image product, team ledger, or complete datastore.
+## Centralized information as an upper bound
 
-Receiver inboxes make message handling deterministic:
+Direct centralized information is an upper bound for the metadata available to the actor
+under the adopted observation contract. LOS sharing does not automatically converge to the
+same bound merely because more sensors are present. The time-varying communication graph
+must be sufficiently connected, status must propagate before expiry, and the necessary
+fields must be transmitted. Disconnected components or stale messages can preserve local
+catalog differences.
 
-1. expired messages are rejected;
-2. an already seen `(sender, sequence_number)` is a duplicate;
-3. a lower sequence number from the same sender is stale/out of order;
-4. remaining updates merge by `(creation_time, sender)`.
+## Reward and asynchronous timing
 
-Perfect metadata delivery is used first. The broadcast extension ports the minimal design
-idea from commit `494df0f`: a finite action sets a sender-side broadcast flag, communication
-directions are explicit, and only broadcasting senders may transmit. Unlike that reference,
-the new implementation transmits a typed message rather than copying a complete Python
-datastore. The initial non-perfect model uses Earth-unoccluded inter-sensor geometry only,
-sampled when the finite broadcast action completes.
-
-## What “centralized information upper bound” means
-
-The direct `centralized_information` case is a valid information upper bound for the
-adopted policy inputs because every sensor can read the newest metadata from all sensors at
-every decision. LOS-only sharing is not automatically the same upper bound. Even with many
-satellites, full synchronization occurs only when the time-varying communication graph is
-connected often enough, information propagates with the assumed timing, and every relevant
-field is shared. A disconnected component or stale message can preserve local divergence.
-Therefore the direct ideal view and the LOS broadcast case remain distinct experiments.
-
-## Reward and credit
-
-The reward preserves the AMOS mixture:
+The reward preserves the AMOS mixture
 
 \[
-r_i = (1-\alpha) r_{i,\mathrm{image}} + \alpha r_{i,\mathrm{ground}}.
+r_i=(1-\alpha)r_{i,\mathrm{image}}+\alpha r_{i,\mathrm{ground}}.
 \]
 
-Global truth groups simultaneous service deterministically. A fixed priority value is split
-between simultaneous source sensors, so summing agent rewards does not multiply the team
-total. Later service inside the team cooldown has zero unique-service value and is logged as
-a successful duplicate. Capture duplicate attempts and ground-verified successful duplicates
-are separate metrics. Optional duplicate and communication penalties are separate parameters;
-the broadcast action already has an inherent finite time cost.
+Global truth groups simultaneous service deterministically. A priority value is split
+among simultaneous qualifying source sensors, so summed agent reward does not multiply
+the team total. Capture duplicate attempts and successfully delivered duplicates are
+logged separately. Optional communication or duplicate penalties remain separate from the
+finite time cost of broadcasting.
 
-## Asynchronous decision timing
+Basilisk advances to the earliest enabled terminal event. A sensor still executing an
+action receives `NO_ACTION` and is not retasked because a teammate finished first.
+Continuation transitions are condensed before learning, and elapsed global intervals are
+accumulated into that sensor's `d_ts`. A message received while a sensor is busy is visible
+at its next decision epoch.
 
-Basilisk advances to the earliest enabled terminal event. A sensor still executing an action
-receives `NO_ACTION`; it is not retasked merely because a teammate completed an action.
-Continuation transitions are condensed before learning, rewards are associated with the
-originating action, and the elapsed global intervals are summed into the corresponding
-sensor's `d_ts`. A typed message delivered while a receiver is busy is present in that
-receiver's local catalog at its next observation and decision epoch.
-
-This is parameter-sharing independent PPO. The policy weights are shared, but physical
-state, observations, action histories, and value samples are per agent. There is no
-centralized critic and the implementation should not be described as MAPPO.
+This is parameter-sharing independent PPO. The policy weights are shared, while physical
+state, observations, actions, rewards, and value samples remain per sensor. No centralized
+critic or MAPPO implementation is claimed.
