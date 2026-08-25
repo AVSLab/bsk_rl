@@ -1,0 +1,21 @@
+{
+  "n_sensors": 2,
+  "n_targets": 8,
+  "n_candidates": 4,
+  "episode_duration_s": 1200.0,
+  "sim_rate_s": 1.0,
+  "max_step_duration_s": 180.0,
+  "imaging_duration_s": 180.0,
+  "downlink_duration_s": 120.0,
+  "charge_duration_s": 180.0,
+  "desat_duration_s": 120.0,
+  "broadcast_duration_s": 30.0,
+  "min_pointing_hold_s": 10.0,
+  "reimage_cooldown_orbits": 2.0,
+  "alpha": 0.1,
+  "information_case": "intent_status",
+  "perfect_metadata_delivery": true,
+  "message_ttl_s": 600.0,
+  "sensor_count_norm": 10.0,
+  "seed": 0
+}
