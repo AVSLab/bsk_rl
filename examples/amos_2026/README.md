@@ -38,11 +38,11 @@ environment variable.  From the repository root:
 
 The launcher records a 200-target, 45,000-second episode at 1 Hz by default. The
 priority-event threshold is half the episode (22,500 s); at the first policy decision
-boundary at or after that threshold, a reproducible, disjoint 10% of the catalog (20
-targets) becomes HIO and another 10% (20 targets) becomes SHIO. Applying the event at a
-decision boundary avoids pretending that a priority change can interrupt an action that
-is already executing. Their priorities become five and ten times the episode's maximum
-initial priority, respectively. The default additional orbital
+boundary at or after that threshold, the paper-count scenario promotes five targets to
+HIO and three disjoint targets to SHIO. Applying the event at a decision boundary avoids
+pretending that a priority change can interrupt an action that is already executing.
+Their priorities become five and ten times the episode's maximum initial priority,
+respectively. The default additional orbital
 cooldown is zero: a captured target remains unavailable while its image is onboard, then
 becomes eligible as soon as useful ground verification removes that pending record. Use
 `--reimage-cooldown-orbits 2` only to reproduce the older two-orbit behavior. Use
@@ -68,8 +68,8 @@ During a desaturation action, a separate transceiver emits opaque red rings inst
 the former spacecraft halo; the purple communication rings remain off unless data is
 actually leaving storage. Each target retains its light-to-dark blue priority-tier
 fill. The cyan eligible, red cooldown, and green onboard lifecycle outlines are omitted
-by default because they are not reliably visible in Vizard and add 240 ellipsoid objects
-to the 200-target/40-promotion scene. Use `--target-status-outlines` to opt into them for
+by default because they are not reliably visible in Vizard and add hundreds of
+ellipsoid objects to the scene. Use `--target-status-outlines` to opt into them for
 diagnostics. The native expandable storage panel is visible. Vizard automatically
 appends `Storage` to that panel title and provides no title override. The separate
 operations dialog remains `SPACE SURVEILLANCE`, and the spacecraft display name is
@@ -106,11 +106,18 @@ This prevents macOS from aborting a background recording when post-episode plots
 their first canvas, while still saving the requested plot files.
 
 Use `--n-targets 100` or `--n-targets 200` to select the exact 50/30/20 mixed-regime
-catalog size; 200 is the default. `--interest-fraction` changes each of the two disjoint
-promotion groups and must produce an integer target count. Both catalog sizes use the
-paper's 45,000 s horizon, the selected mixed-trained `alpha=0.1` checkpoint, and save
-into the single `artifacts/amos_2026/vizard/` folder. Scenario tags include catalog
-size, interest fractions, cooldown mode, seed, and sampling rate so a new
+catalog size; 200 is the default. With no promotion arguments, both catalog sizes use
+the paper's five-HIO/three-SHIO event. Use independent `--hio-fraction` and
+`--shio-fraction` arguments for catalog-scaled stress scenarios; each fraction must
+produce an integer target count and the two disjoint groups cannot exceed the catalog.
+For example, the earlier symmetric 10%/10% case is selected with
+`--hio-fraction 0.10 --shio-fraction 0.10`, while a 25%/25% stress case uses
+`--hio-fraction 0.25 --shio-fraction 0.25`. Exact non-paper counts can instead be given
+with `--hio-count` and `--shio-count`. The legacy `--interest-fraction` flag remains a
+shorthand for equal fractions. Both catalog sizes use the paper's 45,000 s horizon, the
+selected mixed-trained `alpha=0.1` checkpoint, and save into the single
+`artifacts/amos_2026/vizard/` folder. Scenario tags include catalog size, promotion
+counts or fractions, cooldown mode, seed, and sampling rate so a new
 ground-confirmation playback cannot overwrite an older two-orbit file accidentally.
 
 ### Vizard playback performance
@@ -125,8 +132,9 @@ histories hidden because rendering histories for 241 visualized spacecraft is th
 largest avoidable playback cost. They can still be enabled from Vizard's `View` menu.
 
 The default launcher now avoids constructing the 240 lifecycle-outline ellipsoids. It
-retains only the 40 HIO/SHIO promotion halos and the two action-ring transceivers. This
-reduces scene load without changing target priority fills or simulation behavior.
+retains only the requested HIO/SHIO promotion halos and the two action-ring
+transceivers. This reduces scene load without changing target priority fills or
+simulation behavior.
 
 For a faster review copy, record at `--vizard-rate-hz 0.5` (or `0.25` for rapid
 screening), leave `--rw-display off`, and use `--no-text-hud --no-metric-bars`. The AMOS
@@ -587,6 +595,80 @@ eligible and imageable target counts together with Desat decisions and wheel sta
 Use `--reimage_cooldown_orbits 1` for the one-orbit cooldown ablation. Its
 availability plot is automatically titled `ONE-ORBIT COOLDOWN ABLATION`; the
 standard AMOS configuration remains `--reimage_cooldown_orbits 2`.
+
+Use `--reimage_cooldown_orbits 0` for ground-confirmation re-imaging. Its
+availability plot is titled `GROUND-CONFIRMATION RE-IMAGING`, while its filename
+includes `0orbit_cooldown`.
+
+Use `--random-imaging` for a reproducible imaging-only random baseline. At each
+decision, the runner selects uniformly among the candidate imaging actions using
+the evaluation seed. The safety shield remains enabled and is the only source of
+charge or downlink actions. Output names include `randomImagingShield`.
+
+Use `--heuristic-mode angle` for a greedy minimum-angle imaging baseline. It
+selects the visible, eligible target with the smallest current pointing error.
+Use `--heuristic-mode candidate_priority` for a greedy priority baseline that
+selects the highest-current-priority target strictly from the same ten-target
+candidate set represented by the RL policy's imaging actions. For both launcher
+modes, the heuristic only selects imaging targets; the standard safety shield is
+the only source of charge or downlink overrides. Output names distinguish
+`heuristicMinAngleEligibleShield` from
+`heuristicMaxPriorityCandidate10Shield`.
+
+For a paired 100-seed cluster comparison of those two controllers and the
+candidate-10 random-imaging baseline, first synchronize an isolated AMOS 2026
+checkout from the local repository:
+
+```bash
+bash docs/amos_2026/sync_baseline_120_to_cluster.sh
+```
+
+This creates or validates `/projects/$USER/bsk_rl_amos2026` without switching
+the branch of `/projects/$USER/bsk_rl`, which may still be needed by running or
+dependent AMOS 2025 jobs. It then verifies that Python imports `bsk_rl` from the
+AMOS 2026 checkout. On the cluster, submit with:
+
+```bash
+cd /projects/$USER/bsk_rl_amos2026
+bash examples/amos_2026/submit_baseline_mc_mixed_120targets_oneorbit_0to99.sh 2
+```
+
+The optional final argument is the maximum number of concurrent Slurm array
+elements. The campaign evaluates 120 mixed-regime targets (exactly 60 LEO,
+36 MEO, and 24 GEO), a one-orbit re-imaging cooldown, five HIOs promoted to
+five times the initial catalog maximum, and three SHIOs promoted to ten times
+the initial catalog maximum. Each array element runs one controller over ten
+seeds sequentially, and the single array throttle applies across all 300
+episodes. No Vizard files or per-seed plots are generated during this Monte
+Carlo campaign; seed-level CSV and JSON data are retained for analysis.
+
+For the heuristic comparison matched to the primary AMOS 2026 policy Monte
+Carlo, use the same isolated checkout and submit:
+
+```bash
+cd /projects/$USER/bsk_rl_amos2026
+bash examples/amos_2026/submit_heuristics_mc_mixed_100targets_45000s_0to99.sh 4
+```
+
+This evaluates seeds 0--99 with exactly 50 LEO, 30 MEO, and 20 GEO targets,
+ten presented candidates, the 45,000 s episode, the standard two-orbit
+re-imaging cooldown, the five-HIO/three-SHIO midpoint event, and common
+`100d00i` delivered-ground-value scoring. The two controllers are minimum
+pointing angle over the full visible eligible catalog and maximum current
+priority from exactly the changing ten-target candidate set available to the
+RL policy. The external safety shield is disabled, matching the primary policy
+Monte Carlo; each heuristic uses its documented deterministic resource-action
+logic. After all 200 episodes finish, validate the complete paired grid with:
+
+```bash
+python examples/amos_2026/audit_paired_heuristic_mc.py \
+  --input-root "$BSK_RL_HEUR_OUTPUT_ROOT" \
+  --expected-seeds 0:100
+```
+
+Add `--reference-root <PRIMARY_POLICY_MC_ROOT>` to verify that the saved target
+catalog for each heuristic seed matches the corresponding policy-evaluation
+catalog.
 
 An older saved run can be replotted without rerunning the episode:
 
