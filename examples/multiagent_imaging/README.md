@@ -28,6 +28,13 @@ $PYTHON examples/multiagent_imaging/evaluate.py \
   --output results/multiagent_imaging/smoke_seed0.json
 ```
 
+Run all four matched validation cases:
+
+```bash
+$PYTHON examples/multiagent_imaging/run_matched_validation.py \
+  --output-dir results/multiagent_imaging/matched_validation_phase2
+```
+
 Run a single short PPO iteration:
 
 ```bash
@@ -65,6 +72,10 @@ Only explicit sensing roles reach PettingZoo and RLlib. Both sensors map to
 continuation samples, accumulates each sensor's elapsed `d_ts`, and the
 `TimeDiscountedGAEPPOTorchLearner` applies the AMOS per-second discount convention.
 
-The actor observation has 17 spacecraft/team features followed by equal 13-feature
-candidate-target chunks. `TeamKnowledge` includes the configured sensor count, the number
-of peers actually known in the selected information case, and fresh received intents.
+The actor observation has 41 spacecraft/environment/team features followed by equal
+13-feature candidate-target chunks. The first 17 are the AMOS spacecraft/environment/team
+features. A 24-feature mean/max/action-distribution pool then summarizes any number of
+information-available teammates without fixed peer slots. `TeamKnowledge` includes the
+configured sensor count, the number of peers actually known in the selected information
+case, and fresh received intents. See `OBSERVATION_VALIDATION.md` for the exact contract,
+boundary rules, matched-rollout results, and cluster-training proposal.

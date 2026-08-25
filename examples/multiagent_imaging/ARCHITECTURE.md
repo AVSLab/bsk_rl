@@ -30,13 +30,53 @@ relay is disabled. A downlink removes a record only from the executing sensor's 
 store. The team ledger deliberately has no reference to a local catalog, so it cannot
 silently change observations, candidate filters, or cooldown knowledge.
 
+## Shared-policy observation contract
+
+The AMOS target-wise contract is preserved: all global/context features precede equal
+13-feature candidate chunks. The original 17 global features are augmented by a
+24-feature, permutation-invariant teammate-set summary. The result is 41 global/team
+features plus 13 features per candidate, independent of the number or ordering of
+sensing agents.
+
+Each available peer contributes nine compact values: relative distance, relative radial
+rate, battery fraction, storage fraction, maximum wheel-speed fraction, remaining action
+duration, status age, local-catalog age, and Earth-unoccluded link availability. Mean and
+maximum pooling produce 18 values. Six additional values give the fractions of known peers
+currently charging, downlinking, desaturating, broadcasting, imaging, or doing another
+action. Sensor count, known-peer count, and fresh-intent count remain in `TeamKnowledge`.
+The teammate-selected target remains a per-target feature, preserving the target/action
+association that would be lost in a pooled vector.
+
+The pool is deliberately a minimum coordination interface. Full relative position and
+velocity vectors are not included because duplicate avoidance and first-stage metadata
+communication require proximity, closing geometry, availability, intent, freshness, and
+resource margins rather than formation reconstruction. If later experiments require
+identity-specific multi-hop routing or predictive formation coordination, the replacement
+should be a masked teammate-set attention encoder, not fixed peer slots.
+
+Information boundaries are enforced before pooling:
+
+| Case | Teammate source | Local catalog effect |
+|---|---|---|
+| `independent` | Empty set; all 24 values are zero | Local events only |
+| `centralized_information` | Ideal current status of every peer | Read-only global metadata; no ledger access |
+| perfect `intent_status` | Received, unexpired typed messages | Only explicitly messaged target status merges |
+| LOS `intent_status` | Received, unexpired typed messages after a finite broadcast | Same merge rule, subject to LOS and action time |
+
+The target-wise actor previously sliced the global vector but did not use it. Multi-agent
+training now opts into a spacecraft-context encoder that adds the encoded global/team
+context to every target embedding. The flag defaults to off, preserving existing AMOS
+checkpoint behavior. The critic already consumed the global vector.
+
 ## Knowledge and communication
 
 An independent sensor updates only its own catalog. The centralized-information case reads
 a separate aggregation view and never writes the result back to the local catalogs. The
 intent/status case uses `IntentStatusMessage`, which contains sender, sequence number,
 target, action/intent, creation and expiry times, and latest acquisition, delivery,
-pending, and cooldown status.
+pending, and cooldown status. It also carries the compact sender state used by the
+teammate-set pool: position, velocity, resource fractions, action time remaining, and
+catalog timestamp. It never carries an image product, team ledger, or complete datastore.
 
 Receiver inboxes make message handling deterministic:
 

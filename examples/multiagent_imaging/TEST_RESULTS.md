@@ -20,12 +20,15 @@ $PYTHON -m pytest -q \
   tests/integration/multiagent/test_rllib_smoke.py
 ```
 
-Result: **22 passed**. Six warnings are upstream Ray/Gymnasium deprecation warnings.
+Result after the teammate-observation phase: **32 passed**. Six warnings are upstream
+Ray/Gymnasium deprecation warnings.
 
 This includes role/passive exclusion, independent access and storage, local-knowledge
 separation, global-truth non-leakage, message ordering and expiry, deterministic reward
-credit, asynchronous `d_ts` condensation, all three information cases, deterministic
-two-sensor Basilisk rollout, shared-policy mapping, and one short RLlib PPO update.
+credit, asynchronous `d_ts` condensation, all four information/delivery cases,
+deterministic two-sensor Basilisk rollout, teammate-order invariance, fixed shape for
+one/two/three sensors, strict information-case separation, actor target-permutation
+equivariance, shared-policy mapping, and one short RLlib PPO update.
 
 ## Complete unit regression
 
@@ -33,7 +36,7 @@ two-sensor Basilisk rollout, shared-policy mapping, and one short RLlib PPO upda
 $PYTHON -m pytest -q tests/unittest
 ```
 
-Result: **508 passed, 1 skipped**.
+Result: **514 passed, 1 skipped**.
 
 ## Integration regression
 
@@ -43,7 +46,7 @@ $PYTHON -m pytest -q tests/integration \
   --deselect tests/integration/scene/test_int_scenarios.py::TestCityTargets::test_city_distribution
 ```
 
-Result: **57 passed, 1 skipped, 2 deselected**.
+Result: **61 passed, 1 skipped, 2 deselected**.
 
 The two deselected tests also fail at the untouched AMOS base commit. The desaturation
 test does not drain the battery under the installed Basilisk runtime, and the city test
@@ -76,6 +79,29 @@ spacecraft. The perfect-metadata run produced 3 and 5 captures without requiring
 broadcast. The LOS-broadcast run executed two finite broadcasts per sensor and produced
 directional remote-pending knowledge at both receivers.
 
+## Phase-two matched information cases
+
+```bash
+$PYTHON examples/multiagent_imaging/run_matched_validation.py \
+  --output-dir results/multiagent_imaging/matched_validation_phase2
+```
+
+Result: **passed**. The runner confirmed identical initial sensor states, target states,
+priorities, seeds, reward settings, and 1,800-second horizons across all four cases.
+
+| Case | Unique acquisitions | Acquired value | Conflict time | Broadcast time per sensor |
+|---|---:|---:|---:|---:|
+| Independent | 2 | 49.72 | 1,045 s | 0 s |
+| Centralized information | 4 | 76.58 | 193 s | 0 s |
+| Perfect intent/status | 3 | 63.46 | 101 s | 0 s |
+| LOS intent/status | 2 | 49.72 | 763 s | 90 s |
+
+These deterministic shared-controller runs validate information flow and diagnostics, not
+policy performance. No ground delivery completed in the bounded horizon. The saved local
+results include reward/resource histories, action durations, duplicate counts, message
+ages/dispositions, intent conflicts, per-sensor local catalogs and physical products, and
+local-versus-shared omission counts.
+
 ## Static checks
 
 ```bash
@@ -85,6 +111,7 @@ $PYTHON -m ruff check \
   src/bsk_rl/obs/__init__.py src/bsk_rl/sats/__init__.py \
   src/bsk_rl/gym.py src/bsk_rl/sats/satellite.py \
   src/bsk_rl/obs/observations.py src/bsk_rl/utils/rllib/discounting.py \
+  src/bsk_rl/comm/teammate_state.py \
   src/bsk_rl/sats/roles.py src/bsk_rl/comm/rso_communication.py \
   src/bsk_rl/comm/typed_messages.py src/bsk_rl/data/multiagent_rso_data.py \
   src/bsk_rl/data/multiagent_rso_reward.py examples/multiagent_imaging \
