@@ -53,6 +53,7 @@ from Basilisk.utilities import (
 # from webcolors import names
 
 from bsk_rl.scene import Scenario
+from bsk_rl.sats.roles import SpacecraftRole
 # from bsk_rl.utils.orbital import lla2ecef
 # from tests.integration.comm.test_int_communication import oes_visible
 
@@ -462,25 +463,65 @@ class RandomSatellites(Scenario):
 
     def link_satellites(self, satellites: list["Satellite"]) -> None:
         super().link_satellites(satellites)
-        scanning_sat_name = self.chief_satellite_name
-        self.ScanningSat = [
-            satellite for satellite in self.satellites if satellite.name == scanning_sat_name
-        ][0]
-        self.ScanningSat.sat_args_generator["bufferNames"] = [
-            sc.name for sc in self.satellites
-        ]  # includes scanner + all target spacecraft names
-        self.ScanningSat.sat_args_generator["transmitterNumBuffers"] = len(
-            self.ScanningSat.sat_args_generator["bufferNames"]
+        passive_targets = [
+            satellite
+            for satellite in self.satellites
+            if satellite.role is SpacecraftRole.PASSIVE_TARGET
+        ]
+        explicit_role_mode = bool(passive_targets)
+        if explicit_role_mode:
+            self.sensing_satellites = [
+                satellite
+                for satellite in self.satellites
+                if satellite.role is SpacecraftRole.SENSING_AGENT
+            ]
+            self.target_satellites = passive_targets
+        else:
+            # Backward-compatible AMOS path. New multi-agent construction always uses
+            # explicit roles and never reaches this name-based legacy bridge.
+            self.sensing_satellites = [
+                satellite
+                for satellite in self.satellites
+                if satellite.name == self.chief_satellite_name
+            ]
+            self.target_satellites = [
+                satellite
+                for satellite in self.satellites
+                if satellite not in self.sensing_satellites
+            ]
+        if not self.sensing_satellites:
+            raise ValueError("RandomSatellites requires at least one sensing spacecraft.")
+        if len(self.target_satellites) != self.n_targets:
+            raise ValueError(
+                f"Expected {self.n_targets} passive RSO spacecraft, found "
+                f"{len(self.target_satellites)}."
+            )
+        if not explicit_role_mode:
+            # Retain the historical single-sensor alias only for existing AMOS code.
+            self.ScanningSat = next(
+                sensor
+                for sensor in self.sensing_satellites
+                if sensor.name == self.chief_satellite_name
+            )
+        target_buffer_names = (
+            [satellite.name for satellite in self.target_satellites]
+            if explicit_role_mode
+            else [satellite.name for satellite in self.satellites]
         )
+        for sensor in self.sensing_satellites:
+            sensor.sat_args_generator["bufferNames"] = list(target_buffer_names)
+            sensor.sat_args_generator["transmitterNumBuffers"] = len(
+                target_buffer_names
+            )
 
     def reset_pre_sim_init(self):
         self._reset_priority_event_state()
         priorities = self._generate_priorities()
         if len(priorities) > 0:
             self.realized_initial_priority_max = float(np.max(priorities))
-        for i in range(self.n_targets):
-            target_sc_name = f"target_{i}"  # must match buffer name
-            sc = RSOTarget(self.satellites[i + 1], target_sc_name, i, float(priorities[i]))
+        for i, target_satellite in enumerate(self.target_satellites):
+            target_sc_name = target_satellite.name  # must match buffer name
+            sc = RSOTarget(target_satellite, target_sc_name, i, float(priorities[i]))
             # Keep a direct link on the simulated spacecraft for visualization and
             # diagnostics that run at the dynamics cadence.  This avoids reconstructing
             # scenario metadata (priority-event kind, lifecycle target id, etc.) from a
@@ -505,15 +546,13 @@ class RandomSatellites(Scenario):
         self._reset_priority_event_state()
 
     def reset_during_sim_init(self):
-        for i in range(self.n_targets):
-            # Add all candidate targets to scanner's target location model.
-            self.satellites[0].dynamics.targetLocation.addSpacecraftToModel(
-                self.satellites[i + 1].dynamics.scObject.scStateOutMsg
-            )
-
-
-
-
+        for sensor in self.sensing_satellites:
+            for target_satellite in self.target_satellites:
+                # Every sensor owns an independent access model populated with the
+                # same passive target truth states.
+                sensor.dynamics.targetLocation.addSpacecraftToModel(
+                    target_satellite.dynamics.scObject.scStateOutMsg
+                )
 
 
 

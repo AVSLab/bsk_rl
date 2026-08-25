@@ -265,6 +265,41 @@ class Drift(DiscreteFSWAction):
         super().__init__(fsw_action="action_drift", name=name, duration=duration)
 
 
+class BroadcastIntent(DiscreteAction):
+    """Spend a finite action interval broadcasting typed catalog metadata.
+
+    The associated communication method consumes only compact metadata explicitly
+    staged by the sender. It never copies the sender's complete Python datastore.
+    """
+
+    def __init__(
+        self,
+        name: str = "action_broadcast_intent",
+        duration: float = 30.0,
+    ) -> None:
+        if float(duration) <= 0.0:
+            raise ValueError("Broadcast duration must be positive.")
+        super().__init__(name=name, n_actions=1)
+        self.duration = float(duration)
+
+    def reset_post_sim_init(self) -> None:
+        super().reset_post_sim_init()
+        self.broadcast_pending = False
+
+    def set_action(self, action: int, prev_action_key=None) -> str:
+        assert action == 0
+        self.broadcast_pending = True
+        self.satellite.update_timed_terminal_event(
+            self.simulator.sim_time + self.duration,
+            info="for metadata broadcast",
+        )
+        # Broadcasting occupies the sensor instead of silently continuing an imaging
+        # or downlink mode from the previous command.
+        if hasattr(self.satellite.fsw, "action_drift"):
+            self.satellite.fsw.action_drift()
+        return self.name
+
+
 class Desat(DiscreteFSWAction):
     def __init__(self, name: Optional[str] = None, duration: Optional[float] = None):
         """Action to desaturate reaction wheels (:class:`~bsk_rl.env.simulation.fsw.BasicFSWModel.action_desat`).

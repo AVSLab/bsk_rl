@@ -43,6 +43,7 @@ Use :class:`DiscreteAction` for integer-indexable, discrete actions.
 from bsk_rl.act.actions import Action
 from bsk_rl.act.discrete_actions import (
     Charge,
+    BroadcastIntent,
     Desat,
     DiscreteAction,
     DiscreteFSWAction,
@@ -59,6 +60,7 @@ __all__ = [
     "DiscreteAction",
     "DiscreteFSWAction",
     "Charge",
+    "BroadcastIntent",
     "Drift",
     "Desat",
     "Downlink",

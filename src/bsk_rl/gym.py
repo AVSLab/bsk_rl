@@ -15,6 +15,7 @@ from bsk_rl.comm import CommunicationMethod, NoCommunication
 from bsk_rl.data import GlobalReward, NoReward
 from bsk_rl.data.composition import ComposedReward
 from bsk_rl.sats import Satellite
+from bsk_rl.sats.roles import SpacecraftRole
 from bsk_rl.scene import Scenario
 from bsk_rl.sim import Simulator
 from bsk_rl.sim.world import WorldModel
@@ -782,6 +783,182 @@ class ConstellationTasking(
             logger.info(f"Episode truncated: {truncated_true}")
         logger.debug(f"Step info: {info}")
         logger.debug(f"Step observation: {observation}")
+        return observation, reward, terminated, truncated, info
+
+
+class SensingAgentConstellationTasking(ConstellationTasking):
+    """Expose explicit sensing spacecraft as agents while propagating all spacecraft.
+
+    Passive spacecraft remain in :attr:`satellites` and therefore in the underlying
+    Basilisk simulation. They never appear in the PettingZoo agent dictionaries. A
+    passive spacecraft receives a deterministic configured action whenever it requires
+    tasking; the default is action ``0``. The implementation supports any positive
+    number of sensing spacecraft and does not infer roles from names or list position.
+    """
+
+    def __init__(
+        self,
+        *args,
+        passive_actions: Optional[dict[str, Any]] = None,
+        default_passive_action: Any = 0,
+        **kwargs,
+    ) -> None:
+        self.passive_actions = dict(passive_actions or {})
+        self.default_passive_action = default_passive_action
+        super().__init__(*args, **kwargs)
+        self._sensing_satellites = [
+            satellite
+            for satellite in self.satellites
+            if satellite.role is SpacecraftRole.SENSING_AGENT
+        ]
+        self._passive_satellites = [
+            satellite
+            for satellite in self.satellites
+            if satellite.role is SpacecraftRole.PASSIVE_TARGET
+        ]
+        if not self._sensing_satellites:
+            raise ValueError("At least one explicit sensing-agent spacecraft is required.")
+        classified = set(self._sensing_satellites) | set(self._passive_satellites)
+        if classified != set(self.satellites):
+            raise ValueError("Every propagated spacecraft must have a supported role.")
+
+    @property
+    def sensing_satellites(self) -> tuple[Satellite, ...]:
+        """Sensing spacecraft in stable simulator order."""
+        return tuple(self._sensing_satellites)
+
+    @property
+    def passive_satellites(self) -> tuple[Satellite, ...]:
+        """Passive propagated spacecraft in stable simulator order."""
+        return tuple(self._passive_satellites)
+
+    @property
+    def agents(self) -> list[AgentID]:
+        """Currently alive sensing agents only."""
+        if (
+            self._agents_last_compute_time is None
+            or self._agents_last_compute_time != self.simulator.sim_time
+        ):
+            truncated = GeneralSatelliteTasking._get_truncated(self)
+            self._agents_cache = [
+                satellite.name
+                for satellite in self._sensing_satellites
+                if satellite.is_alive() and not truncated
+            ]
+            self._agents_last_compute_time = self.simulator.sim_time
+        return self._agents_cache
+
+    @property
+    def possible_agents(self) -> list[AgentID]:
+        return [satellite.name for satellite in self._sensing_satellites]
+
+    @property
+    def observation_spaces(self) -> dict[AgentID, spaces.Box]:
+        return {
+            satellite.name: satellite.observation_space
+            for satellite in self._sensing_satellites
+        }
+
+    @property
+    def action_spaces(self) -> dict[AgentID, spaces.Space[SatAct]]:
+        return {
+            satellite.name: satellite.action_space
+            for satellite in self._sensing_satellites
+        }
+
+    def _get_obs(self) -> dict[AgentID, SatObs]:
+        with self.profiler.section("env.get_obs"):
+            return {
+                satellite.name: (
+                    satellite.get_obs()
+                    if not self.generate_obs_retasking_only
+                    or satellite.requires_retasking
+                    else satellite.observation_space.sample() * 0
+                )
+                for satellite in self._sensing_satellites
+                if satellite.name not in self.previously_dead
+            }
+
+    def _get_reward(self) -> dict[AgentID, float]:
+        reward = {
+            agent: float(self.reward_dict.get(agent, 0.0))
+            for agent in self.possible_agents
+            if agent not in self.previously_dead
+        }
+        for satellite in self._sensing_satellites:
+            if satellite.name in reward and not satellite.is_alive():
+                reward[satellite.name] += self.failure_penalty
+        return reward
+
+    def _get_terminated(self) -> dict[AgentID, bool]:
+        if self.terminate_on_time_limit and GeneralSatelliteTasking._get_truncated(self):
+            return {
+                agent: True
+                for agent in self.possible_agents
+                if agent not in self.previously_dead
+            }
+        return {
+            satellite.name: not satellite.is_alive()
+            for satellite in self._sensing_satellites
+            if satellite.name not in self.previously_dead
+        }
+
+    def _get_truncated(self) -> dict[AgentID, bool]:
+        truncated = GeneralSatelliteTasking._get_truncated(self)
+        return {
+            agent: truncated
+            for agent in self.possible_agents
+            if agent not in self.previously_dead
+        }
+
+    def _get_info(self) -> dict[AgentID, dict]:
+        common = {"d_ts": self.latest_step_duration}
+        if hasattr(self.rewarder, "team_summary"):
+            common["team_summary"] = deepcopy(self.rewarder.team_summary)
+        info = {
+            satellite.name: {
+                "requires_retasking": satellite.requires_retasking,
+                "sensor_metrics": deepcopy(
+                    getattr(self.rewarder, "per_sensor_metrics", {}).get(
+                        satellite.name, {}
+                    )
+                ),
+                **common,
+            }
+            for satellite in self._sensing_satellites
+            if satellite.name not in self.previously_dead
+        }
+        info["__common__"] = common
+        return info
+
+    def step(self, actions: dict[AgentID, SatAct]):
+        """Apply sensing actions and deterministic passive propagation actions."""
+        unexpected = set(actions) - set(self.possible_agents)
+        if unexpected:
+            raise KeyError(f"Actions supplied for non-sensing agents: {sorted(unexpected)}")
+
+        previous_alive = self.agents
+        action_vector = []
+        for satellite in self.satellites:
+            if satellite.role is SpacecraftRole.SENSING_AGENT:
+                action_vector.append(actions.get(satellite.name))
+            elif satellite.requires_retasking:
+                action_vector.append(
+                    self.passive_actions.get(
+                        satellite.name, self.default_passive_action
+                    )
+                )
+            else:
+                action_vector.append(NO_ACTION)
+
+        self._step(action_vector)
+        self.newly_dead = list(set(previous_alive) - set(self.agents))
+        observation = self._get_obs()
+        reward = self._get_reward()
+        terminated = self._get_terminated()
+        truncated = self._get_truncated()
+        info = self._get_info()
+        self.profiler.finish_step(self.simulator.sim_time, self.latest_step_duration)
         return observation, reward, terminated, truncated, info
 
 

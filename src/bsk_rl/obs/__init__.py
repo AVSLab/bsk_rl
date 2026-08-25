@@ -40,6 +40,7 @@ from bsk_rl.obs.observations import (
     SatProperties,
     PolarisScTargetProperties,
     Time,
+    TeamKnowledge,
     s_hat_H,
 )
 
@@ -52,4 +53,5 @@ __all__ = [
     "Eclipse",
     "PolarisScTargetProperties",
     "s_hat_H",
+    "TeamKnowledge",
 ]

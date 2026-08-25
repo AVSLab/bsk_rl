@@ -23,6 +23,7 @@ from bsk_rl.utils.functional import (
     valid_func_name,
 )
 from bsk_rl.utils.orbital import TrajectorySimulator
+from bsk_rl.sats.roles import SpacecraftRole
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.act import Action
@@ -75,6 +76,7 @@ class Satellite(ABC, Resetable):
         sat_args: Optional[dict[str, Any]] = None,
         obs_type=np.ndarray,
         variable_interval: bool = True,
+        role: SpacecraftRole | str = SpacecraftRole.SENSING_AGENT,
     ) -> None:
         """The base satellite agent class.
 
@@ -90,8 +92,12 @@ class Satellite(ABC, Resetable):
             variable_interval: Whether to stop the simulation at terminal events. If
                 False, only the ``max_step_duration`` setting in :class:`~bsk_rl.GeneralSatelliteTasking`
                 will stop the simulation.
+            role: Explicit operational role. Existing definitions default to a
+                sensing agent for backward compatibility. Passive propagated objects
+                must opt in to :attr:`SpacecraftRole.PASSIVE_TARGET`.
         """
         self.name = name
+        self.role = SpacecraftRole(role)
         self.logger = logging.getLogger(__name__).getChild(self.name)
         if sat_args is None:
             sat_args = self.default_sat_args()

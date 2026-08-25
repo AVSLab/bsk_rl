@@ -7,12 +7,14 @@ from bsk_rl.gym import (
     ConstellationTasking,
     GeneralSatelliteTasking,
     SatelliteTasking,
+    SensingAgentConstellationTasking,
 )
 
 __all__ = [
     "GeneralSatelliteTasking",
     "SatelliteTasking",
     "ConstellationTasking",
+    "SensingAgentConstellationTasking",
 ]
 
 register(

@@ -151,13 +151,18 @@ class CondenseMultiStepActions(ConnectorV2):
             if NO_ACTION not in episode.actions:
                 continue
 
+            original_actions = np.array(episode.actions.data)
+            original_rewards = np.array(episode.rewards.data)
+            original_infos = list(episode.infos.data)
+            original_action_count = len(original_actions)
             action_idx = list(
                 np.argwhere(
-                    [action != NO_ACTION for action in episode.actions.data]
+                    [action != NO_ACTION for action in original_actions]
                 ).flatten()
             )
             obs_idx = action_idx.copy()
-            obs_idx.append(len(episode) - 1)
+            # SingleAgentEpisode has one more observation/info than action/reward.
+            obs_idx.append(original_action_count)
 
             lookback = episode.actions.data[: episode.actions.lookback]
             new_lookback = episode.actions.lookback
@@ -188,14 +193,14 @@ class CondenseMultiStepActions(ConnectorV2):
             requires_retasking = []
             for i, idx_start in enumerate(action_idx):
                 if i == len(action_idx) - 1:
-                    idx_end = len(episode) - 1
+                    idx_end = original_action_count - 1
                 else:
                     idx_end = action_idx[i + 1] - 1
                 rewards.append(
-                    sum(episode.rewards[idx_start : idx_end + 1])
+                    sum(original_rewards[idx_start : idx_end + 1])
                 )  # Doesn't discount over course of multistep
                 requires_retasking.append(
-                    episode.infos.data[idx_start]["requires_retasking"]
+                    original_infos[idx_start]["requires_retasking"]
                 )
             requires_retasking.append(True)
             episode.rewards.data = np.array(rewards)
@@ -211,7 +216,7 @@ class CondenseMultiStepActions(ConnectorV2):
                 d_ts.append(
                     sum(
                         info["d_ts"]
-                        for info in episode.infos.data[idx_start : idx_end + 1]
+                        for info in original_infos[idx_start : idx_end + 1]
                     )
                 )
             episode.infos.data = [
