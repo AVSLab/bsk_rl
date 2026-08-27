@@ -18,6 +18,7 @@ if [[ "$(git branch --show-current)" != "amos2025-architecture-comparison" ]]; t
 fi
 PYTHON=${BSK_RL_VENV_ROOT:-/projects/$USER/.venv}/bin/python
 MANIFEST="$ROOT/validation/manifest.json"
+export PYTHONPATH="$REPO_DIR/src:$REPO_DIR${PYTHONPATH:+:$PYTHONPATH}"
 MISSING_IDS=$("$PYTHON" examples/prospectus_rfi/prepare_memorysafe_validation.py \
   --root "$ROOT" --base-config "$BASE_CONFIG" --manifest "$MANIFEST" --print-missing)
 if [[ -z "$MISSING_IDS" ]]; then
