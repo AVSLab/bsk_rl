@@ -374,13 +374,22 @@ and are not part of training-runner memory load.
 
 After the reported cleanup array completes successfully, submit validation with:
 
+The first serial validation array was retired because 90 full episodes per
+configuration exceeded its 24-hour allocation. The replacement is a
+restartable, one-episode-per-task campaign. It preserves completed rows and
+selects a checkpoint only after the collector verifies the full held-out
+design:
+
 ```bash
-VALIDATE_JOB=$(sbatch --parsable \
-  --dependency=afterok:$CLEANUP_JOB \
-  --export=ALL,BSK_RL_REPO_DIR \
-  examples/prospectus_rfi/slurm/validate_candidate_sweep_memorysafe.sbatch)
-echo "Validation job: $VALIDATE_JOB"
+VALIDATION_SUBMISSION=$(bash examples/prospectus_rfi/submit_memorysafe_validation.sh 20)
+printf '%s\n' "$VALIDATION_SUBMISSION"
 ```
+
+It uses the predeclared N = 100, 150, 200 and five held-out seeds for every
+retained checkpoint. `VALIDATION_TASK_JOB` is dependency-free; the short
+collector runs `afterok` only after those missing task IDs finish. If an array
+task fails or is cancelled, rerun the same submitter; it schedules only the
+missing atomic CSV/metadata pairs.
 
 ## AMOS 2025 N=100, K=10, 300-second attention control
 
