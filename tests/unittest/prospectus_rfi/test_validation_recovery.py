@@ -4,6 +4,7 @@ from examples.prospectus_rfi.validation_campaign import (
     build_tasks,
     completed_task,
     task_output_relative,
+    slurm_array_expression,
 )
 
 
@@ -43,3 +44,8 @@ def test_completed_task_requires_csv_and_metadata(tmp_path):
     assert not completed_task(task, tmp_path)
     output.with_suffix(".metadata.json").write_text("{}\n")
     assert completed_task(task, tmp_path)
+
+
+def test_task_ids_are_compacted_for_slurm_array_submission():
+    assert slurm_array_expression([]) == ""
+    assert slurm_array_expression([0, 1, 2, 5, 7, 8, 10]) == "0-2,5,7-8,10"

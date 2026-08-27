@@ -19,9 +19,11 @@ fi
 PYTHON=${BSK_RL_VENV_ROOT:-/projects/$USER/.venv}/bin/python
 MANIFEST="$ROOT/validation/manifest.json"
 export PYTHONPATH="$REPO_DIR/src:$REPO_DIR${PYTHONPATH:+:$PYTHONPATH}"
-MISSING_IDS=$("$PYTHON" examples/prospectus_rfi/prepare_memorysafe_validation.py \
-  --root "$ROOT" --base-config "$BASE_CONFIG" --manifest "$MANIFEST" --print-missing)
-if [[ -z "$MISSING_IDS" ]]; then
+ARRAY_EXPRESSION=$("$PYTHON" examples/prospectus_rfi/prepare_memorysafe_validation.py \
+  --root "$ROOT" --base-config "$BASE_CONFIG" --manifest "$MANIFEST" --print-array-expression)
+MISSING_COUNT=$("$PYTHON" examples/prospectus_rfi/prepare_memorysafe_validation.py \
+  --root "$ROOT" --base-config "$BASE_CONFIG" --manifest "$MANIFEST" --print-missing-count)
+if [[ -z "$ARRAY_EXPRESSION" ]]; then
   echo "All validation episodes already exist; submit collector only."
   TASK_JOB=""
   COLLECT_JOB=$(sbatch --parsable \
@@ -30,17 +32,12 @@ if [[ -z "$MISSING_IDS" ]]; then
 else
   mkdir -p "/scratch/alpine/$USER/job_output"
   EXPORTS="ALL,BSK_RL_REPO_DIR=$REPO_DIR,BSK_RL_VALIDATION_MANIFEST=$MANIFEST"
-  sbatch --test-only --array="${MISSING_IDS}%${MAX_CONCURRENT}" --export="$EXPORTS" \
+  sbatch --test-only --array="${ARRAY_EXPRESSION}%${MAX_CONCURRENT}" --export="$EXPORTS" \
     examples/prospectus_rfi/slurm/validate_memorysafe_task.sbatch
-  TASK_JOB=$(sbatch --parsable --array="${MISSING_IDS}%${MAX_CONCURRENT}" --export="$EXPORTS" \
+  TASK_JOB=$(sbatch --parsable --array="${ARRAY_EXPRESSION}%${MAX_CONCURRENT}" --export="$EXPORTS" \
     examples/prospectus_rfi/slurm/validate_memorysafe_task.sbatch)
   COLLECT_JOB=$(sbatch --parsable --dependency="afterok:$TASK_JOB" --export="$EXPORTS" \
     examples/prospectus_rfi/slurm/collect_memorysafe_validation.sbatch)
-fi
-if [[ -n "$MISSING_IDS" ]]; then
-  MISSING_COUNT=$(tr ',' '\n' <<< "$MISSING_IDS" | wc -l | tr -d ' ')
-else
-  MISSING_COUNT=0
 fi
 echo "VALIDATION_TASK_JOB=$TASK_JOB"
 echo "VALIDATION_COLLECT_JOB=$COLLECT_JOB"

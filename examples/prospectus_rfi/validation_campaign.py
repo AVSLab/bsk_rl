@@ -78,3 +78,21 @@ def read_manifest(path: Path) -> dict[str, Any]:
 def completed_task(task: dict[str, Any], root: Path) -> bool:
     output = root / task_output_relative(task)
     return output.is_file() and output.with_suffix(".metadata.json").is_file()
+
+
+def slurm_array_expression(task_ids: list[int]) -> str:
+    """Compact sorted task IDs into Slurm's range syntax."""
+
+    if not task_ids:
+        return ""
+    values = sorted(set(task_ids))
+    ranges: list[str] = []
+    start = previous = values[0]
+    for value in values[1:]:
+        if value == previous + 1:
+            previous = value
+            continue
+        ranges.append(str(start) if start == previous else f"{start}-{previous}")
+        start = previous = value
+    ranges.append(str(start) if start == previous else f"{start}-{previous}")
+    return ",".join(ranges)
