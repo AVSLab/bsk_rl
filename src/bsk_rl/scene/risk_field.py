@@ -235,7 +235,9 @@ class SweepRiskField(Scenario):
         # Combine background and seeds as a probabilistic union
         # (1 - prod(1 - r_i)): smooth, overlaps reinforce, bounded by 1.
         miss = 1.0 - risk
-        for lat0, lon0, core, falloff, peak in zip(*self._sample_seeds(rng)):
+        for s, (lat0, lon0, core, falloff, peak) in enumerate(
+            zip(*self._sample_seeds(rng))
+        ):
             d = _great_circle_km(lat_g, lon_g, lat0, lon0)
             # `falloff` is the outer radius of the spot, not the width of the
             # ramp: the risk is at `peak` out to `core` and has decayed to
@@ -248,8 +250,27 @@ class SweepRiskField(Scenario):
                     * np.clip((d - core) / max(falloff - core, 1e-6), 0.0, 1.0)
                 )
             )
-            miss *= 1.0 - peak * ramp
+            contribution = peak * ramp
+            miss *= 1.0 - contribution
+            # Hook for subclasses that attribute cells to spots (the cloud
+            # field): it sees every spot's contribution in this same pass,
+            # so no second sweep over the raster is needed. No-op here, and
+            # it touches nothing the union depends on.
+            self._note_seed_contribution(s, 0, contribution)
         self.risk = 1.0 - miss
+
+    def _note_seed_contribution(
+        self, seed_idx: int, category: int, contribution: np.ndarray
+    ) -> None:
+        """Per-seed hook of :meth:`build_risk_field` (no-op here).
+
+        Called once per spot with its ``peak * ramp`` contribution over the
+        whole grid, before it is folded into the union. ``category`` is
+        always 0 for this single-channel field; the signature is
+        :class:`CategorizedSweepRiskField`'s so that a subclass tracking
+        which spot dominates each cell reads the same call in either
+        hierarchy (:class:`CloudSweepRiskField` here, the quota field there).
+        """
 
     def reset_overwrite_previous(self) -> None:
         """Regenerate the risk field and clear the coverage state."""
