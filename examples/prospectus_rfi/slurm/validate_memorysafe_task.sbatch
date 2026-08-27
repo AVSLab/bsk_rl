@@ -17,7 +17,13 @@
 set -euo pipefail
 REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl-rfi}
 MANIFEST=${BSK_RL_VALIDATION_MANIFEST:?BSK_RL_VALIDATION_MANIFEST is required}
-TASK_ID=${SLURM_ARRAY_TASK_ID:?SLURM_ARRAY_TASK_ID is required}
+TASK_MAP=${BSK_RL_VALIDATION_TASK_MAP:?BSK_RL_VALIDATION_TASK_MAP is required}
+LOCAL_TASK_ID=${SLURM_ARRAY_TASK_ID:?SLURM_ARRAY_TASK_ID is required}
+TASK_ID=$(sed -n "$((LOCAL_TASK_ID + 1))p" "$TASK_MAP")
+if ! [[ "$TASK_ID" =~ ^[0-9]+$ ]]; then
+  echo "No validation task ID for local array index $LOCAL_TASK_ID in $TASK_MAP" >&2
+  exit 4
+fi
 
 module purge
 source "$REPO_DIR/examples/prospectus_rfi/slurm/alpine_runtime.sh"

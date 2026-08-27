@@ -5,6 +5,7 @@ from examples.prospectus_rfi.validation_campaign import (
     completed_task,
     task_output_relative,
     slurm_array_expression,
+    write_task_shards,
 )
 
 
@@ -49,3 +50,26 @@ def test_completed_task_requires_csv_and_metadata(tmp_path):
 def test_task_ids_are_compacted_for_slurm_array_submission():
     assert slurm_array_expression([]) == ""
     assert slurm_array_expression([0, 1, 2, 5, 7, 8, 10]) == "0-2,5,7-8,10"
+
+
+def test_validation_uses_only_last_five_iterations_plus_final(tmp_path):
+    checkpoint_root = tmp_path / "training" / "mlp_k5_seed10001" / "checkpoints"
+    for iteration in (3, 6, 9, 12, 15, 18, 21):
+        (checkpoint_root / f"iteration_{iteration:03d}").mkdir(parents=True)
+    (checkpoint_root / "final").mkdir()
+    from examples.prospectus_rfi.validation_campaign import checkpoint_directories
+
+    assert [path.name for path in checkpoint_directories(checkpoint_root.parent)] == [
+        "iteration_009",
+        "iteration_012",
+        "iteration_015",
+        "iteration_018",
+        "iteration_021",
+        "final",
+    ]
+
+
+def test_task_maps_keep_slurm_array_indices_bounded(tmp_path):
+    paths = write_task_shards(list(range(540)), tmp_path, shard_size=400)
+    assert [len(path.read_text().splitlines()) for path in paths] == [400, 140]
+    assert paths[1].read_text().splitlines()[0] == "400"

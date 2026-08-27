@@ -16,11 +16,21 @@ ARCHITECTURES = ("mlp", "attention")
 CANDIDATE_COUNTS = (5, 10, 20)
 
 
-def checkpoint_directories(run_dir: Path) -> list[Path]:
-    """Return retained checkpoint directories in stable selection order."""
+def _iteration_number(path: Path) -> int:
+    try:
+        return int(path.name.removeprefix("iteration_"))
+    except ValueError as error:
+        raise ValueError(f"invalid checkpoint directory name: {path.name}") from error
+
+
+def checkpoint_directories(run_dir: Path, *, iteration_limit: int = 5) -> list[Path]:
+    """Return the configured tail of iteration checkpoints plus ``final``."""
 
     root = run_dir / "checkpoints"
-    checkpoints = sorted(path for path in root.glob("iteration_*") if path.is_dir())
+    checkpoints = sorted(
+        (path for path in root.glob("iteration_*") if path.is_dir()),
+        key=_iteration_number,
+    )[-iteration_limit:]
     final = root / "final"
     if final.is_dir():
         checkpoints.append(final)
@@ -96,3 +106,20 @@ def slurm_array_expression(task_ids: list[int]) -> str:
         start = previous = value
     ranges.append(str(start) if start == previous else f"{start}-{previous}")
     return ",".join(ranges)
+
+
+def write_task_shards(task_ids: list[int], directory: Path, *, shard_size: int) -> list[Path]:
+    """Write local-array-index to validation-task-ID maps in bounded shards."""
+
+    if shard_size < 1:
+        raise ValueError("shard_size must be positive")
+    directory.mkdir(parents=True, exist_ok=True)
+    paths = []
+    for shard_index, offset in enumerate(range(0, len(task_ids), shard_size)):
+        values = task_ids[offset : offset + shard_size]
+        path = directory / f"shard_{shard_index:03d}.txt"
+        temporary = path.with_name(f".{path.name}.tmp")
+        temporary.write_text("".join(f"{value}\n" for value in values))
+        temporary.replace(path)
+        paths.append(path)
+    return paths
