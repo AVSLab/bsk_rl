@@ -92,7 +92,9 @@ handles the combination of multiple reward systems.
 from bsk_rl.data.base import GlobalReward
 from bsk_rl.data.categorized_swept_risk_data import (
     DiminishingSweptRiskReward,
+    LinearCategoryReward,
     ProportionalSweptRiskReward,
+    QuotaPriorityReward,
     blend_rates,
     blend_total,
 )
@@ -112,6 +114,8 @@ __all__ = [
     "SweptRiskReward",
     "DiminishingSweptRiskReward",
     "ProportionalSweptRiskReward",
+    "LinearCategoryReward",
+    "QuotaPriorityReward",
     "blend_total",
     "blend_rates",
 ]

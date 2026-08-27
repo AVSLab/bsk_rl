@@ -299,10 +299,101 @@ class ProportionalSweptRiskReward(GlobalReward):
         }
 
 
+class LinearCategoryReward(GlobalReward):
+    """Preference-weighted sum of collected risk-area — the architecture
+    benchmark.
+
+    .. math::
+
+        r = k \\sum_c w_c \\, \\delta_c
+
+    with ``w`` the scenario's preference vector and ``k`` the base
+    :class:`~bsk_rl.data.SweptRiskReward` scale (1/40000 km^-2), so with a
+    one-hot ``w`` this is EXACTLY the single-channel reward of the
+    category-blind pipeline on that channel, in its units. Deliberately
+    reducible: the ``w``-weighted summed map is a sufficient statistic, and
+    the frozen single-channel policy fed that map is a near-optimal zero-
+    training reference. A categorized policy conditioned on ``w`` must match
+    it — that is the pass/fail test of the conditioning path and the
+    channel attribution, with no composition dynamics in the way. The
+    reward is linear in the collected vector, so no collection state is
+    needed in the observation.
+    """
+
+    datastore_type = CategorizedSweptRiskStore
+
+    def __init__(self, reward_per_risk_area: float = 1.0 / 40000.0) -> None:
+        """Linear preference-weighted reward.
+
+        Args:
+            reward_per_risk_area: [1/km^2] Scale on the weighted collected
+                risk-area; the base class default makes one minute of fresh
+                full-risk swath at weight 1 worth about 1.0.
+        """
+        super().__init__()
+        self.reward_per_risk_area = reward_per_risk_area
+
+    def initial_data(self, satellite) -> "CategorizedSweptRisk":
+        """Start each satellite with zero collected risk in every category."""
+        return CategorizedSweptRisk()
+
+    def calculate_reward(self, new_data_dict) -> dict[str, float]:
+        """Weighted collected risk-area of the step."""
+        w = np.asarray(self.scenario.preference, dtype=float)
+        return {
+            sat: float(w @ np.asarray(d.swept, dtype=float))
+            * self.reward_per_risk_area
+            for sat, d in new_data_dict.items()
+        }
+
+
+class QuotaPriorityReward(GlobalReward):
+    """Paid priority under replenishing image quotas — the quota benchmark.
+
+    .. math::
+
+        r = k \\sum_c \\delta^{\\text{paid}}_c
+
+    where the paid increments come from
+    :class:`~bsk_rl.scene.QuotaSweepRiskField`: a swept cell's priority is
+    paid only while its category's budget (km^2 of category ground per
+    period, ``w_c`` times the total quota) has room, and consumes that
+    budget. No weight appears here — the preference already acts through
+    the quota split, and weighting the payment again would double-count
+    it. ``k`` is the base :class:`~bsk_rl.data.SweptRiskReward` scale, so
+    returns are in v1 units and an unlimited quota reproduces the v1
+    reward exactly.
+    """
+
+    datastore_type = CategorizedSweptRiskStore
+
+    def __init__(self, reward_per_risk_area: float = 1.0 / 40000.0) -> None:
+        """Quota reward.
+
+        Args:
+            reward_per_risk_area: [1/km^2] Scale on the paid risk-area.
+        """
+        super().__init__()
+        self.reward_per_risk_area = reward_per_risk_area
+
+    def initial_data(self, satellite) -> "CategorizedSweptRisk":
+        """Start each satellite with nothing paid in any category."""
+        return CategorizedSweptRisk()
+
+    def calculate_reward(self, new_data_dict) -> dict[str, float]:
+        """Paid priority of the step, summed over categories."""
+        return {
+            sat: float(np.sum(d.swept)) * self.reward_per_risk_area
+            for sat, d in new_data_dict.items()
+        }
+
+
 __doc_title__ = "Categorized Swept Risk"
 __all__ = [
     "DiminishingSweptRiskReward",
     "ProportionalSweptRiskReward",
+    "LinearCategoryReward",
+    "QuotaPriorityReward",
     "CategorizedSweptRiskStore",
     "CategorizedSweptRisk",
     "S_REF_DEFAULT",

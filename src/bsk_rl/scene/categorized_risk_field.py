@@ -70,6 +70,7 @@ class CategorizedSweepRiskField(SweepRiskField):
         ),
         preference_alpha: tuple = (0.2, 0.2, 0.2),
         preference_min: float = 0.05,
+        preference_onehot_prob: float = 0.0,
         fixed_preference: Optional[tuple] = None,
         exclusive_categories: bool = True,
         seeding: str = "v1_partition",
@@ -127,6 +128,12 @@ class CategorizedSweepRiskField(SweepRiskField):
                 the intent is a policy that always has to account for all
                 of them. The most extreme draw is ``1 - (n-1)*min`` on one
                 category. Does not apply to ``fixed_preference``.
+            preference_onehot_prob: Probability that an episode's preference
+                is an exact one-hot vector (uniform over categories) instead
+                of the floored Dirichlet draw — the corners a Dirichlet
+                never reaches. For the linear architecture benchmark, where
+                a one-hot ``w`` makes the reward exactly the single-channel
+                one on that category; pair with ``preference_min=0`` there.
             fixed_preference: Pin the preference instead of drawing it
                 (normalized to sum to 1) — for evaluation and deployment.
             exclusive_categories: (``per_category`` only; inherent under
@@ -147,6 +154,8 @@ class CategorizedSweepRiskField(SweepRiskField):
         self.category_land_weights = category_land_weights
         self.preference_alpha = preference_alpha
         self.preference_min = preference_min
+        assert 0.0 <= preference_onehot_prob <= 1.0, preference_onehot_prob
+        self.preference_onehot_prob = preference_onehot_prob
         self.fixed_preference = fixed_preference
         self.exclusive_categories = exclusive_categories
         self.n_categories = len(category_land_weights)
@@ -279,6 +288,10 @@ class CategorizedSweepRiskField(SweepRiskField):
         else:
             self._build_v1_partition(rng)
 
+    def _note_seed_contribution(self, seed_idx: int, category: int,
+                                contribution: np.ndarray) -> None:
+        """Per-seed hook of :meth:`_build_v1_partition` (no-op here)."""
+
     def _build_v1_partition(self, rng: np.random.Generator) -> None:
         """The base field, partitioned into channels by seed label.
 
@@ -317,9 +330,9 @@ class CategorizedSweepRiskField(SweepRiskField):
 
         miss = 1.0 - risk
         miss_c = [np.ones_like(miss) for _ in range(self.n_categories)]
-        for lat0, lon0, core, falloff, peak, c in zip(
+        for s, (lat0, lon0, core, falloff, peak, c) in enumerate(zip(
             seed_lats, seed_lons, cores, falloffs, peaks, category
-        ):
+        )):
             d = _great_circle_km(lat_g, lon_g, lat0, lon0)
             ramp = 0.5 * (
                 1.0
@@ -331,6 +344,11 @@ class CategorizedSweepRiskField(SweepRiskField):
             factor = 1.0 - peak * ramp
             miss *= factor
             miss_c[c] *= factor
+            # Hook for subclasses that attribute cells to spots (the quota
+            # field): sees every seed's contribution in the same pass, so
+            # no second sweep over the raster is needed. No-op here, and it
+            # touches nothing the union depends on.
+            self._note_seed_contribution(s, c, peak * ramp)
         union = 1.0 - miss
         strength = np.stack([1.0 - m for m in miss_c])
         winner = np.argmax(strength, axis=0)
@@ -406,12 +424,21 @@ class CategorizedSweepRiskField(SweepRiskField):
             self.preference = p / p.sum()
         else:
             # Global np.random: seeded by the env right before this call
-            # (gym reset), so the draw is reproducible per episode seed.
+            # (gym reset), so the draw is reproducible per episode seed. All
+            # three draws happen on every reset, whichever branch is taken,
+            # so the RNG stream after this point is identical for any
+            # ``preference_onehot_prob`` — episodes stay paired across
+            # settings of it.
             draw = np.random.dirichlet(self.preference_alpha)
             n = draw.size
-            self.preference = (
-                self.preference_min + (1.0 - n * self.preference_min) * draw
-            )
+            use_corner = np.random.uniform() < self.preference_onehot_prob
+            corner = np.random.randint(n)
+            if use_corner:
+                self.preference = np.eye(n)[corner]
+            else:
+                self.preference = (
+                    self.preference_min + (1.0 - n * self.preference_min) * draw
+                )
         logger.info(f"Preference drawn: {np.round(self.preference, 3)}")
 
     def update_coverage(self, satellite) -> np.ndarray:

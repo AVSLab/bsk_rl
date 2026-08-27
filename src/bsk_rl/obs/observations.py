@@ -832,6 +832,19 @@ class RiskTokens(Observation):
 
     def rectified_map(self) -> np.ndarray:
         """(n_time, n_roll) risk rectangle ahead of the satellite."""
+        scenario = self.satellite.sweep_scene
+        # Consume any not-yet-processed swath coverage first, so ground
+        # already imaged this step shows as zero importance
+        scenario.update_coverage(self.satellite)
+        lat, lon = self.rectified_points()
+        return scenario.sample_risk(lat, lon).mean(axis=2)
+
+    def rectified_points(self) -> tuple[np.ndarray, np.ndarray]:
+        """Lat/lon [deg] of the rectified grid's sample points, shape
+        ``(n_time, n_roll, swath_samples)``, from the current orbit state —
+        the geometry of :meth:`rectified_map` without the sampling, so any
+        scenario grid (e.g. a true cloud cover the observation never shows)
+        can be rendered in the same frame."""
         from bsk_rl.scene.risk_field import (
             R_EARTH_KM,
             central_angle_from_roll,
@@ -839,9 +852,6 @@ class RiskTokens(Observation):
         )
 
         scenario = self.satellite.sweep_scene
-        # Consume any not-yet-processed swath coverage first, so ground
-        # already imaged this step shows as zero importance
-        scenario.update_coverage(self.satellite)
         r_N = np.array(self.satellite.dynamics.r_BN_N)
         v_N = np.array(self.satellite.dynamics.v_BN_N)
         t0 = self.simulator.sim_time
@@ -880,8 +890,7 @@ class RiskTokens(Observation):
             np.cos(lam_s)[None, ..., None] * r_hat_k[:, None, None, :]
             + np.sin(lam_s)[None, ..., None] * h_hat[None, None, None, :]
         )
-        lat, lon = eci_to_latlon(p, (t0 + t_rel)[:, None, None])
-        return scenario.sample_risk(lat, lon).mean(axis=2)
+        return eci_to_latlon(p, (t0 + t_rel)[:, None, None])
 
     def get_obs(self) -> np.ndarray:
         """Flattened (n_tokens, patch*patch) token array.

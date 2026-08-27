@@ -11,6 +11,8 @@ following scenarios have been implemented:
 from bsk_rl.scene.scenario import Scenario, UniformNadirScanning
 from bsk_rl.scene.risk_field import SweepRiskField
 from bsk_rl.scene.categorized_risk_field import CategorizedSweepRiskField
+from bsk_rl.scene.cloud_risk_field import CloudSweepRiskField
+from bsk_rl.scene.quota_risk_field import QuotaSweepRiskField
 from bsk_rl.scene.targets import CityTargets, UniformTargets, UniformStripTargets
 
 __doc_title__ = "Scenario"
@@ -23,4 +25,6 @@ __all__ = [
     "UniformNadirScanning",
     "SweepRiskField",
     "CategorizedSweepRiskField",
+    "CloudSweepRiskField",
+    "QuotaSweepRiskField",
 ]
