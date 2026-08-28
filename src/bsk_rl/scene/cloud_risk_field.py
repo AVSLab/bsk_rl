@@ -2,8 +2,9 @@
 
 Every reset draws a **cloud-fraction map** over the whole grid that looks
 like an instantaneous satellite cloud product — a filamentary texture of
-clear ground, partly cloudy patches and overcast decks: fractal noise
-domain-warped into swirls, then pushed through a soft threshold — with a
+clear ground, partly cloudy patches and overcast decks: isotropic fractal
+noise on the sphere, domain-warped into swirls, then pushed through a soft
+threshold — with a
 three-region climatology: the non-polar ocean, the non-polar land and the
 polar caps (``|lat| >= polar_lat``) each get their own mean cover
 (defaults 0.70 / 0.55 / 0.72, about 0.66 over the Earth); optionally the
@@ -48,13 +49,18 @@ from scipy.ndimage import gaussian_filter, map_coordinates, zoom
 from bsk_rl.scene.risk_field import R_EARTH_KM, SweepRiskField
 
 # --- Cloud-map recipe (calibrated 2026-08-26 on the 0.5 deg grid) --------
-# Texture: fractal noise (octaves of cubic-interpolated Gaussian grids,
-# coarsest 12 x 24 nodes, persistence 0.55) warped three times by noise
-# displacement fields, in grid cells — large swirls, then filaments.
-_FBM_BASE = (12, 24)
+# Texture: isotropic fractal noise ON THE SPHERE — octaves of Gaussian 3-D
+# lattices spanning the unit cube, cubic-interpolated at every grid cell's
+# unit vector (coarsest 8 nodes ~ 1600 km, finest 128 ~ 100 km, persistence
+# 0.55) — warped three times along the surface by random vector fields of
+# the given rms [km] (large swirls, then filaments). Synthesizing in 3-D
+# rather than in lat/lon cells keeps every feature its physical size up to
+# the poles (a lat/lon texture squeezes into streaks converging on them)
+# and makes the map seamless at the antimeridian.
+_FBM_BASE = 8
 _FBM_OCTAVES = 5
 _FBM_PERSISTENCE = 0.55
-_WARP_CELLS = (25.0, 12.0, 5.0)
+_WARP_KM = (1400.0, 660.0, 280.0)
 # Cover = clip(0.5 + (noise + offset) / (2 * ramp)) with the unit-variance
 # noise: the ramp half-width sets how much of the ground saturates at
 # clear / overcast (0.45 leaves roughly half of it saturated, the look of
@@ -92,35 +98,45 @@ def _bilinear_apply(grid, i0, j0, j1, wi, wj):
     return lo * (1.0 - wi) + hi * wi
 
 
-def _fbm(rng, shape, base, octaves, persistence):
-    """Fractal noise: octaves of Gaussian node grids, each cubic-interpolated
-    to ``shape`` and summed with geometrically decaying weights; unit std."""
-    field = np.zeros(shape)
+def _sphere_points(lats, lons):
+    """Unit vectors of the grid cells, shape (n_lat, n_lon, 3)."""
+    lat = np.radians(lats)[:, None]
+    lon = np.radians(lons)[None, :]
+    return np.stack(
+        [np.cos(lat) * np.cos(lon), np.cos(lat) * np.sin(lon),
+         np.sin(lat) * np.ones_like(lon)],
+        axis=-1,
+    )
+
+
+def _fbm_sphere(rng, points, base, octaves, persistence):
+    """Isotropic fractal noise at unit vectors ``points``: octaves of
+    Gaussian lattices over [-1, 1]^3, each cubic-interpolated at the points
+    and summed with geometrically decaying weights; unit std."""
+    field = np.zeros(points.shape[:-1])
+    flat = points.reshape(-1, 3)
     amp = 1.0
     for k in range(octaves):
-        sub = (base[0] * 2 ** k, base[1] * 2 ** k)
-        nodes = rng.standard_normal(sub)
-        field += amp * zoom(
-            nodes, (shape[0] / sub[0], shape[1] / sub[1]), order=3, mode="reflect"
-        )
+        n = base * 2 ** k
+        lattice = rng.standard_normal((n, n, n))
+        coords = (flat + 1.0) * 0.5 * (n - 1)          # [-1, 1] -> [0, n-1]
+        field += amp * map_coordinates(
+            lattice, coords.T, order=3, mode="reflect"
+        ).reshape(field.shape)
         amp *= persistence
     return field / field.std()
 
 
-def _warp(field, rng, cells):
-    """Resample ``field`` along a random smooth displacement of ``cells``
-    cells rms — the swirls and filaments of an advected cloud field.
-    Periodic in longitude, clamped in latitude."""
-    n_lat, n_lon = field.shape
-    dy = _fbm(rng, field.shape, (6, 12), 3, 0.5) * cells
-    dx = _fbm(rng, field.shape, (6, 12), 3, 0.5) * cells
-    ii, jj = np.meshgrid(np.arange(n_lat), np.arange(n_lon), indexing="ij")
-    return map_coordinates(
-        field,
-        [np.clip(ii + dy, 0, n_lat - 1), (jj + dx) % n_lon],
-        order=1,
-        mode="reflect",
-    )
+def _warp_sphere(points, rng, km):
+    """Displace the sample points along the surface by an isotropic random
+    vector field (``km`` rms per component, tangent part kept) — the swirls
+    and filaments of an advected cloud field, the same size everywhere."""
+    v = np.stack(
+        [_fbm_sphere(rng, points, 4, 3, 0.5) for _ in range(3)], axis=-1
+    ) * (km / R_EARTH_KM)
+    v -= np.sum(v * points, axis=-1, keepdims=True) * points
+    p = points + v
+    return p / np.linalg.norm(p, axis=-1, keepdims=True)
 
 
 class CloudSweepRiskField(SweepRiskField):
@@ -271,12 +287,16 @@ class CloudSweepRiskField(SweepRiskField):
     def build_cloud_map(self, rng: np.random.Generator) -> np.ndarray:
         """Draw a global cloud-fraction map (module docstring recipe).
 
-        Requires ``self.lats`` / ``self.lons`` (set by the field build).
+        The sample points are warped first and the noise evaluated at the
+        warped points, which is the same thing as warping the noise field
+        and is exact on the sphere. Requires ``self.lats`` / ``self.lons``
+        (set by the field build).
         """
         shape = (self.lats.size, self.lons.size)
-        z = _fbm(rng, shape, _FBM_BASE, _FBM_OCTAVES, _FBM_PERSISTENCE)
-        for cells in _WARP_CELLS:
-            z = _warp(z, rng, cells)
+        points = _sphere_points(self.lats, self.lons)
+        for km in _WARP_KM:
+            points = _warp_sphere(points, rng, km)
+        z = _fbm_sphere(rng, points, _FBM_BASE, _FBM_OCTAVES, _FBM_PERSISTENCE)
         z = (z - z.mean()) / z.std()
         area = self._area_weights()
         regions = self._region_weights()
