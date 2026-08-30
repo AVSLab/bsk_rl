@@ -29,6 +29,11 @@ def parse_args():
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--base-config", type=Path)
     parser.add_argument("--include-final", action="store_true")
+    parser.add_argument(
+        "--last-iterations",
+        type=int,
+        help="Evaluate only the newest N iteration checkpoints.",
+    )
     parser.add_argument("--no-wheel-guard", action="store_true")
     return parser.parse_args()
 
@@ -49,6 +54,10 @@ def main() -> None:
     )
     checkpoint_root = args.run_dir.resolve() / "checkpoints"
     checkpoints = sorted(checkpoint_root.glob("iteration_*"))
+    if args.last_iterations is not None:
+        if args.last_iterations < 1:
+            raise SystemExit("--last-iterations must be positive")
+        checkpoints = checkpoints[-args.last_iterations :]
     if args.include_final and (checkpoint_root / "final").exists():
         checkpoints.append(checkpoint_root / "final")
     if not checkpoints:

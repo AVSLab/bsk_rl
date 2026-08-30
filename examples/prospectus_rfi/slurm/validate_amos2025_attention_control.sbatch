@@ -41,6 +41,7 @@ python -u examples/prospectus_rfi/validate_checkpoints.py \
     --candidate-count 10 \
     --run-dir "$RUN_DIR" \
     --base-config examples/prospectus_rfi/configs/base_amos2025_attention_control.yaml \
+    --last-iterations 5 \
     --include-final \
     --no-wheel-guard
 
