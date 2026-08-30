@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# 4 methods x 3 K values x 4 N values x 4 blocks of 25 paired seeds.
+# 5 methods x 3 K values x 4 N values x 4 blocks of 25 paired seeds.
 #SBATCH --account=ucb550_asc2
 #SBATCH --job-name=rfi_paired_mc
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --time=24:00:00
-#SBATCH --array=0-191%32
+#SBATCH --array=0-239%32
 #SBATCH --partition=acpu
 #SBATCH --mem=80G
 #SBATCH --constraint=epyc-7713
@@ -16,14 +16,14 @@
 #SBATCH --nice=10000
 
 set -euo pipefail
-METHODS=(mlp attention heuristic_historical heuristic_matched)
+METHODS=(mlp attention heuristic_historical heuristic_distance_historical heuristic_matched)
 KS=(5 10 20)
 NS=(100 200 300 400)
 INDEX=${SLURM_ARRAY_TASK_ID:?SLURM_ARRAY_TASK_ID is required}
 BLOCK=$((INDEX % 4))
 N_INDEX=$(((INDEX / 4) % 4))
 K_INDEX=$(((INDEX / 16) % 3))
-METHOD_INDEX=$(((INDEX / 48) % 4))
+METHOD_INDEX=$(((INDEX / 48) % 5))
 METHOD=${METHODS[$METHOD_INDEX]}
 K=${KS[$K_INDEX]}
 N=${NS[$N_INDEX]}

@@ -78,5 +78,6 @@ def test_memorysafe_paired_mc_submission_is_checkpoint_gated():
     assert 'for K in 5 10 20' in script
     assert 'checkpoints/best_validation' in script
     assert 'sbatch --test-only' in script
-    assert 'expected_episode_rows\": 4800' in script
+    assert 'expected_episode_rows\": 6000' in script
+    assert 'heuristic_distance_historical' in script
     assert 'Refusing to overwrite an existing paired evaluation' in script

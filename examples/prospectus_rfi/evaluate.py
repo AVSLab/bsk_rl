@@ -92,8 +92,14 @@ def matched_angle_action(observation: np.ndarray, layout: ObservationLayout) -> 
     return int(np.argmin(scores))
 
 
-def apply_resource_shield(base_env, action: int, candidate_count: int):
-    """Historical battery/storage shield plus a wheel-speed guard."""
+def apply_resource_shield(
+    base_env,
+    action: int,
+    candidate_count: int,
+    *,
+    include_wheel_guard: bool = True,
+):
+    """Historical battery/storage shield, optionally with a wheel-speed guard."""
 
     scanner = base_env.satellites[0]
     battery = float(scanner.dynamics.battery_charge_fraction)
@@ -103,7 +109,7 @@ def apply_resource_shield(base_env, action: int, candidate_count: int):
         return candidate_count, "battery"
     if storage >= 0.99:
         return candidate_count + 1, "storage"
-    if wheel >= 0.90:
+    if include_wheel_guard and wheel >= 0.90:
         return candidate_count + 2, "reaction_wheel"
     return int(action), None
 
@@ -124,14 +130,19 @@ def run_episode(
     catalog_size: int,
     learned_policy: Callable[[np.ndarray], int] | None,
     shield: bool,
+    wheel_guard: bool = True,
     observation_contract: str = STUDY_MASKED_OBSERVATION_CONTRACT,
     trajectory_rows: list[dict] | None = None,
 ) -> dict[str, float | int | str | bool]:
-    historical = method == "heuristic_historical"
+    historical_modes = {
+        "heuristic_historical": "angle",
+        "heuristic_distance_historical": "distance",
+    }
+    historical_mode = historical_modes.get(method)
     env_args = make_environment_args(
         study.environment,
         fixed_catalog_size=catalog_size,
-        historical_heuristic=historical,
+        historical_heuristic_mode=historical_mode,
         observation_contract=observation_contract,
     )
     env_args["log_level"] = "ERROR"
@@ -156,9 +167,9 @@ def run_episode(
             start_ns = time.perf_counter_ns()
             if method == "heuristic_matched":
                 requested_action = matched_angle_action(scanner_observation, layout)
-            elif method == "heuristic_historical":
+            elif method in historical_modes:
                 # ImageRSO replaces any valid image slot with the full-catalog
-                # smallest-pointing-angle choice when its historical mode is active.
+                # angle/distance choice when its historical mode is active.
                 requested_action = 0
             else:
                 if learned_policy is None:
@@ -171,7 +182,10 @@ def run_episode(
             executed_action = requested_action
             if shield:
                 executed_action, reason = apply_resource_shield(
-                    base, requested_action, study.environment.candidate_count
+                    base,
+                    requested_action,
+                    study.environment.candidate_count,
+                    include_wheel_guard=wheel_guard,
                 )
                 if reason is not None and executed_action != requested_action:
                     base.study_constraint_interventions += 1
@@ -197,6 +211,7 @@ def run_episode(
                 "catalog_size": catalog_size,
                 "candidate_count": study.environment.candidate_count,
                 "shield_enabled": shield,
+                "wheel_guard_enabled": wheel_guard,
                 "observation_contract": observation_contract,
                 "battery_shield_interventions": intervention_reasons["battery"],
                 "storage_shield_interventions": intervention_reasons["storage"],
@@ -237,7 +252,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--method",
-        choices=("mlp", "attention", "heuristic_historical", "heuristic_matched"),
+        choices=(
+            "mlp",
+            "attention",
+            "heuristic_historical",
+            "heuristic_distance_historical",
+            "heuristic_matched",
+        ),
         required=True,
     )
     parser.add_argument("--checkpoint", type=Path)
@@ -323,7 +344,10 @@ def main() -> None:
         "shield_enabled": not args.no_shield,
         "information_scope": (
             "full eligible catalog"
-            if args.method == "heuristic_historical"
+            if args.method in {
+                "heuristic_historical",
+                "heuristic_distance_historical",
+            }
             else f"same {args.candidate_count}-candidate list as learned policies"
         ),
         "checkpoint": checkpoint_metadata,

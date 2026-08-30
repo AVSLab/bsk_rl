@@ -23,25 +23,29 @@ from examples.prospectus_rfi.config import load_study_config
 METHOD_LABELS = {
     "mlp": "Fixed-input monolithic MLP",
     "attention": "Target-set attention",
-    "heuristic_historical": "Historical heuristic (full catalog)",
+    "heuristic_historical": "Smallest-angle heuristic (full catalog)",
+    "heuristic_distance_historical": "Closest-distance heuristic (full catalog)",
     "heuristic_matched": "Heuristic (information matched)",
 }
 COLORS = {
     "mlp": "#365f9d",
     "attention": "#d55e00",
     "heuristic_historical": "#6a6a6a",
+    "heuristic_distance_historical": "#cc79a7",
     "heuristic_matched": "#009e73",
 }
 LINE_STYLES = {
     "mlp": "-",
     "attention": "--",
     "heuristic_historical": ":",
+    "heuristic_distance_historical": (0, (3, 1, 1, 1)),
     "heuristic_matched": "-.",
 }
 MARKERS = {
     "mlp": "o",
     "attention": "s",
     "heuristic_historical": "^",
+    "heuristic_distance_historical": "v",
     "heuristic_matched": "D",
 }
 RESOURCE_COLORS = {
@@ -144,7 +148,12 @@ def paired_table(frame: pd.DataFrame, margin: float) -> pd.DataFrame:
             ref = group[group["method"] == reference][["scenario_seed", metric]].rename(
                 columns={metric: "reference"}
             )
-            for method in ("mlp", "attention", "heuristic_historical"):
+            for method in (
+                "mlp",
+                "attention",
+                "heuristic_historical",
+                "heuristic_distance_historical",
+            ):
                 policy = group[group["method"] == method][
                     ["scenario_seed", metric]
                 ].rename(columns={metric: "method_value"})
@@ -387,7 +396,12 @@ def plot_differences(paired: pd.DataFrame, figure_dir: Path) -> None:
     fig, axes = plt.subplots(1, 3, figsize=(12, 3.6), sharey=True)
     for axis, candidate_count in zip(axes, (5, 10, 20)):
         subset = data[data["candidate_count"] == candidate_count]
-        offsets = {"mlp": -7, "attention": 0, "heuristic_historical": 7}
+        offsets = {
+            "mlp": -9,
+            "attention": -3,
+            "heuristic_historical": 3,
+            "heuristic_distance_historical": 9,
+        }
         for method, group in subset.groupby("method"):
             x = group["catalog_size"] + offsets[method]
             y = group["mean_paired_difference"]

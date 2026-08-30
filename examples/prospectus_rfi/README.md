@@ -431,6 +431,51 @@ campaign directory below:
 /scratch/alpine/$USER/prospectus_rfi/amos2025_attention_control_300s/
 ```
 
+### Matched 300-second Research Focus I Monte Carlo
+
+The Breckenridge imaging-versus-downlink paper's alpha=0 policy is the October
+14, 2025 `0d100i/checkpoint_000145` policy, not the August AMOS checkpoint. The
+matched campaign verifies its module checksum, preserves its 81-value
+observation-version-7 input, and compares it with the held-out-selected
+300-second target-set attention policy. It also reruns the full-catalog
+smallest-angle and closest-distance heuristics on seeds 0--99.
+
+All four methods use N=100, K=10, 45,000-second episodes, fixed
+image/charge/downlink/desaturation durations of 300/300/180/150 seconds,
+alpha=0, 10--40% initial battery, the LEO target distribution, no re-imaging,
+and the historical battery/storage shield without the later wheel-speed guard.
+The policies retain their trained observation contracts; a campaign is rejected
+if the physical target fingerprint differs between methods for any seed.
+
+First locate the completed attention-control run:
+
+```bash
+find /scratch/alpine/$USER/prospectus_rfi/amos2025_attention_control_300s \
+  -path '*/training/attention_k10_seed10001/checkpoints/final' -type d -print
+```
+
+Then submit checkpoint validation, 400 one-episode array tasks, and the strict
+collector:
+
+```bash
+export BSK_RL_REPO_DIR=/projects/$USER/bsk_rl-rfi
+export BSK_RL_AMOS2025_ATTENTION_RUN_DIR=<campaign-root>/training/attention_k10_seed10001
+
+# Optional only if the publication snapshot lives elsewhere:
+export BSK_RL_BRECKENRIDGE_ALPHA0_CHECKPOINT=\
+/projects/$USER/bsk_rl/policies/breckenridge2026_alpha_sweep/0d100i/checkpoint_000145
+
+bash examples/prospectus_rfi/submit_amos2025_matched_300s.sh 30
+```
+
+The submitter pins the paper-policy weight checksum
+`0d8033272f14cdd408192d7ab6ee819b18691c9385fca87be24044fc950464d2`.
+It first selects the attention checkpoint over held-out seeds 91001--91005,
+then evaluates all four methods on seeds 0--99. The collector writes combined
+episodes, summary statistics, and paired differences under `analysis/` only
+after all 400 episodes pass the design and fingerprint checks. Rerunning with
+the same `BSK_RL_AMOS2025_MATCHED_300S_OUTPUT_ROOT` skips completed episodes.
+
 To audit the current N=100--200 training telemetry against environment steps and wall
 time, submit the read-only, low-priority diagnostic from the login node:
 
@@ -531,7 +576,7 @@ VALIDATE_JOB=$(sbatch --parsable --dependency=afterok:$TRAIN_JOB \
 echo "$VALIDATE_JOB"
 ```
 
-6. Launch the paired 100-episode-per-N evaluation after validation. The 192-task array
+6. Launch the paired 100-episode-per-N evaluation after validation. The 240-task array
    splits each method/K/N cell into four blocks of 25 seeds while preserving identical
    seeds across methods:
 

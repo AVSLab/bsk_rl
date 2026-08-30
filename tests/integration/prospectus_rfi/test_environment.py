@@ -10,6 +10,7 @@ from examples.prospectus_rfi.acquisition_timeline import append_trajectory_snaps
 from examples.prospectus_rfi.config import load_study_config
 from examples.prospectus_rfi.environment import (
     AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT,
+    BRECKENRIDGE2026_OBSERVATION_CONTRACT,
     LEGACY_AMOS2025_OBSERVATION_CONTRACT,
     make_environment_args,
 )
@@ -135,3 +136,37 @@ def test_attention_control_has_checkpoint_fields_mask_and_300_second_action():
         assert base.simulator.sim_time - start == pytest.approx(300.0)
     finally:
         env.close()
+
+
+def test_breckenridge_obs_v7_contract_has_81_inputs_and_matched_scenario():
+    study = load_study_config(
+        CONFIG_DIR / "attention_amos2025_control.yaml",
+        CONFIG_DIR / "base_amos2025_attention_control.yaml",
+    )
+    attention_args = make_environment_args(study.environment, fixed_catalog_size=100)
+    breckenridge_args = make_environment_args(
+        study.environment,
+        fixed_catalog_size=100,
+        observation_contract=BRECKENRIDGE2026_OBSERVATION_CONTRACT,
+    )
+    attention_env = gym.make(
+        "ConstellationTasking-v1",
+        disable_env_checker=True,
+        **attention_args,
+    )
+    breckenridge_env = gym.make(
+        "ConstellationTasking-v1",
+        disable_env_checker=True,
+        **breckenridge_args,
+    )
+    try:
+        attention_obs, _ = attention_env.reset(seed=314159)
+        breckenridge_obs, _ = breckenridge_env.reset(seed=314159)
+        assert attention_obs["SS1"].shape == (97,)
+        assert breckenridge_obs["SS1"].shape == (81,)
+        assert scenario_fingerprint(
+            attention_env.unwrapped
+        ) == scenario_fingerprint(breckenridge_env.unwrapped)
+    finally:
+        attention_env.close()
+        breckenridge_env.close()

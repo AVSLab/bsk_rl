@@ -29,6 +29,7 @@ def parse_args():
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--base-config", type=Path)
     parser.add_argument("--include-final", action="store_true")
+    parser.add_argument("--no-wheel-guard", action="store_true")
     return parser.parse_args()
 
 
@@ -65,6 +66,7 @@ def main() -> None:
                     catalog_size=catalog_size,
                     learned_policy=policy,
                     shield=True,
+                    wheel_guard=not args.no_wheel_guard,
                 )
                 metrics["checkpoint"] = checkpoint.name
                 rows.append(metrics)
@@ -95,6 +97,7 @@ def main() -> None:
                 "mean_physical_validation_score": float(
                     checkpoint_scores.iloc[0]["physical_validation_score"]
                 ),
+                "wheel_guard_enabled": not args.no_wheel_guard,
                 "selection_rule": (
                     "maximum mean predeclared physical validation score across held-out "
                     f"seeds {list(study.validation.seeds)} and catalog sizes "

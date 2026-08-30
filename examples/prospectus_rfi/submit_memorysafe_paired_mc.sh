@@ -43,12 +43,12 @@ cat > "$MANIFEST" <<EOF
   "job_id": "$MC_JOB",
   "base_config": "$BASE_CONFIG",
   "evaluation_root": "$ROOT",
-  "methods": ["mlp", "attention", "heuristic_historical", "heuristic_matched"],
+  "methods": ["mlp", "attention", "heuristic_historical", "heuristic_distance_historical", "heuristic_matched"],
   "candidate_counts": [5, 10, 20],
   "catalog_sizes": [100, 200, 300, 400],
   "scenario_seeds": [700000, 700099],
-  "expected_array_tasks": 192,
-  "expected_episode_rows": 4800
+  "expected_array_tasks": 240,
+  "expected_episode_rows": 6000
 }
 EOF
 

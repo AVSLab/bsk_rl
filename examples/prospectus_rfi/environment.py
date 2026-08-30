@@ -47,6 +47,8 @@ AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT = (
 )
 AMOS2025_ATTENTION_CONTROL_GLOBAL_FEATURE_COUNT = 17
 AMOS2025_ATTENTION_CONTROL_TARGET_START = 5
+BRECKENRIDGE2026_OBSERVATION_CONTRACT = "breckenridge2026_obs_v7"
+BRECKENRIDGE2026_OBSERVATION_SIZE = 81
 
 
 class StudyDiscreteActionBuilder(DiscreteActionBuilder):
@@ -210,13 +212,18 @@ def make_satellite_types(
         STUDY_MASKED_OBSERVATION_CONTRACT,
         LEGACY_AMOS2025_OBSERVATION_CONTRACT,
         AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT,
+        BRECKENRIDGE2026_OBSERVATION_CONTRACT,
     }:
         raise ValueError(f"unsupported observation contract: {observation_contract}")
     if (
-        observation_contract == LEGACY_AMOS2025_OBSERVATION_CONTRACT
+        observation_contract
+        in {
+            LEGACY_AMOS2025_OBSERVATION_CONTRACT,
+            BRECKENRIDGE2026_OBSERVATION_CONTRACT,
+        }
         and config.candidate_count != LEGACY_AMOS2025_CANDIDATE_COUNT
     ):
-        raise ValueError("the frozen AMOS 2025 policy requires exactly 10 candidates")
+        raise ValueError("the frozen monolithic policies require exactly 10 candidates")
 
     class StudyImageRSO(act.ImageRSO):
         builder_type = StudyDiscreteActionBuilder
@@ -253,6 +260,31 @@ def make_satellite_types(
                     dict(prop="opportunity_close", norm=5700.0),
                     type="ground_station",
                     n_ahead_observe=LEGACY_AMOS2025_GROUND_STATION_COUNT,
+                ),
+            ]
+        elif observation_contract == BRECKENRIDGE2026_OBSERVATION_CONTRACT:
+            # Exact observation-version-7 contract used by the October 14,
+            # 2025 Breckenridge imaging-versus-downlink alpha sweep.
+            observation_spec = [
+                obs.SatProperties(
+                    dict(prop="storage_level_fraction"),
+                    dict(prop="battery_charge_fraction"),
+                    dict(prop="wheel_speeds_fraction"),
+                ),
+                obs.PolarisScTargetProperties(
+                    dict(prop="target_elevation_angle", norm=90.0),
+                    dict(prop="rel_pos_vector_r_BR_H", norm=15960.0e3),
+                    dict(prop="angle_to_target", norm=90.0),
+                    dict(prop="target_distance", norm=15960.0e3),
+                    dict(prop="target_shadowFactor", norm=1.0),
+                    n_ahead_observe=LEGACY_AMOS2025_CANDIDATE_COUNT,
+                ),
+                obs.Eclipse(norm=5700.0),
+                obs.OpportunityProperties(
+                    dict(prop="opportunity_open", norm=5700.0),
+                    dict(prop="opportunity_close", norm=5700.0),
+                    type="ground_station",
+                    n_ahead_observe=2,
                 ),
             ]
         elif observation_contract == STUDY_MASKED_OBSERVATION_CONTRACT:
@@ -345,6 +377,7 @@ def make_environment_args(
     episode_data_callback: Any | None = None,
     satellite_data_callback: Any | None = None,
     historical_heuristic: bool = False,
+    historical_heuristic_mode: str | None = None,
     observation_contract: str | None = None,
 ) -> dict[str, Any]:
     """Create one directly usable BSK-RL environment configuration."""
@@ -354,6 +387,10 @@ def make_environment_args(
         config.catalog_min <= fixed_catalog_size <= config.catalog_max
     ):
         raise ValueError("fixed_catalog_size lies outside the study range")
+    if historical_heuristic_mode not in {None, "angle", "distance"}:
+        raise ValueError(
+            "historical_heuristic_mode must be None, 'angle', or 'distance'"
+        )
 
     scanner_type, target_type = make_satellite_types(
         config, observation_contract=observation_contract
@@ -383,8 +420,10 @@ def make_environment_args(
         "imaging_bonus": config.imaging_bonus,
         "eclipse_threshold_for_imaging": config.eclipse_threshold,
         "eclipse_threshold_for_reward": config.eclipse_threshold,
-        "use_heuristic": bool(historical_heuristic),
-        "heuristic_mode": "angle",
+        "use_heuristic": bool(
+            historical_heuristic or historical_heuristic_mode is not None
+        ),
+        "heuristic_mode": historical_heuristic_mode or "angle",
     }
     target_args = {
         "oe": amos2025_target_orbit,
@@ -508,6 +547,8 @@ __all__ = [
     "AMOS2025_ATTENTION_CONTROL_GLOBAL_FEATURE_COUNT",
     "AMOS2025_ATTENTION_CONTROL_OBSERVATION_CONTRACT",
     "AMOS2025_ATTENTION_CONTROL_TARGET_START",
+    "BRECKENRIDGE2026_OBSERVATION_CONTRACT",
+    "BRECKENRIDGE2026_OBSERVATION_SIZE",
     "GLOBAL_FEATURE_COUNT",
     "LEGACY_AMOS2025_ACTION_COUNT",
     "LEGACY_AMOS2025_CANDIDATE_COUNT",
