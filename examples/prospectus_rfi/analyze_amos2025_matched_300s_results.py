@@ -1,0 +1,229 @@
+#!/usr/bin/env python3
+"""Statistical analysis for the matched 300-second Research Focus I campaign."""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+if __package__ in {None, ""}:
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+import numpy as np
+import pandas as pd
+from scipy.stats import t, ttest_rel, wilcoxon
+
+from examples.prospectus_rfi.amos2025_matched_300s_design import METHODS
+from examples.prospectus_rfi.collect_amos2025_matched_300s import validate_campaign
+
+REFERENCE_METHOD = "smallest_angle_heuristic"
+METHOD_LABELS = {
+    "breckenridge2026_alpha0_mlp": "Breckenridge alpha=0 MLP",
+    "target_set_attention": "Target-set attention",
+    "smallest_angle_heuristic": "Smallest-angle heuristic",
+    "closest_distance_heuristic": "Closest-distance heuristic",
+}
+TABLE_METHODS = (
+    "smallest_angle_heuristic",
+    "closest_distance_heuristic",
+    "breckenridge2026_alpha0_mlp",
+    "target_set_attention",
+)
+METRICS = (
+    "successful_observations",
+    "illuminated_observations",
+    "illumination_quality_fraction",
+    "illuminated_catalog_fraction",
+    "useful_deliveries",
+    "delivery_fraction",
+    "useful_images_left_onboard",
+    "resource_constraint_interventions",
+    "constraint_intervention_rate",
+    "final_battery_fraction",
+    "survival_fraction",
+    "total_action_count",
+)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input-root", type=Path, required=True)
+    return parser.parse_args()
+
+
+def holm_adjust(values: pd.Series) -> pd.Series:
+    array = values.to_numpy(dtype=float)
+    order = np.argsort(array)
+    adjusted = np.empty(len(array), dtype=float)
+    running = 0.0
+    for rank, index in enumerate(order):
+        running = max(running, (len(array) - rank) * array[index])
+        adjusted[index] = min(1.0, running)
+    return pd.Series(adjusted, index=values.index)
+
+
+def add_derived_metrics(frame: pd.DataFrame) -> pd.DataFrame:
+    frame = frame.copy()
+    successful = frame["successful_observations"].to_numpy(dtype=float)
+    illuminated = frame["illuminated_observations"].to_numpy(dtype=float)
+    delivered = frame["useful_deliveries"].to_numpy(dtype=float)
+    catalog = frame["catalog_size"].to_numpy(dtype=float)
+    frame["illumination_quality_fraction"] = np.divide(
+        illuminated,
+        successful,
+        out=np.full_like(illuminated, np.nan),
+        where=successful > 0.0,
+    )
+    frame["illuminated_catalog_fraction"] = illuminated / catalog
+    frame["delivery_fraction"] = np.divide(
+        delivered,
+        successful,
+        out=np.full_like(delivered, np.nan),
+        where=successful > 0.0,
+    )
+    frame["useful_images_left_onboard"] = successful - delivered
+    return frame
+
+
+def descriptive_statistics(frame: pd.DataFrame) -> pd.DataFrame:
+    rows: list[dict[str, float | int | str]] = []
+    for method in METHODS:
+        subset = frame[frame["method"] == method]
+        for metric in METRICS:
+            values = subset[metric].dropna().to_numpy(dtype=float)
+            n = len(values)
+            mean = float(np.mean(values))
+            std = float(np.std(values, ddof=1))
+            sem = std / np.sqrt(n)
+            half_width = float(t.ppf(0.975, n - 1) * sem)
+            rows.append(
+                {
+                    "method": method,
+                    "method_label": METHOD_LABELS[method],
+                    "metric": metric,
+                    "n": n,
+                    "mean": mean,
+                    "std": std,
+                    "sem": sem,
+                    "mean_95_ci_low": mean - half_width,
+                    "mean_95_ci_high": mean + half_width,
+                    "median": float(np.median(values)),
+                    "q25": float(np.quantile(values, 0.25)),
+                    "q75": float(np.quantile(values, 0.75)),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def paired_statistics(frame: pd.DataFrame) -> pd.DataFrame:
+    indexed = frame.set_index(["scenario_seed", "method"])
+    rows: list[dict[str, float | int | str]] = []
+    for metric in METRICS:
+        reference = indexed.xs(REFERENCE_METHOD, level="method")[metric]
+        for method in METHODS:
+            if method == REFERENCE_METHOD:
+                continue
+            candidate = indexed.xs(method, level="method")[metric]
+            paired = pd.concat(
+                [candidate.rename("candidate"), reference.rename("reference")],
+                axis=1,
+                join="inner",
+            ).dropna()
+            difference = (paired["candidate"] - paired["reference"]).to_numpy(
+                dtype=float
+            )
+            n = len(difference)
+            mean = float(np.mean(difference))
+            std = float(np.std(difference, ddof=1))
+            half_width = float(t.ppf(0.975, n - 1) * std / np.sqrt(n))
+            try:
+                wilcoxon_p = float(wilcoxon(difference).pvalue)
+            except ValueError:
+                wilcoxon_p = 1.0
+            rows.append(
+                {
+                    "method": method,
+                    "method_label": METHOD_LABELS[method],
+                    "reference_method": REFERENCE_METHOD,
+                    "reference_label": METHOD_LABELS[REFERENCE_METHOD],
+                    "metric": metric,
+                    "paired_seed_count": n,
+                    "method_mean": float(paired["candidate"].mean()),
+                    "reference_mean": float(paired["reference"].mean()),
+                    "mean_paired_difference": mean,
+                    "paired_difference_std": std,
+                    "paired_difference_95_ci_low": mean - half_width,
+                    "paired_difference_95_ci_high": mean + half_width,
+                    "paired_effect_size_dz": mean / std if std > 0.0 else np.nan,
+                    "paired_t_p_raw": float(
+                        ttest_rel(paired["candidate"], paired["reference"]).pvalue
+                    ),
+                    "wilcoxon_p_raw": wilcoxon_p,
+                }
+            )
+    result = pd.DataFrame(rows)
+    result["paired_t_p_holm"] = result.groupby("metric", group_keys=False)[
+        "paired_t_p_raw"
+    ].apply(holm_adjust)
+    result["wilcoxon_p_holm"] = result.groupby("metric", group_keys=False)[
+        "wilcoxon_p_raw"
+    ].apply(holm_adjust)
+    return result
+
+
+def prospectus_table(descriptive: pd.DataFrame) -> str:
+    rows = (
+        ("Illuminated images", "illuminated_observations", 1.0),
+        ("Illumination quality [\\%]", "illumination_quality_fraction", 100.0),
+        ("Illuminated catalog coverage [\\%]", "illuminated_catalog_fraction", 100.0),
+        ("Useful downlinks", "useful_deliveries", 1.0),
+        ("Delivery fraction [\\%]", "delivery_fraction", 100.0),
+        ("Useful images left onboard", "useful_images_left_onboard", 1.0),
+        ("Shield interventions per run", "resource_constraint_interventions", 1.0),
+    )
+    lines = [
+        "\\begin{tabular}{lcccc}",
+        "\\toprule",
+        "\\textbf{Metric} & \\textbf{Angle} & \\textbf{Distance} & "
+        "\\textbf{Breckenridge MLP} & \\textbf{Target attention} \\\\",
+        "\\midrule",
+    ]
+    for label, metric, scale in rows:
+        values = []
+        for method in TABLE_METHODS:
+            record = descriptive[
+                (descriptive["method"] == method)
+                & (descriptive["metric"] == metric)
+            ].iloc[0]
+            values.append(
+                f"${record['mean'] * scale:.2f}\\pm{record['std'] * scale:.2f}$"
+            )
+        lines.append(f"{label} & " + " & ".join(values) + r" \\")
+    lines.extend(["\\bottomrule", "\\end{tabular}"])
+    return "\n".join(lines) + "\n"
+
+
+def main() -> int:
+    args = parse_args()
+    input_root = args.input_root.resolve()
+    combined = input_root / "analysis" / "episodes_combined.csv"
+    if not combined.is_file():
+        raise FileNotFoundError(f"collector output is missing: {combined}")
+    frame = add_derived_metrics(pd.read_csv(combined))
+    validate_campaign(frame)
+    output = input_root / "analysis" / "statistical_analysis"
+    output.mkdir(parents=True, exist_ok=True)
+    frame.to_csv(output / "episodes_with_derived_metrics.csv", index=False)
+    descriptive = descriptive_statistics(frame)
+    paired = paired_statistics(frame)
+    descriptive.to_csv(output / "descriptive_statistics.csv", index=False)
+    paired.to_csv(output / "paired_statistics_vs_smallest_angle.csv", index=False)
+    (output / "prospectus_table_rows.tex").write_text(prospectus_table(descriptive))
+    print(descriptive[descriptive["metric"].isin({"illuminated_observations", "illumination_quality_fraction"})].to_string(index=False))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

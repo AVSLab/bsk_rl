@@ -56,7 +56,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def load_episode_rows(input_root: Path) -> pd.DataFrame:
-    paths = sorted((input_root / "raw").glob("n*/*.csv"))
+    # Campaigns group one-row episode files either by catalog size (``n100``)
+    # or by method.  Both layouts are exactly one directory below ``raw``.
+    paths = sorted((input_root / "raw").glob("*/*.csv"))
     if not paths:
         raise FileNotFoundError(
             f"no per-seed CSV files found under {input_root / 'raw'}"
