@@ -14,6 +14,10 @@ if __package__ in {None, ""}:
 
 import numpy as np
 import pandas as pd
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 from scipy.stats import t, ttest_rel, wilcoxon
 
 from examples.prospectus_rfi.amos2025_matched_300s_design import METHODS
@@ -32,6 +36,18 @@ TABLE_METHODS = (
     "breckenridge2026_alpha0_mlp",
     "target_set_attention",
 )
+COLORS = {
+    "breckenridge2026_alpha0_mlp": "#365f9d",
+    "target_set_attention": "#009e73",
+    "smallest_angle_heuristic": "#d55e00",
+    "closest_distance_heuristic": "#cc79a7",
+}
+SHORT_LABELS = {
+    "smallest_angle_heuristic": "Angle",
+    "closest_distance_heuristic": "Distance",
+    "breckenridge2026_alpha0_mlp": "Breck. MLP",
+    "target_set_attention": "Attention",
+}
 METRICS = (
     "successful_observations",
     "illuminated_observations",
@@ -265,6 +281,112 @@ def prospectus_table(descriptive: pd.DataFrame) -> str:
     return "\n".join(lines) + "\n"
 
 
+def save_figure(fig: plt.Figure, output: Path, stem: str) -> None:
+    output.mkdir(parents=True, exist_ok=True)
+    for suffix in ("pdf", "png", "svg"):
+        fig.savefig(output / f"{stem}.{suffix}", bbox_inches="tight", dpi=220)
+    plt.close(fig)
+
+
+def plot_endpoint_summary(descriptive: pd.DataFrame, output: Path) -> None:
+    panels = (
+        ("illuminated_observations", "Illuminated images", 1.0),
+        ("useful_deliveries", "Useful deliveries", 1.0),
+        ("delivery_fraction", "Delivery fraction (%)", 100.0),
+        (
+            "resource_constraint_interventions",
+            "Shield interventions per run",
+            1.0,
+        ),
+    )
+    fig, axes = plt.subplots(2, 2, figsize=(9.0, 6.4), constrained_layout=True)
+    x = np.arange(len(TABLE_METHODS))
+    for axis, (metric, ylabel, scale) in zip(axes.flat, panels):
+        subset = descriptive[descriptive["metric"] == metric].set_index("method")
+        means = np.array([subset.loc[method, "mean"] for method in TABLE_METHODS])
+        lows = np.array(
+            [subset.loc[method, "mean_95_ci_low"] for method in TABLE_METHODS]
+        )
+        highs = np.array(
+            [subset.loc[method, "mean_95_ci_high"] for method in TABLE_METHODS]
+        )
+        means, lows, highs = means * scale, lows * scale, highs * scale
+        for position, method, mean, low, high in zip(
+            x, TABLE_METHODS, means, lows, highs
+        ):
+            axis.errorbar(
+                position,
+                mean,
+                yerr=np.array([[mean - low], [high - mean]]),
+                fmt="o",
+                markersize=6,
+                capsize=3,
+                color=COLORS[method],
+            )
+        axis.set_xticks(x, [SHORT_LABELS[method] for method in TABLE_METHODS])
+        axis.tick_params(axis="x", labelrotation=20)
+        axis.set_ylabel(ylabel)
+        axis.grid(axis="y", alpha=0.2)
+    fig.suptitle("Matched AMOS 2025 evaluation (100 paired seeds; mean and 95% CI)")
+    save_figure(fig, output, "matched_300s_endpoint_summary")
+
+
+def plot_operational_tradeoff(descriptive: pd.DataFrame, output: Path) -> None:
+    indexed = descriptive.set_index(["method", "metric"])
+    fig, axis = plt.subplots(figsize=(7.2, 5.2))
+    annotation_offsets = {
+        "smallest_angle_heuristic": (5, -14),
+        "closest_distance_heuristic": (5, -14),
+        "breckenridge2026_alpha0_mlp": (5, -14),
+        "target_set_attention": (5, 7),
+    }
+    for method in TABLE_METHODS:
+        images = indexed.loc[(method, "illuminated_observations")]
+        delivery = indexed.loc[(method, "delivery_fraction")]
+        x = float(images["mean"])
+        y = float(delivery["mean"]) * 100.0
+        axis.errorbar(
+            x,
+            y,
+            xerr=np.array(
+                [
+                    [x - float(images["mean_95_ci_low"])],
+                    [float(images["mean_95_ci_high"]) - x],
+                ]
+            ),
+            yerr=np.array(
+                [
+                    [
+                        (float(delivery["mean"]) - float(delivery["mean_95_ci_low"]))
+                        * 100
+                    ],
+                    [
+                        (float(delivery["mean_95_ci_high"]) - float(delivery["mean"]))
+                        * 100
+                    ],
+                ]
+            ),
+            fmt="o",
+            markersize=8,
+            capsize=3,
+            color=COLORS[method],
+        )
+        axis.annotate(
+            SHORT_LABELS[method],
+            (x, y),
+            xytext=annotation_offsets[method],
+            textcoords="offset points",
+            fontsize=9,
+        )
+    axis.set(
+        xlabel="Illuminated images",
+        ylabel="Useful-delivery fraction (%)",
+        title="Acquisition–delivery tradeoff (mean and 95% CI)",
+    )
+    axis.grid(alpha=0.2)
+    save_figure(fig, output, "matched_300s_acquisition_delivery_tradeoff")
+
+
 def main() -> int:
     args = parse_args()
     input_root = args.input_root.resolve()
@@ -286,6 +408,9 @@ def main() -> int:
     paired.to_csv(output / "paired_statistics_vs_smallest_angle.csv", index=False)
     pairwise.to_csv(output / "all_pairwise_statistics.csv", index=False)
     (output / "prospectus_table_rows.tex").write_text(prospectus_table(descriptive))
+    figure_output = output / "figures"
+    plot_endpoint_summary(descriptive, figure_output)
+    plot_operational_tradeoff(descriptive, figure_output)
     print(
         descriptive[
             descriptive["metric"].isin(
