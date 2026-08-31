@@ -31,3 +31,5 @@ fi
 OUTPUT_ROOT=${BSK_RL_AMOS2025_MATCHED_300S_OUTPUT_ROOT:?Set BSK_RL_AMOS2025_MATCHED_300S_OUTPUT_ROOT}
 python -u examples/prospectus_rfi/collect_amos2025_matched_300s.py \
     --input-root "$OUTPUT_ROOT"
+python -u examples/prospectus_rfi/analyze_amos2025_matched_300s_results.py \
+    --input-root "$OUTPUT_ROOT"
