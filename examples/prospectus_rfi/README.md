@@ -447,8 +447,10 @@ and the historical battery/storage shield without the later wheel-speed guard.
 The policies retain their trained observation contracts; a campaign is rejected
 if the physical target fingerprint differs between methods for any seed.
 
-The submitter automatically selects the newest attention-control run whose
-`status.json` reports `target_reached`. To inspect the candidates manually:
+The submitter automatically selects the newest attention-control run with a
+final checkpoint and at least 40 cumulative training hours. This accepts a
+three-segment run that finished just short of the nominal 48-hour threshold
+while excluding short or failed attempts. To inspect the candidates manually:
 
 ```bash
 find /scratch/alpine/$USER/prospectus_rfi/amos2025_attention_control_300s \

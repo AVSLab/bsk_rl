@@ -13,18 +13,24 @@ LEGACY_CHECKPOINT=${BSK_RL_BRECKENRIDGE_ALPHA0_CHECKPOINT:-/projects/$USER/bsk_r
 ATTENTION_RUN_DIR=${BSK_RL_AMOS2025_ATTENTION_RUN_DIR:-}
 if [[ -z "$ATTENTION_RUN_DIR" ]]; then
     ATTENTION_ROOT="/scratch/alpine/$USER/prospectus_rfi/amos2025_attention_control_300s"
+    MIN_ATTENTION_WALL_S=144000
     mapfile -t ATTENTION_CANDIDATES < <(
         while IFS= read -r STATUS_PATH; do
             RUN_DIR=${STATUS_PATH%/status.json}
-            if grep -q '"state": "target_reached"' "$STATUS_PATH" \
-                && [[ -d "$RUN_DIR/checkpoints/final" ]]; then
+            WALL_S=$(sed -n \
+                's/.*"cumulative_wall_clock_s": \([0-9.]*\).*/\1/p' \
+                "$STATUS_PATH" | tail -1)
+            if [[ -d "$RUN_DIR/checkpoints/final" ]] \
+                && [[ -n "$WALL_S" ]] \
+                && awk -v wall="$WALL_S" -v minimum="$MIN_ATTENTION_WALL_S" \
+                    'BEGIN { exit !(wall >= minimum) }'; then
                 printf '%s\n' "$RUN_DIR"
             fi
         done < <(find "$ATTENTION_ROOT" -type f \
             -path '*/training/attention_k10_seed10001/status.json' -print)
     )
     if [[ ${#ATTENTION_CANDIDATES[@]} -eq 0 ]]; then
-        echo "No completed target_reached 300-second attention run found under $ATTENTION_ROOT" >&2
+        echo "No 300-second attention run with a final checkpoint and at least 40 training hours found under $ATTENTION_ROOT" >&2
         exit 3
     fi
     ATTENTION_RUN_DIR=$(ls -1dt "${ATTENTION_CANDIDATES[@]}" | head -1)
