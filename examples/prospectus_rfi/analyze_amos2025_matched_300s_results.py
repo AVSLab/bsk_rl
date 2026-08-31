@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from itertools import combinations
 from pathlib import Path
 
 if __package__ in {None, ""}:
@@ -179,6 +180,60 @@ def paired_statistics(frame: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
+def all_pairwise_statistics(frame: pd.DataFrame) -> pd.DataFrame:
+    indexed = frame.set_index(["scenario_seed", "method"])
+    rows: list[dict[str, float | int | str]] = []
+    for metric in METRICS:
+        for method_a, method_b in combinations(TABLE_METHODS, 2):
+            values_a = indexed.xs(method_a, level="method")[metric]
+            values_b = indexed.xs(method_b, level="method")[metric]
+            paired = pd.concat(
+                [values_a.rename("a"), values_b.rename("b")], axis=1, join="inner"
+            ).dropna()
+            difference = (paired["a"] - paired["b"]).to_numpy(dtype=float)
+            n = len(difference)
+            mean = float(np.mean(difference))
+            std = float(np.std(difference, ddof=1))
+            half_width = float(t.ppf(0.975, n - 1) * std / np.sqrt(n))
+            if np.allclose(difference, 0.0):
+                paired_t_p = 1.0
+                wilcoxon_p = 1.0
+            else:
+                paired_t_p = float(ttest_rel(paired["a"], paired["b"]).pvalue)
+                try:
+                    wilcoxon_p = float(wilcoxon(difference).pvalue)
+                except ValueError:
+                    wilcoxon_p = 1.0
+            rows.append(
+                {
+                    "metric": metric,
+                    "method_a": method_a,
+                    "method_a_label": METHOD_LABELS[method_a],
+                    "method_b": method_b,
+                    "method_b_label": METHOD_LABELS[method_b],
+                    "difference_definition": "method_a_minus_method_b",
+                    "paired_seed_count": n,
+                    "method_a_mean": float(paired["a"].mean()),
+                    "method_b_mean": float(paired["b"].mean()),
+                    "mean_paired_difference": mean,
+                    "paired_difference_std": std,
+                    "paired_difference_95_ci_low": mean - half_width,
+                    "paired_difference_95_ci_high": mean + half_width,
+                    "paired_effect_size_dz": mean / std if std > 0.0 else np.nan,
+                    "paired_t_p_raw": paired_t_p,
+                    "wilcoxon_p_raw": wilcoxon_p,
+                }
+            )
+    result = pd.DataFrame(rows)
+    result["paired_t_p_holm"] = result.groupby("metric", group_keys=False)[
+        "paired_t_p_raw"
+    ].apply(holm_adjust)
+    result["wilcoxon_p_holm"] = result.groupby("metric", group_keys=False)[
+        "wilcoxon_p_raw"
+    ].apply(holm_adjust)
+    return result
+
+
 def prospectus_table(descriptive: pd.DataFrame) -> str:
     rows = (
         ("Illuminated images", "illuminated_observations", 1.0),
@@ -213,18 +268,23 @@ def prospectus_table(descriptive: pd.DataFrame) -> str:
 def main() -> int:
     args = parse_args()
     input_root = args.input_root.resolve()
-    combined = input_root / "analysis" / "episodes_combined.csv"
+    analysis_root = input_root / "analysis"
+    if not (analysis_root / "episodes_combined.csv").is_file():
+        analysis_root = input_root
+    combined = analysis_root / "episodes_combined.csv"
     if not combined.is_file():
         raise FileNotFoundError(f"collector output is missing: {combined}")
     frame = add_derived_metrics(pd.read_csv(combined))
     validate_campaign(frame)
-    output = input_root / "analysis" / "statistical_analysis"
+    output = analysis_root / "statistical_analysis"
     output.mkdir(parents=True, exist_ok=True)
     frame.to_csv(output / "episodes_with_derived_metrics.csv", index=False)
     descriptive = descriptive_statistics(frame)
     paired = paired_statistics(frame)
+    pairwise = all_pairwise_statistics(frame)
     descriptive.to_csv(output / "descriptive_statistics.csv", index=False)
     paired.to_csv(output / "paired_statistics_vs_smallest_angle.csv", index=False)
+    pairwise.to_csv(output / "all_pairwise_statistics.csv", index=False)
     (output / "prospectus_table_rows.tex").write_text(prospectus_table(descriptive))
     print(
         descriptive[
