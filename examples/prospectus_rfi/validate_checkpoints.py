@@ -76,6 +76,7 @@ def main() -> None:
                     learned_policy=policy,
                     shield=True,
                     wheel_guard=not args.no_wheel_guard,
+                    observation_contract=study.environment.observation_layout,
                 )
                 metrics["checkpoint"] = checkpoint.name
                 rows.append(metrics)
