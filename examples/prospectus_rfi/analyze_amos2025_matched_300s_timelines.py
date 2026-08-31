@@ -152,6 +152,8 @@ def curve_tables(
                     "mean": matrix.mean(axis=0),
                     "std": matrix.std(axis=0, ddof=1),
                     "median": np.median(matrix, axis=0),
+                    "q25": np.quantile(matrix, 0.25, axis=0),
+                    "q75": np.quantile(matrix, 0.75, axis=0),
                     "bootstrap_95_ci_low": low,
                     "bootstrap_95_ci_high": high,
                 }
@@ -288,11 +290,11 @@ def save_figure(fig: plt.Figure, root: Path, stem: str) -> None:
     plt.close(fig)
 
 
-def plot_curves(summary: pd.DataFrame, root: Path) -> None:
+def plot_mean_curves(summary: pd.DataFrame, root: Path) -> None:
     fig, axis = plt.subplots(figsize=(8.2, 4.8))
     for method in METHODS:
         data = summary[summary["method"] == method]
-        x = data["sim_time_s"].to_numpy(dtype=float) / 1000.0
+        x = data["sim_time_s"].to_numpy(dtype=float)
         axis.plot(x, data["mean"], color=COLORS[method], label=METHOD_LABELS[method])
         axis.fill_between(
             x,
@@ -303,13 +305,44 @@ def plot_curves(summary: pd.DataFrame, root: Path) -> None:
             linewidth=0.0,
         )
     axis.set(
-        xlabel="Simulation time (thousands of seconds)",
+        xlabel="Simulation time (s)",
         ylabel="Cumulative illuminated images",
-        xlim=(0, 45),
+        xlim=(0, 45_000),
     )
+    axis.set_xticks((0, 15_000, 30_000, 45_000))
     axis.grid(alpha=0.2)
     axis.legend(frameon=False, fontsize=8)
-    save_figure(fig, root, "cumulative_illuminated_images_over_time")
+    save_figure(fig, root, "cumulative_illuminated_images_mean_95ci")
+
+
+def plot_median_curves(summary: pd.DataFrame, root: Path) -> None:
+    fig, axis = plt.subplots(figsize=(8.2, 4.8))
+    for method in METHODS:
+        data = summary[summary["method"] == method]
+        x = data["sim_time_s"].to_numpy(dtype=float)
+        axis.plot(
+            x,
+            data["median"],
+            color=COLORS[method],
+            label=METHOD_LABELS[method],
+        )
+        axis.fill_between(
+            x,
+            data["q25"],
+            data["q75"],
+            color=COLORS[method],
+            alpha=0.14,
+            linewidth=0.0,
+        )
+    axis.set(
+        xlabel="Simulation time (s)",
+        ylabel="Cumulative illuminated images",
+        xlim=(0, 45_000),
+    )
+    axis.set_xticks((0, 15_000, 30_000, 45_000))
+    axis.grid(alpha=0.2)
+    axis.legend(frameon=False, fontsize=8)
+    save_figure(fig, root, "cumulative_illuminated_images_median_iqr")
 
 
 def plot_differences(differences: pd.DataFrame, root: Path) -> None:
@@ -319,7 +352,7 @@ def plot_differences(differences: pd.DataFrame, root: Path) -> None:
         if method == REFERENCE_METHOD:
             continue
         data = differences[differences["method"] == method]
-        x = data["sim_time_s"].to_numpy(dtype=float) / 1000.0
+        x = data["sim_time_s"].to_numpy(dtype=float)
         axis.plot(
             x,
             data["mean_paired_difference"],
@@ -335,10 +368,11 @@ def plot_differences(differences: pd.DataFrame, root: Path) -> None:
             linewidth=0.0,
         )
     axis.set(
-        xlabel="Simulation time (thousands of seconds)",
+        xlabel="Simulation time (s)",
         ylabel="Paired difference from smallest-angle",
-        xlim=(0, 45),
+        xlim=(0, 45_000),
     )
+    axis.set_xticks((0, 15_000, 30_000, 45_000))
     axis.grid(alpha=0.2)
     axis.legend(frameon=False, fontsize=8)
     save_figure(fig, root, "paired_difference_from_smallest_angle_over_time")
@@ -364,7 +398,8 @@ def main() -> int:
     differences.to_csv(output / "paired_curve_differences_300s.csv", index=False)
     episode_metrics.to_csv(output / "episode_timing_metrics.csv", index=False)
     paired.to_csv(output / "paired_timing_statistics.csv", index=False)
-    plot_curves(summary, root)
+    plot_mean_curves(summary, root)
+    plot_median_curves(summary, root)
     plot_differences(differences, root)
     metadata = {
         "created_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
