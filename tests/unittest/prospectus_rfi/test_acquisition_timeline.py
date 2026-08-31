@@ -48,6 +48,22 @@ def test_decision_epoch_history_is_forward_filled_without_interpolation() -> Non
     ]
 
 
+def test_resampling_snaps_submicrosecond_grid_drift() -> None:
+    frame = pd.DataFrame(
+        {
+            "sim_time_s": [0.0, 300.0, 600.000000000001, 900.0],
+            "cumulative_illuminated_observations": [0.0, 1.0, 2.0, 3.0],
+        }
+    )
+    result = resample_step_trajectory(frame, interval_s=300.0, duration_s=900.0)
+    assert result["cumulative_illuminated_observations"].tolist() == [
+        0.0,
+        1.0,
+        2.0,
+        3.0,
+    ]
+
+
 def accepted_episode() -> pd.Series:
     return pd.Series(
         {

@@ -101,7 +101,16 @@ def resample_step_trajectory(
         raise ValueError("interval_s and duration_s must be positive")
     if frame.empty:
         raise ValueError("trajectory is empty")
-    source = frame.sort_values("sim_time_s").drop_duplicates("sim_time_s", keep="last")
+    source = frame.sort_values("sim_time_s").copy()
+    # Basilisk decision epochs that are mathematically on the requested grid can
+    # accumulate sub-picosecond drift (for example, 3900.000000000001).  Without
+    # snapping, forward filling assigns that event to the *next* grid point and
+    # creates a false plateau followed by a double jump in a 100-seed mean.
+    source_times = source["sim_time_s"].to_numpy(dtype=float)
+    nearest_grid = np.rint(source_times / interval_s) * interval_s
+    on_grid = np.isclose(source_times, nearest_grid, rtol=0.0, atol=1.0e-6)
+    source.loc[on_grid, "sim_time_s"] = nearest_grid[on_grid]
+    source = source.drop_duplicates("sim_time_s", keep="last")
     times = source["sim_time_s"].to_numpy(dtype=float)
     if times[0] > 0.0 or times[-1] < duration_s:
         raise ValueError("trajectory must span time 0 through the episode duration")

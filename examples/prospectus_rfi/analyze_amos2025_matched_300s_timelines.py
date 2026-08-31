@@ -315,6 +315,35 @@ def plot_mean_curves(summary: pd.DataFrame, root: Path) -> None:
     save_figure(fig, root, "cumulative_illuminated_images_mean_95ci")
 
 
+def plot_mean_sd_curves(summary: pd.DataFrame, root: Path) -> None:
+    """Plot the mean with between-seed spread rather than uncertainty in the mean."""
+
+    fig, axis = plt.subplots(figsize=(8.2, 4.8))
+    for method in METHODS:
+        data = summary[summary["method"] == method]
+        x = data["sim_time_s"].to_numpy(dtype=float)
+        mean = data["mean"].to_numpy(dtype=float)
+        std = data["std"].to_numpy(dtype=float)
+        axis.plot(x, mean, color=COLORS[method], label=METHOD_LABELS[method])
+        axis.fill_between(
+            x,
+            np.maximum(0.0, mean - std),
+            np.minimum(100.0, mean + std),
+            color=COLORS[method],
+            alpha=0.14,
+            linewidth=0.0,
+        )
+    axis.set(
+        xlabel="Simulation time (s)",
+        ylabel="Cumulative illuminated images",
+        xlim=(0, 45_000),
+    )
+    axis.set_xticks((0, 15_000, 30_000, 45_000))
+    axis.grid(alpha=0.2)
+    axis.legend(frameon=False, fontsize=8)
+    save_figure(fig, root, "cumulative_illuminated_images_mean_sd")
+
+
 def plot_median_curves(summary: pd.DataFrame, root: Path) -> None:
     fig, axis = plt.subplots(figsize=(8.2, 4.8))
     for method in METHODS:
@@ -399,6 +428,7 @@ def main() -> int:
     episode_metrics.to_csv(output / "episode_timing_metrics.csv", index=False)
     paired.to_csv(output / "paired_timing_statistics.csv", index=False)
     plot_mean_curves(summary, root)
+    plot_mean_sd_curves(summary, root)
     plot_median_curves(summary, root)
     plot_differences(differences, root)
     metadata = {
