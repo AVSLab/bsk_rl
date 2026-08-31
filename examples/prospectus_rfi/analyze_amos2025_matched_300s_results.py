@@ -25,7 +25,7 @@ from examples.prospectus_rfi.collect_amos2025_matched_300s import validate_campa
 
 REFERENCE_METHOD = "smallest_angle_heuristic"
 METHOD_LABELS = {
-    "breckenridge2026_alpha0_mlp": "Breckenridge alpha=0 MLP",
+    "breckenridge2026_alpha0_mlp": "Monolithic MLP",
     "target_set_attention": "Target-set attention",
     "smallest_angle_heuristic": "Smallest-angle heuristic",
     "closest_distance_heuristic": "Closest-distance heuristic",
@@ -37,15 +37,29 @@ TABLE_METHODS = (
     "target_set_attention",
 )
 COLORS = {
-    "breckenridge2026_alpha0_mlp": "#365f9d",
-    "target_set_attention": "#009e73",
-    "smallest_angle_heuristic": "#d55e00",
-    "closest_distance_heuristic": "#cc79a7",
+    # Shared dark-purple Plasma color for learned policies.
+    "breckenridge2026_alpha0_mlp": "#41049d",
+    "target_set_attention": "#41049d",
+    # Separated Viridis colors for heuristic baselines.
+    "smallest_angle_heuristic": "#2c738e",
+    "closest_distance_heuristic": "#5ec962",
+}
+LINE_STYLES = {
+    "breckenridge2026_alpha0_mlp": "-",
+    "target_set_attention": "--",
+    "smallest_angle_heuristic": "-",
+    "closest_distance_heuristic": "-",
+}
+MARKERS = {
+    "breckenridge2026_alpha0_mlp": "o",
+    "target_set_attention": "s",
+    "smallest_angle_heuristic": "^",
+    "closest_distance_heuristic": "v",
 }
 SHORT_LABELS = {
     "smallest_angle_heuristic": "Angle",
     "closest_distance_heuristic": "Distance",
-    "breckenridge2026_alpha0_mlp": "Breck. MLP",
+    "breckenridge2026_alpha0_mlp": "Monolithic MLP",
     "target_set_attention": "Attention",
 }
 METRICS = (
@@ -264,7 +278,7 @@ def prospectus_table(descriptive: pd.DataFrame) -> str:
         "\\begin{tabular}{lcccc}",
         "\\toprule",
         "\\textbf{Metric} & \\textbf{Angle} & \\textbf{Distance} & "
-        "\\textbf{Breckenridge MLP} & \\textbf{Target attention} \\\\",
+        "\\textbf{Monolithic MLP} & \\textbf{Target attention} \\\\",
         "\\midrule",
     ]
     for label, metric, scale in rows:
@@ -318,7 +332,7 @@ def plot_endpoint_summary(descriptive: pd.DataFrame, output: Path) -> None:
                 position,
                 mean,
                 yerr=np.array([[mean - low], [high - mean]]),
-                fmt="o",
+                fmt=MARKERS[method],
                 markersize=6,
                 capsize=3,
                 color=COLORS[method],
@@ -366,7 +380,7 @@ def plot_operational_tradeoff(descriptive: pd.DataFrame, output: Path) -> None:
                     ],
                 ]
             ),
-            fmt="o",
+            fmt=MARKERS[method],
             markersize=8,
             capsize=3,
             color=COLORS[method],

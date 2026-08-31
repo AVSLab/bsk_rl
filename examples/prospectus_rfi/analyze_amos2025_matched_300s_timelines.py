@@ -27,6 +27,8 @@ from examples.prospectus_rfi.acquisition_timeline import (
 )
 from examples.prospectus_rfi.amos2025_matched_300s_design import METHODS
 from examples.prospectus_rfi.analyze_amos2025_matched_300s_results import (
+    COLORS,
+    LINE_STYLES,
     METHOD_LABELS,
     REFERENCE_METHOD,
     holm_adjust,
@@ -35,12 +37,6 @@ from examples.prospectus_rfi.analyze_amos2025_matched_300s_results import (
 COUNT_COLUMN = "cumulative_illuminated_observations"
 SEEDS = tuple(range(100))
 CHECKPOINTS_S = (15_000.0, 30_000.0, 45_000.0)
-COLORS = {
-    "breckenridge2026_alpha0_mlp": "#365f9d",
-    "target_set_attention": "#009e73",
-    "smallest_angle_heuristic": "#d55e00",
-    "closest_distance_heuristic": "#cc79a7",
-}
 
 
 def parse_args() -> argparse.Namespace:
@@ -295,7 +291,13 @@ def plot_mean_curves(summary: pd.DataFrame, root: Path) -> None:
     for method in METHODS:
         data = summary[summary["method"] == method]
         x = data["sim_time_s"].to_numpy(dtype=float)
-        axis.plot(x, data["mean"], color=COLORS[method], label=METHOD_LABELS[method])
+        axis.plot(
+            x,
+            data["mean"],
+            color=COLORS[method],
+            linestyle=LINE_STYLES[method],
+            label=METHOD_LABELS[method],
+        )
         axis.fill_between(
             x,
             data["bootstrap_95_ci_low"],
@@ -324,7 +326,13 @@ def plot_mean_sd_curves(summary: pd.DataFrame, root: Path) -> None:
         x = data["sim_time_s"].to_numpy(dtype=float)
         mean = data["mean"].to_numpy(dtype=float)
         std = data["std"].to_numpy(dtype=float)
-        axis.plot(x, mean, color=COLORS[method], label=METHOD_LABELS[method])
+        axis.plot(
+            x,
+            mean,
+            color=COLORS[method],
+            linestyle=LINE_STYLES[method],
+            label=METHOD_LABELS[method],
+        )
         axis.fill_between(
             x,
             np.maximum(0.0, mean - std),
@@ -353,6 +361,7 @@ def plot_median_curves(summary: pd.DataFrame, root: Path) -> None:
             x,
             data["median"],
             color=COLORS[method],
+            linestyle=LINE_STYLES[method],
             label=METHOD_LABELS[method],
         )
         axis.fill_between(
@@ -386,6 +395,7 @@ def plot_differences(differences: pd.DataFrame, root: Path) -> None:
             x,
             data["mean_paired_difference"],
             color=COLORS[method],
+            linestyle=LINE_STYLES[method],
             label=METHOD_LABELS[method],
         )
         axis.fill_between(

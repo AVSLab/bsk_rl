@@ -21,18 +21,18 @@ from examples.prospectus_rfi.config import load_study_config
 
 
 METHOD_LABELS = {
-    "mlp": "Fixed-input monolithic MLP",
+    "mlp": "Monolithic MLP",
     "attention": "Target-set attention",
     "heuristic_historical": "Smallest-angle heuristic (full catalog)",
     "heuristic_distance_historical": "Closest-distance heuristic (full catalog)",
     "heuristic_matched": "Heuristic (information matched)",
 }
 COLORS = {
-    "mlp": "#365f9d",
-    "attention": "#d55e00",
-    "heuristic_historical": "#6a6a6a",
-    "heuristic_distance_historical": "#cc79a7",
-    "heuristic_matched": "#009e73",
+    "mlp": "#41049d",
+    "attention": "#41049d",
+    "heuristic_historical": "#2c738e",
+    "heuristic_distance_historical": "#5ec962",
+    "heuristic_matched": "#fde725",
 }
 LINE_STYLES = {
     "mlp": "-",
