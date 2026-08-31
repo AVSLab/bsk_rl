@@ -447,24 +447,20 @@ and the historical battery/storage shield without the later wheel-speed guard.
 The policies retain their trained observation contracts; a campaign is rejected
 if the physical target fingerprint differs between methods for any seed.
 
-First locate the completed attention-control run:
+The submitter automatically selects the newest attention-control run whose
+`status.json` reports `target_reached`. To inspect the candidates manually:
 
 ```bash
 find /scratch/alpine/$USER/prospectus_rfi/amos2025_attention_control_300s \
   -path '*/training/attention_k10_seed10001/checkpoints/final' -type d -print
 ```
 
-Then submit checkpoint validation, 400 one-episode array tasks, and the strict
-collector:
+Submit checkpoint validation, 400 one-episode array tasks, and the strict
+collector. The environment overrides are optional because the submitter can
+discover both artifacts on Alpine:
 
 ```bash
 export BSK_RL_REPO_DIR=/projects/$USER/bsk_rl-rfi
-export BSK_RL_AMOS2025_ATTENTION_RUN_DIR=<campaign-root>/training/attention_k10_seed10001
-
-# Optional only if the publication snapshot lives elsewhere:
-export BSK_RL_BRECKENRIDGE_ALPHA0_CHECKPOINT=\
-/projects/$USER/bsk_rl/policies/breckenridge2026_alpha_sweep/0d100i/checkpoint_000145
-
 bash examples/prospectus_rfi/submit_amos2025_matched_300s.sh 30
 ```
 

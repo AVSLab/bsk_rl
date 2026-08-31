@@ -12,8 +12,42 @@ REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl-rfi}
 LEGACY_CHECKPOINT=${BSK_RL_BRECKENRIDGE_ALPHA0_CHECKPOINT:-/projects/$USER/bsk_rl/policies/breckenridge2026_alpha_sweep/0d100i/checkpoint_000145}
 ATTENTION_RUN_DIR=${BSK_RL_AMOS2025_ATTENTION_RUN_DIR:-}
 if [[ -z "$ATTENTION_RUN_DIR" ]]; then
-    echo "Set BSK_RL_AMOS2025_ATTENTION_RUN_DIR." >&2
-    exit 3
+    ATTENTION_RUN_DIR=$(python - <<'PY'
+import json
+import os
+from pathlib import Path
+
+root = (
+    Path("/scratch/alpine")
+    / os.environ["USER"]
+    / "prospectus_rfi"
+    / "amos2025_attention_control_300s"
+)
+candidates = []
+for status_path in root.glob("*/training/attention_k10_seed10001/status.json"):
+    try:
+        status = json.loads(status_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        continue
+    run_dir = status_path.parent
+    if (
+        status.get("state") == "target_reached"
+        and (run_dir / "checkpoints" / "final").is_dir()
+    ):
+        candidates.append(run_dir)
+if not candidates:
+    raise SystemExit(
+        "No completed target_reached 300-second attention run was found under "
+        f"{root}"
+    )
+print(max(candidates, key=lambda path: path.stat().st_mtime))
+PY
+    )
+fi
+if [[ ! -d "$LEGACY_CHECKPOINT" ]]; then
+    LEGACY_CHECKPOINT=$(find "/projects/$USER" -type d \
+        -path '*/policies/breckenridge2026_alpha_sweep/0d100i/checkpoint_000145' \
+        -print -quit 2>/dev/null)
 fi
 cd "$REPO_DIR"
 if [[ "$(git branch --show-current)" != "amos2025-architecture-comparison" ]]; then
@@ -24,17 +58,24 @@ if [[ ! -d "$ATTENTION_RUN_DIR/checkpoints/final" ]]; then
     echo "Missing final attention checkpoint under $ATTENTION_RUN_DIR" >&2
     exit 5
 fi
+if [[ ! -d "$LEGACY_CHECKPOINT" ]]; then
+    echo "Missing Breckenridge alpha=0 checkpoint: $LEGACY_CHECKPOINT" >&2
+    exit 6
+fi
+
+echo "ATTENTION_RUN_DIR=$ATTENTION_RUN_DIR"
+echo "BRECKENRIDGE_ALPHA0_CHECKPOINT=$LEGACY_CHECKPOINT"
 
 mapfile -t LEGACY_STATES < <(find "$LEGACY_CHECKPOINT" -type f -name module_state.pt -print)
 if [[ ${#LEGACY_STATES[@]} -ne 1 ]]; then
     echo "Expected one archived MLP module_state.pt; found ${#LEGACY_STATES[@]}" >&2
-    exit 6
+    exit 7
 fi
 EXPECTED_SHA256=0d8033272f14cdd408192d7ab6ee819b18691c9385fca87be24044fc950464d2
 ACTUAL_SHA256=$(sha256sum "${LEGACY_STATES[0]}" | awk '{print $1}')
 if [[ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]]; then
     echo "Wrong Breckenridge 2026 alpha=0 MLP checksum: $ACTUAL_SHA256" >&2
-    exit 7
+    exit 8
 fi
 
 CAMPAIGN_ID=${BSK_RL_AMOS2025_MATCHED_300S_CAMPAIGN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}
