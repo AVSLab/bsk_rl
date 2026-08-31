@@ -12,37 +12,22 @@ REPO_DIR=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl-rfi}
 LEGACY_CHECKPOINT=${BSK_RL_BRECKENRIDGE_ALPHA0_CHECKPOINT:-/projects/$USER/bsk_rl/policies/breckenridge2026_alpha_sweep/0d100i/checkpoint_000145}
 ATTENTION_RUN_DIR=${BSK_RL_AMOS2025_ATTENTION_RUN_DIR:-}
 if [[ -z "$ATTENTION_RUN_DIR" ]]; then
-    ATTENTION_RUN_DIR=$(python - <<'PY'
-import json
-import os
-from pathlib import Path
-
-root = (
-    Path("/scratch/alpine")
-    / os.environ["USER"]
-    / "prospectus_rfi"
-    / "amos2025_attention_control_300s"
-)
-candidates = []
-for status_path in root.glob("*/training/attention_k10_seed10001/status.json"):
-    try:
-        status = json.loads(status_path.read_text())
-    except (OSError, json.JSONDecodeError):
-        continue
-    run_dir = status_path.parent
-    if (
-        status.get("state") == "target_reached"
-        and (run_dir / "checkpoints" / "final").is_dir()
-    ):
-        candidates.append(run_dir)
-if not candidates:
-    raise SystemExit(
-        "No completed target_reached 300-second attention run was found under "
-        f"{root}"
+    ATTENTION_ROOT="/scratch/alpine/$USER/prospectus_rfi/amos2025_attention_control_300s"
+    mapfile -t ATTENTION_CANDIDATES < <(
+        while IFS= read -r STATUS_PATH; do
+            RUN_DIR=${STATUS_PATH%/status.json}
+            if grep -q '"state": "target_reached"' "$STATUS_PATH" \
+                && [[ -d "$RUN_DIR/checkpoints/final" ]]; then
+                printf '%s\n' "$RUN_DIR"
+            fi
+        done < <(find "$ATTENTION_ROOT" -type f \
+            -path '*/training/attention_k10_seed10001/status.json' -print)
     )
-print(max(candidates, key=lambda path: path.stat().st_mtime))
-PY
-    )
+    if [[ ${#ATTENTION_CANDIDATES[@]} -eq 0 ]]; then
+        echo "No completed target_reached 300-second attention run found under $ATTENTION_ROOT" >&2
+        exit 3
+    fi
+    ATTENTION_RUN_DIR=$(ls -1dt "${ATTENTION_CANDIDATES[@]}" | head -1)
 fi
 if [[ ! -d "$LEGACY_CHECKPOINT" ]]; then
     LEGACY_CHECKPOINT=$(find "/projects/$USER" -type d \
@@ -101,7 +86,7 @@ COLLECTOR_JOB=$(sbatch --parsable --dependency="afterok:$MC_JOB" \
     examples/prospectus_rfi/slurm/collect_amos2025_matched_300s.sbatch)
 
 COMMIT=$(git rev-parse HEAD)
-python - "$MANIFEST_DIR/submission.json" <<PY
+python3 - "$MANIFEST_DIR/submission.json" <<PY
 import json
 import sys
 
