@@ -391,6 +391,55 @@ def plot_performance(frame: pd.DataFrame, figure_dir: Path) -> None:
     save_figure(fig, figure_dir, "performance_vs_catalog_size")
 
 
+def plot_learned_performance_vs_k(frame: pd.DataFrame, figure_dir: Path) -> None:
+    """Show the direct K ablation at the fixed N=100 prospectus condition."""
+
+    data = frame[
+        frame["method"].isin(("mlp", "attention")) & (frame["catalog_size"] == 100)
+    ]
+    panels = (
+        (
+            "illuminated_observation_fraction",
+            "Illuminated catalog coverage (%)",
+            100.0,
+        ),
+        ("useful_deliveries", "Useful deliveries", 1.0),
+    )
+    fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.8))
+    for axis, (metric, ylabel, scale) in zip(axes, panels):
+        for method in ("mlp", "attention"):
+            statistics = (
+                data[data["method"] == method]
+                .groupby("candidate_count")[metric]
+                .agg(["count", "mean", "sem"])
+                .sort_index()
+            )
+            axis.errorbar(
+                statistics.index,
+                statistics["mean"] * scale,
+                yerr=1.96 * statistics["sem"] * scale,
+                marker=MARKERS[method],
+                linestyle=LINE_STYLES[method],
+                capsize=3,
+                color=COLORS[method],
+                label=METHOD_LABELS[method],
+            )
+        axis.set_xticks((5, 10, 20))
+        axis.set_xlabel("Presented candidates K")
+        axis.set_ylabel(ylabel)
+        axis.grid(alpha=0.2)
+    axes[-1].legend(frameon=False, fontsize=8)
+    min_episodes = int(data.groupby(["method", "candidate_count"]).size().min())
+    label_figure(
+        fig,
+        "Learned-policy performance versus presented candidate count",
+        f"Fixed catalog N=100; means and normal-approximation 95% intervals across {min_episodes} held-out paired scenarios per point.",
+        top=0.75,
+        bottom=0.18,
+    )
+    save_figure(fig, figure_dir, "learned_policy_performance_vs_k_n100")
+
+
 def plot_differences(paired: pd.DataFrame, figure_dir: Path) -> None:
     data = paired[paired["metric"] == "successful_observation_fraction"]
     fig, axes = plt.subplots(1, 3, figsize=(12, 3.6), sharey=True)
@@ -621,6 +670,7 @@ def main() -> None:
     )
     plot_training_curves(training, figure_dir)
     plot_performance(frame, figure_dir)
+    plot_learned_performance_vs_k(frame, figure_dir)
     plot_differences(paired, figure_dir)
     plot_resources(frame, figure_dir)
     plot_computation(frame, root, figure_dir)
