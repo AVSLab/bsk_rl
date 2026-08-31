@@ -55,11 +55,12 @@ def parse_args() -> argparse.Namespace:
 
 def holm_adjust(values: pd.Series) -> pd.Series:
     array = values.to_numpy(dtype=float)
-    order = np.argsort(array)
-    adjusted = np.empty(len(array), dtype=float)
+    finite_indices = np.flatnonzero(np.isfinite(array))
+    adjusted = np.full(len(array), np.nan, dtype=float)
+    order = finite_indices[np.argsort(array[finite_indices])]
     running = 0.0
     for rank, index in enumerate(order):
-        running = max(running, (len(array) - rank) * array[index])
+        running = max(running, (len(order) - rank) * array[index])
         adjusted[index] = min(1.0, running)
     return pd.Series(adjusted, index=values.index)
 
@@ -138,10 +139,17 @@ def paired_statistics(frame: pd.DataFrame) -> pd.DataFrame:
             mean = float(np.mean(difference))
             std = float(np.std(difference, ddof=1))
             half_width = float(t.ppf(0.975, n - 1) * std / np.sqrt(n))
-            try:
-                wilcoxon_p = float(wilcoxon(difference).pvalue)
-            except ValueError:
+            if np.allclose(difference, 0.0):
+                paired_t_p = 1.0
                 wilcoxon_p = 1.0
+            else:
+                paired_t_p = float(
+                    ttest_rel(paired["candidate"], paired["reference"]).pvalue
+                )
+                try:
+                    wilcoxon_p = float(wilcoxon(difference).pvalue)
+                except ValueError:
+                    wilcoxon_p = 1.0
             rows.append(
                 {
                     "method": method,
@@ -157,9 +165,7 @@ def paired_statistics(frame: pd.DataFrame) -> pd.DataFrame:
                     "paired_difference_95_ci_low": mean - half_width,
                     "paired_difference_95_ci_high": mean + half_width,
                     "paired_effect_size_dz": mean / std if std > 0.0 else np.nan,
-                    "paired_t_p_raw": float(
-                        ttest_rel(paired["candidate"], paired["reference"]).pvalue
-                    ),
+                    "paired_t_p_raw": paired_t_p,
                     "wilcoxon_p_raw": wilcoxon_p,
                 }
             )
@@ -194,8 +200,7 @@ def prospectus_table(descriptive: pd.DataFrame) -> str:
         values = []
         for method in TABLE_METHODS:
             record = descriptive[
-                (descriptive["method"] == method)
-                & (descriptive["metric"] == metric)
+                (descriptive["method"] == method) & (descriptive["metric"] == metric)
             ].iloc[0]
             values.append(
                 f"${record['mean'] * scale:.2f}\\pm{record['std'] * scale:.2f}$"
@@ -221,7 +226,13 @@ def main() -> int:
     descriptive.to_csv(output / "descriptive_statistics.csv", index=False)
     paired.to_csv(output / "paired_statistics_vs_smallest_angle.csv", index=False)
     (output / "prospectus_table_rows.tex").write_text(prospectus_table(descriptive))
-    print(descriptive[descriptive["metric"].isin({"illuminated_observations", "illumination_quality_fraction"})].to_string(index=False))
+    print(
+        descriptive[
+            descriptive["metric"].isin(
+                {"illuminated_observations", "illumination_quality_fraction"}
+            )
+        ].to_string(index=False)
+    )
     return 0
 
 

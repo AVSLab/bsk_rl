@@ -474,6 +474,21 @@ statistics, and paired differences under `analysis/` only after all 400
 episodes pass the design and fingerprint checks. Rerunning with the same
 `BSK_RL_AMOS2025_MATCHED_300S_OUTPUT_ROOT` skips completed episodes.
 
+The final episode rows do not contain acquisition histories. After the strict
+collector succeeds, replay the same accepted method/seed pairs and record every
+decision epoch with:
+
+```bash
+bash examples/prospectus_rfi/submit_amos2025_matched_300s_timelines.sh \
+  <completed-campaign-root> 30
+```
+
+Each replay must reproduce the accepted final counts and scenario fingerprint.
+The dependent analysis resamples the step histories without smoothing onto a
+300-second grid, reports counts at 15,000, 30,000, and 45,000 seconds, acquisition
+AUC and time-to-threshold statistics, and writes PDF/PNG/SVG figures under
+`analysis/timeline/figures/`.
+
 To audit the current N=100--200 training telemetry against environment steps and wall
 time, submit the read-only, low-priority diagnostic from the login node:
 
