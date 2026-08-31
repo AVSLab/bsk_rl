@@ -75,17 +75,12 @@ MANIFEST_DIR="$OUTPUT_ROOT/manifests"
 mkdir -p "$MANIFEST_DIR" "/scratch/alpine/$USER/job_output"
 
 BASE_EXPORTS="ALL,BSK_RL_REPO_DIR,BSK_RL_BRECKENRIDGE_ALPHA0_CHECKPOINT=$LEGACY_CHECKPOINT,BSK_RL_AMOS2025_ATTENTION_RUN_DIR=$ATTENTION_RUN_DIR,BSK_RL_AMOS2025_MATCHED_300S_OUTPUT_ROOT=$OUTPUT_ROOT"
-sbatch --test-only --export="$BASE_EXPORTS" \
-    examples/prospectus_rfi/slurm/validate_amos2025_attention_control.sbatch
 sbatch --test-only --array="0-399%${MAX_CONCURRENT}" \
-    --export="$BASE_EXPORTS,BSK_RL_AMOS2025_ATTENTION_CHECKPOINT=$ATTENTION_RUN_DIR/checkpoints/best_validation" \
+    --export="$BASE_EXPORTS,BSK_RL_AMOS2025_ATTENTION_CHECKPOINT=$ATTENTION_RUN_DIR/checkpoints/final" \
     examples/prospectus_rfi/slurm/evaluate_amos2025_matched_300s.sbatch
 
-VALIDATION_JOB=$(sbatch --parsable --export="$BASE_EXPORTS" \
-    examples/prospectus_rfi/slurm/validate_amos2025_attention_control.sbatch)
-MC_JOB=$(sbatch --parsable --dependency="afterok:$VALIDATION_JOB" \
-    --array="0-399%${MAX_CONCURRENT}" \
-    --export="$BASE_EXPORTS,BSK_RL_AMOS2025_ATTENTION_CHECKPOINT=$ATTENTION_RUN_DIR/checkpoints/best_validation" \
+MC_JOB=$(sbatch --parsable --array="0-399%${MAX_CONCURRENT}" \
+    --export="$BASE_EXPORTS,BSK_RL_AMOS2025_ATTENTION_CHECKPOINT=$ATTENTION_RUN_DIR/checkpoints/final" \
     examples/prospectus_rfi/slurm/evaluate_amos2025_matched_300s.sbatch)
 COLLECTOR_JOB=$(sbatch --parsable --dependency="afterok:$MC_JOB" \
     --export="$BASE_EXPORTS" \
@@ -103,7 +98,8 @@ payload = {
     "legacy_checkpoint": "$LEGACY_CHECKPOINT",
     "legacy_module_state_sha256": "$ACTUAL_SHA256",
     "attention_run_dir": "$ATTENTION_RUN_DIR",
-    "attention_selection": "maximum held-out physical validation score over seeds 91001..91005",
+    "attention_selection": "last checkpoint from the completed training run",
+    "attention_checkpoint": "$ATTENTION_RUN_DIR/checkpoints/final",
     "methods": [
         "breckenridge2026_alpha0_mlp",
         "target_set_attention",
@@ -121,7 +117,7 @@ payload = {
         "wheel_guard": False,
         "seeds": [0, 99],
     },
-    "validation_job": "$VALIDATION_JOB",
+    "validation_job": None,
     "monte_carlo_job": "$MC_JOB",
     "collector_job": "$COLLECTOR_JOB",
     "max_concurrent": int("$MAX_CONCURRENT"),
@@ -132,7 +128,6 @@ with open(sys.argv[1], "w") as stream:
 PY
 
 echo "Submitted matched AMOS 2025 300-second Research Focus I comparison."
-echo "VALIDATION_JOB=$VALIDATION_JOB"
 echo "MC_JOB=$MC_JOB"
 echo "COLLECTOR_JOB=$COLLECTOR_JOB"
 echo "OUTPUT_ROOT=$OUTPUT_ROOT"

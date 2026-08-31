@@ -12,7 +12,8 @@ Codex session because CURC requires interactive authentication.
   the exploratory comparison.
 - The isolated N=100, K=10, 300-second target-set attention control completed its
   gate and three training allocations (last recorded jobs 31561686--31561689).
-  It needs held-out checkpoint selection, not another training run.
+  The matched comparison uses its final checkpoint directly; no retraining or
+  additional checkpoint-selection episodes are required.
 - The requested Breckenridge imaging-versus-downlink alpha=0 monolithic policy
   is the October 14, 2025 observation-v7 `0d100i/checkpoint_000145` artifact.
   Its 81-input, 13-action, 8,757,262-parameter module has SHA-256
@@ -71,8 +72,8 @@ Codex session because CURC requires interactive authentication.
 2. Launch the 6,000-row 100-second paired campaign with
    `submit_memorysafe_paired_mc.sh`; do not retrain the six exploratory policies.
 3. Locate the completed 300-second attention run directory and launch
-   `submit_amos2025_matched_300s.sh`. This selects its checkpoint on held-out
-   seeds before the 400-row evaluation.
+   `submit_amos2025_matched_300s.sh`. This uses its final checkpoint directly
+   for the 400-row evaluation.
 4. Run the strict collectors/analysis. Only then replace the preliminary values
    in `sec_focus1.tex`.
 5. If the prospectus will claim architecture superiority rather than present an

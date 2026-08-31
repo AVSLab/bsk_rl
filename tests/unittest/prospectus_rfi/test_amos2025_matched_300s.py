@@ -27,9 +27,6 @@ def test_submitter_pins_the_breckenridge_policy_checksum_and_400_tasks():
     contents = (ROOT / "submit_amos2025_matched_300s.sh").read_text()
     assert "0d8033272f14cdd408192d7ab6ee819b18691c9385fca87be24044fc950464d2" in contents
     assert '0-399%${MAX_CONCURRENT}' in contents
-    assert "afterok:$VALIDATION_JOB" in contents
+    assert "checkpoints/final" in contents
+    assert "VALIDATION_JOB=" not in contents
     assert "afterok:$MC_JOB" in contents
-    validation = (
-        ROOT / "slurm" / "validate_amos2025_attention_control.sbatch"
-    ).read_text()
-    assert "--no-wheel-guard" in validation

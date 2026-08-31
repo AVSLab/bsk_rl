@@ -436,8 +436,8 @@ campaign directory below:
 The Breckenridge imaging-versus-downlink paper's alpha=0 policy is the October
 14, 2025 `0d100i/checkpoint_000145` policy, not the August AMOS checkpoint. The
 matched campaign verifies its module checksum, preserves its 81-value
-observation-version-7 input, and compares it with the held-out-selected
-300-second target-set attention policy. It also reruns the full-catalog
+observation-version-7 input, and compares it with the final checkpoint from the
+completed 300-second target-set attention run. It also reruns the full-catalog
 smallest-angle and closest-distance heuristics on seeds 0--99.
 
 All four methods use N=100, K=10, 45,000-second episodes, fixed
@@ -457,9 +457,9 @@ find /scratch/alpine/$USER/prospectus_rfi/amos2025_attention_control_300s \
   -path '*/training/attention_k10_seed10001/checkpoints/final' -type d -print
 ```
 
-Submit checkpoint validation, 400 one-episode array tasks, and the strict
-collector. The environment overrides are optional because the submitter can
-discover both artifacts on Alpine:
+Submit 400 one-episode array tasks using the completed attention run's final
+checkpoint, followed by the strict collector. The environment overrides are
+optional because the submitter can discover both artifacts on Alpine:
 
 ```bash
 export BSK_RL_REPO_DIR=/projects/$USER/bsk_rl-rfi
@@ -468,11 +468,11 @@ bash examples/prospectus_rfi/submit_amos2025_matched_300s.sh 30
 
 The submitter pins the paper-policy weight checksum
 `0d8033272f14cdd408192d7ab6ee819b18691c9385fca87be24044fc950464d2`.
-It first selects the attention checkpoint over held-out seeds 91001--91005,
-then evaluates all four methods on seeds 0--99. The collector writes combined
-episodes, summary statistics, and paired differences under `analysis/` only
-after all 400 episodes pass the design and fingerprint checks. Rerunning with
-the same `BSK_RL_AMOS2025_MATCHED_300S_OUTPUT_ROOT` skips completed episodes.
+It evaluates the final attention checkpoint and the other three methods on
+seeds 0--99 immediately. The collector writes combined episodes, summary
+statistics, and paired differences under `analysis/` only after all 400
+episodes pass the design and fingerprint checks. Rerunning with the same
+`BSK_RL_AMOS2025_MATCHED_300S_OUTPUT_ROOT` skips completed episodes.
 
 To audit the current N=100--200 training telemetry against environment steps and wall
 time, submit the read-only, low-priority diagnostic from the login node:
