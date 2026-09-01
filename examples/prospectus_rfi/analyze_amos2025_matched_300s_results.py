@@ -302,88 +302,201 @@ def save_figure(fig: plt.Figure, output: Path, stem: str) -> None:
     plt.close(fig)
 
 
-def plot_endpoint_summary(descriptive: pd.DataFrame, output: Path) -> None:
-    panels = (
-        ("illuminated_observations", "Illuminated images", 1.0),
-        ("useful_deliveries", "Useful deliveries", 1.0),
-        ("delivery_fraction", "Delivery fraction (%)", 100.0),
-        (
-            "resource_constraint_interventions",
-            "Shield interventions per run",
-            1.0,
-        ),
+ENDPOINT_PANELS = (
+    (
+        "illuminated_observations",
+        "Illuminated images",
+        1.0,
+        "matched_300s_illuminated_images_box_scatter",
+    ),
+    (
+        "useful_deliveries",
+        "Useful downlinked images",
+        1.0,
+        "matched_300s_useful_deliveries_box_scatter",
+    ),
+    (
+        "delivery_fraction",
+        "Useful-delivery fraction (%)",
+        100.0,
+        "matched_300s_delivery_fraction_box_scatter",
+    ),
+    (
+        "resource_constraint_interventions",
+        "Shield interventions per run",
+        1.0,
+        "matched_300s_shield_interventions_box_scatter",
+    ),
+)
+
+
+def _draw_box_scatter_panel(
+    axis: plt.Axes,
+    frame: pd.DataFrame,
+    descriptive: pd.DataFrame,
+    *,
+    metric: str,
+    ylabel: str,
+    scale: float,
+) -> None:
+    """Draw all 100 seeds, a box distribution, and the mean +/- one SD."""
+
+    positions = np.arange(len(TABLE_METHODS), dtype=float)
+    values_by_method = [
+        frame.loc[frame["method"] == method, metric].to_numpy(dtype=float) * scale
+        for method in TABLE_METHODS
+    ]
+    boxes = axis.boxplot(
+        values_by_method,
+        positions=positions,
+        widths=0.52,
+        patch_artist=True,
+        showfliers=False,
+        medianprops={"color": "black", "linewidth": 1.4},
+        whiskerprops={"color": "#555555", "linewidth": 1.0},
+        capprops={"color": "#555555", "linewidth": 1.0},
     )
-    fig, axes = plt.subplots(2, 2, figsize=(9.0, 6.4), constrained_layout=True)
-    x = np.arange(len(TABLE_METHODS))
-    for axis, (metric, ylabel, scale) in zip(axes.flat, panels):
-        subset = descriptive[descriptive["metric"] == metric].set_index("method")
-        means = np.array([subset.loc[method, "mean"] for method in TABLE_METHODS])
-        lows = np.array(
-            [subset.loc[method, "mean_95_ci_low"] for method in TABLE_METHODS]
+    for patch, method in zip(boxes["boxes"], TABLE_METHODS):
+        patch.set_facecolor(COLORS[method])
+        patch.set_edgecolor(COLORS[method])
+        patch.set_alpha(0.18)
+
+    indexed = descriptive.set_index(["method", "metric"])
+    for method_index, (position, method, values) in enumerate(
+        zip(positions, TABLE_METHODS, values_by_method)
+    ):
+        # Fixed random seeds make the display reproducible; jitter does not alter values.
+        generator = np.random.default_rng(20260831 + method_index)
+        jitter = generator.uniform(-0.19, 0.19, size=len(values))
+        axis.scatter(
+            position + jitter,
+            values,
+            s=13,
+            marker=MARKERS[method],
+            color=COLORS[method],
+            alpha=0.30,
+            linewidths=0.0,
+            zorder=2,
         )
-        highs = np.array(
-            [subset.loc[method, "mean_95_ci_high"] for method in TABLE_METHODS]
+        record = indexed.loc[(method, metric)]
+        mean = float(record["mean"]) * scale
+        std = float(record["std"]) * scale
+        axis.errorbar(
+            position,
+            mean,
+            yerr=std,
+            fmt=MARKERS[method],
+            markersize=6.5,
+            markerfacecolor="white",
+            markeredgewidth=1.4,
+            capsize=4,
+            elinewidth=1.6,
+            color=COLORS[method],
+            zorder=4,
         )
-        means, lows, highs = means * scale, lows * scale, highs * scale
-        for position, method, mean, low, high in zip(
-            x, TABLE_METHODS, means, lows, highs
-        ):
-            axis.errorbar(
-                position,
-                mean,
-                yerr=np.array([[mean - low], [high - mean]]),
-                fmt=MARKERS[method],
-                markersize=6,
-                capsize=3,
-                color=COLORS[method],
-            )
-        axis.set_xticks(x, [SHORT_LABELS[method] for method in TABLE_METHODS])
-        axis.tick_params(axis="x", labelrotation=20)
-        axis.set_ylabel(ylabel)
-        axis.grid(axis="y", alpha=0.2)
-    fig.suptitle("Matched AMOS 2025 evaluation (100 paired seeds; mean and 95% CI)")
+
+    axis.set_xticks(positions, [SHORT_LABELS[method] for method in TABLE_METHODS])
+    axis.tick_params(axis="x", labelrotation=20)
+    axis.set_ylabel(ylabel)
+    axis.grid(axis="y", alpha=0.2)
+
+
+def plot_endpoint_summary(
+    frame: pd.DataFrame, descriptive: pd.DataFrame, output: Path
+) -> None:
+    fig, axes = plt.subplots(2, 2, figsize=(9.5, 7.0), constrained_layout=True)
+    for axis, (metric, ylabel, scale, _) in zip(axes.flat, ENDPOINT_PANELS):
+        _draw_box_scatter_panel(
+            axis,
+            frame,
+            descriptive,
+            metric=metric,
+            ylabel=ylabel,
+            scale=scale,
+        )
+    fig.suptitle("Matched AMOS 2025 evaluation (100 paired seeds)", fontsize=13)
+    fig.text(
+        0.5,
+        -0.015,
+        "Dots: individual seeds; boxes: median and IQR; open markers: mean ± one SD",
+        ha="center",
+        fontsize=9,
+    )
     save_figure(fig, output, "matched_300s_endpoint_summary")
 
 
-def plot_operational_tradeoff(descriptive: pd.DataFrame, output: Path) -> None:
+def plot_individual_endpoint_panels(
+    frame: pd.DataFrame, descriptive: pd.DataFrame, output: Path
+) -> None:
+    for metric, ylabel, scale, stem in ENDPOINT_PANELS:
+        fig, axis = plt.subplots(figsize=(7.2, 5.2), constrained_layout=True)
+        _draw_box_scatter_panel(
+            axis,
+            frame,
+            descriptive,
+            metric=metric,
+            ylabel=ylabel,
+            scale=scale,
+        )
+        axis.set_title(f"{ylabel} across 100 paired seeds")
+        axis.text(
+            0.5,
+            -0.23,
+            "Dots: individual seeds; box: median and IQR; open marker: mean ± one SD",
+            transform=axis.transAxes,
+            ha="center",
+            fontsize=9,
+        )
+        save_figure(fig, output, stem)
+
+
+def plot_operational_tradeoff(
+    frame: pd.DataFrame,
+    descriptive: pd.DataFrame,
+    output: Path,
+    *,
+    y_metric: str,
+    ylabel: str,
+    y_scale: float,
+    stem: str,
+) -> None:
     indexed = descriptive.set_index(["method", "metric"])
-    fig, axis = plt.subplots(figsize=(7.2, 5.2))
+    fig, axis = plt.subplots(figsize=(7.2, 5.2), constrained_layout=True)
     annotation_offsets = {
-        "smallest_angle_heuristic": (5, -14),
-        "closest_distance_heuristic": (5, -14),
-        "breckenridge2026_alpha0_mlp": (5, -14),
-        "target_set_attention": (5, 7),
+        "smallest_angle_heuristic": (6, -15),
+        "closest_distance_heuristic": (6, -15),
+        "breckenridge2026_alpha0_mlp": (6, -15),
+        "target_set_attention": (6, 7),
     }
     for method in TABLE_METHODS:
+        seed_rows = frame[frame["method"] == method]
+        axis.scatter(
+            seed_rows["illuminated_observations"],
+            seed_rows[y_metric] * y_scale,
+            s=16,
+            marker=MARKERS[method],
+            color=COLORS[method],
+            alpha=0.22,
+            linewidths=0.0,
+            zorder=2,
+        )
         images = indexed.loc[(method, "illuminated_observations")]
-        delivery = indexed.loc[(method, "delivery_fraction")]
+        delivery = indexed.loc[(method, y_metric)]
         x = float(images["mean"])
-        y = float(delivery["mean"]) * 100.0
+        y = float(delivery["mean"]) * y_scale
         axis.errorbar(
             x,
             y,
-            xerr=np.array(
-                [
-                    [x - float(images["mean_95_ci_low"])],
-                    [float(images["mean_95_ci_high"]) - x],
-                ]
-            ),
-            yerr=np.array(
-                [
-                    [
-                        (float(delivery["mean"]) - float(delivery["mean_95_ci_low"]))
-                        * 100
-                    ],
-                    [
-                        (float(delivery["mean_95_ci_high"]) - float(delivery["mean"]))
-                        * 100
-                    ],
-                ]
-            ),
+            xerr=float(images["std"]),
+            yerr=float(delivery["std"]) * y_scale,
             fmt=MARKERS[method],
             markersize=8,
+            markerfacecolor="white",
+            markeredgewidth=1.5,
             capsize=3,
+            elinewidth=1.5,
             color=COLORS[method],
+            zorder=4,
         )
         axis.annotate(
             SHORT_LABELS[method],
@@ -394,11 +507,51 @@ def plot_operational_tradeoff(descriptive: pd.DataFrame, output: Path) -> None:
         )
     axis.set(
         xlabel="Illuminated images",
-        ylabel="Useful-delivery fraction (%)",
-        title="Acquisition–delivery tradeoff (mean and 95% CI)",
+        ylabel=ylabel,
+        title="Acquisition–delivery tradeoff (100 paired seeds; mean ± SD)",
     )
     axis.grid(alpha=0.2)
-    save_figure(fig, output, "matched_300s_acquisition_delivery_tradeoff")
+    save_figure(fig, output, stem)
+
+
+def plot_shield_components(frame: pd.DataFrame, output: Path) -> None:
+    """Show whether intervention differences arise from battery or storage."""
+
+    components = (
+        ("battery_shield_interventions", "Battery", "#f6c85f"),
+        ("storage_shield_interventions", "Storage", "#6f4e7c"),
+        ("wheel_shield_interventions", "Reaction wheel", "#9dd866"),
+    )
+    positions = np.arange(len(TABLE_METHODS))
+    bottom = np.zeros(len(TABLE_METHODS), dtype=float)
+    fig, axis = plt.subplots(figsize=(7.2, 5.2), constrained_layout=True)
+    for metric, label, color in components:
+        means = np.array(
+            [
+                frame.loc[frame["method"] == method, metric].mean()
+                for method in TABLE_METHODS
+            ]
+        )
+        axis.bar(
+            positions,
+            means,
+            bottom=bottom,
+            width=0.62,
+            label=label,
+            color=color,
+            edgecolor="white",
+            linewidth=0.7,
+        )
+        bottom += means
+    axis.set_xticks(positions, [SHORT_LABELS[method] for method in TABLE_METHODS])
+    axis.tick_params(axis="x", labelrotation=20)
+    axis.set(
+        ylabel="Mean shield interventions per run",
+        title="Shield-intervention components across 100 paired seeds",
+    )
+    axis.legend(frameon=False)
+    axis.grid(axis="y", alpha=0.2)
+    save_figure(fig, output, "matched_300s_shield_intervention_components")
 
 
 def main() -> int:
@@ -423,8 +576,27 @@ def main() -> int:
     pairwise.to_csv(output / "all_pairwise_statistics.csv", index=False)
     (output / "prospectus_table_rows.tex").write_text(prospectus_table(descriptive))
     figure_output = output / "figures"
-    plot_endpoint_summary(descriptive, figure_output)
-    plot_operational_tradeoff(descriptive, figure_output)
+    plot_endpoint_summary(frame, descriptive, figure_output)
+    plot_individual_endpoint_panels(frame, descriptive, figure_output)
+    plot_operational_tradeoff(
+        frame,
+        descriptive,
+        figure_output,
+        y_metric="delivery_fraction",
+        ylabel="Useful-delivery fraction (%)",
+        y_scale=100.0,
+        stem="matched_300s_acquisition_delivery_tradeoff",
+    )
+    plot_operational_tradeoff(
+        frame,
+        descriptive,
+        figure_output,
+        y_metric="useful_deliveries",
+        ylabel="Useful downlinked images",
+        y_scale=1.0,
+        stem="matched_300s_illuminated_vs_useful_deliveries",
+    )
+    plot_shield_components(frame, figure_output)
     print(
         descriptive[
             descriptive["metric"].isin(

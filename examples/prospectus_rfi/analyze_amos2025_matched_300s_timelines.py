@@ -29,14 +29,23 @@ from examples.prospectus_rfi.amos2025_matched_300s_design import METHODS
 from examples.prospectus_rfi.analyze_amos2025_matched_300s_results import (
     COLORS,
     LINE_STYLES,
+    MARKERS,
     METHOD_LABELS,
     REFERENCE_METHOD,
+    SHORT_LABELS,
+    TABLE_METHODS,
     holm_adjust,
 )
 
 COUNT_COLUMN = "cumulative_illuminated_observations"
 SEEDS = tuple(range(100))
 CHECKPOINTS_S = (15_000.0, 30_000.0, 45_000.0)
+TARGET_SELECTION_COLUMNS = (
+    "target_selection_count",
+    "illuminated_target_selection_count",
+    "illuminated_target_selection_fraction",
+    "mean_selected_target_shadow_factor",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -58,6 +67,13 @@ def load_and_validate(root: Path) -> pd.DataFrame:
             )
         for path in paths:
             frame = pd.read_csv(path)
+            missing_columns = set(TARGET_SELECTION_COLUMNS) - set(frame.columns)
+            if missing_columns:
+                raise ValueError(
+                    f"target-selection fields are missing from {path}: "
+                    f"{sorted(missing_columns)}; replay this timeline with the "
+                    "current recorder"
+                )
             if set(frame["method"].astype(str)) != {method}:
                 raise ValueError(f"wrong method label in {path}")
             frames.append(frame)
@@ -286,6 +302,139 @@ def save_figure(fig: plt.Figure, root: Path, stem: str) -> None:
     plt.close(fig)
 
 
+def target_selection_endpoint_metrics(frame: pd.DataFrame) -> pd.DataFrame:
+    """Return one command-time target-illumination record per method and seed."""
+
+    final = (
+        frame.sort_values("sim_time_s")
+        .groupby(["method", "scenario_seed"], as_index=False)
+        .tail(1)
+    )
+    columns = [
+        "method",
+        "scenario_seed",
+        "scenario_fingerprint",
+        *TARGET_SELECTION_COLUMNS,
+    ]
+    result = (
+        final[columns].sort_values(["method", "scenario_seed"]).reset_index(drop=True)
+    )
+    if len(result.index) != len(METHODS) * len(SEEDS):
+        raise ValueError("target-selection endpoint table is incomplete")
+    return result
+
+
+def _draw_target_selection_box_scatter(
+    axis: plt.Axes,
+    frame: pd.DataFrame,
+    *,
+    metric: str,
+    ylabel: str,
+    scale: float,
+) -> None:
+    positions = np.arange(len(TABLE_METHODS), dtype=float)
+    values_by_method = [
+        frame.loc[frame["method"] == method, metric].to_numpy(dtype=float) * scale
+        for method in TABLE_METHODS
+    ]
+    boxes = axis.boxplot(
+        values_by_method,
+        positions=positions,
+        widths=0.52,
+        patch_artist=True,
+        showfliers=False,
+        medianprops={"color": "black", "linewidth": 1.4},
+        whiskerprops={"color": "#555555", "linewidth": 1.0},
+        capprops={"color": "#555555", "linewidth": 1.0},
+    )
+    for patch, method in zip(boxes["boxes"], TABLE_METHODS):
+        patch.set_facecolor(COLORS[method])
+        patch.set_edgecolor(COLORS[method])
+        patch.set_alpha(0.18)
+    for method_index, (position, method, values) in enumerate(
+        zip(positions, TABLE_METHODS, values_by_method)
+    ):
+        generator = np.random.default_rng(20_260_831 + method_index)
+        jitter = generator.uniform(-0.19, 0.19, size=len(values))
+        axis.scatter(
+            position + jitter,
+            values,
+            s=13,
+            marker=MARKERS[method],
+            color=COLORS[method],
+            alpha=0.30,
+            linewidths=0.0,
+            zorder=2,
+        )
+        axis.errorbar(
+            position,
+            float(np.mean(values)),
+            yerr=float(np.std(values, ddof=1)),
+            fmt=MARKERS[method],
+            markersize=6.5,
+            markerfacecolor="white",
+            markeredgewidth=1.4,
+            capsize=4,
+            elinewidth=1.6,
+            color=COLORS[method],
+            zorder=4,
+        )
+    axis.set_xticks(positions, [SHORT_LABELS[method] for method in TABLE_METHODS])
+    axis.tick_params(axis="x", labelrotation=20)
+    axis.set_ylabel(ylabel)
+    axis.grid(axis="y", alpha=0.2)
+
+
+def plot_target_selection_endpoints(frame: pd.DataFrame, root: Path) -> None:
+    panels = (
+        (
+            "illuminated_target_selection_count",
+            "Illuminated targets selected",
+            1.0,
+            "matched_300s_illuminated_target_selections_box_scatter",
+        ),
+        (
+            "illuminated_target_selection_fraction",
+            "Illuminated target selections (%)",
+            100.0,
+            "matched_300s_illuminated_target_selection_fraction_box_scatter",
+        ),
+    )
+    fig, axes = plt.subplots(1, 2, figsize=(10.0, 4.8), constrained_layout=True)
+    for axis, (metric, ylabel, scale, _) in zip(axes, panels):
+        _draw_target_selection_box_scatter(
+            axis, frame, metric=metric, ylabel=ylabel, scale=scale
+        )
+    fig.suptitle(
+        "Target illumination when each imaging command was issued "
+        "(100 paired seeds; threshold > 0.5)"
+    )
+    fig.text(
+        0.5,
+        -0.015,
+        "Dots: individual seeds; boxes: median and IQR; open markers: mean ± one SD",
+        ha="center",
+        fontsize=9,
+    )
+    save_figure(fig, root, "matched_300s_target_selection_illumination_summary")
+
+    for metric, ylabel, scale, stem in panels:
+        fig, axis = plt.subplots(figsize=(7.2, 5.2), constrained_layout=True)
+        _draw_target_selection_box_scatter(
+            axis, frame, metric=metric, ylabel=ylabel, scale=scale
+        )
+        axis.set_title(f"{ylabel} across 100 paired seeds")
+        axis.text(
+            0.5,
+            -0.23,
+            "Dots: individual seeds; box: median and IQR; open marker: mean ± one SD",
+            transform=axis.transAxes,
+            ha="center",
+            fontsize=9,
+        )
+        save_figure(fig, root, stem)
+
+
 def plot_mean_curves(summary: pd.DataFrame, root: Path) -> None:
     fig, axis = plt.subplots(figsize=(8.2, 4.8))
     for method in METHODS:
@@ -428,6 +577,7 @@ def main() -> int:
     resampled = resample_all(decision_epochs, args.grid_seconds)
     summary, differences, _ = curve_tables(resampled, args.bootstrap_draws)
     episode_metrics = episode_timing_metrics(resampled)
+    target_selection = target_selection_endpoint_metrics(decision_epochs)
     paired = paired_timing_statistics(episode_metrics)
     output = root / "analysis" / "timeline"
     output.mkdir(parents=True, exist_ok=True)
@@ -436,11 +586,15 @@ def main() -> int:
     summary.to_csv(output / "curve_summary_300s.csv", index=False)
     differences.to_csv(output / "paired_curve_differences_300s.csv", index=False)
     episode_metrics.to_csv(output / "episode_timing_metrics.csv", index=False)
+    target_selection.to_csv(
+        output / "target_selection_illumination_metrics.csv", index=False
+    )
     paired.to_csv(output / "paired_timing_statistics.csv", index=False)
     plot_mean_curves(summary, root)
     plot_mean_sd_curves(summary, root)
     plot_median_curves(summary, root)
     plot_differences(differences, root)
+    plot_target_selection_endpoints(target_selection, root)
     metadata = {
         "created_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "methods": list(METHODS),

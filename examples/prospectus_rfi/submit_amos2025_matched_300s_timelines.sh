@@ -44,7 +44,8 @@ ATTENTION_CHECKPOINT=${CHECKPOINTS[1]}
 [[ -d "$ATTENTION_CHECKPOINT" ]] || { echo "Missing $ATTENTION_CHECKPOINT" >&2; exit 7; }
 
 MISSING_OUTPUT=$(
-    "$PYTHON" - "$CAMPAIGN_ROOT" <<'PY'
+	"$PYTHON" - "$CAMPAIGN_ROOT" <<'PY'
+import json
 import sys
 from pathlib import Path
 
@@ -64,7 +65,19 @@ for method_index, method in enumerate(methods):
         metadata = timeline.with_suffix(".metadata.json")
         if not accepted.is_file():
             raise SystemExit(f"accepted raw episode is missing: {accepted}")
-        if not (timeline.is_file() and metadata.is_file()):
+        complete = timeline.is_file() and metadata.is_file()
+        if complete:
+            try:
+                payload = json.loads(metadata.read_text())
+            except json.JSONDecodeError:
+                payload = {}
+            final_metrics = payload.get("final_replay_metrics", {})
+            header = timeline.open().readline()
+            complete = (
+                "illuminated_target_selection_count" in final_metrics
+                and "illuminated_target_selection_count" in header
+            )
+        if not complete:
             print(task_id)
 PY
 )

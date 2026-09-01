@@ -228,6 +228,29 @@ def make_satellite_types(
     class StudyImageRSO(act.ImageRSO):
         builder_type = StudyDiscreteActionBuilder
 
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            super().__init__(*args, **kwargs)
+            # ImageRSO's historical diagnostic list is populated before its
+            # full-catalog heuristic override.  Keep a study-local record of the
+            # target that was actually tasked so policy/heuristic comparisons use
+            # the same command-time definition.
+            self.actual_target_ids: list[int] = []
+            self.actual_target_illumination_status: list[float] = []
+
+        def set_action(self, action: int, prev_action_key: str | None = None) -> str:
+            action_key = super().set_action(action, prev_action_key)
+            actual_id = int(self.satellite.dynamics.last_imaging_target_id)
+            actual_target = next(
+                target
+                for target in self.satellite.data_store.data.known
+                if int(target.id) == actual_id
+            )
+            self.actual_target_ids.append(actual_id)
+            self.actual_target_illumination_status.append(
+                self._target_shadow_factor(actual_target)
+            )
+            return action_key
+
     class StudyCharge(act.Charge):
         builder_type = StudyDiscreteActionBuilder
 

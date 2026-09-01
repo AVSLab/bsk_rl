@@ -107,6 +107,16 @@ def test_frozen_policy_contract_preserves_scenario_seed_and_100_second_action():
         start = legacy_base.simulator.sim_time
         legacy_env.step({"SS1": 0})
         assert legacy_base.simulator.sim_time - start == pytest.approx(100.0)
+
+        # The historical heuristic replaces the requested candidate slot.  The
+        # command-time diagnostic must describe the target actually tasked.
+        study_env.step({"SS1": 0})
+        study_scanner = study_base.satellites[0]
+        image_action = study_scanner.action_builder.action_spec[0]
+        assert image_action.actual_target_ids[-1] == int(
+            study_scanner.dynamics.last_heuristic_target_id
+        )
+        assert np.isfinite(image_action.actual_target_illumination_status[-1])
     finally:
         study_env.close()
         legacy_env.close()
@@ -134,6 +144,9 @@ def test_attention_control_has_checkpoint_fields_mask_and_300_second_action():
         start = base.simulator.sim_time
         env.step({"SS1": 0})
         assert base.simulator.sim_time - start == pytest.approx(300.0)
+        image_action = base.satellites[0].action_builder.action_spec[0]
+        assert len(image_action.actual_target_ids) == 1
+        assert len(image_action.actual_target_illumination_status) == 1
     finally:
         env.close()
 

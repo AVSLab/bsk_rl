@@ -487,7 +487,13 @@ Each replay must reproduce the accepted final counts and scenario fingerprint.
 The dependent analysis resamples the step histories without smoothing onto a
 300-second grid, reports counts at 15,000, 30,000, and 45,000 seconds, acquisition
 AUC and time-to-threshold statistics, and writes PDF/PNG/SVG figures under
-`analysis/timeline/figures/`.
+`analysis/timeline/figures/`. It also records the shadow factor of the target
+actually tasked by every executed imaging command (including the heuristic's
+post-override target), then reports the number and fraction selected while
+illuminated using the same strict `shadowFactor > 0.5` threshold as the imaging
+dynamics. If older timeline sidecars lack these command-time fields, running the
+same submit command automatically replays only those incomplete sidecars before
+regenerating the analysis.
 
 To audit the current N=100--200 training telemetry against environment steps and wall
 time, submit the read-only, low-priority diagnostic from the login node:

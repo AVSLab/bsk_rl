@@ -110,9 +110,17 @@ def main() -> int:
     if timeline_path.is_file() and metadata_path.is_file() and status_path.is_file():
         try:
             prior = json.loads(status_path.read_text())
+            prior_metadata = json.loads(metadata_path.read_text())
         except json.JSONDecodeError:
             prior = {}
-        if prior.get("state") == "completed":
+            prior_metadata = {}
+        final_metrics = prior_metadata.get("final_replay_metrics", {})
+        timeline_header = timeline_path.open().readline()
+        has_selection_metrics = (
+            "illuminated_target_selection_count" in final_metrics
+            and "illuminated_target_selection_count" in timeline_header
+        )
+        if prior.get("state") == "completed" and has_selection_metrics:
             print(f"SKIP timeline method={task.method} seed={task.seed}", flush=True)
             return 0
 

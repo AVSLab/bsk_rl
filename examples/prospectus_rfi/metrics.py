@@ -55,6 +55,18 @@ def episode_metrics(env) -> dict[str, float]:
         scanner.sat_args.get("storedCharge_Init", 0.0)
         / scanner.sat_args.get("batteryStorageCapacity", 1.0)
     )
+    image_action = scanner.action_builder.action_spec[0]
+    selected_target_shadow = np.asarray(
+        getattr(image_action, "actual_target_illumination_status", []), dtype=float
+    )
+    selected_target_shadow = selected_target_shadow[np.isfinite(selected_target_shadow)]
+    illumination_threshold = _safe_float(
+        getattr(scanner.dynamics, "eclipse_threshold_for_imaging", 0.5), 0.5
+    )
+    illuminated_target_selections = int(
+        np.count_nonzero(selected_target_shadow > illumination_threshold)
+    )
+    target_selection_count = int(selected_target_shadow.size)
 
     return {
         "episode_target_count": float(catalog_size),
@@ -83,6 +95,17 @@ def episode_metrics(env) -> dict[str, float]:
         "resource_constraint_interventions": float(interventions),
         "constraint_intervention_rate": interventions / max(total_actions, 1),
         "total_action_count": float(total_actions),
+        "target_selection_count": float(target_selection_count),
+        "illuminated_target_selection_count": float(illuminated_target_selections),
+        "illuminated_target_selection_fraction": (
+            illuminated_target_selections / target_selection_count
+            if target_selection_count
+            else 0.0
+        ),
+        "mean_selected_target_shadow_factor": (
+            float(np.mean(selected_target_shadow)) if target_selection_count else 0.0
+        ),
+        "target_selection_illumination_threshold": illumination_threshold,
     }
 
 
