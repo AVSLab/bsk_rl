@@ -40,18 +40,25 @@ def test_no_action_like():
     assert np.allclose(no_action_like(np.array([1.0, 2.0])), NO_ACTION)
 
 
-def test_no_action_keep_indices_includes_final_obs():
-    actions = [0, NO_ACTION, NO_ACTION, 1, NO_ACTION]
+@pytest.mark.parametrize(
+    "actions,action_idx",
+    [
+        ([0, 1, 2], [0, 1, 2]),
+        ([0, NO_ACTION, NO_ACTION, 1, NO_ACTION], [0, 3]),
+        ([0, NO_ACTION, 1], [0, 2]),
+        ([NO_ACTION, 0, 1], [1, 2]),
+        ([NO_ACTION, NO_ACTION, 0], [2]),
+        ([0], [0]),
+        ([NO_ACTION], []),
+        ([NO_ACTION, NO_ACTION], []),
+        ([0, NO_ACTION, 1, NO_ACTION, 2], [0, 2, 4]),
+    ],
+)
+def test_no_action_keep_indices(actions, action_idx):
     n_obs = len(actions) + 1
-    action_idx, obs_idx = no_action_keep_indices(actions, n_obs)
-    assert action_idx == [0, 3]
-    assert obs_idx == [0, 3, n_obs - 1]
-
-
-def test_no_action_keep_indices_without_fillers():
-    action_idx, obs_idx = no_action_keep_indices([0, 1, 2], 4)
-    assert action_idx == [0, 1, 2]
-    assert obs_idx == [0, 1, 2, 3]
+    got_action_idx, obs_idx = no_action_keep_indices(actions, n_obs)
+    assert got_action_idx == action_idx
+    assert obs_idx == action_idx + [n_obs - 1]
 
 
 class TypeA:
