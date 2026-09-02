@@ -1,0 +1,796 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fault Environment Example &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Broadcast Communication" href="communication_action.html" />
+    <link rel="prev" title="Multi-Agent Environments" href="multiagent_envs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#environments">Environments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="simple_environment.html">Getting Started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="satellite_configuration.html">Satellite Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="multiagent_envs.html">Multi-Agent Environments</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Fault Environment Example</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Load-Modules">Load Modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Making-Faults-Cases">Making Faults Cases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Configure-the-Simulation-Models">Configure the Simulation Models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Configure-the-Satellite">Configure the Satellite</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Configure-Satellite-Pareameters">Configure Satellite Pareameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Making-and-interacting-the-Environment">Making and interacting the Environment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="communication_action.html">Broadcast Communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cloud_environment.html">Cloud Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#earth-observation">Earth Observation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#rso-inspection">RSO Inspection</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#benchmarks">Benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Fault Environment Example</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/fault_environment.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Fault-Environment-Example">
+<h1>Fault Environment Example<a class="headerlink" href="#Fault-Environment-Example" title="Link to this heading"></a></h1>
+<p>This tutorial demonstrates how to configure and use a simple BSK-RL environment to model faults in a system with four reaction wheels (RWs).</p>
+<section id="Load-Modules">
+<h2>Load Modules<a class="headerlink" href="#Load-Modules" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">bskLogging</span><span class="p">,</span> <span class="n">messaging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.fswAlgorithms</span><span class="w"> </span><span class="kn">import</span> <span class="n">rwNullSpace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">reactionWheelStateEffector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">macros</span><span class="p">,</span> <span class="n">orbitalMotion</span><span class="p">,</span> <span class="n">simIncludeRW</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">SatelliteTasking</span><span class="p">,</span> <span class="n">act</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">sats</span><span class="p">,</span> <span class="n">scene</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.functional</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_args</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.orbital</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_orbit</span><span class="p">,</span> <span class="n">random_unit_vector</span>
+
+<span class="n">bskLogging</span><span class="o">.</span><span class="n">setDefaultLogLevel</span><span class="p">(</span><span class="n">bskLogging</span><span class="o">.</span><span class="n">BSK_WARNING</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Making-Faults-Cases">
+<h2>Making Faults Cases<a class="headerlink" href="#Making-Faults-Cases" title="Link to this heading"></a></h2>
+<p>Creating a fault base class and defining individual fault types enables modeling multiple kinds of faults within a single satellite. In this example, a power draw limit is applied to RWs, causing it to operate at reduced speed compared to nominal conditions. By default, while a torque limit is enforced, there are no restrictions on power draw. <code class="docutils literal notranslate"><span class="pre">time</span></code> is used to define the time at which the fault occurs, <code class="docutils literal notranslate"><span class="pre">reducedLimit</span></code> specifies the power draw limit in watts, and <code class="docutils literal notranslate"><span class="pre">wheel_Idx</span></code> indicates which
+RW is affected by the fault. It can be set to a value from 1 to 4, or to all to apply the fault to every RW.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">FaultObject</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message_printed</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> does not have a custom execute function!"</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">satellite</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">message_printed</span><span class="p">:</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message_printed</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">addFaultToSimulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">,</span> <span class="n">listIdx</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uniqueFaultIdx</span> <span class="o">=</span> <span class="n">listIdx</span>  <span class="c1"># Index in the faultList array.</span>
+        <span class="n">satellite</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">createNewEvent</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"add</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">Fault"</span><span class="p">,</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">dyn_rate</span><span class="p">,</span>
+            <span class="n">eventActive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">conditionTime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+            <span class="n">actionList</span><span class="o">=</span><span class="p">[</span>
+                <span class="sa">f</span><span class="s2">"self.faultList[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">uniqueFaultIdx</span><span class="si">}</span><span class="s2">].execute(</span><span class="si">{</span><span class="n">satellite</span><span class="o">.</span><span class="n">_satellite_command</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"self.faultList[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">uniqueFaultIdx</span><span class="si">}</span><span class="s2">].print(</span><span class="si">{</span><span class="n">satellite</span><span class="o">.</span><span class="n">_satellite_command</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">RwPowerFault</span><span class="p">(</span><span class="n">FaultObject</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">reducedLimit</span><span class="p">,</span> <span class="n">wheelIdx</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reducedLimit</span> <span class="o">=</span> <span class="n">reducedLimit</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wheelIdx</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="c1"># int needed around wheelIdx because np.random.choice doesn't return</span>
+            <span class="c1"># a type int, and the index will not register in execute without it.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wheelIdx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">wheelIdx</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wheelIdx</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">wheelIdx</span> <span class="o">==</span> <span class="s2">"all"</span><span class="p">:</span>
+            <span class="c1"># option to trigger the fault in all wheels reflecting a larger power issue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wheelIdx</span> <span class="o">=</span> <span class="n">wheelIdx</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Fault parameter 'wheelIdx' must either be a number corresponding to a reaction wheel or the string 'all'"</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">):</span>
+        <span class="n">dynModels</span> <span class="o">=</span> <span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheelIdx</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">dynModels</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="p">[</span><span class="s2">"RW1"</span><span class="p">]</span><span class="o">.</span><span class="n">P_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducedLimit</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheelIdx</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">dynModels</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="p">[</span><span class="s2">"RW2"</span><span class="p">]</span><span class="o">.</span><span class="n">P_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducedLimit</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheelIdx</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">dynModels</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="p">[</span><span class="s2">"RW3"</span><span class="p">]</span><span class="o">.</span><span class="n">P_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducedLimit</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheelIdx</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">dynModels</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="p">[</span><span class="s2">"RW4"</span><span class="p">]</span><span class="o">.</span><span class="n">P_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducedLimit</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheelIdx</span> <span class="o">==</span> <span class="s2">"all"</span><span class="p">:</span>
+            <span class="c1"># option to trigger the fault in all wheels (not supported for all fault types)</span>
+            <span class="n">dynModels</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="p">[</span><span class="s2">"RW1"</span><span class="p">]</span><span class="o">.</span><span class="n">P_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducedLimit</span>
+            <span class="n">dynModels</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="p">[</span><span class="s2">"RW2"</span><span class="p">]</span><span class="o">.</span><span class="n">P_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducedLimit</span>
+            <span class="n">dynModels</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="p">[</span><span class="s2">"RW3"</span><span class="p">]</span><span class="o">.</span><span class="n">P_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducedLimit</span>
+            <span class="n">dynModels</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="p">[</span><span class="s2">"RW4"</span><span class="p">]</span><span class="o">.</span><span class="n">P_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducedLimit</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheelIdx</span> <span class="o">==</span> <span class="s2">"all"</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"RW Power Fault: all RW's power limit reduced to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reducedLimit</span><span class="si">}</span><span class="s2"> Watts at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">macros</span><span class="o">.</span><span class="n">NANO2MIN</span><span class="si">}</span><span class="s2"> minutes!"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"RW Power Fault: RW</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">wheelIdx</span><span class="si">}</span><span class="s2">'s power limit reduced to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reducedLimit</span><span class="si">}</span><span class="s2"> Watts at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">macros</span><span class="o">.</span><span class="n">NANO2MIN</span><span class="si">}</span><span class="s2"> minutes!"</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">print_message</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="n">satellite</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Configure-the-Simulation-Models">
+<h2>Configure the Simulation Models<a class="headerlink" href="#Configure-the-Simulation-Models" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="../api_reference/sim/dyn.rst">Dynamics model</a>: <code class="docutils literal notranslate"><span class="pre">FullFeaturedDynModel</span></code> is used as the base class, and <code class="docutils literal notranslate"><span class="pre">setup_reaction_wheel_dyn_effector</span></code> is overridden to support four RWs. Two additional properties are added: the angle between the Sun and the solar panel, and the speed fraction of each RW.</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">CustomDynModel</span><span class="p">(</span><span class="n">dyn</span><span class="o">.</span><span class="n">FullFeaturedDynModel</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solar_angle_norm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">sun_vec_N</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">sun_index</span><span class="p">]</span>
+            <span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">PositionVector</span>
+        <span class="p">)</span>
+        <span class="n">sun_vec_N_hat</span> <span class="o">=</span> <span class="n">sun_vec_N</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">sun_vec_N</span><span class="p">)</span>
+        <span class="n">solar_panel_vec_B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BN</span><span class="p">)</span>
+        <span class="n">solar_panel_vec_N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">solar_panel_vec_B</span><span class="p">)</span>
+        <span class="n">error_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">solar_panel_vec_N</span><span class="p">,</span> <span class="n">sun_vec_N_hat</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">error_angle</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wheel_speeds_frac</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rw_speed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheel_speeds</span>
+        <span class="k">return</span> <span class="n">rw_speed</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxWheelSpeed</span> <span class="o">*</span> <span class="n">macros</span><span class="o">.</span><span class="n">rpm2radsec</span><span class="p">)</span>
+
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">wheelSpeeds</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1500</span><span class="p">,</span> <span class="mi">1500</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+        <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+        <span class="n">u_max</span><span class="o">=</span><span class="mf">0.200</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_reaction_wheel_dyn_effector</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">wheelSpeeds</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">maxWheelSpeed</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">u_max</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">997</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Set the RW state effector parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            wheelSpeeds: Initial speeds of each wheel [RPM]</span>
+<span class="sd">            maxWheelSpeed: Failure speed for wheels [RPM]</span>
+<span class="sd">            u_max: Torque producible by wheel [N*m]</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Ignored</span>
+<span class="sd">        """</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">balancedHR16Triad</span><span class="p">(</span>
+            <span class="n">useRandom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">randomBounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">400</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="n">wheelSpeeds</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+        <span class="p">):</span>
+<span class="w">            </span><span class="sd">"""Create a set of three HR16 reaction wheels.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                useRandom: Use random values for wheel speeds.</span>
+<span class="sd">                randomBounds: Bounds for random wheel speeds.</span>
+<span class="sd">                wheelSpeeds: Fixed wheel speeds.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                tuple:</span>
+<span class="sd">                    * **rwStateEffector**: Reaction wheel state effector instance.</span>
+<span class="sd">                    * **rwFactory**: Factory containing defined reaction wheels.</span>
+<span class="sd">                    * **wheelSpeeds**: Wheel speeds.</span>
+<span class="sd">            """</span>
+            <span class="n">rwFactory</span> <span class="o">=</span> <span class="n">simIncludeRW</span><span class="o">.</span><span class="n">rwFactory</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">useRandom</span><span class="p">:</span>
+                <span class="n">wheelSpeeds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">randomBounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">randomBounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+            <span class="n">rwFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="s2">"Honeywell_HR16"</span><span class="p">,</span>
+                <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="n">maxMomentum</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span>
+                <span class="n">Omega</span><span class="o">=</span><span class="n">wheelSpeeds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">rwFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="s2">"Honeywell_HR16"</span><span class="p">,</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="n">maxMomentum</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span>
+                <span class="n">Omega</span><span class="o">=</span><span class="n">wheelSpeeds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">rwFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="s2">"Honeywell_HR16"</span><span class="p">,</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="n">maxMomentum</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span>
+                <span class="n">Omega</span><span class="o">=</span><span class="n">wheelSpeeds</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">rwFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="s2">"Honeywell_HR16"</span><span class="p">,</span>
+                <span class="p">[</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">],</span>
+                <span class="n">maxMomentum</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span>
+                <span class="n">Omega</span><span class="o">=</span><span class="n">wheelSpeeds</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+            <span class="p">)</span>
+
+            <span class="n">rwStateEffector</span> <span class="o">=</span> <span class="n">reactionWheelStateEffector</span><span class="o">.</span><span class="n">ReactionWheelStateEffector</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">rwStateEffector</span><span class="p">,</span> <span class="n">rwFactory</span><span class="p">,</span> <span class="n">wheelSpeeds</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxWheelSpeed</span> <span class="o">=</span> <span class="n">maxWheelSpeed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwFactory</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">balancedHR16Triad</span><span class="p">(</span>
+            <span class="n">useRandom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">wheelSpeeds</span><span class="o">=</span><span class="n">wheelSpeeds</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">RW</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">RW</span><span class="o">.</span><span class="n">u_max</span> <span class="o">=</span> <span class="n">u_max</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"ReactionWheels"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">addToSpacecraft</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">ModelTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scObject</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Gs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)],</span>  <span class="c1"># RW1 and RW4 x-components</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)],</span>  <span class="c1"># RW2 and RW4 y-components</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)],</span>  <span class="c1"># RW3 and RW4 z-components</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<ul class="simple">
+<li><p><a class="reference external" href="../api_reference/sim/fsw.rst">Flight software model</a>: A custom flight software model is defined to support four RWs. It is based on the <code class="docutils literal notranslate"><span class="pre">SteeringImagerFSWModel</span></code>, with the main modification being the addition of the <code class="docutils literal notranslate"><span class="pre">rwNullSpace</span></code> module. Due to the redundancy of having four RWs, there are infinitely many solutions for mapping the required body control torque to individual RW torques. To address this, once the control torque is computed, the RW null space is used to decelerate the wheels
+without applying additional torque to the spacecraft.</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">CustomSteeringImagerFSWModel</span><span class="p">(</span><span class="n">fsw</span><span class="o">.</span><span class="n">SteeringImagerFSWModel</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Convenience type that combines the imaging FSW model with MRP steering for four reaction wheels."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_config_msgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_set_config_msgs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_rw_constellation_msg</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_rw_constellation_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Set the reaction wheel constellation message."""</span>
+        <span class="n">rwConstellationConfig</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">RWConstellationMsgPayload</span><span class="p">()</span>
+        <span class="n">rwConstellationConfig</span><span class="o">.</span><span class="n">numRW</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">getNumOfDevices</span><span class="p">()</span>
+        <span class="n">rwConfigElementList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+            <span class="n">rwConfigElementMsg</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">RWConfigElementMsgPayload</span><span class="p">()</span>
+            <span class="n">rwConfigElementMsg</span><span class="o">.</span><span class="n">gsHat_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">Gs</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">rwConfigElementMsg</span><span class="o">.</span><span class="n">Js</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="p">[</span><span class="sa">f</span><span class="s2">"RW</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span><span class="o">.</span><span class="n">Js</span>
+            <span class="n">rwConfigElementMsg</span><span class="o">.</span><span class="n">uMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rwFactory</span><span class="o">.</span><span class="n">rwList</span><span class="p">[</span><span class="sa">f</span><span class="s2">"RW</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span><span class="o">.</span><span class="n">u_max</span>
+            <span class="n">rwConfigElementList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rwConfigElementMsg</span><span class="p">)</span>
+        <span class="n">rwConstellationConfig</span><span class="o">.</span><span class="n">reactionWheels</span> <span class="o">=</span> <span class="n">rwConfigElementList</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwConstellationConfigInMsg</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">RWConstellationMsg</span><span class="p">()</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="n">rwConstellationConfig</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_gateway_msgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Create C-wrapped gateway messages."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attRefMsg</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">AttRefMsg_C</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attGuidMsg</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">AttGuidMsg_C</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zero_gateway_msgs</span><span class="p">()</span>
+
+        <span class="c1"># connect gateway FSW effector command msgs with the dynamics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="o">.</span><span class="n">rwMotorCmdInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwNullSpace</span><span class="o">.</span><span class="n">rwMotorTorqueOutMsg</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">thrusterSet</span><span class="o">.</span><span class="n">cmdsInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thrDump</span><span class="o">.</span><span class="n">thrusterOnTimeOutMsg</span>
+        <span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">MRPControlTask</span><span class="p">(</span><span class="n">fsw</span><span class="o">.</span><span class="n">SteeringImagerFSWModel</span><span class="o">.</span><span class="n">MRPControlTask</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_create_module_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_create_module_data</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwNullSpace</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">rwNullSpace</span> <span class="o">=</span> <span class="n">rwNullSpace</span><span class="o">.</span><span class="n">rwNullSpace</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwNullSpace</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"rwNullSpace"</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_setup_fsw_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_setup_fsw_objects</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_rw_null_space</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="nd">@default_args</span><span class="p">(</span><span class="n">OmegaGain</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">set_rw_null_space</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">OmegaGain</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">"""Define the null space to slow down the wheels."""</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwNullSpace</span><span class="o">.</span><span class="n">rwMotorTorqueInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rwMotorTorque</span><span class="o">.</span><span class="n">rwMotorTorqueOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwNullSpace</span><span class="o">.</span><span class="n">rwSpeedsInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rwStateEffector</span><span class="o">.</span><span class="n">rwSpeedOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwNullSpace</span><span class="o">.</span><span class="n">rwConfigInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">rwConstellationConfigInMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rwNullSpace</span><span class="o">.</span><span class="n">OmegaGain</span> <span class="o">=</span> <span class="n">OmegaGain</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rwNullSpace</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1193</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Configure-the-Satellite">
+<h2>Configure the Satellite<a class="headerlink" href="#Configure-the-Satellite" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api_reference/obs/index.html"><span class="doc">Observations</span></a>:</p>
+<ul>
+<li><p>SatProperties: Body angular velocity, instrument pointing direction, body position, body velocity, battery charge (properties in <a class="reference external" href="../api_reference/sim/fsw.rst">flight software model</a> or <a class="reference external" href="../api_reference/sim/dyn.rst">dynamics model</a>). Also, customized dynamics property in CustomDynModel above: Angle between the sun and the solar panel and four RW speed fraction.</p></li>
+<li><p>OpportunityProperties: Target’s priority, normalized location, and target angle (upcoming 32 targets).</p></li>
+<li><p>Time: Simulation time.</p></li>
+<li><p>Eclipse: Next eclipse start and end times.</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="../api_reference/act/index.html"><span class="doc">Actions</span></a>:</p>
+<ul>
+<li><p>Desat: Manage momentum for the RWs for 60 seconds.</p></li>
+<li><p>Charge: Enter a sun-pointing charging mode for 60 seconds.</p></li>
+<li><p>Image: Image target from upcoming 32 targets</p></li>
+</ul>
+</li>
+</ul>
+<p>The fault is introduced by overriding the <code class="docutils literal notranslate"><span class="pre">reset_post_sim_init</span></code> function. The probability of the fault occurring can be specified using the <code class="docutils literal notranslate"><span class="pre">fault_chance</span></code> argument, and the time of occurrence can be set using the <code class="docutils literal notranslate"><span class="pre">fault_time</span></code> argument.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">CustomSatComposed</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">ImagingSatellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"omega_BP_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"c_hat_P"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"v_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7616.5</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"battery_charge_fraction"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"solar_angle_norm"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"wheel_speeds_frac"</span><span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_LP_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"target_angle"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">"target"</span><span class="p">,</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">(),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Desat</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">60.0</span><span class="p">),</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">60.0</span><span class="p">),</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">n_ahead_image</span><span class="o">=</span><span class="mi">32</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Modified the constructor to include the fault chance and list</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">fault_chance</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">fault_time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fault_chance</span> <span class="o">=</span> <span class="n">fault_chance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fault_time</span> <span class="o">=</span> <span class="n">fault_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">faultList</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># List to store faults</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_post_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">fault_chance</span><span class="p">:</span>
+            <span class="n">powerFault</span> <span class="o">=</span> <span class="n">RwPowerFault</span><span class="p">(</span>
+                <span class="s2">"rwPowerLimited"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fault_time</span><span class="p">,</span> <span class="n">reducedLimit</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">wheelIdx</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">faultList</span> <span class="o">=</span> <span class="p">[</span><span class="n">powerFault</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">faultList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faultList</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faultList</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">faultList</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">addFaultToSimulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">CustomDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">CustomSteeringImagerFSWModel</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Configure-Satellite-Pareameters">
+<h1>Configure Satellite Pareameters<a class="headerlink" href="#Configure-Satellite-Pareameters" title="Link to this heading"></a></h1>
+<p>When instantiating a satellite, these parameters can be overriden with a constant or rerandomized every time the environment is reset using the <code class="docutils literal notranslate"><span class="pre">sat_args</span></code> dictionary.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataStorageCapacity</span> <span class="o">=</span> <span class="mi">20</span> <span class="o">*</span> <span class="mf">8e6</span> <span class="o">*</span> <span class="mi">100</span>
+<span class="n">batteryStorageCapacity</span> <span class="o">=</span> <span class="mf">80.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mi">2</span>
+<span class="n">sat_args</span> <span class="o">=</span> <span class="n">CustomSatComposed</span><span class="o">.</span><span class="n">default_sat_args</span><span class="p">(</span>
+    <span class="n">oe</span><span class="o">=</span><span class="n">random_orbit</span><span class="p">,</span>
+    <span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="n">batteryStorageCapacity</span><span class="p">,</span>
+    <span class="n">storedCharge_Init</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">batteryStorageCapacity</span><span class="p">,</span>
+    <span class="n">u_max</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>  <span class="c1"># More realistic values than 1.0</span>
+    <span class="n">K1</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># Updated value to have smooth and more predictable control</span>
+    <span class="n">nHat_B</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="n">imageTargetMinimumElevation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">45</span><span class="p">),</span>
+    <span class="n">rwBasePower</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="mi">1500</span><span class="p">,</span>
+    <span class="n">storageInit</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+        <span class="mi">0</span> <span class="o">*</span> <span class="n">dataStorageCapacity</span><span class="p">,</span>
+        <span class="mf">0.01</span> <span class="o">*</span> <span class="n">dataStorageCapacity</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">wheelSpeeds</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">900</span><span class="p">,</span> <span class="mi">900</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+    <span class="n">disturbance_vector</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">random_unit_vector</span><span class="p">(),</span>
+<span class="p">)</span>
+
+<span class="c1"># Make the satellites</span>
+<span class="n">satellites</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">satellites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">CustomSatComposed</span><span class="p">(</span>
+        <span class="s2">"EO"</span><span class="p">,</span>
+        <span class="n">sat_args</span><span class="p">,</span>
+        <span class="n">fault_chance</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">fault_time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># Fault occurs at 0.0 (nano seconds)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="Making-and-interacting-the-Environment">
+<h2>Making and interacting the Environment<a class="headerlink" href="#Making-and-interacting-the-Environment" title="Link to this heading"></a></h2>
+<p>For this example, the single-agent <a class="reference internal" href="../api_reference/index.html"><span class="doc">SatelliteTasking</span></a> environment is used. n addition to the configured satellite, the environment requires a <a class="reference internal" href="../api_reference/scene/index.html"><span class="doc">scenario</span></a>, which defines the context in which the satellite operates. In this case, the scenario uses <code class="docutils literal notranslate"><span class="pre">UniformTargets</span></code>, placing 1000 uniformly distributed targets across the Earth’s surface. The environment also takes a <a class="reference internal" href="../api_reference/data/index.html"><span class="doc">rewarder</span></a>, which defines how
+data collected from the scenario is rewarded. Here, <code class="docutils literal notranslate"><span class="pre">UniqueImageReward</span></code> is used, which assigns rewards based on the sum of the priorities of uniquely imaged targets in each episode.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">satellites</span><span class="p">,</span>
+    <span class="n">terminate_on_time_limit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">UniformTargets</span><span class="p">(</span><span class="n">n_targets</span><span class="o">=</span><span class="mi">1000</span><span class="p">),</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+    <span class="n">sim_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">max_step_duration</span><span class="o">=</span><span class="mf">300.0</span><span class="p">,</span>
+    <span class="n">time_limit</span><span class="o">=</span><span class="mi">95</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">"INFO"</span><span class="p">,</span>
+    <span class="n">failure_penalty</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="c1"># disable_env_checker=True, # For debugging</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>First, the environment is reset. A seed is provided to ensure reproducibility of the results; it can be removed to enable randomized testing.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">observation</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,642 </span>gym                            INFO       Resetting environment with seed=1
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,643 </span>scene.targets                  INFO       Generating 1000 targets
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,692 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Finding opportunity windows from 0.00 to 17400.00 seconds
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,912 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Environment reset
+</pre></div></div>
+</div>
+<p>The composed satellite action space returns a human-readable action map and each satellite has the same action space and similar observation space.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Actions:"</span><span class="p">,</span> <span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">action_description</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"States:"</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">observation_description</span><span class="p">,</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+
+<span class="c1"># Using the composed satellite features also provides a human-readable state:</span>
+<span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">:  </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Actions: [&#39;action_desat&#39;, &#39;action_charge&#39;, &#39;action_image_0&#39;, &#39;action_image_1&#39;, &#39;action_image_2&#39;, &#39;action_image_3&#39;, &#39;action_image_4&#39;, &#39;action_image_5&#39;, &#39;action_image_6&#39;, &#39;action_image_7&#39;, &#39;action_image_8&#39;, &#39;action_image_9&#39;, &#39;action_image_10&#39;, &#39;action_image_11&#39;, &#39;action_image_12&#39;, &#39;action_image_13&#39;, &#39;action_image_14&#39;, &#39;action_image_15&#39;, &#39;action_image_16&#39;, &#39;action_image_17&#39;, &#39;action_image_18&#39;, &#39;action_image_19&#39;, &#39;action_image_20&#39;, &#39;action_image_21&#39;, &#39;action_image_22&#39;, &#39;action_image_23&#39;, &#39;action_image_24&#39;, &#39;action_image_25&#39;, &#39;action_image_26&#39;, &#39;action_image_27&#39;, &#39;action_image_28&#39;, &#39;action_image_29&#39;, &#39;action_image_30&#39;, &#39;action_image_31&#39;]
+States: [np.str_(&#39;sat_props.omega_BP_P_normd[0]&#39;), np.str_(&#39;sat_props.omega_BP_P_normd[1]&#39;), np.str_(&#39;sat_props.omega_BP_P_normd[2]&#39;), np.str_(&#39;sat_props.c_hat_P[0]&#39;), np.str_(&#39;sat_props.c_hat_P[1]&#39;), np.str_(&#39;sat_props.c_hat_P[2]&#39;), np.str_(&#39;sat_props.r_BN_P_normd[0]&#39;), np.str_(&#39;sat_props.r_BN_P_normd[1]&#39;), np.str_(&#39;sat_props.r_BN_P_normd[2]&#39;), np.str_(&#39;sat_props.v_BN_P_normd[0]&#39;), np.str_(&#39;sat_props.v_BN_P_normd[1]&#39;), np.str_(&#39;sat_props.v_BN_P_normd[2]&#39;), np.str_(&#39;sat_props.battery_charge_fraction&#39;), np.str_(&#39;sat_props.solar_angle_norm&#39;), np.str_(&#39;sat_props.wheel_speeds_frac[0]&#39;), np.str_(&#39;sat_props.wheel_speeds_frac[1]&#39;), np.str_(&#39;sat_props.wheel_speeds_frac[2]&#39;), np.str_(&#39;target.target_0.priority&#39;), np.str_(&#39;target.target_0.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_0.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_0.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_0.target_angle_normd&#39;), np.str_(&#39;target.target_1.priority&#39;), np.str_(&#39;target.target_1.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_1.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_1.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_1.target_angle_normd&#39;), np.str_(&#39;target.target_2.priority&#39;), np.str_(&#39;target.target_2.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_2.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_2.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_2.target_angle_normd&#39;), np.str_(&#39;target.target_3.priority&#39;), np.str_(&#39;target.target_3.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_3.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_3.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_3.target_angle_normd&#39;), np.str_(&#39;target.target_4.priority&#39;), np.str_(&#39;target.target_4.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_4.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_4.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_4.target_angle_normd&#39;), np.str_(&#39;target.target_5.priority&#39;), np.str_(&#39;target.target_5.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_5.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_5.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_5.target_angle_normd&#39;), np.str_(&#39;target.target_6.priority&#39;), np.str_(&#39;target.target_6.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_6.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_6.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_6.target_angle_normd&#39;), np.str_(&#39;target.target_7.priority&#39;), np.str_(&#39;target.target_7.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_7.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_7.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_7.target_angle_normd&#39;), np.str_(&#39;target.target_8.priority&#39;), np.str_(&#39;target.target_8.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_8.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_8.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_8.target_angle_normd&#39;), np.str_(&#39;target.target_9.priority&#39;), np.str_(&#39;target.target_9.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_9.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_9.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_9.target_angle_normd&#39;), np.str_(&#39;target.target_10.priority&#39;), np.str_(&#39;target.target_10.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_10.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_10.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_10.target_angle_normd&#39;), np.str_(&#39;target.target_11.priority&#39;), np.str_(&#39;target.target_11.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_11.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_11.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_11.target_angle_normd&#39;), np.str_(&#39;target.target_12.priority&#39;), np.str_(&#39;target.target_12.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_12.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_12.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_12.target_angle_normd&#39;), np.str_(&#39;target.target_13.priority&#39;), np.str_(&#39;target.target_13.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_13.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_13.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_13.target_angle_normd&#39;), np.str_(&#39;target.target_14.priority&#39;), np.str_(&#39;target.target_14.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_14.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_14.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_14.target_angle_normd&#39;), np.str_(&#39;target.target_15.priority&#39;), np.str_(&#39;target.target_15.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_15.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_15.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_15.target_angle_normd&#39;), np.str_(&#39;target.target_16.priority&#39;), np.str_(&#39;target.target_16.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_16.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_16.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_16.target_angle_normd&#39;), np.str_(&#39;target.target_17.priority&#39;), np.str_(&#39;target.target_17.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_17.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_17.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_17.target_angle_normd&#39;), np.str_(&#39;target.target_18.priority&#39;), np.str_(&#39;target.target_18.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_18.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_18.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_18.target_angle_normd&#39;), np.str_(&#39;target.target_19.priority&#39;), np.str_(&#39;target.target_19.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_19.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_19.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_19.target_angle_normd&#39;), np.str_(&#39;target.target_20.priority&#39;), np.str_(&#39;target.target_20.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_20.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_20.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_20.target_angle_normd&#39;), np.str_(&#39;target.target_21.priority&#39;), np.str_(&#39;target.target_21.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_21.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_21.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_21.target_angle_normd&#39;), np.str_(&#39;target.target_22.priority&#39;), np.str_(&#39;target.target_22.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_22.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_22.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_22.target_angle_normd&#39;), np.str_(&#39;target.target_23.priority&#39;), np.str_(&#39;target.target_23.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_23.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_23.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_23.target_angle_normd&#39;), np.str_(&#39;target.target_24.priority&#39;), np.str_(&#39;target.target_24.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_24.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_24.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_24.target_angle_normd&#39;), np.str_(&#39;target.target_25.priority&#39;), np.str_(&#39;target.target_25.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_25.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_25.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_25.target_angle_normd&#39;), np.str_(&#39;target.target_26.priority&#39;), np.str_(&#39;target.target_26.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_26.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_26.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_26.target_angle_normd&#39;), np.str_(&#39;target.target_27.priority&#39;), np.str_(&#39;target.target_27.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_27.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_27.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_27.target_angle_normd&#39;), np.str_(&#39;target.target_28.priority&#39;), np.str_(&#39;target.target_28.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_28.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_28.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_28.target_angle_normd&#39;), np.str_(&#39;target.target_29.priority&#39;), np.str_(&#39;target.target_29.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_29.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_29.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_29.target_angle_normd&#39;), np.str_(&#39;target.target_30.priority&#39;), np.str_(&#39;target.target_30.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_30.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_30.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_30.target_angle_normd&#39;), np.str_(&#39;target.target_31.priority&#39;), np.str_(&#39;target.target_31.r_LP_P_normd[0]&#39;), np.str_(&#39;target.target_31.r_LP_P_normd[1]&#39;), np.str_(&#39;target.target_31.r_LP_P_normd[2]&#39;), np.str_(&#39;target.target_31.target_angle_normd&#39;), np.str_(&#39;time&#39;), np.str_(&#39;eclipse[0]&#39;), np.str_(&#39;eclipse[1]&#39;)]
+
+sat_props:  {&#39;omega_BP_P_normd&#39;: array([0.00137284, 0.00080893, 0.00185074]), &#39;c_hat_P&#39;: array([-0.94095395, -0.07120216, -0.3309621 ]), &#39;r_BN_P_normd&#39;: array([-0.76023893, -0.76226973,  0.03873832]), &#39;v_BN_P_normd&#39;: array([-0.74001565,  0.72585949, -0.23976204]), &#39;battery_charge_fraction&#39;: 0.48805353449026784, &#39;solar_angle_norm&#39;: np.float64(0.3675725758375922), &#39;wheel_speeds_frac&#39;: array([ 0.2222634 , -0.3546573 ,  0.45374092])}
+target:  {&#39;target_0&#39;: {&#39;priority&#39;: 0.6797657443023485, &#39;r_LP_P_normd&#39;: array([-0.72304393, -0.69048255,  0.02100749]), &#39;target_angle_normd&#39;: np.float64(0.6357597658378449)}, &#39;target_1&#39;: {&#39;priority&#39;: 0.1011278274566988, &#39;r_LP_P_normd&#39;: array([-0.8839314 , -0.46366914, -0.06063175]), &#39;target_angle_normd&#39;: np.float64(0.3764086411837673)}, &#39;target_2&#39;: {&#39;priority&#39;: 0.6931851990942818, &#39;r_LP_P_normd&#39;: array([-0.92043412, -0.36952122, -0.12749548]), &#39;target_angle_normd&#39;: np.float64(0.3723877146688926)}, &#39;target_3&#39;: {&#39;priority&#39;: 0.17225514293500632, &#39;r_LP_P_normd&#39;: array([-0.92565997, -0.37833103, -0.00438879]), &#39;target_angle_normd&#39;: np.float64(0.38981813759316086)}, &#39;target_4&#39;: {&#39;priority&#39;: 0.5711709172856598, &#39;r_LP_P_normd&#39;: array([-0.96343073, -0.26718398, -0.02034567]), &#39;target_angle_normd&#39;: np.float64(0.3943146022248573)}, &#39;target_5&#39;: {&#39;priority&#39;: 0.39915339691165386, &#39;r_LP_P_normd&#39;: array([-0.9832796 , -0.17545716, -0.04874432]), &#39;target_angle_normd&#39;: np.float64(0.39937897834300234)}, &#39;target_6&#39;: {&#39;priority&#39;: 0.3659991252731889, &#39;r_LP_P_normd&#39;: array([-0.99415125, -0.07715346, -0.07556872]), &#39;target_angle_normd&#39;: np.float64(0.4078843692651548)}, &#39;target_7&#39;: {&#39;priority&#39;: 0.8196046614443331, &#39;r_LP_P_normd&#39;: array([-0.99765329, -0.01207943, -0.06739442]), &#39;target_angle_normd&#39;: np.float64(0.4168294389284707)}, &#39;target_8&#39;: {&#39;priority&#39;: 0.31321450974410614, &#39;r_LP_P_normd&#39;: array([-0.97449116,  0.1725315 , -0.1435265 ]), &#39;target_angle_normd&#39;: np.float64(0.4358647819265422)}, &#39;target_9&#39;: {&#39;priority&#39;: 0.9484757208286156, &#39;r_LP_P_normd&#39;: array([-0.96031054,  0.17441228, -0.21767872]), &#39;target_angle_normd&#39;: np.float64(0.433242760838707)}, &#39;target_10&#39;: {&#39;priority&#39;: 0.48592850306846924, &#39;r_LP_P_normd&#39;: array([-0.96853779,  0.21402263, -0.12699944]), &#39;target_angle_normd&#39;: np.float64(0.4426489488945429)}, &#39;target_11&#39;: {&#39;priority&#39;: 0.6184129633885858, &#39;r_LP_P_normd&#39;: array([-0.96210743,  0.21701823, -0.16508293]), &#39;target_angle_normd&#39;: np.float64(0.4411215055325246)}, &#39;target_12&#39;: {&#39;priority&#39;: 0.17947175160982998, &#39;r_LP_P_normd&#39;: array([-0.94017117,  0.243405  , -0.23839502]), &#39;target_angle_normd&#39;: np.float64(0.4427323667761162)}, &#39;target_13&#39;: {&#39;priority&#39;: 0.7384995398085523, &#39;r_LP_P_normd&#39;: array([-0.80487741,  0.52282763, -0.28075545]), &#39;target_angle_normd&#39;: np.float64(0.48648454206124414)}, &#39;target_14&#39;: {&#39;priority&#39;: 0.27114812998614257, &#39;r_LP_P_normd&#39;: array([-0.76729423,  0.58576762, -0.26102845]), &#39;target_angle_normd&#39;: np.float64(0.4977256880591026)}, &#39;target_15&#39;: {&#39;priority&#39;: 0.602211552115518, &#39;r_LP_P_normd&#39;: array([-0.69808315,  0.6848033 , -0.20910371]), &#39;target_angle_normd&#39;: np.float64(0.5172281968118192)}, &#39;target_16&#39;: {&#39;priority&#39;: 0.379803286768697, &#39;r_LP_P_normd&#39;: array([-0.49501598,  0.82573585, -0.27040613]), &#39;target_angle_normd&#39;: np.float64(0.5507581988576493)}, &#39;target_17&#39;: {&#39;priority&#39;: 0.4436831213331952, &#39;r_LP_P_normd&#39;: array([-0.45042693,  0.86931897, -0.20347018]), &#39;target_angle_normd&#39;: np.float64(0.5625207407345922)}, &#39;target_18&#39;: {&#39;priority&#39;: 0.7048706468084478, &#39;r_LP_P_normd&#39;: array([-0.21420724,  0.9326702 , -0.29024395]), &#39;target_angle_normd&#39;: np.float64(0.59373704837557)}, &#39;target_19&#39;: {&#39;priority&#39;: 0.9285111717464954, &#39;r_LP_P_normd&#39;: array([-0.19966509,  0.94633197, -0.25414496]), &#39;target_angle_normd&#39;: np.float64(0.5980174335717613)}, &#39;target_20&#39;: {&#39;priority&#39;: 0.6283839193934228, &#39;r_LP_P_normd&#39;: array([ 0.04079828,  0.96062029, -0.27485298]), &#39;target_angle_normd&#39;: np.float64(0.6314125127394534)}, &#39;target_21&#39;: {&#39;priority&#39;: 0.1929743249397491, &#39;r_LP_P_normd&#39;: array([ 0.0355612 ,  0.97627369, -0.21360027]), &#39;target_angle_normd&#39;: np.float64(0.6341742328673365)}, &#39;target_22&#39;: {&#39;priority&#39;: 0.44341724161916973, &#39;r_LP_P_normd&#39;: array([ 0.11710105,  0.96569059, -0.23179522]), &#39;target_angle_normd&#39;: np.float64(0.6446733019141536)}, &#39;target_23&#39;: {&#39;priority&#39;: 0.11836853522372437, &#39;r_LP_P_normd&#39;: array([ 0.34219224,  0.92570533, -0.16116486]), &#39;target_angle_normd&#39;: np.float64(0.6810789969475336)}, &#39;target_24&#39;: {&#39;priority&#39;: 0.8270836989643272, &#39;r_LP_P_normd&#39;: array([ 0.37614852,  0.90638066, -0.19231846]), &#39;target_angle_normd&#39;: np.float64(0.6842502087329536)}, &#39;target_25&#39;: {&#39;priority&#39;: 0.5185496026201819, &#39;r_LP_P_normd&#39;: array([ 0.38424706,  0.90105932, -0.20111263]), &#39;target_angle_normd&#39;: np.float64(0.6849377870859835)}, &#39;target_26&#39;: {&#39;priority&#39;: 0.9675170836931263, &#39;r_LP_P_normd&#39;: array([ 0.38356319,  0.9111912 , -0.15036584]), &#39;target_angle_normd&#39;: np.float64(0.6878383017756565)}, &#39;target_27&#39;: {&#39;priority&#39;: 0.9065897890064923, &#39;r_LP_P_normd&#39;: array([ 0.55753272,  0.82426831, -0.09868644]), &#39;target_angle_normd&#39;: np.float64(0.7179839245481688)}, &#39;target_28&#39;: {&#39;priority&#39;: 0.9282669521531632, &#39;r_LP_P_normd&#39;: array([ 0.62887363,  0.76646723, -0.13056009]), &#39;target_angle_normd&#39;: np.float64(0.7278214487998897)}, &#39;target_29&#39;: {&#39;priority&#39;: 0.07379201140065461, &#39;r_LP_P_normd&#39;: array([ 0.83349796,  0.55251892, -0.00199665]), &#39;target_angle_normd&#39;: np.float64(0.7770010755992804)}, &#39;target_30&#39;: {&#39;priority&#39;: 0.010627938976362383, &#39;r_LP_P_normd&#39;: array([ 0.87933586,  0.46953401, -0.07941194]), &#39;target_angle_normd&#39;: np.float64(0.7821048162611637)}, &#39;target_31&#39;: {&#39;priority&#39;: 0.13642904696262903, &#39;r_LP_P_normd&#39;: array([ 0.90564527,  0.41905752, -0.06478763]), &#39;target_angle_normd&#39;: np.float64(0.7904117166194159)}}
+time:  0.0
+eclipse:  [np.float64(0.7684210526315789), np.float64(0.14210526315789473)]
+</pre></div></div>
+</div>
+<p>The simulation runs until either the battery is depleted, a RW exceeds its maximum speed (both considered failures), or a timeout occurs (which simply stops the simulation).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">total_reward</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">total_reward</span> <span class="o">+=</span> <span class="n">reward</span>
+    <span class="k">if</span> <span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Episode complete."</span><span class="p">)</span>
+        <span class="k">break</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Total reward:"</span><span class="p">,</span> <span class="n">total_reward</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,926 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,926 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 22 tasked
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,927 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-967) tasked for imaging
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,928 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-967) window enabled: 2032.2 to 2132.1
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,928 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 2132.1
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,929 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO: </span>RW Power Fault: RW1&#39;s power limit reduced to 1.0 Watts at 0.0 minutes!
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,930 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.50&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-967)
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,931 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;0.50&gt; </span>Total reward: {&#39;EO&#39;: 0.44341724161916973}
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,931 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;0.50&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,932 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Satellite EO requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,936 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.50&gt; </span>Step reward: 0.44341724161916973
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,937 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,937 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 6 tasked
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,938 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-378) tasked for imaging
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,938 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-378) window enabled: 564.0 to 650.0
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,939 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;0.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 650.0
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,941 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-378)
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,941 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span>Total reward: {&#39;EO&#39;: 0.3659991252731889}
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,942 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,942 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Satellite EO requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,946 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span>Step reward: 0.3659991252731889
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,947 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,947 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 14 tasked
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,948 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-594) tasked for imaging
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,949 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-594) window enabled: 1276.7 to 1383.1
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,949 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 1383.1
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,951 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.50&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-594)
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,951 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;1.50&gt; </span>Total reward: {&#39;EO&#39;: 0.602211552115518}
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,952 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;1.50&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,952 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Satellite EO requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,956 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1.50&gt; </span>Step reward: 0.602211552115518
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,957 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,957 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 30 tasked
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,958 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-846) tasked for imaging
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,959 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-846) window enabled: 2997.6 to 3109.8
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,959 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;1.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 3109.8
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,961 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-846)
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,961 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span>Total reward: {&#39;EO&#39;: 0.6230685362738178}
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,962 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,963 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Satellite EO requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,967 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span>Step reward: 0.6230685362738178
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,967 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,968 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 5 tasked
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,968 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-97) tasked for imaging
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,969 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-97) window enabled: 482.7 to 557.8
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,970 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 557.8
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,971 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.50&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-97)
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,971 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;2.50&gt; </span>Total reward: {&#39;EO&#39;: 0.39915339691165386}
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,972 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;2.50&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,972 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Satellite EO requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,977 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2.50&gt; </span>Step reward: 0.39915339691165386
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,977 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,978 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 1 tasked
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,978 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-634) tasked for imaging
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,979 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-634) window enabled: 214.4 to 324.0
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,979 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;2.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 324.0
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,981 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-634)
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,981 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span>Total reward: {&#39;EO&#39;: 0.1011278274566988}
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,982 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,982 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Satellite EO requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,986 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span>Step reward: 0.1011278274566988
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,987 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,987 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 19 tasked
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,988 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-208) tasked for imaging
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,989 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-208) window enabled: 2260.7 to 2359.2
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,989 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 2359.2
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,990 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.50&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-208)
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,991 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;3.50&gt; </span>Total reward: {&#39;EO&#39;: 0.8270836989643272}
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,991 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;3.50&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,992 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Satellite EO requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,996 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3.50&gt; </span>Step reward: 0.8270836989643272
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,997 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,997 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 7 tasked
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,998 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-977) tasked for imaging
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,998 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-977) window enabled: 818.3 to 900.6
+<span class="ansi-black-intense-fg">2026-09-02 14:52:15,999 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;3.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 900.6
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,000 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-977)
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,001 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span>Total reward: {&#39;EO&#39;: 0.48592850306846924}
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,001 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,002 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Satellite EO requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,006 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span>Step reward: 0.48592850306846924
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,007 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,007 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 0 tasked
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,008 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-873) tasked for imaging
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,009 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-873) window enabled: 0.0 to 81.3
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,009 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 81.3
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,010 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.50&gt; </span><span class="ansi-cyan-fg">EO: </span>imaged Target(tgt-873)
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,011 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;4.50&gt; </span>Total reward: {&#39;EO&#39;: 0.6797657443023485}
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,011 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;4.50&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,012 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Satellite EO requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,016 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4.50&gt; </span>Step reward: 0.6797657443023485
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,016 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4.50&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,017 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.50&gt; </span><span class="ansi-cyan-fg">EO: </span>target index 20 tasked
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,017 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-123) tasked for imaging
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,018 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.50&gt; </span><span class="ansi-cyan-fg">EO: </span>Target(tgt-123) window enabled: 2508.8 to 2611.9
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,018 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span>INFO       <span class="ansi-yellow-fg">&lt;4.50&gt; </span><span class="ansi-cyan-fg">EO: </span>setting timed terminal event at 2611.9
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,094 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;304.50&gt; </span>Max step duration reached
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,094 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;304.50&gt; </span>Total reward: {}
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,095 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;304.50&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,099 </span><span class="ansi-cyan-fg">sats.satellite.EO              </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;304.50&gt; </span><span class="ansi-cyan-fg">EO: </span><span class="ansi-yellow-intense-fg">failed rw_speeds_valid check</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,100 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;304.50&gt; </span>Step reward: 0.0
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,100 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;304.50&gt; </span>Episode terminated: True
+<span class="ansi-black-intense-fg">2026-09-02 14:52:16,100 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;304.50&gt; </span>Episode truncated: False
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Episode complete.
+Total reward: 4.527755625985192
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="multiagent_envs.html" class="btn btn-neutral float-left" title="Multi-Agent Environments" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="communication_action.html" class="btn btn-neutral float-right" title="Broadcast Communication" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

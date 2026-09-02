@@ -1,0 +1,259 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.data.resource_data &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.data.resource_data</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.data.resource_data</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The ResourceReward system tracks the change in an arbitrary resource level (e.g. fuel, power, time, etc.).</span>
+
+<span class="sd">It can be used to penalize the use of resources or reward a gain. The reward type is</span>
+<span class="sd">configured by setting the ``resource_fn`` argument to the desired function of the satellite.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.data.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Data</span><span class="p">,</span> <span class="n">DataStore</span><span class="p">,</span> <span class="n">GlobalReward</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.obs</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResourceRewardWeight</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ResourceData">
+<a class="viewcode-back" href="../../../api_reference/data/resource_data.html#bsk_rl.data.ResourceData">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ResourceData</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Data for tracking a change in some resource."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_accumulated</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Construct resource data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            resource_accumulated: Amount of resource change accumulated.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resource_accumulated</span> <span class="o">=</span> <span class="n">resource_accumulated</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"ResourceData"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"ResourceData"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Combine two units of ResourceData.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: Another unit of ResourceData to add with this one.</span>
+<span class="sd">        """</span>
+        <span class="n">total_resource</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resource_accumulated</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">resource_accumulated</span>
+        <span class="k">return</span> <span class="n">ResourceData</span><span class="p">(</span><span class="n">total_resource</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""String representation of the ResourceData."""</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"ResourceData(resource_accumulated=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">resource_accumulated</span><span class="si">}</span><span class="s2">)"</span></div>
+
+
+
+<div class="viewcode-block" id="ResourceDataStore">
+<a class="viewcode-back" href="../../../api_reference/data/resource_data.html#bsk_rl.data.ResourceDataStore">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ResourceDataStore</span><span class="p">(</span><span class="n">DataStore</span><span class="p">):</span>
+    <span class="n">data_type</span> <span class="o">=</span> <span class="n">ResourceData</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">resource_fn</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">sat</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""DataStore for tracking a change in some resource."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resource_fn</span> <span class="o">=</span> <span class="n">resource_fn</span>
+
+<div class="viewcode-block" id="ResourceDataStore.get_log_state">
+<a class="viewcode-back" href="../../../api_reference/data/resource_data.html#bsk_rl.data.ResourceDataStore.get_log_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_log_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Gets the current state of the resource."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">resource_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ResourceDataStore.compare_log_states">
+<a class="viewcode-back" href="../../../api_reference/data/resource_data.html#bsk_rl.data.ResourceDataStore.compare_log_states">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compare_log_states</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prev_state</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">new_state</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResourceData</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Compare the previous and new state of the resource."""</span>
+        <span class="n">delta_resource</span> <span class="o">=</span> <span class="n">new_state</span> <span class="o">-</span> <span class="n">prev_state</span>
+        <span class="k">return</span> <span class="n">ResourceData</span><span class="p">(</span><span class="n">delta_resource</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ResourceReward">
+<a class="viewcode-back" href="../../../api_reference/data/resource_data.html#bsk_rl.data.ResourceReward">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ResourceReward</span><span class="p">(</span><span class="n">GlobalReward</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Rewards for an arbitrary resource."""</span>
+
+    <span class="n">data_store_type</span> <span class="o">=</span> <span class="n">ResourceDataStore</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">reward_weight</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">resource_fn</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">sat</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Rewards for an arbitrary resource.</span>
+
+<span class="sd">        For example, to penalize the use of fuel, set</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            resource_fn = lambda sat: sat.dynamics.dv_available  # or equivalent</span>
+<span class="sd">            reward_weight = 0.1  # is positive, because the fuel changes are negative</span>
+
+
+<span class="sd">        To penalize the use of time, set</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            resource_fn = lambda sat: sat.simulator.sim_time</span>
+<span class="sd">            reward_weight = -1e-3  # is negative, because time increases over time</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            reward_weight: [reward/resource] Scaling factor to apply to changes in resource</span>
+<span class="sd">                level to yield reward. Can be a float or a function that randomizes the reward</span>
+<span class="sd">                weight per-episode.</span>
+<span class="sd">            resource_fn: Function to call to get the resource level for each satellite.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reward_weight</span> <span class="o">=</span> <span class="n">reward_weight</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resource_fn</span> <span class="o">=</span> <span class="n">resource_fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_store_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">resource_fn</span><span class="o">=</span><span class="n">resource_fn</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ResourceReward.reset_pre_sim_init">
+<a class="viewcode-back" href="../../../api_reference/data/resource_data.html#bsk_rl.data.ResourceReward.reset_pre_sim_init">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_pre_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Reset the reward weight before simulation initialization."""</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reward_weight</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reward_weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reward_weight</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reward_weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reward_weight</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_pre_sim_init</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ResourceReward.reset_post_sim_init">
+<a class="viewcode-back" href="../../../api_reference/data/resource_data.html#bsk_rl.data.ResourceReward.reset_post_sim_init">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_post_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Add the reward weight to each satellite's observation spec."""</span>
+        <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">observation_spec</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">ResourceRewardWeight</span><span class="p">):</span>
+                    <span class="n">obs</span><span class="o">.</span><span class="n">weight_vector</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reward_weight</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ResourceReward.calculate_reward">
+<a class="viewcode-back" href="../../../api_reference/data/resource_data.html#bsk_rl.data.ResourceReward.calculate_reward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_reward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">new_data_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ResourceData</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Calculate the reward based on the change in resource level times the weight."""</span>
+        <span class="n">penalty</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">sat_name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_weight</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">resource_accumulated</span>
+            <span class="k">for</span> <span class="n">sat_name</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">penalty</span></div>
+</div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">"Resource Data"</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"ResourceData"</span><span class="p">,</span> <span class="s2">"ResourceDataStore"</span><span class="p">,</span> <span class="s2">"ResourceReward"</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

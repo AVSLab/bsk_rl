@@ -1,0 +1,202 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.sim.dyn &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.sim.dyn</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.sim.dyn</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Basilisk dynamics models are given in ``bsk_rl.sim.dyn``.</span>
+
+<span class="sd">The dynamics model is the core of the satellite simulation, representing the physical</span>
+<span class="sd">properties of the satellite and its interactions with the environment. The dynamics model</span>
+<span class="sd">can be customized to represent different satellite configurations, actuator models, and</span>
+<span class="sd">instrument models.</span>
+
+<span class="sd">The dynamics model is selected using the ``dyn_type`` class property of the</span>
+<span class="sd">:class:`~bsk_rl.sats.Satellite`. Certain environment elements may require specific</span>
+<span class="sd">dynamics models, such as :class:`~bsk_rl.comm.LOSCommunication` requiring a dynamics</span>
+<span class="sd">model that inherits from :class:`~bsk_rl.sim.dyn.LOSCommDynModel` or :class:`~bsk_rl.sats.ImagingSatellite`</span>
+<span class="sd">requiring a dynamics model that inherits from :class:`~bsk_rl.sim.dyn.ImagingDynModel`.</span>
+
+<span class="sd">Setting Parameters</span>
+<span class="sd">------------------</span>
+
+<span class="sd">Customization of the dynamics model parameters is achieved through the ``sat_args``</span>
+<span class="sd">dictionary passed to the :class:`~bsk_rl.sats.Satellite` constructor. This dictionary is</span>
+<span class="sd">passed on to the dynamics model setup functions, which are called each time the simulator</span>
+<span class="sd">is reset.</span>
+
+<span class="sd">Properties</span>
+<span class="sd">----------</span>
+
+<span class="sd">The dynamics model provides a number of properties for easy access to the satellite state.</span>
+<span class="sd">These can be accessed directly from the dynamics model instance, or in the observation</span>
+<span class="sd">via the :class:`~bsk_rl.obs.SatProperties` observation.</span>
+
+
+<span class="sd">Aliveness Checking</span>
+<span class="sd">------------------</span>
+
+<span class="sd">Certain functions in the dynamics model are decorated with the :func:`~bsk_rl.utils.functional.aliveness_checker`</span>
+<span class="sd">decorator. These functions are called at each step to check if the satellite is still</span>
+<span class="sd">operational, returning true if the satellite is still alive.</span>
+
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">deprecated</span><span class="w"> </span><span class="kn">import</span> <span class="n">deprecated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim.dyn.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AtmosphericDragDynModel</span><span class="p">,</span>
+    <span class="n">BasicDynamicsModel</span><span class="p">,</span>
+    <span class="n">DisturbanceTorqueDynModel</span><span class="p">,</span>
+    <span class="n">DynamicsModel</span><span class="p">,</span>
+    <span class="n">DynamicsModelABC</span><span class="p">,</span>
+    <span class="n">EclipseDynModel</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim.dyn.ground_imaging</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ContinuousImagingDynModel</span><span class="p">,</span>
+    <span class="n">GroundStationDynModel</span><span class="p">,</span>
+    <span class="n">ImagingDynModel</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim.dyn.relative_motion</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ConjunctionDynModel</span><span class="p">,</span>
+    <span class="n">LOSCommDynModel</span><span class="p">,</span>
+    <span class="n">MaxRangeDynModel</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim.dyn.rso_inspection</span><span class="w"> </span><span class="kn">import</span> <span class="n">RSODynModel</span><span class="p">,</span> <span class="n">RSOInspectorDynModel</span>
+
+
+<div class="viewcode-block" id="FullFeaturedDynModel">
+<a class="viewcode-back" href="../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.FullFeaturedDynModel">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FullFeaturedDynModel</span><span class="p">(</span><span class="n">GroundStationDynModel</span><span class="p">,</span> <span class="n">LOSCommDynModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Convenience class for a satellite with ground station and line-of-sight comms."""</span>
+
+    <span class="nd">@deprecated</span><span class="p">(</span>
+        <span class="s2">"Create your own subclass of BasicDynamicsModel instead of using FullFeaturedDynModel."</span>
+    <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Convenience class for an imaging satellite with ground stations and line-of-sight communication."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">"Dynamics Sims"</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"DynamicsModelABC"</span><span class="p">,</span>
+    <span class="s2">"DynamicsModel"</span><span class="p">,</span>
+    <span class="s2">"BasicDynamicsModel"</span><span class="p">,</span>
+    <span class="s2">"EclipseDynModel"</span><span class="p">,</span>
+    <span class="s2">"DisturbanceTorqueDynModel"</span><span class="p">,</span>
+    <span class="s2">"AtmosphericDragDynModel"</span><span class="p">,</span>
+    <span class="s2">"LOSCommDynModel"</span><span class="p">,</span>
+    <span class="s2">"ImagingDynModel"</span><span class="p">,</span>
+    <span class="s2">"ContinuousImagingDynModel"</span><span class="p">,</span>
+    <span class="s2">"GroundStationDynModel"</span><span class="p">,</span>
+    <span class="s2">"ConjunctionDynModel"</span><span class="p">,</span>
+    <span class="s2">"MaxRangeDynModel"</span><span class="p">,</span>
+    <span class="s2">"FullFeaturedDynModel"</span><span class="p">,</span>
+    <span class="s2">"RSODynModel"</span><span class="p">,</span>
+    <span class="s2">"RSOInspectorDynModel"</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

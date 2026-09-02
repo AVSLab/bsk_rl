@@ -1,0 +1,688 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.obs.observations &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.obs.observations</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.obs.observations</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Classes for composing observations for a satellite."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">spaces</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.functional</span><span class="w"> </span><span class="kn">import</span> <span class="n">Resetable</span><span class="p">,</span> <span class="n">vectorize_nested_dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.orbital</span><span class="w"> </span><span class="kn">import</span> <span class="n">rv2HN</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sats</span><span class="w"> </span><span class="kn">import</span> <span class="n">Satellite</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulator</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">nested_obs_to_space</span><span class="p">(</span><span class="n">obs_dict</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Convert a nested observation dictionary to a gym space.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obs_dict: Observation dictionary</span>
+<span class="sd">        dtype: Data type for observation np vectors.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        gym.Space: Observation space</span>
+
+<span class="sd">    :meta private:</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">nested_obs_to_space</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">obs_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs_dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="mf">1e16</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1e16</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">obs_dict</span><span class="p">),),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs_dict</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="mf">1e16</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1e16</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs_dict</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="mf">1e16</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1e16</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">obs_dict</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot convert </span><span class="si">{</span><span class="n">obs_dict</span><span class="si">}</span><span class="s2"> to gym space."</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ObservationBuilder">
+<a class="viewcode-back" href="../../../api_reference/obs/observations.html#bsk_rl.obs.ObservationBuilder">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ObservationBuilder</span><span class="p">(</span><span class="n">Resetable</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">satellite</span><span class="p">:</span> <span class="s2">"Satellite"</span><span class="p">,</span>
+        <span class="n">obs_type</span><span class="p">:</span> <span class="nb">type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Satellite subclass for composing observations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellite: Satellite to observe</span>
+<span class="sd">            obs_type: Datatype of satellite's returned observation. Can be ``np.ndarray``</span>
+<span class="sd">                (default), ``dict``, or ``list``.</span>
+<span class="sd">            dtype: Data type for observation np vectors.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_type</span> <span class="o">=</span> <span class="n">obs_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_dict_cache</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_cache_time</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span> <span class="o">=</span> <span class="n">satellite</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="p">:</span> <span class="s2">"Simulator"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_spec</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_spec</span><span class="p">)</span>
+        <span class="n">name_counts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_spec</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">obs</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">name_counts</span><span class="p">:</span>
+                <span class="n">name_counts</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"_</span><span class="si">{</span><span class="n">name_counts</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">name_counts</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">link_satellite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ObservationBuilder.reset_overwrite_previous">
+<a class="viewcode-back" href="../../../api_reference/obs/observations.html#bsk_rl.obs.ObservationBuilder.reset_overwrite_previous">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_overwrite_previous</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Perform any once-per-episode setup."""</span>
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_spec</span><span class="p">:</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">reset_overwrite_previous</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ObservationBuilder.reset_pre_sim_init">
+<a class="viewcode-back" href="../../../api_reference/obs/observations.html#bsk_rl.obs.ObservationBuilder.reset_pre_sim_init">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_pre_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Perform any once-per-episode setup."""</span>
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_spec</span><span class="p">:</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">reset_pre_sim_init</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ObservationBuilder.reset_during_sim_init">
+<a class="viewcode-back" href="../../../api_reference/obs/observations.html#bsk_rl.obs.ObservationBuilder.reset_during_sim_init">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_during_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Perform any once-per-episode setup."""</span>
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_spec</span><span class="p">:</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">reset_during_sim_init</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ObservationBuilder.reset_post_sim_init">
+<a class="viewcode-back" href="../../../api_reference/obs/observations.html#bsk_rl.obs.ObservationBuilder.reset_post_sim_init">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_post_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Perform any once-per-episode setup."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">simulator</span>  <span class="c1"># already a proxy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_dict_cache</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_spec</span><span class="p">:</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">link_simulator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="p">)</span>  <span class="c1"># already a proxy</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ObservationBuilder.obs_dict">
+<a class="viewcode-back" href="../../../api_reference/obs/observations.html#bsk_rl.obs.ObservationBuilder.obs_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">obs_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Human-readable observation format.</span>
+
+<span class="sd">        Cached so only computed once per timestep.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_dict_cache</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_cache_time</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_dict_cache</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">obs_getter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_spec</span><span class="p">:</span>
+                <span class="n">obs</span> <span class="o">=</span> <span class="n">obs_getter</span><span class="o">.</span><span class="n">get_obs</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                    <span class="n">obs</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">obs_dict_cache</span><span class="p">[</span><span class="n">obs_getter</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_cache_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_dict_cache</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ObservationBuilder.obs_ndarray">
+<a class="viewcode-back" href="../../../api_reference/obs/observations.html#bsk_rl.obs.ObservationBuilder.obs_ndarray">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">obs_ndarray</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Numpy vector observation format."""</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">vectorize_nested_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_dict</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">obs</span></div>
+
+
+<div class="viewcode-block" id="ObservationBuilder.obs_array_keys">
+<a class="viewcode-back" href="../../../api_reference/obs/observations.html#bsk_rl.obs.ObservationBuilder.obs_array_keys">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">obs_array_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Get the keys of the obs_ndarray."""</span>
+        <span class="n">keys</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">vectorize_nested_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_dict</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">keys</span></div>
+
+
+<div class="viewcode-block" id="ObservationBuilder.obs_list">
+<a class="viewcode-back" href="../../../api_reference/obs/observations.html#bsk_rl.obs.ObservationBuilder.obs_list">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">obs_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""List observation format."""</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_ndarray</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="ObservationBuilder.get_obs">
+<a class="viewcode-back" href="../../../api_reference/obs/observations.html#bsk_rl.obs.ObservationBuilder.get_obs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Update the observation."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_type</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_dict</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_type</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_ndarray</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_type</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_list</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid observation type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_type</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Space</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Space of the observation."""</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_obs</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">nested_obs_to_space</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation_description</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Human-interpretable description of observation space."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_array_keys</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="Observation">
+<a class="viewcode-back" href="../../../api_reference/obs/index.html#bsk_rl.obs.Observation">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Observation</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">Resetable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Base observations class."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"obs"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Construct an observation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Name of the observation.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">:</span> <span class="s2">"Satellite"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="p">:</span> <span class="s2">"Simulator"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">link_satellite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="s2">"Satellite"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Link the observation to a satellite.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellite: Satellite to link to</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span> <span class="o">=</span> <span class="n">satellite</span>  <span class="c1"># already a proxy</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">link_simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulator</span><span class="p">:</span> <span class="s2">"Simulator"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Link the observation to a simulator.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            simulator: Simulator to link to</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">simulator</span>  <span class="c1"># already a proxy</span>
+
+<div class="viewcode-block" id="Observation.get_obs">
+<a class="viewcode-back" href="../../../api_reference/obs/index.html#bsk_rl.obs.Observation.get_obs">[docs]</a>
+    <span class="nd">@abstractmethod</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the observation."""</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SatProperties">
+<a class="viewcode-back" href="../../../api_reference/obs/index.html#bsk_rl.obs.SatProperties">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SatProperties</span><span class="p">(</span><span class="n">Observation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Add arbitrary `dynamics` and `fsw` ."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obs_properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"sat_props"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Include properties from ``fsw`` and ``dynamics`` in the observation.</span>
+
+<span class="sd">        For each desired property, a dictionary specifying the property name and settings</span>
+<span class="sd">        is passed. For example, to query the position and velocity of the satellite, the</span>
+<span class="sd">        following would be used:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            SatProperties(</span>
+<span class="sd">                dict(prop="r_BN_P", module="dynamics", norm=REQ_EARTH * 1e3),</span>
+<span class="sd">                dict(prop="v_BN_P", module="dynamics", norm=7616.5, name="velocity"),</span>
+<span class="sd">            ),</span>
+
+
+<span class="sd">        Args:</span>
+<span class="sd">            obs_properties: Property that can be found in fsw or dynamics that</span>
+<span class="sd">                are to be appended to the the observation. Properties are optionally</span>
+<span class="sd">                normalized by some factor. Each observation is a dictionary with the keys:</span>
+
+<span class="sd">                * ``prop``: Name of property in ``fsw`` and ``dynamics`` to query</span>
+<span class="sd">                * ``module`` `optional`: Module (dynamics or fsw) that holds the property. Can be inferred if ``None``.</span>
+<span class="sd">                * ``norm`` `optional`: Value to normalize property by. Defaults to 1.0.</span>
+<span class="sd">                * ``name`` `optional`: Name of the observation element. Defaults to the value of ``prop``.</span>
+<span class="sd">                * ``fn`` `optional`: Alternatively, call a function that takes the satellite as an argument.</span>
+<span class="sd">            name: Name of the observation.</span>
+
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">obs_property</span> <span class="ow">in</span> <span class="n">obs_properties</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">obs_property</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"prop"</span><span class="p">,</span> <span class="s2">"module"</span><span class="p">,</span> <span class="s2">"norm"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="s2">"fn"</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid property key: </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">"norm"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">obs_property</span><span class="p">:</span>
+                <span class="n">obs_property</span><span class="p">[</span><span class="s2">"norm"</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="k">if</span> <span class="s2">"name"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">obs_property</span><span class="p">:</span>
+                <span class="n">obs_property</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs_property</span><span class="p">[</span><span class="s2">"prop"</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">obs_property</span><span class="p">[</span><span class="s2">"norm"</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+                    <span class="n">obs_property</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">+=</span> <span class="s2">"_normd"</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_properties</span> <span class="o">=</span> <span class="n">obs_properties</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_post_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""If necessary, automatically determine property location.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">obs_property</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_properties</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">"module"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">obs_property</span> <span class="ow">and</span> <span class="s2">"fn"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">obs_property</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"dynamics"</span><span class="p">,</span> <span class="s2">"fsw"</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">,</span> <span class="n">module</span><span class="p">),</span> <span class="n">obs_property</span><span class="p">[</span><span class="s2">"prop"</span><span class="p">]):</span>
+                        <span class="n">obs_property</span><span class="p">[</span><span class="s2">"module"</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Property </span><span class="si">{</span><span class="n">obs_property</span><span class="p">[</span><span class="s1">'prop'</span><span class="p">]</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the observation.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        """</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">obs_property</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_properties</span><span class="p">:</span>
+            <span class="n">prop</span> <span class="o">=</span> <span class="n">obs_property</span><span class="p">[</span><span class="s2">"prop"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">"fn"</span> <span class="ow">in</span> <span class="n">obs_property</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">obs_property</span><span class="p">[</span><span class="s2">"fn"</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">module</span> <span class="o">=</span> <span class="n">obs_property</span><span class="p">[</span><span class="s2">"module"</span><span class="p">]</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">,</span> <span class="n">module</span><span class="p">),</span> <span class="n">prop</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">norm</span> <span class="o">=</span> <span class="n">obs_property</span><span class="p">[</span><span class="s2">"norm"</span><span class="p">]</span>
+            <span class="n">obs</span><span class="p">[</span><span class="n">obs_property</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]]</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">norm</span>
+        <span class="k">return</span> <span class="n">obs</span></div>
+
+
+
+<div class="viewcode-block" id="Time">
+<a class="viewcode-back" href="../../../api_reference/obs/index.html#bsk_rl.obs.Time">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Time</span><span class="p">(</span><span class="n">Observation</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">observe_time_remaining</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Include the simulation time in the observation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            norm: Time to normalize by. If ``None``, the time is normalized by the simulation time limit.</span>
+<span class="sd">            name: Name of the observation.</span>
+<span class="sd">            observe_time_remaining: If ``True``, return the time remaining until the simulation time limit.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_time_remaining</span> <span class="o">=</span> <span class="n">observe_time_remaining</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_post_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Autodetect normalization time.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">time_limit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return time normalized by normalization_time.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_time_remaining</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_norm</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_norm</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_target_angle</span><span class="p">(</span><span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">):</span>
+    <span class="n">vector_target_spacecraft_P</span> <span class="o">=</span> <span class="n">opp</span><span class="p">[</span><span class="s2">"r_LP_P"</span><span class="p">]</span> <span class="o">-</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_P</span>
+    <span class="n">vector_target_spacecraft_P_hat</span> <span class="o">=</span> <span class="n">vector_target_spacecraft_P</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+        <span class="n">vector_target_spacecraft_P</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vector_target_spacecraft_P_hat</span><span class="p">,</span> <span class="n">sat</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">c_hat_P</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_target_angle_rate</span><span class="p">(</span><span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">):</span>
+    <span class="n">r_BN_P</span> <span class="o">=</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_P</span>
+    <span class="n">v_BN_P</span> <span class="o">=</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">v_BN_P</span>
+    <span class="n">r_LP_P</span> <span class="o">=</span> <span class="n">opp</span><span class="p">[</span><span class="s2">"object"</span><span class="p">]</span><span class="o">.</span><span class="n">r_LP_P</span>
+    <span class="n">omega_BP_P</span> <span class="o">=</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">omega_BP_P</span>
+    <span class="n">omega_CP_ref</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">omega_BP_P</span>
+        <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">v_BN_P</span><span class="p">,</span> <span class="n">r_LP_P</span> <span class="o">-</span> <span class="n">r_BN_P</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">r_LP_P</span> <span class="o">-</span> <span class="n">r_BN_P</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">omega_CP_ref</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_r_LB_H</span><span class="p">(</span><span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">):</span>
+    <span class="n">r_LP_P</span> <span class="o">=</span> <span class="n">opp</span><span class="p">[</span><span class="s2">"object"</span><span class="p">]</span><span class="o">.</span><span class="n">r_LP_P</span>
+    <span class="n">r_BN_N</span> <span class="o">=</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_N</span>
+    <span class="n">r_TB_N</span> <span class="o">=</span> <span class="n">sat</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">PN</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">r_LP_P</span> <span class="o">-</span> <span class="n">r_BN_N</span>
+    <span class="n">HN</span> <span class="o">=</span> <span class="n">rv2HN</span><span class="p">(</span><span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_N</span><span class="p">,</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">v_BN_N</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">HN</span> <span class="o">@</span> <span class="n">r_TB_N</span>
+
+
+<div class="viewcode-block" id="OpportunityProperties">
+<a class="viewcode-back" href="../../../api_reference/obs/index.html#bsk_rl.obs.OpportunityProperties">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OpportunityProperties</span><span class="p">(</span><span class="n">Observation</span><span class="p">):</span>
+    <span class="n">_fn_map</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="s2">"Satellite"</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"priority"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">:</span> <span class="n">opp</span><span class="p">[</span><span class="s2">"object"</span><span class="p">]</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+        <span class="s2">"r_LP_P"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">:</span> <span class="n">opp</span><span class="p">[</span><span class="s2">"r_LP_P"</span><span class="p">],</span>
+        <span class="s2">"r_LB_H"</span><span class="p">:</span> <span class="n">_r_LB_H</span><span class="p">,</span>
+        <span class="s2">"opportunity_open"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">:</span> <span class="n">opp</span><span class="p">[</span><span class="s2">"window"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">sat</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">,</span>
+        <span class="s2">"opportunity_mid"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">opp</span><span class="p">[</span><span class="s2">"window"</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="o">-</span> <span class="n">sat</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">,</span>
+        <span class="s2">"opportunity_close"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">sat</span><span class="p">,</span> <span class="n">opp</span><span class="p">:</span> <span class="n">opp</span><span class="p">[</span><span class="s2">"window"</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">sat</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">,</span>
+        <span class="s2">"target_angle"</span><span class="p">:</span> <span class="n">_target_angle</span><span class="p">,</span>
+        <span class="s2">"target_angle_rate"</span><span class="p">:</span> <span class="n">_target_angle_rate</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">target_properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">n_ahead_observe</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="s2">"target"</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Include information about upcoming access opportunities in the observation..</span>
+
+<span class="sd">        For each desired property, a dictionary specifying the property name and settings</span>
+<span class="sd">        is passed. These can include preset properties or arbitrary functions of the satellite</span>
+<span class="sd">        and opportunity.</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            OpportunityProperties(</span>
+<span class="sd">                dict(prop="r_LP_P", norm=REQ_EARTH * 1e3),</span>
+<span class="sd">                dict(prop="double_priority", fn=lambda sat, opp: opp["target"].priority * 2.0),</span>
+<span class="sd">                n_ahead_observe=16,</span>
+<span class="sd">            )</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target_properties: Property that is a function of the opportunity to be appended</span>
+<span class="sd">                to the the observation. Properties are optionally normalized by some factor.</span>
+<span class="sd">                Each observation is a dictionary with the keys:</span>
+
+<span class="sd">                * ``name`` `optional`: Name of the observation element.</span>
+<span class="sd">                * ``fn`` `optional`: Function to calculate property, in the form ``fn(satellite, opportunity)``.</span>
+<span class="sd">                  If not provided, the key ``prop`` will be used to look up a preset function:</span>
+
+<span class="sd">                    * ``priority``: Priority of the target.</span>
+<span class="sd">                    * ``r_LP_P``: Location of the target in the planet-fixed frame.</span>
+<span class="sd">                    * ``r_LB_H``: Location of the target in the Hill frame.</span>
+<span class="sd">                    * ``opportunity_open``: Time until the opportunity opens.</span>
+<span class="sd">                    * ``opportunity_mid``: Time until the opportunity midpoint.</span>
+<span class="sd">                    * ``opportunity_close``: Time until the opportunity closes.</span>
+<span class="sd">                    * ``target_angle``: Angle between the target and the satellite instrument direction.</span>
+<span class="sd">                    * ``target_angle_rate``: Rate difference between the target pointing frame and the body frame.</span>
+
+<span class="sd">                * ``norm`` `optional`: Value to normalize property by. Defaults to 1.0.</span>
+
+<span class="sd">            n_ahead_observe: Number of upcoming targets to consider.</span>
+<span class="sd">            type: The type of opportunity to consider. Can be ``target``, ``ground_station``,</span>
+<span class="sd">                or any other type of opportunity that has been added via</span>
+<span class="sd">                :obj:`~bsk_rl.sats.AccessSatellite.add_location_for_access_checking`.</span>
+<span class="sd">            name: Name of the observation.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">type</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="nb">type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_properties</span> <span class="o">=</span> <span class="n">target_properties</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">prop_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_properties</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">prop_spec</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"fn"</span><span class="p">,</span> <span class="s2">"norm"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="s2">"prop"</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid property key: </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s2">"norm"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prop_spec</span><span class="p">:</span>
+                <span class="n">prop_spec</span><span class="p">[</span><span class="s2">"norm"</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+            <span class="c1"># Determine observation function</span>
+            <span class="k">if</span> <span class="s2">"fn"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prop_spec</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">prop_spec</span><span class="p">[</span><span class="s2">"fn"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fn_map</span><span class="p">[</span><span class="n">prop_spec</span><span class="p">[</span><span class="s2">"prop"</span><span class="p">]]</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Property prop=</span><span class="si">{</span><span class="n">prop_spec</span><span class="p">[</span><span class="s1">'prop'</span><span class="p">]</span><span class="si">}</span><span class="s2"> is not predefined and no `fn` was provided."</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">"prop"</span> <span class="ow">in</span> <span class="n">prop_spec</span> <span class="ow">and</span> <span class="n">prop_spec</span><span class="p">[</span><span class="s2">"prop"</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fn_map</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Ignoring default function for `</span><span class="si">{</span><span class="n">prop_spec</span><span class="p">[</span><span class="s1">'prop'</span><span class="p">]</span><span class="si">}</span><span class="s2">` when `fn` is provided."</span>
+                    <span class="p">)</span>
+
+            <span class="c1"># Determine best name</span>
+            <span class="k">if</span> <span class="s2">"name"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prop_spec</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">"prop"</span> <span class="ow">in</span> <span class="n">prop_spec</span><span class="p">:</span>
+                    <span class="n">prop_spec</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">prop_spec</span><span class="p">[</span><span class="s2">"prop"</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">prop_spec</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"prop_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span>
+
+                <span class="k">if</span> <span class="n">prop_spec</span><span class="p">[</span><span class="s2">"norm"</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+                    <span class="n">prop_spec</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">+=</span> <span class="s2">"_normd"</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_ahead_observe</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_ahead_observe</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Iterate over property specs.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sats</span><span class="w"> </span><span class="kn">import</span> <span class="n">AccessSatellite</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">,</span> <span class="n">AccessSatellite</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"OpportunityProperties observation requires an AccessSatellite"</span>
+            <span class="p">)</span>
+
+        <span class="n">obs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">find_next_opportunities</span><span class="p">(</span>
+                <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_ahead_observe</span><span class="p">,</span>
+                <span class="n">types</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                <span class="n">pad</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">props</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">prop_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_properties</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">prop_spec</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="n">prop_spec</span><span class="p">[</span><span class="s2">"norm"</span><span class="p">]</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">prop_spec</span><span class="p">[</span><span class="s2">"fn"</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">,</span> <span class="n">opportunity</span><span class="p">)</span>
+                <span class="n">props</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">norm</span>
+            <span class="n">obs</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="n">props</span>
+        <span class="k">return</span> <span class="n">obs</span></div>
+
+
+
+<div class="viewcode-block" id="Eclipse">
+<a class="viewcode-back" href="../../../api_reference/obs/index.html#bsk_rl.obs.Eclipse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Eclipse</span><span class="p">(</span><span class="n">Observation</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"eclipse"</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Include a tuple of the next eclipse start and end times in the observation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            norm: Value to normalize by.</span>
+<span class="sd">            name: Name of the observation.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return tuple of normalized next eclipse start and end.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        """</span>
+        <span class="n">eclipse_start</span><span class="p">,</span> <span class="n">eclipse_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">next_eclipse</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">eclipse_start</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">eclipse_end</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">,</span>
+        <span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="ResourceRewardWeight">
+<a class="viewcode-back" href="../../../api_reference/obs/index.html#bsk_rl.obs.ResourceRewardWeight">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ResourceRewardWeight</span><span class="p">(</span><span class="n">Observation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Observation for the weight of any :class:`ResourceReward`."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"resource_reward_weight"</span><span class="p">,</span> <span class="n">norm</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Include the resource reward weight in the observation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Name of the observation.</span>
+<span class="sd">            norm: Value to normalize the resource reward weight by. If a vector, it should</span>
+<span class="sd">                be the same length as the number of resource rewards in the environment.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span>
+
+<div class="viewcode-block" id="ResourceRewardWeight.reset_overwrite_previous">
+<a class="viewcode-back" href="../../../api_reference/obs/index.html#bsk_rl.obs.ResourceRewardWeight.reset_overwrite_previous">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_overwrite_previous</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">"""Prepare weights to be saved by rewarders."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight_vector</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="ResourceRewardWeight.get_obs">
+<a class="viewcode-back" href="../../../api_reference/obs/index.html#bsk_rl.obs.ResourceRewardWeight.get_obs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the resource reward weight."""</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_vector</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span></div>
+</div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">"Backend"</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"ObservationBuilder"</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

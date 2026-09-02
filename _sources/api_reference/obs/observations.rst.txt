@@ -1,0 +1,13 @@
+.. _bsk_rl.obs.observations:
+.. currentmodule:: bsk_rl.obs.observations
+
+Backend
+=======
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.obs.observations
+   :members:
+   :show-inheritance:
+

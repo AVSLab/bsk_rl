@@ -1,0 +1,218 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RSO Inspection &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="FSW Sims" href="../fsw/index.html" />
+    <link rel="prev" title="Relative Motion" href="relative_motion.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scene/index.html">Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../comm/index.html">Communication</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Simulation (BSK)</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../index.html#bsk_rl.sim.Simulator"><code class="docutils literal notranslate"><span class="pre">Simulator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../world.html">World Sims</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Dynamics Sims</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#setting-parameters">Setting Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#properties">Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#aliveness-checking">Aliveness Checking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.DynamicsModelABC"><code class="docutils literal notranslate"><span class="pre">DynamicsModelABC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.DynamicsModel"><code class="docutils literal notranslate"><span class="pre">DynamicsModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.BasicDynamicsModel"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.EclipseDynModel"><code class="docutils literal notranslate"><span class="pre">EclipseDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.DisturbanceTorqueDynModel"><code class="docutils literal notranslate"><span class="pre">DisturbanceTorqueDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.AtmosphericDragDynModel"><code class="docutils literal notranslate"><span class="pre">AtmosphericDragDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.LOSCommDynModel"><code class="docutils literal notranslate"><span class="pre">LOSCommDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.ImagingDynModel"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.ContinuousImagingDynModel"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.GroundStationDynModel"><code class="docutils literal notranslate"><span class="pre">GroundStationDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.ConjunctionDynModel"><code class="docutils literal notranslate"><span class="pre">ConjunctionDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.MaxRangeDynModel"><code class="docutils literal notranslate"><span class="pre">MaxRangeDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.FullFeaturedDynModel"><code class="docutils literal notranslate"><span class="pre">FullFeaturedDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.RSODynModel"><code class="docutils literal notranslate"><span class="pre">RSODynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.RSOInspectorDynModel"><code class="docutils literal notranslate"><span class="pre">RSOInspectorDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="base.html">Dynamics Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ground_imaging.html">Ground Imaging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="relative_motion.html">Relative Motion</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">RSO Inspection</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.rso_inspection.RSODynModel"><code class="docutils literal notranslate"><span class="pre">RSODynModel</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.rso_inspection.RSODynModel.add_rso_point"><code class="docutils literal notranslate"><span class="pre">RSODynModel.add_rso_point()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.rso_inspection.RSOInspectorDynModel"><code class="docutils literal notranslate"><span class="pre">RSOInspectorDynModel</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.rso_inspection.RSOInspectorDynModel.add_rso_point"><code class="docutils literal notranslate"><span class="pre">RSOInspectorDynModel.add_rso_point()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../fsw/index.html">FSW Sims</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Simulation (BSK)</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Dynamics Sims</a></li>
+      <li class="breadcrumb-item active">RSO Inspection</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/api_reference/sim/dyn/rso_inspection.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rso-inspection">
+<span id="bsk-rl-sim-dyn-rso-inspection"></span><h1>RSO Inspection<a class="headerlink" href="#rso-inspection" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.sim.dyn.rso_inspection">RSO inspection dynamics models.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.rso_inspection.RSODynModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RSODynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/rso_inspection.html#RSODynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.rso_inspection.RSODynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#bsk_rl.sim.dyn.base.EclipseDynModel" title="bsk_rl.sim.dyn.base.EclipseDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">EclipseDynModel</span></code></a>, <a class="reference internal" href="base.html#bsk_rl.sim.dyn.base.DynamicsModel" title="bsk_rl.sim.dyn.base.DynamicsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">DynamicsModel</span></code></a></p>
+<p>Allow for body fixed inspection points to be added to a spacecraft.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.rso_inspection.RSODynModel.add_rso_point">
+<span class="sig-name descname"><span class="pre">add_rso_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_LB_B</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aHat_B</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_solar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_illumination_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/rso_inspection.html#RSODynModel.add_rso_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.rso_inspection.RSODynModel.add_rso_point" title="Link to this definition"></a></dt>
+<dd><p>Add a point on the RSO for observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r_LB_B</strong> (<em>ndarray</em>) – [m] Position of point in RSO body frame.</p></li>
+<li><p><strong>aHat_B</strong> (<em>ndarray</em>) – [-] Point normal in RSO body frame.</p></li>
+<li><p><strong>theta</strong> (<em>float</em>) – [rad] Max angle from instrument to normal.</p></li>
+<li><p><strong>range</strong> (<em>float</em>) – [m] Max range to point for imaging.</p></li>
+<li><p><strong>theta_solar</strong> (<em>float</em>) – [rad] Maximum solar incidence angle for illumination.</p></li>
+<li><p><strong>min_illumination_factor</strong> (<em>float</em>) – [-] Minimum illumination factor for imaging.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.rso_inspection.RSOInspectorDynModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RSOInspectorDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/rso_inspection.html#RSOInspectorDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.rso_inspection.RSOInspectorDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="ground_imaging.html#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel" title="bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContinuousImagingDynModel</span></code></a></p>
+<p>Allow a satellite to observe points in a RSO.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.rso_inspection.RSOInspectorDynModel.add_rso_point">
+<span class="sig-name descname"><span class="pre">add_rso_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rso_point_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/rso_inspection.html#RSOInspectorDynModel.add_rso_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.rso_inspection.RSOInspectorDynModel.add_rso_point" title="Link to this definition"></a></dt>
+<dd><p>Add a point on the RSO for observation.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="relative_motion.html" class="btn btn-neutral float-left" title="Relative Motion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../fsw/index.html" class="btn btn-neutral float-right" title="FSW Sims" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,464 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ground Imaging &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Relative Motion" href="relative_motion.html" />
+    <link rel="prev" title="Dynamics Base" href="base.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scene/index.html">Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../comm/index.html">Communication</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Simulation (BSK)</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../index.html#bsk_rl.sim.Simulator"><code class="docutils literal notranslate"><span class="pre">Simulator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../world.html">World Sims</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Dynamics Sims</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#setting-parameters">Setting Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#properties">Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#aliveness-checking">Aliveness Checking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.DynamicsModelABC"><code class="docutils literal notranslate"><span class="pre">DynamicsModelABC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.DynamicsModel"><code class="docutils literal notranslate"><span class="pre">DynamicsModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.BasicDynamicsModel"><code class="docutils literal notranslate"><span class="pre">BasicDynamicsModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.EclipseDynModel"><code class="docutils literal notranslate"><span class="pre">EclipseDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.DisturbanceTorqueDynModel"><code class="docutils literal notranslate"><span class="pre">DisturbanceTorqueDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.AtmosphericDragDynModel"><code class="docutils literal notranslate"><span class="pre">AtmosphericDragDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.LOSCommDynModel"><code class="docutils literal notranslate"><span class="pre">LOSCommDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.ImagingDynModel"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.ContinuousImagingDynModel"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.GroundStationDynModel"><code class="docutils literal notranslate"><span class="pre">GroundStationDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.ConjunctionDynModel"><code class="docutils literal notranslate"><span class="pre">ConjunctionDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.MaxRangeDynModel"><code class="docutils literal notranslate"><span class="pre">MaxRangeDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.FullFeaturedDynModel"><code class="docutils literal notranslate"><span class="pre">FullFeaturedDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.RSODynModel"><code class="docutils literal notranslate"><span class="pre">RSODynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.dyn.RSOInspectorDynModel"><code class="docutils literal notranslate"><span class="pre">RSOInspectorDynModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="base.html">Dynamics Base</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Ground Imaging</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.storage_level"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.storage_level</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.storage_level_fraction"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.storage_level_fraction</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_instrument"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_instrument()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_transmitter"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_transmitter()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_instrument_power_sink"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_instrument_power_sink()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_transmitter_power_sink"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_transmitter_power_sink()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_storage_unit"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_storage_unit()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.data_storage_valid"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.data_storage_valid()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_imaging_target"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.setup_imaging_target()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.reset_for_action"><code class="docutils literal notranslate"><span class="pre">ImagingDynModel.reset_for_action()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingDynModel</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_instrument"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingDynModel.setup_instrument()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_storage_unit"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingDynModel.setup_storage_unit()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_imaging_target"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingDynModel.setup_imaging_target()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.GroundStationDynModel"><code class="docutils literal notranslate"><span class="pre">GroundStationDynModel</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.GroundStationDynModel.setup_ground_station_locations"><code class="docutils literal notranslate"><span class="pre">GroundStationDynModel.setup_ground_station_locations()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="relative_motion.html">Relative Motion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rso_inspection.html">RSO Inspection</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../fsw/index.html">FSW Sims</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Simulation (BSK)</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Dynamics Sims</a></li>
+      <li class="breadcrumb-item active">Ground Imaging</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/api_reference/sim/dyn/ground_imaging.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ground-imaging">
+<span id="bsk-rl-sim-dyn-ground-imaging"></span><h1>Ground Imaging<a class="headerlink" href="#ground-imaging" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.sim.dyn.ground_imaging">Models for ground imaging dynamics.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ImagingDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ImagingDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#bsk_rl.sim.dyn.base.BasicDynamicsModel" title="bsk_rl.sim.dyn.base.BasicDynamicsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicDynamicsModel</span></code></a></p>
+<p>Equips the satellite with an instrument, storage unit, and transmitter.</p>
+<p>This dynamics model is used with <a class="reference internal" href="../../sats/index.html#bsk_rl.sats.ImagingSatellite" title="bsk_rl.sats.ImagingSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingSatellite</span></code></a>. It
+provides the satellite with the ability to take images of a point target. To
+enable downlink, use <a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.GroundStationDynModel" title="bsk_rl.sim.dyn.ground_imaging.GroundStationDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroundStationDynModel</span></code></a> and <a class="reference internal" href="../world.html#bsk_rl.sim.world.GroundStationWorldModel" title="bsk_rl.sim.world.GroundStationWorldModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroundStationWorldModel</span></code></a>.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.storage_level">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">storage_level</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.storage_level" title="Link to this definition"></a></dt>
+<dd><p>Storage level [bits].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.storage_level_fraction">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">storage_level_fraction</span></span><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.storage_level_fraction" title="Link to this definition"></a></dt>
+<dd><p>Storage level as a fraction of capacity.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_instrument">
+<span class="sig-name descname"><span class="pre">setup_instrument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instrumentBaudRate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">895</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ImagingDynModel.setup_instrument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_instrument" title="Link to this definition"></a></dt>
+<dd><p>Set up the instrument data collection model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instrumentBaudRate</strong> (<em>float</em>) – [bits] Data generated by an image.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_transmitter">
+<span class="sig-name descname"><span class="pre">setup_transmitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transmitterBaudRate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrumentBaudRate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmitterNumBuffers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmitterPacketSize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">798</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ImagingDynModel.setup_transmitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_transmitter" title="Link to this definition"></a></dt>
+<dd><p>Set up the transmitter model for downlinking data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transmitterBaudRate</strong> (<em>float</em>) – [baud] Rate of data downlink. Should be negative.</p></li>
+<li><p><strong>instrumentBaudRate</strong> (<em>float</em>) – [bits] Image size, used to set packet size if <code class="docutils literal notranslate"><span class="pre">transmitterPacketSize</span></code> is not specified.</p></li>
+<li><p><strong>transmitterNumBuffers</strong> (<em>int</em>) – Number of transmitter buffers</p></li>
+<li><p><strong>transmitterPacketSize</strong> (<em>float</em><em> | </em><em>None</em>) – [bits] Minimum data amount to be downlinked for a partition. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, set as <code class="docutils literal notranslate"><span class="pre">instrumentBaudRate</span></code>.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_instrument_power_sink">
+<span class="sig-name descname"><span class="pre">setup_instrument_power_sink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instrumentPowerDraw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">897</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ImagingDynModel.setup_instrument_power_sink"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_instrument_power_sink" title="Link to this definition"></a></dt>
+<dd><p>Set the instrument power sink parameters.</p>
+<p>The instrument draws power when in an imaging task, representing the power cost
+of operating the instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instrumentPowerDraw</strong> (<em>float</em>) – [W] Power draw when instrument is enabled.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_transmitter_power_sink">
+<span class="sig-name descname"><span class="pre">setup_transmitter_power_sink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transmitterPowerDraw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">896</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ImagingDynModel.setup_transmitter_power_sink"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_transmitter_power_sink" title="Link to this definition"></a></dt>
+<dd><p>Set the transmitter power sink parameters.</p>
+<p>The transmitter draws power when in a downlink task, representing the power cost
+of downlinking data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transmitterPowerDraw</strong> (<em>float</em>) – [W] Power draw when transmitter is enabled.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_storage_unit">
+<span class="sig-name descname"><span class="pre">setup_storage_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataStorageCapacity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageUnitValidCheck</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageInit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmitterNumBuffers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bufferNames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">699</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ImagingDynModel.setup_storage_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_storage_unit" title="Link to this definition"></a></dt>
+<dd><p>Configure the storage unit and its buffers.</p>
+<p>Separate buffers can be used to track imaging of different targets. Often, the
+buffer names will be set up by satellite based on the scenario configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataStorageCapacity</strong> (<em>int</em>) – [bits] Maximum data that can be stored.</p></li>
+<li><p><strong>transmitterNumBuffers</strong> (<em>int</em><em> | </em><em>None</em>) – Number of unit buffers. Not necessary if <code class="docutils literal notranslate"><span class="pre">bufferNames</span></code>
+are given.</p></li>
+<li><p><strong>bufferNames</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – List of buffer names to use. Named by number if <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>storageUnitValidCheck</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, enforce that the storage level is below
+the storage capacity when checking aliveness.</p></li>
+<li><p><strong>storageInit</strong> (<em>int</em>) – [bits] Initial storage level.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.data_storage_valid">
+<span class="sig-name descname"><span class="pre">data_storage_valid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ImagingDynModel.data_storage_valid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.data_storage_valid" title="Link to this definition"></a></dt>
+<dd><p><em>Decorated with</em> <a class="reference internal" href="../../utils/functional.html#bsk_rl.utils.functional.aliveness_checker" title="bsk_rl.utils.functional.aliveness_checker"><code class="xref py py-class docutils literal notranslate"><span class="pre">aliveness_checker</span></code></a></p>
+<p>Check that the buffer has not run out of space.</p>
+<blockquote>
+<div><p>Only is checked if <code class="docutils literal notranslate"><span class="pre">storageUnitValidCheck</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>; otherwise, a full storage
+unit will prevent additional data from being stored but will not cause the satellite
+to be considered dead.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_imaging_target">
+<span class="sig-name descname"><span class="pre">setup_imaging_target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">groundLocationPlanetRadius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imageTargetMinimumElevation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imageTargetMaximumRange</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ImagingDynModel.setup_imaging_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_imaging_target" title="Link to this definition"></a></dt>
+<dd><p>Add a generic imaging target to dynamics.</p>
+<p>The target must be updated with a particular location when used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>groundLocationPlanetRadius</strong> (<em>float</em>) – [m] Radius of ground locations from center of planet.</p></li>
+<li><p><strong>imageTargetMinimumElevation</strong> (<em>float</em>) – [rad] Minimum elevation angle from target to
+satellite when imaging.</p></li>
+<li><p><strong>imageTargetMaximumRange</strong> (<em>float</em>) – [m] Maximum range from target to satellite when
+imaging. -1 to disable.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.reset_for_action">
+<span class="sig-name descname"><span class="pre">reset_for_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ImagingDynModel.reset_for_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.reset_for_action" title="Link to this definition"></a></dt>
+<dd><p>Shut off power sinks unless the transmitter or instrument is being used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ContinuousImagingDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ContinuousImagingDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel" title="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a></p>
+<p>Equips the satellite for continuous nadir imaging.</p>
+<p>Equips satellite with an instrument, storage unit, and transmitter
+for continuous nadir imaging. A single data buffer is used for storage, and data
+is accumulated continuously while imaging. The imaging target is fixed at the
+center of the Earth for nadir imaging.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_instrument">
+<span class="sig-name descname"><span class="pre">setup_instrument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instrumentBaudRate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">895</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ContinuousImagingDynModel.setup_instrument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_instrument" title="Link to this definition"></a></dt>
+<dd><p>Set up the continuous instrument model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instrumentBaudRate</strong> (<em>float</em>) – [baud] Data generation rate step when continuously imaging.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_storage_unit">
+<span class="sig-name descname"><span class="pre">setup_storage_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataStorageCapacity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageUnitValidCheck</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageInit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">699</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ContinuousImagingDynModel.setup_storage_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_storage_unit" title="Link to this definition"></a></dt>
+<dd><p>Configure the storage unit and its buffers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataStorageCapacity</strong> (<em>int</em>) – [bits] Maximum data that can be stored.</p></li>
+<li><p><strong>storageUnitValidCheck</strong> (<em>bool</em>) – If True, check that the storage level is below the
+storage capacity.</p></li>
+<li><p><strong>storageInit</strong> (<em>int</em>) – [bits] Initial storage level.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_imaging_target">
+<span class="sig-name descname"><span class="pre">setup_imaging_target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imageTargetMaximumRange</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#ContinuousImagingDynModel.setup_imaging_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_imaging_target" title="Link to this definition"></a></dt>
+<dd><p>Add a imaging target at the center of the Earth.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imageTargetMaximumRange</strong> (<em>float</em>) – [m] Maximum range from target to satellite when
+imaging. -1 to disable.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.GroundStationDynModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">GroundStationDynModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#GroundStationDynModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.GroundStationDynModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel" title="bsk_rl.sim.dyn.ground_imaging.ImagingDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingDynModel</span></code></a></p>
+<p>Model that connects satellite to world ground stations.</p>
+<p>This model enables the use of ground stations defined in <a class="reference internal" href="../world.html#bsk_rl.sim.world.GroundStationWorldModel" title="bsk_rl.sim.world.GroundStationWorldModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroundStationWorldModel</span></code></a>
+for data downlink.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.dyn.ground_imaging.GroundStationDynModel.setup_ground_station_locations">
+<span class="sig-name descname"><span class="pre">setup_ground_station_locations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/dyn/ground_imaging.html#GroundStationDynModel.setup_ground_station_locations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.dyn.ground_imaging.GroundStationDynModel.setup_ground_station_locations" title="Link to this definition"></a></dt>
+<dd><p>Connect the transmitter to ground stations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="base.html" class="btn btn-neutral float-left" title="Dynamics Base" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="relative_motion.html" class="btn btn-neutral float-right" title="Relative Motion" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,978 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Training with Curriculum Learning &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Shielded training with action masking and action replacement" href="training_with_shield.html" />
+    <link rel="prev" title="Asynchronous Multiagent Decision Making" href="async_multiagent_training.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#environments">Environments</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#training">Training</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="rllib_training.html">Training with RLlib PPO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="time_discounted_gae.html">Time-Discounted GAE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="async_multiagent_training.html">Asynchronous Multiagent Decision Making</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Training with Curriculum Learning</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Load-Modules">Load Modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Creating-an-Environment-with-CL">Creating an Environment with CL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Registering-the-Custom-Environment">Registering the Custom Environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Creating-the-Scanning-Satellite">Creating the Scanning Satellite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Defining-Curriculum-Function">Defining Curriculum Function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Custom-Callback-to-Enable-CL">Custom Callback to Enable CL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Defining-Satellite,-Environment,-and-CL-Options">Defining Satellite, Environment, and CL Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Choosing-Curriculum-for-Training">Choosing Curriculum for Training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Assigning-Curriculum-Functions">Assigning Curriculum Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Training">Training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Checking-Difficulty-Over-Training">Checking Difficulty Over Training</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="training_with_shield.html">Shielded training with action masking and action replacement</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#benchmarks">Benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Training with Curriculum Learning</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/curriculum_learning.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Training-with-Curriculum-Learning">
+<h1>Training with Curriculum Learning<a class="headerlink" href="#Training-with-Curriculum-Learning" title="Link to this heading"></a></h1>
+<p>This example script demonstrates how to use curriculum learning (CL) and domain randomization (DR) during training with RLlib.</p>
+<p>Three different examples of curriculums are shown, as well as the DR case. This example is part of the paper <a class="reference external" href="https://hanspeterschaub.info/Papers/QuevedoMantovani2025.pdf">Improving Robustenss of Autonomous Spacecraft Scheduling Using Curriculum Learning</a> and of a future publication. In CL, a sequence of different tasks with increasing difficulty are presented to the agent during training. Each task is seen as a different Markov decision process (MDP). For this problem, each task is
+characterized by a satellite with different battery capacity and exposed to different external torques, which would lead to different transition probabilities in the MDP.</p>
+<section id="Load-Modules">
+<h2>Load Modules<a class="headerlink" href="#Load-Modules" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">TypeVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">bskLogging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">tune</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.algorithms.ppo</span><span class="w"> </span><span class="kn">import</span> <span class="n">PPOConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.tune.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_env</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">act</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">sats</span><span class="p">,</span> <span class="n">scene</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.gym</span><span class="w"> </span><span class="kn">import</span> <span class="n">SatelliteTasking</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sats</span><span class="w"> </span><span class="kn">import</span> <span class="n">Satellite</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.rllib.callbacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">EpisodeDataWrapper</span><span class="p">,</span> <span class="n">WrappedEpisodeDataCallbacks</span>
+
+<span class="n">bskLogging</span><span class="o">.</span><span class="n">setDefaultLogLevel</span><span class="p">(</span><span class="n">bskLogging</span><span class="o">.</span><span class="n">BSK_WARNING</span><span class="p">)</span>
+
+<span class="n">SatObs</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"SatObs"</span><span class="p">)</span>
+<span class="n">MultiSatObs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SatObs</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="n">SatArgRandomizer</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="n">Satellite</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Satellite</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Creating-an-Environment-with-CL">
+<h2>Creating an Environment with CL<a class="headerlink" href="#Creating-an-Environment-with-CL" title="Link to this heading"></a></h2>
+<p>In this example, the <a class="reference internal" href="../api_reference/index.html"><span class="doc">SatelliteTasking</span></a> environment is modified to allow changes to the spacecraft parameters during training. Two extra method <code class="docutils literal notranslate"><span class="pre">set_task</span></code> and <code class="docutils literal notranslate"><span class="pre">get_task</span></code> are introduced to set the difficulty and get the difficulty of the environment. Additionally, <code class="docutils literal notranslate"><span class="pre">update_sat_params</span></code> is used to change specific spacecraft arguments as a function of the difficulty and is called before each environment reset.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SatelliteTaskingCL</span><span class="p">(</span><span class="n">SatelliteTasking</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">satellite</span><span class="p">:</span> <span class="n">Satellite</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">CL_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">satellite</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">difficulty</span> <span class="o">=</span> <span class="n">difficulty</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CL_params</span> <span class="o">=</span> <span class="n">CL_params</span> <span class="ow">or</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MultiSatObs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_sat_params</span><span class="p">()</span>  <span class="c1"># Update satellite parameters based on difficulty before resetting</span>
+        <span class="n">obs</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obs</span><span class="p">,</span> <span class="n">info</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_sat_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Update the satellite parameters based on the difficulty level.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">CL_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CL_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">satellite</span><span class="o">.</span><span class="n">sat_args_generator</span><span class="p">:</span>
+                        <span class="n">satellite</span><span class="o">.</span><span class="n">sat_args_generator</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">difficulty</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_task</span><span class="p">())))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Set the difficulty level.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">difficulty</span> <span class="o">=</span> <span class="n">task</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_task</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Get the current difficulty level.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">difficulty</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Registering-the-Custom-Environment">
+<h2>Registering the Custom Environment<a class="headerlink" href="#Registering-the-Custom-Environment" title="Link to this heading"></a></h2>
+<p>Since a custom environment was created, it needs to be registered and made it compatible with RLlib.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_satellite_tasking_env_creator</span><span class="p">(</span><span class="n">env_config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Create an environment compatible with RLlib.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="s2">"episode_data_callback"</span> <span class="ow">in</span> <span class="n">env_config</span><span class="p">:</span>
+        <span class="n">episode_data_callback</span> <span class="o">=</span> <span class="n">env_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"episode_data_callback"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">episode_data_callback</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">"satellite_data_callback"</span> <span class="ow">in</span> <span class="n">env_config</span><span class="p">:</span>
+        <span class="n">satellite_data_callback</span> <span class="o">=</span> <span class="n">env_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"satellite_data_callback"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">satellite_data_callback</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">EpisodeDataWrapper</span><span class="p">(</span>
+        <span class="n">SatelliteTaskingCL</span><span class="p">(</span><span class="o">**</span><span class="n">env_config</span><span class="p">),</span>
+        <span class="n">episode_data_callback</span><span class="o">=</span><span class="n">episode_data_callback</span><span class="p">,</span>
+        <span class="n">satellite_data_callback</span><span class="o">=</span><span class="n">satellite_data_callback</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="n">register_env</span><span class="p">(</span><span class="s2">"SatelliteTaskingCL-RLlib"</span><span class="p">,</span> <span class="n">_satellite_tasking_env_creator</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Creating-the-Scanning-Satellite">
+<h2>Creating the Scanning Satellite<a class="headerlink" href="#Creating-the-Scanning-Satellite" title="Link to this heading"></a></h2>
+<p>A nadir scanning satellite is created with personalized observation space properties, including the angle between the solar panels and the sun, and the angle between the instrument and nadir. A custom dynamics module is introduced to combine <a class="reference internal" href="../api_reference/sim/dyn/index.html"><span class="doc">“GroundStationDynModel”</span></a> and <a class="reference internal" href="../api_reference/sim/dyn/index.html"><span class="doc">“ContinuousImagingDynModel”</span></a>, allowing for scanning and downlink actions.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">attitude_error_norm</span><span class="p">(</span><span class="n">sat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="c1"># Calculate this using the instrument unit vector and the spacecraft position</span>
+    <span class="c1"># in inertial frame (-r_BN_P) and c_hat_P (get angle between then)</span>
+    <span class="n">r_BN_P_unit</span> <span class="o">=</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_P</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_P</span><span class="p">)</span>
+    <span class="n">c_hat_P</span> <span class="o">=</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">c_hat_P</span>  <span class="c1"># Instrument unit vector in ECEF frame</span>
+    <span class="n">error_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="o">-</span><span class="n">r_BN_P_unit</span><span class="p">,</span> <span class="n">c_hat_P</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">error_angle</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">solar_angle_norm</span><span class="p">(</span><span class="n">sat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span>
+            <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">sun_index</span>
+        <span class="p">]</span>
+        <span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">PositionVector</span>
+    <span class="p">)</span>
+    <span class="n">a_hat</span> <span class="o">=</span> <span class="n">a</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># Solar panel opposite to instrument</span>
+    <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">BN</span><span class="p">)</span>
+    <span class="n">b_N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="n">error_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">b_N</span><span class="p">,</span> <span class="n">a_hat</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">error_angle</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomDynamics</span><span class="p">(</span><span class="n">dyn</span><span class="o">.</span><span class="n">GroundStationDynModel</span><span class="p">,</span> <span class="n">dyn</span><span class="o">.</span><span class="n">ContinuousImagingDynModel</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ScanningSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">AccessSatellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"wheel_speeds_fraction"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"battery_charge_fraction"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"storage_level_fraction"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"attitude_error_norm"</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="n">attitude_error_norm</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"solar_angle_norm"</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="n">solar_angle_norm</span><span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="mf">5700.0</span><span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_open"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">5700.0</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_close"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">5700.0</span><span class="p">),</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">"ground_station"</span><span class="p">,</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Scan</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">180.0</span><span class="p">),</span>  <span class="c1"># Scan for 3 minute</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">180.0</span><span class="p">),</span>  <span class="c1"># Charge for 3 minutes</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Downlink</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">180.0</span><span class="p">),</span>  <span class="c1"># Downlink for 3 minute</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Desat</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">180.0</span><span class="p">),</span>  <span class="c1"># Desaturate for 3 minute</span>
+    <span class="p">]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">CustomDynamics</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">ContinuousImagingFSWModel</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Defining-Curriculum-Function">
+<h2>Defining Curriculum Function<a class="headerlink" href="#Defining-Curriculum-Function" title="Link to this heading"></a></h2>
+<p>The following functions are used to define how the satellite parameters vary as a function of the difficulty during training. For these cases, the difficulty is assumed to be between 0 and 1. Direct, inverse, and constant curriculums can be defined based on the initial and final levels.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">capacity_fn</span><span class="p">(</span><span class="n">time_seed</span><span class="p">,</span> <span class="n">init_val</span><span class="p">,</span> <span class="n">final_val</span><span class="p">,</span> <span class="n">difficulty</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Function to calculate the capacity of the a given satellite property (e.g. battery, storage, etc) based on the difficulty level.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        time_seed (float, optional): Seed for random number generation. If None, CL will be used. Otherwise, DR will be used.</span>
+<span class="sd">        init_val (float): Initial value of the capacity.</span>
+<span class="sd">        final_val (float): Final value of the capacity.</span>
+<span class="sd">        difficulty (float): Difficulty level.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float: Capacity of the satellite.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">time_seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">random_generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span>
+            <span class="n">seed</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">time_seed</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">difficulty</span> <span class="o">*</span> <span class="mi">10000</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">random_generator</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">init_val</span><span class="p">,</span> <span class="n">final_val</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">init_val</span> <span class="o">-</span> <span class="p">(</span><span class="n">init_val</span> <span class="o">-</span> <span class="n">final_val</span><span class="p">)</span> <span class="o">*</span> <span class="n">difficulty</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">capacity_init_fn</span><span class="p">(</span><span class="n">time_seed</span><span class="p">,</span> <span class="n">init_val</span><span class="p">,</span> <span class="n">final_val</span><span class="p">,</span> <span class="n">difficulty</span><span class="p">,</span> <span class="n">max_init</span><span class="p">,</span> <span class="n">min_init</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Function to calculate the initial capacity of the a given satellite property (e.g. battery, storage, etc) based on the difficulty level.</span>
+<span class="sd">    This function is necessary since the capacity is not constant and can change based on the difficulty level.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        time_seed (float, optional): Seed for random number generation. If None, CL will be used. Otherwise, DR will be used.</span>
+<span class="sd">        init_val (float): Initial value of the capacity.</span>
+<span class="sd">        final_val (float): Final value of the capacity.</span>
+<span class="sd">        difficulty (float): Difficulty level.</span>
+<span class="sd">        max_init (float): Maximum initial value of the capacity.</span>
+<span class="sd">        min_init (float): Minimum initial value of the capacity.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        float: Initial level of the given satellite property.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">time_seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">random_generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span>
+            <span class="n">seed</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">time_seed</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">difficulty</span> <span class="o">*</span> <span class="mi">10000</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">capacity</span> <span class="o">=</span> <span class="n">random_generator</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">init_val</span><span class="p">,</span> <span class="n">final_val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">min_init</span><span class="p">,</span> <span class="n">max_init</span><span class="p">)</span> <span class="o">*</span> <span class="n">capacity</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">capacity</span> <span class="o">=</span> <span class="n">init_val</span> <span class="o">-</span> <span class="p">(</span><span class="n">init_val</span> <span class="o">-</span> <span class="n">final_val</span><span class="p">)</span> <span class="o">*</span> <span class="n">difficulty</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">min_init</span><span class="p">,</span> <span class="n">max_init</span><span class="p">)</span> <span class="o">*</span> <span class="n">capacity</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">random_disturbance_vector</span><span class="p">(</span><span class="n">magnitude_disturbance</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Function to generate a random disturbance vector with a given magnitude.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        magnitude_disturbance (float): Magnitude of the disturbance vector.</span>
+<span class="sd">        seed (int, optional): Seed for random number generation. Defaults to None.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: Random disturbance vector with the given magnitude.</span>
+<span class="sd">    """</span>
+
+    <span class="n">disturbance_rand_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">disturbance_rand_unit_vector</span> <span class="o">=</span> <span class="n">disturbance_rand_vector</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+        <span class="n">disturbance_rand_vector</span>
+    <span class="p">)</span>
+    <span class="n">disturbance_vector</span> <span class="o">=</span> <span class="n">disturbance_rand_unit_vector</span> <span class="o">*</span> <span class="n">magnitude_disturbance</span>
+    <span class="k">return</span> <span class="n">disturbance_vector</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">external_disturbance_fn</span><span class="p">(</span><span class="n">time_seed</span><span class="p">,</span> <span class="n">init_val</span><span class="p">,</span> <span class="n">final_val</span><span class="p">,</span> <span class="n">difficulty</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Function to calculate the external disturbance vector based on the difficulty level.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        time_seed (float, optional): Seed for random number generation. If None, CL will be used. Otherwise, DR will be used.</span>
+<span class="sd">        init_val (float): Initial value of the disturbance vector.</span>
+<span class="sd">        final_val (float): Final value of the disturbance vector.</span>
+<span class="sd">        difficulty (float): Difficulty level.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: External disturbance vector.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">time_seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">random_generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span>
+            <span class="n">seed</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">time_seed</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">difficulty</span> <span class="o">*</span> <span class="mi">10000</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">disturbance_mag</span> <span class="o">=</span> <span class="n">random_generator</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">init_val</span><span class="p">,</span> <span class="n">final_val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">random_disturbance_vector</span><span class="p">(</span><span class="n">disturbance_mag</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">disturbance_mag</span> <span class="o">=</span> <span class="n">init_val</span> <span class="o">-</span> <span class="p">(</span><span class="n">init_val</span> <span class="o">-</span> <span class="n">final_val</span><span class="p">)</span> <span class="o">*</span> <span class="n">difficulty</span>
+        <span class="k">return</span> <span class="n">random_disturbance_vector</span><span class="p">(</span><span class="n">disturbance_mag</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Custom-Callback-to-Enable-CL">
+<h2>Custom Callback to Enable CL<a class="headerlink" href="#Custom-Callback-to-Enable-CL" title="Link to this heading"></a></h2>
+<p>A custom <code class="docutils literal notranslate"><span class="pre">Callback</span></code> function is required to enable CL. The <code class="docutils literal notranslate"><span class="pre">CLCallbacks</span></code> reads the number of trained steps from the environment and determines the task (difficulty). Here, different functions could be used to implement more complex curriculums instead of a linear function, such as spring mass dynamics.</p>
+<p>A custom <code class="docutils literal notranslate"><span class="pre">episode_data_callback</span></code> is also defined to collect information about the agent and the curriculum during training.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">CLCallbacks</span><span class="p">(</span><span class="n">WrappedEpisodeDataCallbacks</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_episode_start</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">episode</span><span class="p">,</span>
+        <span class="n">worker</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">env_runner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">metrics_logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">base_env</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">env</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">policies</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">rl_module</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">env_index</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">n_steps</span> <span class="o">=</span> <span class="n">metrics_logger</span><span class="o">.</span><span class="n">peek</span><span class="p">(</span><span class="s2">"num_env_steps_sampled_lifetime"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">n_steps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="n">n_steps</span> <span class="o">/</span> <span class="mi">5_000_000</span>  <span class="c1"># 5M steps = 1.0 difficulty</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="n">env</span><span class="o">.</span><span class="n">envs</span><span class="p">[</span><span class="n">env_index</span><span class="p">]</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">set_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">episode_data_callback</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
+    <span class="n">reward</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">cum_reward</span>
+    <span class="n">reward</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">reward</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
+    <span class="n">orbits</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">/</span> <span class="p">(</span><span class="mi">95</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+
+    <span class="n">data_log</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">reward</span><span class="o">=</span><span class="n">reward</span><span class="p">,</span>
+        <span class="c1"># Are satellites dying, and how and when?</span>
+        <span class="n">alive</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()),</span>
+        <span class="n">rw_status_valid</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rw_speeds_valid</span><span class="p">()),</span>
+        <span class="n">battery_status_valid</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">battery_valid</span><span class="p">()),</span>
+        <span class="n">orbits_complete</span><span class="o">=</span><span class="n">orbits</span><span class="p">,</span>
+        <span class="c1"># Is CL working? How is it varying during training?</span>
+        <span class="n">difficulty</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get_task</span><span class="p">(),</span>
+        <span class="n">battery_capacity</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">storageCapacity</span><span class="p">,</span>
+        <span class="n">external_torque</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">extForceTorqueObject</span><span class="o">.</span><span class="n">extTorquePntB_B</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">orbits</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">data_log</span><span class="p">[</span><span class="s2">"reward_per_orbit"</span><span class="p">]</span> <span class="o">=</span> <span class="n">reward</span> <span class="o">/</span> <span class="n">orbits</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_alive</span><span class="p">():</span>
+        <span class="n">data_log</span><span class="p">[</span><span class="s2">"orbits_complete_partial_only"</span><span class="p">]</span> <span class="o">=</span> <span class="n">orbits</span>
+
+    <span class="k">return</span> <span class="n">data_log</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Defining-Satellite,-Environment,-and-CL-Options">
+<h2>Defining Satellite, Environment, and CL Options<a class="headerlink" href="#Defining-Satellite,-Environment,-and-CL-Options" title="Link to this heading"></a></h2>
+<p>Two different environment configurations are defined, the <code class="docutils literal notranslate"><span class="pre">standard_90</span></code> and <code class="docutils literal notranslate"><span class="pre">degraded_90</span></code>, which can be used for training and testing. Additionally, different initialization ranges can be defined for the parameters during reset. Here, <code class="docutils literal notranslate"><span class="pre">nominal</span></code> corresponds to parameters being initialized in a range near their nominal operation values. In <code class="docutils literal notranslate"><span class="pre">wide</span></code>, parameters can vary from 0% to 100%.</p>
+<p>Different CL and DR levels are also defined to be chosen from. Each case can include several different parameters from the spacecraft, each with different CL levels.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sat_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">standard_90</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="c1"># Nominal env parameters</span>
+        <span class="n">intervals</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+        <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mi">400</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">,</span>  <span class="c1"># in Ws</span>
+        <span class="n">disturbance_vector_mag</span><span class="o">=</span><span class="mf">0.0002</span><span class="p">,</span>
+        <span class="n">panelEfficiency</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">degraded_90</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="c1"># Degraded env parameters</span>
+        <span class="n">intervals</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+        <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mi">400</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># in Ws</span>
+        <span class="n">disturbance_vector_mag</span><span class="o">=</span><span class="mf">0.0002</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">panelEfficiency</span><span class="o">=</span><span class="mf">0.2</span> <span class="o">*</span> <span class="mf">0.75</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="c1"># Other sat parameters common to all</span>
+    <span class="n">sat_params</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># norm of MRP ~ 20 degree</span>
+        <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># norm of angular velocity (rad/s)</span>
+        <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mi">5000</span> <span class="o">*</span> <span class="mf">8e6</span><span class="p">,</span>  <span class="c1"># in bits</span>
+        <span class="n">instrumentPowerDraw</span><span class="o">=-</span><span class="mf">30.0</span><span class="p">,</span>  <span class="c1"># in Watts</span>
+        <span class="n">instrumentBaudRate</span><span class="o">=</span><span class="mf">0.5e6</span><span class="p">,</span>  <span class="c1"># bits per second</span>
+        <span class="n">transmitterPowerDraw</span><span class="o">=-</span><span class="mf">25.0</span><span class="p">,</span>  <span class="c1"># in Watts</span>
+        <span class="n">transmitterBaudRate</span><span class="o">=-</span><span class="mf">112.0e6</span><span class="p">,</span>  <span class="c1"># bits per second #size it to downlink in one downlink opportunity</span>
+        <span class="n">rwMechToElecEfficiency</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">rwElecToMechEfficiency</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">thrusterPowerDraw</span><span class="o">=-</span><span class="mf">80.0</span><span class="p">,</span>
+        <span class="n">rwBasePower</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+        <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="mi">6000</span><span class="p">,</span>  <span class="c1"># RPM</span>
+        <span class="n">desatAttitude</span><span class="o">=</span><span class="s2">"nadir"</span><span class="p">,</span>
+        <span class="n">K</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span>  <span class="c1"># Derivative control gain (attitude)</span>
+        <span class="n">Ki</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Integral gain (turned off)</span>
+        <span class="n">P</span><span class="o">=</span><span class="mf">17.5</span><span class="p">,</span>  <span class="c1"># Proportional gain (attitude))</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">init_range_options</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">nominal</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">battery_init_range</span><span class="o">=</span><span class="p">[</span><span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.625</span><span class="p">],</span>
+        <span class="n">data_storage_init_range</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">reaction_wheel_init_range</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4000</span><span class="p">,</span> <span class="mi">4000</span><span class="p">],</span>  <span class="c1"># RPM</span>
+    <span class="p">),</span>
+    <span class="n">wide</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">battery_init_range</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">data_storage_init_range</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">reaction_wheel_init_range</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">6000</span><span class="p">,</span> <span class="mi">6000</span><span class="p">],</span>  <span class="c1"># RPM</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">CL_options</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">constant_BT_high</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">battery</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"batteryStorageCapacity"</span><span class="p">,</span>
+            <span class="s2">"init_val"</span><span class="p">:</span> <span class="mf">0.40</span><span class="p">,</span>
+            <span class="s2">"final_val"</span><span class="p">:</span> <span class="mf">0.40</span><span class="p">,</span>
+            <span class="s2">"init_range_config"</span><span class="p">:</span> <span class="s2">"battery_init_range"</span><span class="p">,</span>
+            <span class="s2">"name_init"</span><span class="p">:</span> <span class="s2">"storedCharge_Init"</span><span class="p">,</span>
+            <span class="s2">"domain_randomization"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">torque</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"disturbance_vector_mag"</span><span class="p">,</span>
+            <span class="s2">"var_name"</span><span class="p">:</span> <span class="s2">"disturbance_vector"</span><span class="p">,</span>
+            <span class="s2">"init_val"</span><span class="p">:</span> <span class="mf">8.0</span><span class="p">,</span>
+            <span class="s2">"final_val"</span><span class="p">:</span> <span class="mf">8.0</span><span class="p">,</span>
+            <span class="s2">"domain_randomization"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">),</span>
+    <span class="n">direct_BT_high</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">battery</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"batteryStorageCapacity"</span><span class="p">,</span>
+            <span class="s2">"init_val"</span><span class="p">:</span> <span class="mf">1.00</span><span class="p">,</span>
+            <span class="s2">"final_val"</span><span class="p">:</span> <span class="mf">0.40</span><span class="p">,</span>
+            <span class="s2">"init_range_config"</span><span class="p">:</span> <span class="s2">"battery_init_range"</span><span class="p">,</span>
+            <span class="s2">"name_init"</span><span class="p">:</span> <span class="s2">"storedCharge_Init"</span><span class="p">,</span>
+            <span class="s2">"domain_randomization"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">torque</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"disturbance_vector_mag"</span><span class="p">,</span>
+            <span class="s2">"var_name"</span><span class="p">:</span> <span class="s2">"disturbance_vector"</span><span class="p">,</span>
+            <span class="s2">"init_val"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="s2">"final_val"</span><span class="p">:</span> <span class="mf">8.0</span><span class="p">,</span>
+            <span class="s2">"domain_randomization"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">),</span>
+    <span class="n">inverse_BT_high</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">battery</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"batteryStorageCapacity"</span><span class="p">,</span>
+            <span class="s2">"init_val"</span><span class="p">:</span> <span class="mf">0.40</span><span class="p">,</span>
+            <span class="s2">"final_val"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="s2">"init_range_config"</span><span class="p">:</span> <span class="s2">"battery_init_range"</span><span class="p">,</span>
+            <span class="s2">"name_init"</span><span class="p">:</span> <span class="s2">"storedCharge_Init"</span><span class="p">,</span>
+            <span class="s2">"domain_randomization"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">torque</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"disturbance_vector_mag"</span><span class="p">,</span>
+            <span class="s2">"var_name"</span><span class="p">:</span> <span class="s2">"disturbance_vector"</span><span class="p">,</span>
+            <span class="s2">"init_val"</span><span class="p">:</span> <span class="mf">8.0</span><span class="p">,</span>
+            <span class="s2">"final_val"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="s2">"domain_randomization"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">),</span>
+    <span class="n">DR_BT_high</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">battery</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"batteryStorageCapacity"</span><span class="p">,</span>
+            <span class="s2">"init_val"</span><span class="p">:</span> <span class="mf">0.40</span><span class="p">,</span>
+            <span class="s2">"final_val"</span><span class="p">:</span> <span class="mf">1.00</span><span class="p">,</span>
+            <span class="s2">"init_range_config"</span><span class="p">:</span> <span class="s2">"battery_init_range"</span><span class="p">,</span>
+            <span class="s2">"name_init"</span><span class="p">:</span> <span class="s2">"storedCharge_Init"</span><span class="p">,</span>
+            <span class="s2">"domain_randomization"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">torque</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"disturbance_vector_mag"</span><span class="p">,</span>
+            <span class="s2">"var_name"</span><span class="p">:</span> <span class="s2">"disturbance_vector"</span><span class="p">,</span>
+            <span class="s2">"init_val"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="s2">"final_val"</span><span class="p">:</span> <span class="mf">8.0</span><span class="p">,</span>
+            <span class="s2">"domain_randomization"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Choosing-Curriculum-for-Training">
+<h2>Choosing Curriculum for Training<a class="headerlink" href="#Choosing-Curriculum-for-Training" title="Link to this heading"></a></h2>
+<p>Here, the <code class="docutils literal notranslate"><span class="pre">direct_BT_high</span></code> is selected with a <code class="docutils literal notranslate"><span class="pre">nominal</span></code> initialization range and <code class="docutils literal notranslate"><span class="pre">standard</span></code> environment with each episode lasting at most 90 steps.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">CL_params</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">CL_enabled</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">CL_case</span> <span class="o">=</span> <span class="s2">"direct_BT_high"</span>
+<span class="n">initialization_range</span> <span class="o">=</span> <span class="s2">"nominal"</span>
+<span class="n">environment_mode</span> <span class="o">=</span> <span class="s2">"standard_90"</span>
+
+<span class="n">sat</span> <span class="o">=</span> <span class="n">ScanningSatellite</span><span class="p">(</span>
+    <span class="s2">"Scanner-1"</span><span class="p">,</span>
+    <span class="n">sat_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="o">**</span><span class="n">sat_config</span><span class="p">[</span><span class="s2">"sat_params"</span><span class="p">],</span>
+        <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="n">sat_config</span><span class="p">[</span><span class="n">environment_mode</span><span class="p">][</span><span class="s2">"batteryStorageCapacity"</span><span class="p">],</span>
+        <span class="n">disturbance_vector</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">random_disturbance_vector</span><span class="p">(</span>
+            <span class="n">sat_config</span><span class="p">[</span><span class="n">environment_mode</span><span class="p">][</span><span class="s2">"disturbance_vector_mag"</span><span class="p">]</span>
+        <span class="p">),</span>
+        <span class="n">panelEfficiency</span><span class="o">=</span><span class="n">sat_config</span><span class="p">[</span><span class="n">environment_mode</span><span class="p">][</span><span class="s2">"panelEfficiency"</span><span class="p">],</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">duration</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">sat_config</span><span class="p">[</span><span class="n">environment_mode</span><span class="p">][</span><span class="s2">"intervals"</span><span class="p">]</span> <span class="o">*</span> <span class="mi">180</span>
+<span class="p">)</span>  <span class="c1"># intervals of 180 seconds (3 minutes)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Assigning-Curriculum-Functions">
+<h2>Assigning Curriculum Functions<a class="headerlink" href="#Assigning-Curriculum-Functions" title="Link to this heading"></a></h2>
+<p>After selecting the curriculum, the code below will populate the <code class="docutils literal notranslate"><span class="pre">CL_params</span></code> dictionary with functions, specifying how each of the parameters will vary during training.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">CL_enabled</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">]:</span>
+        <span class="n">current_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"domain_randomization"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">current_time</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">current_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"torque"</span><span class="p">:</span>
+            <span class="n">capacity</span> <span class="o">=</span> <span class="n">sat_config</span><span class="p">[</span><span class="n">environment_mode</span><span class="p">][</span><span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"name"</span><span class="p">]]</span>
+            <span class="n">init_val</span> <span class="o">=</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"init_val"</span><span class="p">]</span>
+            <span class="n">final_val</span> <span class="o">=</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"final_val"</span><span class="p">]</span>
+            <span class="n">CL_params</span><span class="p">[</span><span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"var_name"</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">difficulty</span><span class="p">,</span>
+                <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+                <span class="n">init_val</span><span class="o">=</span><span class="n">init_val</span><span class="p">,</span>
+                <span class="n">final_val</span><span class="o">=</span><span class="n">final_val</span><span class="p">,</span>
+                <span class="n">time_seed</span><span class="o">=</span><span class="n">current_time</span><span class="p">:</span> <span class="n">external_disturbance_fn</span><span class="p">(</span>
+                    <span class="n">time_seed</span><span class="p">,</span>
+                    <span class="n">capacity</span> <span class="o">*</span> <span class="n">init_val</span><span class="p">,</span>
+                    <span class="n">capacity</span> <span class="o">*</span> <span class="n">final_val</span><span class="p">,</span>
+                    <span class="n">difficulty</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">capacity</span> <span class="o">=</span> <span class="n">sat_config</span><span class="p">[</span><span class="n">environment_mode</span><span class="p">][</span><span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"name"</span><span class="p">]]</span>
+            <span class="n">init_val</span> <span class="o">=</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"init_val"</span><span class="p">]</span>
+            <span class="n">final_val</span> <span class="o">=</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"final_val"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">"var_name"</span> <span class="ow">in</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">]:</span>
+                <span class="n">temp_name</span> <span class="o">=</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"var_name"</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">temp_name</span> <span class="o">=</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"name"</span><span class="p">]</span>
+            <span class="n">CL_params</span><span class="p">[</span><span class="n">temp_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">difficulty</span><span class="p">,</span>
+                <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+                <span class="n">init_val</span><span class="o">=</span><span class="n">init_val</span><span class="p">,</span>
+                <span class="n">final_val</span><span class="o">=</span><span class="n">final_val</span><span class="p">,</span>
+                <span class="n">time_seed</span><span class="o">=</span><span class="n">current_time</span><span class="p">:</span> <span class="n">capacity_fn</span><span class="p">(</span>
+                    <span class="n">time_seed</span><span class="p">,</span>
+                    <span class="n">capacity</span> <span class="o">*</span> <span class="n">init_val</span><span class="p">,</span>
+                    <span class="n">capacity</span> <span class="o">*</span> <span class="n">final_val</span><span class="p">,</span>
+                    <span class="n">difficulty</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="s2">"name_init"</span> <span class="ow">in</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">]:</span>
+                <span class="n">init_range</span> <span class="o">=</span> <span class="n">init_range_options</span><span class="p">[</span><span class="n">initialization_range</span><span class="p">][</span>
+                    <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"init_range_config"</span><span class="p">]</span>
+                <span class="p">]</span>
+                <span class="n">init_val</span> <span class="o">=</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"init_val"</span><span class="p">]</span>
+                <span class="n">final_val</span> <span class="o">=</span> <span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"final_val"</span><span class="p">]</span>
+                <span class="n">CL_params</span><span class="p">[</span><span class="n">CL_options</span><span class="p">[</span><span class="n">CL_case</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">"name_init"</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">difficulty</span><span class="p">,</span>
+                    <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+                    <span class="n">init_val</span><span class="o">=</span><span class="n">init_val</span><span class="p">,</span>
+                    <span class="n">final_val</span><span class="o">=</span><span class="n">final_val</span><span class="p">,</span>
+                    <span class="n">init_range</span><span class="o">=</span><span class="n">init_range</span><span class="p">,</span>
+                    <span class="n">time_seed</span><span class="o">=</span><span class="n">current_time</span><span class="p">:</span> <span class="n">capacity_init_fn</span><span class="p">(</span>
+                        <span class="n">time_seed</span><span class="p">,</span>
+                        <span class="n">capacity</span> <span class="o">*</span> <span class="n">init_val</span><span class="p">,</span>
+                        <span class="n">capacity</span> <span class="o">*</span> <span class="n">final_val</span><span class="p">,</span>
+                        <span class="n">difficulty</span><span class="p">,</span>
+                        <span class="n">init_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="n">init_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Training">
+<h2>Training<a class="headerlink" href="#Training" title="Link to this heading"></a></h2>
+<p>Training is performed using ray tune. Usually, the <code class="docutils literal notranslate"><span class="pre">num_env_steps_sampled_lifetime</span></code> should be set similar to the number of training steps in <code class="docutils literal notranslate"><span class="pre">CLCallbacks</span></code>. Originally, the paper <a class="reference external" href="https://hanspeterschaub.info/Papers/QuevedoMantovani2025.pdf">Improving Robustenss of Autonomous Spacecraft Scheduling Using Curriculum Learning</a> used the APPO algorithm with generalized advantage estimation instead of PPO.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">N_CPUS</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="n">env_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">sat</span><span class="p">,</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">UniformNadirScanning</span><span class="p">(</span><span class="n">value_per_second</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="n">duration</span><span class="p">),</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">ScanningTimeReward</span><span class="p">(),</span>
+    <span class="n">time_limit</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+    <span class="n">failure_penalty</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">CL_params</span><span class="o">=</span><span class="n">CL_params</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">training_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">lr</span><span class="o">=</span><span class="mf">0.00003</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span>
+    <span class="n">train_batch_size</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span>  <span class="c1"># originally 10,000</span>
+    <span class="n">num_sgd_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">fcnet_hiddens</span><span class="o">=</span><span class="p">[</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">],</span> <span class="n">vf_share_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">lambda_</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span>
+    <span class="n">use_kl_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">entropy_coeff</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">clip_param</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">grad_clip</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">PPOConfig</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">training</span><span class="p">(</span><span class="o">**</span><span class="n">training_args</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">env_runners</span><span class="p">(</span><span class="n">num_env_runners</span><span class="o">=</span><span class="n">N_CPUS</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sample_timeout_s</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">environment</span><span class="p">(</span>
+        <span class="n">env</span><span class="o">=</span><span class="s2">"SatelliteTaskingCL-RLlib"</span><span class="p">,</span>
+        <span class="n">env_config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="n">env_args</span><span class="p">,</span> <span class="n">episode_data_callback</span><span class="o">=</span><span class="n">episode_data_callback</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">reporting</span><span class="p">(</span>
+        <span class="n">metrics_num_episodes_for_smoothing</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">metrics_episode_collection_timeout_s</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">checkpointing</span><span class="p">(</span><span class="n">export_native_model_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">framework</span><span class="p">(</span><span class="n">framework</span><span class="o">=</span><span class="s2">"torch"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">api_stack</span><span class="p">(</span>
+        <span class="n">enable_rl_module_and_learner</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">enable_env_runner_and_connector_v2</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">callbacks</span><span class="p">(</span><span class="n">CLCallbacks</span><span class="p">)</span>
+    <span class="c1"># .evaluation(evaluation_interval=10, evaluation_duration=1, evaluation_parallel_to_training=True, evaluation_config={"env": unpack_config(env_class), "env_config": nominal_env_args, "explore":False}, evaluation_num_workers=1, always_attach_evaluation_results=True) #An evaluation environment can be configured with parameters different from the training environment by specifying the `nominal_env_args` argument. This is useful for evaluating the performance of the agent in a different environment than the one it was trained in.</span>
+<span class="p">)</span>
+
+<span class="n">ray</span><span class="o">.</span><span class="n">init</span><span class="p">(</span>
+    <span class="n">ignore_reinit_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">num_cpus</span><span class="o">=</span><span class="n">N_CPUS</span><span class="p">,</span>
+    <span class="n">object_store_memory</span><span class="o">=</span><span class="mi">2_000_000_000</span><span class="p">,</span>  <span class="c1"># 2 GB</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the training</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">tune</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="s2">"PPO"</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+    <span class="n">stop</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"num_env_steps_sampled_lifetime"</span><span class="p">:</span> <span class="mi">750</span>
+    <span class="p">},</span>  <span class="c1"># Total number of steps to train the model. Originally 5M</span>
+    <span class="n">checkpoint_freq</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">checkpoint_at_end</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Shutdown Ray</span>
+<span class="n">ray</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2026-09-02 14:51:40,962 INFO worker.py:1783 -- Started a local Ray instance.
+2026-09-02 14:51:45,061 INFO tune.py:616 -- [output] This uses the legacy output and progress reporter, as Jupyter notebooks are not supported by the new engine, yet. For more information, please see https://github.com/ray-project/ray/issues/36949
+/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:130: UserWarning: <span class="ansi-yellow-fg">WARN: Box bound precision lowered by casting to float32</span>
+  gym.logger.warn(f&#34;Box bound precision lowered by casting to {self.dtype}&#34;)
+/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gymnasium/utils/passive_env_checker.py:164: UserWarning: <span class="ansi-yellow-fg">WARN: The obs returned by the `reset()` method was expecting numpy array dtype to be float32, actual type: float64</span>
+  logger.warn(
+/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gymnasium/utils/passive_env_checker.py:188: UserWarning: <span class="ansi-yellow-fg">WARN: The obs returned by the `reset()` method is not within the observation space.</span>
+  logger.warn(f&#34;{pre} is not within the observation space.&#34;)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div class="tuneStatus">
+  <div style="display: flex;flex-direction: row">
+    <div style="display: flex;flex-direction: column;">
+      <h3>Tune Status</h3>
+      <table>
+<tbody>
+<tr><td>Current time:</td><td>2026-09-02 14:52:08</td></tr>
+<tr><td>Running for: </td><td>00:00:23.81        </td></tr>
+<tr><td>Memory:      </td><td>4.9/15.6 GiB       </td></tr>
+</tbody>
+</table>
+    </div>
+    <div class="vDivider"></div>
+    <div class="systemInfo">
+      <h3>System Info</h3>
+      Using FIFO scheduling algorithm.<br>Logical resource usage: 3.0/3 CPUs, 0/0 GPUs
+    </div>
+
+  </div>
+  <div class="hDivider"></div>
+  <div class="trialStatus">
+    <h3>Trial Status</h3>
+    <table>
+<thead>
+<tr><th>Trial name                              </th><th>status    </th><th>loc           </th><th style="text-align: right;">  iter</th><th style="text-align: right;">  total time (s)</th><th style="text-align: right;">    num_env_steps_sample
+d_lifetime</th><th style="text-align: right;">  num_episodes_lifetim
+e</th><th style="text-align: right;">    num_env_steps_traine
+d_lifetime</th></tr>
+</thead>
+<tbody>
+<tr><td>PPO_SatelliteTaskingCL-RLlib_d1155_00000</td><td>TERMINATED</td><td>10.1.1.29:4060</td><td style="text-align: right;">     3</td><td style="text-align: right;">         6.81851</td><td style="text-align: right;">750</td><td style="text-align: right;">8</td><td style="text-align: right;">750</td></tr>
+</tbody>
+</table>
+  </div>
+</div>
+<style>
+.tuneStatus {
+  color: var(--jp-ui-font-color1);
+}
+.tuneStatus .systemInfo {
+  display: flex;
+  flex-direction: column;
+}
+.tuneStatus td {
+  white-space: nowrap;
+}
+.tuneStatus .trialStatus {
+  display: flex;
+  flex-direction: column;
+}
+.tuneStatus h3 {
+  font-weight: bold;
+}
+.tuneStatus .hDivider {
+  border-bottom-width: var(--jp-border-width);
+  border-bottom-color: var(--jp-border-color0);
+  border-bottom-style: solid;
+}
+.tuneStatus .vDivider {
+  border-left-width: var(--jp-border-width);
+  border-left-color: var(--jp-border-color0);
+  border-left-style: solid;
+  margin: 0.5em 1em 0.5em 1em;
+}
+</style></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-cyan-fg">(PPO pid=4060)</span> Install gputil for GPU system monitoring.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div class="trialProgress">
+  <h3>Trial Progress</h3>
+  <table>
+<thead>
+<tr><th>Trial name                              </th><th>env_runners                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   </th><th>fault_tolerance                                                                           </th><th>learners                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   </th><th>num_agent_steps_sampled_lifetime  </th><th style="text-align: right;">  num_env_steps_sampled_lifetime</th><th style="text-align: right;">  num_env_steps_trained_lifetime</th><th style="text-align: right;">  num_episodes_lifetime</th><th>perf                                                                                     </th><th>timers                                                                                                                                                                          </th></tr>
+</thead>
+<tbody>
+<tr><td>PPO_SatelliteTaskingCL-RLlib_d1155_00000</td><td>{&#x27;episode_len_mean&#x27;: 90.0, &#x27;episode_len_min&#x27;: 90, &#x27;num_module_steps_sampled&#x27;: {&#x27;default_policy&#x27;: 250}, &#x27;episode_duration_sec_mean&#x27;: 1.2058074619999957, &#x27;sample&#x27;: np.float64(1.7319265971965785), &#x27;module_episode_returns_mean&#x27;: {&#x27;default_policy&#x27;: 0.37395061728395074}, &#x27;episode_len_max&#x27;: 90, &#x27;num_env_steps_sampled&#x27;: 250, &#x27;num_module_steps_sampled_lifetime&#x27;: {&#x27;default_policy&#x27;: 1500}, &#x27;num_agent_steps_sampled_lifetime&#x27;: {&#x27;default_agent&#x27;: 1500}, &#x27;num_env_steps_sampled_lifetime&#x27;: 2250, &#x27;episode_return_mean&#x27;: 0.37395061728395074, &#x27;num_agent_steps_sampled&#x27;: {&#x27;default_agent&#x27;: 250}, &#x27;num_episodes&#x27;: 4, &#x27;episode_return_max&#x27;: 0.4156790123456792, &#x27;agent_episode_returns_mean&#x27;: {&#x27;default_agent&#x27;: 0.37395061728395074}, &#x27;episode_return_min&#x27;: 0.33222222222222225, &#x27;time_between_sampling&#x27;: np.float64(0.530813013363901), &#x27;battery_capacity&#x27;: np.float64(1439999.568), &#x27;reward&#x27;: np.float64(0.24711450617283948), &#x27;difficulty&#x27;: np.float64(5.05e-05), &#x27;orbits_complete&#x27;: np.float64(2.842105263157895), &#x27;reward_per_orbit&#x27;: np.float64(0.08694769661636942), &#x27;alive&#x27;: np.float64(1.0), &#x27;battery_status_valid&#x27;: np.float64(1.0), &#x27;rw_status_valid&#x27;: np.float64(1.0), &#x27;external_torque&#x27;: np.float64(0.0002000007)}</td><td>{&#x27;num_healthy_workers&#x27;: 2, &#x27;num_in_flight_async_reqs&#x27;: 0, &#x27;num_remote_worker_restarts&#x27;: 0}</td><td>{&#x27;default_policy&#x27;: {&#x27;vf_explained_var&#x27;: 0.1555296778678894, &#x27;num_non_trainable_parameters&#x27;: 0.0, &#x27;gradients_default_optimizer_global_norm&#x27;: 0.17127594351768494, &#x27;mean_kl_loss&#x27;: 0.0, &#x27;total_loss&#x27;: -0.28926289081573486, &#x27;vf_loss_unclipped&#x27;: 0.0005386329721659422, &#x27;default_optimizer_learning_rate&#x27;: 3e-05, &#x27;num_module_steps_trained&#x27;: 250, &#x27;curr_entropy_coeff&#x27;: 0.0, &#x27;entropy&#x27;: 1.3078924417495728, &#x27;num_trainable_parameters&#x27;: 139013.0, &#x27;vf_loss&#x27;: 0.0005386329721659422, &#x27;policy_loss&#x27;: -0.28980153799057007}, &#x27;__all_modules__&#x27;: {&#x27;num_trainable_parameters&#x27;: 139013.0, &#x27;num_module_steps_trained&#x27;: 250, &#x27;num_non_trainable_parameters&#x27;: 0.0, &#x27;total_loss&#x27;: -0.28926289081573486, &#x27;num_env_steps_trained&#x27;: 250}}</td><td>{&#x27;default_agent&#x27;: 750}            </td><td style="text-align: right;">                             750</td><td style="text-align: right;">                             750</td><td style="text-align: right;">                      8</td><td>{&#x27;cpu_util_percent&#x27;: np.float64(45.76666666666666), &#x27;ram_util_percent&#x27;: np.float64(31.2)}</td><td>{&#x27;env_runner_sampling_timer&#x27;: 1.744673675293324, &#x27;learner_update_timer&#x27;: 0.4837858614448032, &#x27;synch_weights&#x27;: 0.00581688823831625, &#x27;synch_env_connectors&#x27;: 0.006155101644571636}</td></tr>
+</tbody>
+</table>
+</div>
+<style>
+.trialProgress {
+  display: flex;
+  flex-direction: column;
+  color: var(--jp-ui-font-color1);
+}
+.trialProgress h3 {
+  font-weight: bold;
+}
+.trialProgress td {
+  white-space: nowrap;
+}
+</style></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2026-09-02 14:52:08,930 INFO tune.py:1009 -- Wrote the latest version of all result files and experiment state to &#39;/home/runner/ray_results/PPO_2026-09-02_14-51-45&#39; in 0.0298s.
+2026-09-02 14:52:08,951 INFO tune.py:1041 -- Total run time: 23.89 seconds (23.78 seconds for the tuning loop).
+</pre></div></div>
+</div>
+</section>
+<section id="Checking-Difficulty-Over-Training">
+<h2>Checking Difficulty Over Training<a class="headerlink" href="#Checking-Difficulty-Over-Training" title="Link to this heading"></a></h2>
+<p>After a few training steps, the difficulty started to increase</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">()))][</span><span class="s2">"env_runners"</span><span class="p">][</span><span class="s2">"difficulty"</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+np.float64(5.05e-05)
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="async_multiagent_training.html" class="btn btn-neutral float-left" title="Asynchronous Multiagent Decision Making" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="training_with_shield.html" class="btn btn-neutral float-right" title="Shielded training with action masking and action replacement" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

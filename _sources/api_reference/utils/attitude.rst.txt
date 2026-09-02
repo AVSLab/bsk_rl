@@ -1,0 +1,13 @@
+.. _bsk_rl.utils.attitude:
+.. currentmodule:: bsk_rl.utils.attitude
+
+Attitude
+========
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.utils.attitude
+   :members:
+   :show-inheritance:
+

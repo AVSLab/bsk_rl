@@ -1,0 +1,13 @@
+.. _bsk_rl.data.composition:
+.. currentmodule:: bsk_rl.data.composition
+
+Data Composition
+================
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.data.composition
+   :members:
+   :show-inheritance:
+

@@ -1,0 +1,331 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RSO Scenarios &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Target Scenarios" href="targets.html" />
+    <link rel="prev" title="Scenario" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../act/index.html">Actions</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Scenario</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.Scenario"><code class="docutils literal notranslate"><span class="pre">Scenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.UniformTargets"><code class="docutils literal notranslate"><span class="pre">UniformTargets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.CityTargets"><code class="docutils literal notranslate"><span class="pre">CityTargets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.UniformNadirScanning"><code class="docutils literal notranslate"><span class="pre">UniformNadirScanning</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.RSOPoints"><code class="docutils literal notranslate"><span class="pre">RSOPoints</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.SphericalRSO"><code class="docutils literal notranslate"><span class="pre">SphericalRSO</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">RSO Scenarios</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint"><code class="docutils literal notranslate"><span class="pre">RSOPoint</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint.r_PB_B"><code class="docutils literal notranslate"><span class="pre">RSOPoint.r_PB_B</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint.n_B"><code class="docutils literal notranslate"><span class="pre">RSOPoint.n_B</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint.theta_max"><code class="docutils literal notranslate"><span class="pre">RSOPoint.theta_max</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint.range_max"><code class="docutils literal notranslate"><span class="pre">RSOPoint.range_max</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint.theta_solar_max"><code class="docutils literal notranslate"><span class="pre">RSOPoint.theta_solar_max</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint.min_illumination_factor"><code class="docutils literal notranslate"><span class="pre">RSOPoint.min_illumination_factor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoints"><code class="docutils literal notranslate"><span class="pre">RSOPoints</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoints.reset_overwrite_previous"><code class="docutils literal notranslate"><span class="pre">RSOPoints.reset_overwrite_previous()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoints.reset_pre_sim_init"><code class="docutils literal notranslate"><span class="pre">RSOPoints.reset_pre_sim_init()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoints.reset_during_sim_init"><code class="docutils literal notranslate"><span class="pre">RSOPoints.reset_during_sim_init()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoints.visualize_rso_point"><code class="docutils literal notranslate"><span class="pre">RSOPoints.visualize_rso_point()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoints.setup_inspector_camera"><code class="docutils literal notranslate"><span class="pre">RSOPoints.setup_inspector_camera()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoints.generate_points"><code class="docutils literal notranslate"><span class="pre">RSOPoints.generate_points()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.scene.rso_points.SphericalRSO"><code class="docutils literal notranslate"><span class="pre">SphericalRSO</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_points.SphericalRSO.generate_points"><code class="docutils literal notranslate"><span class="pre">SphericalRSO.generate_points()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="targets.html">Target Scenarios</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comm/index.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim/index.html">Simulation (BSK)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Scenario</a></li>
+      <li class="breadcrumb-item active">RSO Scenarios</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_reference/scene/rso_points.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rso-scenarios">
+<span id="bsk-rl-scene-rso-points"></span><h1>RSO Scenarios<a class="headerlink" href="#rso-scenarios" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.scene.rso_points">RSO scenarios define the geometry of a RSO.</p>
+<p>The geometry is defined by a set of <a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint" title="bsk_rl.scene.rso_points.RSOPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">RSOPoint</span></code></a> objects, which give a location and
+a normal vector for the point, as well as conditions for inspection (range, illumination,
+etc.). Implemented geometries include:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#bsk_rl.scene.rso_points.SphericalRSO" title="bsk_rl.scene.rso_points.SphericalRSO"><code class="xref py py-class docutils literal notranslate"><span class="pre">SphericalRSO</span></code></a>: Points are generated on a sphere using the Fibonacci sphere method.</p></li>
+</ul>
+<p>This module does not consider self-occlusion effects or inspector-to-RSO occlusion effects.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoint">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RSOPoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_PB_B</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_B</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_solar_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_illumination_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_points.html#RSOPoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoint" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r_PB_B</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>n_B</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>theta_max</strong> (<em>float</em>)</p></li>
+<li><p><strong>range_max</strong> (<em>float</em>)</p></li>
+<li><p><strong>theta_solar_max</strong> (<em>float</em>)</p></li>
+<li><p><strong>min_illumination_factor</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoint.r_PB_B">
+<span class="sig-name descname"><span class="pre">r_PB_B</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoint.r_PB_B" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoint.n_B">
+<span class="sig-name descname"><span class="pre">n_B</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoint.n_B" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoint.theta_max">
+<span class="sig-name descname"><span class="pre">theta_max</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoint.theta_max" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoint.range_max">
+<span class="sig-name descname"><span class="pre">range_max</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoint.range_max" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoint.theta_solar_max">
+<span class="sig-name descname"><span class="pre">theta_solar_max</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoint.theta_solar_max" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoint.min_illumination_factor">
+<span class="sig-name descname"><span class="pre">min_illumination_factor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoint.min_illumination_factor" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoints">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RSOPoints</span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_points.html#RSOPoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoints" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="index.html#bsk_rl.scene.Scenario" title="bsk_rl.scene.scenario.Scenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scenario</span></code></a></p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoints.reset_overwrite_previous">
+<span class="sig-name descname"><span class="pre">reset_overwrite_previous</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_points.html#RSOPoints.reset_overwrite_previous"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoints.reset_overwrite_previous" title="Link to this definition"></a></dt>
+<dd><p>Overwrite target list from previous episode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoints.reset_pre_sim_init">
+<span class="sig-name descname"><span class="pre">reset_pre_sim_init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_points.html#RSOPoints.reset_pre_sim_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoints.reset_pre_sim_init" title="Link to this definition"></a></dt>
+<dd><p>Identify RSO and Inspector satellites.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoints.reset_during_sim_init">
+<span class="sig-name descname"><span class="pre">reset_during_sim_init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_points.html#RSOPoints.reset_during_sim_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoints.reset_during_sim_init" title="Link to this definition"></a></dt>
+<dd><p>Add points to dynamics and fsw of RSO.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoints.visualize_rso_point">
+<span class="sig-name descname"><span class="pre">visualize_rso_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rso_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint" title="bsk_rl.scene.rso_points.RSOPoint"><span class="pre">RSOPoint</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">vizSupport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vizInstance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_points.html#RSOPoints.visualize_rso_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoints.visualize_rso_point" title="Link to this definition"></a></dt>
+<dd><p>Visualize target in Vizard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rso_point</strong> (<a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint" title="bsk_rl.scene.rso_points.RSOPoint"><em>RSOPoint</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoints.setup_inspector_camera">
+<span class="sig-name descname"><span class="pre">setup_inspector_camera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inspector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">vizSupport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vizInstance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_points.html#RSOPoints.setup_inspector_camera"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoints.setup_inspector_camera" title="Link to this definition"></a></dt>
+<dd><p>Visualize camera view in Vizard panel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inspector</strong> (<a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><em>Satellite</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.RSOPoints.generate_points">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">generate_points</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint" title="bsk_rl.scene.rso_points.RSOPoint"><span class="pre">RSOPoint</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_points.html#RSOPoints.generate_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_points.RSOPoints.generate_points" title="Link to this definition"></a></dt>
+<dd><p>Generate a list of RSOPoint objects based on some spacecraft geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint" title="bsk_rl.scene.rso_points.RSOPoint"><em>RSOPoint</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.SphericalRSO">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">SphericalRSO</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">np.float64(0.7853981633974483)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_solar_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">np.float64(1.0471975511965976)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_illumination_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_points.html#SphericalRSO"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_points.SphericalRSO" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoints" title="bsk_rl.scene.rso_points.RSOPoints"><code class="xref py py-class docutils literal notranslate"><span class="pre">RSOPoints</span></code></a></p>
+<p>Generate points on a sphere using the Fibonacci sphere method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_points</strong> (<em>int</em>) – Number of points to generate on the sphere.</p></li>
+<li><p><strong>radius</strong> (<em>float</em>) – [m] Radius of the sphere.</p></li>
+<li><p><strong>theta_max</strong> (<em>float</em>) – [rad] Maximum angle from the normal for inspection.</p></li>
+<li><p><strong>range_max</strong> (<em>float</em>) – [m] Maximum range for inspection.</p></li>
+<li><p><strong>theta_solar_max</strong> (<em>float</em>) – [rad] Minimum solar incidence angle for illumination.</p></li>
+<li><p><strong>min_illumination_factor</strong> (<em>float</em>) – Minimum illumination factor for imaging.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_points.SphericalRSO.generate_points">
+<span class="sig-name descname"><span class="pre">generate_points</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint" title="bsk_rl.scene.rso_points.RSOPoint"><span class="pre">RSOPoint</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_points.html#SphericalRSO.generate_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_points.SphericalRSO.generate_points" title="Link to this definition"></a></dt>
+<dd><p>Generate a list of RSOPoint objects on a sphere.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="#bsk_rl.scene.rso_points.RSOPoint" title="bsk_rl.scene.rso_points.RSOPoint"><em>RSOPoint</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Scenario" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="targets.html" class="btn btn-neutral float-right" title="Target Scenarios" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

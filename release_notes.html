@@ -1,0 +1,315 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Release Notes &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=e358f374"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Publications" href="publications.html" />
+    <link rel="prev" title="Semi-MDP Discounting in RLlib" href="api_reference/utils/rllib/discounting.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#development-version">Development - Version 1.3.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-1-3-0">Version 1.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-1-2-0">Version 1.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-1-1-0">Version 1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-1-0-1">Version 1.0.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-1-0-0">Version 1.0.0</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Release Notes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/release_notes.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="release-notes">
+<h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading"></a></h1>
+<section id="development-version">
+<h2>Development - Version 1.3.4<a class="headerlink" href="#development-version" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fix a bug where condensing <code class="docutils literal notranslate"><span class="pre">NO_ACTION</span></code> steps for sMDP discounting dropped the
+final observation and <code class="docutils literal notranslate"><span class="pre">d_ts</span></code>, and could give the last super-action an empty
+reward. See issue #248.</p></li>
+<li><p>Fix a bug where extending an access opportunity window across a generation seam
+could leave the satellite’s <code class="docutils literal notranslate"><span class="pre">opportunities</span></code> list out of close-time order, which
+corrupted <code class="docutils literal notranslate"><span class="pre">bisect</span></code>-based opportunity lookups. See issue #205.</p></li>
+<li><p>Fix a bug where taking the charge action would not work properly because of a missing message
+subscription in the <a class="reference internal" href="api_reference/sim/fsw/index.html#bsk_rl.sim.fsw.BasicFSWModel" title="bsk_rl.sim.fsw.BasicFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicFSWModel</span></code></a>.</p></li>
+<li><p>Update <a class="reference internal" href="examples/cloud_environment_with_reimaging.html"><span class="doc">Cloud Environment with Re-imaging</span></a> example
+adding a new network architecture and example heuristics.</p></li>
+<li><p>Add a CI smoke test that builds and steps each benchmark environment. See issue #340.</p></li>
+<li><p>Update files for compatibility with Ruff 0.16.0’s new default lint rules, excluding C408.</p></li>
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">np2EigenMatrix3d</span></code> and <code class="docutils literal notranslate"><span class="pre">np2EigenVectorXd</span></code> import path to prevent deprecation warning while preserving compatibility with older versions of Basilisk.</p></li>
+</ul>
+</section>
+<section id="version-1-3-0">
+<h2>Version 1.3.0<a class="headerlink" href="#version-1-3-0" title="Link to this heading"></a></h2>
+<p><em>Release Date: May. 19, 2026</em></p>
+<ul>
+<li><p>Allow communication to be one-way. Adds a <a class="reference internal" href="api_reference/act/index.html#bsk_rl.act.Broadcast" title="bsk_rl.act.Broadcast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Broadcast</span></code></a> action
+that can be used with <a class="reference internal" href="api_reference/comm/index.html#bsk_rl.comm.BroadcastCommunication" title="bsk_rl.comm.BroadcastCommunication"><code class="xref py py-class docutils literal notranslate"><span class="pre">BroadcastCommunication</span></code></a> to only communicate
+data when the action has been called.</p></li>
+<li><p>Add example script for shielded training with action replacement and action masking in <a class="reference internal" href="examples/training_with_shield.html"><span class="doc">Shielded training with action masking and action replacement</span></a>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">bsk</span></code> as a dependency in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.</p></li>
+<li><p>Update the CI/CD workflows to build BSK-RL using the new <code class="docutils literal notranslate"><span class="pre">bsk</span></code> dependency.</p></li>
+<li><p>Optimize performance of AEOS environments, especially for high request counts.</p></li>
+<li><p>Allow for the Vizard output path to be specified as a .bin file instead of just a directory.</p></li>
+<li><p>Use Vizard 2.3.1 locations for visualization; results in significantly smaller output
+files.</p></li>
+<li><p>Allow for a simpler Earth model to be used in Vizard by setting <code class="docutils literal notranslate"><span class="pre">use_simple_earth=True</span></code>
+in the Vizard settings dictionary. This is helpful for when visualizing may Earth-fixed
+targets.</p></li>
+<li><p>Allow flight software and dynamics models to be specified as lists of classes. This allows
+for multiple inheritance to be used for easily creating more complex satellite models.</p></li>
+<li><p>The inheritance structure of flight software and dynamics models has changed. Most models
+now inherit from <a class="reference internal" href="api_reference/sim/fsw/index.html#bsk_rl.sim.fsw.FSWModel" title="bsk_rl.sim.fsw.FSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">FSWModel</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">DynModel</span></code>,
+which are instantiable versions of the abstract bases <a class="reference internal" href="api_reference/sim/fsw/index.html#bsk_rl.sim.fsw.FSWModelABC" title="bsk_rl.sim.fsw.FSWModelABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">FSWModelABC</span></code></a> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">DynModelABC</span></code>, instead of from <a class="reference internal" href="api_reference/sim/fsw/index.html#bsk_rl.sim.fsw.BasicFSWModel" title="bsk_rl.sim.fsw.BasicFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicFSWModel</span></code></a>
+or <code class="xref py py-class docutils literal notranslate"><span class="pre">BasicDynModel</span></code>. These are lighter-weight base classes that lack
+some functionality that was not always wanted.</p></li>
+<li><p>Update support data import paths to allow compatibility with Basilisk’s new dataFetcher API.</p></li>
+<li><p>Standardize RSO inspection/eclipse naming from <code class="docutils literal notranslate"><span class="pre">shadow</span></code> to <code class="docutils literal notranslate"><span class="pre">illumination</span></code>.
+Custom code should update <code class="docutils literal notranslate"><span class="pre">min_shadow_factor</span></code> to <code class="docutils literal notranslate"><span class="pre">min_illumination_factor</span></code> and
+<code class="docutils literal notranslate"><span class="pre">shadowFactor</span></code> to <code class="docutils literal notranslate"><span class="pre">illuminationFactor</span></code> where these names are referenced.</p></li>
+<li><p>Fix target angle rate observation. <code class="docutils literal notranslate"><span class="pre">r_BN_P</span></code> is now correctly used instead of <code class="docutils literal notranslate"><span class="pre">v_BN_P</span></code>.</p></li>
+<li><p>Relax <code class="docutils literal notranslate"><span class="pre">TestAttitudeSetpoint</span></code> test tolerance to account for different initial conditions and avoid eventual failures.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If your custom satellite configurations break as a result of this change, add
+<a class="reference internal" href="api_reference/sim/fsw/index.html#bsk_rl.sim.fsw.BasicFSWModel" title="bsk_rl.sim.fsw.BasicFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicFSWModel</span></code></a> and <code class="xref py py-class docutils literal notranslate"><span class="pre">BasicDynModel</span></code>
+to your <code class="docutils literal notranslate"><span class="pre">fsw_type</span></code> and <code class="docutils literal notranslate"><span class="pre">dyn_type</span></code> lists in your satellite classes.</p>
+</div>
+</li>
+<li><p><a class="reference internal" href="api_reference/sim/fsw/index.html#bsk_rl.sim.fsw.FSWModel" title="bsk_rl.sim.fsw.FSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">FSWModel</span></code></a> implements direct actuator-less attitude control.
+By inheriting from a FSW class that overrides the <code class="docutils literal notranslate"><span class="pre">MRPControlTask</span></code>, such as
+<a class="reference internal" href="api_reference/sim/fsw/index.html#bsk_rl.sim.fsw.BasicFSWModel" title="bsk_rl.sim.fsw.BasicFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicFSWModel</span></code></a> or <a class="reference internal" href="api_reference/sim/fsw/index.html#bsk_rl.sim.fsw.SteeringFSWModel" title="bsk_rl.sim.fsw.SteeringFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">SteeringFSWModel</span></code></a>,
+users can implement custom attitude control strategies.</p></li>
+<li><p>Add a continuous action for setting attitude in <a class="reference internal" href="api_reference/act/index.html#bsk_rl.act.AttitudeSetpoint" title="bsk_rl.act.AttitudeSetpoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">AttitudeSetpoint</span></code></a>.</p></li>
+<li><p>Add <span class="xref std std-ref">benchmarks</span> with training script and four predefined benchmark environments.</p></li>
+</ul>
+</section>
+<section id="version-1-2-0">
+<h2>Version 1.2.0<a class="headerlink" href="#version-1-2-0" title="Link to this heading"></a></h2>
+<p><em>Release Date: Jul. 23, 2025</em></p>
+<ul class="simple">
+<li><p>Add an example script where reward is based on the probability of successfully observing targets covered
+by clouds in the <a class="reference internal" href="examples/cloud_environment_with_reimaging.html"><span class="doc">Cloud Environment with Re-imaging</span></a> example.</p></li>
+<li><p>Add a conjunction checking dynamics model in <code class="xref py py-class docutils literal notranslate"><span class="pre">ConjunctionDynModel</span></code>.</p></li>
+<li><p>Add utilities for relative motion state setup, <a class="reference internal" href="api_reference/utils/orbital.html#bsk_rl.utils.orbital.cd2hill" title="bsk_rl.utils.orbital.cd2hill"><code class="xref py py-class docutils literal notranslate"><span class="pre">cd2hill</span></code></a>, <a class="reference internal" href="api_reference/utils/orbital.html#bsk_rl.utils.orbital.hill2cd" title="bsk_rl.utils.orbital.hill2cd"><code class="xref py py-class docutils literal notranslate"><span class="pre">hill2cd</span></code></a>,
+and <a class="reference internal" href="api_reference/utils/orbital.html#bsk_rl.utils.orbital.relative_to_chief" title="bsk_rl.utils.orbital.relative_to_chief"><code class="xref py py-class docutils literal notranslate"><span class="pre">relative_to_chief</span></code></a>.</p></li>
+<li><p>Add a <code class="docutils literal notranslate"><span class="pre">dtype</span></code> argument to the environment (or individual satellites) and sets the default
+dtype to <code class="docutils literal notranslate"><span class="pre">np.float64</span></code>.</p></li>
+<li><p>Add support for continuous action spaces (e.g. for control problems) with <a class="reference internal" href="api_reference/act/index.html#bsk_rl.act.ContinuousAction" title="bsk_rl.act.ContinuousAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContinuousAction</span></code></a>.</p></li>
+<li><p>Add models and action for impulsive thrust and drift with a continuous action space (<a class="reference internal" href="api_reference/act/index.html#bsk_rl.act.ImpulsiveThrust" title="bsk_rl.act.ImpulsiveThrust"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImpulsiveThrust</span></code></a>).</p></li>
+<li><p>Changed inconsistent uses of <code class="docutils literal notranslate"><span class="pre">datastore</span></code> to <code class="docutils literal notranslate"><span class="pre">data_store</span></code>.</p></li>
+<li><p>Added property <code class="docutils literal notranslate"><span class="pre">data_store_kwargs</span></code> to <a class="reference internal" href="api_reference/data/index.html#bsk_rl.data.GlobalReward" title="bsk_rl.data.GlobalReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">GlobalReward</span></code></a> that is unpacked in the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">DataStore</span></code> constructor.</p></li>
+<li><p>Implemented <a class="reference internal" href="api_reference/data/index.html#bsk_rl.data.ResourceReward" title="bsk_rl.data.ResourceReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResourceReward</span></code></a> to reward based on the level of a property in the satellite
+multiplied by some coefficient.</p></li>
+<li><p>Allow rewarders to mark a satellite as truncated or terminated with the <code class="docutils literal notranslate"><span class="pre">is_truncated</span></code> and <code class="docutils literal notranslate"><span class="pre">is_terminated</span></code>
+methods.</p></li>
+<li><p>Added example script for using curriculum learning with RLlib in
+<a class="reference internal" href="examples/curriculum_learning.html"><span class="doc">Curriculum Learning</span></a> example.</p></li>
+<li><p>Updated the list of <a class="reference internal" href="publications.html"><span class="doc">publications</span></a></p></li>
+<li><p>Added the option to compute value with sMDP rewards at the start of the step in the
+RLlib configuration.</p></li>
+<li><p>Add the ability to observe remaining time in <a class="reference internal" href="api_reference/obs/index.html#bsk_rl.obs.Time" title="bsk_rl.obs.Time"><code class="xref py py-class docutils literal notranslate"><span class="pre">Time</span></code></a>.</p></li>
+<li><p>Allow for the <code class="docutils literal notranslate"><span class="pre">time_limit</span></code> to be randomized.</p></li>
+<li><p>Added observation for arbitrary relative states between two satellites in <a class="reference internal" href="api_reference/obs/index.html#bsk_rl.obs.RelativeProperties" title="bsk_rl.obs.RelativeProperties"><code class="xref py py-class docutils literal notranslate"><span class="pre">RelativeProperties</span></code></a>.</p></li>
+<li><p>Allow for the <code class="docutils literal notranslate"><span class="pre">transmitterPacketSize</span></code> to be specified. The default sets it to the instrument’s baud rate.</p></li>
+<li><p>Add a maximum range checking dynamics model in <a class="reference internal" href="api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.MaxRangeDynModel" title="bsk_rl.sim.dyn.MaxRangeDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxRangeDynModel</span></code></a>. Useful for keeping an agent
+in the vicinity of a target early in training.</p></li>
+<li><p>Add properties in spacecraft dynamics for orbital element observations.</p></li>
+<li><p>Fix an issue with failure penalties in the PettingZoo environment when the rewarder
+does not return a reward for a satellite.</p></li>
+<li><p>Allow for per-episode randomization of <a class="reference internal" href="api_reference/data/index.html#bsk_rl.data.ResourceReward" title="bsk_rl.data.ResourceReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResourceReward</span></code></a> weights and observation
+of those weights with <a class="reference internal" href="api_reference/obs/index.html#bsk_rl.obs.ResourceRewardWeight" title="bsk_rl.obs.ResourceRewardWeight"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResourceRewardWeight</span></code></a>.</p></li>
+<li><p>Add <a class="reference internal" href="api_reference/act/index.html#bsk_rl.act.ImpulsiveThrustHill" title="bsk_rl.act.ImpulsiveThrustHill"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImpulsiveThrustHill</span></code></a> for impulsive thrust in the Hill frame.</p></li>
+<li><p>Separate <a class="reference internal" href="api_reference/utils/orbital.html#bsk_rl.utils.orbital.random_circular_orbit" title="bsk_rl.utils.orbital.random_circular_orbit"><code class="xref py py-class docutils literal notranslate"><span class="pre">random_circular_orbit</span></code></a> and <a class="reference internal" href="api_reference/utils/orbital.html#bsk_rl.utils.orbital.random_orbit" title="bsk_rl.utils.orbital.random_orbit"><code class="xref py py-class docutils literal notranslate"><span class="pre">random_orbit</span></code></a> to avoid misleading
+altitude argument.</p></li>
+<li><p>Add fault modeling example script using four reaction wheels in the <a class="reference internal" href="examples/fault_environment.html"><span class="doc">Fault Environment</span></a> example.</p></li>
+<li><p>Introduce a new RSO inspection environment, primarily consisting of <a class="reference internal" href="api_reference/data/index.html#bsk_rl.data.RSOInspectionReward" title="bsk_rl.data.RSOInspectionReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">RSOInspectionReward</span></code></a>,
+<a class="reference internal" href="api_reference/scene/index.html#bsk_rl.scene.RSOPoints" title="bsk_rl.scene.RSOPoints"><code class="xref py py-class docutils literal notranslate"><span class="pre">RSOPoints</span></code></a>, <a class="reference internal" href="api_reference/sim/fsw/index.html#bsk_rl.sim.fsw.RSOInspectorFSWModel" title="bsk_rl.sim.fsw.RSOInspectorFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">RSOInspectorFSWModel</span></code></a>, and
+<a class="reference internal" href="api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.RSODynModel" title="bsk_rl.sim.dyn.RSODynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">RSODynModel</span></code></a>. An example environment setup is described in the
+<a class="reference internal" href="examples/rso_inspection.html"><span class="doc">RSO Inspection</span></a> example.</p></li>
+<li><p>Add a maximum duration option to <a class="reference internal" href="api_reference/act/index.html#bsk_rl.act.Image" title="bsk_rl.act.Image"><code class="xref py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p></li>
+<li><p>Fix a bug where a satellite’s initial data was never added to the rewarder.</p></li>
+<li><p>Fix a bug where using multiple of the same rewarder would cause some settings to be
+overwritten.</p></li>
+<li><p>Add the ability to define metaagents that concatenate satellite action and observation
+spaces in the environment.</p></li>
+<li><p>Add the ability to have the chief also terminate if a deputy violates a maximum range
+constraint in <a class="reference internal" href="api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.MaxRangeDynModel" title="bsk_rl.sim.dyn.MaxRangeDynModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxRangeDynModel</span></code></a>.</p></li>
+</ul>
+</section>
+<section id="version-1-1-0">
+<h2>Version 1.1.0<a class="headerlink" href="#version-1-1-0" title="Link to this heading"></a></h2>
+<p><em>Release Date: Feb. 26, 2025</em></p>
+<ul class="simple">
+<li><p>Add ability in <a class="reference internal" href="api_reference/obs/index.html#bsk_rl.obs.SatProperties" title="bsk_rl.obs.SatProperties"><code class="xref py py-class docutils literal notranslate"><span class="pre">SatProperties</span></code></a> to define new observations with
+a custom function.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">deepcopy</span></code> to mutable inputs to the environment so that an environment argument
+dictionary can be copied without being affected by things that happen in the environment.
+This fixes compatibility with RLlib 2.33.0+. Note that this means that the satellite
+object passed to the environment is not the same object as the one used in the environment,
+as is the case for rewarders and communication objects.</p></li>
+<li><p>Add additional observation properties for satellites and opportunities.</p></li>
+<li><p>Add connectors for multiagent semi-MDPs, as demonstrated in a new <a class="reference internal" href="examples/time_discounted_gae.html"><span class="doc">single agent</span></a>
+and <a class="reference internal" href="examples/async_multiagent_training.html"><span class="doc">multiagent</span></a> example.</p></li>
+<li><p>Add a <code class="docutils literal notranslate"><span class="pre">min_period</span></code> option to <a class="reference internal" href="api_reference/comm/index.html#bsk_rl.comm.CommunicationMethod" title="bsk_rl.comm.CommunicationMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationMethod</span></code></a>.</p></li>
+<li><p>Cache <code class="docutils literal notranslate"><span class="pre">agents</span></code> in the <a class="reference internal" href="api_reference/index.html#bsk_rl.ConstellationTasking" title="bsk_rl.ConstellationTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a> environment to improve
+performance.</p></li>
+<li><p>Add option to <code class="docutils literal notranslate"><span class="pre">generate_obs_retasking_only</span></code> to prevent computing observations for
+satellites that are continuing their current action.</p></li>
+<li><p>Allow for <a class="reference internal" href="api_reference/sats/index.html#bsk_rl.sats.ImagingSatellite" title="bsk_rl.sats.ImagingSatellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingSatellite</span></code></a> to default to a different type of
+opportunity than <code class="docutils literal notranslate"><span class="pre">target</span></code>. Also allows for access filters to include an opportunity
+type.</p></li>
+<li><p>Improve performance of <a class="reference internal" href="api_reference/obs/index.html#bsk_rl.obs.Eclipse" title="bsk_rl.obs.Eclipse"><code class="xref py py-class docutils literal notranslate"><span class="pre">Eclipse</span></code></a> observations by about 95%.</p></li>
+<li><p>Logs a warning if the initial battery charge or buffer level is incompatible with its capacity.</p></li>
+<li><p>Optimize communication when all satellites are communicating with each other.</p></li>
+</ul>
+</section>
+<section id="version-1-0-1">
+<h2>Version 1.0.1<a class="headerlink" href="#version-1-0-1" title="Link to this heading"></a></h2>
+<p><em>Release Date: Aug. 29, 2024</em></p>
+<ul class="simple">
+<li><p>Change the <a class="reference internal" href="api_reference/index.html#bsk_rl.ConstellationTasking" title="bsk_rl.ConstellationTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a> environment info dictionary to include
+all non-agent information in <code class="docutils literal notranslate"><span class="pre">info['__common__']</span></code>, which is expected by RLlib’s
+multiagent interfaces.</p></li>
+<li><p>Rewarder, communication, scenario, and satellites all have standardized <code class="docutils literal notranslate"><span class="pre">reset_overwrite_previous</span></code>,
+<code class="docutils literal notranslate"><span class="pre">reset_pre_sim_init</span></code>, and <code class="docutils literal notranslate"><span class="pre">reset_post_sim_init</span></code> methods to all for more complex
+initialization dependencies.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">get_access_filter</span></code> with <a class="reference internal" href="api_reference/sats/index.html#bsk_rl.sats.AccessSatellite.add_access_filter" title="bsk_rl.sats.AccessSatellite.add_access_filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">add_access_filter</span></code></a>,
+which uses boolean functions to determine which opportunity windows to consider.</p></li>
+<li><p>Changed the initial data generation to be defined in <a class="reference internal" href="api_reference/data/index.html#bsk_rl.data.GlobalReward" title="bsk_rl.data.GlobalReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">GlobalReward</span></code></a>
+instead of <a class="reference internal" href="api_reference/scene/index.html#bsk_rl.scene.Scenario" title="bsk_rl.scene.Scenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scenario</span></code></a>.</p></li>
+<li><p>Added a new <a class="reference internal" href="examples/index.html#examples"><span class="std std-ref">Examples</span></a> script that demonstrates how to include
+a targets with cloud coverage and a rewarder that accounts for cloud cover.</p></li>
+<li><p>Reformat the info dictionary to be more consistent across environments. All satellites now
+have a <code class="docutils literal notranslate"><span class="pre">requires_retasking</span></code> key, as opposed to a global list of satellites that require retasking.
+Each satellite also gets <code class="docutils literal notranslate"><span class="pre">d_ts</span></code> in its info dictionary. Info and warning messages are no longer
+saved in the info dict.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">log_info</span></code> and <code class="docutils literal notranslate"><span class="pre">log_warning</span></code> are deprecated by <a class="reference internal" href="api_reference/sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><code class="xref py py-class docutils literal notranslate"><span class="pre">Satellite</span></code></a>, in favor of
+<code class="docutils literal notranslate"><span class="pre">logger.info</span></code> and <code class="docutils literal notranslate"><span class="pre">logger.warning</span></code>.</p></li>
+<li><p>Add ability to correlate <code class="docutils literal notranslate"><span class="pre">sat_args</span></code> between satellites with the <code class="docutils literal notranslate"><span class="pre">sat_arg_randomizer</span></code>
+option in <a class="reference internal" href="api_reference/index.html#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a>.  This is demonstrated in the setup
+of a constellation in the <a class="reference internal" href="examples/multiagent_envs.html"><span class="doc">multiagent example</span></a>.</p></li>
+<li><p>The default solar panel normal direction is now the negative z-axis, which is antiparallel
+to the default instrument direction.</p></li>
+</ul>
+</section>
+<section id="version-1-0-0">
+<h2>Version 1.0.0<a class="headerlink" href="#version-1-0-0" title="Link to this heading"></a></h2>
+<p><em>Release Date: Jun. 12, 2024</em></p>
+<p>First major release of BSK-RL.</p>
+<ul class="simple">
+<li><p>Refactored the repository to prioritize use of the <a class="reference internal" href="api_reference/index.html#bsk_rl.GeneralSatelliteTasking" title="bsk_rl.GeneralSatelliteTasking"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a>
+environment. The general environment is now at the base level of <code class="docutils literal notranslate"><span class="pre">bsk_rl</span></code>.</p></li>
+<li><p>Renamed various elements of the environment for simplicity and clarity. See the
+<a class="reference internal" href="api_reference/index.html#bsk-rl"><span class="std std-ref">API Reference</span></a> for further details.</p></li>
+<li><p>Refactored the satellite <a class="reference internal" href="api_reference/obs/index.html#bsk-rl-obs"><span class="std std-ref">Observations</span></a> and <a class="reference internal" href="api_reference/act/index.html#bsk-rl-act"><span class="std std-ref">Actions</span></a> specification
+to be more clear and avoid conflicting variable names.</p></li>
+<li><p>Rewrote the documentation and added useful <a class="reference internal" href="examples/index.html#examples"><span class="std std-ref">Examples</span></a>.</p></li>
+<li><p>Deprecated one-off environments and training scripts. These are still accessible
+in the <a class="reference external" href="https://github.com/AVSLab/bsk_rl/">git history of the repository</a>.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api_reference/utils/rllib/discounting.html" class="btn btn-neutral float-left" title="Semi-MDP Discounting in RLlib" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="publications.html" class="btn btn-neutral float-right" title="Publications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

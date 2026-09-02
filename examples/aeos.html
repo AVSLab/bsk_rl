@@ -1,0 +1,489 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agile Earth-Observing Satellite Environment &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="RSO Inspection" href="rso_inspection.html" />
+    <link rel="prev" title="Cloud Environment with Re-imaging" href="cloud_environment_with_reimaging.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#environments">Environments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="simple_environment.html">Getting Started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="satellite_configuration.html">Satellite Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="multiagent_envs.html">Multi-Agent Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html">Fault Environment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html#Configure-Satellite-Pareameters">Configure Satellite Pareameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="communication_action.html">Broadcast Communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cloud_environment.html">Cloud Environment</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#earth-observation">Earth Observation</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cloud_environment.html">Cloud Environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cloud_environment_with_reimaging.html">Cloud Environment with Re-imaging</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Agile Earth-Observing Satellite Environment</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#Power-Free-Environment">Power-Free Environment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Power-Constrained-Environment">Power-Constrained Environment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Enabling-Vizard">Enabling Vizard</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#rso-inspection">RSO Inspection</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#benchmarks">Benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Agile Earth-Observing Satellite Environment</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/aeos.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Agile-Earth-Observing-Satellite-Environment">
+<h1>Agile Earth-Observing Satellite Environment<a class="headerlink" href="#Agile-Earth-Observing-Satellite-Environment" title="Link to this heading"></a></h1>
+<p>This example demonstrates the environment configuration for a power-free and power-constrained agile Earth-observing satellite. These environments reflect the configuration and values from an upcoming journal paper.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">bskLogging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">orbitalMotion</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">SatelliteTasking</span><span class="p">,</span> <span class="n">act</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">sats</span><span class="p">,</span> <span class="n">scene</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">fsw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.orbital</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_orbit</span><span class="p">,</span> <span class="n">rv2HN</span>
+
+<span class="n">bskLogging</span><span class="o">.</span><span class="n">setDefaultLogLevel</span><span class="p">(</span><span class="n">bskLogging</span><span class="o">.</span><span class="n">BSK_WARNING</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="Power-Free-Environment">
+<h2>Power-Free Environment<a class="headerlink" href="#Power-Free-Environment" title="Link to this heading"></a></h2>
+<p>First, a function for generating satellite types is introduced. This function can generate one of three different observation types, and can choose to include the time through episode in the observation.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">satellite_generator</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">n_ahead</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">include_time</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""_summary_</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        observation: Pick from "S1", "S2", "S3"</span>
+<span class="sd">        n_ahead: Number of requests to include in the observation and action spaces</span>
+<span class="sd">        include_time: Whether to include time through episode in the observation</span>
+<span class="sd">    """</span>
+
+    <span class="k">assert</span> <span class="n">observation</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"S1"</span><span class="p">,</span> <span class="s2">"S2"</span><span class="p">,</span> <span class="s2">"S3"</span><span class="p">]</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">CustomSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">ImagingSatellite</span><span class="p">):</span>
+        <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">n_ahead_image</span><span class="o">=</span><span class="n">n_ahead</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">observation</span> <span class="o">==</span> <span class="s2">"S1"</span><span class="p">:</span>
+            <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"omega_BP_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"c_hat_P"</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"v_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7616.5</span><span class="p">),</span>
+                <span class="p">),</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_LP_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+                    <span class="nb">type</span><span class="o">=</span><span class="s2">"target"</span><span class="p">,</span>
+                    <span class="n">n_ahead_observe</span><span class="o">=</span><span class="n">n_ahead</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">observation</span> <span class="o">==</span> <span class="s2">"S2"</span><span class="p">:</span>
+            <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"omega_BH_H"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"c_hat_H"</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"v_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7616.5</span><span class="p">),</span>
+                <span class="p">),</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_LB_H"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+                    <span class="nb">type</span><span class="o">=</span><span class="s2">"target"</span><span class="p">,</span>
+                    <span class="n">n_ahead_observe</span><span class="o">=</span><span class="n">n_ahead</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">observation</span> <span class="o">==</span> <span class="s2">"S3"</span><span class="p">:</span>
+            <span class="n">observation_spec</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"omega_BH_H"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"c_hat_H"</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"v_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7616.5</span><span class="p">),</span>
+                <span class="p">),</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_LB_H"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">800</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"target_angle"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"target_angle_rate"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_open"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">300.0</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_close"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">300.0</span><span class="p">),</span>
+                    <span class="nb">type</span><span class="o">=</span><span class="s2">"target"</span><span class="p">,</span>
+                    <span class="n">n_ahead_observe</span><span class="o">=</span><span class="n">n_ahead</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">include_time</span><span class="p">:</span>
+            <span class="n">observation_spec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">())</span>
+        <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">SteeringImagerFSWModel</span>
+
+    <span class="k">return</span> <span class="n">CustomSatellite</span>
+</pre></div>
+</div>
+</div>
+<p>Next, the parameters for the satellite are defined.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SAT_ARGS</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">80.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">storedCharge_Init</span><span class="o">=</span><span class="mf">80.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mf">100.0</span><span class="p">,</span>
+    <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mi">200</span> <span class="o">*</span> <span class="mf">8e6</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">u_max</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+    <span class="n">imageTargetMinimumElevation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="mi">800</span> <span class="o">/</span> <span class="mi">500</span><span class="p">),</span>
+    <span class="n">K1</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">K3</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
+    <span class="n">omega_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">servo_Ki</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+    <span class="n">servo_P</span><span class="o">=</span><span class="mi">150</span> <span class="o">/</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">oe</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">random_orbit</span><span class="p">(</span><span class="n">alt</span><span class="o">=</span><span class="mi">800</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Finally, the environment can be initialized.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">duration</span> <span class="o">=</span> <span class="mf">5700.0</span> <span class="o">*</span> <span class="mi">5</span>  <span class="c1"># 5 orbits</span>
+<span class="n">target_distribution</span> <span class="o">=</span> <span class="s2">"uniform"</span>
+<span class="n">n_targets</span> <span class="o">=</span> <span class="mi">3000</span>
+<span class="n">n_ahead</span> <span class="o">=</span> <span class="mi">32</span>
+
+<span class="k">if</span> <span class="n">target_distribution</span> <span class="o">==</span> <span class="s2">"uniform"</span><span class="p">:</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">UniformTargets</span><span class="p">(</span><span class="n">n_targets</span><span class="p">)</span>
+<span class="k">elif</span> <span class="n">target_distribution</span> <span class="o">==</span> <span class="s2">"cities"</span><span class="p">:</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">CityTargets</span><span class="p">(</span><span class="n">n_targets</span><span class="p">)</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">satellite_generator</span><span class="p">(</span><span class="n">observation</span><span class="o">=</span><span class="s2">"S3"</span><span class="p">,</span> <span class="n">n_ahead</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">include_time</span><span class="o">=</span><span class="kc">False</span><span class="p">)(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"EO1"</span><span class="p">,</span>
+        <span class="n">sat_args</span><span class="o">=</span><span class="n">SAT_ARGS</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+    <span class="n">sim_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">max_step_duration</span><span class="o">=</span><span class="mf">300.0</span><span class="p">,</span>
+    <span class="n">time_limit</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+    <span class="n">failure_penalty</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">terminate_on_time_limit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">"INFO"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Power-Constrained-Environment">
+<h2>Power-Constrained Environment<a class="headerlink" href="#Power-Constrained-Environment" title="Link to this heading"></a></h2>
+<p>The power-constrained environment is like the power-free environment, but with an additional battery management requirement. The satellite has additional observation elements to be able to account for power.</p>
+<p>First, the upcoming reward density observation is defined.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Density</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">interval_duration</span><span class="o">=</span><span class="mi">60</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">intervals</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">norm</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">:</span> <span class="n">sats</span><span class="o">.</span><span class="n">AccessSatellite</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interval_duration</span> <span class="o">=</span> <span class="n">interval_duration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span> <span class="o">=</span> <span class="n">intervals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">calculate_additional_windows</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+            <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intervals</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">interval_duration</span>
+            <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">window_calculation_time</span>
+        <span class="p">)</span>
+        <span class="n">soonest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">upcoming_opportunities_dict</span><span class="p">(</span><span class="n">types</span><span class="o">=</span><span class="s2">"target"</span><span class="p">)</span>
+        <span class="n">rewards</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">opportunity</span><span class="o">.</span><span class="n">priority</span> <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="n">soonest</span><span class="p">])</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">opportunities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">opportunities</span> <span class="ow">in</span> <span class="n">soonest</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+        <span class="n">time_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">times</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">interval_duration</span><span class="p">)</span>
+        <span class="n">densities</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">[</span><span class="n">time_bins</span> <span class="o">==</span> <span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">densities</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span>
+</pre></div>
+</div>
+</div>
+<p>The satellite generator function is then defined, along with some additional observations.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">wheel_speed_3</span><span class="p">(</span><span class="n">sat</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">wheel_speeds</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="mi">630</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">s_hat_H</span><span class="p">(</span><span class="n">sat</span><span class="p">):</span>
+    <span class="n">r_SN_N</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">sat</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span>
+            <span class="n">sat</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">sun_index</span>
+        <span class="p">]</span>
+        <span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">PositionVector</span>
+    <span class="p">)</span>
+    <span class="n">r_BN_N</span> <span class="o">=</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_N</span>
+    <span class="n">r_SB_N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">r_SN_N</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">r_BN_N</span><span class="p">)</span>
+    <span class="n">r_SB_H</span> <span class="o">=</span> <span class="n">rv2HN</span><span class="p">(</span><span class="n">r_BN_N</span><span class="p">,</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">v_BN_N</span><span class="p">)</span> <span class="o">@</span> <span class="n">r_SB_N</span>
+    <span class="k">return</span> <span class="n">r_SB_H</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">r_SB_H</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">power_sat_generator</span><span class="p">(</span><span class="n">n_ahead</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">include_time</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">PowerSat</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">ImagingSatellite</span><span class="p">):</span>
+        <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">n_ahead_image</span><span class="o">=</span><span class="n">n_ahead</span><span class="p">),</span> <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">()]</span>
+        <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"omega_BH_H"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"c_hat_H"</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"v_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7616.5</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"battery_charge_fraction"</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"wheel_speed_3"</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="n">wheel_speed_3</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"s_hat_H"</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="n">s_hat_H</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_LB_H"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">800</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"target_angle"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"target_angle_rate"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_open"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">300.0</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_close"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">300.0</span><span class="p">),</span>
+                <span class="nb">type</span><span class="o">=</span><span class="s2">"target"</span><span class="p">,</span>
+                <span class="n">n_ahead_observe</span><span class="o">=</span><span class="n">n_ahead</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+            <span class="n">Density</span><span class="p">(</span><span class="n">intervals</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">include_time</span><span class="p">:</span>
+            <span class="n">observation_spec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">())</span>
+
+        <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">SteeringImagerFSWModel</span>
+
+    <span class="k">return</span> <span class="n">PowerSat</span>
+</pre></div>
+</div>
+</div>
+<p>Satellite parameters are also modified for the power-constrained environment.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SAT_ARGS_POWER</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">SAT_ARGS_POWER</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">SAT_ARGS</span><span class="p">)</span>
+<span class="n">SAT_ARGS_POWER</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+    <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">120.0</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">,</span>
+        <span class="n">storedCharge_Init</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">120.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+        <span class="n">rwBasePower</span><span class="o">=</span><span class="mf">20.4</span><span class="p">,</span>
+        <span class="n">instrumentPowerDraw</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">thrusterPowerDraw</span><span class="o">=-</span><span class="mi">30</span><span class="p">,</span>
+        <span class="n">nHat_B</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">wheelSpeeds</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">2000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="n">desatAttitude</span><span class="o">=</span><span class="s2">"nadir"</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Finally, the environment can be initialized.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">duration</span> <span class="o">=</span> <span class="mf">5700.0</span> <span class="o">*</span> <span class="mi">5</span>  <span class="c1"># 5 orbits</span>
+<span class="n">target_distribution</span> <span class="o">=</span> <span class="s2">"uniform"</span>
+<span class="n">n_targets</span> <span class="o">=</span> <span class="mi">3000</span>
+<span class="n">n_ahead</span> <span class="o">=</span> <span class="mi">32</span>
+
+<span class="k">if</span> <span class="n">target_distribution</span> <span class="o">==</span> <span class="s2">"uniform"</span><span class="p">:</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">UniformTargets</span><span class="p">(</span><span class="n">n_targets</span><span class="p">)</span>
+<span class="k">elif</span> <span class="n">target_distribution</span> <span class="o">==</span> <span class="s2">"cities"</span><span class="p">:</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">CityTargets</span><span class="p">(</span><span class="n">n_targets</span><span class="p">)</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">power_sat_generator</span><span class="p">(</span><span class="n">n_ahead</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">include_time</span><span class="o">=</span><span class="kc">False</span><span class="p">)(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"EO1-power"</span><span class="p">,</span>
+        <span class="n">sat_args</span><span class="o">=</span><span class="n">SAT_ARGS_POWER</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+    <span class="n">sim_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">max_step_duration</span><span class="o">=</span><span class="mf">300.0</span><span class="p">,</span>
+    <span class="n">time_limit</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+    <span class="n">failure_penalty</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">terminate_on_time_limit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">"INFO"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Enabling-Vizard">
+<h2>Enabling Vizard<a class="headerlink" href="#Enabling-Vizard" title="Link to this heading"></a></h2>
+<p>Vizard visualization can be enabled by setting the <code class="docutils literal notranslate"><span class="pre">vizard_dir</span></code> to save the Vizard binary to. Here, it is saved to <code class="docutils literal notranslate"><span class="pre">/tmp/vizard</span></code>, but this can be modified. Scripting settings can also be passed to Vizard.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">satellite_generator</span><span class="p">(</span><span class="n">observation</span><span class="o">=</span><span class="s2">"S3"</span><span class="p">,</span> <span class="n">n_ahead</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">include_time</span><span class="o">=</span><span class="kc">False</span><span class="p">)(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"EO1"</span><span class="p">,</span>
+        <span class="n">sat_args</span><span class="o">=</span><span class="n">SAT_ARGS</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">CityTargets</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+    <span class="n">sim_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">max_step_duration</span><span class="o">=</span><span class="mf">300.0</span><span class="p">,</span>
+    <span class="n">time_limit</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+    <span class="n">failure_penalty</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">terminate_on_time_limit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">"INFO"</span><span class="p">,</span>
+    <span class="n">vizard_dir</span><span class="o">=</span><span class="s2">"/tmp/vizard"</span><span class="p">,</span>
+    <span class="n">vizard_settings</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">showLocationLabels</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cloud_environment_with_reimaging.html" class="btn btn-neutral float-left" title="Cloud Environment with Re-imaging" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rso_inspection.html" class="btn btn-neutral float-right" title="RSO Inspection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

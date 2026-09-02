@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.data.composition &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.data.composition</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.data.composition</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Data composition classes."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.data.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Data</span><span class="p">,</span> <span class="n">DataStore</span><span class="p">,</span> <span class="n">GlobalReward</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sats</span><span class="w"> </span><span class="kn">import</span> <span class="n">Satellite</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.scene.scenario</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scenario</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sats</span><span class="w"> </span><span class="kn">import</span> <span class="n">Satellite</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ComposedData">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedData">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComposedData</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Data for composed data types."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="p">:</span> <span class="n">Data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Data for composed data types.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data: Data types to compose.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"ComposedData"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"ComposedData"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Combine two units of composed data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: Another unit of composed data to combine with this one.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Combined unit of composed data.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">d</span><span class="p">)()</span> <span class="o">+</span> <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="o">+</span> <span class="nb">type</span><span class="p">(</span><span class="n">d</span><span class="p">)()</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">d1</span> <span class="o">+</span> <span class="n">d2</span> <span class="k">for</span> <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">data</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"ComposedData units must have the same number of data types."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">ComposedData</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Search for an attribute in the datas."""</span>
+        <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No Data in ComposedData has attribute '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""String representation of the ComposedData."""</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"ComposedData(</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span></div>
+
+
+
+<div class="viewcode-block" id="ComposedDataStore">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedDataStore">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComposedDataStore</span><span class="p">(</span><span class="n">DataStore</span><span class="p">):</span>
+    <span class="n">data_type</span> <span class="o">=</span> <span class="n">ComposedData</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">pass_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Pass data to the sub-DataStores.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">ds</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_stores</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+            <span class="n">ds</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">satellite</span><span class="p">:</span> <span class="s2">"Satellite"</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">data_store_types</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">DataStore</span><span class="p">],</span>
+        <span class="n">initial_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ComposedData</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_store_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""DataStore for composed data types.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellite: Satellite which data is being stored for.</span>
+<span class="sd">            data_store_types: DataStore types to compose.</span>
+<span class="sd">            initial_data: Initial data to start the store with. Usually comes from</span>
+<span class="sd">                :class:`~bsk_rl.data.GlobalReward.initial_data`.</span>
+<span class="sd">            data_store_kwargs: List of data_store kwargs matching data_store_types.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span> <span class="n">ComposedData</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">satellite</span><span class="p">,</span> <span class="n">initial_data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data_store_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data_store_kwargs</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">data_store_types</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_store_types</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_store_kwargs</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"data_store_types and data_store_kwargs must have the same length."</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_stores</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">ds</span><span class="p">(</span><span class="n">satellite</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ds</span><span class="p">,</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data_store_types</span><span class="p">,</span> <span class="n">data_store_kwargs</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pass_data</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Search for an attribute in the data_stores."""</span>
+        <span class="k">for</span> <span class="n">data_store</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_stores</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data_store</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_store</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"No DataStore in ComposedDataStore has attribute '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">'"</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ComposedDataStore.get_log_state">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedDataStore.get_log_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_log_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Pull information used in determining current data contribution."""</span>
+        <span class="n">log_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">ds</span><span class="o">.</span><span class="n">get_log_state</span><span class="p">()</span> <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_stores</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">log_states</span></div>
+
+
+<div class="viewcode-block" id="ComposedDataStore.compare_log_states">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedDataStore.compare_log_states">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compare_log_states</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prev_state</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">new_state</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Generate a unit of composed data based on previous step and current step logs."""</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">ds</span><span class="o">.</span><span class="n">compare_log_states</span><span class="p">(</span><span class="n">prev</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ds</span><span class="p">,</span> <span class="n">prev</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_stores</span><span class="p">,</span> <span class="n">prev_state</span><span class="p">,</span> <span class="n">new_state</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">ComposedData</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ComposedDataStore.update_from_logs">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedDataStore.update_from_logs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_from_logs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Update the data store based on collected information."""</span>
+        <span class="n">new_data</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">update_from_logs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pass_data</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">new_data</span></div>
+
+
+<div class="viewcode-block" id="ComposedDataStore.update_with_communicated_data">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedDataStore.update_with_communicated_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_with_communicated_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Update the data store based on collected information from other satellites."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">update_with_communicated_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pass_data</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ComposedReward">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedReward">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComposedReward</span><span class="p">(</span><span class="n">GlobalReward</span><span class="p">):</span>
+    <span class="n">data_store_type</span> <span class="o">=</span> <span class="n">ComposedDataStore</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">pass_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Pass data to the sub-rewarders.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">rewarder</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+            <span class="n">rewarder</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">rewarders</span><span class="p">:</span> <span class="n">GlobalReward</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Rewarder for composed data types.</span>
+
+<span class="sd">        This type can be automatically constructed by passing a tuple of rewarders to</span>
+<span class="sd">        the environment constructor's `reward` argument.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            rewarders: Global rewarders to compose.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span> <span class="o">=</span> <span class="n">rewarders</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Search for an attribute in the rewarders."""</span>
+        <span class="k">for</span> <span class="n">rewarder</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">rewarder</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">rewarder</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"No GlobalReward in ComposedReward has attribute '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">'"</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ComposedReward.reset_pre_sim_init">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedReward.reset_pre_sim_init">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_pre_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Handle resetting for all rewarders."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_pre_sim_init</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">rewarder</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">:</span>
+            <span class="n">rewarder</span><span class="o">.</span><span class="n">reset_pre_sim_init</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ComposedReward.reset_post_sim_init">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedReward.reset_post_sim_init">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_post_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Handle resetting for all rewarders."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">rewarder</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">:</span>
+            <span class="n">rewarder</span><span class="o">.</span><span class="n">reset_post_sim_init</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ComposedReward.reset_overwrite_previous">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedReward.reset_overwrite_previous">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_overwrite_previous</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Handle resetting for all rewarders."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_overwrite_previous</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">rewarder</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">:</span>
+            <span class="n">rewarder</span><span class="o">.</span><span class="n">reset_overwrite_previous</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ComposedReward.link_scenario">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedReward.link_scenario">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">link_scenario</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scenario</span><span class="p">:</span> <span class="n">Scenario</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Link the rewarder to the scenario."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">link_scenario</span><span class="p">(</span><span class="n">scenario</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">rewarder</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">:</span>
+            <span class="n">rewarder</span><span class="o">.</span><span class="n">link_scenario</span><span class="p">(</span><span class="n">scenario</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ComposedReward.initial_data">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedReward.initial_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initial_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="n">Satellite</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComposedData</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Furnish the DataStore with :class:`ComposedData`."""</span>
+        <span class="k">return</span> <span class="n">ComposedData</span><span class="p">(</span>
+            <span class="o">*</span><span class="p">[</span><span class="n">rewarder</span><span class="o">.</span><span class="n">initial_data</span><span class="p">(</span><span class="n">satellite</span><span class="p">)</span> <span class="k">for</span> <span class="n">rewarder</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ComposedReward.create_data_store">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedReward.create_data_store">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_data_store</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="n">Satellite</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Create a :class:`CompositeDataStore` for a satellite."""</span>
+        <span class="n">satellite</span><span class="o">.</span><span class="n">data_store</span> <span class="o">=</span> <span class="n">ComposedDataStore</span><span class="p">(</span>
+            <span class="n">satellite</span><span class="p">,</span>
+            <span class="o">*</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">data_store_type</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">],</span>
+            <span class="n">initial_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_data</span><span class="p">(</span><span class="n">satellite</span><span class="p">),</span>
+            <span class="n">data_store_kwargs</span><span class="o">=</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">data_store_kwargs</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cum_reward</span><span class="p">[</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">rewarder</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">:</span>
+            <span class="n">rewarder</span><span class="o">.</span><span class="n">cum_reward</span><span class="p">[</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span></div>
+
+
+<div class="viewcode-block" id="ComposedReward.calculate_reward">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedReward.calculate_reward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_reward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">new_data_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ComposedData</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Calculate reward for each data type and combine them."""</span>
+        <span class="n">data_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">new_data_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="n">data_len</span>
+
+        <span class="n">reward</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">data_len</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">rewarder</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">):</span>
+                <span class="n">reward_i</span> <span class="o">=</span> <span class="n">rewarder</span><span class="o">.</span><span class="n">calculate_reward</span><span class="p">(</span>
+                    <span class="p">{</span><span class="n">sat_id</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">sat_id</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">new_data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Logging</span>
+                <span class="n">nonzero_reward</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">reward_i</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">}</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonzero_reward</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">rewarder</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> reward: </span><span class="si">{</span><span class="n">nonzero_reward</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">sat_id</span><span class="p">,</span> <span class="n">sat_reward</span> <span class="ow">in</span> <span class="n">reward_i</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">reward</span><span class="p">[</span><span class="n">sat_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">reward</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sat_id</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">sat_reward</span>
+                    <span class="n">rewarder</span><span class="o">.</span><span class="n">cum_reward</span><span class="p">[</span><span class="n">sat_id</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sat_reward</span>
+        <span class="k">return</span> <span class="n">reward</span></div>
+
+
+<div class="viewcode-block" id="ComposedReward.reward">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedReward.reward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_data_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ComposedData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return combined reward calculation and update data."""</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reward</span><span class="p">(</span><span class="n">new_data_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pass_data</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">reward</span></div>
+
+
+<div class="viewcode-block" id="ComposedReward.is_truncated">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedReward.is_truncated">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_truncated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">:</span> <span class="n">Satellite</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Check if the episode is truncated by any rewarder."""</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">rewarder</span><span class="o">.</span><span class="n">is_truncated</span><span class="p">(</span><span class="n">satellite</span><span class="p">)</span> <span class="k">for</span> <span class="n">rewarder</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ComposedReward.is_terminated">
+<a class="viewcode-back" href="../../../api_reference/data/composition.html#bsk_rl.data.composition.ComposedReward.is_terminated">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_terminated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">satellite</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Check if the episode is terminated by any rewarder."""</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">rewarder</span><span class="o">.</span><span class="n">is_terminated</span><span class="p">(</span><span class="n">satellite</span><span class="p">)</span> <span class="k">for</span> <span class="n">rewarder</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewarders</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">"Data Composition"</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"ComposedReward"</span><span class="p">,</span> <span class="s2">"ComposedDataStore"</span><span class="p">,</span> <span class="s2">"ComposedData"</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

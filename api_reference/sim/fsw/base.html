@@ -1,0 +1,620 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FSW Base &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Ground Imaging" href="ground_imaging.html" />
+    <link rel="prev" title="FSW Sims" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scene/index.html">Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../comm/index.html">Communication</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Simulation (BSK)</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../index.html#bsk_rl.sim.Simulator"><code class="docutils literal notranslate"><span class="pre">Simulator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../world.html">World Sims</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../dyn/index.html">Dynamics Sims</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">FSW Sims</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#actions">Actions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#properties">Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#aliveness-checking">Aliveness Checking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.action"><code class="docutils literal notranslate"><span class="pre">action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.FSWModelABC"><code class="docutils literal notranslate"><span class="pre">FSWModelABC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.FSWModel"><code class="docutils literal notranslate"><span class="pre">FSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.BasicFSWModel"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.ImagingFSWModel"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.ContinuousImagingFSWModel"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.SteeringFSWModel"><code class="docutils literal notranslate"><span class="pre">SteeringFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.SteeringImagerFSWModel"><code class="docutils literal notranslate"><span class="pre">SteeringImagerFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.MagicOrbitalManeuverFSWModel"><code class="docutils literal notranslate"><span class="pre">MagicOrbitalManeuverFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.RSOInspectorFSWModel"><code class="docutils literal notranslate"><span class="pre">RSOInspectorFSWModel</span></code></a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">FSW Base</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.fsw.base.action"><code class="docutils literal notranslate"><span class="pre">action()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.fsw.base.FSWModelABC"><code class="docutils literal notranslate"><span class="pre">FSWModelABC</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.FSWModelABC.simulator"><code class="docutils literal notranslate"><span class="pre">FSWModelABC.simulator</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.FSWModelABC.world"><code class="docutils literal notranslate"><span class="pre">FSWModelABC.world</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.FSWModelABC.dynamics"><code class="docutils literal notranslate"><span class="pre">FSWModelABC.dynamics</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.FSWModelABC.is_alive"><code class="docutils literal notranslate"><span class="pre">FSWModelABC.is_alive()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.fsw.base.Task"><code class="docutils literal notranslate"><span class="pre">Task</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.Task.name"><code class="docutils literal notranslate"><span class="pre">Task.name</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.Task.create_task"><code class="docutils literal notranslate"><span class="pre">Task.create_task()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.Task.reset_for_action"><code class="docutils literal notranslate"><span class="pre">Task.reset_for_action()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.SunPointTask"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.SunPointTask</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.SunPointTask.name"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.SunPointTask.name</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.SunPointTask.setup_sun_pointing"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.SunPointTask.setup_sun_pointing()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.action_charge"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.action_charge()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.RWDesatTask</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.name"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.RWDesatTask.name</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.setup_thruster_mapping"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.RWDesatTask.setup_thruster_mapping()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.setup_momentum_dumping"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.RWDesatTask.setup_momentum_dumping()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.reset_for_action"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.RWDesatTask.reset_for_action()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.action_desat"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.action_desat()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.MRPControlTask</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.name"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.MRPControlTask.name</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.setup_mrp_feedback_rwa"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.MRPControlTask.setup_mrp_feedback_rwa()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.setup_rw_motor_torque"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.MRPControlTask.setup_rw_motor_torque()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.reset_for_action"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel.MRPControlTask.reset_for_action()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.fsw.base.SteeringFSWModel"><code class="docutils literal notranslate"><span class="pre">SteeringFSWModel</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask"><code class="docutils literal notranslate"><span class="pre">SteeringFSWModel.MRPControlTask</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.name"><code class="docutils literal notranslate"><span class="pre">SteeringFSWModel.MRPControlTask.name</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.setup_mrp_steering_rwa"><code class="docutils literal notranslate"><span class="pre">SteeringFSWModel.MRPControlTask.setup_mrp_steering_rwa()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.setup_rw_motor_torque"><code class="docutils literal notranslate"><span class="pre">SteeringFSWModel.MRPControlTask.setup_rw_motor_torque()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.reset_for_action"><code class="docutils literal notranslate"><span class="pre">SteeringFSWModel.MRPControlTask.reset_for_action()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="ground_imaging.html">Ground Imaging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rso_inspection.html">RSO Inspection</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Simulation (BSK)</a></li>
+          <li class="breadcrumb-item"><a href="index.html">FSW Sims</a></li>
+      <li class="breadcrumb-item active">FSW Base</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/api_reference/sim/fsw/base.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fsw-base">
+<span id="bsk-rl-sim-fsw-base"></span><h1>FSW Base<a class="headerlink" href="#fsw-base" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.sim.fsw.base">Basic FSW model for BSK-RL.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.action">
+<span class="sig-name descname"><span class="pre">action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.action" title="Link to this definition"></a></dt>
+<dd><p>Decorator to reset the satellite software before executing an action.</p>
+<p>Each time an action is called, the FSW tasks and dynamics models call their
+<code class="docutils literal notranslate"><span class="pre">reset_for_action</span></code> methods to ensure that the satellite is in a consistent state
+before the action is executed.</p>
+<p>Action functions are typically called by <a class="reference internal" href="../../act/index.html#bsk-rl-act"><span class="std std-ref">Actions</span></a> to task the satellite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>func</strong> (<em>Callable</em><em>[</em><em>[</em><em>...</em><em>]</em><em>, </em><em>None</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Callable</em>[[<em>Callable</em>[[…], None]], <em>Callable</em>[[…], None]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.FSWModelABC">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">FSWModelABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsw_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#FSWModelABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.FSWModelABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code>, <a class="reference internal" href="../../utils/functional.html#bsk_rl.utils.functional.Resetable" title="bsk_rl.utils.functional.Resetable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Resetable</span></code></a></p>
+<p>The abstract base flight software model.</p>
+<p>One FSWModelABC is instantiated for each satellite in the environment each time the
+environment is reset and new simulator is created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite</strong> (<a class="reference internal" href="../../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><em>Satellite</em></a>) – Satellite modelled by this model</p></li>
+<li><p><strong>fsw_rate</strong> (<em>float</em>) – [s] Rate of FSW simulation.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to task creation functions</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.FSWModelABC.simulator">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">simulator</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../index.html#bsk_rl.sim.Simulator" title="bsk_rl.sim.Simulator"><span class="pre">Simulator</span></a></span><a class="headerlink" href="#bsk_rl.sim.fsw.base.FSWModelABC.simulator" title="Link to this definition"></a></dt>
+<dd><p>Reference to the episode simulator.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.FSWModelABC.world">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">world</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../world.html#bsk_rl.sim.world.WorldModelABC" title="bsk_rl.sim.world.WorldModelABC"><span class="pre">WorldModelABC</span></a></span><a class="headerlink" href="#bsk_rl.sim.fsw.base.FSWModelABC.world" title="Link to this definition"></a></dt>
+<dd><p>Reference to the episode world model.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.FSWModelABC.dynamics">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dynamics</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../dyn/base.html#bsk_rl.sim.dyn.base.DynamicsModelABC" title="bsk_rl.sim.dyn.base.DynamicsModelABC"><span class="pre">DynamicsModelABC</span></a></span><a class="headerlink" href="#bsk_rl.sim.fsw.base.FSWModelABC.dynamics" title="Link to this definition"></a></dt>
+<dd><p>Reference to the satellite dynamics model for the episode.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.FSWModelABC.is_alive">
+<span class="sig-name descname"><span class="pre">is_alive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#FSWModelABC.is_alive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.FSWModelABC.is_alive" title="Link to this definition"></a></dt>
+<dd><p>Check if the FSW model has failed any aliveness requirements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the satellite FSW is still alive.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.Task">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fsw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#bsk_rl.sim.fsw.base.FSWModelABC" title="bsk_rl.sim.fsw.base.FSWModelABC"><span class="pre">FSWModelABC</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#Task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.Task" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Template class for defining FSW processes.</p>
+<p>Each FSW process has a task associated with it, which handle certain housekeeping
+functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fsw</strong> (<a class="reference internal" href="#bsk_rl.sim.fsw.base.FSWModelABC" title="bsk_rl.sim.fsw.base.FSWModelABC"><em>FSWModelABC</em></a>) – FSW model task contributes to</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Task priority</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.Task.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#bsk_rl.sim.fsw.base.Task.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.Task.create_task">
+<span class="sig-name descname"><span class="pre">create_task</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#Task.create_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.Task.create_task" title="Link to this definition"></a></dt>
+<dd><p>Add task to FSW with a unique name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.Task.reset_for_action">
+<span class="sig-name descname"><span class="pre">reset_for_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#Task.reset_for_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.Task.reset_for_action" title="Link to this definition"></a></dt>
+<dd><p>Housekeeping for task when a new action is called.</p>
+<p>Disables task by default, can be overridden by subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">BasicFSWModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><span class="pre">Satellite</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsw_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="index.html#bsk_rl.sim.fsw.FSWModel" title="bsk_rl.sim.fsw.base.FSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">FSWModel</span></code></a></p>
+<p>The abstract base flight software model.</p>
+<p>One FSWModelABC is instantiated for each satellite in the environment each time the
+environment is reset and new simulator is created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite</strong> (<a class="reference internal" href="../../sats/index.html#bsk_rl.sats.Satellite" title="bsk_rl.sats.Satellite"><em>Satellite</em></a>) – Satellite modelled by this model</p></li>
+<li><p><strong>fsw_rate</strong> (<em>float</em>) – [s] Rate of FSW simulation.</p></li>
+<li><p><strong>priority</strong> (<em>int</em>) – Model priority.</p></li>
+<li><p><strong>kwargs</strong> – Passed to task creation functions</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.SunPointTask">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">SunPointTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fsw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">99</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.SunPointTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.SunPointTask" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.fsw.base.Task" title="bsk_rl.sim.fsw.base.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a></p>
+<p>Task to generate a sun-pointing reference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fsw</strong> (<a class="reference internal" href="#bsk_rl.sim.fsw.base.FSWModelABC" title="bsk_rl.sim.fsw.base.FSWModelABC"><em>FSWModelABC</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.SunPointTask.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sunPointTask'</span></span><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.SunPointTask.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.SunPointTask.setup_sun_pointing">
+<span class="sig-name descname"><span class="pre">setup_sun_pointing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nHat_B</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.SunPointTask.setup_sun_pointing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.SunPointTask.setup_sun_pointing" title="Link to this definition"></a></dt>
+<dd><p>Configure the solar array sun-pointing task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nHat_B</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) – Solar array normal vector.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.action_charge">
+<span class="sig-name descname"><span class="pre">action_charge</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.action_charge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.action_charge" title="Link to this definition"></a></dt>
+<dd><p><em>Decorated with</em> <a class="reference internal" href="index.html#bsk_rl.sim.fsw.action" title="bsk_rl.sim.fsw.action"><code class="xref py py-class docutils literal notranslate"><span class="pre">action</span></code></a></p>
+<p>Charge battery by pointing the solar panels at the sun.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RWDesatTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fsw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">97</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.RWDesatTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.fsw.base.Task" title="bsk_rl.sim.fsw.base.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a></p>
+<p>Task to desaturate reaction wheels using thrusters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fsw</strong> (<a class="reference internal" href="#bsk_rl.sim.fsw.base.FSWModelABC" title="bsk_rl.sim.fsw.base.FSWModelABC"><em>FSWModelABC</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'rwDesatTask'</span></span><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.setup_thruster_mapping">
+<span class="sig-name descname"><span class="pre">setup_thruster_mapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controlAxes_B</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thrForceSign</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.RWDesatTask.setup_thruster_mapping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.setup_thruster_mapping" title="Link to this definition"></a></dt>
+<dd><p>Configure the thruster mapping.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>controlAxes_B</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) – Control unit axes.</p></li>
+<li><p><strong>thrForceSign</strong> (<em>int</em>) – Flag indicating if pos (+1) or negative (-1) thruster
+solutions are found.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.setup_momentum_dumping">
+<span class="sig-name descname"><span class="pre">setup_momentum_dumping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hs_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxCounterValue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thrMinFireTime</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">desatAttitude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.RWDesatTask.setup_momentum_dumping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.setup_momentum_dumping" title="Link to this definition"></a></dt>
+<dd><p>Configure the momentum dumping algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hs_min</strong> (<em>float</em>) – [N*m*s] Minimum RW cluster momentum for dumping.</p></li>
+<li><p><strong>maxCounterValue</strong> (<em>int</em>) – Control periods between firing thrusters.</p></li>
+<li><p><strong>thrMinFireTime</strong> (<em>float</em>) – [s] Minimum thruster firing time.</p></li>
+<li><p><strong>desatAttitude</strong> (<em>str</em><em> | </em><em>None</em>) – <p>Direction to point while desaturating:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;sun&quot;</span></code> points panels at sun</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;nadir&quot;</span></code> points instrument nadir</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code> disables attitude control.</p></li>
+</ul>
+</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.reset_for_action">
+<span class="sig-name descname"><span class="pre">reset_for_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.RWDesatTask.reset_for_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.RWDesatTask.reset_for_action" title="Link to this definition"></a></dt>
+<dd><p>Disable power draw for thrusters when a new action is selected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.action_desat">
+<span class="sig-name descname"><span class="pre">action_desat</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.action_desat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.action_desat" title="Link to this definition"></a></dt>
+<dd><p><em>Decorated with</em> <a class="reference internal" href="index.html#bsk_rl.sim.fsw.action" title="bsk_rl.sim.fsw.action"><code class="xref py py-class docutils literal notranslate"><span class="pre">action</span></code></a></p>
+<p>Charge while desaturating reaction wheels.</p>
+<blockquote>
+<div><p>This action maneuvers the satellite into <code class="docutils literal notranslate"><span class="pre">desatAttitude</span></code>, turns on the thruster
+power sink, and enables the desaturation tasks. This action typically needs to be
+called multiple times to fully desaturate the wheels.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MRPControlTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fsw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">80</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.MRPControlTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.fsw.base.Task" title="bsk_rl.sim.fsw.base.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a></p>
+<p>Task to control the satellite with reaction wheels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fsw</strong> (<a class="reference internal" href="#bsk_rl.sim.fsw.base.FSWModelABC" title="bsk_rl.sim.fsw.base.FSWModelABC"><em>FSWModelABC</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mrpControlTask'</span></span><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.setup_mrp_feedback_rwa">
+<span class="sig-name descname"><span class="pre">setup_mrp_feedback_rwa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ki</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.MRPControlTask.setup_mrp_feedback_rwa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.setup_mrp_feedback_rwa" title="Link to this definition"></a></dt>
+<dd><p>Set the MRP feedback control properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>K</strong> (<em>float</em>) – Proportional gain.</p></li>
+<li><p><strong>Ki</strong> (<em>float</em>) – Integral gain.</p></li>
+<li><p><strong>P</strong> (<em>float</em>) – Derivative gain.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.setup_rw_motor_torque">
+<span class="sig-name descname"><span class="pre">setup_rw_motor_torque</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controlAxes_B</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.MRPControlTask.setup_rw_motor_torque"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.setup_rw_motor_torque" title="Link to this definition"></a></dt>
+<dd><p>Set parameters for finding motor torque from the control law.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>controlAxes_B</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) – Control unit axes.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.reset_for_action">
+<span class="sig-name descname"><span class="pre">reset_for_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#BasicFSWModel.MRPControlTask.reset_for_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.BasicFSWModel.MRPControlTask.reset_for_action" title="Link to this definition"></a></dt>
+<dd><p>MRP control is enabled by default for all tasks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.SteeringFSWModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">SteeringFSWModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#SteeringFSWModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.SteeringFSWModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.fsw.base.BasicFSWModel" title="bsk_rl.sim.fsw.base.BasicFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicFSWModel</span></code></a></p>
+<p>FSW extending attitude control to use MRP steering instead of MRP feedback.</p>
+<p>This class replaces the simple attitude feedback control law with a more
+sophisticated <a class="reference external" href="https://hanspeterschaub.info/basilisk/Documentation/fswAlgorithms/attControl/mrpSteering/mrpSteering.html">MRP steering control law</a>.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MRPControlTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fsw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">80</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#SteeringFSWModel.MRPControlTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.fsw.base.Task" title="bsk_rl.sim.fsw.base.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a></p>
+<p>Task to control the satellite with reaction wheels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fsw</strong> (<a class="reference internal" href="#bsk_rl.sim.fsw.base.FSWModelABC" title="bsk_rl.sim.fsw.base.FSWModelABC"><em>FSWModelABC</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mrpControlTask'</span></span><a class="headerlink" href="#bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.setup_mrp_steering_rwa">
+<span class="sig-name descname"><span class="pre">setup_mrp_steering_rwa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">servo_Ki</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">servo_P</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#SteeringFSWModel.MRPControlTask.setup_mrp_steering_rwa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.setup_mrp_steering_rwa" title="Link to this definition"></a></dt>
+<dd><p>Define the control properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>K1</strong> (<em>float</em>) – MRP steering gain.</p></li>
+<li><p><strong>K3</strong> (<em>float</em>) – MRP steering gain.</p></li>
+<li><p><strong>omega_max</strong> (<em>float</em>) – [rad/s] Maximum targetable spacecraft body rate.</p></li>
+<li><p><strong>servo_Ki</strong> (<em>float</em>) – Servo gain.</p></li>
+<li><p><strong>servo_P</strong> (<em>float</em>) – Servo gain.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.setup_rw_motor_torque">
+<span class="sig-name descname"><span class="pre">setup_rw_motor_torque</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controlAxes_B</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#SteeringFSWModel.MRPControlTask.setup_rw_motor_torque"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.setup_rw_motor_torque" title="Link to this definition"></a></dt>
+<dd><p>Define the motor torque from the control law.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>controlAxes_B</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) – Control unit axes.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.reset_for_action">
+<span class="sig-name descname"><span class="pre">reset_for_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/base.html#SteeringFSWModel.MRPControlTask.reset_for_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.base.SteeringFSWModel.MRPControlTask.reset_for_action" title="Link to this definition"></a></dt>
+<dd><p>Keep MRP control enabled on action calls.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="FSW Sims" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ground_imaging.html" class="btn btn-neutral float-right" title="Ground Imaging" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

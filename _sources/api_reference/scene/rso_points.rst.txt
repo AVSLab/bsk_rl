@@ -1,0 +1,13 @@
+.. _bsk_rl.scene.rso_points:
+.. currentmodule:: bsk_rl.scene.rso_points
+
+RSO Scenarios
+=============
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.scene.rso_points
+   :members:
+   :show-inheritance:
+

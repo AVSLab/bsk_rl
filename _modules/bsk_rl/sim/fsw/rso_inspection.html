@@ -1,0 +1,230 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.sim.fsw.rso_inspection &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.sim.fsw.rso_inspection</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.sim.fsw.rso_inspection</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""FSW models for RSO inspection."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Iterable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">messaging</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim.fsw</span><span class="w"> </span><span class="kn">import</span> <span class="n">ContinuousImagingFSWModel</span><span class="p">,</span> <span class="n">action</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.functional</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_args</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sats</span><span class="w"> </span><span class="kn">import</span> <span class="n">Satellite</span>
+
+
+<div class="viewcode-block" id="RSOInspectorFSWModel">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_inspection.html#bsk_rl.sim.fsw.RSOInspectorFSWModel">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RSOInspectorFSWModel</span><span class="p">(</span><span class="n">ContinuousImagingFSWModel</span><span class="p">):</span>
+<div class="viewcode-block" id="RSOInspectorFSWModel.set_target_rso">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_inspection.html#bsk_rl.sim.fsw.RSOInspectorFSWModel.set_target_rso">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_target_rso</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rso</span><span class="p">:</span> <span class="s2">"Satellite"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Set the RSO to point at."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">scTargetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="n">rso</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">transOutMsg</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RSOInspectorFSWModel.LocPointTask">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_inspection.html#bsk_rl.sim.fsw.RSOInspectorFSWModel.LocPointTask">[docs]</a>
+    <span class="k">class</span><span class="w"> </span><span class="nc">LocPointTask</span><span class="p">(</span><span class="n">ContinuousImagingFSWModel</span><span class="o">.</span><span class="n">LocPointTask</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Task to point at the RSO and trigger the instrument."""</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">"""Task to point at the RSO and trigger the instrument."""</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RSOInspectorFSWModel.LocPointTask.setup_location_pointing">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_inspection.html#bsk_rl.sim.fsw.RSOInspectorFSWModel.LocPointTask.setup_location_pointing">[docs]</a>
+        <span class="nd">@default_args</span><span class="p">(</span><span class="n">inst_pHat_B</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">setup_location_pointing</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">inst_pHat_B</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">"""Set the location pointing guidance module to point at the RSO.</span>
+
+<span class="sd">            The function ``set_target_rso`` must be called externally to connect the RSO</span>
+<span class="sd">            to the pointing module.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                inst_pHat_B: Instrument pointing direction.</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            """</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">pHat_B</span> <span class="o">=</span> <span class="n">inst_pHat_B</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">scAttInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">attOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">scTransInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">transOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">useBoresightRateDamping</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">messaging</span><span class="o">.</span><span class="n">AttGuidMsg_C_addAuthor</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">attGuidOutMsg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span>
+            <span class="p">)</span>
+            <span class="n">messaging</span><span class="o">.</span><span class="n">AttRefMsg_C_addAuthor</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">attRefOutMsg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attRefMsg</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1198</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RSOInspectorFSWModel.LocPointTask.setup_instrument_controller">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_inspection.html#bsk_rl.sim.fsw.RSOInspectorFSWModel.LocPointTask.setup_instrument_controller">[docs]</a>
+        <span class="nd">@default_args</span><span class="p">(</span><span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">setup_instrument_controller</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">imageAttErrorRequirement</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">imageRateErrorRequirement</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">"""Set the instrument controller parameters for scanning.</span>
+
+<span class="sd">            As long as these two conditions are met, scanning will occur continuously.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                imageAttErrorRequirement: [MRP norm] Pointing attitude error tolerance</span>
+<span class="sd">                    for imaging.</span>
+<span class="sd">                imageRateErrorRequirement: [rad/s] Rate tolerance for imaging. Disable</span>
+<span class="sd">                    with None.</span>
+<span class="sd">                kwargs: Passed to other setup functions.</span>
+<span class="sd">            """</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">attErrTolerance</span> <span class="o">=</span> <span class="n">imageAttErrorRequirement</span>
+            <span class="k">if</span> <span class="n">imageRateErrorRequirement</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">useRateTolerance</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">rateErrTolerance</span> <span class="o">=</span> <span class="n">imageRateErrorRequirement</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">attGuidInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span><span class="p">)</span>
+            <span class="c1"># Only use this module to check for pointing requirements</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">access_msg</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">AccessMsg</span><span class="p">()</span>
+            <span class="n">payload</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">AccessMsgPayload</span><span class="p">()</span>
+            <span class="n">payload</span><span class="o">.</span><span class="n">hasAccess</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">access_msg</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">accessInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">access_msg</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">987</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="RSOInspectorFSWModel.action_inspect_rso">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_inspection.html#bsk_rl.sim.fsw.RSOInspectorFSWModel.action_inspect_rso">[docs]</a>
+    <span class="nd">@action</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_inspect_rso</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Action to inspect the RSO."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeStatusInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">deviceCmdOutMsg</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">controllerStatus</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataName</span> <span class="o">=</span> <span class="s2">"inspect_rso"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LocPointTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">"RSO Inspection"</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"RSOInspectorFSWModel"</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

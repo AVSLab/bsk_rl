@@ -1,0 +1,604 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.sim.dyn.ground_imaging &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../dyn.html">bsk_rl.sim.dyn</a></li>
+      <li class="breadcrumb-item active">bsk_rl.sim.dyn.ground_imaging</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.sim.dyn.ground_imaging</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Models for ground imaging dynamics."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">groundLocation</span><span class="p">,</span>
+    <span class="n">partitionedStorageUnit</span><span class="p">,</span>
+    <span class="n">simpleInstrument</span><span class="p">,</span>
+    <span class="n">simplePowerSink</span><span class="p">,</span>
+    <span class="n">simpleStorageUnit</span><span class="p">,</span>
+    <span class="n">spaceToGroundTransmitter</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">orbitalMotion</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">world</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim.dyn</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasicDynamicsModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">actuator_primitives</span> <span class="k">as</span> <span class="n">aP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.functional</span><span class="w"> </span><span class="kn">import</span> <span class="n">aliveness_checker</span><span class="p">,</span> <span class="n">default_args</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim.world</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorldModelABC</span>
+
+
+<div class="viewcode-block" id="ImagingDynModel">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ImagingDynModel</span><span class="p">(</span><span class="n">BasicDynamicsModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Equips the satellite with an instrument, storage unit, and transmitter."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Equips the satellite with an instrument, storage unit, and transmitter.</span>
+
+<span class="sd">        This dynamics model is used with :class:`~bsk_rl.sats.ImagingSatellite`. It</span>
+<span class="sd">        provides the satellite with the ability to take images of a point target. To</span>
+<span class="sd">        enable downlink, use :class:`GroundStationDynModel` and :class:`~bsk_rl.sim.world.GroundStationWorldModel`.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">storage_level</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Storage level [bits]."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">storageLevel</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">storage_level_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Storage level as a fraction of capacity."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_level</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_setup_dynamics_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_setup_dynamics_objects</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_instrument_power_sink</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_transmitter_power_sink</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_instrument</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_transmitter</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_storage_unit</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_imaging_target</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ImagingDynModel.setup_instrument">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_instrument">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">instrumentBaudRate</span><span class="o">=</span><span class="mf">8e6</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_instrument</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instrumentBaudRate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">895</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Set up the instrument data collection model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instrumentBaudRate: [bits] Data generated by an image.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span> <span class="o">=</span> <span class="n">simpleInstrument</span><span class="o">.</span><span class="n">SimpleInstrument</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"instrument"</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeBaudRate</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">instrumentBaudRate</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dyn_rate</span>
+        <span class="p">)</span>  <span class="c1"># makes imaging instantaneous</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataName</span> <span class="o">=</span> <span class="s2">"Instrument"</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.setup_transmitter">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_transmitter">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">transmitterBaudRate</span><span class="o">=-</span><span class="mf">8e6</span><span class="p">,</span> <span class="n">transmitterNumBuffers</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">transmitterPacketSize</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_transmitter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">transmitterBaudRate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">instrumentBaudRate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">transmitterNumBuffers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">transmitterPacketSize</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">798</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Set up the transmitter model for downlinking data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            transmitterBaudRate: [baud] Rate of data downlink. Should be negative.</span>
+<span class="sd">            instrumentBaudRate: [bits] Image size, used to set packet size if ``transmitterPacketSize`` is not specified.</span>
+<span class="sd">            transmitterNumBuffers: Number of transmitter buffers</span>
+<span class="sd">            transmitterPacketSize: [bits] Minimum data amount to be downlinked for a partition. If ``None``, set as ``instrumentBaudRate``.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">transmitterBaudRate</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"transmitterBaudRate should probably be negative."</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">spaceToGroundTransmitter</span><span class="o">.</span><span class="n">SpaceToGroundTransmitter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"transmitter"</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">nodeBaudRate</span> <span class="o">=</span> <span class="n">transmitterBaudRate</span>  <span class="c1"># baud</span>
+        <span class="k">if</span> <span class="n">transmitterPacketSize</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># set packet size equal to the size of a single image</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">packetSize</span> <span class="o">=</span> <span class="o">-</span><span class="n">instrumentBaudRate</span>  <span class="c1"># bits</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">packetSize</span> <span class="o">=</span> <span class="n">transmitterPacketSize</span>  <span class="c1"># bits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">numBuffers</span> <span class="o">=</span> <span class="n">transmitterNumBuffers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.setup_instrument_power_sink">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_instrument_power_sink">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">instrumentPowerDraw</span><span class="o">=-</span><span class="mf">30.0</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_instrument_power_sink</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instrumentPowerDraw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">897</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Set the instrument power sink parameters.</span>
+
+<span class="sd">        The instrument draws power when in an imaging task, representing the power cost</span>
+<span class="sd">        of operating the instrument.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instrumentPowerDraw: [W] Power draw when instrument is enabled.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">instrumentPowerDraw</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"instrumentPowerDraw should probably be zero or negative."</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span> <span class="o">=</span> <span class="n">simplePowerSink</span><span class="o">.</span><span class="n">SimplePowerSink</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"insPowerSink"</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">nodePowerOut</span> <span class="o">=</span> <span class="n">instrumentPowerDraw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.setup_transmitter_power_sink">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_transmitter_power_sink">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">transmitterPowerDraw</span><span class="o">=-</span><span class="mf">15.0</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_transmitter_power_sink</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">transmitterPowerDraw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">896</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Set the transmitter power sink parameters.</span>
+
+<span class="sd">        The transmitter draws power when in a downlink task, representing the power cost</span>
+<span class="sd">        of downlinking data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            transmitterPowerDraw: [W] Power draw when transmitter is enabled.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">transmitterPowerDraw</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"transmitterPowerDraw should probably be zero or negative."</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span> <span class="o">=</span> <span class="n">simplePowerSink</span><span class="o">.</span><span class="n">SimplePowerSink</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"transPowerSink"</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">nodePowerOut</span> <span class="o">=</span> <span class="n">transmitterPowerDraw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">addPowerNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">nodePowerOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.setup_storage_unit">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_storage_unit">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mi">20</span> <span class="o">*</span> <span class="mf">8e6</span><span class="p">,</span>
+        <span class="n">bufferNames</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">storageUnitValidCheck</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">storageInit</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_storage_unit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataStorageCapacity</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">storageUnitValidCheck</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">storageInit</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">transmitterNumBuffers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">bufferNames</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">699</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Configure the storage unit and its buffers.</span>
+
+<span class="sd">        Separate buffers can be used to track imaging of different targets. Often, the</span>
+<span class="sd">        buffer names will be set up by satellite based on the scenario configuration.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataStorageCapacity: [bits] Maximum data that can be stored.</span>
+<span class="sd">            transmitterNumBuffers: Number of unit buffers. Not necessary if ``bufferNames``</span>
+<span class="sd">                are given.</span>
+<span class="sd">            bufferNames: List of buffer names to use. Named by number if ``None``.</span>
+<span class="sd">            storageUnitValidCheck: If ``True``, enforce that the storage level is below</span>
+<span class="sd">                the storage capacity when checking aliveness.</span>
+<span class="sd">            storageInit: [bits] Initial storage level.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span> <span class="o">=</span> <span class="n">partitionedStorageUnit</span><span class="o">.</span><span class="n">PartitionedStorageUnit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"storageUnit"</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span> <span class="o">=</span> <span class="n">dataStorageCapacity</span>  <span class="c1"># bits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addDataNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addDataNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">nodeDataOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnitValidCheck</span> <span class="o">=</span> <span class="n">storageUnitValidCheck</span>
+        <span class="c1"># Add all of the targets to the data buffer</span>
+        <span class="k">if</span> <span class="n">bufferNames</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">buffer_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">transmitterNumBuffers</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addPartition</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">buffer_idx</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">transmitterNumBuffers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">transmitterNumBuffers</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span>
+                <span class="n">bufferNames</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"transmitterNumBuffers cannot be different than len(bufferNames)."</span>
+                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">buffer_name</span> <span class="ow">in</span> <span class="n">bufferNames</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addPartition</span><span class="p">(</span><span class="n">buffer_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">storageInit</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">storageInit</span> <span class="o">&gt;</span> <span class="n">dataStorageCapacity</span> <span class="ow">or</span> <span class="n">storageInit</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Initial storage level </span><span class="si">{</span><span class="n">storageInit</span><span class="si">}</span><span class="s2"> incompatible with its capacity </span><span class="si">{</span><span class="n">dataStorageCapacity</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">setDataBuffer</span><span class="p">([</span><span class="s2">"STORED DATA"</span><span class="p">],</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">storageInit</span><span class="p">)])</span>
+
+        <span class="c1"># Add the storage unit to the transmitter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addStorageUnitToTransmitter</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.data_storage_valid">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.data_storage_valid">[docs]</a>
+    <span class="nd">@aliveness_checker</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">data_storage_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Check that the buffer has not run out of space.</span>
+
+<span class="sd">        Only is checked if ``storageUnitValidCheck`` is ``True``; otherwise, a full storage</span>
+<span class="sd">        unit will prevent additional data from being stored but will not cause the satellite</span>
+<span class="sd">        to be considered dead.</span>
+<span class="sd">        """</span>
+        <span class="n">storage_check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnitValidCheck</span>
+        <span class="k">if</span> <span class="n">storage_check</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_level</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">storage_level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.setup_imaging_target">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.setup_imaging_target">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">groundLocationPlanetRadius</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span>
+        <span class="n">imageTargetMinimumElevation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mf">45.0</span><span class="p">),</span>
+        <span class="n">imageTargetMaximumRange</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_imaging_target</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">groundLocationPlanetRadius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">imageTargetMinimumElevation</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">imageTargetMaximumRange</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Add a generic imaging target to dynamics.</span>
+
+<span class="sd">        The target must be updated with a particular location when used.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            groundLocationPlanetRadius: [m] Radius of ground locations from center of planet.</span>
+<span class="sd">            imageTargetMinimumElevation: [rad] Minimum elevation angle from target to</span>
+<span class="sd">                satellite when imaging.</span>
+<span class="sd">            imageTargetMaximumRange: [m] Maximum range from target to satellite when</span>
+<span class="sd">                imaging. -1 to disable.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"ImagingTarget"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="n">groundLocationPlanetRadius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1000.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">imageTargetMinimumElevation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">imageTargetMaximumRange</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">world_task_name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="p">,</span>
+            <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagingDynModel.reset_for_action">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ImagingDynModel.reset_for_action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_for_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Shut off power sinks unless the transmitter or instrument is being used."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_for_action</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">dataStatus</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitterPowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">0</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ContinuousImagingDynModel">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ContinuousImagingDynModel</span><span class="p">(</span><span class="n">ImagingDynModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Equips the satellite for continuous nadir imaging."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Equips the satellite for continuous nadir imaging.</span>
+
+<span class="sd">        Equips satellite with an instrument, storage unit, and transmitter</span>
+<span class="sd">        for continuous nadir imaging. A single data buffer is used for storage, and data</span>
+<span class="sd">        is accumulated continuously while imaging. The imaging target is fixed at the</span>
+<span class="sd">        center of the Earth for nadir imaging.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ContinuousImagingDynModel.setup_instrument">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_instrument">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">instrumentBaudRate</span><span class="o">=</span><span class="mf">8e6</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_instrument</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instrumentBaudRate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">895</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Set up the continuous instrument model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instrumentBaudRate: [baud] Data generation rate step when continuously imaging.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span> <span class="o">=</span> <span class="n">simpleInstrument</span><span class="o">.</span><span class="n">SimpleInstrument</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"instrument"</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeBaudRate</span> <span class="o">=</span> <span class="n">instrumentBaudRate</span>  <span class="c1"># make imaging instantaneous</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataName</span> <span class="o">=</span> <span class="s2">"Instrument"</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ContinuousImagingDynModel.setup_storage_unit">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_storage_unit">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span>
+        <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mi">20</span> <span class="o">*</span> <span class="mf">8e6</span><span class="p">,</span>
+        <span class="n">storageUnitValidCheck</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">storageInit</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_storage_unit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataStorageCapacity</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">storageUnitValidCheck</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">storageInit</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">699</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Configure the storage unit and its buffers.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataStorageCapacity: [bits] Maximum data that can be stored.</span>
+<span class="sd">            storageUnitValidCheck: If True, check that the storage level is below the</span>
+<span class="sd">                storage capacity.</span>
+<span class="sd">            storageInit: [bits] Initial storage level.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span> <span class="o">=</span> <span class="n">simpleStorageUnit</span><span class="o">.</span><span class="n">SimpleStorageUnit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"storageUnit"</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span> <span class="o">=</span> <span class="n">dataStorageCapacity</span>  <span class="c1"># bits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addDataNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">addDataNodeToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">nodeDataOutMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnitValidCheck</span> <span class="o">=</span> <span class="n">storageUnitValidCheck</span>
+        <span class="k">if</span> <span class="n">storageInit</span> <span class="o">&gt;</span> <span class="n">dataStorageCapacity</span> <span class="ow">or</span> <span class="n">storageInit</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Initial storage level </span><span class="si">{</span><span class="n">storageInit</span><span class="si">}</span><span class="s2"> incompatible with its capacity </span><span class="si">{</span><span class="n">dataStorageCapacity</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">setDataBuffer</span><span class="p">(</span><span class="n">storageInit</span><span class="p">)</span>
+
+        <span class="c1"># Add the storage unit to the transmitter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addStorageUnitToTransmitter</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">storageUnit</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ContinuousImagingDynModel.setup_imaging_target">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.ContinuousImagingDynModel.setup_imaging_target">[docs]</a>
+    <span class="nd">@default_args</span><span class="p">(</span><span class="n">imageTargetMaximumRange</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_imaging_target</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">imageTargetMaximumRange</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Add a imaging target at the center of the Earth.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            imageTargetMaximumRange: [m] Maximum range from target to satellite when</span>
+<span class="sd">                imaging. -1 to disable.</span>
+<span class="sd">            priority: Model priority.</span>
+<span class="sd">            kwargs: Passed to other setup functions.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span> <span class="o">=</span> <span class="n">groundLocation</span><span class="o">.</span><span class="n">GroundLocation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"scanningTarget"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">planetRadius</span> <span class="o">=</span> <span class="mf">1e-6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">specifyLocation</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">planetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">body_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">minimumElevation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">maximumRange</span> <span class="o">=</span> <span class="n">imageTargetMaximumRange</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">world_task_name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="p">,</span>
+            <span class="n">ModelPriority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imagingTarget</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="GroundStationDynModel">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.GroundStationDynModel">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GroundStationDynModel</span><span class="p">(</span><span class="n">ImagingDynModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Model that connects satellite to world ground stations."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Model that connects satellite to world ground stations.</span>
+
+<span class="sd">        This model enables the use of ground stations defined in :class:`~bsk_rl.sim.world.GroundStationWorldModel`</span>
+<span class="sd">        for data downlink.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_requires_world</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="s2">"WorldModelABC"</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_requires_world</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="n">world</span><span class="o">.</span><span class="n">GroundStationWorldModel</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_setup_dynamics_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_setup_dynamics_objects</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_ground_station_locations</span><span class="p">()</span>
+
+<div class="viewcode-block" id="GroundStationDynModel.setup_ground_station_locations">
+<a class="viewcode-back" href="../../../../api_reference/sim/dyn/index.html#bsk_rl.sim.dyn.ground_imaging.GroundStationDynModel.setup_ground_station_locations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_ground_station_locations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Connect the transmitter to ground stations."""</span>
+        <span class="k">for</span> <span class="n">groundStation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">groundStations</span><span class="p">:</span>
+            <span class="n">groundStation</span><span class="o">.</span><span class="n">addSpacecraftToModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scObject</span><span class="o">.</span><span class="n">scStateOutMsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transmitter</span><span class="o">.</span><span class="n">addAccessMsgToTransmitter</span><span class="p">(</span><span class="n">groundStation</span><span class="o">.</span><span class="n">accessOutMsgs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">,</span> <span class="s2">"add_location_for_access_checking"</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">add_location_for_access_checking</span><span class="p">(</span>
+                    <span class="nb">object</span><span class="o">=</span><span class="n">groundStation</span><span class="o">.</span><span class="n">ModelTag</span><span class="p">,</span>
+                    <span class="n">r_LP_P</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">groundStation</span><span class="o">.</span><span class="n">r_LP_P_Init</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                    <span class="n">min_elev</span><span class="o">=</span><span class="n">groundStation</span><span class="o">.</span><span class="n">minimumElevation</span><span class="p">,</span>
+                    <span class="nb">type</span><span class="o">=</span><span class="s2">"ground_station"</span><span class="p">,</span>
+                <span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">"Ground Imaging"</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"ImagingDynModel"</span><span class="p">,</span>
+    <span class="s2">"ContinuousImagingDynModel"</span><span class="p">,</span>
+    <span class="s2">"GroundStationDynModel"</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

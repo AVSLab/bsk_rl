@@ -1,0 +1,506 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RSO Inspection &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Training with RLlib PPO" href="rllib_training.html" />
+    <link rel="prev" title="Agile Earth-Observing Satellite Environment" href="aeos.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#environments">Environments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="simple_environment.html">Getting Started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="satellite_configuration.html">Satellite Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="multiagent_envs.html">Multi-Agent Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html">Fault Environment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html#Configure-Satellite-Pareameters">Configure Satellite Pareameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="communication_action.html">Broadcast Communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cloud_environment.html">Cloud Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#earth-observation">Earth Observation</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#rso-inspection">RSO Inspection</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">RSO Inspection</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#Defining-the-Satellites">Defining the Satellites</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Environment-Generation">Environment Generation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Environment-Interaction">Environment Interaction</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#benchmarks">Benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">RSO Inspection</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/rso_inspection.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="RSO-Inspection">
+<h1>RSO Inspection<a class="headerlink" href="#RSO-Inspection" title="Link to this heading"></a></h1>
+<p>This example demonstrates the configuration of a resident space object (RSO) inspection environment, in which a servicer spacecraft circumnavigates a RSO to image the illuminated facets.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">bskLogging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities.orbitalMotion</span><span class="w"> </span><span class="kn">import</span> <span class="n">elem2rv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities.RigidBodyKinematics</span><span class="w"> </span><span class="kn">import</span> <span class="n">C2MRP</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConstellationTasking</span><span class="p">,</span> <span class="n">act</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">sats</span><span class="p">,</span> <span class="n">scene</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.obs.relative_observations</span><span class="w"> </span><span class="kn">import</span> <span class="n">rso_imaged_regions</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.orbital</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">fibonacci_sphere</span><span class="p">,</span>
+    <span class="n">random_orbit</span><span class="p">,</span>
+    <span class="n">random_unit_vector</span><span class="p">,</span>
+    <span class="n">relative_to_chief</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">bskLogging</span><span class="o">.</span><span class="n">setDefaultLogLevel</span><span class="p">(</span><span class="n">bskLogging</span><span class="o">.</span><span class="n">BSK_WARNING</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<p>RLlib is actively developed and can change significantly from version to version. For this script, the following version is used:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">version</span><span class="p">(</span><span class="s2">"ray"</span><span class="p">)</span>  <span class="c1"># Parent package of RLlib</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&#39;2.35.0&#39;
+</pre></div></div>
+</div>
+<section id="Defining-the-Satellites">
+<h2>Defining the Satellites<a class="headerlink" href="#Defining-the-Satellites" title="Link to this heading"></a></h2>
+<p>First, the RSO satellite is configured. A simple model is used that has no actuators modelled and just deterministically points nadir.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">RSOSat</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"one"</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">)),</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">NadirPoint</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">1e9</span><span class="p">)]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="p">(</span><span class="n">dyn</span><span class="o">.</span><span class="n">ConjunctionDynModel</span><span class="p">,</span> <span class="n">dyn</span><span class="o">.</span><span class="n">RSODynModel</span><span class="p">)</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">FSWModel</span>
+<br/></pre></div>
+</div>
+</div>
+<p>Arguments for the satellite are configured for smooth pointing behavior.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rso_sat_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">conjunction_radius</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The inspector satellite has a more complex configuration. First, an observation function for the sun vector is defined.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">sun_hat_chief</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="n">r_SN_N</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">sun_index</span>
+        <span class="p">]</span>
+        <span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">PositionVector</span>
+    <span class="p">)</span>
+    <span class="n">r_BN_N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_N</span>
+    <span class="n">r_SN_N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">r_SN_N</span><span class="p">)</span>
+    <span class="n">r_SB_N</span> <span class="o">=</span> <span class="n">r_SN_N</span> <span class="o">-</span> <span class="n">r_BN_N</span>
+    <span class="n">r_SB_N_hat</span> <span class="o">=</span> <span class="n">r_SB_N</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">r_SB_N</span><span class="p">)</span>
+    <span class="n">HN</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">HN</span>
+    <span class="k">return</span> <span class="n">HN</span> <span class="o">@</span> <span class="n">r_SB_N_hat</span>
+<br/></pre></div>
+</div>
+</div>
+<p>The inspector satellite is configured with observations relating to the relative state and the mission objectives. The satellite is given an action for impulsively thrusting and drifting. The dynamics and flight software models introduce a maximum range check, collision checking orbital maneuvers, and RSO inspection.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">InspectorSat</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"dv_available"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"inclination"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"eccentricity"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"semi_major_axis"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">7000</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"ascending_node"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"argument_of_periapsis"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"true_anomaly"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"beta_angle"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">ResourceRewardWeight</span><span class="p">(),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">RelativeProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_DC_Hc"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">500</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"v_DC_Hc"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">prop</span><span class="o">=</span><span class="s2">"rso_imaged_regions"</span><span class="p">,</span>
+                <span class="n">fn</span><span class="o">=</span><span class="n">partial</span><span class="p">(</span>
+                    <span class="n">rso_imaged_regions</span><span class="p">,</span>
+                    <span class="n">region_centers</span><span class="o">=</span><span class="n">fibonacci_sphere</span><span class="p">(</span><span class="mi">15</span><span class="p">),</span>
+                    <span class="n">frame</span><span class="o">=</span><span class="s2">"chief_hill"</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"sun_hat_Hc"</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="n">sun_hat_chief</span><span class="p">),</span>
+            <span class="n">chief_name</span><span class="o">=</span><span class="s2">"RSO"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">(),</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">ImpulsiveThrustHill</span><span class="p">(</span>
+            <span class="n">chief_name</span><span class="o">=</span><span class="s2">"RSO"</span><span class="p">,</span>
+            <span class="n">max_dv</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">max_drift_duration</span><span class="o">=</span><span class="mf">5700.0</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">fsw_action</span><span class="o">=</span><span class="s2">"action_inspect_rso"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="p">(</span><span class="n">dyn</span><span class="o">.</span><span class="n">MaxRangeDynModel</span><span class="p">,</span> <span class="n">dyn</span><span class="o">.</span><span class="n">ConjunctionDynModel</span><span class="p">,</span> <span class="n">dyn</span><span class="o">.</span><span class="n">RSOInspectorDynModel</span><span class="p">)</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">fsw</span><span class="o">.</span><span class="n">SteeringFSWModel</span><span class="p">,</span>
+        <span class="n">fsw</span><span class="o">.</span><span class="n">MagicOrbitalManeuverFSWModel</span><span class="p">,</span>
+        <span class="n">fsw</span><span class="o">.</span><span class="n">RSOInspectorFSWModel</span><span class="p">,</span>
+    <span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<p>Generous configurations are used for the inspector, allowing for “sloppy” attitude control with a low simulation step rate.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">inspector_sat_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">instrumentBaudRate</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span>
+    <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>
+    <span class="n">storedCharge_Init</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>
+    <span class="n">conjunction_radius</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">dv_available_init</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+    <span class="n">max_range_radius</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">chief_name</span><span class="o">=</span><span class="s2">"RSO"</span><span class="p">,</span>
+    <span class="n">u_max</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Environment-Generation">
+<h2>Environment Generation<a class="headerlink" href="#Environment-Generation" title="Link to this heading"></a></h2>
+<p>A satellite argument randomizer is defined to configure the initial state of the satellites. The RSO is put into a random orbit with an apogee and perigee between 500 km and 1100 km. The inspector is placed in the region 250 to 750 meters from the RSO, with up to 1 m/s of relative velocity. Finally, the RSO’s attitude and body rate are set up to be in the nadir-pointing initial configuration.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">sat_arg_randomizer</span><span class="p">(</span><span class="n">satellites</span><span class="p">):</span>
+    <span class="c1"># Generate the RSO orbit</span>
+    <span class="n">R_E</span> <span class="o">=</span> <span class="mf">6371.0</span>  <span class="c1"># km</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">R_E</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">1100</span><span class="p">)</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">R_E</span> <span class="o">+</span> <span class="mi">500</span><span class="p">)</span> <span class="o">/</span> <span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">R_E</span> <span class="o">+</span> <span class="mi">1100</span><span class="p">)</span> <span class="o">/</span> <span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">chief_orbit</span> <span class="o">=</span> <span class="n">random_orbit</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="n">inspectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">sat</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">satellites</span> <span class="k">if</span> <span class="s2">"Inspector"</span> <span class="ow">in</span> <span class="n">sat</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+    <span class="n">rso</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">satellite</span> <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="n">satellites</span> <span class="k">if</span> <span class="n">satellite</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"RSO"</span><span class="p">)</span>
+
+    <span class="c1"># Generate the inspector initial states.</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">inspector</span> <span class="ow">in</span> <span class="n">inspectors</span><span class="p">:</span>
+        <span class="n">relative_randomizer</span> <span class="o">=</span> <span class="n">relative_to_chief</span><span class="p">(</span>
+            <span class="n">chief_name</span><span class="o">=</span><span class="s2">"RSO"</span><span class="p">,</span>
+            <span class="n">chief_orbit</span><span class="o">=</span><span class="n">chief_orbit</span><span class="p">,</span>
+            <span class="n">deputy_relative_state</span><span class="o">=</span><span class="p">{</span>
+                <span class="n">inspector</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="n">random_unit_vector</span><span class="p">()</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">250</span><span class="p">,</span> <span class="mi">750</span><span class="p">),</span>
+                        <span class="n">random_unit_vector</span><span class="p">()</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">relative_randomizer</span><span class="p">([</span><span class="n">rso</span><span class="p">,</span> <span class="n">inspector</span><span class="p">]))</span>
+
+    <span class="c1"># Align RSO Hill frame for initial nadir pointing</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">rso</span><span class="o">.</span><span class="n">sat_args_generator</span><span class="p">[</span><span class="s2">"mu"</span><span class="p">]</span>
+    <span class="n">r_N</span><span class="p">,</span> <span class="n">v_N</span> <span class="o">=</span> <span class="n">elem2rv</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="n">rso</span><span class="p">][</span><span class="s2">"oe"</span><span class="p">])</span>
+
+    <span class="n">r_hat</span> <span class="o">=</span> <span class="n">r_N</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">r_N</span><span class="p">)</span>
+    <span class="n">v_hat</span> <span class="o">=</span> <span class="n">v_N</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v_N</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">r_hat</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">r_hat</span><span class="p">,</span> <span class="n">v_hat</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">z</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">HN</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">])</span>
+    <span class="n">BH</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">chief_orbit</span><span class="o">.</span><span class="n">a</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="mi">3</span> <span class="o">/</span> <span class="n">mu</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+    <span class="n">omega_BN_N</span> <span class="o">=</span> <span class="n">z</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">T</span>
+
+    <span class="n">args</span><span class="p">[</span><span class="n">rso</span><span class="p">][</span><span class="s2">"sigma_init"</span><span class="p">]</span> <span class="o">=</span> <span class="n">C2MRP</span><span class="p">(</span><span class="n">BH</span> <span class="o">@</span> <span class="n">HN</span><span class="p">)</span>
+    <span class="n">args</span><span class="p">[</span><span class="n">rso</span><span class="p">][</span><span class="s2">"omega_init"</span><span class="p">]</span> <span class="o">=</span> <span class="n">BH</span> <span class="o">@</span> <span class="n">HN</span> <span class="o">@</span> <span class="n">omega_BN_N</span>
+
+    <span class="k">return</span> <span class="n">args</span>
+<br/></pre></div>
+</div>
+</div>
+<p>The scenario is configured to set the RSO geometry as a sphere with 100 points at a radius of 1 meter. Points must be imaged within 30 degrees of their normal, with illumination coming from no more than 60 degrees from normal. The inspector must be within 250 meters to inspect the RSO.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">scenario</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">SphericalRSO</span><span class="p">(</span>
+    <span class="n">n_points</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">theta_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span>
+    <span class="n">range_max</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span>
+    <span class="n">theta_solar_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">60</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>This scenario uses two rewarders. For the RSO inspection component of the task, a bonus of 1.0 is yielded once at least 90% of the illuminated points have been inspected. The ResourceReward is used to penalize fuel use, with some basic logic add to only apply the reward to the Inspector.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rewarders</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">RSOInspectionReward</span><span class="p">(</span>
+        <span class="n">completion_bonus</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">completion_threshold</span><span class="o">=</span><span class="mf">0.90</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">ResourceReward</span><span class="p">(</span>
+        <span class="n">resource_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sat</span><span class="p">:</span> <span class="n">sat</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dv_available</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sat</span><span class="o">.</span><span class="n">fsw</span><span class="p">,</span> <span class="n">fsw</span><span class="o">.</span><span class="n">MagicOrbitalManeuverFSWModel</span><span class="p">)</span>
+        <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">reward_weight</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>With all the components defined, the environment can be instantiated.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">ConstellationTasking</span><span class="p">(</span>
+    <span class="n">satellites</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">RSOSat</span><span class="p">(</span><span class="s2">"RSO"</span><span class="p">,</span> <span class="n">sat_args</span><span class="o">=</span><span class="n">rso_sat_args</span><span class="p">),</span>
+        <span class="n">InspectorSat</span><span class="p">(</span><span class="s2">"Inspector"</span><span class="p">,</span> <span class="n">sat_args</span><span class="o">=</span><span class="n">inspector_sat_args</span><span class="p">,</span> <span class="n">obs_type</span><span class="o">=</span><span class="nb">dict</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">sat_arg_randomizer</span><span class="o">=</span><span class="n">sat_arg_randomizer</span><span class="p">,</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scenario</span><span class="p">,</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">rewarders</span><span class="p">,</span>
+    <span class="n">time_limit</span><span class="o">=</span><span class="mi">60000</span><span class="p">,</span>
+    <span class="n">sim_rate</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">"INFO"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Environment-Interaction">
+<h2>Environment Interaction<a class="headerlink" href="#Environment-Interaction" title="Link to this heading"></a></h2>
+<p>The environment is reset and randomly stepped through.</p>
+<div class="admonition note">
+<p><strong>Future Work:</strong> This example will be updated with an actual trained policy in the future.</p>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">RSO</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">Inspector</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">(</span><span class="s2">"Inspector"</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">()))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,629 </span>gym                            INFO       Resetting environment with seed=565584306
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,697 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Environment reset
+/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:130: UserWarning: <span class="ansi-yellow-fg">WARN: Box bound precision lowered by casting to float32</span>
+  gym.logger.warn(f&#34;Box bound precision lowered by casting to {self.dtype}&#34;)
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,699 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,699 </span><span class="ansi-cyan-fg">sats.satellite.RSO             </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">RSO: </span>action_nadir_point tasked for 1000000000.0 seconds
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,700 </span><span class="ansi-cyan-fg">sats.satellite.RSO             </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">RSO: </span>setting timed terminal event at 1000000000.0
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,701 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>Thrust clamped from 1.2485895346410074 m/s to 1.0 m/s.
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,701 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>Thrusting with inertial dV [ 0.75075612 -0.65674687 -0.07105486] with 3781.12890625 second drift.
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,703 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>setting timed terminal event at 3781.1
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,703 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>FSW action action_inspect_rso activated.
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,734 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>Exceeded maximum range of 1000 m from RSO
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,738 </span>data.rso_inspection            INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span>Inspected/Illuminated/Total: 0/34/100
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,739 </span>data.composition               INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span>ResourceReward reward: {&#39;Inspector&#39;: np.float64(-0.10761720779062889)}
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,739 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span>Total reward: {&#39;Inspector&#39;: np.float64(-0.10761720779062889)}
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,740 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;675.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span><span class="ansi-yellow-intense-fg">failed range_valid check</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,743 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span>Step reward: {&#39;Inspector&#39;: np.float64(-1.107617207790629)}
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,743 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span>Episode terminated: [&#39;Inspector&#39;]
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,744 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,744 </span><span class="ansi-cyan-fg">sats.satellite.RSO             </span>INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span><span class="ansi-cyan-fg">RSO: </span>action_nadir_point tasked for 1000000000.0 seconds
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,745 </span><span class="ansi-cyan-fg">sats.satellite.RSO             </span>INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span><span class="ansi-cyan-fg">RSO: </span>setting timed terminal event at 1000000675.0
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,746 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>Thrusting with inertial dV [-0.2867725  -0.0745726   0.68105478] with 5483.86474609375 second drift.
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,747 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>setting timed terminal event at 6158.9
+<span class="ansi-black-intense-fg">2026-09-02 14:53:15,748 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;675.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>FSW action action_inspect_rso activated.
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,011 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>timed termination at 6158.9
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,024 </span>data.rso_inspection            INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span>Inspected/Illuminated/Total: 0/72/100
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,025 </span>data.composition               INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span>ResourceReward reward: {&#39;Inspector&#39;: np.float64(-0.07992960867372398)}
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,025 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span>Total reward: {&#39;Inspector&#39;: np.float64(-0.07992960867372398)}
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,026 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>Satellite Inspector requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,027 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span>Step reward: {}
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,028 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,029 </span><span class="ansi-cyan-fg">sats.satellite.RSO             </span>INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span><span class="ansi-cyan-fg">RSO: </span>action_nadir_point tasked for 1000000000.0 seconds
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,029 </span><span class="ansi-cyan-fg">sats.satellite.RSO             </span>INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span><span class="ansi-cyan-fg">RSO: </span>setting timed terminal event at 1000006160.0
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,030 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>Thrusting with inertial dV [-0.36555087 -0.48847812 -0.40758844] with 8420.3720703125 second drift.
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,031 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>setting timed terminal event at 14580.4
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,032 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;6160.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>FSW action action_inspect_rso activated.
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,381 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>timed termination at 14580.4
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,403 </span>data.rso_inspection            INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span>Inspected/Illuminated/Total: 0/72/100
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,403 </span>data.composition               INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span>ResourceReward reward: {&#39;Inspector&#39;: np.float64(-0.07896248210330115)}
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,404 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span>Total reward: {&#39;Inspector&#39;: np.float64(-0.07896248210330115)}
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,404 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>Satellite Inspector requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,406 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span>Step reward: {}
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,407 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,407 </span><span class="ansi-cyan-fg">sats.satellite.RSO             </span>INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span><span class="ansi-cyan-fg">RSO: </span>action_nadir_point tasked for 1000000000.0 seconds
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,408 </span><span class="ansi-cyan-fg">sats.satellite.RSO             </span>INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span><span class="ansi-cyan-fg">RSO: </span>setting timed terminal event at 1000014585.0
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,409 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>Thrust clamped from 1.3327595064905846 m/s to 1.0 m/s.
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,409 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>Thrusting with inertial dV [-0.28279537 -0.92021845 -0.27060076] with 6429.45263671875 second drift.
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,411 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>setting timed terminal event at 21014.5
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,412 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;14585.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>FSW action action_inspect_rso activated.
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,656 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;21015.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>timed termination at 21014.5
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,676 </span>data.rso_inspection            INFO       <span class="ansi-yellow-fg">&lt;21015.00&gt; </span>Inspected/Illuminated/Total: 0/72/100
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,676 </span>data.composition               INFO       <span class="ansi-yellow-fg">&lt;21015.00&gt; </span>ResourceReward reward: {&#39;Inspector&#39;: np.float64(-0.10761720779062889)}
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,677 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;21015.00&gt; </span>Total reward: {&#39;Inspector&#39;: np.float64(-0.10761720779062889)}
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,677 </span><span class="ansi-green-intense-fg">sats.satellite.Inspector       </span>INFO       <span class="ansi-yellow-fg">&lt;21015.00&gt; </span><span class="ansi-green-intense-fg">Inspector: </span>Satellite Inspector requires retasking
+<span class="ansi-black-intense-fg">2026-09-02 14:53:16,678 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;21015.00&gt; </span>Step reward: {}
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="aeos.html" class="btn btn-neutral float-left" title="Agile Earth-Observing Satellite Environment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rllib_training.html" class="btn btn-neutral float-right" title="Training with RLlib PPO" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

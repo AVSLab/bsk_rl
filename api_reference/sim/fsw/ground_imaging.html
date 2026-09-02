@@ -1,0 +1,426 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ground Imaging &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="RSO Inspection" href="rso_inspection.html" />
+    <link rel="prev" title="FSW Base" href="base.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scene/index.html">Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../comm/index.html">Communication</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Simulation (BSK)</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../index.html#bsk_rl.sim.Simulator"><code class="docutils literal notranslate"><span class="pre">Simulator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../world.html">World Sims</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../dyn/index.html">Dynamics Sims</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">FSW Sims</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="index.html#actions">Actions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#properties">Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#aliveness-checking">Aliveness Checking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.action"><code class="docutils literal notranslate"><span class="pre">action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.FSWModelABC"><code class="docutils literal notranslate"><span class="pre">FSWModelABC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.FSWModel"><code class="docutils literal notranslate"><span class="pre">FSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.BasicFSWModel"><code class="docutils literal notranslate"><span class="pre">BasicFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.ImagingFSWModel"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.ContinuousImagingFSWModel"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.SteeringFSWModel"><code class="docutils literal notranslate"><span class="pre">SteeringFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.SteeringImagerFSWModel"><code class="docutils literal notranslate"><span class="pre">SteeringImagerFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.MagicOrbitalManeuverFSWModel"><code class="docutils literal notranslate"><span class="pre">MagicOrbitalManeuverFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="index.html#bsk_rl.sim.fsw.RSOInspectorFSWModel"><code class="docutils literal notranslate"><span class="pre">RSOInspectorFSWModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="base.html">FSW Base</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Ground Imaging</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.c_hat_P"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel.c_hat_P</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.c_hat_H"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel.c_hat_H</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel.LocPointTask</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.name"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel.LocPointTask.name</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.setup_location_pointing"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel.LocPointTask.setup_location_pointing()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.setup_instrument_controller"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel.LocPointTask.setup_instrument_controller()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.show_sensor"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel.LocPointTask.show_sensor()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.reset_for_action"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel.LocPointTask.reset_for_action()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.action_image"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel.action_image()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.action_downlink"><code class="docutils literal notranslate"><span class="pre">ImagingFSWModel.action_downlink()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingFSWModel</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.LocPointTask"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingFSWModel.LocPointTask</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.LocPointTask.setup_instrument_controller"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingFSWModel.LocPointTask.setup_instrument_controller()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.LocPointTask.reset_for_action"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingFSWModel.LocPointTask.reset_for_action()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.action_nadir_scan"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingFSWModel.action_nadir_scan()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.action_image"><code class="docutils literal notranslate"><span class="pre">ContinuousImagingFSWModel.action_image()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.SteeringImagerFSWModel"><code class="docutils literal notranslate"><span class="pre">SteeringImagerFSWModel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="rso_inspection.html">RSO Inspection</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Simulation (BSK)</a></li>
+          <li class="breadcrumb-item"><a href="index.html">FSW Sims</a></li>
+      <li class="breadcrumb-item active">Ground Imaging</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/api_reference/sim/fsw/ground_imaging.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ground-imaging">
+<span id="bsk-rl-sim-fsw-ground-imaging"></span><h1>Ground Imaging<a class="headerlink" href="#ground-imaging" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.sim.fsw.ground_imaging">FSW models for ground imaging scenarios.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ImagingFSWModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ImagingFSWModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#bsk_rl.sim.fsw.base.BasicFSWModel" title="bsk_rl.sim.fsw.base.BasicFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicFSWModel</span></code></a></p>
+<p>Adds instrument pointing and triggering control to FSW.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.c_hat_P">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">c_hat_P</span></span><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.c_hat_P" title="Link to this definition"></a></dt>
+<dd><p>Instrument pointing direction in the planet frame.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.c_hat_H">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">c_hat_H</span></span><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.c_hat_H" title="Link to this definition"></a></dt>
+<dd><p>Instrument pointing direction in the hill frame.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">LocPointTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fsw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">96</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ImagingFSWModel.LocPointTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#bsk_rl.sim.fsw.base.Task" title="bsk_rl.sim.fsw.base.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a></p>
+<p>Task to point the instrument at ground targets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fsw</strong> (<a class="reference internal" href="base.html#bsk_rl.sim.fsw.base.FSWModelABC" title="bsk_rl.sim.fsw.base.FSWModelABC"><em>FSWModelABC</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'locPointTask'</span></span><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.setup_location_pointing">
+<span class="sig-name descname"><span class="pre">setup_location_pointing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inst_pHat_B</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ImagingFSWModel.LocPointTask.setup_location_pointing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.setup_location_pointing" title="Link to this definition"></a></dt>
+<dd><p>Set the Earth location pointing guidance module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inst_pHat_B</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) – Instrument pointing direction.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.setup_instrument_controller">
+<span class="sig-name descname"><span class="pre">setup_instrument_controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imageAttErrorRequirement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imageRateErrorRequirement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ImagingFSWModel.LocPointTask.setup_instrument_controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.setup_instrument_controller" title="Link to this definition"></a></dt>
+<dd><p>Set the instrument controller parameters.</p>
+<p>The instrument controller is used to take an image when certain relative
+attitude requirements are met, along with the access requirements of the
+target (i.e. <code class="docutils literal notranslate"><span class="pre">imageTargetMinimumElevation</span></code> and <code class="docutils literal notranslate"><span class="pre">imageTargetMaximumRange</span></code>
+as set in <a class="reference internal" href="../dyn/index.html#bsk_rl.sim.dyn.ImagingDynModel.setup_imaging_target" title="bsk_rl.sim.dyn.ImagingDynModel.setup_imaging_target"><code class="xref py py-class docutils literal notranslate"><span class="pre">setup_imaging_target</span></code></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imageAttErrorRequirement</strong> (<em>float</em>) – [MRP norm] Pointing attitude error tolerance
+for imaging.</p></li>
+<li><p><strong>imageRateErrorRequirement</strong> (<em>float</em>) – [rad/s] Rate tolerance for imaging. Disable
+with <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.show_sensor">
+<span class="sig-name descname"><span class="pre">show_sensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vizInterface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vizSupport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ImagingFSWModel.LocPointTask.show_sensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.show_sensor" title="Link to this definition"></a></dt>
+<dd><p>Visualize the sensor in Vizard.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.reset_for_action">
+<span class="sig-name descname"><span class="pre">reset_for_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ImagingFSWModel.LocPointTask.reset_for_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask.reset_for_action" title="Link to this definition"></a></dt>
+<dd><p>Reset pointing controller.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.action_image">
+<span class="sig-name descname"><span class="pre">action_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_LP_P</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ImagingFSWModel.action_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.action_image" title="Link to this definition"></a></dt>
+<dd><p><em>Decorated with</em> <a class="reference internal" href="index.html#bsk_rl.sim.fsw.action" title="bsk_rl.sim.fsw.action"><code class="xref py py-class docutils literal notranslate"><span class="pre">action</span></code></a></p>
+<p>Attempt to image a target at a location.</p>
+<blockquote>
+<div><p>This action sets the target attitude to one tracking a ground location. If the
+target is within the imaging constraints, an image will be taken and stored in
+the data buffer. The instrument power sink will be active as long as the task is
+enabled.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>r_LP_P: [m] Planet-fixed planet relative target location.
+data_name: Data buffer to store image data to.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r_LP_P</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>data_name</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.action_downlink">
+<span class="sig-name descname"><span class="pre">action_downlink</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ImagingFSWModel.action_downlink"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.action_downlink" title="Link to this definition"></a></dt>
+<dd><p><em>Decorated with</em> <a class="reference internal" href="index.html#bsk_rl.sim.fsw.action" title="bsk_rl.sim.fsw.action"><code class="xref py py-class docutils literal notranslate"><span class="pre">action</span></code></a></p>
+<p>Attempt to downlink data.</p>
+<blockquote>
+<div><p>This action points the satellite nadir and attempts to downlink data. If the
+satellite is in range of a ground station, data will be downlinked at the specified
+baud rate. The transmitter power sink will be active as long as the task is enabled.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ContinuousImagingFSWModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ContinuousImagingFSWModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel" title="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingFSWModel</span></code></a></p>
+<p>FSW model for continuous nadir scanning.</p>
+<p>Instead of imaging point targets, this model is used to continuously scan the
+ground while pointing nadir.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.LocPointTask">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">LocPointTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ContinuousImagingFSWModel.LocPointTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.LocPointTask" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask" title="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel.LocPointTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocPointTask</span></code></a></p>
+<p>Task to point nadir and trigger the instrument.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.LocPointTask.setup_instrument_controller">
+<span class="sig-name descname"><span class="pre">setup_instrument_controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imageAttErrorRequirement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imageRateErrorRequirement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ContinuousImagingFSWModel.LocPointTask.setup_instrument_controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.LocPointTask.setup_instrument_controller" title="Link to this definition"></a></dt>
+<dd><p>Set the instrument controller parameters for scanning.</p>
+<p>As long as these two conditions are met, scanning will occur continuously.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imageAttErrorRequirement</strong> (<em>float</em>) – [MRP norm] Pointing attitude error tolerance
+for imaging.</p></li>
+<li><p><strong>imageRateErrorRequirement</strong> (<em>float</em>) – [rad/s] Rate tolerance for imaging. Disable
+with None.</p></li>
+<li><p><strong>kwargs</strong> – Passed to other setup functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.LocPointTask.reset_for_action">
+<span class="sig-name descname"><span class="pre">reset_for_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ContinuousImagingFSWModel.LocPointTask.reset_for_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.LocPointTask.reset_for_action" title="Link to this definition"></a></dt>
+<dd><p>Reset scanning controller.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.action_nadir_scan">
+<span class="sig-name descname"><span class="pre">action_nadir_scan</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ContinuousImagingFSWModel.action_nadir_scan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.action_nadir_scan" title="Link to this definition"></a></dt>
+<dd><p><em>Decorated with</em> <a class="reference internal" href="index.html#bsk_rl.sim.fsw.action" title="bsk_rl.sim.fsw.action"><code class="xref py py-class docutils literal notranslate"><span class="pre">action</span></code></a></p>
+<p>Scan nadir.</p>
+<blockquote>
+<div><p>This action points the instrument nadir and continuously adds data to the buffer
+as long as attitude requirements are met. The instrument power sink is active
+as long as the action is set.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.action_image">
+<span class="sig-name descname"><span class="pre">action_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#ContinuousImagingFSWModel.action_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.ContinuousImagingFSWModel.action_image" title="Link to this definition"></a></dt>
+<dd><p><em>Decorated with</em> <a class="reference internal" href="index.html#bsk_rl.sim.fsw.action" title="bsk_rl.sim.fsw.action"><code class="xref py py-class docutils literal notranslate"><span class="pre">action</span></code></a></p>
+<p>Disable <code class="docutils literal notranslate"><span class="pre">action_image</span></code> from parent class.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">meta private<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.sim.fsw.ground_imaging.SteeringImagerFSWModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">SteeringImagerFSWModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/bsk_rl/sim/fsw/ground_imaging.html#SteeringImagerFSWModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.sim.fsw.ground_imaging.SteeringImagerFSWModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#bsk_rl.sim.fsw.base.SteeringFSWModel" title="bsk_rl.sim.fsw.base.SteeringFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">SteeringFSWModel</span></code></a>, <a class="reference internal" href="#bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel" title="bsk_rl.sim.fsw.ground_imaging.ImagingFSWModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImagingFSWModel</span></code></a></p>
+<p>Convenience type that combines the imaging FSW model with MRP steering.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="base.html" class="btn btn-neutral float-left" title="FSW Base" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rso_inspection.html" class="btn btn-neutral float-right" title="RSO Inspection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

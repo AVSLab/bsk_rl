@@ -1,0 +1,352 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.sim.simulator &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.sim.simulator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.sim.simulator</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Extended Basilisk SimBaseClass for GeneralSatelliteTasking environments."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="kn">import</span> <span class="n">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationBaseClass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">macros</span> <span class="k">as</span> <span class="n">mc</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">vizard</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sats</span><span class="w"> </span><span class="kn">import</span> <span class="n">Satellite</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim.world</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorldModelABC</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Simulator">
+<a class="viewcode-back" href="../../../api_reference/sim/index.html#bsk_rl.sim.Simulator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Simulator</span><span class="p">(</span><span class="n">SimulationBaseClass</span><span class="o">.</span><span class="n">SimBaseClass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Basilisk simulator for GeneralSatelliteTasking environments."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">satellites</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">"Satellite"</span><span class="p">],</span>
+        <span class="n">world_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="s2">"WorldModelABC"</span><span class="p">],</span>
+        <span class="n">world_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">sim_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">max_step_duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">600.0</span><span class="p">,</span>
+        <span class="n">time_limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">),</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Basilisk simulator for satellite tasking environments.</span>
+
+<span class="sd">        The simulator is reconstructed each time the environment :class:`~bsk_rl.GeneralSatelliteTasking.reset`</span>
+<span class="sd">        is called, generating a fresh Basilisk simulation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            satellites: Satellites to be simulated</span>
+<span class="sd">            world_type: Type of world model to be constructed</span>
+<span class="sd">            world_args: Arguments for world model construction</span>
+<span class="sd">            sim_rate: [s] Rate for model simulation.</span>
+<span class="sd">            max_step_duration: [s] Maximum time to propagate sim at a step.</span>
+<span class="sd">            time_limit: [s] Latest time simulation will propagate to.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_rate</span> <span class="o">=</span> <span class="n">sim_rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span> <span class="o">=</span> <span class="n">satellites</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_step_duration</span> <span class="o">=</span> <span class="n">max_step_duration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">=</span> <span class="n">time_limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_simple_earth</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="p">:</span> <span class="n">WorldModelABC</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_world</span><span class="p">(</span><span class="n">world_type</span><span class="p">,</span> <span class="n">world_args</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw_list</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics_list</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="n">satellite</span><span class="o">.</span><span class="n">set_simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dynamics_list</span><span class="p">[</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">satellite</span><span class="o">.</span><span class="n">set_dynamics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sim_rate</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw_list</span><span class="p">[</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">satellite</span><span class="o">.</span><span class="n">set_fsw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sim_rate</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Simulator.finish_init">
+<a class="viewcode-back" href="../../../api_reference/sim/index.html#bsk_rl.sim.Simulator.finish_init">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">finish_init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Finish simulator initialization."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_vizard_epoch</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_simple_earth</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">make_earth_simple</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">InitializeSimulation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TotalSim</span><span class="o">.</span><span class="n">StepUntilStop</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sim_time_ns</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Simulation time in ns, tied to SimBase integrator."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">TotalSim</span><span class="o">.</span><span class="n">CurrentNanos</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sim_time</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Simulation time in seconds, tied to SimBase integrator."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_time_ns</span> <span class="o">*</span> <span class="n">mc</span><span class="o">.</span><span class="n">NANO2SEC</span>
+
+<div class="viewcode-block" id="Simulator.setup_vizard">
+<a class="viewcode-back" href="../../../api_reference/sim/index.html#bsk_rl.sim.Simulator.setup_vizard">[docs]</a>
+    <span class="nd">@vizard</span><span class="o">.</span><span class="n">visualize</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_vizard</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">vizard_rate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_simple_earth</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">vizSupport</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">vizard_settings</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Setup Vizard for visualization."""</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">vizard</span><span class="o">.</span><span class="n">VIZARD_PATH</span><span class="p">)</span>
+
+        <span class="n">viz_proc_name</span> <span class="o">=</span> <span class="s2">"VizProcess"</span>
+        <span class="n">viz_proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreateNewProcess</span><span class="p">(</span><span class="n">viz_proc_name</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+
+        <span class="c1"># Define process name, task name and task time-step</span>
+        <span class="n">viz_task_name</span> <span class="o">=</span> <span class="s2">"viz_task_name"</span>
+        <span class="k">if</span> <span class="n">vizard_rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vizard_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_rate</span>
+        <span class="n">viz_proc</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CreateNewTask</span><span class="p">(</span><span class="n">viz_task_name</span><span class="p">,</span> <span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="n">vizard_rate</span><span class="p">)))</span>
+
+        <span class="n">customizers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"spriteList"</span><span class="p">,</span> <span class="s2">"genericSensorList"</span><span class="p">]</span>
+        <span class="n">list_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">customizer</span> <span class="ow">in</span> <span class="n">customizers</span><span class="p">:</span>
+            <span class="n">list_data</span><span class="p">[</span><span class="n">customizer</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">sat</span><span class="o">.</span><span class="n">vizard_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">customizer</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span>
+            <span class="p">]</span>
+
+        <span class="c1"># determine save file: if the configured path is a .bin file, use it directly,</span>
+        <span class="c1"># otherwise create a timestamped file inside the directory</span>
+        <span class="k">if</span> <span class="n">save_path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">".bin"</span><span class="p">:</span>
+            <span class="n">saveFile</span> <span class="o">=</span> <span class="n">save_path</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">saveFile</span> <span class="o">=</span> <span class="n">save_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"viz_</span><span class="si">{</span><span class="n">time</span><span class="p">()</span><span class="si">}</span><span class="s2">.bin"</span>
+        <span class="n">saveFile</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vizInstance</span> <span class="o">=</span> <span class="n">vizSupport</span><span class="o">.</span><span class="n">enableUnityVisualization</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">viz_task_name</span><span class="p">,</span>
+            <span class="n">scList</span><span class="o">=</span><span class="p">[</span><span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">scObject</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">],</span>
+            <span class="o">**</span><span class="n">list_data</span><span class="p">,</span>
+            <span class="n">saveFile</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">saveFile</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_simple_earth</span> <span class="o">=</span> <span class="n">use_simple_earth</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_simple_earth</span><span class="p">:</span>
+            <span class="n">vizard_settings</span><span class="p">[</span><span class="s2">"atmospheresOff"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">vizard_settings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vizInstance</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="n">vizard</span><span class="o">.</span><span class="n">VIZINSTANCE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vizInstance</span></div>
+
+
+<div class="viewcode-block" id="Simulator.set_vizard_epoch">
+<a class="viewcode-back" href="../../../api_reference/sim/index.html#bsk_rl.sim.Simulator.set_vizard_epoch">[docs]</a>
+    <span class="nd">@vizard</span><span class="o">.</span><span class="n">visualize</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_vizard_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vizInstance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Set the Vizard epoch."""</span>
+        <span class="n">vizInstance</span><span class="o">.</span><span class="n">epochInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">epochMsg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Simulator.make_earth_simple">
+<a class="viewcode-back" href="../../../api_reference/sim/index.html#bsk_rl.sim.Simulator.make_earth_simple">[docs]</a>
+    <span class="nd">@vizard</span><span class="o">.</span><span class="n">visualize</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_earth_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vizInstance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vizSupport</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Make the Earth shader in Vizard lower detail to help viewing ground locations."""</span>
+        <span class="n">earth_texture_path</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
+            <span class="o">/</span> <span class="s2">"_dat"</span>
+            <span class="o">/</span> <span class="s2">"world.200407.3x5400x2700.jpg"</span>
+        <span class="p">)</span>
+        <span class="n">vizSupport</span><span class="o">.</span><span class="n">createCustomModel</span><span class="p">(</span>
+            <span class="n">vizInstance</span><span class="p">,</span>
+            <span class="n">simBodiesToModify</span><span class="o">=</span><span class="p">[</span><span class="s2">"earth"</span><span class="p">],</span>
+            <span class="n">modelPath</span><span class="o">=</span><span class="s2">"HI_DEF_SPHERE"</span><span class="p">,</span>
+            <span class="n">customTexturePath</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">earth_texture_path</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_world</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">world_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="s2">"WorldModelABC"</span><span class="p">],</span> <span class="n">world_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Construct the simulator world model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            world_type: Type of world model to be constructed.</span>
+<span class="sd">            world_args: Arguments for world model construction, passed to the world</span>
+<span class="sd">                from the environment.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">world</span> <span class="o">=</span> <span class="n">world_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_rate</span><span class="p">,</span> <span class="o">**</span><span class="n">world_args</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Simulator.run">
+<a class="viewcode-back" href="../../../api_reference/sim/index.html#bsk_rl.sim.Simulator.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Propagate the simulator.</span>
+
+<span class="sd">        Propagates for a duration up to the ``max_step_duration``, stopping if the</span>
+<span class="sd">        environment time limit is reached or an event is triggered.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="s2">"max_step_duration"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">eventMap</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_event</span><span class="p">(</span><span class="s2">"max_step_duration"</span><span class="p">)</span>
+
+        <span class="n">step_end_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_step_duration</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">createNewEvent</span><span class="p">(</span>
+            <span class="s2">"max_step_duration"</span><span class="p">,</span>
+            <span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sim_rate</span><span class="p">),</span>
+            <span class="kc">True</span><span class="p">,</span>
+            <span class="n">conditionTime</span><span class="o">=</span><span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="n">step_end_time</span><span class="p">),</span>
+            <span class="n">actionFunction</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sim</span><span class="p">:</span> <span class="n">sim</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Max step duration reached"</span><span class="p">),</span>
+            <span class="n">terminal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ConfigureStopTime</span><span class="p">(</span>
+            <span class="n">mc</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_limit</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="mi">31</span><span class="p">)),</span> <span class="n">StopCondition</span><span class="o">=</span><span class="s2">"&gt;="</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ExecuteSimulation</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Simulator.delete_event">
+<a class="viewcode-back" href="../../../api_reference/sim/index.html#bsk_rl.sim.Simulator.delete_event">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Remove an event from the event map.</span>
+
+<span class="sd">        Makes event checking faster. Due to a performance issue in Basilisk, it is</span>
+<span class="sd">        necessary to remove created for tasks that are no longer needed (even if it is</span>
+<span class="sd">        inactive), or else significant time is spent processing the event at each step.</span>
+<span class="sd">        """</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">eventMap</span><span class="p">[</span><span class="n">event_name</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Simulator.get_satellite">
+<a class="viewcode-back" href="../../../api_reference/sim/index.html#bsk_rl.sim.Simulator.get_satellite">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_satellite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Satellite"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Get a satellite by name.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Name of the satellite to retrieve.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The satellite object with the specified name.</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sat</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">sat</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Satellite with name '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' not found."</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Log when simulator is deleted."""</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Basilisk simulator deleted"</span><span class="p">)</span></div>
+
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

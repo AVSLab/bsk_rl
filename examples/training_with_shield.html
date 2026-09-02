@@ -1,0 +1,1486 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shielded training with action masking and action replacement &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API Reference" href="../api_reference/index.html" />
+    <link rel="prev" title="Training with Curriculum Learning" href="curriculum_learning.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#environments">Environments</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#training">Training</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="rllib_training.html">Training with RLlib PPO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="time_discounted_gae.html">Time-Discounted GAE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="async_multiagent_training.html">Asynchronous Multiagent Decision Making</a></li>
+<li class="toctree-l3"><a class="reference internal" href="curriculum_learning.html">Training with Curriculum Learning</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Shielded training with action masking and action replacement</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Different-environment-configurations">Different environment configurations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Defining-the-satellite">Defining the satellite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Action-replacement-and-action-masking-wrappers">Action replacement and action masking wrappers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Handmade-shield">Handmade shield</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Training-setup">Training setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Testing-configuration">Testing configuration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#benchmarks">Benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Shielded training with action masking and action replacement</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/training_with_shield.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Shielded-training-with-action-masking-and-action-replacement">
+<h1>Shielded training with action masking and action replacement<a class="headerlink" href="#Shielded-training-with-action-masking-and-action-replacement" title="Link to this heading"></a></h1>
+<p>This example script demonstrates how to train and test a policy with shields. Although DRL can lead to a high-performing policy, it still lacks safety guarantees. Further, adding negative rewards for reaching unsafe states can help the agent learn the safety aspects of the problems, but still lacks guarantees while being prone to issues. Shields can be used to provide these guarantees while minimizing interference. Two main approaches to provide safety during training and testing are action
+masking and action replacement.</p>
+<p><strong>Action replacement</strong>: The agent selects an action and the shield checks if it is a safe action. If it is deemed unsafe, the action is replaced with a safe action. This information might or might not be used for the policy update during training (the latter is implemented in this script). Optionally, an interference penalty can be provided to the agent for every shield correction.</p>
+<p><strong>Action masking</strong>: Provides a masking function, containing allowed and not-allowed actions at a given state. These method alters the logits (raw outputs) of the actor network, such that the agent can only sample safe actions. In this case, the safe selected action is accounted for in the policy update.</p>
+<p>This paper is associated with <a class="reference external" href="https://hanspeterschaub.info/Papers/QuevedoMantovani2025a.pdf">Performance Evaluation of Shielded Neural Networks for Autonomous Agile Earth Observing Satellites in Long Term Scenarios</a> and a future publication. Failure penalties, action masking and action replacement with different interference penalties were investigated for training and their performance analyzed during testing.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">TypeVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gym</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">bskLogging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">orbitalMotion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActionWrapper</span><span class="p">,</span> <span class="n">ObservationWrapper</span><span class="p">,</span> <span class="n">RewardWrapper</span><span class="p">,</span> <span class="n">Wrapper</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">act</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">sats</span><span class="p">,</span> <span class="n">scene</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.gym</span><span class="w"> </span><span class="kn">import</span> <span class="n">SatelliteTasking</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.orbital</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_orbit</span>
+
+<span class="n">Satellite</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"Satellite"</span><span class="p">)</span>
+<span class="n">SatObs</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"SatObs"</span><span class="p">)</span>
+<span class="n">SatAct</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"SatAct"</span><span class="p">)</span>
+<span class="n">MultiSatObs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SatObs</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="n">MultiSatAct</span> <span class="o">=</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SatAct</span><span class="p">]</span>
+<span class="n">SatArgRandomizer</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="n">Satellite</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Satellite</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span>
+
+<span class="n">bskLogging</span><span class="o">.</span><span class="n">setDefaultLogLevel</span><span class="p">(</span><span class="n">bskLogging</span><span class="o">.</span><span class="n">BSK_WARNING</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="Different-environment-configurations">
+<h2>Different environment configurations<a class="headerlink" href="#Different-environment-configurations" title="Link to this heading"></a></h2>
+<p>Three different environment options are available:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">no_failure_penalty</span></code>: No penalty is assigned for failure</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">failure_penalty</span></code>: Penalty of -10 is assigned for failure</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inf_power</span></code>: Case with unlimited power and no reaction wheel speed limits</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ALTITUDE</span> <span class="o">=</span> <span class="mi">800</span>  <span class="c1"># km</span>
+
+<span class="n">T_ORBIT</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="mi">2</span>
+    <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+    <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">+</span> <span class="n">ALTITUDE</span><span class="p">)</span> <span class="o">**</span> <span class="mi">3</span> <span class="o">/</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">MU_EARTH</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">general_sat_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">oe</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">random_orbit</span><span class="p">(</span>
+            <span class="n">alt</span><span class="o">=</span><span class="n">ALTITUDE</span><span class="p">,</span>  <span class="c1"># 800 km altitude</span>
+            <span class="n">i</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span>  <span class="c1"># 45 degrees inclination</span>
+        <span class="p">),</span>
+        <span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>  <span class="c1"># 0.01 MRP normalized</span>
+        <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>  <span class="c1"># 0.01 rad/s</span>
+        <span class="n">u_max</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>  <span class="c1"># Maximum control input</span>
+        <span class="n">K1</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>  <span class="c1"># Control gain</span>
+        <span class="n">K3</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>  <span class="c1"># Control gain</span>
+        <span class="n">servo_P</span><span class="o">=</span><span class="mi">150</span> <span class="o">/</span> <span class="mi">5</span><span class="p">,</span>  <span class="c1"># Servo gain</span>
+        <span class="n">omega_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mf">5.0</span><span class="p">),</span>  <span class="c1"># Maximum rate command in degrees per second</span>
+        <span class="n">imageTargetMinimumElevation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span>
+            <span class="mi">800</span> <span class="o">/</span> <span class="mi">500</span>
+        <span class="p">),</span>  <span class="c1"># 58 degrees minimum elevation</span>
+        <span class="n">rwBasePower</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">transmitterPacketSize</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">sat_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">no_failure_penalty</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">80.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">storedCharge_Init</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">80.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="mi">1500</span><span class="p">,</span>
+            <span class="n">wheelSpeeds</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span>
+                <span class="o">-</span><span class="mi">750</span><span class="p">,</span>
+                <span class="mi">750</span><span class="p">,</span>
+                <span class="mi">3</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">8e6</span> <span class="o">*</span> <span class="mi">25</span><span class="p">,</span>  <span class="c1"># Stores 50 images</span>
+            <span class="n">storageInit</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="mf">0.99</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="mf">8e6</span> <span class="o">*</span> <span class="mi">25</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">failure_penalty</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">80.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">storedCharge_Init</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">80.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="mi">1500</span><span class="p">,</span>
+            <span class="n">wheelSpeeds</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span>
+                <span class="o">-</span><span class="mi">750</span><span class="p">,</span>
+                <span class="mi">750</span><span class="p">,</span>
+                <span class="mi">3</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">8e6</span> <span class="o">*</span> <span class="mi">25</span><span class="p">,</span>  <span class="c1"># Stores 50 images</span>
+            <span class="n">storageInit</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="mf">0.99</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="mf">8e6</span> <span class="o">*</span> <span class="mi">25</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">inf_power</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">80.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="n">storedCharge_Init</span><span class="o">=</span><span class="mf">0.99</span> <span class="o">*</span> <span class="mf">80.0</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="mi">15000</span><span class="p">,</span>
+            <span class="n">wheelSpeeds</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span>
+                <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                <span class="mi">1</span><span class="p">,</span>
+                <span class="mi">3</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">8e6</span> <span class="o">*</span> <span class="mi">25</span><span class="p">,</span>  <span class="c1"># Stores 50 images</span>
+            <span class="n">storageInit</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="mf">0.99</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="mf">8e6</span> <span class="o">*</span> <span class="mi">25</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">sim_params</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">horizon</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">max_step_duration</span><span class="o">=</span><span class="mf">300.0</span><span class="p">,</span>
+        <span class="n">sim_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">failure_penalty</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">no_failure_penalty</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">failure_penalty</span><span class="o">=-</span><span class="mf">10.0</span><span class="p">,</span>
+            <span class="n">inf_power</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Defining-the-satellite">
+<h2>Defining the satellite<a class="headerlink" href="#Defining-the-satellite" title="Link to this heading"></a></h2>
+<p>The observation space is based on <a class="reference external" href="https://arc.aiaa.org/doi/10.2514/1.I011649">Learning Policies for Autonomous Earth-Observing Satellite Scheduling over Semi-MDPs</a>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">s_hat_H</span><span class="p">(</span><span class="n">sat</span><span class="p">:</span> <span class="n">Satellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Computes the unit vector from the satellite body frame to the Sun in the Hill frame.</span>
+<span class="sd">    """</span>
+    <span class="n">r_SN_N</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">sat</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span>
+            <span class="n">sat</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">sun_index</span>
+        <span class="p">]</span>
+        <span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">PositionVector</span>
+    <span class="p">)</span>
+    <span class="n">r_BN_N</span> <span class="o">=</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_N</span>
+    <span class="n">r_SB_N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">r_SN_N</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">r_BN_N</span><span class="p">)</span>
+    <span class="n">r_SB_H</span> <span class="o">=</span> <span class="n">sat</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">HN</span> <span class="o">@</span> <span class="n">r_SB_N</span>
+    <span class="k">return</span> <span class="n">r_SB_H</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">r_SB_H</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Density</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">interval_duration</span><span class="o">=</span><span class="mi">60</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">intervals</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">norm</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">:</span> <span class="n">sats</span><span class="o">.</span><span class="n">ImagingSatellite</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interval_duration</span> <span class="o">=</span> <span class="n">interval_duration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span> <span class="o">=</span> <span class="n">intervals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">calculate_additional_windows</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+            <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intervals</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">interval_duration</span>
+            <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">window_calculation_time</span>
+        <span class="p">)</span>
+        <span class="n">soonest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">upcoming_opportunities_dict</span><span class="p">(</span><span class="n">types</span><span class="o">=</span><span class="s2">"target"</span><span class="p">)</span>
+        <span class="n">rewards</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">opportunity</span><span class="o">.</span><span class="n">priority</span> <span class="k">for</span> <span class="n">opportunity</span> <span class="ow">in</span> <span class="n">soonest</span><span class="p">])</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">opportunities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">opportunities</span> <span class="ow">in</span> <span class="n">soonest</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+        <span class="n">time_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">times</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">interval_duration</span><span class="p">)</span>
+        <span class="n">densities</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">[</span><span class="n">time_bins</span> <span class="o">==</span> <span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">densities</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomSatComposed</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">ImagingSatellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"omega_BN_B"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>  <span class="c1"># 3</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"c_hat_H"</span><span class="p">),</span>  <span class="c1"># 3</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>  <span class="c1"># 3</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"v_BN_P"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">7616.5</span><span class="p">),</span>  <span class="c1"># 3</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"battery_charge_fraction"</span><span class="p">),</span>  <span class="c1"># 1</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"storage_level_fraction"</span><span class="p">),</span>  <span class="c1"># 1</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"wheel_speeds_fraction"</span><span class="p">),</span>  <span class="c1"># 3</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"s_hat_H"</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="n">s_hat_H</span><span class="p">),</span>  <span class="c1"># 3</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_open"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">T_ORBIT</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_close"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">T_ORBIT</span><span class="p">),</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">"ground_station"</span><span class="p">,</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">),</span>  <span class="c1"># 2</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">T_ORBIT</span><span class="p">),</span>  <span class="c1"># 2</span>
+        <span class="n">Density</span><span class="p">(</span><span class="n">intervals</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>  <span class="c1"># 20</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">),</span>  <span class="c1"># 32</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_LB_H"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">),</span>  <span class="c1"># 32*3</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"target_angle"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>  <span class="c1"># 32</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"target_angle_rate"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">0.03</span><span class="p">),</span>  <span class="c1"># 32</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_open"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">300.0</span><span class="p">),</span>  <span class="c1"># 32</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_close"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">300.0</span><span class="p">),</span>  <span class="c1"># 32</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">"target"</span><span class="p">,</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">60.0</span><span class="p">),</span>  <span class="c1"># 1</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Downlink</span><span class="p">(),</span>  <span class="c1"># 1</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Desat</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">60.0</span><span class="p">),</span>  <span class="c1"># 1</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">n_ahead_image</span><span class="o">=</span><span class="mi">32</span><span class="p">),</span>  <span class="c1"># 32</span>
+    <span class="p">]</span>
+
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">FullFeaturedDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">SteeringImagerFSWModel</span>
+</pre></div>
+</div>
+</div>
+<p>Function <code class="docutils literal notranslate"><span class="pre">setup_env</span></code> is defined such that environment and the environment configurations can created for training and testing.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">setup_env</span><span class="p">(</span>
+    <span class="n">test</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">90</span><span class="p">,</span>
+    <span class="n">n_targets</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">3000</span><span class="p">),</span>
+    <span class="n">target_distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"cities"</span><span class="p">,</span>
+    <span class="n">env_case</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"no_failure_penalty"</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Setup the environment for the satellite tasking problem.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        test: If True, sets up the environment for testing.</span>
+<span class="sd">        horizon: The time horizon for the simulation in orbits.</span>
+<span class="sd">        n_targets: The number of targets in the environment.</span>
+<span class="sd">        target_distribution: The distribution of targets, either "uniform" or "cities".</span>
+<span class="sd">        env_case: The environment case to use from the configuration.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        env: The configured environment (for testing).</span>
+<span class="sd">        satellite: The satellite object configured with the specified parameters.</span>
+<span class="sd">        env_args_dict: Dictionary of environment arguments (for training).</span>
+<span class="sd">        indexes: Dictionary of indexes for specific observations.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">env_case</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">"sat_args"</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Environment case '</span><span class="si">{</span><span class="n">env_case</span><span class="si">}</span><span class="s2">' not found in configuration."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">target_distribution</span> <span class="o">==</span> <span class="s2">"uniform"</span><span class="p">:</span>
+        <span class="n">scene_features</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">UniformTargets</span><span class="p">(</span><span class="n">n_targets</span><span class="o">=</span><span class="n">n_targets</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">target_distribution</span> <span class="o">==</span> <span class="s2">"cities"</span><span class="p">:</span>
+        <span class="n">scene_features</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">CityTargets</span><span class="p">(</span><span class="n">n_targets</span><span class="o">=</span><span class="n">n_targets</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Invalid distribution type"</span><span class="p">))</span>
+
+    <span class="n">sat_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="o">**</span><span class="n">config</span><span class="p">[</span><span class="s2">"general_sat_args"</span><span class="p">],</span>
+        <span class="o">**</span><span class="n">config</span><span class="p">[</span><span class="s2">"sat_args"</span><span class="p">][</span><span class="n">env_case</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="n">satellite</span> <span class="o">=</span> <span class="n">CustomSatComposed</span><span class="p">(</span>
+        <span class="s2">"EarthObserving"</span><span class="p">,</span>
+        <span class="n">sat_args</span><span class="o">=</span><span class="n">sat_args</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">test</span><span class="p">:</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span>
+            <span class="s2">"SatelliteTasking-v1"</span><span class="p">,</span>
+            <span class="n">satellite</span><span class="o">=</span><span class="n">satellite</span><span class="p">,</span>
+            <span class="n">scenario</span><span class="o">=</span><span class="n">scene_features</span><span class="p">,</span>
+            <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+            <span class="n">time_limit</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">T_ORBIT</span> <span class="o">*</span> <span class="n">horizon</span><span class="p">),</span>
+            <span class="n">log_level</span><span class="o">=</span><span class="s2">"WARNING"</span><span class="p">,</span>
+            <span class="n">failure_penalty</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># NO FAILURE PENALTY IN TEST</span>
+            <span class="n">sim_rate</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">"sim_params"</span><span class="p">][</span><span class="s2">"sim_rate"</span><span class="p">],</span>
+            <span class="n">max_step_duration</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">"sim_params"</span><span class="p">][</span><span class="s2">"max_step_duration"</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">env_args_dict</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">env_args_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">satellite</span><span class="o">=</span><span class="n">satellite</span><span class="p">,</span>
+            <span class="n">scenario</span><span class="o">=</span><span class="n">scene_features</span><span class="p">,</span>
+            <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+            <span class="n">time_limit</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">T_ORBIT</span> <span class="o">*</span> <span class="n">horizon</span><span class="p">),</span>
+            <span class="n">log_level</span><span class="o">=</span><span class="s2">"WARNING"</span><span class="p">,</span>
+            <span class="n">failure_penalty</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">"sim_params"</span><span class="p">][</span><span class="s2">"failure_penalty"</span><span class="p">][</span><span class="n">env_case</span><span class="p">],</span>
+            <span class="n">sim_rate</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">"sim_params"</span><span class="p">][</span><span class="s2">"sim_rate"</span><span class="p">],</span>
+            <span class="n">max_step_duration</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">"sim_params"</span><span class="p">][</span><span class="s2">"max_step_duration"</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span>
+            <span class="s2">"SatelliteTasking-v1"</span><span class="p">,</span>
+            <span class="n">satellite</span><span class="o">=</span><span class="n">satellite</span><span class="p">,</span>
+            <span class="n">scenario</span><span class="o">=</span><span class="n">scene_features</span><span class="p">,</span>
+            <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+            <span class="n">time_limit</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">T_ORBIT</span><span class="p">),</span>
+            <span class="n">log_level</span><span class="o">=</span><span class="s2">"WARNING"</span><span class="p">,</span>
+            <span class="n">failure_penalty</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">"sim_params"</span><span class="p">][</span><span class="s2">"failure_penalty"</span><span class="p">][</span><span class="n">env_case</span><span class="p">],</span>
+            <span class="n">sim_rate</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">"sim_params"</span><span class="p">][</span><span class="s2">"sim_rate"</span><span class="p">],</span>
+            <span class="n">max_step_duration</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">"sim_params"</span><span class="p">][</span><span class="s2">"max_step_duration"</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Getting observation indexes - useful for shields</span>
+    <span class="n">indexes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"wheel_speeds"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_array_keys</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span>
+                <span class="s2">"sat_props.wheel_speeds_fraction[0]"</span>
+            <span class="p">),</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_array_keys</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span>
+                <span class="s2">"sat_props.wheel_speeds_fraction[1]"</span>
+            <span class="p">),</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_array_keys</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span>
+                <span class="s2">"sat_props.wheel_speeds_fraction[2]"</span>
+            <span class="p">),</span>
+        <span class="p">],</span>
+        <span class="s2">"stored_charge"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_array_keys</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span>
+                <span class="s2">"sat_props.battery_charge_fraction"</span>
+            <span class="p">)</span>
+        <span class="p">],</span>
+        <span class="s2">"attitude_rate"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_array_keys</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span>
+                <span class="s2">"sat_props.omega_BN_B_normd[0]"</span>
+            <span class="p">),</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_array_keys</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span>
+                <span class="s2">"sat_props.omega_BN_B_normd[1]"</span>
+            <span class="p">),</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_array_keys</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span>
+                <span class="s2">"sat_props.omega_BN_B_normd[2]"</span>
+            <span class="p">),</span>
+        <span class="p">],</span>
+        <span class="s2">"eclipse"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_array_keys</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"eclipse[0]"</span><span class="p">),</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_array_keys</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"eclipse[1]"</span><span class="p">),</span>
+        <span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">env</span><span class="p">,</span> <span class="n">satellite</span><span class="p">,</span> <span class="n">env_args_dict</span><span class="p">,</span> <span class="n">indexes</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Action-replacement-and-action-masking-wrappers">
+<h2>Action replacement and action masking wrappers<a class="headerlink" href="#Action-replacement-and-action-masking-wrappers" title="Link to this heading"></a></h2>
+<p>Wrappers are used to extend the capabilities of the base environment:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">WrapperActionLogging</span></code> provides useful logging metrics that can be easily accessed during training and testing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WrapperPostPosed</span></code> implements the action replacement logic. The wrapper receives a function that is used to monitor the action selected by the agent and modifies it if necessary. It is possible to specify an interference penalty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WrapperActionMasking</span></code> extends the observation returned by the agent to incorporate the masking, which will be used with a modified RLmodule during training.</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">WrapperActionLogging</span><span class="p">(</span><span class="n">Wrapper</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">env</span><span class="p">:</span> <span class="n">Satellite</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_action_logger</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_action_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_logger</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"action_charge_count"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"action_downlink_count"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"action_desat_count"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"action_image_count"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"actions_total_count"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shield_info</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"shield_interference"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"original_action"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"shielded_action"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"shield_interference_count"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"shield_penalty_total"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">"masking_all_actions_available_count"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_action_logger</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action_logger</span><span class="p">[</span><span class="s2">"action_charge_count"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action_logger</span><span class="p">[</span><span class="s2">"action_downlink_count"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action_logger</span><span class="p">[</span><span class="s2">"action_desat_count"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action_logger</span><span class="p">[</span><span class="s2">"action_image_count"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_logger</span><span class="p">[</span><span class="s2">"actions_total_count"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">WrapperPostPosed</span><span class="p">(</span><span class="n">WrapperActionLogging</span><span class="p">,</span> <span class="n">ActionWrapper</span><span class="p">,</span> <span class="n">RewardWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A wrapper that allows for post-posing shields in a gym environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">env</span><span class="p">:</span> <span class="n">Satellite</span><span class="p">,</span>
+        <span class="n">shield_function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shield_penalty</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shield_function</span> <span class="o">=</span> <span class="n">shield_function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shield_penalty</span> <span class="o">=</span> <span class="n">shield_penalty</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">original_action</span> <span class="o">=</span> <span class="n">action</span>
+
+        <span class="n">shielded_action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shield_function</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">get_obs</span><span class="p">(),</span> <span class="n">original_action</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">shielded_action</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">shielded_action</span> <span class="o">==</span> <span class="n">original_action</span><span class="p">:</span>
+            <span class="n">modified_action</span> <span class="o">=</span> <span class="n">original_action</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"shield_interference"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"original_action"</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_action</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"shielded_action"</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_action</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">modified_action</span> <span class="o">=</span> <span class="n">shielded_action</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"shield_interference"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"original_action"</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_action</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"shielded_action"</span><span class="p">]</span> <span class="o">=</span> <span class="n">shielded_action</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"shield_interference_count"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">modified_action</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reward</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"shield_interference"</span><span class="p">]:</span>
+            <span class="n">reward</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shield_penalty</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"shield_penalty_total"</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shield_penalty</span>
+
+        <span class="k">return</span> <span class="n">reward</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">WrapperActionMasking</span><span class="p">(</span><span class="n">ObservationWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A wrapper that allows for action-masking in a gym environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">Satellite</span><span class="p">,</span> <span class="n">masking_function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">masking_function</span> <span class="o">=</span> <span class="n">masking_function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_actions</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the single satellite observation space."""</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">observation_space</span>
+        <span class="n">obs_space</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"action_mask"</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">n</span><span class="p">,)),</span>
+                <span class="s2">"observations"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">obs_space</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_actions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">masking_function</span><span class="p">(</span><span class="n">observation</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+        <span class="p">)</span>
+        <span class="n">n_available_actions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_actions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_available_actions</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_actions</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"masking_all_actions_available_count"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">n_available_actions</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># if no actions are available, all actions are allowed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">valid_actions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_actions</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="n">observation_with_mask</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"action_mask"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_actions</span><span class="p">,</span>
+            <span class="s2">"observations"</span><span class="p">:</span> <span class="n">observation</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">observation_with_mask</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Handmade-shield">
+<h2>Handmade shield<a class="headerlink" href="#Handmade-shield" title="Link to this heading"></a></h2>
+<p>The handmade shield is an example of a simple shield constructed based on heuristics based on <a class="reference external" href="https://www.frontiersin.org/journals/space-technologies/articles/10.3389/frspt.2023.1263489/full">A comparative analysis of reinforcement learning algorithms for earth-observing satellite scheduling</a> and <a class="reference external" href="https://hanspeterschaub.info/Papers/Stephenson2024a.pdf">Reinforcement Learning for Earth-Observing Satellite Autonomy with Event-Based Task Intervals</a>. Although it provides a good compromise
+between performance and safety, it is prone to edge cases that are hard to model and predict. Instead, automated shields with stronger safety guarantees can be used, such as those discussed in <a class="reference external" href="https://hanspeterschaub.info/Papers/Reed2024.pdf">Shielded Deep Reinforcement Learning for Complex Spacecraft Tasking</a>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">power_shielding_function</span><span class="p">(</span>
+    <span class="n">obs</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">act</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">indexes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">min_power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">charge_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">discharge_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">rw_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Force charging if not in eclipse and below min_power or the time</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obs: Observation vector</span>
+<span class="sd">        act: unshielded action</span>
+<span class="sd">        indexes: Dictionary with indexes of the observation vector</span>
+<span class="sd">        min_power: Minimum battery percentage. [%]</span>
+<span class="sd">        charge_rate: Rate of charging in charge mode. [%/orbit]</span>
+<span class="sd">        discharge_rate: Rate of discharge in eclipse. [%/orbit]</span>
+<span class="sd">        rw_threshold: Threshold for reaction wheel speeds. [%]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Return None if shield not activated, else return shielded action.</span>
+<span class="sd">    """</span>
+
+    <span class="n">current_power</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">indexes</span><span class="p">[</span><span class="s2">"stored_charge"</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">eclipse_start</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">indexes</span><span class="p">[</span><span class="s2">"eclipse"</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">eclipse_end</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">indexes</span><span class="p">[</span><span class="s2">"eclipse"</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="n">rw_1</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">indexes</span><span class="p">[</span><span class="s2">"wheel_speeds"</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">rw_2</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">indexes</span><span class="p">[</span><span class="s2">"wheel_speeds"</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="n">rw_3</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">indexes</span><span class="p">[</span><span class="s2">"wheel_speeds"</span><span class="p">][</span><span class="mi">2</span><span class="p">]]</span>
+
+    <span class="n">in_eclipse</span> <span class="o">=</span> <span class="n">eclipse_end</span> <span class="o">&lt;</span> <span class="n">eclipse_start</span>
+
+    <span class="c1"># Check if current state is unsafe</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">in_eclipse</span> <span class="ow">and</span> <span class="n">current_power</span> <span class="o">&lt;</span> <span class="n">_power_requirement</span><span class="p">(</span>
+        <span class="n">eclipse_start</span><span class="p">,</span> <span class="n">eclipse_end</span><span class="p">,</span> <span class="n">min_power</span><span class="p">,</span> <span class="n">charge_rate</span><span class="p">,</span> <span class="n">discharge_rate</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>  <span class="c1"># Returns charge action</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">rw_1</span><span class="p">,</span> <span class="n">rw_2</span><span class="p">,</span> <span class="n">rw_3</span><span class="p">]))</span> <span class="o">&gt;</span> <span class="n">rw_threshold</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mi">2</span>  <span class="c1"># Returns desaturate action</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_power_requirement</span><span class="p">(</span>
+    <span class="n">eclipse_start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">eclipse_end</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">min_power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">charge_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">discharge_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">eclipse_duration</span> <span class="o">=</span> <span class="p">(</span><span class="n">eclipse_end</span> <span class="o">-</span> <span class="n">eclipse_start</span><span class="p">)</span> <span class="o">%</span> <span class="mi">1</span>
+    <span class="n">in_eclipse</span> <span class="o">=</span> <span class="n">eclipse_end</span> <span class="o">&lt;</span> <span class="n">eclipse_start</span>
+    <span class="k">if</span> <span class="n">in_eclipse</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">min_power</span> <span class="o">+</span> <span class="n">eclipse_end</span> <span class="o">*</span> <span class="n">discharge_rate</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">eclipse_draw</span> <span class="o">=</span> <span class="n">eclipse_duration</span> <span class="o">*</span> <span class="n">discharge_rate</span>
+        <span class="n">charge_time</span> <span class="o">=</span> <span class="n">eclipse_draw</span> <span class="o">/</span> <span class="n">charge_rate</span>
+        <span class="k">if</span> <span class="n">charge_time</span> <span class="o">&lt;</span> <span class="n">eclipse_start</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">min_power</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">min_power</span> <span class="o">+</span> <span class="p">(</span><span class="n">charge_time</span> <span class="o">-</span> <span class="n">eclipse_start</span><span class="p">)</span> <span class="o">*</span> <span class="n">charge_rate</span>
+</pre></div>
+</div>
+</div>
+<p>The handmade shield can be used in both action replacement and masking. Function <code class="docutils literal notranslate"><span class="pre">generate_shield_functions</span></code> creates the adequate function for each case.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ACTION_SPACE_SIZE</span> <span class="o">=</span> <span class="mi">35</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_shield_functions</span><span class="p">(</span>
+    <span class="n">shield_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">shield_mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Generates shield functions based on the specified shield type and mode.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        shield_type: Type of the shield (-1 for handmade, 0 for optimal shielding, 1 for two-step strategy, 2 for value function).</span>
+<span class="sd">        shield_mode: Mode of the shield ("postposed" or "action_masking").</span>
+<span class="sd">        indexes: Dictionary containing indexes for specific observations.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Callable: A function that either shields actions or masks actions based on the shield type and mode.</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the shield type or mode is invalid.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">shield_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"unshielded"</span><span class="p">,</span> <span class="s2">"handmade"</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid shield type: </span><span class="si">{</span><span class="n">shield_type</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shield_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"postposed"</span><span class="p">,</span> <span class="s2">"action_masking"</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Invalid shield mode: </span><span class="si">{</span><span class="n">shield_mode</span><span class="si">}</span><span class="s2"> for shield type: </span><span class="si">{</span><span class="n">shield_type</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">shield_type</span> <span class="o">==</span> <span class="s2">"unshielded"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shield_mode</span> <span class="o">==</span> <span class="s2">"postposed"</span><span class="p">:</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">shield_function</span><span class="p">(</span><span class="n">obs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">act</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">act</span>  <span class="c1"># No shielding, return the action as is</span>
+
+            <span class="k">return</span> <span class="n">shield_function</span>
+
+        <span class="k">elif</span> <span class="n">shield_mode</span> <span class="o">==</span> <span class="s2">"action_masking"</span><span class="p">:</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">mask_function</span><span class="p">(</span><span class="n">obs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">ACTION_SPACE_SIZE</span>  <span class="c1"># All actions are valid</span>
+
+            <span class="k">return</span> <span class="n">mask_function</span>
+
+    <span class="k">elif</span> <span class="n">shield_type</span> <span class="o">==</span> <span class="s2">"handmade"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shield_mode</span> <span class="o">==</span> <span class="s2">"postposed"</span><span class="p">:</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">shield_function</span><span class="p">(</span><span class="n">obs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">act</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">power_shielding_function</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">act</span><span class="p">,</span> <span class="n">indexes</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">shield_function</span>
+
+        <span class="k">elif</span> <span class="n">shield_mode</span> <span class="o">==</span> <span class="s2">"action_masking"</span><span class="p">:</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">mask_function</span><span class="p">(</span><span class="n">obs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+                <span class="n">shielded_action</span> <span class="o">=</span> <span class="n">power_shielding_function</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">shielded_action</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">ACTION_SPACE_SIZE</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">shielded_action</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">mask_vector</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ACTION_SPACE_SIZE</span>
+                        <span class="n">mask_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                        <span class="k">return</span> <span class="n">mask_vector</span>
+                    <span class="k">elif</span> <span class="n">shielded_action</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">mask_vector</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ACTION_SPACE_SIZE</span>
+                        <span class="n">mask_vector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                        <span class="k">return</span> <span class="n">mask_vector</span>
+
+            <span class="k">return</span> <span class="n">mask_function</span>
+</pre></div>
+</div>
+</div>
+<p>An modified RLModule from RLLib is used for the action masking module with a small modification. <code class="docutils literal notranslate"><span class="pre">ActionMaskingTorchRLModule</span></code> uses a logit-level log-infinity mask where</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{l}^\varphi=\mathbf{l}+log(\mathbf{m})\]</div>
+<p>such that the original logits <span class="math notranslate nohighlight">\(\mathbf{l}\)</span> are added to the log of the mask vector <span class="math notranslate nohighlight">\(\mathbf{m}\)</span> (element wise) resulting in the <span class="math notranslate nohighlight">\(\mathbf{l}^\varphi\)</span>. When the action probabilities are computed using softmax</p>
+<div class="math notranslate nohighlight">
+\[\pi^\varphi(a,s)=\frac{e^{l_a^\varphi}}{\sum_{a'\in\mathcal{A}}e^{l_a'^\varphi}}\]</div>
+<p>actions masked out receive zero probability. As implemented, the probability provided by <span class="math notranslate nohighlight">\(\pi^\varphi\)</span> is used in the policy update.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.core.rl_module.apis.value_function_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValueFunctionAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.examples.rl_modules.classes.action_masking_rlm</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ActionMaskingTorchRLModule</span> <span class="k">as</span> <span class="n">BaseActionMaskingTorchRLModule</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.utils.annotations</span><span class="w"> </span><span class="kn">import</span> <span class="n">override</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.utils.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorType</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ActionMaskingTorchRLModule</span><span class="p">(</span><span class="n">BaseActionMaskingTorchRLModule</span><span class="p">):</span>
+    <span class="nd">@override</span><span class="p">(</span><span class="n">ValueFunctionAPI</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TensorType</span><span class="p">]):</span>
+        <span class="c1"># Preprocess the batch to extract the `observations` to `Columns.OBS`.</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        <span class="c1"># Call the super's method to compute values for GAE.</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">BaseActionMaskingTorchRLModule</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">compute_values</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Training-setup">
+<h2>Training setup<a class="headerlink" href="#Training-setup" title="Link to this heading"></a></h2>
+<p>First, the data callback is defined and metrics provided by the <code class="docutils literal notranslate"><span class="pre">WrapperActionLogging</span></code> wrapper stored.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">floating</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.core.rl_module.rl_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">RLModuleSpec</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.rllib.callbacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">EpisodeDataLogger</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">episode_data_callback</span><span class="p">(</span><span class="n">env</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">floating</span><span class="p">[</span><span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Collects data at the end of each episode for the RLlib environment.</span>
+<span class="sd">    """</span>
+    <span class="n">reward</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">cum_reward</span>
+    <span class="n">reward</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">reward</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
+    <span class="n">orbits</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">/</span> <span class="n">T_ORBIT</span>
+    <span class="n">imaged</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">imaged</span>
+    <span class="n">missed</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">missed</span>
+    <span class="n">count_charge</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_logger</span><span class="p">[</span><span class="s2">"action_charge_count"</span><span class="p">]</span>
+    <span class="n">count_downlink</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_logger</span><span class="p">[</span><span class="s2">"action_downlink_count"</span><span class="p">]</span>
+    <span class="n">count_desat</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_logger</span><span class="p">[</span><span class="s2">"action_desat_count"</span><span class="p">]</span>
+    <span class="n">count_image</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_logger</span><span class="p">[</span><span class="s2">"action_image_count"</span><span class="p">]</span>
+    <span class="n">count_total_actions</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_logger</span><span class="p">[</span><span class="s2">"actions_total_count"</span><span class="p">]</span>
+    <span class="n">count_shield_interference</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"shield_interference_count"</span><span class="p">]</span>
+    <span class="n">shield_penalty_total</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span><span class="s2">"shield_penalty_total"</span><span class="p">]</span>
+    <span class="n">masking_all_actions_available_count</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">shield_info</span><span class="p">[</span>
+        <span class="s2">"masking_all_actions_available_count"</span>
+    <span class="p">]</span>
+    <span class="n">mask_active_percent</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mi">100</span> <span class="o">-</span> <span class="p">(</span><span class="n">masking_all_actions_available_count</span> <span class="o">/</span> <span class="n">count_total_actions</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">count_total_actions</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">else</span> <span class="mi">0</span>
+    <span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">reward</span><span class="o">=</span><span class="n">reward</span><span class="p">,</span>
+        <span class="n">alive_percentage</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()),</span>
+        <span class="n">imaged</span><span class="o">=</span><span class="n">imaged</span><span class="p">,</span>
+        <span class="n">missed</span><span class="o">=</span><span class="n">missed</span><span class="p">,</span>
+        <span class="n">orbits_complete</span><span class="o">=</span><span class="n">orbits</span><span class="p">,</span>
+        <span class="n">data_storage_capacity</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span><span class="p">,</span>
+        <span class="n">battery_capacity</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">storageCapacity</span><span class="p">,</span>
+        <span class="n">external_torque</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">extForceTorqueObject</span><span class="o">.</span><span class="n">extTorquePntB_B</span>
+        <span class="p">),</span>
+        <span class="n">valid_battery</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">battery_valid</span><span class="p">()</span>
+        <span class="p">),</span>  <span class="c1"># True if the battery is valid</span>
+        <span class="n">valid_rw</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rw_speeds_valid</span><span class="p">()</span>
+        <span class="p">),</span>  <span class="c1"># True if RW speeds are valid</span>
+        <span class="n">count_charge_action</span><span class="o">=</span><span class="n">count_charge</span><span class="p">,</span>
+        <span class="n">count_downlink_action</span><span class="o">=</span><span class="n">count_downlink</span><span class="p">,</span>
+        <span class="n">count_desat_action</span><span class="o">=</span><span class="n">count_desat</span><span class="p">,</span>
+        <span class="n">count_image_action</span><span class="o">=</span><span class="n">count_image</span><span class="p">,</span>
+        <span class="n">count_total_actions</span><span class="o">=</span><span class="n">count_total_actions</span><span class="p">,</span>
+        <span class="n">count_shield_interference</span><span class="o">=</span><span class="n">count_shield_interference</span><span class="p">,</span>
+        <span class="n">shield_penalty_total</span><span class="o">=</span><span class="n">shield_penalty_total</span><span class="p">,</span>
+        <span class="n">masking_all_actions_available_count</span><span class="o">=</span><span class="n">masking_all_actions_available_count</span><span class="p">,</span>
+        <span class="n">mask_active_percent</span><span class="o">=</span><span class="n">mask_active_percent</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">orbits</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"reward_per_orbit"</span><span class="p">]</span> <span class="o">=</span> <span class="n">reward</span> <span class="o">/</span> <span class="n">orbits</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"imaged_per_orbit"</span><span class="p">]</span> <span class="o">=</span> <span class="n">imaged</span> <span class="o">/</span> <span class="n">orbits</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"count_charge_action_per_orbit"</span><span class="p">]</span> <span class="o">=</span> <span class="n">count_charge</span> <span class="o">/</span> <span class="n">orbits</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"count_downlink_action_per_orbit"</span><span class="p">]</span> <span class="o">=</span> <span class="n">count_downlink</span> <span class="o">/</span> <span class="n">orbits</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"count_desat_action_per_orbit"</span><span class="p">]</span> <span class="o">=</span> <span class="n">count_desat</span> <span class="o">/</span> <span class="n">orbits</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"count_image_action_per_orbit"</span><span class="p">]</span> <span class="o">=</span> <span class="n">count_image</span> <span class="o">/</span> <span class="n">orbits</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"count_total_actions_per_orbit"</span><span class="p">]</span> <span class="o">=</span> <span class="n">count_total_actions</span> <span class="o">/</span> <span class="n">orbits</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"attempts_per_orbit"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">imaged</span> <span class="o">+</span> <span class="n">missed</span><span class="p">)</span> <span class="o">/</span> <span class="n">orbits</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">is_alive</span><span class="p">():</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"orbits_complete_partial_only"</span><span class="p">]</span> <span class="o">=</span> <span class="n">orbits</span>
+
+    <span class="k">if</span> <span class="n">imaged</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"avg_tgt_val"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"success_rate"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"avg_tgt_val"</span><span class="p">]</span> <span class="o">=</span> <span class="n">reward</span> <span class="o">/</span> <span class="n">imaged</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"success_rate"</span><span class="p">]</span> <span class="o">=</span> <span class="n">imaged</span> <span class="o">/</span> <span class="p">(</span><span class="n">imaged</span> <span class="o">+</span> <span class="n">missed</span><span class="p">)</span>
+
+    <span class="n">data</span><span class="p">[</span><span class="s2">"attempts"</span><span class="p">]</span> <span class="o">=</span> <span class="n">imaged</span> <span class="o">+</span> <span class="n">missed</span>
+
+    <span class="k">if</span> <span class="n">count_total_actions</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"count_shield_interference_percent"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">count_shield_interference</span> <span class="o">/</span> <span class="n">count_total_actions</span> <span class="o">*</span> <span class="mi">100</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span>
+</pre></div>
+</div>
+</div>
+<p>Next, the training is configured with the options to use different environment cases, shields, and shield modes.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env_case</span> <span class="o">=</span> <span class="s2">"no_failure_penalty"</span>  <span class="c1"># no_failure_penalty, failure_penalty, inf_power</span>
+<span class="n">shield_type</span> <span class="o">=</span> <span class="s2">"handmade"</span>  <span class="c1"># unshielded or handmade</span>
+<span class="n">shield_mode</span> <span class="o">=</span> <span class="s2">"action_masking"</span>  <span class="c1"># postposed or action_masking</span>
+<span class="n">shield_penalty</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.1</span>
+
+<span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">env_args</span><span class="p">,</span> <span class="n">indexes</span> <span class="o">=</span> <span class="n">setup_env</span><span class="p">(</span>
+    <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">n_targets</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">3000</span><span class="p">),</span>
+    <span class="n">target_distribution</span><span class="o">=</span><span class="s2">"cities"</span><span class="p">,</span>
+    <span class="n">env_case</span><span class="o">=</span><span class="n">env_case</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">training_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">lr</span><span class="o">=</span><span class="mf">0.00003</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="o">=</span><span class="mf">0.997</span><span class="p">,</span>
+    <span class="n">train_batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>  <span class="c1"># Originally 3000</span>
+    <span class="n">num_sgd_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">lambda_</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span>
+    <span class="n">use_kl_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">clip_param</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">grad_clip</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">entropy_coeff</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">rl_module_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">model_config_dict</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"use_lstm"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">"fcnet_hiddens"</span><span class="p">:</span> <span class="p">[</span><span class="mi">2048</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">"vf_share_layers"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+
+<span class="n">shield_function</span> <span class="o">=</span> <span class="n">generate_shield_functions</span><span class="p">(</span><span class="n">shield_type</span><span class="p">,</span> <span class="n">shield_mode</span><span class="p">,</span> <span class="n">indexes</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">shield_mode</span> <span class="o">==</span> <span class="s2">"postposed"</span><span class="p">:</span>
+    <span class="n">shield_function</span> <span class="o">=</span> <span class="n">generate_shield_functions</span><span class="p">(</span><span class="n">shield_type</span><span class="p">,</span> <span class="s2">"postposed"</span><span class="p">,</span> <span class="n">indexes</span><span class="p">)</span>
+<span class="k">elif</span> <span class="n">shield_mode</span> <span class="o">==</span> <span class="s2">"action_masking"</span><span class="p">:</span>
+    <span class="n">mask_function</span> <span class="o">=</span> <span class="n">generate_shield_functions</span><span class="p">(</span><span class="n">shield_type</span><span class="p">,</span> <span class="s2">"action_masking"</span><span class="p">,</span> <span class="n">indexes</span><span class="p">)</span>
+
+<span class="n">rl_module_args</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">if</span> <span class="n">shield_mode</span> <span class="o">==</span> <span class="s2">"postposed"</span> <span class="ow">or</span> <span class="n">shield_type</span> <span class="o">==</span> <span class="s2">"unshielded"</span><span class="p">:</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_creation</span><span class="p">(</span><span class="o">**</span><span class="n">env_config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WrapperPostPosed</span><span class="p">:</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span><span class="o">**</span><span class="n">env_config</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">WrapperPostPosed</span><span class="p">(</span>
+            <span class="n">env</span><span class="p">,</span> <span class="n">shield_function</span><span class="o">=</span><span class="n">shield_function</span><span class="p">,</span> <span class="n">shield_penalty</span><span class="o">=</span><span class="n">shield_penalty</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">env</span>
+
+<span class="k">elif</span> <span class="n">shield_mode</span> <span class="o">==</span> <span class="s2">"action_masking"</span><span class="p">:</span>
+    <span class="n">rl_module_args</span><span class="p">[</span><span class="s2">"rl_module_spec"</span><span class="p">]</span> <span class="o">=</span> <span class="n">RLModuleSpec</span><span class="p">(</span>
+        <span class="n">module_class</span><span class="o">=</span><span class="n">ActionMaskingTorchRLModule</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_creation</span><span class="p">(</span><span class="o">**</span><span class="n">env_config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WrapperActionMasking</span><span class="p">:</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">SatelliteTasking</span><span class="p">(</span><span class="o">**</span><span class="n">env_config</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">WrapperActionLogging</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">WrapperActionMasking</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">masking_function</span><span class="o">=</span><span class="n">mask_function</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">env</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Env_wrapped</span><span class="p">(</span><span class="n">EpisodeDataLogger</span><span class="p">,</span> <span class="n">Wrapper</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_config</span><span class="p">):</span>
+        <span class="n">episode_data_callback</span> <span class="o">=</span> <span class="n">env_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"episode_data_callback"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">satellite_data_callback</span> <span class="o">=</span> <span class="n">env_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"satellite_data_callback"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">env_creation</span><span class="p">(</span><span class="o">**</span><span class="n">env_config</span><span class="p">)</span>
+        <span class="n">EpisodeDataLogger</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_data_callback</span><span class="p">,</span> <span class="n">satellite_data_callback</span><span class="p">)</span>
+        <span class="n">Wrapper</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+
+
+<span class="n">env_args</span><span class="p">[</span><span class="s2">"episode_data_callback"</span><span class="p">]</span> <span class="o">=</span> <span class="n">episode_data_callback</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-09-02 14:54:52,231 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-intense-fg">Ignoring a, e, and omega and using alt and r_body to generate a circular orbit.random_circular_orbit is preferred for this use case.</span>
+</pre></div></div>
+</div>
+<p>Training algorithm is configured and initialized with a maximum of 264 steps.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">tune</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.algorithms.ppo</span><span class="w"> </span><span class="kn">import</span> <span class="n">PPOConfig</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.rllib.callbacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">WrappedEpisodeDataCallbacks</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.rllib.discounting</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeDiscountedGAEPPOTorchLearner</span>
+
+<span class="n">N_CPUS</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># Originally 32</span>
+
+<span class="n">ppo_config</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">PPOConfig</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">training</span><span class="p">(</span>
+        <span class="o">**</span><span class="n">training_args</span><span class="p">,</span>
+        <span class="n">learner_class</span><span class="o">=</span><span class="n">TimeDiscountedGAEPPOTorchLearner</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">env_runners</span><span class="p">(</span><span class="n">num_env_runners</span><span class="o">=</span><span class="n">N_CPUS</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sample_timeout_s</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">environment</span><span class="p">(</span>
+        <span class="n">env</span><span class="o">=</span><span class="n">Env_wrapped</span><span class="p">,</span>
+        <span class="n">env_config</span><span class="o">=</span><span class="n">env_args</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">reporting</span><span class="p">(</span>
+        <span class="n">metrics_num_episodes_for_smoothing</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">metrics_episode_collection_timeout_s</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">checkpointing</span><span class="p">(</span><span class="n">export_native_model_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">framework</span><span class="p">(</span><span class="n">framework</span><span class="o">=</span><span class="s2">"torch"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">api_stack</span><span class="p">(</span>
+        <span class="n">enable_rl_module_and_learner</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">enable_env_runner_and_connector_v2</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">callbacks</span><span class="p">(</span><span class="n">WrappedEpisodeDataCallbacks</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">ppo_config</span><span class="o">.</span><span class="n">rl_module</span><span class="p">(</span><span class="o">**</span><span class="n">rl_module_args</span><span class="p">)</span>
+
+<span class="n">ray</span><span class="o">.</span><span class="n">init</span><span class="p">(</span>
+    <span class="n">ignore_reinit_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">num_cpus</span><span class="o">=</span><span class="n">N_CPUS</span><span class="p">,</span>
+    <span class="n">object_store_memory</span><span class="o">=</span><span class="mi">2_000_000_000</span><span class="p">,</span>  <span class="c1"># 2 GB</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the training</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">tune</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="s2">"PPO"</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">ppo_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+    <span class="n">stop</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"num_env_steps_sampled_lifetime"</span><span class="p">:</span> <span class="mi">264</span>
+    <span class="p">},</span>  <span class="c1"># Total number of steps to train the model. Originally 20M</span>
+    <span class="n">checkpoint_freq</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">checkpoint_at_end</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ray</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2026-09-02 14:54:55,694 INFO worker.py:1783 -- Started a local Ray instance.
+2026-09-02 14:54:59,318 INFO tune.py:616 -- [output] This uses the legacy output and progress reporter, as Jupyter notebooks are not supported by the new engine, yet. For more information, please see https://github.com/ray-project/ray/issues/36949
+/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:130: UserWarning: <span class="ansi-yellow-fg">WARN: Box bound precision lowered by casting to float32</span>
+  gym.logger.warn(f&#34;Box bound precision lowered by casting to {self.dtype}&#34;)
+/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gymnasium/utils/passive_env_checker.py:164: UserWarning: <span class="ansi-yellow-fg">WARN: The obs returned by the `reset()` method was expecting numpy array dtype to be float32, actual type: float64</span>
+  logger.warn(
+/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gymnasium/utils/passive_env_checker.py:188: UserWarning: <span class="ansi-yellow-fg">WARN: The obs returned by the `reset()` method is not within the observation space.</span>
+  logger.warn(f&#34;{pre} is not within the observation space.&#34;)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div class="tuneStatus">
+  <div style="display: flex;flex-direction: row">
+    <div style="display: flex;flex-direction: column;">
+      <h3>Tune Status</h3>
+      <table>
+<tbody>
+<tr><td>Current time:</td><td>2026-09-02 14:55:35</td></tr>
+<tr><td>Running for: </td><td>00:00:36.22        </td></tr>
+<tr><td>Memory:      </td><td>5.1/15.6 GiB       </td></tr>
+</tbody>
+</table>
+    </div>
+    <div class="vDivider"></div>
+    <div class="systemInfo">
+      <h3>System Info</h3>
+      Using FIFO scheduling algorithm.<br>Logical resource usage: 3.0/3 CPUs, 0/0 GPUs
+    </div>
+
+  </div>
+  <div class="hDivider"></div>
+  <div class="trialStatus">
+    <h3>Trial Status</h3>
+    <table>
+<thead>
+<tr><th>Trial name                 </th><th>status    </th><th>loc           </th><th style="text-align: right;">  iter</th><th style="text-align: right;">  total time (s)</th><th style="text-align: right;">    num_env_steps_sample
+d_lifetime</th><th style="text-align: right;">  num_episodes_lifetim
+e</th><th style="text-align: right;">    num_env_steps_traine
+d_lifetime</th></tr>
+</thead>
+<tbody>
+<tr><td>PPO_Env_wrapped_44dd5_00000</td><td>TERMINATED</td><td>10.1.1.29:6560</td><td style="text-align: right;">     3</td><td style="text-align: right;">         17.1185</td><td style="text-align: right;">384</td><td style="text-align: right;">2</td><td style="text-align: right;">384</td></tr>
+</tbody>
+</table>
+  </div>
+</div>
+<style>
+.tuneStatus {
+  color: var(--jp-ui-font-color1);
+}
+.tuneStatus .systemInfo {
+  display: flex;
+  flex-direction: column;
+}
+.tuneStatus td {
+  white-space: nowrap;
+}
+.tuneStatus .trialStatus {
+  display: flex;
+  flex-direction: column;
+}
+.tuneStatus h3 {
+  font-weight: bold;
+}
+.tuneStatus .hDivider {
+  border-bottom-width: var(--jp-border-width);
+  border-bottom-color: var(--jp-border-color0);
+  border-bottom-style: solid;
+}
+.tuneStatus .vDivider {
+  border-left-width: var(--jp-border-width);
+  border-left-color: var(--jp-border-color0);
+  border-left-style: solid;
+  margin: 0.5em 1em 0.5em 1em;
+}
+</style></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6609)</span> <span class="ansi-black-intense-fg">2026-09-02 14:55:14,984 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-intense-fg">Ignoring a, e, and omega and using alt and r_body to generate a circular orbit.random_circular_orbit is preferred for this use case.</span>
+<span class="ansi-cyan-fg">(PPO pid=6560)</span> Trainable.setup took 10.926 seconds. If your trainable is slow to initialize, consider setting reuse_actors=True to reduce actor creation overheads.
+<span class="ansi-cyan-fg">(PPO pid=6560)</span> Install gputil for GPU system monitoring.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div class="trialProgress">
+  <h3>Trial Progress</h3>
+  <table>
+<thead>
+<tr><th>Trial name                 </th><th>env_runners                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </th><th>fault_tolerance                                                                           </th><th>learners                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         </th><th>num_agent_steps_sampled_lifetime  </th><th style="text-align: right;">  num_env_steps_sampled_lifetime</th><th style="text-align: right;">  num_env_steps_trained_lifetime</th><th style="text-align: right;">  num_episodes_lifetime</th><th>perf                                                                            </th><th>timers                                                                                                                                                                           </th></tr>
+</thead>
+<tbody>
+<tr><td>PPO_Env_wrapped_44dd5_00000</td><td>{&#x27;num_env_steps_sampled&#x27;: 128, &#x27;num_episodes&#x27;: 0, &#x27;num_module_steps_sampled_lifetime&#x27;: {&#x27;default_policy&#x27;: 768}, &#x27;num_module_steps_sampled&#x27;: {&#x27;default_policy&#x27;: 128}, &#x27;sample&#x27;: np.float64(6.10730686298101), &#x27;num_env_steps_sampled_lifetime&#x27;: 1152, &#x27;num_agent_steps_sampled&#x27;: {&#x27;default_agent&#x27;: 128}, &#x27;num_agent_steps_sampled_lifetime&#x27;: {&#x27;default_agent&#x27;: 768}, &#x27;episode_return_mean&#x27;: 5.947887546998507, &#x27;episode_return_max&#x27;: 10.984832619410838, &#x27;module_episode_returns_mean&#x27;: {&#x27;default_policy&#x27;: 5.947887546998507}, &#x27;episode_duration_sec_mean&#x27;: 8.788921369999969, &#x27;episode_len_min&#x27;: 96, &#x27;time_between_sampling&#x27;: np.float64(0.4650688911263551), &#x27;episode_len_mean&#x27;: 99.0, &#x27;agent_episode_returns_mean&#x27;: {&#x27;default_agent&#x27;: 5.947887546998507}, &#x27;episode_len_max&#x27;: 102, &#x27;episode_return_min&#x27;: 0.9109424745861759}</td><td>{&#x27;num_healthy_workers&#x27;: 2, &#x27;num_in_flight_async_reqs&#x27;: 0, &#x27;num_remote_worker_restarts&#x27;: 0}</td><td>{&#x27;__all_modules__&#x27;: {&#x27;num_env_steps_trained&#x27;: 128, &#x27;num_trainable_parameters&#x27;: 294948.0, &#x27;total_loss&#x27;: 0.1326863020658493, &#x27;num_module_steps_trained&#x27;: 128, &#x27;num_non_trainable_parameters&#x27;: 0.0}, &#x27;default_policy&#x27;: {&#x27;vf_explained_var&#x27;: 0.3345479965209961, &#x27;gradients_default_optimizer_global_norm&#x27;: 1.2361189126968384, &#x27;policy_loss&#x27;: -0.02882463112473488, &#x27;mean_kl_loss&#x27;: 0.0, &#x27;num_trainable_parameters&#x27;: 294948.0, &#x27;vf_loss&#x27;: 0.16151092946529388, &#x27;entropy&#x27;: 2.801575183868408, &#x27;curr_entropy_coeff&#x27;: 0.0, &#x27;default_optimizer_learning_rate&#x27;: 3e-05, &#x27;total_loss&#x27;: 0.1326863020658493, &#x27;num_module_steps_trained&#x27;: 128, &#x27;vf_loss_unclipped&#x27;: 0.16151092946529388, &#x27;num_non_trainable_parameters&#x27;: 0.0}}</td><td>{&#x27;default_agent&#x27;: 384}            </td><td style="text-align: right;">                             384</td><td style="text-align: right;">                             384</td><td style="text-align: right;">                      2</td><td>{&#x27;cpu_util_percent&#x27;: np.float64(47.325), &#x27;ram_util_percent&#x27;: np.float64(32.625)}</td><td>{&#x27;env_runner_sampling_timer&#x27;: 6.35815324477698, &#x27;learner_update_timer&#x27;: 0.07750964381745613, &#x27;synch_weights&#x27;: 0.005313921205847795, &#x27;synch_env_connectors&#x27;: 0.006058211817274138}</td></tr>
+</tbody>
+</table>
+</div>
+<style>
+.trialProgress {
+  display: flex;
+  flex-direction: column;
+  color: var(--jp-ui-font-color1);
+}
+.trialProgress h3 {
+  font-weight: bold;
+}
+.trialProgress td {
+  white-space: nowrap;
+}
+</style></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-cyan-fg">(PPO pid=6560)</span> Checkpoint successfully created at: Checkpoint(filesystem=local, path=/home/runner/ray_results/PPO_2026-09-02_14-54-59/PPO_Env_wrapped_44dd5_00000_0_2026-09-02_14-54-59/checkpoint_000000)
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6610)</span> <span class="ansi-black-intense-fg">2026-09-02 14:55:18,152 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-intense-fg">Ignoring a, e, and omega and using alt and r_body to generate a circular orbit.random_circular_orbit is preferred for this use case.</span><span class="ansi-green-fg"> [repeated 4x across cluster] (Ray deduplicates logs by default. Set RAY_DEDUP_LOGS=0 to disable log deduplication, or see https://docs.ray.io/en/master/ray-observability/user-guides/configure-logging.html#log-deduplication for more options.)</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6609)</span> <span class="ansi-black-intense-fg">2026-09-02 14:55:24,972 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13763.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(PPO pid=6560)</span> Checkpoint successfully created at: Checkpoint(filesystem=local, path=/home/runner/ray_results/PPO_2026-09-02_14-54-59/PPO_Env_wrapped_44dd5_00000_0_2026-09-02_14-54-59/checkpoint_000001)
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6610)</span> <span class="ansi-black-intense-fg">2026-09-02 14:55:27,210 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-intense-fg">Ignoring a, e, and omega and using alt and r_body to generate a circular orbit.random_circular_orbit is preferred for this use case.</span><span class="ansi-green-fg"> [repeated 2x across cluster]</span>
+2026-09-02 14:55:35,588 INFO tune.py:1009 -- Wrote the latest version of all result files and experiment state to &#39;/home/runner/ray_results/PPO_2026-09-02_14-54-59&#39; in 0.0416s.
+<span class="ansi-cyan-fg">(PPO pid=6560)</span> Checkpoint successfully created at: Checkpoint(filesystem=local, path=/home/runner/ray_results/PPO_2026-09-02_14-54-59/PPO_Env_wrapped_44dd5_00000_0_2026-09-02_14-54-59/checkpoint_000002)
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6610)</span> <span class="ansi-black-intense-fg">2026-09-02 14:55:26,176 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;16304.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+2026-09-02 14:55:35,653 INFO tune.py:1041 -- Total run time: 36.34 seconds (36.18 seconds for the tuning loop).
+</pre></div></div>
+</div>
+</section>
+<section id="Testing-configuration">
+<h2>Testing configuration<a class="headerlink" href="#Testing-configuration" title="Link to this heading"></a></h2>
+<p>The original testing environment was 90-orbit long, leading to a significant decrease in the number of available targets over time. To solve this issues, a <code class="docutils literal notranslate"><span class="pre">HiddentargetsMask</span></code> was introduced, which manages the number of targets visible to the satellite at any given moment through an opportunity filter. Originally, 15,000 targets were created in each environment but only <code class="docutils literal notranslate"><span class="pre">targets_max</span></code> targets were available to the satellite at any given time. When the agent successfully acquired a target, a
+target previously hidden would be made available.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">compress</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HiddenTargetsMask</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">targets_max</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialize the mask for hidden targets</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            list_targets: A list of all targets in the environment.</span>
+<span class="sd">            targets_max: The maximum number of targets available to the agent in a given time step.</span>
+<span class="sd">            verbose: If True, prints information about the targets.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_targets</span> <span class="o">=</span> <span class="n">list_targets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">targets_max</span> <span class="o">=</span> <span class="n">targets_max</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_total_targets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_targets</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_total_targets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_imaged</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_set</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_imaged</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_set</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_imaged</span> <span class="o">!=</span> <span class="n">n_imaged</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_imaged</span> <span class="o">=</span> <span class="n">n_imaged</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace_targets</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_imaged</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_total_targets</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">targets_max</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hidden_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_targets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">))</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_set</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">replace_targets</span><span class="p">(</span>
+        <span class="n">mask</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span>
+        <span class="n">n_imaged</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_total_targets</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_max_targets</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Add targets to the environment</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mask: The mask of hidden targets.</span>
+<span class="sd">            n_imaged: The number of targets that have been imaged.</span>
+<span class="sd">            n_total_targets: The total number of targets in the environment.</span>
+<span class="sd">            n_max_targets: The maximum number of targets available to the agent in a given time step.</span>
+<span class="sd">            verbose: If True, prints information about the targets.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            mask: The updated mask of hidden targets.</span>
+<span class="sd">        """</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">n_hidden</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="n">n_available</span> <span class="o">=</span> <span class="n">n_total_targets</span> <span class="o">-</span> <span class="n">n_imaged</span> <span class="o">-</span> <span class="n">n_hidden</span>
+        <span class="k">if</span> <span class="n">n_available</span> <span class="o">&lt;</span> <span class="n">n_max_targets</span><span class="p">:</span>
+            <span class="n">n_new</span> <span class="o">=</span> <span class="n">n_max_targets</span> <span class="o">-</span> <span class="n">n_available</span>
+            <span class="n">mask_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">readd_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+                <span class="n">mask_idxs</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">n_new</span><span class="p">,</span>
+                <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">mask</span><span class="p">[</span><span class="n">readd_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="n">mask</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">load_policy</span></code> function returns a policy function compatible with the different training methods. If training was performed with action masking, it is necessary to specify <code class="docutils literal notranslate"><span class="pre">embedded_masking=True</span></code> so that an unmasked environment becomes compatible with it. A different masking function can also be specified to be used during testing.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_MODULE_ID</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.core.columns</span><span class="w"> </span><span class="kn">import</span> <span class="n">Columns</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.core.rl_module.rl_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">RLModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.utils.numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_to_numpy</span><span class="p">,</span> <span class="n">softmax</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.utils.torch_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">FLOAT_MIN</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">load_policy</span><span class="p">(</span><span class="n">policy_path_general</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Load a PyTorch policy from a saved model.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        policy_path_general: The path to the saved model.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A function that takes observations and returns actions.</span>
+<span class="sd">    """</span>
+
+    <span class="n">rl_module</span> <span class="o">=</span> <span class="n">RLModule</span><span class="o">.</span><span class="n">from_checkpoint</span><span class="p">(</span>
+        <span class="n">policy_path_general</span>
+        <span class="o">/</span> <span class="s2">"learner_group"</span>
+        <span class="o">/</span> <span class="s2">"learner"</span>
+        <span class="o">/</span> <span class="s2">"rl_module"</span>
+        <span class="o">/</span> <span class="n">DEFAULT_MODULE_ID</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">policy</span><span class="p">(</span>
+        <span class="n">obs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">embedded_masking</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">masking_function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Policy function that takes observations and returns actions.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            obs: A list of observations.</span>
+<span class="sd">            deterministic: If True, use argmax for action selection; otherwise, sample from the action distribution.</span>
+<span class="sd">            embedded_masking: If True, model was trained with embedded masking and observation needs to be modified.</span>
+<span class="sd">            masking_function: A function that takes observations and returns a mask for valid actions. If None, no masking is applied.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            An integer representing the selected action.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">obs_vec</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="s2">"observations"</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">obs_vec</span> <span class="o">=</span> <span class="n">obs</span>
+        <span class="n">obs_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">obs_vec</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">embedded_masking</span><span class="p">:</span>
+            <span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">Columns</span><span class="o">.</span><span class="n">OBS</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">obs_vec</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)}</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">35</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">masking_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># If possible, masking is applies inside the RLModule</span>
+                    <span class="n">mask</span> <span class="o">=</span> <span class="n">masking_function</span><span class="p">(</span><span class="n">obs_vec</span><span class="p">)</span>
+
+                <span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Columns</span><span class="o">.</span><span class="n">OBS</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"observations"</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+                        <span class="s2">"action_mask"</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Columns</span><span class="o">.</span><span class="n">OBS</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"observations"</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">"observations"</span><span class="p">])</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span>
+                            <span class="mi">0</span>
+                        <span class="p">),</span>
+                        <span class="s2">"action_mask"</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">"action_mask"</span><span class="p">])</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span>
+                            <span class="mi">0</span>
+                        <span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+
+        <span class="n">rl_module_out</span> <span class="o">=</span> <span class="n">rl_module</span><span class="o">.</span><span class="n">forward_inference</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="n">convert_to_numpy</span><span class="p">(</span><span class="n">rl_module_out</span><span class="p">[</span><span class="n">Columns</span><span class="o">.</span><span class="n">ACTION_DIST_INPUTS</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">embedded_masking</span> <span class="ow">and</span> <span class="n">masking_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">masking_function</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+            <span class="n">inf_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mask</span><span class="p">),</span> <span class="nb">min</span><span class="o">=</span><span class="n">FLOAT_MIN</span><span class="p">)</span>
+            <span class="n">logits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">inf_mask</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">deterministic</span><span class="p">:</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># Use argmax for deterministic action</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">logits</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">p</span><span class="o">=</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">policy</span>
+</pre></div>
+</div>
+</div>
+<p>Testing is then performed specifying the desired shield method and type. The hidden targets are also re-computed at every step.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Loading the policy produced by tune.run()</span>
+<span class="n">policy_path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">get_last_checkpoint</span><span class="p">()</span><span class="o">.</span><span class="n">to_directory</span><span class="p">())</span>
+
+<span class="n">shield_type</span> <span class="o">=</span> <span class="s2">"handmade"</span>
+<span class="n">shield_mode</span> <span class="o">=</span> <span class="s2">"postposed"</span>
+<span class="n">targets_max</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># Originally varying from (100, 3000)</span>
+<span class="n">total_targets</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># Originally 15,000</span>
+<span class="n">embedded_masking</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Necessary when training with action masking. Set to False is trained with action replacement</span>
+
+<span class="n">env_case</span> <span class="o">=</span> <span class="s2">"no_failure_penalty"</span>
+
+<span class="n">env</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">indexes</span> <span class="o">=</span> <span class="n">setup_env</span><span class="p">(</span>
+    <span class="n">test</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Orbits. Originally 90</span>
+    <span class="n">n_targets</span><span class="o">=</span><span class="n">total_targets</span><span class="p">,</span>
+    <span class="n">target_distribution</span><span class="o">=</span><span class="s2">"cities"</span><span class="p">,</span>
+    <span class="n">env_case</span><span class="o">=</span><span class="n">env_case</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">shield_function</span> <span class="o">=</span> <span class="n">generate_shield_functions</span><span class="p">(</span><span class="n">shield_type</span><span class="p">,</span> <span class="n">shield_mode</span><span class="p">,</span> <span class="n">indexes</span><span class="p">)</span>
+<span class="n">policy</span> <span class="o">=</span> <span class="n">load_policy</span><span class="p">(</span><span class="n">policy_path</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">shield_mode</span> <span class="o">==</span> <span class="s2">"postposed"</span><span class="p">:</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">WrapperPostPosed</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">shield_function</span><span class="o">=</span><span class="n">shield_function</span><span class="p">)</span>
+
+<span class="k">elif</span> <span class="n">shield_mode</span> <span class="o">==</span> <span class="s2">"action_masking"</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+        <span class="s2">"Action masking is not implemented in testing. Cases were tested with postposed shields"</span>
+    <span class="p">)</span>
+
+<span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="n">reward_cumulative</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">hidden_targets_mask</span> <span class="o">=</span> <span class="n">HiddenTargetsMask</span><span class="p">(</span>
+    <span class="n">list_targets</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">known</span><span class="p">,</span>
+    <span class="n">targets_max</span><span class="o">=</span><span class="n">targets_max</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">hidden_targets</span> <span class="o">=</span> <span class="n">hidden_targets_mask</span><span class="o">.</span><span class="n">compute_mask</span><span class="p">(</span><span class="n">n_imaged</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">replace_targets_filter</span><span class="p">(</span><span class="n">opp</span><span class="p">,</span> <span class="n">sat</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">opp</span><span class="p">[</span><span class="s2">"object"</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sat</span><span class="o">.</span><span class="n">hidden_targets</span>
+
+
+<span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">add_access_filter</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="n">opp</span><span class="p">,</span> <span class="n">sat</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">satellite</span><span class="p">:</span> <span class="n">replace_targets_filter</span><span class="p">(</span><span class="n">opp</span><span class="p">,</span> <span class="n">sat</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="n">sat</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">satellite</span>
+
+    <span class="n">hidden_targets</span> <span class="o">=</span> <span class="n">hidden_targets_mask</span><span class="o">.</span><span class="n">compute_mask</span><span class="p">(</span><span class="n">sat</span><span class="o">.</span><span class="n">imaged</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hidden_targets</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sat</span><span class="o">.</span><span class="n">hidden_targets</span> <span class="o">=</span> <span class="n">hidden_targets</span>
+        <span class="n">sat</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_dict_cache</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">action</span> <span class="o">=</span> <span class="n">policy</span><span class="p">(</span><span class="n">sat</span><span class="o">.</span><span class="n">get_obs</span><span class="p">(),</span> <span class="n">embedded_masking</span><span class="o">=</span><span class="n">embedded_masking</span><span class="p">)</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+    <span class="n">reward_cumulative</span> <span class="o">+=</span> <span class="n">reward</span>
+
+    <span class="k">if</span> <span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">:</span>
+        <span class="k">break</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cumulative reward: </span><span class="si">{</span><span class="n">reward_cumulative</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-09-02 14:55:36,906 </span>                               <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-intense-fg">Creating logger for new env on PID=6262. Old environments in process may now log times incorrectly.</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:55:36,909 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-intense-fg">Ignoring a, e, and omega and using alt and r_body to generate a circular orbit.random_circular_orbit is preferred for this use case.</span>
+<span class="ansi-black-intense-fg">2026-09-02 14:55:37,276 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-intense-fg">Ignoring a, e, and omega and using alt and r_body to generate a circular orbit.random_circular_orbit is preferred for this use case.</span>
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Cumulative reward: 0.8198236565683718
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="curriculum_learning.html" class="btn btn-neutral float-left" title="Training with Curriculum Learning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../api_reference/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

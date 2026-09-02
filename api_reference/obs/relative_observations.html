@@ -1,0 +1,301 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relative Properties &mdash; BSK-RL v1.3.4 1.3.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e358f374"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Actions" href="../act/index.html" />
+    <link rel="prev" title="Backend" href="observations.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL v1.3.4
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sats/index.html">Satellites</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Observations</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.obs.Observation"><code class="docutils literal notranslate"><span class="pre">Observation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.obs.SatProperties"><code class="docutils literal notranslate"><span class="pre">SatProperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.obs.RelativeProperties"><code class="docutils literal notranslate"><span class="pre">RelativeProperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.obs.Time"><code class="docutils literal notranslate"><span class="pre">Time</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.obs.OpportunityProperties"><code class="docutils literal notranslate"><span class="pre">OpportunityProperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.obs.Eclipse"><code class="docutils literal notranslate"><span class="pre">Eclipse</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.obs.ResourceRewardWeight"><code class="docutils literal notranslate"><span class="pre">ResourceRewardWeight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="observations.html">Backend</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Relative Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.RelativeProperties"><code class="docutils literal notranslate"><span class="pre">RelativeProperties</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.r_DC_N"><code class="docutils literal notranslate"><span class="pre">r_DC_N()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.r_DC_C"><code class="docutils literal notranslate"><span class="pre">r_DC_C()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.r_DC_D"><code class="docutils literal notranslate"><span class="pre">r_DC_D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.r_DC_Hc"><code class="docutils literal notranslate"><span class="pre">r_DC_Hc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.r_DC_Hd"><code class="docutils literal notranslate"><span class="pre">r_DC_Hd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.v_DC_N"><code class="docutils literal notranslate"><span class="pre">v_DC_N()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.v_DC_C"><code class="docutils literal notranslate"><span class="pre">v_DC_C()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.v_DC_D"><code class="docutils literal notranslate"><span class="pre">v_DC_D()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.v_DC_Hc"><code class="docutils literal notranslate"><span class="pre">v_DC_Hc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.v_DC_Hd"><code class="docutils literal notranslate"><span class="pre">v_DC_Hd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.sigma_DC"><code class="docutils literal notranslate"><span class="pre">sigma_DC()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.sigma_DHc"><code class="docutils literal notranslate"><span class="pre">sigma_DHc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.sigma_HdC"><code class="docutils literal notranslate"><span class="pre">sigma_HdC()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.sigma_HdHc"><code class="docutils literal notranslate"><span class="pre">sigma_HdHc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.obs.relative_observations.rso_imaged_regions"><code class="docutils literal notranslate"><span class="pre">rso_imaged_regions()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../act/index.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scene/index.html">Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comm/index.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim/index.html">Simulation (BSK)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL v1.3.4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Observations</a></li>
+      <li class="breadcrumb-item active">Relative Properties</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_reference/obs/relative_observations.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="relative-properties">
+<span id="bsk-rl-obs-relative-observations"></span><h1>Relative Properties<a class="headerlink" href="#relative-properties" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.obs.relative_observations">Relative properties between two satellites.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.RelativeProperties">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RelativeProperties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">rel_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rel_props'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#RelativeProperties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.RelativeProperties" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="index.html#bsk_rl.obs.Observation" title="bsk_rl.obs.observations.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observation</span></code></a></p>
+<p>Include properties relative to another satellite.</p>
+<p>Within the observation specification for the deputy satellite, this would look like.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span><span class="o">.</span><span class="n">RelativeProperties</span><span class="p">(</span>
+    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"r_DC_N"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">1e3</span><span class="p">),</span>
+    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"v_DC_N"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">1e3</span><span class="p">),</span>
+    <span class="n">chief_name</span><span class="o">=</span><span class="s2">"ChiefSat"</span><span class="p">,</span>
+<span class="p">),</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rel_properties</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – <p>Property specifications. Properties are optionally
+normalized by some factor. Each observation is a dictionary with the keys:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">prop</span></code>: Name of a function in <a class="reference internal" href="#bsk-rl-obs-relative-observations"><span class="std std-ref">Relative Properties</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm</span></code> <cite>optional</cite>: Value to normalize property by. Defaults to 1.0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> <cite>optional</cite>: Name of the observation element. Defaults to the value of <code class="docutils literal notranslate"><span class="pre">prop</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fn</span></code> <cite>optional</cite>: Alternatively, call a function that takes the deputy (self) and chief (other)
+as arguments.</p></li>
+</ul>
+</p></li>
+<li><p><strong>chief_name</strong> (<em>str</em>) – Name of the satellite to compare against.</p></li>
+<li><p><strong>name</strong> – Name of the observation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.r_DC_N">
+<span class="sig-name descname"><span class="pre">r_DC_N</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#r_DC_N"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.r_DC_N" title="Link to this definition"></a></dt>
+<dd><p>Relative position of the deputy satellite to the chief satellite in inertial frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.r_DC_C">
+<span class="sig-name descname"><span class="pre">r_DC_C</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#r_DC_C"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.r_DC_C" title="Link to this definition"></a></dt>
+<dd><p>Relative position of the deputy satellite to the chief satellite in chief body frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.r_DC_D">
+<span class="sig-name descname"><span class="pre">r_DC_D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#r_DC_D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.r_DC_D" title="Link to this definition"></a></dt>
+<dd><p>Relative position of the deputy satellite to the chief satellite in deputy body frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.r_DC_Hc">
+<span class="sig-name descname"><span class="pre">r_DC_Hc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#r_DC_Hc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.r_DC_Hc" title="Link to this definition"></a></dt>
+<dd><p>Relative position of the deputy satellite to the chief satellite in chief Hill frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.r_DC_Hd">
+<span class="sig-name descname"><span class="pre">r_DC_Hd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#r_DC_Hd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.r_DC_Hd" title="Link to this definition"></a></dt>
+<dd><p>Relative position of the deputy satellite to the chief satellite in deputy Hill frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.v_DC_N">
+<span class="sig-name descname"><span class="pre">v_DC_N</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#v_DC_N"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.v_DC_N" title="Link to this definition"></a></dt>
+<dd><p>Relative velocity of the deputy satellite to the chief satellite in inertial frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.v_DC_C">
+<span class="sig-name descname"><span class="pre">v_DC_C</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#v_DC_C"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.v_DC_C" title="Link to this definition"></a></dt>
+<dd><p>Relative velocity of the deputy satellite to the chief satellite in chief body frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.v_DC_D">
+<span class="sig-name descname"><span class="pre">v_DC_D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#v_DC_D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.v_DC_D" title="Link to this definition"></a></dt>
+<dd><p>Relative velocity of the deputy satellite to the chief satellite in deputy body frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.v_DC_Hc">
+<span class="sig-name descname"><span class="pre">v_DC_Hc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#v_DC_Hc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.v_DC_Hc" title="Link to this definition"></a></dt>
+<dd><p>Relative velocity of the deputy satellite to the chief satellite in chief Hill frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.v_DC_Hd">
+<span class="sig-name descname"><span class="pre">v_DC_Hd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#v_DC_Hd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.v_DC_Hd" title="Link to this definition"></a></dt>
+<dd><p>Relative velocity of the deputy satellite to the chief satellite in deputy Hill frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.sigma_DC">
+<span class="sig-name descname"><span class="pre">sigma_DC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#sigma_DC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.sigma_DC" title="Link to this definition"></a></dt>
+<dd><p>Relative attitude of the deputy satellite to the chief satellite.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.sigma_DHc">
+<span class="sig-name descname"><span class="pre">sigma_DHc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#sigma_DHc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.sigma_DHc" title="Link to this definition"></a></dt>
+<dd><p>Relative attitude of the deputy satellite to the chief satellite in chief Hill frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.sigma_HdC">
+<span class="sig-name descname"><span class="pre">sigma_HdC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#sigma_HdC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.sigma_HdC" title="Link to this definition"></a></dt>
+<dd><p>Relative attitude of the deputy satellite Hill frame to the chief satellite.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.sigma_HdHc">
+<span class="sig-name descname"><span class="pre">sigma_HdHc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deputy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#sigma_HdHc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.sigma_HdHc" title="Link to this definition"></a></dt>
+<dd><p>Relative attitude of the deputy satellite Hill frame to the chief satellite Hill frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bsk_rl.obs.relative_observations.rso_imaged_regions">
+<span class="sig-name descname"><span class="pre">rso_imaged_regions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">servicer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chief</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_centers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[1,</span> <span class="pre">0,</span> <span class="pre">0],</span> <span class="pre">[-1,</span> <span class="pre">0,</span> <span class="pre">0],</span> <span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">0],</span> <span class="pre">[0,</span> <span class="pre">-1,</span> <span class="pre">0],</span> <span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">-1]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'chief_hill'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/obs/relative_observations.html#rso_imaged_regions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.obs.relative_observations.rso_imaged_regions" title="Link to this definition"></a></dt>
+<dd><p>For use with the RSO tasking scenario.</p>
+<p>Returns the fraction of regions imaged by the servicer, where regions are defined by
+the inspection points closest to each region center.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>servicer</strong> – The servicer satellite.</p></li>
+<li><p><strong>chief</strong> – The chief satellite.</p></li>
+<li><p><strong>region_centers</strong> – The centers of the regions to return inspection metrics for.
+It may be useful to set this as <code class="xref py py-class docutils literal notranslate"><span class="pre">fibonacci_sphere</span></code> points.</p></li>
+<li><p><strong>frame</strong> – The frame to use for the region centers. Can be <code class="docutils literal notranslate"><span class="pre">chief_hill</span></code> or
+<code class="docutils literal notranslate"><span class="pre">chief_body</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="observations.html" class="btn btn-neutral float-left" title="Backend" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../act/index.html" class="btn btn-neutral float-right" title="Actions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

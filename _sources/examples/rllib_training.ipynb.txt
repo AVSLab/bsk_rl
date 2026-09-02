@@ -1,0 +1,372 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Training with RLlib PPO\n",
+    "[RLlib](https://docs.ray.io/en/latest/rllib/index.html) is a high-performance, distributed\n",
+    "reinforcement learning library. It is preferable to other RL libraries (e.g. Stable Baselines\n",
+    "3) for `bsk_rl` environments because it steps environments copies asynchronously; because \n",
+    "of the variable step lengths, variable episode step counts, and long episode reset times, \n",
+    "stepping each environment independently can increase step throughput by 2-5 times.\n",
+    "\n",
+    "<div class=\"alert alert-warning\">\n",
+    "\n",
+    "**Warning:** RLlib had a bug that results in an undesirable timeout which stops\n",
+    "training. It has since been resolved: https://github.com/ray-project/ray/pull/45147\n",
+    "\n",
+    "</div>\n",
+    "\n",
+    "RLlib is actively developed and can change significantly from version to version. For this\n",
+    "script, the following version is used:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from importlib.metadata import version\n",
+    "from typing import ClassVar\n",
+    "\n",
+    "version(\"ray\")  # Parent package of RLlib"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Define the Environment\n",
+    "A nadir-scanning environment is created, to the one used in [this paper](https://hanspeterschaub.info/Papers/Stephenson2024.pdf). \n",
+    "The satellite has to collect data while managing the data buffer level and battery level.\n",
+    "\n",
+    "First, the satellite class is defined. A custom dynamics model is created that defines\n",
+    "a few additional properties to use in the state."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "\n",
+    "from bsk_rl import act, data, obs, sats, scene\n",
+    "from bsk_rl.sim import dyn, fsw\n",
+    "\n",
+    "\n",
+    "class ScanningDownlinkDynModel(dyn.ContinuousImagingDynModel, dyn.GroundStationDynModel):\n",
+    "    # Define some custom properties to be accessed in the state\n",
+    "    @property\n",
+    "    def instrument_pointing_error(self) -> float:\n",
+    "        r_BN_P_unit = self.r_BN_P/np.linalg.norm(self.r_BN_P) \n",
+    "        c_hat_P = self.satellite.fsw.c_hat_P\n",
+    "        return np.arccos(np.dot(-r_BN_P_unit, c_hat_P))\n",
+    "    \n",
+    "    @property\n",
+    "    def solar_pointing_error(self) -> float:\n",
+    "        a = self.world.gravFactory.spiceObject.planetStateOutMsgs[\n",
+    "            self.world.sun_index\n",
+    "        ].read().PositionVector\n",
+    "        a_hat_N = a / np.linalg.norm(a)\n",
+    "        nHat_B = self.satellite.sat_args[\"nHat_B\"]\n",
+    "        NB = np.transpose(self.BN)\n",
+    "        nHat_N = NB @ nHat_B\n",
+    "        return np.arccos(np.dot(nHat_N, a_hat_N))\n",
+    "\n",
+    "class ScanningSatellite(sats.AccessSatellite):\n",
+    "    observation_spec: ClassVar[list[obs.Observation]] = [\n",
+    "        obs.SatProperties(\n",
+    "            dict(prop=\"storage_level_fraction\"),\n",
+    "            dict(prop=\"battery_charge_fraction\"),\n",
+    "            dict(prop=\"wheel_speeds_fraction\"),\n",
+    "            dict(prop=\"instrument_pointing_error\", norm=np.pi),\n",
+    "            dict(prop=\"solar_pointing_error\", norm=np.pi)\n",
+    "        ),\n",
+    "        obs.OpportunityProperties(\n",
+    "            dict(prop=\"opportunity_open\", norm=5700),\n",
+    "            dict(prop=\"opportunity_close\", norm=5700),\n",
+    "            type=\"ground_station\",\n",
+    "            n_ahead_observe=1,\n",
+    "        ),\n",
+    "        obs.Eclipse(norm=5700),\n",
+    "        obs.Time(),\n",
+    "    ]\n",
+    "    action_spec: ClassVar[list[act.Action]] = [\n",
+    "        act.Scan(duration=180.0),\n",
+    "        act.Charge(duration=120.0),\n",
+    "        act.Downlink(duration=60.0),\n",
+    "        act.Desat(duration=60.0),\n",
+    "    ]\n",
+    "    dyn_type = ScanningDownlinkDynModel\n",
+    "    fsw_type = fsw.ContinuousImagingFSWModel"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Next, parameters are set. Since this scenario is focused on maintaining acceptable data\n",
+    "and power levels, these are tuned to create a sufficiently interesting mission."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "sat = ScanningSatellite(\n",
+    "    \"Scanner-1\",\n",
+    "    sat_args=dict(\n",
+    "        # Data\n",
+    "        dataStorageCapacity=5000 * 8e6,  # bits\n",
+    "        storageInit=lambda: np.random.uniform(0.0, 0.8) * 5000 * 8e6,\n",
+    "        instrumentBaudRate=0.5 * 8e6,\n",
+    "        transmitterBaudRate=-50 * 8e6,\n",
+    "        # Power\n",
+    "        batteryStorageCapacity=200 * 3600,  # W*s\n",
+    "        storedCharge_Init=lambda: np.random.uniform(0.3, 1.0) * 200 * 3600,\n",
+    "        basePowerDraw=-10.0,  # W\n",
+    "        instrumentPowerDraw=-30.0,  # W\n",
+    "        transmitterPowerDraw=-25.0,  # W\n",
+    "        thrusterPowerDraw=-80.0,  # W\n",
+    "        panelArea=0.25,\n",
+    "        # Attitude\n",
+    "        imageAttErrorRequirement=0.1,\n",
+    "        imageRateErrorRequirement=0.1,\n",
+    "        disturbance_vector=lambda: np.random.normal(scale=0.0001, size=3),  # N*m\n",
+    "        maxWheelSpeed=6000.0,  # RPM\n",
+    "        wheelSpeeds=lambda: np.random.uniform(-3000, 3000, 3),\n",
+    "        desatAttitude=\"nadir\",\n",
+    "    )\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Finally, the environment arguments are set. Stepping through this environment is \n",
+    "demonstrated at the bottom of the page."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "duration = 5 * 5700.0  # About 5 orbits\n",
+    "env_args = dict(\n",
+    "    satellite=sat,\n",
+    "    scenario=scene.UniformNadirScanning(value_per_second=1/duration),\n",
+    "    rewarder=data.ScanningTimeReward(),\n",
+    "    time_limit=duration,\n",
+    "    failure_penalty=-1.0,\n",
+    "    terminate_on_time_limit=True,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Set Up Custom Logging\n",
+    "\n",
+    "The `bsk_rl` package supplies a utility to make logging information at the end of episodes\n",
+    "easier. This is useful to see how an agent's policy is changing over time, using a\n",
+    "monitoring program such as [TensorBoard](https://www.tensorflow.org/tensorboard). The callback \n",
+    "is configured by writing a function that takes the environment as an input and returns a\n",
+    "dictionary with values to be logged."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def episode_data_callback(env):\n",
+    "    reward = env.rewarder.cum_reward\n",
+    "    reward = sum(reward.values()) / len(reward)\n",
+    "    orbits = env.simulator.sim_time / (95 * 60)\n",
+    "\n",
+    "    data = dict(\n",
+    "        reward=reward,\n",
+    "        # Are satellites dying, and how and when?\n",
+    "        alive=float(env.satellite.is_alive()),\n",
+    "        rw_status_valid=float(env.satellite.dynamics.rw_speeds_valid()),\n",
+    "        battery_status_valid=float(env.satellite.dynamics.battery_valid()),\n",
+    "        orbits_complete=orbits,\n",
+    "    )\n",
+    "    if orbits > 0:\n",
+    "        data[\"reward_per_orbit\"] = reward / orbits\n",
+    "    if not env.satellite.is_alive():\n",
+    "        data[\"orbits_complete_partial_only\"] = orbits\n",
+    "        \n",
+    "    return data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Configure Ray and PPO\n",
+    "\n",
+    "PPO (or some other algorithm) can be configured. Of particular importance\n",
+    "are setting `sample_timeout_s` and `metrics_episode_collection_timeout_s` to appropriately\n",
+    "high values for this environment. The `episode_data_callback` is included in the environment\n",
+    "arguments, and the `WrappedEpisodeDataCallbacks` must be included in training to trigger\n",
+    "logging."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import bsk_rl.utils.rllib  # noqa To access \"SatelliteTasking-RLlib\"\n",
+    "from ray.rllib.algorithms.ppo import PPOConfig\n",
+    "from bsk_rl.utils.rllib.callbacks import WrappedEpisodeDataCallbacks\n",
+    "\n",
+    "N_CPUS = 3\n",
+    "\n",
+    "training_args = dict(\n",
+    "    lr=0.00003,\n",
+    "    gamma=0.999,\n",
+    "    train_batch_size=250,  # usually a larger number, like 2500\n",
+    "    num_sgd_iter=10,\n",
+    "    model=dict(fcnet_hiddens=[512, 512], vf_share_layers=False),\n",
+    "    lambda_=0.95,\n",
+    "    use_kl_loss=False,\n",
+    "    clip_param=0.1,\n",
+    "    grad_clip=0.5,\n",
+    ")\n",
+    "\n",
+    "config = (\n",
+    "    PPOConfig()\n",
+    "    .training(**training_args)\n",
+    "    .env_runners(num_env_runners=N_CPUS-1, sample_timeout_s=1000.0)\n",
+    "    .environment(\n",
+    "        env=\"SatelliteTasking-RLlib\",\n",
+    "        env_config=dict(**env_args, episode_data_callback=episode_data_callback),\n",
+    "    )\n",
+    "    .reporting(\n",
+    "        metrics_num_episodes_for_smoothing=1,\n",
+    "        metrics_episode_collection_timeout_s=180,\n",
+    "    )\n",
+    "    .checkpointing(export_native_model_files=True)\n",
+    "    .framework(framework=\"torch\")\n",
+    "    .api_stack(\n",
+    "        enable_rl_module_and_learner=True,\n",
+    "        enable_env_runner_and_connector_v2=True,\n",
+    "    )\n",
+    "    .callbacks(WrappedEpisodeDataCallbacks)\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Once the PPO configuration has been set, `ray` can be started and the agent can be\n",
+    "trained.\n",
+    "\n",
+    "Training on a reasonably modern machine, we can achieve 5M steps over 32 processors in 6\n",
+    "to 18 hours, depending on specific environment configurations.\n",
+    "\n",
+    "Note that the custom logging metrics are reported under env_runners."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import ray\n",
+    "from ray import tune\n",
+    "\n",
+    "ray.init(\n",
+    "    ignore_reinit_error=True,\n",
+    "    num_cpus=N_CPUS,\n",
+    "    object_store_memory=2_000_000_000,  # 2 GB\n",
+    ")\n",
+    "\n",
+    "# Run the training\n",
+    "tune.run(\n",
+    "    \"PPO\",\n",
+    "    config=config.to_dict(),\n",
+    "    stop={\"training_iteration\": 10},  # Adjust the number of iterations as needed\n",
+    "    checkpoint_freq=10,\n",
+    "    checkpoint_at_end=True\n",
+    ")\n",
+    "\n",
+    "# Shutdown Ray\n",
+    "ray.shutdown()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Loading the Policy Network\n",
+    "\n",
+    "The policy network can be found in the `p0` subdirectory of the checkpoint output, if \n",
+    "using the torch backend, and the `model` subdirectory of the checkpoint output. Use\n",
+    "`bsk_rl.utils.rllib.load_torch_mlp_policy` to load torch policies."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Stepping Through the Environment\n",
+    "\n",
+    "The environment is stepped through with random actions to give a sense of how it acts."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from bsk_rl import SatelliteTasking\n",
+    "\n",
+    "env = SatelliteTasking(**env_args, log_level=\"INFO\")\n",
+    "env.reset()\n",
+    "terminated = False\n",
+    "while not terminated:\n",
+    "    action = env.action_space.sample()\n",
+    "    observation, reward, terminated, truncated, info = env.step(action)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.11"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
