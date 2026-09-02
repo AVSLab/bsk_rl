@@ -20,6 +20,7 @@ from bsk_rl.utils.functional import (
     Resetable,
     collect_default_args,
     compose_types,
+    is_property,
     safe_dict_merge,
     valid_func_name,
 )
@@ -257,6 +258,45 @@ class Satellite(ABC, Resetable):
         fsw = self.fsw_type(self, fsw_rate, **self.sat_args)
         self.fsw = proxy(fsw)
         return fsw
+
+    def setup_aliveness_events(self) -> None:
+        """Create simulator events for continuous aliveness checkers.
+
+        :meta private:
+        """
+        for model in (self.dynamics, self.fsw):
+            for name in dir(model):
+                if (
+                    not name.startswith("__")
+                    and not is_property(model, name)
+                    and callable(getattr(model, name))
+                    and hasattr(getattr(model, name), "is_aliveness_checker")
+                    and getattr(getattr(model, name), "continuous", False)
+                ):
+                    checker = getattr(model, name)
+                    check_rate = checker.check_rate
+                    if check_rate is None:
+                        check_rate = self.simulator.sim_rate
+
+                    def condition(sim, checker=checker):
+                        return not checker()
+
+                    def side_effect(sim, name=name):
+                        self.logger.warning(f"failed {name} check")
+                        self._is_alive = False
+                        self.record_death(sim.sim_time)
+
+                    self.simulator.createNewEvent(
+                        valid_func_name(
+                            f"aliveness_{self.name}_{model.__class__.__name__}_{name}"
+                        ),
+                        macros.sec2nano(check_rate),
+                        True,
+                        conditionFunction=condition,
+                        actionFunction=side_effect,
+                        terminal=True,
+                        exactRateMatch=False,
+                    )
 
     def reset_during_sim_init(self) -> None:
         """Called during environment reset, during Basilisk simulation initialization."""
