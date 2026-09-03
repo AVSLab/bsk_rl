@@ -69,7 +69,8 @@ bash examples/amos_2026/submit_initial_priority_allocation_mc_50seeds.sh
 
 The submission script resolves the repository from its own location, so it can
 be launched safely from a linked worktree. It prints the evaluation-array job
-ID, dependent analysis job ID, source worktree, imported `bsk_rl` path, and
-unique output root. Both submission and batch scripts refuse to run from the
-wrong branch, a worktree with modified tracked files, or a Python import that
-resolves outside the selected worktree.
+ID, dependent analysis job ID, source worktree, and unique output root. The
+submission script does not import Basilisk on the restricted login node. Each
+evaluation task loads Alpine's default GCC module on its compute node, verifies
+that the selected C++ runtime provides `GLIBCXX_3.4.29`, and then refuses to run
+if Python resolves `bsk_rl` outside the selected worktree.

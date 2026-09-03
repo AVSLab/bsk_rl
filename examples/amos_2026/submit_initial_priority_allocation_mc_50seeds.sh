@@ -19,16 +19,6 @@ array_limit=${AMOS_INITIAL_PRIORITY_ARRAY_LIMIT:-20}
 cd "$repo_dir"
 source "/projects/$USER/.venv/bin/activate"
 export PYTHONPATH="$repo_dir/src${PYTHONPATH:+:$PYTHONPATH}"
-if ! module --ignore_cache load gcc/14.2.0; then
-    export PATH="/curc/sw/install/gcc/14.2.0/bin:${PATH}"
-fi
-if [[ -d /curc/sw/install/gcc/14.2.0/lib64 ]]; then
-    export LD_LIBRARY_PATH="/curc/sw/install/gcc/14.2.0/lib64:${LD_LIBRARY_PATH:-}"
-fi
-if command -v gcc >/dev/null 2>&1; then
-    gcc_lib_dir=$(dirname "$(gcc -print-file-name=libstdc++.so.6)")
-    export LD_LIBRARY_PATH="$gcc_lib_dir:${LD_LIBRARY_PATH:-}"
-fi
 
 branch=$(git branch --show-current)
 if [[ "$branch" != "amos-2026-space-imaging" ]]; then
@@ -40,10 +30,8 @@ if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
     git status --short --untracked-files=no >&2
     exit 3
 fi
-
-imported_bsk_rl=$(python3 -c 'import pathlib, bsk_rl; print(pathlib.Path(bsk_rl.__file__).resolve())')
-if [[ "$imported_bsk_rl" != "$repo_dir"/src/bsk_rl/* ]]; then
-    echo "Refusing to submit: bsk_rl imports from $imported_bsk_rl, not $repo_dir/src." >&2
+if [[ ! -f "$repo_dir/src/bsk_rl/__init__.py" ]]; then
+    echo "Refusing to submit: bsk_rl source is missing from $repo_dir/src." >&2
     exit 4
 fi
 if [[ ! -f "$policy_spec" ]]; then
@@ -126,7 +114,6 @@ date -u +'%Y-%m-%dT%H:%M:%SZ' > "$output_root/manifests/SUBMISSION_COMPLETE_UTC.
 echo
 echo "Submitted initial-priority allocation campaign."
 echo "  source worktree: $repo_dir"
-echo "  bsk_rl import: $imported_bsk_rl"
 echo "  evaluation array: $evaluation_job (100 tasks, max $array_limit concurrent)"
 echo "  aggregate analysis: $analysis_job (after successful array completion)"
 echo "  output root: $output_root"
