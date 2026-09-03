@@ -62,6 +62,7 @@ The dependent analysis job writes:
 module unload slurm/blanca 2>/dev/null || true
 module load slurm/alpine
 cd /projects/$USER/bsk_rl
+git switch amos-2026-space-imaging
 git pull --ff-only origin amos-2026-space-imaging
 bash examples/amos_2026/submit_initial_priority_allocation_mc_50seeds.sh
 ```
