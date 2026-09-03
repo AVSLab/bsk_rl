@@ -15,6 +15,7 @@ policy_spec=${AMOS_INITIAL_PRIORITY_POLICY_SPEC:-$source_root/manifests/mixed_fi
 campaign_id=${AMOS_INITIAL_PRIORITY_CAMPAIGN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}
 output_root=${AMOS_INITIAL_PRIORITY_OUTPUT_ROOT:-/scratch/alpine/$USER/amos2026_mc/initial_priority_10pctHIO_10pctSHIO_mixed200_45000s_50seeds_${campaign_id}}
 array_limit=${AMOS_INITIAL_PRIORITY_ARRAY_LIMIT:-20}
+partition=${AMOS_INITIAL_PRIORITY_PARTITION:-acpu}
 
 cd "$repo_dir"
 source "/projects/$USER/.venv/bin/activate"
@@ -86,6 +87,7 @@ CASE_2=one_orbit_cooldown
 VIZARD=disabled
 PER_SEED_PLOTS=disabled
 AGGREGATE_PLOTS=enabled_after_successful_array
+SLURM_PARTITION=$partition
 EOF
 
 export BSK_RL_REPO_DIR="$repo_dir"
@@ -94,12 +96,14 @@ export AMOS_INITIAL_PRIORITY_POLICY_SPEC="$policy_spec"
 
 evaluation_job=$(sbatch \
     --parsable \
+    --partition="$partition" \
     --array="0-99%${array_limit}" \
     --export=ALL,BSK_RL_REPO_DIR="$repo_dir",AMOS_INITIAL_PRIORITY_OUTPUT_ROOT="$output_root",AMOS_INITIAL_PRIORITY_POLICY_SPEC="$policy_spec" \
     examples/amos_2026/sbatch_initial_priority_allocation_mc.sbatch)
 
 analysis_job=$(sbatch \
     --parsable \
+    --partition="$partition" \
     --dependency="afterok:${evaluation_job}" \
     --export=ALL,BSK_RL_REPO_DIR="$repo_dir",AMOS_INITIAL_PRIORITY_OUTPUT_ROOT="$output_root" \
     examples/amos_2026/sbatch_analyze_initial_priority_allocation_mc.sbatch)
@@ -114,6 +118,7 @@ date -u +'%Y-%m-%dT%H:%M:%SZ' > "$output_root/manifests/SUBMISSION_COMPLETE_UTC.
 echo
 echo "Submitted initial-priority allocation campaign."
 echo "  source worktree: $repo_dir"
+echo "  Slurm partition: $partition"
 echo "  evaluation array: $evaluation_job (100 tasks, max $array_limit concurrent)"
 echo "  aggregate analysis: $analysis_job (after successful array completion)"
 echo "  output root: $output_root"

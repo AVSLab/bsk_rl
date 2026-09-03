@@ -67,6 +67,14 @@ git pull --ff-only origin amos-2026-space-imaging
 bash examples/amos_2026/submit_initial_priority_allocation_mc_50seeds.sh
 ```
 
+The launcher defaults to the current Alpine CPU partition, `acpu`. If CURC
+changes the partition name, override it without editing the scripts:
+
+```bash
+AMOS_INITIAL_PRIORITY_PARTITION=<partition> \
+  bash examples/amos_2026/submit_initial_priority_allocation_mc_50seeds.sh
+```
+
 The submission script resolves the repository from its own location, so it can
 be launched safely from a linked worktree. It prints the evaluation-array job
 ID, dependent analysis job ID, source worktree, and unique output root. The

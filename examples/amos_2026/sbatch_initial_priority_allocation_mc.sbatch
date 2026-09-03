@@ -11,9 +11,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --time=04:00:00
 #SBATCH --array=0-99%20
-#SBATCH --partition=amilan
+#SBATCH --partition=acpu
 #SBATCH --mem=24G
-#SBATCH --constraint=epyc-7713
 #SBATCH --threads-per-core=1
 #SBATCH --nodes=1
 #SBATCH --output=/scratch/alpine/%u/job_output/%x_%A_%a.out
