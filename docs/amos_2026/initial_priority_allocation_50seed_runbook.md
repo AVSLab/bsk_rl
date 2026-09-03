@@ -16,7 +16,8 @@ targets when the priority classes are present before the first decision.
   into lower, middle, and upper initial-priority thirds.
 - Case 1 uses the ground-confirmation gate with no additional time cooldown.
 - Case 2 adds one observer-orbit cooldown after ground confirmation.
-- No Vizard recording and no per-seed plots.
+- No Vizard recording. Per-seed plots are created after the simulations from
+  the retained CSV files so plotting does not occupy the dynamics jobs.
 
 The two cooldown cases use the same environment seed and the same dynamic
 priority-event seed. The event is applied at simulation time zero before the
@@ -55,6 +56,40 @@ The dependent analysis job writes:
 - `STATISTICAL_SUMMARY.md`;
 - vector PDF and PNG versions of the capture-allocation, service-metric, and
   paired HIO--SHIO figures.
+
+The raw episode directories remain under the campaign root rather than under
+the source worktree. Their layout is
+`<campaign>/<cooldown_case>/seed_###/<evaluation_name>/`, and each evaluation
+directory contains the retained CSV and NumPy products. The aggregate-analysis
+archive therefore does not contain `steps.csv` or the other per-episode files.
+
+## Per-seed plot postprocessing
+
+After the aggregate analysis completes, generate four PDF/PNG diagnostics for
+all 100 episodes without rerunning Basilisk or policy inference:
+
+```bash
+cd /projects/$USER/bsk_rl-amos2026-campaign
+git pull --ff-only origin amos-2026-space-imaging
+export AMOS_INITIAL_PRIORITY_OUTPUT_ROOT=/scratch/alpine/$USER/amos2026_mc/<campaign>
+bash examples/amos_2026/submit_initial_priority_episode_plot_postprocessing.sh
+```
+
+The job writes `per_seed_plots/<cooldown_case>/seed_###/`, an inventory CSV,
+and a summary JSON under the campaign root. It creates two downloadable files
+beside the campaign directory: `<campaign>_per_seed_plots.tar.gz` contains only
+the generated figures, while `<campaign>_episode_csv_and_plots.tar.gz` contains
+every per-episode CSV/JSON file together with the figures.
+
+To package all raw episode files as a separate archive, first check their size
+and then archive the two case directories:
+
+```bash
+campaign_root=/scratch/alpine/$USER/amos2026_mc/<campaign>
+du -sh "$campaign_root/ground_confirmation" "$campaign_root/one_orbit"
+tar -C "$campaign_root" -czf "${campaign_root}_raw_episodes.tar.gz" \
+  ground_confirmation one_orbit
+```
 
 ## Cluster launch
 
