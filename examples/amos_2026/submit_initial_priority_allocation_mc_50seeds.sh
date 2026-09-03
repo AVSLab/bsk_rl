@@ -19,6 +19,16 @@ array_limit=${AMOS_INITIAL_PRIORITY_ARRAY_LIMIT:-20}
 cd "$repo_dir"
 source "/projects/$USER/.venv/bin/activate"
 export PYTHONPATH="$repo_dir/src${PYTHONPATH:+:$PYTHONPATH}"
+if ! module --ignore_cache load gcc/14.2.0; then
+    export PATH="/curc/sw/install/gcc/14.2.0/bin:${PATH}"
+fi
+if [[ -d /curc/sw/install/gcc/14.2.0/lib64 ]]; then
+    export LD_LIBRARY_PATH="/curc/sw/install/gcc/14.2.0/lib64:${LD_LIBRARY_PATH:-}"
+fi
+if command -v gcc >/dev/null 2>&1; then
+    gcc_lib_dir=$(dirname "$(gcc -print-file-name=libstdc++.so.6)")
+    export LD_LIBRARY_PATH="$gcc_lib_dir:${LD_LIBRARY_PATH:-}"
+fi
 
 branch=$(git branch --show-current)
 if [[ "$branch" != "amos-2026-space-imaging" ]]; then

@@ -35,16 +35,16 @@ source "/projects/$USER/.venv/bin/activate"
 
 cd "$repo_dir"
 export PYTHONPATH="$repo_dir/src${PYTHONPATH:+:$PYTHONPATH}"
-imported_bsk_rl=$(python3 -c 'import pathlib, bsk_rl; print(pathlib.Path(bsk_rl.__file__).resolve())')
-if [[ "$imported_bsk_rl" != "$repo_dir"/src/bsk_rl/* ]]; then
-    echo "Refusing to run: bsk_rl imports from $imported_bsk_rl, not $repo_dir/src." >&2
-    exit 3
-fi
 if [[ -d /curc/sw/install/gcc/14.2.0/lib64 ]]; then
     export LD_LIBRARY_PATH="/curc/sw/install/gcc/14.2.0/lib64:${LD_LIBRARY_PATH:-}"
 fi
 if command -v gcc >/dev/null 2>&1; then
     export LD_LIBRARY_PATH="$(dirname "$(gcc -print-file-name=libstdc++.so.6)"):${LD_LIBRARY_PATH:-}"
+fi
+imported_bsk_rl=$(python3 -c 'import pathlib, bsk_rl; print(pathlib.Path(bsk_rl.__file__).resolve())')
+if [[ "$imported_bsk_rl" != "$repo_dir"/src/bsk_rl/* ]]; then
+    echo "Refusing to run: bsk_rl imports from $imported_bsk_rl, not $repo_dir/src." >&2
+    exit 3
 fi
 export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1}
 export MKL_NUM_THREADS=${MKL_NUM_THREADS:-1}
