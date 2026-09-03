@@ -7,7 +7,9 @@
 
 set -euo pipefail
 
-repo_dir=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl}
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+default_repo_dir=$(cd "$script_dir/../.." && pwd)
+repo_dir=${BSK_RL_REPO_DIR:-$default_repo_dir}
 source_root=${BSK_RL_MIXED_TRAINED_SOURCE_ROOT:-/scratch/alpine/$USER/amos2026_mc/gat_mixed_trained_eval_100d00i_mixed_exact50LEO30MEO20GEO_100targets_45000s_HIO5_SHIO3_20260802}
 policy_spec=${AMOS_INITIAL_PRIORITY_POLICY_SPEC:-$source_root/manifests/mixed_fixed100_custom_policies.json}
 campaign_id=${AMOS_INITIAL_PRIORITY_CAMPAIGN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}
@@ -16,6 +18,7 @@ array_limit=${AMOS_INITIAL_PRIORITY_ARRAY_LIMIT:-20}
 
 cd "$repo_dir"
 source "/projects/$USER/.venv/bin/activate"
+export PYTHONPATH="$repo_dir/src${PYTHONPATH:+:$PYTHONPATH}"
 
 branch=$(git branch --show-current)
 if [[ "$branch" != "amos-2026-space-imaging" ]]; then
@@ -27,9 +30,15 @@ if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
     git status --short --untracked-files=no >&2
     exit 3
 fi
+
+imported_bsk_rl=$(python3 -c 'import pathlib, bsk_rl; print(pathlib.Path(bsk_rl.__file__).resolve())')
+if [[ "$imported_bsk_rl" != "$repo_dir"/src/bsk_rl/* ]]; then
+    echo "Refusing to submit: bsk_rl imports from $imported_bsk_rl, not $repo_dir/src." >&2
+    exit 4
+fi
 if [[ ! -f "$policy_spec" ]]; then
     echo "Mixed-trained policy specification not found: $policy_spec" >&2
-    exit 4
+    exit 5
 fi
 
 python3 - "$policy_spec" <<'PY'
@@ -106,6 +115,8 @@ date -u +'%Y-%m-%dT%H:%M:%SZ' > "$output_root/manifests/SUBMISSION_COMPLETE_UTC.
 
 echo
 echo "Submitted initial-priority allocation campaign."
+echo "  source worktree: $repo_dir"
+echo "  bsk_rl import: $imported_bsk_rl"
 echo "  evaluation array: $evaluation_job (100 tasks, max $array_limit concurrent)"
 echo "  aggregate analysis: $analysis_job (after successful array completion)"
 echo "  output root: $output_root"

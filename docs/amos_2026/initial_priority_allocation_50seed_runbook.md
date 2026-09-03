@@ -67,6 +67,9 @@ git pull --ff-only origin amos-2026-space-imaging
 bash examples/amos_2026/submit_initial_priority_allocation_mc_50seeds.sh
 ```
 
-The submission script prints the evaluation-array job ID, dependent analysis
-job ID, and unique output root. It refuses to submit from the wrong branch or a
-worktree with modified tracked files.
+The submission script resolves the repository from its own location, so it can
+be launched safely from a linked worktree. It prints the evaluation-array job
+ID, dependent analysis job ID, source worktree, imported `bsk_rl` path, and
+unique output root. Both submission and batch scripts refuse to run from the
+wrong branch, a worktree with modified tracked files, or a Python import that
+resolves outside the selected worktree.

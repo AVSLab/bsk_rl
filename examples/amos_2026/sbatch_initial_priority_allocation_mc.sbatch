@@ -34,6 +34,12 @@ module --ignore_cache load python/3.10.2 || true
 source "/projects/$USER/.venv/bin/activate"
 
 cd "$repo_dir"
+export PYTHONPATH="$repo_dir/src${PYTHONPATH:+:$PYTHONPATH}"
+imported_bsk_rl=$(python3 -c 'import pathlib, bsk_rl; print(pathlib.Path(bsk_rl.__file__).resolve())')
+if [[ "$imported_bsk_rl" != "$repo_dir"/src/bsk_rl/* ]]; then
+    echo "Refusing to run: bsk_rl imports from $imported_bsk_rl, not $repo_dir/src." >&2
+    exit 3
+fi
 if [[ -d /curc/sw/install/gcc/14.2.0/lib64 ]]; then
     export LD_LIBRARY_PATH="/curc/sw/install/gcc/14.2.0/lib64:${LD_LIBRARY_PATH:-}"
 fi
@@ -54,6 +60,7 @@ date -u
 hostname
 echo "job=${SLURM_JOB_ID:-} array_task=${SLURM_ARRAY_TASK_ID:-}"
 echo "repo=$repo_dir"
+echo "bsk_rl_import=$imported_bsk_rl"
 echo "commit=$(git rev-parse HEAD)"
 echo "output_root=$output_root"
 echo "policy_spec=$policy_spec"

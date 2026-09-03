@@ -25,6 +25,12 @@ module purge
 module --ignore_cache load python/3.10.2 || true
 source "/projects/$USER/.venv/bin/activate"
 cd "$repo_dir"
+export PYTHONPATH="$repo_dir/src${PYTHONPATH:+:$PYTHONPATH}"
+imported_bsk_rl=$(python3 -c 'import pathlib, bsk_rl; print(pathlib.Path(bsk_rl.__file__).resolve())')
+if [[ "$imported_bsk_rl" != "$repo_dir"/src/bsk_rl/* ]]; then
+    echo "Refusing to analyze: bsk_rl imports from $imported_bsk_rl, not $repo_dir/src." >&2
+    exit 3
+fi
 export MPLBACKEND=Agg
 export MPLCONFIGDIR="/scratch/alpine/$USER/.cache/matplotlib"
 mkdir -p "$MPLCONFIGDIR"
