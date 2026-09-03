@@ -60,6 +60,34 @@ def test_controls_activate_without_receiving_priority_boost():
             assert target.priority_event_active
 
 
+def test_zero_time_priority_assignment_is_applied_at_zero():
+    scenario = RandomSatellites(
+        "SS1",
+        n_targets=10,
+        dynamic_priority_event_enabled=True,
+        dynamic_priority_event_time_sec=0.0,
+        hio_count=2,
+        hio_priority=5.0,
+        shio_count=2,
+        shio_priority=10.0,
+        priority_control_count=6,
+        dynamic_priority_event_seed=1234,
+    )
+    scenario.target_spacecrafts = [
+        SimpleNamespace(id=i, priority=1.0) for i in range(10)
+    ]
+    scenario._select_dynamic_priority_targets()
+
+    assert scenario.maybe_apply_dynamic_priority_event(
+        sim_time=0.0,
+        time_limit=100.0,
+    )
+    assert scenario.priority_event_applied_time == 0.0
+    assert all(
+        target.priority_event_active for target in scenario.target_spacecrafts
+    )
+
+
 def test_priority_controls_can_use_an_independent_reproducible_seed():
     first = make_scenario(control_count=8, control_seed=20260729)
     second = make_scenario(control_count=8, control_seed=20260729)

@@ -32,6 +32,23 @@ class TestGeneralSatelliteTasking:
         env._generate_world_args()
         assert env.unwrapped.world_args == {"a": 1, "b": 2}
 
+    @patch(
+        "bsk_rl.GeneralSatelliteTasking.__init__",
+        MagicMock(return_value=None),
+    )
+    def test_initial_scenario_events_are_checked_before_first_observation(self):
+        env = GeneralSatelliteTasking()
+        env.unwrapped.scenario = MagicMock()
+        env.unwrapped.simulator = MagicMock(sim_time=0.0)
+        env.unwrapped.time_limit = 45_000.0
+
+        env._apply_initial_scenario_events()
+
+        env.scenario.maybe_apply_dynamic_priority_event.assert_called_once_with(
+            sim_time=0.0,
+            time_limit=45_000.0,
+        )
+
     @pytest.mark.parametrize(
         "classes,result",
         [

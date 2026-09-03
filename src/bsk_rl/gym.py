@@ -345,11 +345,31 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
                 satellite.reset_post_sim_init()
                 satellite.data_store.update_from_logs()
 
+        with self.profiler.section("env.reset.initial_scenario_events"):
+            self._apply_initial_scenario_events()
+
         with self.profiler.section("env.reset.get_obs"):
             observation = self._get_obs()
         info = self._get_info()
         logger.info("Environment reset")
         return observation, info
+
+    def _apply_initial_scenario_events(self) -> None:
+        """Apply scenario events scheduled at the initial simulation time.
+
+        Dynamic events are normally checked after each propagated action in
+        :meth:`_step`.  Checking once before the initial observation ensures
+        that an event explicitly scheduled for ``t=0`` is visible to the policy
+        before its first decision.  Events scheduled later remain unchanged.
+        """
+        maybe_apply = getattr(
+            self.scenario, "maybe_apply_dynamic_priority_event", None
+        )
+        if callable(maybe_apply):
+            maybe_apply(
+                sim_time=float(self.simulator.sim_time),
+                time_limit=self.time_limit,
+            )
 
     def delete_simulator(self):
         """Delete Basilisk objects.
