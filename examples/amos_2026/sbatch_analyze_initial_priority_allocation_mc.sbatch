@@ -9,11 +9,12 @@
 #SBATCH --time=01:00:00
 #SBATCH --partition=acpu
 #SBATCH --mem=12G
+#SBATCH --constraint=epyc-7713
 #SBATCH --threads-per-core=1
 #SBATCH --nodes=1
 #SBATCH --output=/scratch/alpine/%u/job_output/%x_%j.out
 #SBATCH --mail-type=ALL
-#SBATCH --qos=normal
+#SBATCH --qos=cpu-normal
 
 set -euo pipefail
 
@@ -21,8 +22,8 @@ repo_dir=${BSK_RL_REPO_DIR:-/projects/$USER/bsk_rl}
 output_root=${AMOS_INITIAL_PRIORITY_OUTPUT_ROOT:?Set AMOS_INITIAL_PRIORITY_OUTPUT_ROOT}
 
 module purge
-module --ignore_cache load python/3.10.2 || true
-source "/projects/$USER/.venv/bin/activate"
+# shellcheck source=/dev/null
+source "$repo_dir/examples/amos_2026/alpine_runtime.sh"
 cd "$repo_dir"
 export PYTHONPATH="$repo_dir/src${PYTHONPATH:+:$PYTHONPATH}"
 export MPLBACKEND=Agg

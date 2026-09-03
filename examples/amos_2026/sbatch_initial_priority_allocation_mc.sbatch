@@ -13,11 +13,12 @@
 #SBATCH --array=0-99%20
 #SBATCH --partition=acpu
 #SBATCH --mem=24G
+#SBATCH --constraint=epyc-7713
 #SBATCH --threads-per-core=1
 #SBATCH --nodes=1
 #SBATCH --output=/scratch/alpine/%u/job_output/%x_%A_%a.out
 #SBATCH --mail-type=ALL
-#SBATCH --qos=normal
+#SBATCH --qos=cpu-normal
 
 set -euo pipefail
 
@@ -26,18 +27,11 @@ output_root=${AMOS_INITIAL_PRIORITY_OUTPUT_ROOT:?Set AMOS_INITIAL_PRIORITY_OUTPU
 policy_spec=${AMOS_INITIAL_PRIORITY_POLICY_SPEC:?Set AMOS_INITIAL_PRIORITY_POLICY_SPEC}
 
 module purge
-module --ignore_cache load gcc
-module --ignore_cache load python/3.10.2 || true
-source "/projects/$USER/.venv/bin/activate"
+# shellcheck source=/dev/null
+source "$repo_dir/examples/amos_2026/alpine_runtime.sh"
 
 cd "$repo_dir"
 export PYTHONPATH="$repo_dir/src${PYTHONPATH:+:$PYTHONPATH}"
-gcc_runtime=$(gcc -print-file-name=libstdc++.so.6)
-if [[ ! -r "$gcc_runtime" ]] || ! grep -aFq 'GLIBCXX_3.4.29' "$gcc_runtime"; then
-    echo "Loaded GCC runtime does not provide GLIBCXX_3.4.29: $gcc_runtime" >&2
-    exit 3
-fi
-export LD_LIBRARY_PATH="$(dirname "$gcc_runtime"):${LD_LIBRARY_PATH:-}"
 imported_bsk_rl=$(python3 -c 'import pathlib, bsk_rl; print(pathlib.Path(bsk_rl.__file__).resolve())')
 if [[ "$imported_bsk_rl" != "$repo_dir"/src/bsk_rl/* ]]; then
     echo "Refusing to run: bsk_rl imports from $imported_bsk_rl, not $repo_dir/src." >&2
@@ -58,7 +52,6 @@ hostname
 echo "job=${SLURM_JOB_ID:-} array_task=${SLURM_ARRAY_TASK_ID:-}"
 echo "repo=$repo_dir"
 echo "bsk_rl_import=$imported_bsk_rl"
-echo "libstdcxx=$gcc_runtime"
 echo "commit=$(git rev-parse HEAD)"
 echo "output_root=$output_root"
 echo "policy_spec=$policy_spec"

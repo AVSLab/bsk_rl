@@ -16,8 +16,11 @@ campaign_id=${AMOS_INITIAL_PRIORITY_CAMPAIGN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}
 output_root=${AMOS_INITIAL_PRIORITY_OUTPUT_ROOT:-/scratch/alpine/$USER/amos2026_mc/initial_priority_10pctHIO_10pctSHIO_mixed200_45000s_50seeds_${campaign_id}}
 array_limit=${AMOS_INITIAL_PRIORITY_ARRAY_LIMIT:-20}
 partition=${AMOS_INITIAL_PRIORITY_PARTITION:-acpu}
+qos=${AMOS_INITIAL_PRIORITY_QOS:-cpu-normal}
+constraint=${AMOS_INITIAL_PRIORITY_CONSTRAINT:-epyc-7713}
 
 cd "$repo_dir"
+# shellcheck source=/dev/null
 source "/projects/$USER/.venv/bin/activate"
 export PYTHONPATH="$repo_dir/src${PYTHONPATH:+:$PYTHONPATH}"
 
@@ -88,24 +91,52 @@ VIZARD=disabled
 PER_SEED_PLOTS=disabled
 AGGREGATE_PLOTS=enabled_after_successful_array
 SLURM_PARTITION=$partition
+SLURM_QOS=$qos
+SLURM_CONSTRAINT=$constraint
 EOF
 
 export BSK_RL_REPO_DIR="$repo_dir"
 export AMOS_INITIAL_PRIORITY_OUTPUT_ROOT="$output_root"
 export AMOS_INITIAL_PRIORITY_POLICY_SPEC="$policy_spec"
 
+evaluation_exports=ALL,BSK_RL_REPO_DIR="$repo_dir",AMOS_INITIAL_PRIORITY_OUTPUT_ROOT="$output_root",AMOS_INITIAL_PRIORITY_POLICY_SPEC="$policy_spec"
+analysis_exports=ALL,BSK_RL_REPO_DIR="$repo_dir",AMOS_INITIAL_PRIORITY_OUTPUT_ROOT="$output_root"
+
+# Validate both resource requests before submitting either real job.  This
+# catches stale partition/QoS/constraint combinations without leaving a
+# partially submitted campaign.
+sbatch \
+    --test-only \
+    --partition="$partition" \
+    --qos="$qos" \
+    --constraint="$constraint" \
+    --array="0-99%${array_limit}" \
+    --export="$evaluation_exports" \
+    examples/amos_2026/sbatch_initial_priority_allocation_mc.sbatch
+sbatch \
+    --test-only \
+    --partition="$partition" \
+    --qos="$qos" \
+    --constraint="$constraint" \
+    --export="$analysis_exports" \
+    examples/amos_2026/sbatch_analyze_initial_priority_allocation_mc.sbatch
+
 evaluation_job=$(sbatch \
     --parsable \
     --partition="$partition" \
+    --qos="$qos" \
+    --constraint="$constraint" \
     --array="0-99%${array_limit}" \
-    --export=ALL,BSK_RL_REPO_DIR="$repo_dir",AMOS_INITIAL_PRIORITY_OUTPUT_ROOT="$output_root",AMOS_INITIAL_PRIORITY_POLICY_SPEC="$policy_spec" \
+    --export="$evaluation_exports" \
     examples/amos_2026/sbatch_initial_priority_allocation_mc.sbatch)
 
 analysis_job=$(sbatch \
     --parsable \
     --partition="$partition" \
+    --qos="$qos" \
+    --constraint="$constraint" \
     --dependency="afterok:${evaluation_job}" \
-    --export=ALL,BSK_RL_REPO_DIR="$repo_dir",AMOS_INITIAL_PRIORITY_OUTPUT_ROOT="$output_root" \
+    --export="$analysis_exports" \
     examples/amos_2026/sbatch_analyze_initial_priority_allocation_mc.sbatch)
 
 cat > "$output_root/manifests/submitted_jobs.tsv" <<EOF
@@ -118,7 +149,7 @@ date -u +'%Y-%m-%dT%H:%M:%SZ' > "$output_root/manifests/SUBMISSION_COMPLETE_UTC.
 echo
 echo "Submitted initial-priority allocation campaign."
 echo "  source worktree: $repo_dir"
-echo "  Slurm partition: $partition"
+echo "  Slurm resources: partition=$partition qos=$qos constraint=$constraint"
 echo "  evaluation array: $evaluation_job (100 tasks, max $array_limit concurrent)"
 echo "  aggregate analysis: $analysis_job (after successful array completion)"
 echo "  output root: $output_root"

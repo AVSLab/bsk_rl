@@ -67,11 +67,16 @@ git pull --ff-only origin amos-2026-space-imaging
 bash examples/amos_2026/submit_initial_priority_allocation_mc_50seeds.sh
 ```
 
-The launcher defaults to the current Alpine CPU partition, `acpu`. If CURC
-changes the partition name, override it without editing the scripts:
+The launcher uses the same current Alpine resource combination as the recent
+successful Research Focus I jobs: partition `acpu`, QoS `cpu-normal`, and the
+`epyc-7713` constraint. It runs `sbatch --test-only` for both the evaluation and
+analysis jobs before submitting either real job. If CURC changes these names,
+override them without editing the scripts:
 
 ```bash
 AMOS_INITIAL_PRIORITY_PARTITION=<partition> \
+AMOS_INITIAL_PRIORITY_QOS=<qos> \
+AMOS_INITIAL_PRIORITY_CONSTRAINT=<constraint> \
   bash examples/amos_2026/submit_initial_priority_allocation_mc_50seeds.sh
 ```
 
