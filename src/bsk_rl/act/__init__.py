@@ -55,6 +55,7 @@ from bsk_rl.act.discrete_actions import (
 from bsk_rl.act.hybrid_actions import (
     HybridAction,
     HybridCharge,
+    HybridDesat,
     HybridFSWAction,
     HybridImageStrip,
 )
@@ -90,6 +91,7 @@ __all__ = [
     "Scan",
     "HybridAction",
     "HybridCharge",
+    "HybridDesat",
     "HybridFSWAction",
     "HybridImageStrip",
     "MultiHybridAction",

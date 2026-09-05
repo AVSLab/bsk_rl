@@ -219,6 +219,56 @@ class HybridCharge(HybridAction):
         return self.fsw_action
 
 
+class HybridDesat(HybridAction):
+    def __init__(self, name: Optional[str] = None, duration: float = 60.0):
+        """Desaturation action for use within a hybrid action spec.
+
+        Mirror of :class:`HybridCharge` for the ``action_desat`` FSW action:
+        shares ``HybridActionBuilder`` with :class:`HybridImageStrip`, ignores
+        the continuous component, and always runs for the fixed ``duration``.
+        ``action_desat`` typically must be selected several times to fully dump
+        the wheel momentum (thrMomentumDumping fires in bursts).
+
+        Args:
+            name: Action name.
+            duration: Fixed desaturation duration in seconds.
+        """
+        if name is None:
+            name = "action_desat"
+        super().__init__(name=name, n_actions=1)
+        self.fsw_action = "action_desat"
+        self.duration = duration
+
+    def set_action(
+        self,
+        action: tuple[int, Union[float, np.ndarray, list]],
+        prev_action_key=None,
+    ) -> str:
+        """Activate desaturation mode for the fixed duration.
+
+        The continuous component is ignored — duration is always ``self.duration``.
+
+        Args:
+            action: (local_index, continuous_value) — local_index must be 0.
+            prev_action_key: Previous action key.
+
+        Returns:
+            The name of the activated FSW action.
+        """
+        action = clean_action(action)
+        assert action[0] == 0
+        self.satellite.logger.info(f"{self.name} tasked for {self.duration} seconds")
+        self.satellite.update_timed_terminal_event(
+            self.simulator.sim_time + self.duration, info=f"for {self.fsw_action}"
+        )
+        # Always re-task (equivalent of DiscreteFSWAction's reset_task=True):
+        # thrMomentumManagement latches deltaH once per Reset and thrMomentumDumping
+        # fires ONE burst sequence per latch, so consecutive desat selections must
+        # Reset the modules again or the wheels stop dumping after the first burst.
+        getattr(self.satellite.fsw, self.fsw_action)()
+        return self.fsw_action
+
+
 class HybridImageStrip(HybridAction):
     def __init__(
         self,
