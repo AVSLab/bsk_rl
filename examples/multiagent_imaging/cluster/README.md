@@ -1,8 +1,11 @@
 # Reviewed Alpine launch preparation — 2026-09-06
 
-The code and launch files are prepared. **No Slurm jobs have been submitted, no
-cluster runtime has been installed, and no cluster learning/coverage result is
-claimed.** All `sbatch` commands below require the user's explicit authorization.
+The completion branch is deployed through Git. The user authorized the runtime
+build, then (only after its audit passes) baseline tasks **0 and 100** and the
+**one-worker validation** stage. See [EXECUTION.md](EXECUTION.md) for live job
+records. The remaining 198 baseline episodes and four-worker learning still
+require separate authorization. No cluster learning/coverage result is claimed
+until its recorded job completes and its checks pass.
 The immediate priority is the [200-episode baseline campaign](../BASELINE_MONTE_CARLO.md).
 The directed-completion learning pilot is a separate, bounded workflow.
 
@@ -32,7 +35,7 @@ intact. The separate destinations below are proposed paths, not installed runtim
 
 ## Deployment and runtime
 
-**Preferred deployment after the September 7 push authorization:** use the committed
+**Git deployment:** use the committed
 `multi-agent-space-imaging-2026` branch. Create a separate repository and fetch only
 that branch; verify its HEAD against the reported desktop commit before building:
 
@@ -49,27 +52,17 @@ git -C "$BSK_PROJECT_ROOT" switch -c multi-agent-space-imaging-2026 FETCH_HEAD
 git -C "$BSK_PROJECT_ROOT" rev-parse HEAD
 ```
 
-This replaces the SFTP release transfer below. The archived release remains a
-reproducibility artifact. AMOS is not switched, pulled, or modified.
-
-The local worktree contains uncommitted/new completion-v2 source. A branch name or
-commit alone would omit it. `prepare_release.py` creates `base.bundle`,
-`source-overlay.tar.gz`, `release.json`, `SHA256SUMS`, and `deploy_release.sh`.
-The overlay preserves exact Python/config/docs/tests; the Git bundle preserves the
-base history. The prepared local release is in
-`results/multiagent_imaging/cluster_preparation/release/`.
-
-Transfer that directory through the user's authenticated SFTP connection to
-`/projects/dahu1128/completion-v2-release-20260906`. Then run on the login node
-(these commands do not simulate or submit):
+This replaces the originally prepared SFTP release transfer. The archived release
+in `results/multiagent_imaging/cluster_preparation/release/` preserves the earlier
+uncommitted source as a reproducibility artifact; it is not needed for deployment.
+AMOS is not switched, pulled, or modified. Fetch the exact separate Basilisk source
+on the login node (these commands do not simulate or submit):
 
 ```bash
 export BSK_PROJECT_ROOT=/projects/dahu1128/bsk_rl-multi-agent-space-imaging-2026
 export BSK_RL_PYTHON=/projects/dahu1128/.venv-completion-v2/bin/python
 export BASILISK_SOURCE_ROOT=/projects/dahu1128/basilisk-completion-v2
 export BSK_BOOTSTRAP_PYTHON=/usr/bin/python3.11
-export BSK_RELEASE_DIR=/projects/dahu1128/completion-v2-release-20260906
-bash "$BSK_RELEASE_DIR/deploy_release.sh" "$BSK_RELEASE_DIR"
 test ! -e "$BASILISK_SOURCE_ROOT"
 git init "$BASILISK_SOURCE_ROOT"
 git -C "$BASILISK_SOURCE_ROOT" remote add origin https://github.com/AVSLab/basilisk.git
@@ -84,10 +77,12 @@ validated replacement. A source HEAD alone does not establish when an existing
 binary was built. The fresh build records source, compiler, resolved tools,
 dependencies, and hashes of the native modules actually loaded.
 
-After explicit authorization:
+The live interactive shell aliases `sbatch` to `sbatch --export=NONE`. Every launch
+below explicitly overrides that alias with `--export=ALL`; otherwise the job loses
+the reviewed project/interpreter paths and fails before setup. The authorized build:
 
 ```bash
-sbatch examples/multiagent_imaging/cluster/build_runtime.slurm
+sbatch --export=ALL examples/multiagent_imaging/cluster/build_runtime.slurm
 ```
 
 The build requests one node/eight CPUs/32 GiB/four hours; refuses an existing venv;
@@ -126,7 +121,7 @@ export BSK_MC_MANIFEST="$BSK_PROJECT_ROOT/results/multiagent_imaging/baseline-mc
 export BSK_MC_OUTPUT="$BSK_PROJECT_ROOT/results/multiagent_imaging/baseline-mc/episodes"
 "$BSK_RL_PYTHON" -m examples.multiagent_imaging.baseline_monte_carlo manifest \
   --config examples/multiagent_imaging/configs/baseline_mc.json --output "$BSK_MC_MANIFEST"
-sbatch --array=0,100%2 examples/multiagent_imaging/cluster/baseline_mc.slurm
+sbatch --export=ALL --array=0,100%2 examples/multiagent_imaging/cluster/baseline_mc.slurm
 ```
 
 Review this first LEO information pair: initial-state fingerprints must match,
@@ -136,7 +131,7 @@ radio occupancy must be zero. These two episodes count toward 200. After reviewi
 and authorizing expansion, submit the remaining 198 IDs:
 
 ```bash
-sbatch --array=1-99,101-199%8 examples/multiagent_imaging/cluster/baseline_mc.slurm
+sbatch --export=ALL --array=1-99,101-199%8 examples/multiagent_imaging/cluster/baseline_mc.slurm
 "$BSK_RL_PYTHON" -m examples.multiagent_imaging.aggregate_baseline_monte_carlo \
   --manifest "$BSK_MC_MANIFEST" --episodes-dir "$BSK_MC_OUTPUT" \
   --output-dir "$BSK_PROJECT_ROOT/results/multiagent_imaging/baseline-mc/report" --plots
@@ -162,7 +157,7 @@ restored weights and the heuristic on matched held-out seed 10000:
 ```bash
 export BSK_STAGE=validate
 export BSK_OUTPUT="$BSK_PROJECT_ROOT/results/multiagent_imaging/cluster-one-worker"
-sbatch examples/multiagent_imaging/cluster/pilot.slurm
+sbatch --export=ALL examples/multiagent_imaging/cluster/pilot.slurm
 ```
 
 The gate is written only after both modes pass finite losses/gradients, weight
@@ -177,7 +172,7 @@ export BSK_STAGE=learn
 export BSK_VALIDATION_GATE="$BSK_PROJECT_ROOT/results/multiagent_imaging/cluster-one-worker/validation_gate.json"
 export BSK_OUTPUT="$BSK_PROJECT_ROOT/results/multiagent_imaging/cluster-four-worker-pilot"
 export BSK_UPDATES=8
-sbatch examples/multiagent_imaging/cluster/pilot.slurm
+sbatch --export=ALL examples/multiagent_imaging/cluster/pilot.slurm
 ```
 
 Four-worker learning starts fresh matched seed-zero policies. It does not claim

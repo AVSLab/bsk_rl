@@ -36,8 +36,10 @@ export CONAN_HOME="$BSK_ENV_DIRECTORY/conan2"
 export CONAN_CPU_COUNT="${SLURM_CPUS_PER_TASK}"
 cd "$BASILISK_SOURCE_ROOT"
 git rev-parse HEAD > "$BSK_BUILD_RECORD/basilisk-source.txt"
-# Install a CPU wheel first; the ordinary PyPI Linux wheel pulls CUDA libraries.
-"$BSK_RL_PYTHON" -m pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu
+# Install only the CPU wheel from the Torch index. Resolve its dependencies in
+# the following pinned PyPI installation: the Torch index is not a complete
+# build-backend registry (e.g. a typing_extensions sdist requires flit_core).
+"$BSK_RL_PYTHON" -m pip install --no-deps torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu
 "$BSK_RL_PYTHON" -m pip install -r "$BSK_PROJECT_ROOT/examples/multiagent_imaging/cluster/requirements.txt"
 "$BSK_RL_PYTHON" -m pip install -r requirements.txt \
   -c "$BSK_PROJECT_ROOT/examples/multiagent_imaging/cluster/requirements.txt"
