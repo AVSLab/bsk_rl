@@ -20,6 +20,9 @@ set -euo pipefail
 cd "$BSK_PROJECT_ROOT"
 export PYTHONPATH="$BSK_PROJECT_ROOT/src:$BSK_PROJECT_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
+# Load the C++ runtime used to build the isolated Basilisk modules.
+BSK_GCC_ROOT="${BSK_GCC_ROOT:-/curc/sw/install/gcc/14.2.0}"
+export LD_LIBRARY_PATH="$BSK_GCC_ROOT/lib64:$BSK_GCC_ROOT/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 # Short, job-specific Unix socket paths; no shared Ray head or global ray stop.
 export BSK_RL_RAY_TMPDIR="/tmp/bsk-ray-${SLURM_JOB_ID}"
 mkdir -p "$BSK_RL_RAY_TMPDIR"

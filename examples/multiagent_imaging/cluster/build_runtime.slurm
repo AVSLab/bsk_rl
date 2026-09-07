@@ -45,9 +45,12 @@ export CONAN_CPU_COUNT="${SLURM_CPUS_PER_TASK}"
 # The base compute image exposes GCC 8.5, whose standard library cannot link
 # Basilisk's C++17 filesystem probe without legacy flags. Alpine provides GCC
 # 14.2 on its shared software filesystem; select and record that toolchain.
-export CC="${BSK_C_COMPILER:-/curc/sw/install/gcc/14.2.0/bin/gcc}"
-export CXX="${BSK_CXX_COMPILER:-/curc/sw/install/gcc/14.2.0/bin/g++}"
+BSK_GCC_ROOT="${BSK_GCC_ROOT:-/curc/sw/install/gcc/14.2.0}"
+export CC="${BSK_C_COMPILER:-$BSK_GCC_ROOT/bin/gcc}"
+export CXX="${BSK_CXX_COMPILER:-$BSK_GCC_ROOT/bin/g++}"
+export LD_LIBRARY_PATH="$BSK_GCC_ROOT/lib64:$BSK_GCC_ROOT/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 test -x "$CC" -a -x "$CXX"
+test -f "$BSK_GCC_ROOT/lib64/libstdc++.so.6"
 "$CC" --version > "$BSK_BUILD_RECORD/c-compiler.txt"
 "$CXX" --version > "$BSK_BUILD_RECORD/cxx-compiler.txt"
 # Alpine's login image has python3.11-devel while its compute image does not.

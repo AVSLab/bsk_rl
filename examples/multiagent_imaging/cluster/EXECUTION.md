@@ -21,6 +21,7 @@ not modified. No source archive was uploaded.
 | 32173261 | FAILED during dependency resolution | CPU Torch installation succeeded. Ray's optional `rllib` extra required Gymnasium 0.28.1, conflicting with the tested 0.29.1 pin. |
 | 32204475 | FAILED, exit 1:0, elapsed 9:59, batch MaxRSS 9322588 K | All Python/build dependencies installed and CSPICE built. CMake could not find Python headers on the compute image. |
 | 32207880 | FAILED, exit 1:0, elapsed 2:06, batch MaxRSS 2190164 K | Matching 3.11.13 headers were found and CMake configured. GCC 8.5 could not link the C++17 `std::filesystem` build-info probe. |
+| 32208040 | FAILED, exit 1:0, elapsed 5:03, batch MaxRSS 6265936 K | GCC 14 configured and compiled Basilisk sources, but generated `protoc` loaded the system GCC 8 `libstdc++`, missing `GLIBCXX_3.4.32`. |
 
 The build correction downloads only the CPU Torch wheel from its dedicated index
 (`--no-deps`), then resolves all runtime dependencies together from PyPI under the
@@ -41,6 +42,9 @@ record, and passed through Conan's documented CMake toolchain variables. The
 compute image's GCC 8.5 also fails Basilisk's C++17 filesystem probe. The resumed
 build selects Alpine's shared GCC 14.2 installation, refreshes only its isolated
 Conan profile, and cleans only Basilisk's marker-validated generated build folder.
+The build and both simulation launchers also prepend that toolchain's `lib64` and
+`lib` directories to `LD_LIBRARY_PATH`, pairing compiled programs and Basilisk
+modules with the C++ runtime that built them.
 
 The interactive shell reports `sbatch is aliased to sbatch --export=NONE`.
 The retry explicitly supplied `--export=ALL` and the four reviewed path variables.

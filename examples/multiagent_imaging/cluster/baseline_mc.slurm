@@ -27,6 +27,9 @@ export OMP_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
+# Load the C++ runtime used to build the isolated Basilisk modules.
+BSK_GCC_ROOT="${BSK_GCC_ROOT:-/curc/sw/install/gcc/14.2.0}"
+export LD_LIBRARY_PATH="$BSK_GCC_ROOT/lib64:$BSK_GCC_ROOT/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 mkdir -p "$BSK_MC_OUTPUT"
 "$BSK_RL_PYTHON" examples/multiagent_imaging/cluster/audit_runtime.py \
   --output "$BSK_MC_OUTPUT/runtime-${SLURM_ARRAY_TASK_ID}.json"
