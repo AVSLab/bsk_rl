@@ -38,10 +38,10 @@ fi
 export PATH="$BSK_ENV_DIRECTORY/bin:$PATH"
 export PYTHONPATH="$BSK_PROJECT_ROOT/src:$BSK_PROJECT_ROOT"
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
-# Generated SWIG wrappers can each use several GiB under GCC 14. Keep two
-# compilers active inside the 32-GiB allocation; the eight CPUs remain available
+# Generated SWIG wrappers can each use several GiB under GCC 14. Keep one
+# compiler active inside the 32-GiB allocation; the eight CPUs remain available
 # to later Ray validation and do not need to be saturated during this build.
-export CMAKE_BUILD_PARALLEL_LEVEL="${BSK_BUILD_PARALLELISM:-2}"
+export CMAKE_BUILD_PARALLEL_LEVEL="${BSK_BUILD_PARALLELISM:-1}"
 [[ "$CMAKE_BUILD_PARALLEL_LEVEL" =~ ^[1-8]$ ]]
 printf '%s\n' "$CMAKE_BUILD_PARALLEL_LEVEL" > "$BSK_BUILD_RECORD/build-parallelism.txt"
 # Keep Conan cache/build profiles isolated from other projects.
