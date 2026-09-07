@@ -19,6 +19,8 @@ not modified. No source archive was uploaded.
 | 32173090 | FAILED, exit 1:0, elapsed 1 s, batch MaxRSS 3008 K | Stopped before environment creation because `BSK_PROJECT_ROOT` was absent inside Slurm. |
 | 32173134 | FAILED, exit 1:0, elapsed 19 s, batch MaxRSS 880844 K | Explicit exports worked. Torch's CPU index lacked the `flit_core` backend needed by the downloaded `typing_extensions` source distribution. |
 | 32173261 | FAILED during dependency resolution | CPU Torch installation succeeded. Ray's optional `rllib` extra required Gymnasium 0.28.1, conflicting with the tested 0.29.1 pin. |
+| 32204475 | FAILED, exit 1:0, elapsed 9:59, batch MaxRSS 9322588 K | All Python/build dependencies installed and CSPICE built. CMake could not find Python headers on the compute image. |
+| 32207880 | FAILED, exit 1:0, elapsed 2:06, batch MaxRSS 2190164 K | Matching 3.11.13 headers were found and CMake configured. GCC 8.5 could not link the C++17 `std::filesystem` build-info probe. |
 
 The build correction downloads only the CPU Torch wheel from its dedicated index
 (`--no-deps`), then resolves all runtime dependencies together from PyPI under the
@@ -31,6 +33,14 @@ dependency pins from the saved working preflight environment, including
 Gymnasium 0.29.1. It avoids requesting the incompatible optional `rllib` extra.
 The same Ray implementation is installed; runtime and PPO validation still must
 pass on Linux. No tested primary package version or mission setting is changed.
+
+The compute image omits `/usr/include/python3.11`, although the login image has
+the matching `python3.11-devel-3.11.13` package. Those headers are copied into a
+separate project path, version-checked against the runtime, hashed in the build
+record, and passed through Conan's documented CMake toolchain variables. The
+compute image's GCC 8.5 also fails Basilisk's C++17 filesystem probe. The resumed
+build selects Alpine's shared GCC 14.2 installation, refreshes only its isolated
+Conan profile, and cleans only Basilisk's marker-validated generated build folder.
 
 The interactive shell reports `sbatch is aliased to sbatch --export=NONE`.
 The retry explicitly supplied `--export=ALL` and the four reviewed path variables.

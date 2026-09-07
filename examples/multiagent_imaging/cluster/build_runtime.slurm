@@ -42,6 +42,14 @@ export CMAKE_BUILD_PARALLEL_LEVEL="${SLURM_CPUS_PER_TASK}"
 # Keep Conan cache/build profiles isolated from other projects.
 export CONAN_HOME="$BSK_ENV_DIRECTORY/conan2"
 export CONAN_CPU_COUNT="${SLURM_CPUS_PER_TASK}"
+# The base compute image exposes GCC 8.5, whose standard library cannot link
+# Basilisk's C++17 filesystem probe without legacy flags. Alpine provides GCC
+# 14.2 on its shared software filesystem; select and record that toolchain.
+export CC="${BSK_C_COMPILER:-/curc/sw/install/gcc/14.2.0/bin/gcc}"
+export CXX="${BSK_CXX_COMPILER:-/curc/sw/install/gcc/14.2.0/bin/g++}"
+test -x "$CC" -a -x "$CXX"
+"$CC" --version > "$BSK_BUILD_RECORD/c-compiler.txt"
+"$CXX" --version > "$BSK_BUILD_RECORD/cxx-compiler.txt"
 # Alpine's login image has python3.11-devel while its compute image does not.
 # Use a recorded copy of those exact-version headers without changing /usr or
 # patching the clean Basilisk source. Conan forwards this artifact path to CMake.
@@ -91,8 +99,17 @@ with open('pyproject.toml', 'rb') as f:
 subprocess.check_call([sys.executable, '-m', 'pip', 'install', *requirements])
 PY
 "$BSK_RL_PYTHON" -m pip freeze > "$BSK_BUILD_RECORD/build-tools.lock.txt"
-"$BSK_RL_PYTHON" conanfile.py --buildType Release --buildTesting False \
-  --vizInterface True --opNav False --mujoco False --rustModules False
+# Refresh the isolated profile after selecting compilers. A prior failed build
+# may have detected the compute image's GCC 8.5 profile.
+"$BSK_RL_PYTHON" -m conans.conan profile detect --force
+bsk_conan_args=(--buildType Release --buildTesting False --vizInterface True
+                --opNav False --mujoco False --rustModules False)
+if [[ "${BSK_CLEAN_NATIVE_BUILD:-0}" == 1 ]]; then
+  # Remove only Basilisk's marker-validated generated build folder. Conan's
+  # downloaded package cache and the clean source checkout are preserved.
+  bsk_conan_args+=(--clean)
+fi
+"$BSK_RL_PYTHON" conanfile.py "${bsk_conan_args[@]}"
 "$BSK_RL_PYTHON" -m pip install --no-deps --no-build-isolation -e .
 "$BSK_RL_PYTHON" -m pip install -e "$BSK_PROJECT_ROOT" \
   -c "$BSK_PROJECT_ROOT/examples/multiagent_imaging/cluster/requirements.txt"
