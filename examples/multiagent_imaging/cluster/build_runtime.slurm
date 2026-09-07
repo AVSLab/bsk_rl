@@ -30,7 +30,17 @@ if [[ -e "$BSK_ENV_DIRECTORY" ]]; then
   BSK_PREVIOUS_RECORD="$BSK_PROJECT_ROOT/results/multiagent_imaging/runtime-build-$BSK_RESUME_BUILD_FROM"
   test "$(cat "$BSK_PREVIOUS_RECORD/basilisk-source.txt")" = 8fcb54b2fb28388efb711786630501944fddec28
   "$BSK_RL_PYTHON" -m pip freeze > "$BSK_BUILD_RECORD/resume-before.lock.txt"
-  diff -u "$BSK_PREVIOUS_RECORD/build-tools.lock.txt" "$BSK_BUILD_RECORD/resume-before.lock.txt"
+  # A failed native build has only the build-tool lock.  An audit-stage retry
+  # already has the editable bsk_rl/Basilisk installs, so compare against the
+  # later runtime lock instead.  In either case, an unrecorded environment
+  # change stops the retry before it can alter the installation.
+  if [[ -f "$BSK_PREVIOUS_RECORD/runtime.lock.txt" ]]; then
+    BSK_PREVIOUS_LOCK="$BSK_PREVIOUS_RECORD/runtime.lock.txt"
+  else
+    BSK_PREVIOUS_LOCK="$BSK_PREVIOUS_RECORD/build-tools.lock.txt"
+  fi
+  diff -u "$BSK_PREVIOUS_LOCK" "$BSK_BUILD_RECORD/resume-before.lock.txt"
+  basename "$BSK_PREVIOUS_LOCK" > "$BSK_BUILD_RECORD/resume-lock-source.txt"
   printf '%s\n' "$BSK_RESUME_BUILD_FROM" > "$BSK_BUILD_RECORD/resumed-build-job.txt"
 else
   "$BSK_BOOTSTRAP_PYTHON" -m venv "$BSK_ENV_DIRECTORY"
@@ -129,6 +139,17 @@ if [[ "${BSK_CLEAN_NATIVE_BUILD:-0}" == 1 ]]; then
   bsk_conan_args+=(--clean)
 fi
 "$BSK_RL_PYTHON" conanfile.py "${bsk_conan_args[@]}"
+# Failed parallel builds can leave a zero-byte or truncated Python extension in
+# the generated install tree.  Reject such artifacts before editable install;
+# otherwise Python reports a misleading "file too short" error during audit.
+if find dist3/Basilisk -type f -name '*.so' -size -4096c -print -quit \
+    | grep -q .; then
+  find dist3/Basilisk -type f -name '*.so' -size -4096c -print \
+    > "$BSK_BUILD_RECORD/invalid-native-artifacts.txt"
+  echo "Refusing Basilisk install with undersized native artifacts" >&2
+  cat "$BSK_BUILD_RECORD/invalid-native-artifacts.txt" >&2
+  exit 1
+fi
 "$BSK_RL_PYTHON" -m pip install --no-deps --no-build-isolation -e .
 "$BSK_RL_PYTHON" -m pip install -e "$BSK_PROJECT_ROOT" \
   -c "$BSK_PROJECT_ROOT/examples/multiagent_imaging/cluster/requirements.txt"
