@@ -22,6 +22,7 @@ not modified. No source archive was uploaded.
 | 32204475 | FAILED, exit 1:0, elapsed 9:59, batch MaxRSS 9322588 K | All Python/build dependencies installed and CSPICE built. CMake could not find Python headers on the compute image. |
 | 32207880 | FAILED, exit 1:0, elapsed 2:06, batch MaxRSS 2190164 K | Matching 3.11.13 headers were found and CMake configured. GCC 8.5 could not link the C++17 `std::filesystem` build-info probe. |
 | 32208040 | FAILED, exit 1:0, elapsed 5:03, batch MaxRSS 6265936 K | GCC 14 configured and compiled Basilisk sources, but generated `protoc` loaded the system GCC 8 `libstdc++`, missing `GLIBCXX_3.4.32`. |
+| 32208367 | Failed during native compilation at 67% | Compiler/runtime pairing passed. Eight simultaneous GCC 14 SWIG-wrapper compilations exceeded the 32-GiB allocation and two `cc1plus` processes were killed. |
 
 The build correction downloads only the CPU Torch wheel from its dedicated index
 (`--no-deps`), then resolves all runtime dependencies together from PyPI under the
@@ -45,6 +46,8 @@ Conan profile, and cleans only Basilisk's marker-validated generated build folde
 The build and both simulation launchers also prepend that toolchain's `lib64` and
 `lib` directories to `LD_LIBRARY_PATH`, pairing compiled programs and Basilisk
 modules with the C++ runtime that built them.
+Native build parallelism is reduced to two inside the same 32-GiB allocation;
+the eight requested CPUs remain the reviewed resource shape for Ray validation.
 
 The interactive shell reports `sbatch is aliased to sbatch --export=NONE`.
 The retry explicitly supplied `--export=ALL` and the four reviewed path variables.
