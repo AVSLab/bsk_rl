@@ -24,6 +24,8 @@ class ImageProductRecord:
     delivery_time: Optional[float]
     quality: float
     storage_owner: str
+    request_epoch: float = 0.0
+    completion_time: Optional[float] = None
 
     def delivered(self, delivery_time: float) -> "ImageProductRecord":
         """Return a delivered copy while preserving capture provenance."""

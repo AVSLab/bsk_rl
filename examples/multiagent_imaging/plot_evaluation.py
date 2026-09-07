@@ -137,7 +137,9 @@ def _step_counts(times: Iterable[float]) -> tuple[list[float], list[int]]:
 def _plot_team(result: dict, sensors: list[str], output_dir: Path) -> list[Path]:
     products = _all_products(result)
     team = result.get("team_summary", {})
-    conflict = result.get("intent_conflicts", {})
+    conflict = result.get(
+        "concurrent_target_conflicts", result.get("intent_conflicts", {})
+    )
     colors = {
         sensor: plt.get_cmap("tab10")(index % 10)
         for index, sensor in enumerate(sensors)

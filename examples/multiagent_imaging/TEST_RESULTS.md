@@ -1,3 +1,126 @@
+# Cluster and baseline preparation — September 6, 2026
+
+The final focused suite passed **17 tests** (pilot gates, schema/worker seeds, and
+12 baseline unit/native-simulator tests). Log: `/tmp/completion-cluster-final-tests.log`.
+An earlier six-test run also passed the full policy/Adam/seed resume integration
+test: `/tmp/completion-cluster-preparation-tests.log`.
+
+A separate real **one-remote-worker** regression used three sensors, four passive
+RSOs, two candidate slots and complete 360-second episodes. Initial update collected
+20 environment steps/60 agent rows/24 policy decisions from two complete episodes;
+resumed update collected 20/60/32 from three complete episodes. Both had finite
+losses/gradients, changed 62,520 and 65,383 weight elements, and restored with zero
+probe-logit error. PPO advanced from iteration one to two with Adam/seed validation.
+Event-boundary resource histories were present. Restored weights and the heuristic
+ran matched held-out seed 10000. Artifacts:
+`results/multiagent_imaging/cluster_preparation/one_worker/`;
+log `/tmp/completion-one-worker-check.log`. This is a regression, not a mission-scale
+learning result. The short restored policy performed poorly; no convergence claim
+is made from two updates.
+
+Four saved 1800-second/six-target baseline episodes completed and paired correctly:
+LEO capture coverage 4/6 in both information cases; mixed capture coverage 5/6 in
+both. These short episodes had no ground deliveries. They used no radio actions;
+all passive spacecraft propagated. Artifacts:
+`results/multiagent_imaging/baseline_mc_validation/`. The production manifest uses
+100 targets and 200 tasks; regenerate it after final deployment/source changes.
+
+The runtime audit passes locally after correcting psutil's pin to the saved 6.1.0.
+Ruff and all cluster shell syntax checks pass. Live Alpine audit, incompatible old
+runtime, reviewed commands and remaining native-build validation are documented in
+[cluster/README.md](cluster/README.md). **No cluster jobs were submitted.**
+
+# Earlier completion-v2 readiness validation
+
+**190 tests passed**: 85 multi-agent unit/integration checks plus 105 core checks in a
+separate process. Full 100-RSO, 45,000-second profile and one PPO update in each retasking
+mode passed. Checkpoint logits, optimizer resume, actual updates and two-worker seed
+streams were validated. See [CLUSTER_READINESS.md](CLUSTER_READINESS.md) for measured
+batches, timings, memory, coverage and remaining limits.
+
+Logs: `/tmp/completion-readiness-final-suite.log`, `/tmp/completion-core-regression.log`,
+`/tmp/completion-preflight-conflict.log`, `/tmp/completion-preflight-continuous.log`,
+`/tmp/completion-worker-preflight.log`, `/tmp/completion-full-restore.log`.
+
+The results below are historical validation of the preceding implementation.
+
+---
+
+# Option 2 implementation validation — September 5, 2026
+
+Validated in the `multi-agent-space-imaging-2026` worktree using the existing
+`/Users/dahu1128/Repositories/bsk_rl/.venv/bin/python` and `PYTHONPATH=src:.`.
+The implementation preserves the AMOS-derived base and existing local Vizard/FSW work,
+while correcting the passive-target moving-Location substitution. No rebase or push was
+performed. Old intent observation checkpoints require retraining for completion-v1.
+
+## Executed checks
+
+| Checks | Result |
+|---|---:|
+| `tests/unittest/multiagent` (catalog/channel/products/masks/timing/legacy roles and messaging) | 55 passed |
+| `tests/integration/multiagent` (real Basilisk and RLlib, final run) | 19 passed |
+| Existing `tests/unittest/act`, `obs`, `test_gym_env.py`, `sim/test_simulator.py` | 105 passed |
+| Scoped Ruff checks on new components and changed example/test files | Passed |
+| `git diff --check` | Passed |
+
+**179 passing tests across these groups.** The integrated suite includes one real PPO
+training iteration in each retasking mode, with finite total, policy, and value losses.
+It also checks implicit reset-seed reproducibility. This is training-pipeline validation,
+not a convergence or learned-performance claim. Existing Basilisk deprecation and
+Gymnasium wrapper/registry warnings remain.
+
+Behavioral regressions include:
+
+- receiver-local conflict interruption in both modes, unrelated tasks continuing, and
+  global reward truth being unable to retask an agent;
+- preserving active hold identity, attempt start, and deadline for deliberate continue
+  and repeated selection of the same imaging target;
+- a 30-second broadcast staying undelivered at 5-second boundaries, then a seven-second
+  packet delay producing reception at t=37; one physical broadcast counted once;
+- out-of-order exposure/delivery facts, durable knowledge beyond transport expiry,
+  packet loss/retry, LOS interruption, no failed-exposure completion broadcasts, and
+  source/ownership preservation;
+- no capture credit from raw image bits before hold completion; no complete-product
+  delivery credit from partial downlink, including native Basilisk SWIG index handling;
+- empty candidates explicitly masked, fixed observation size across sensor counts,
+  and training/inference/exploration masks;
+- physical-time reward aggregation, two-pass PPO idempotence, complete-episode bootstrap
+  handling, and real final observations for busy truncated agents;
+- all 106 scene sprite entries for six sensors/100 passive targets; a real small Vizard
+  recording contains every spacecraft and changing target state, with only sensors in
+  the RL agent list. Interactive Vizard rendering/full video playback was not reviewed.
+
+## Six matched deterministic rollouts
+
+Ran `run_matched_validation` with the smoke physical settings, seed 0, two sensors,
+eight targets, four candidates, and a 1200-second horizon. The runner verified identical
+initial spacecraft states and priorities in all six cells. Each cell produced two unique
+qualified acquisitions, total agent reward **32.474679**, zero ground deliveries, and
+zero duplicate acquisitions. The short horizon therefore does not establish a ground
+service or duplicate-avoidance benefit.
+
+| Case | Policy decisions, summed | Broadcast sensor-seconds | Wasted imaging-time fraction |
+|---|---:|---:|---:|
+| Independent / conflict | 15 | 0 | 0 |
+| Independent / continuous | 20 | 0 | 0.070833 |
+| Ideal completion / conflict | 15 | 0 | 0 |
+| Ideal completion / continuous | 20 | 0 | 0.070833 |
+| Finite completion / conflict | 16 | 30 | 0 |
+| Finite completion / continuous | 24 | 60 | 0.070000 |
+
+The nonzero waste here is nonduplicate policy interruption under the heuristic. It is
+not evidence that a trained continuous policy must perform worse. The finite LOS cases
+accepted one and two packets respectively; the ideal cases each accepted two.
+
+Results are in `results/multiagent_imaging/completion_implementation_validation/`:
+`summary.json`, six cell JSON files, and per-sensor/team PDF/PNG
+plots under `plots/`. JSON exports unknown timestamps as null. Results are local ignored
+artifacts; launch configurations and documentation are versionable. Historical results
+below describe the earlier intent/status implementation and do not validate completion-v1.
+
+# Historical validation before completion-v1
+
 # Verification record
 
 Date: 2026-08-25

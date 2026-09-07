@@ -751,7 +751,9 @@ class ImagingFSWModel(BasicFSWModel):
             genericSensor.normalVector = self.locPoint.pHat_B
             genericSensor.r_SB_B = [0.0, 0.0, 0.0]
             genericSensor.fieldOfView.push_back(4 * self.insControl.attErrTolerance)
-            genericSensor.color = vizInterface.IntVector(vizSupport.toRGBA255(self.fsw.satellite.vizard_color, alpha=0.5))
+            genericSensor.color = vizInterface.IntVector(
+                vizSupport.toRGBA255(self.fsw.satellite.vizard_color, alpha=0.5)
+            )
             cmdInMsg = messaging.DeviceCmdMsgReader()
             cmdInMsg.subscribeTo(self.insControl.deviceCmdOutMsg)
             genericSensor.genericSensorCmdInMsg = cmdInMsg
@@ -779,7 +781,7 @@ class ImagingFSWModel(BasicFSWModel):
         """
         self.insControl.controllerStatus = 1
         self.dynamics.instrumentPowerSink.powerStatus = 1
-        self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P #self.locationPoint.scTargetInMsg.subscribeto(ScTarget.simpleTargetNav.transOutMsg)
+        self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P  # self.locationPoint.scTargetInMsg.subscribeto(ScTarget.simpleTargetNav.transOutMsg)
         self.dynamics.instrument.nodeDataName = data_name
         self.insControl.imaged = 0
         self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
@@ -895,6 +897,7 @@ class ContinuousImagingFSWModel(ImagingFSWModel):
         :meta private:
         """
         raise NotImplementedError("Use action_nadir_scan instead")
+
 
 class BasicTargetFSWModel(FSWModel):
     """Basic Target FSW model with minimum necessary Basilisk components."""
@@ -1278,29 +1281,37 @@ class BasicTargetFSWModel(FSWModel):
             """MRP control is enabled by default for all tasks."""
             self.fsw.simulator.enableTask(self.name + self.fsw.satellite.name)
 
-class ImagingSCFSWModel(ImagingFSWModel):
 
+class ImagingSCFSWModel(ImagingFSWModel):
     @vizard.visualize
-    def _update_imaging_line(self, to_body_name: str, vizSupport=None, vizInstance=None) -> None:
-        """
-        Create (on first use) or retarget a Vizard line from this spacecraft to `to_body_name`.
+    def _update_imaging_line(
+        self, to_body_name: str, vizSupport=None, vizInstance=None
+    ) -> None:
+        """Create or retarget a Vizard line from this spacecraft to a body.
+
         The line updates automatically as the bodies move; only retarget on new selections.
         """
-        # Use a consistent color per spacecraft
-        line_color = "yellow"  # getattr(self.satellite, "vizard_color", "yellow")
+        target_name_transform = getattr(self, "_vizard_target_name_transform", None)
+        if target_name_transform is not None:
+            to_body_name = target_name_transform(to_body_name)
+        line_color = getattr(self, "_vizard_line_slew_color", "yellow")
 
         if not hasattr(self, "_rso_line"):
             # create the line once
             vizSupport.createTargetLine(
                 vizInstance,
-                fromBodyName=self.satellite.name,   # origin = this imaging spacecraft
-                toBodyName=to_body_name,            # destination = current RSO body name
-                lineColor=line_color
+                fromBodyName=self.satellite.name,  # origin = this imaging spacecraft
+                toBodyName=to_body_name,  # destination = current RSO body name
+                lineColor=line_color,
             )
             self._rso_line = vizSupport.targetLineList[-1]
         else:
             # retarget the existing line
             self._rso_line.toBodyName = to_body_name
+            if target_name_transform is not None:
+                # A new target begins in the slew state. The live monitor turns
+                # this green only after the complete imaging hold is valid.
+                self._rso_line.lineColor = vizSupport.toRGBA255(line_color)
 
         # push the change to Vizard
         vizSupport.updateTargetLineList(vizInstance)
@@ -1328,11 +1339,17 @@ class ImagingSCFSWModel(ImagingFSWModel):
             # Recorder for "image actually triggered" events
             # deviceCmdOutMsg.deviceCmd will go to 1 when att/access requirements are met and the image is captured
             REC_DT_SEC = getattr(self.fsw, "metrics_rec_dt_sec", 1.0)
-            self.ins_cmd_recorder = self.insControl.deviceCmdOutMsg.recorder(macros.sec2nano(REC_DT_SEC))
+            self.ins_cmd_recorder = self.insControl.deviceCmdOutMsg.recorder(
+                macros.sec2nano(REC_DT_SEC)
+            )
 
             # Add recorder to the SAME task where insControl runs (this LocPointTask),
             # so it only records while the imaging task is enabled.
-            self.fsw.simulator.AddModelToTask(self.name + self.fsw.satellite.name,self.ins_cmd_recorder, ModelPriority=980)
+            self.fsw.simulator.AddModelToTask(
+                self.name + self.fsw.satellite.name,
+                self.ins_cmd_recorder,
+                ModelPriority=980,
+            )
 
             # Expose it so evaluation/training scripts can access it easily
             self.fsw.ins_cmd_recorder = self.ins_cmd_recorder
@@ -1353,7 +1370,6 @@ class ImagingSCFSWModel(ImagingFSWModel):
                 inst_pHat_B: Instrument pointing direction.
                 kwargs: Passed to other setup functions.
             """
-
             self.locPoint.pHat_B = inst_pHat_B
             self.locPoint.scAttInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.attOutMsg
@@ -1361,7 +1377,7 @@ class ImagingSCFSWModel(ImagingFSWModel):
             self.locPoint.scTransInMsg.subscribeTo(
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
-            self.locPoint.scTargetInMsg.subscribeTo(        # TODO: fix this to the target transOutMsg
+            self.locPoint.scTargetInMsg.subscribeTo(  # TODO: fix this to the target transOutMsg
                 self.fsw.dynamics.simpleNavObject.transOutMsg
             )
             # # self.locPoint.scTargetInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.simpleNavObject.transOutMsg)
@@ -1403,19 +1419,35 @@ class ImagingSCFSWModel(ImagingFSWModel):
                 self.insControl.rateErrTolerance = imageRateErrorRequirement
             self.insControl.attGuidInMsg.subscribeTo(self.fsw.attGuidMsg)
 
-
             if self.fsw.dynamics.targetLocation.accessOutMsgs:
                 self.insControl.locationAccessInMsg.subscribeTo(
-                    self.fsw.dynamics.targetLocation.accessOutMsgs[-1] # TODO: this should be changed to the id of the target but this currently still works since I am lenghting this array everytime we choose a new target
+                    self.fsw.dynamics.targetLocation.accessOutMsgs[
+                        -1
+                    ]  # TODO: this should be changed to the id of the target but this currently still works since I am lenghting this array everytime we choose a new target
                 )
             else:
-                msgData = messaging.AccessMsgPayload() # this is the payload
-                msg = messaging.AccessMsg() # this is the container
+                msgData = messaging.AccessMsgPayload()  # this is the payload
+                msg = messaging.AccessMsg()  # this is the container
                 msg.write(msgData)
                 self.insControl.locationAccessInMsg.subscribeTo(msg)
             self._add_model_to_task(self.insControl, priority=987)
 
             # self.current_target_r_BN_N=[] # TODO: DHP this should be set up so that plotting can be done easier!
+
+    @action
+    def action_point_peer(self, peer) -> None:
+        """Track a discovered peer's navigation beacon with the imaging boresight.
+
+        Reuse locationPointing and the existing attitude controller. The instrument
+        stays disabled: a completion exchange must never create image data or run
+        the ground downlink device. The action's hold gate controls radio power.
+        """
+        self.locPoint.scTargetInMsg.subscribeTo(
+            peer.dynamics.simpleNavObject.transOutMsg
+        )
+        self.insControl.controllerStatus = 0
+        self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
+        self._update_imaging_line(peer.name)
 
     @action
     def action_image_rso_target(self, RSOTarget) -> None:
@@ -1433,11 +1465,14 @@ class ImagingSCFSWModel(ImagingFSWModel):
         self.insControl.controllerStatus = 1
         self.dynamics.instrumentPowerSink.powerStatus = 1
         # self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P
-        self.locPoint.scTargetInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.simpleNavObject.transOutMsg)
+        self.locPoint.scTargetInMsg.subscribeTo(
+            RSOTarget.target_spacecraft.dynamics.simpleNavObject.transOutMsg
+        )
         # self.dynamics.targetLocation.addSpacecraftToModel(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)  # TODO: check if this is right syntax
         # self.dynamics.simpleNavObject.scStateInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)
-        self.dynamics.simpleTargetNav.scStateInMsg.subscribeTo(RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg)
-
+        self.dynamics.simpleTargetNav.scStateInMsg.subscribeTo(
+            RSOTarget.target_spacecraft.dynamics.scObject.scStateOutMsg
+        )
 
         if self.dynamics.targetLocation.accessOutMsgs:
             self.insControl.locationAccessInMsg.subscribeTo(
@@ -1445,8 +1480,8 @@ class ImagingSCFSWModel(ImagingFSWModel):
             )
             # self.current_target_r_BN_N.append(self.dynamics.targetLocation.accessOutMsgs[RSOTarget.id].read(r_BN_N))
         else:
-            msgData = messaging.AccessMsgPayload() # this is the payload
-            msg = messaging.AccessMsg() # this is the container
+            msgData = messaging.AccessMsgPayload()  # this is the payload
+            msg = messaging.AccessMsg()  # this is the container
             msg.write(msgData)
             self.insControl.locationAccessInMsg.subscribeTo(msg)
 

@@ -14,7 +14,8 @@
   "reimage_cooldown_orbits": 2.0,
   "alpha": 0.1,
   "information_case": "independent",
-  "perfect_metadata_delivery": true,
   "message_ttl_s": 600.0,
-  "seed": 0
+  "seed": 0,
+  "retasking_mode": "conflict",
+  "link_mode": "los"
 }

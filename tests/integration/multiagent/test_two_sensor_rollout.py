@@ -18,7 +18,7 @@ def short_config():
         max_step_duration_s=120.0,
         imaging_duration_s=120.0,
         seed=21,
-        information_case="intent_status",
+        information_case="completion",
     )
 
 
@@ -32,13 +32,13 @@ def test_real_environment_exposes_sensors_and_not_passive_targets():
         value.shape == (GLOBAL_FEATURES + config.n_candidates * TARGET_FEATURES,)
         for value in observations.values()
     )
-    assert env.action_space("sensor_0").n == 4 + config.n_candidates
+    assert env.action_space("sensor_0").n == 5 + config.n_candidates
     env.close()
 
 
 @pytest.mark.parametrize(
     "information_case",
-    ["independent", "centralized_information", "intent_status"],
+    ["independent", "ideal_completion", "completion"],
 )
 def test_all_first_study_information_cases_reset(information_case):
     config = MultiAgentImagingConfig(
@@ -61,47 +61,6 @@ def test_all_first_study_information_cases_reset(information_case):
     env.close()
 
 
-def test_information_cases_strictly_separate_target_intent():
-    summaries = {}
-    cases = (
-        ("independent", True, "independent"),
-        ("centralized_information", True, "centralized"),
-        ("intent_status", True, "intent_perfect"),
-        ("intent_status", False, "intent_los_without_broadcast"),
-    )
-    for information_case, perfect_delivery, label in cases:
-        config = MultiAgentImagingConfig(
-            n_sensors=2,
-            n_targets=4,
-            n_candidates=4,
-            episode_duration_s=120.0,
-            max_step_duration_s=60.0,
-            imaging_duration_s=60.0,
-            information_case=information_case,
-            perfect_metadata_delivery=perfect_delivery,
-            seed=33,
-        )
-        env = build_environment(config)
-        observations, _ = env.reset(seed=config.seed)
-        initial = observations["sensor_0"][GLOBAL_FEATURES:].reshape(
-            config.n_candidates, TARGET_FEATURES
-        )[:, 12]
-        observations, *_ = env.step({"sensor_0": 4, "sensor_1": 4})
-        after_step = observations["sensor_0"][GLOBAL_FEATURES:].reshape(
-            config.n_candidates, TARGET_FEATURES
-        )[:, 12]
-        summaries[label] = (initial, after_step)
-        env.close()
-    assert (summaries["independent"][0] == 0.0).all()
-    assert (summaries["independent"][1] == 0.0).all()
-    assert (summaries["centralized"][0] == 0.0).all()
-    assert not (summaries["centralized"][1] == 0.0).all()
-    assert (summaries["intent_perfect"][0] == 0.0).all()
-    assert not (summaries["intent_perfect"][1] == 0.0).all()
-    assert (summaries["intent_los_without_broadcast"][0] == 0.0).all()
-    assert (summaries["intent_los_without_broadcast"][1] == 0.0).all()
-
-
 @pytest.mark.parametrize("n_sensors", [1, 2, 3])
 def test_observation_size_is_constant_across_sensor_count(n_sensors):
     config = MultiAgentImagingConfig(
@@ -111,7 +70,7 @@ def test_observation_size_is_constant_across_sensor_count(n_sensors):
         episode_duration_s=60.0,
         max_step_duration_s=60.0,
         imaging_duration_s=60.0,
-        information_case="centralized_information",
+        information_case="ideal_completion",
         seed=35,
     )
     env = build_environment(config)

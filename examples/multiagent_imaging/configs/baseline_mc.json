@@ -1,0 +1,17 @@
+{
+  "n_targets": 100,
+  "n_candidates": 10,
+  "episode_duration_s": 45000.0,
+  "max_step_duration_s": 300.0,
+  "imaging_duration_s": 300.0,
+  "downlink_duration_s": 300.0,
+  "charge_duration_s": 300.0,
+  "desat_duration_s": 150.0,
+  "min_pointing_hold_s": 10.0,
+  "reimage_cooldown_orbits": 2.0,
+  "alpha": 0.1,
+  "battery_charge_threshold": 0.3,
+  "wheel_desaturation_threshold": 0.7,
+  "storage_downlink_threshold": 0.8,
+  "retasking_mode": "conflict"
+}

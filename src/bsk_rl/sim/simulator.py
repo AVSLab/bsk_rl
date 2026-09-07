@@ -9,7 +9,12 @@ import numpy as np
 
 from Basilisk.utilities import macros as mc
 from Basilisk.utilities import SimulationBaseClass
-from Basilisk.simulation import simpleInstrument, simpleStorageUnit, partitionedStorageUnit, spaceToGroundTransmitter
+from Basilisk.simulation import (
+    simpleInstrument,
+    simpleStorageUnit,
+    partitionedStorageUnit,
+    spaceToGroundTransmitter,
+)
 from Basilisk.simulation import groundLocation
 from Basilisk.utilities import vizSupport
 from Basilisk.utilities import unitTestSupport
@@ -28,8 +33,10 @@ if TYPE_CHECKING:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
+
 def strip_prefix(s, prefix="GroundStation"):
-    return s[len(prefix):] if s.startswith(prefix) else s
+    return s[len(prefix) :] if s.startswith(prefix) else s
+
 
 class Simulator(SimulationBaseClass.SimBaseClass):
     """Basilisk simulator for GeneralSatelliteTasking environments."""
@@ -98,6 +105,8 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self,
         vizard_rate=None,
         amos_hud=False,
+        multiagent_vizard=False,
+        multiagent_sensor_model_scale=1.5,
         amos_hud_text=True,
         amos_hud_metric_bars=True,
         amos_hud_image_bars=True,
@@ -112,7 +121,10 @@ class Simulator(SimulationBaseClass.SimBaseClass):
             os.makedirs(save_path, exist_ok=True)
 
         viz_proc_name = "VizProcess"
-        viz_proc = self.CreateNewProcess(viz_proc_name, priority=400)
+        # Serialize after world, target, sensor, and FSW updates so spacecraft
+        # positions and the live imaging-line overlay describe the same frame.
+        viz_process_priority = 0 if multiagent_vizard else 400
+        viz_proc = self.CreateNewProcess(viz_proc_name, priority=viz_process_priority)
 
         # Define process name, task name and task time-step
         viz_task_name = "viz_task_name"
@@ -121,13 +133,31 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         viz_proc.addTask(self.CreateNewTask(viz_task_name, mc.sec2nano(vizard_rate)))
 
         customizers = ["spriteList", "genericSensorList"]
+        visualized_satellites = self.satellites
+        # Rendering follows physical spacecraft membership, not RL agent roles.
         list_data = {}
         for customizer in customizers:
             list_data[customizer] = [
-                sat.vizard_data.get(customizer, None) for sat in self.satellites
+                sat.vizard_data.get(customizer, None) for sat in visualized_satellites
             ]
 
         amos_assets = None
+        multiagent_assets = None
+        if multiagent_vizard:
+            from bsk_rl.utils.multiagent_vizard import (
+                IMAGING_LINE_SLEW_COLOR,
+                prepare_multiagent_vizard_assets,
+            )
+
+            multiagent_assets = prepare_multiagent_vizard_assets(
+                self.satellites, vizSupport
+            )
+            list_data["spriteList"] = multiagent_assets.sprite_list
+            from bsk_rl.sats.roles import SpacecraftRole
+
+            for sensor in visualized_satellites:
+                if sensor.role is SpacecraftRole.SENSING_AGENT:
+                    sensor.fsw._vizard_line_slew_color = IMAGING_LINE_SLEW_COLOR
         if amos_hud:
             from Basilisk.simulation import vizInterface
 
@@ -156,21 +186,36 @@ class Simulator(SimulationBaseClass.SimBaseClass):
                 thrEffectorList=amos_assets.thr_effector_list,
                 spriteList=amos_assets.sprite_list,
             )
+        if amos_hud or multiagent_vizard:
+            # These lists live at module scope in Basilisk. A second recording in
+            # the same process must not inherit an earlier episode's live lines.
+            del vizSupport.targetLineList[:]
         self.vizInstance = vizSupport.enableUnityVisualization(
             self,
             viz_task_name,
-            scList=[sat.dynamics.scObject for sat in self.satellites],
+            scList=[sat.dynamics.scObject for sat in visualized_satellites],
             **list_data,
             saveFile=save_path / f"viz_{time()}",
         )
         viz = self.vizInstance
+        if multiagent_assets is not None:
+            from bsk_rl.utils.multiagent_vizard import (
+                configure_multiagent_vizard_models,
+            )
+
+            configure_multiagent_vizard_models(
+                viz,
+                vizSupport,
+                multiagent_assets,
+                sensor_model_scale=multiagent_sensor_model_scale,
+            )
         if amos_assets is not None:
             # Vizard derives the generic storage-panel title from the visualized
             # spacecraft name.  Change only the visualization label; the simulation,
             # policy, data products, and Basilisk model continue to use SS1.
-            self.vizMessenger.scData[0].spacecraftName = (
-                amos_assets.scanner_display_name
-            )
+            self.vizMessenger.scData[
+                0
+            ].spacecraftName = amos_assets.scanner_display_name
             # Promotion candidates use a blue proxy that can be moved inside Earth
             # when its immutable purple star/triangle proxy becomes active.
             target_sc_index = {
@@ -179,9 +224,9 @@ class Simulator(SimulationBaseClass.SimBaseClass):
                 if getattr(sat, "rso_target", None) is not None
             }
             for target_id, proxy_message in amos_assets.target_proxy_messages.items():
-                self.vizMessenger.scData[target_sc_index[target_id]].scStateInMsg.subscribeTo(
-                    proxy_message
-                )
+                self.vizMessenger.scData[
+                    target_sc_index[target_id]
+                ].scStateInMsg.subscribeTo(proxy_message)
             # Vizard treats a spacecraft sprite as initialization-only. Add one
             # immutable promotion sprite for each eventual HIO/SHIO. Its state message
             # starts at Earth's center so Vizard initializes the sprite in frame 1;
@@ -216,7 +261,7 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         for i in range(len(self.world.groundStations)):
             station = self.world.groundStations[i]
             station_radius_m = float(np.linalg.norm(station.r_LP_P_Init))
-            if amos_assets is not None:
+            if amos_assets is not None or multiagent_assets is not None:
                 from bsk_rl.utils.amos_vizard import ground_station_visibility_geometry
 
                 station_fov, station_range, _ = ground_station_visibility_geometry(
@@ -259,12 +304,26 @@ class Simulator(SimulationBaseClass.SimBaseClass):
             # Keep live imaging and ground-contact lines legible in planet view.
             viz.settings.linesAndFramesLineWidth = 3.0
             viz.settings.useLineRenderersForTargetLinesAndFrames = 1
+        elif multiagent_assets is not None:
+            # Native model/sprite transitions retain each target's spacecraft
+            # state and attitude. Locations are reserved for ground stations.
+            viz.settings.showSpacecraftAsSprites = 0
+            viz.settings.useSimpleLocationMarkers = -1
+            viz.settings.spacecraftSizeMultiplier = 2.5
+            viz.settings.orbitLinesOn = -1
+            viz.settings.trueTrajectoryLinesOn = -1
+            viz.settings.showOsculatingGroundTrackLines = -1
+            viz.settings.showTruePathGroundTrackLines = -1
+            viz.settings.linesAndFramesLineWidth = 3.0
+            viz.settings.useLineRenderersForTargetLinesAndFrames = 1
         else:
             viz.settings.spacecraftSizeMultiplier = 1.5
         # Vizard uses 0 for "use application default," not false.  Explicitly use
         # -1 so locations never draw automatic links to every spacecraft in range;
         # the AMOS monitor owns the single SS1-to-active-station line instead.
-        viz.settings.showLocationCommLines = -1 if amos_assets is not None else 1
+        viz.settings.showLocationCommLines = (
+            -1 if amos_assets is not None or multiagent_assets is not None else 1
+        )
         viz.settings.showLocationCones = 1
         viz.settings.showLocationLabels = 1
         for key, value in vizard_settings.items():
@@ -311,8 +370,25 @@ class Simulator(SimulationBaseClass.SimBaseClass):
                 showThrusterLabels=-1,
                 showRWLabels=1 if show_native_rw else -1,
             )
-        vizard.VIZINSTANCE = self.vizInstance
+        if multiagent_assets is not None:
+            from bsk_rl.sats.roles import SpacecraftRole
+            from bsk_rl.utils.multiagent_vizard import MultiAgentVizardMonitor
 
+            self.multiagent_vizard_monitor = MultiAgentVizardMonitor(
+                sensors=[s for s in visualized_satellites if s.role is SpacecraftRole.SENSING_AGENT],
+                targets=multiagent_assets.target_satellites,
+                viz_instance=self.vizInstance,
+                viz_support=vizSupport,
+            )
+            self.AddModelToTask(
+                viz_task_name,
+                self.multiagent_vizard_monitor,
+                # vizMessenger uses the task default (-1). In this task's
+                # execution order, -2 places live imaging-line updates directly
+                # before serialization rather than one frame afterward.
+                ModelPriority=-2,
+            )
+        vizard.VIZINSTANCE = self.vizInstance
 
     @vizard.visualize
     def set_vizard_epoch(self, vizInstance=None):

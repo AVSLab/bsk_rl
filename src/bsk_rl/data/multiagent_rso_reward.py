@@ -53,11 +53,11 @@ class _TeamServiceAccounting:
         self.successful_duplicate_count = 0
         self._unique_acquisition_count = 0
         self._acquisition_team_value = 0.0
-        self._latest_unique_capture_by_target: dict[int, float] = {}
-        self._latest_credited_acquisition_by_target: dict[int, float] = {}
+        self._latest_unique_capture_by_target: dict[tuple[int, float], float] = {}
+        self._latest_credited_acquisition_by_target: dict[tuple[int, float], float] = {}
 
     def register_capture_attempt(self, product: ImageProductRecord) -> bool:
-        latest = self._latest_credited_acquisition_by_target.get(product.target_id)
+        latest = self._latest_credited_acquisition_by_target.get((product.target_id, product.request_epoch))
         duplicate = (
             latest is not None and product.capture_time < latest + self.cooldown_s
         )
@@ -72,6 +72,7 @@ class _TeamServiceAccounting:
             products,
             key=lambda product: (
                 product.target_id,
+                product.request_epoch,
                 product.capture_time,
                 product.source_sensor,
                 product.record_id,
@@ -86,6 +87,7 @@ class _TeamServiceAccounting:
                 candidate = ordered[index]
                 if (
                     candidate.target_id != first.target_id
+                    or candidate.request_epoch != first.request_epoch
                     or abs(candidate.capture_time - first.capture_time)
                     > self.simultaneous_tolerance_s
                 ):
@@ -110,13 +112,13 @@ class _TeamServiceAccounting:
                 if duplicate.record_id not in self.duplicate_attempt_record_ids:
                     self.duplicate_attempt_record_ids.add(duplicate.record_id)
                     self.duplicate_attempt_count += 1
-            latest = self._latest_credited_acquisition_by_target.get(first.target_id)
+            latest = self._latest_credited_acquisition_by_target.get((first.target_id, first.request_epoch))
             unique = bool(qualified) and (
                 latest is None or first.capture_time >= latest + self.cooldown_s
             )
             if not unique:
                 continue
-            self._latest_credited_acquisition_by_target[first.target_id] = (
+            self._latest_credited_acquisition_by_target[(first.target_id, first.request_epoch)] = (
                 first.capture_time
             )
             team_value = float(target_priorities[first.target_id])
@@ -142,12 +144,12 @@ class _TeamServiceAccounting:
                 if product.delivery_time is not None
                 and product.quality >= self.quality_threshold
             ]
-            latest = self._latest_unique_capture_by_target.get(first.target_id)
+            latest = self._latest_unique_capture_by_target.get((first.target_id, first.request_epoch))
             unique = bool(qualified) and (
                 latest is None or first.capture_time >= latest + self.cooldown_s
             )
             if unique:
-                self._latest_unique_capture_by_target[first.target_id] = (
+                self._latest_unique_capture_by_target[(first.target_id, first.request_epoch)] = (
                     first.capture_time
                 )
             share = (

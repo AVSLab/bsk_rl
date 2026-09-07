@@ -1,4 +1,4 @@
-"""Construct the role-aware two-sensor AMOS 2026 environment."""
+"""Construct the compact role-aware multi-sensor LEO environment."""
 
 from __future__ import annotations
 
@@ -7,9 +7,21 @@ from functools import partial
 import numpy as np
 from Basilisk.utilities import macros, orbitalMotion
 
-from bsk_rl import SensingAgentConstellationTasking
-from bsk_rl import act, data, obs, sats, scene
-from bsk_rl.comm import InformationCase, IntentStatusCommunication
+from bsk_rl.completion_gym import CompletionConstellationTasking
+from bsk_rl import act, obs, sats, scene
+from bsk_rl.comm.completion_communication import CompletionCommunication
+from bsk_rl.data.completion_reward import CompletionImageReward
+from bsk_rl.act.completion_actions import (
+    BroadcastCompletions,
+    TransmitCompletions,
+    ContinueTask,
+    ImageCompletion,
+)
+from bsk_rl.obs.completion_observations import (
+    CompletionContext,
+    CompletionTargets,
+    CompletionPeers,
+)
 from bsk_rl.sim import dyn, fsw, world
 from bsk_rl.sats.roles import SpacecraftRole
 
@@ -20,7 +32,7 @@ R_EARTH_M = 6371e3
 
 
 def _sensor_orbit(index: int) -> orbitalMotion.ClassicElements:
-    """Distinct initial orbit for a homogeneous sensor spacecraft."""
+    """Return the original pre-Walker staggered sensor orbit pattern."""
     orbit = orbitalMotion.ClassicElements()
     orbit.a = R_EARTH_M + (700e3 + 100e3 * (index % 2))
     orbit.e = 0.001
@@ -31,21 +43,12 @@ def _sensor_orbit(index: int) -> orbitalMotion.ClassicElements:
     return orbit
 
 
-def _sample_mixed_target_orbit() -> orbitalMotion.ClassicElements:
-    regime = np.random.choice(["LEO", "MEO", "GEO"], p=[0.5, 0.3, 0.2])
+def _sample_leo_target_orbit() -> orbitalMotion.ClassicElements:
+    """Sample the current demonstration catalog entirely in LEO."""
     orbit = orbitalMotion.ClassicElements()
-    if regime == "LEO":
-        altitude = np.random.uniform(400e3, 2000e3)
-        orbit.e = np.random.uniform(0.0, 0.02)
-        inclination = np.random.uniform(0.0, 180.0)
-    elif regime == "MEO":
-        altitude = np.random.uniform(2000e3, 35000e3)
-        orbit.e = np.random.uniform(0.0, 0.1)
-        inclination = np.random.uniform(0.0, 120.0)
-    else:
-        altitude = np.random.uniform(35486e3, 36086e3)
-        orbit.e = np.random.uniform(0.0, 0.0015)
-        inclination = np.random.uniform(0.0, 15.0)
+    altitude = np.random.uniform(400e3, 2000e3)
+    orbit.e = np.random.uniform(0.0, 0.02)
+    inclination = np.random.uniform(0.0, 180.0)
     orbit.a = R_EARTH_M + altitude
     orbit.i = inclination * macros.D2R
     orbit.Omega = np.random.uniform(0.0, 360.0) * macros.D2R
@@ -54,7 +57,12 @@ def _sample_mixed_target_orbit() -> orbitalMotion.ClassicElements:
     return orbit
 
 
-def build_environment(config: MultiAgentImagingConfig):
+def build_environment(
+    config: MultiAgentImagingConfig,
+    *,
+    vizard_dir: str | None = None,
+    vizard_settings: dict | None = None,
+):
     """Build a real Basilisk environment with sensing agents and passive RSOs."""
 
     class SensorSatellite(sats.AccessSatellite):
@@ -72,19 +80,9 @@ def build_environment(config: MultiAgentImagingConfig):
                 type="ground_station",
                 n_ahead_observe=2,
             ),
-            obs.PolarisScTargetProperties(
-                dict(prop="priority", norm=10.0),
-                dict(prop="rel_pos_vector_r_BR_H", norm=15960e3),
-                dict(prop="rel_vel_vector_v_BR_H", norm=12000.0),
-                dict(prop="angle_to_target", norm=90.0),
-                dict(prop="target_distance", norm=15960e3),
-                dict(prop="target_shadowFactor", norm=1.0),
-                dict(prop="known_cooldown_remaining", norm=12000.0),
-                dict(prop="known_pending", norm=1.0),
-                dict(prop="known_teammate_intent", norm=1.0),
-                n_ahead_observe=config.n_candidates,
-            ),
-        ]
+            CompletionContext(),
+            CompletionTargets(config.n_candidates),
+        ] + ([CompletionPeers()] if config.n_peers else [])
         action_spec = [
             act.Charge(duration=config.charge_duration_s),
             act.Downlink(
@@ -92,8 +90,9 @@ def build_environment(config: MultiAgentImagingConfig):
                 variable_duration_downlink=True,
             ),
             act.Desat(duration=config.desat_duration_s),
-            act.BroadcastIntent(duration=config.broadcast_duration_s),
-            act.ImageRSO(
+            BroadcastCompletions(duration=config.broadcast_duration_s),
+            ContinueTask(),
+            ImageCompletion(
                 n_ahead_image=config.n_candidates,
                 duration=config.imaging_duration_s,
                 variable_duration_imaging=True,
@@ -102,9 +101,22 @@ def build_environment(config: MultiAgentImagingConfig):
                 require_illumination_during_hold=False,
             ),
         ]
+        if config.n_peers:
+            action_spec.append(
+                TransmitCompletions(
+                    config.n_peers,
+                    duration=config.transmit_duration_s,
+                    hold_s=config.transmit_hold_s,
+                    bitrate_bps=config.metadata_bitrate_bps,
+                )
+            )
+        completion_n_candidates = config.n_candidates
+        completion_communication_mode = config.communication_mode
         dyn_type = dyn.ImagingSCDynModel
         fsw_type = fsw.ImagingSCFSWModel
 
+    # Targets remain full Basilisk spacecraft. Their role excludes them from the
+    # PettingZoo/RLlib agent dictionary; Drift is deterministic simulator plumbing.
     class PassiveTargetSatellite(sats.Satellite):
         observation_spec = [obs.Time()]
         action_spec = [act.Drift(duration=config.episode_duration_s + 1.0)]
@@ -147,7 +159,7 @@ def build_environment(config: MultiAgentImagingConfig):
         for index in range(config.n_sensors)
     ]
     passive_args = {
-        "oe": _sample_mixed_target_orbit,
+        "oe": _sample_leo_target_orbit,
         "batteryStorageCapacity": 1e12,
         "storedCharge_Init": 5e11,
         "basePowerDraw": 0.0,
@@ -170,18 +182,23 @@ def build_environment(config: MultiAgentImagingConfig):
         hio_count=0,
         shio_count=0,
     )
-    rewarder = data.MultiSensorRSOTargetImageReward(
+    rewarder = CompletionImageReward(
         alpha=config.alpha,
         reimage_cooldown_orbits=config.reimage_cooldown_orbits,
         quality_threshold=0.5,
         hide_pending_targets=True,
     )
-    communicator = IntentStatusCommunication(
-        InformationCase(config.information_case),
-        message_ttl_s=config.message_ttl_s,
-        perfect_metadata_delivery=config.perfect_metadata_delivery,
+    communicator = CompletionCommunication(
+        config.information_case,
+        ttl_s=config.message_ttl_s,
+        delay_s=config.message_delay_s,
+        loss_probability=config.packet_loss_probability,
+        link_mode=config.link_mode,
     )
-    return SensingAgentConstellationTasking(
+    return CompletionConstellationTasking(
+        retasking_mode=config.retasking_mode,
+        default_seed=config.seed,
+        communication_cost_per_s=config.communication_cost_per_s,
         satellites=[*sensors, *targets],
         scenario=scenario,
         rewarder=rewarder,
@@ -192,6 +209,8 @@ def build_environment(config: MultiAgentImagingConfig):
         time_limit=config.episode_duration_s,
         generate_obs_retasking_only=True,
         log_level="WARNING",
+        vizard_dir=vizard_dir,
+        vizard_settings=vizard_settings,
     )
 
 

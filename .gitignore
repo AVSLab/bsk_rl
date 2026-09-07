@@ -165,3 +165,6 @@ wandb_key.txt
 # Local W&B run cache/logs
 examples/wandb/
 wandb/
+
+# Reproducible multi-agent experiment launch specifications
+!examples/multiagent_imaging/configs/*.json

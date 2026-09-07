@@ -13,8 +13,9 @@
   "min_pointing_hold_s": 10.0,
   "reimage_cooldown_orbits": 2.0,
   "alpha": 0.1,
-  "information_case": "intent_status",
-  "perfect_metadata_delivery": false,
+  "information_case": "completion",
   "message_ttl_s": 600.0,
-  "seed": 0
+  "seed": 0,
+  "retasking_mode": "conflict",
+  "link_mode": "los"
 }

@@ -1,0 +1,13 @@
+# Tested Python 3.11 runtime. Build Basilisk separately from the recorded source
+# commit; its local ARM binary cannot be copied onto a Linux cluster.
+ray[rllib]==2.35.0
+torch==2.4.1
+numpy==1.26.4
+gymnasium==0.29.1
+pettingzoo==1.24.3
+pyarrow==19.0.1
+scipy==1.14.1
+psutil==6.1.0
+matplotlib==3.9.3
+pandas==2.2.3
+protobuf==6.30.1

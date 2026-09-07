@@ -75,6 +75,7 @@ torch, nn = try_import_torch()
 
 class ResidualMLPBlock(nn.Module):
     def __init__(self, width: int):
+        """Configure shared encoders, attention and output dimensions."""
         super().__init__()
 
         self.net = nn.Sequential(
@@ -85,11 +86,13 @@ class ResidualMLPBlock(nn.Module):
         )
 
     def forward(self, x):
+        """Encode the item set and preserve its declared masking and ordering."""
         return x + self.net(x)
 
 
 class AttentionHead(nn.Module):
     def __init__(self, d_in: int, embed_dim: int):
+        """Configure shared encoders, attention and output dimensions."""
         super().__init__()
         self.d_in = d_in
         self.embed_dim = embed_dim
@@ -100,6 +103,7 @@ class AttentionHead(nn.Module):
 
     def forward(self, x, y=None):
         # x: (B, n_tgts, d_in)
+        """Encode the item set and preserve its declared masking and ordering."""
         q = self.W_q(x)  # (B, N_x, embed_dim)
         if y is None:
             y = x
@@ -115,6 +119,7 @@ class AttentionHead(nn.Module):
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, d_in, embed_dim, num_heads):
+        """Configure shared encoders, attention and output dimensions."""
         super().__init__()
         assert embed_dim % num_heads == 0, "embed_dim must be divisible by num_heads"
         self.d_in = d_in
@@ -128,6 +133,7 @@ class MultiHeadAttention(nn.Module):
         self.out_proj = nn.Linear(embed_dim, d_in)
 
     def forward(self, x, y=None):
+        """Encode the item set and preserve its declared masking and ordering."""
         head_outputs = [head(x, y) for head in self.attention_heads]
         concat_heads = torch.cat(head_outputs, dim=-1)  # (B, n_tgts, embed_dim)
         output = self.out_proj(concat_heads)  # (B, n_tgts, d_in)
@@ -138,6 +144,7 @@ class FastSelfAttention(nn.Module):
     """Self-attention block using PyTorch's fused kernel when available."""
 
     def __init__(self, d_in, d_model, n_heads=4):
+        """Configure shared encoders, attention and output dimensions."""
         super().__init__()
         assert d_model % n_heads == 0
         self.n_heads = n_heads
@@ -146,7 +153,8 @@ class FastSelfAttention(nn.Module):
         self.qkv = nn.Linear(d_in, 3 * d_model, bias=False)
         self.out = nn.Linear(d_model, d_in, bias=False)
 
-    def forward(self, x):
+    def forward(self, x, valid=None):
+        """Encode the item set and preserve its declared masking and ordering."""
         B, N, _ = x.shape
 
         qkv = self.qkv(x)
@@ -154,21 +162,47 @@ class FastSelfAttention(nn.Module):
         qkv = qkv.permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]
 
+        # Exclude padding keys before softmax. Give empty rows one zero dummy
+        # key so both fused and fallback kernels remain finite; zero them below.
+        mask = None
+        if valid is not None:
+            safe = valid.clone()
+            safe[~safe.any(dim=1), 0] = True
+            mask = safe[:, None, None, :]
         if hasattr(torch.nn.functional, "scaled_dot_product_attention"):
             attn = torch.nn.functional.scaled_dot_product_attention(
-                q, k, v, dropout_p=0.0, is_causal=False
+                q, k, v, attn_mask=mask, dropout_p=0.0, is_causal=False
             )
         else:  # pragma: no cover - compatibility with older PyTorch
             scale = math.sqrt(self.d_head)
-            weights = torch.softmax(torch.matmul(q, k.transpose(-2, -1)) / scale, dim=-1)
+            scores = torch.matmul(q, k.transpose(-2, -1)) / scale
+            if mask is not None:
+                scores = scores.masked_fill(~mask, -torch.inf)
+            weights = torch.softmax(scores, dim=-1)
             attn = torch.matmul(weights, v)
 
         attn = attn.transpose(1, 2).contiguous().view(B, N, -1)
-        return self.out(attn)
+        output = self.out(attn)
+        return output if valid is None else output * valid.unsqueeze(-1)
+
+
+def masked_pool(tokens, valid):
+    """Mean, maximum and population deviation with a zero empty-set identity."""
+    if valid is None:
+        valid = torch.ones(tokens.shape[:2], dtype=torch.bool, device=tokens.device)
+    weights = valid.unsqueeze(-1)
+    count = weights.sum(dim=1).clamp_min(1)
+    mean = (tokens * weights).sum(dim=1) / count
+    maximum = tokens.masked_fill(~weights, -torch.inf).max(dim=1).values
+    maximum = torch.where(valid.any(dim=1, keepdim=True), maximum, 0.0)
+    variance = ((tokens - mean.unsqueeze(1)).square() * weights).sum(dim=1) / count
+    std = torch.where(
+        valid.any(dim=1, keepdim=True), torch.sqrt(variance.clamp_min(1e-12)), 0.0
+    )
+    return mean, maximum, std
 
 
 class GNNCritic(nn.Module):
-
     def __init__(
         self,
         inputs: int,
@@ -185,8 +219,11 @@ class GNNCritic(nn.Module):
         attention: bool = False,
         attention_dim: int = 32,
         num_heads: int = 2,
+        valid_feature: int | None = None,
     ):
+        """Configure shared encoders, attention and output dimensions."""
         super(GNNCritic, self).__init__()
+        self.valid_feature = valid_feature
 
         self.obs_sat = obs_sat
         act_function = nn.ReLU
@@ -248,6 +285,7 @@ class GNNCritic(nn.Module):
         self.model_g = nn.Sequential(*layers_g)
 
     def forward(self, x):
+        """Encode the item set and preserve its declared masking and ordering."""
         if isinstance(x, dict) and "obs" in x:
             x = x["obs"]
 
@@ -264,6 +302,13 @@ class GNNCritic(nn.Module):
         x_tgts = x_tgts.view(
             B, n_tgts, self.features_per_tgt
         )  # (B, n_tgts, features_per_tgt)
+        valid = (
+            None
+            if self.valid_feature is None
+            else x_tgts[:, :, self.valid_feature] > 0.5
+        )
+        if valid is not None:
+            x_tgts = x_tgts.masked_fill(~valid.unsqueeze(-1), 0.0)
         latent_tgts = self.model_f(x_tgts)  # (B, n_tgts, width_f)
         if self.block_f:
             for block_f in self.blocks_f:
@@ -271,28 +316,14 @@ class GNNCritic(nn.Module):
         latent_tgts = self.out_layer_f(latent_tgts)  # (B, n_tgts, tgt_encoded_dim)
 
         if self.attention:
-            attention = self.attention_layer(latent_tgts)
+            attention = self.attention_layer(latent_tgts, valid)
             latent_tgts = latent_tgts + attention
 
+        mean, maximum, std = masked_pool(latent_tgts, valid)
+        pooled = [x_sat, mean, maximum]
         if self.pooling_std:
-            latent = torch.cat(
-                [
-                    x_sat,
-                    torch.mean(latent_tgts, dim=1),
-                    torch.max(latent_tgts, dim=1).values,
-                    torch.std(latent_tgts, dim=1),
-                ],
-                dim=-1,
-            )
-        else:
-            latent = torch.cat(
-                [
-                    x_sat,
-                    torch.mean(latent_tgts, dim=1),
-                    torch.max(latent_tgts, dim=1).values,
-                ],
-                dim=-1,
-            )
+            pooled.append(std)
+        latent = torch.cat(pooled, dim=-1)
 
         critic_value = self.model_g(latent).squeeze(-1)  # (B,)
 
@@ -300,7 +331,6 @@ class GNNCritic(nn.Module):
 
 
 class GNNActor(nn.Module):
-
     def __init__(
         self,
         inputs: int,
@@ -318,8 +348,11 @@ class GNNActor(nn.Module):
         non_imaging_actions: int = 1,
         dropout: float = 0.0,
         condition_on_spacecraft: bool = False,
+        valid_feature: int | None = None,
     ):
+        """Configure shared encoders, attention and output dimensions."""
         super(GNNActor, self).__init__()
+        self.valid_feature = valid_feature
 
         self.obs_sat = obs_sat
         act_function = nn.ReLU
@@ -403,6 +436,7 @@ class GNNActor(nn.Module):
             self.no_action_head = nn.Linear(tgt_encoded_dim, non_imaging_actions)
 
     def forward(self, x):
+        """Encode the item set and preserve its declared masking and ordering."""
         if isinstance(x, dict) and "obs" in x:
             x = x["obs"]
 
@@ -417,6 +451,13 @@ class GNNActor(nn.Module):
         x_tgts = x_tgts.view(
             B, n_tgts, self.features_per_tgt
         )  # (B, n_tgts, features_per_tgt)
+        valid = (
+            None
+            if self.valid_feature is None
+            else x_tgts[:, :, self.valid_feature] > 0.5
+        )
+        if valid is not None:
+            x_tgts = x_tgts.masked_fill(~valid.unsqueeze(-1), 0.0)
         x_tgts = self.model_f(x_tgts)  # (B, n_tgts, width)
         if self.block_f:
             for block_f in self.blocks_f:
@@ -425,13 +466,11 @@ class GNNActor(nn.Module):
         latent_tgts = self.out_layer_f(x_tgts)  # (B, n_tgts, tgt_encoded_dim)
         if self.condition_on_spacecraft:
             context = self.spacecraft_context_encoder(x_sat).unsqueeze(1)
-            latent_tgts = self.spacecraft_context_normalization(
-                latent_tgts + context
-            )
+            latent_tgts = self.spacecraft_context_normalization(latent_tgts + context)
 
         for i in range(self.attention_depth):
             attention_out = self.attention_layers[i](
-                latent_tgts
+                latent_tgts, valid
             )  # (B, n_tgts, tgt_encoded_dim)
 
             latent_tgts = self.normalization_layers[i](
@@ -446,18 +485,62 @@ class GNNActor(nn.Module):
             return logits_tgts
 
         # Right now this is intended for padding the non-imaging actions. Otherwise this should be conditioned on the x_sat vector as well
-        no_action_logit = self.no_action_head(
-            torch.mean(latent_tgts, dim=1)
-        )  # (B, non_imaging_actions)
+        pooled, _, _ = masked_pool(latent_tgts, valid)
+        # Operational choices must still see own resources when no target exists.
+        if self.condition_on_spacecraft:
+            pooled = pooled + context.squeeze(1)
+        no_action_logit = self.no_action_head(pooled)  # (B, non_imaging_actions)
 
         return torch.cat(
             [no_action_logit, logits_tgts], dim=1
         )  # (B, n_tgts + non_imaging_actions)
 
 
+class PeerSetHead(nn.Module):
+    """Shared peer scorer and invariant peer context for the target-set network.
+
+    Only declared contact beacons and local ACK history enter these rows. Peer
+    order permutes transmission logits and leaves imaging/operational values fixed.
+    """
+
+    def __init__(self, base, base_inputs, own_features, peer_features, critic=False):
+        """Configure shared encoders, attention and output dimensions."""
+        super().__init__()
+        self.base, self.base_inputs, self.own_features = base, base_inputs, own_features
+        self.peer_features, self.critic = peer_features, critic
+        self.encode = nn.Sequential(
+            nn.Linear(peer_features, 64), nn.ReLU(), nn.Linear(64, 64), nn.ReLU()
+        )
+        self.context = nn.Linear(64, own_features, bias=False)
+        self.score = nn.Sequential(
+            nn.Linear(64 + own_features, 64), nn.ReLU(), nn.Linear(64, 1)
+        )
+
+    def forward(self, batch):
+        """Encode the item set and preserve its declared masking and ordering."""
+        x = batch["obs"] if isinstance(batch, dict) else batch
+        base = x[:, : self.base_inputs]
+        peers = x[:, self.base_inputs :].reshape(x.shape[0], -1, self.peer_features)
+        valid = peers[:, :, -1] > 0.5
+        peers = peers.masked_fill(~valid.unsqueeze(-1), 0.0)
+        encoded = self.encode(peers)
+        pooled, _, _ = masked_pool(encoded, valid)
+        own = base[:, : self.own_features]
+        conditioned = torch.cat(
+            [own + self.context(pooled), base[:, self.own_features :]], dim=-1
+        )
+        result = self.base(conditioned)
+        if self.critic:
+            return result
+        context = own.unsqueeze(1).expand(-1, peers.shape[1], -1)
+        peer_logits = self.score(torch.cat([encoded, context], dim=-1)).squeeze(-1)
+        return torch.cat([result, peer_logits], dim=-1)
+
+
 class GNNModule(PPOTorchRLModule, nn.Module):
     def setup(self):
         # __sphinx_doc_begin__
+        """Build the actor and local critic for the versioned observation layout."""
         catalog = self.config.get_catalog()
         # If we have a stateful model, states for the critic need to be collected
         # during sampling and `inference-only` needs to be `False`. Note, at this
@@ -479,8 +562,13 @@ class GNNModule(PPOTorchRLModule, nn.Module):
 
         self.encoder = lambda x: {ENCODER_OUT: {ACTOR: x, CRITIC: x}}
 
+        n_peers = model_config.get("n_peers", 0)
+        peer_features = model_config.get("peer_features", 12)
+        base_inputs = self.config.observation_space.shape[0] - n_peers * peer_features
+        valid_feature = 16 if model_config.get("completion_mask", False) else None
         self.pi_head = GNNActor(
-            inputs=self.config.observation_space.shape[0],
+            inputs=base_inputs,
+            valid_feature=valid_feature,
             n_tgts=model_config["n_targets"],
             obs_sat=model_config["obs_sat"],
             width_f=model_config["width_f"],
@@ -493,18 +581,15 @@ class GNNModule(PPOTorchRLModule, nn.Module):
             width_g=model_config["width_g"],
             depth_g=model_config["depth_g"],
             dropout=dropout,
-            non_imaging_actions=model_config.get(
-                "non_imaging_actions", 1
-            ),
-            condition_on_spacecraft=model_config.get(
-                "condition_on_spacecraft", False
-            ),
+            non_imaging_actions=model_config.get("non_imaging_actions", 1),
+            condition_on_spacecraft=model_config.get("condition_on_spacecraft", False),
         )
 
         # Only build the critic network when this is a learner module.
         if not self.config.inference_only or self.framework != "torch":
             self.vf = GNNCritic(
-                inputs=self.config.observation_space.shape[0],
+                inputs=base_inputs,
+                valid_feature=valid_feature,
                 n_tgts=model_config["n_targets"],
                 obs_sat=model_config["obs_sat"],
                 width_f=model_config["critic_width_f"],
@@ -523,14 +608,68 @@ class GNNModule(PPOTorchRLModule, nn.Module):
             # from the learner to the inference module.
             self._inference_only_state_dict_keys = {}
 
+        if n_peers:
+            self.pi_head = PeerSetHead(
+                self.pi_head, base_inputs, model_config["obs_sat"], peer_features
+            )
+            if hasattr(self, "vf"):
+                self.vf = PeerSetHead(
+                    self.vf,
+                    base_inputs,
+                    model_config["obs_sat"],
+                    peer_features,
+                    critic=True,
+                )
         self.action_dist_cls = catalog.get_action_dist_cls(framework=self.framework)
 
     def pi(
         self, batch: Dict[str, TensorType], inference: bool = False
     ) -> Dict[str, TensorType]:
+        """Return masked logits, actions and their categorical log probabilities."""
         pi_outs = {}
 
         logits = self.pi_head(batch)
+        if self.config.model_config_dict.get("completion_mask", False):
+            from bsk_rl.obs.completion_observations import (
+                GLOBAL_FEATURES,
+                TARGET_FEATURES,
+                NON_IMAGING_ACTIONS,
+                CONTINUE_ACTION,
+                CONTINUE_VALID_FEATURE,
+                VALID_TARGET_FEATURE,
+                OBSERVATION_VERSION,
+            )
+
+            if (
+                self.config.model_config_dict.get("observation_version")
+                != OBSERVATION_VERSION
+            ):
+                raise ValueError("Completion observation/checkpoint version mismatch.")
+            features = batch[Columns.OBS]
+            count = self.config.model_config_dict["n_targets"]
+            target_end = GLOBAL_FEATURES + count * TARGET_FEATURES
+            targets = features[:, GLOBAL_FEATURES:target_end].reshape(
+                features.shape[0], count, TARGET_FEATURES
+            )
+            mask = torch.ones_like(logits, dtype=torch.bool)
+            mask[:, NON_IMAGING_ACTIONS : NON_IMAGING_ACTIONS + count] = (
+                targets[:, :, VALID_TARGET_FEATURE] > 0.5
+            )
+            if self.config.model_config_dict.get("n_peers", 0):
+                peers = features[:, target_end:].reshape(features.shape[0], -1, 12)
+                mask[:, NON_IMAGING_ACTIONS + count :] = peers[:, :, -1] > 0.5
+                mask[:, 3] = False  # Directed mode reserves baseline index 3.
+            if self.config.model_config_dict.get("communication_mode") == "directed":
+                mask[:, 3] = False
+            if self.config.model_config_dict.get("information_case") in {
+                "independent",
+                "ideal_completion",
+            }:
+                mask[:, 3] = False
+                mask[:, NON_IMAGING_ACTIONS + count :] = False
+            mask[:, CONTINUE_ACTION] = features[:, CONTINUE_VALID_FEATURE] > 0.5
+            # Finite sentinels keep categorical entropy/KL numerically well behaved.
+            logits = logits.masked_fill(~mask, -1e9)
 
         if inference:
             discrete_action_dist = TorchCategorical.from_logits(
@@ -538,8 +677,8 @@ class GNNModule(PPOTorchRLModule, nn.Module):
             ).to_deterministic()
             discrete_action = discrete_action_dist.sample()
         else:
-            discrete_action_dist = TorchCategorical(probs=torch.softmax(logits, dim=-1))
-            discrete_action = discrete_action_dist.rsample().argmax(dim=-1)
+            discrete_action_dist = TorchCategorical.from_logits(logits)
+            discrete_action = discrete_action_dist.sample()
 
         discrete_action_logp = discrete_action_dist.logp(discrete_action)
 

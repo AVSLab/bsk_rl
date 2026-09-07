@@ -1,84 +1,89 @@
-"""Run the four bounded, paired information-case validation rollouts."""
+"""Run the six paired information/retasking cells on identical initial states."""
 
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import json
 from pathlib import Path
 
 from examples.multiagent_imaging.config import MultiAgentImagingConfig
 from examples.multiagent_imaging.evaluate import run_rollout
 
-
-DEFAULT_CONFIGS = (
-    "validation_independent.json",
-    "validation_centralized_information.json",
-    "validation_intent_perfect.json",
-    "validation_intent_los.json",
-)
-PAIRING_EXCEPTIONS = {"information_case", "perfect_metadata_delivery"}
+INFORMATION_CASES = ("independent", "ideal_completion", "completion")
+RETASKING_MODES = ("conflict", "continuous")
+PAIRING_EXCEPTIONS = {"information_case", "retasking_mode"}
 
 
 def _pairing_signature(config: MultiAgentImagingConfig) -> dict:
-    return {
-        key: value
-        for key, value in config.to_dict().items()
-        if key not in PAIRING_EXCEPTIONS
-    }
+    return {k: v for k, v in config.to_dict().items() if k not in PAIRING_EXCEPTIONS}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--config",
+        type=Path,
+        default=Path(__file__).parent / "configs" / "completion_conflict.json",
+    )
+    parser.add_argument("--duration", type=float)
+    parser.add_argument("--seed", type=int)
+    parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("results/multiagent_imaging/matched_validation"),
+        default=Path("results/multiagent_imaging/completion_validation"),
     )
     args = parser.parse_args()
-    config_dir = Path(__file__).parent / "configs"
-    configs = [
-        MultiAgentImagingConfig.from_json(config_dir / name) for name in DEFAULT_CONFIGS
-    ]
-    signatures = [_pairing_signature(config) for config in configs]
-    if any(signature != signatures[0] for signature in signatures[1:]):
-        raise ValueError(
-            "Matched validation configurations differ beyond information case."
-        )
-
+    base = MultiAgentImagingConfig.from_json(args.config)
+    if args.duration is not None:
+        base = replace(base, episode_duration_s=args.duration)
+    if args.seed is not None:
+        base = replace(base, seed=args.seed)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    results = []
-    reference_initial_conditions = None
-    for name, config in zip(DEFAULT_CONFIGS, configs):
-        result = run_rollout(config)
-        if reference_initial_conditions is None:
-            reference_initial_conditions = result["initial_conditions"]
-        elif result["initial_conditions"] != reference_initial_conditions:
-            raise RuntimeError(
-                "Paired cases did not reproduce identical initial states."
+    results, reference = [], None
+    for case in INFORMATION_CASES:
+        for mode in RETASKING_MODES:
+            config = replace(base, information_case=case, retasking_mode=mode)
+            result = run_rollout(config)
+            if reference is None:
+                reference = result["initial_conditions"]
+            elif result["initial_conditions"] != reference:
+                raise RuntimeError(
+                    "Paired cases did not reproduce identical initial states."
+                )
+            name = f"{case}_{mode}"
+            output = args.output_dir / f"{name}.json"
+            output.write_text(
+                json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n"
             )
-        case_name = Path(name).stem.removeprefix("validation_")
-        output = args.output_dir / f"{case_name}.json"
-        output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
-        results.append(
-            {
-                "case": case_name,
-                "output": str(output),
-                "cumulative_reward": result["cumulative_reward"],
-                "team_summary": result["team_summary"],
-                "intent_conflicts": result["intent_conflicts"],
-                "broadcast_time_s": result["broadcast_time_s"],
-                "message_diagnostics": result["message_diagnostics"],
-                "target_omission_diagnostics": result["target_omission_diagnostics"],
-            }
-        )
-    summary = {
-        "matched_fields": signatures[0],
-        "initial_conditions_identical": True,
-        "cases": results,
-    }
-    summary_path = args.output_dir / "summary.json"
-    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
-    print(summary_path.resolve())
+            results.append(
+                dict(
+                    case=name,
+                    output=str(output),
+                    **{
+                        key: result[key]
+                        for key in (
+                            "cumulative_reward",
+                            "team_summary",
+                            "coordination",
+                            "message_diagnostics",
+                            "concurrent_target_conflicts",
+                            "target_omission_diagnostics",
+                        )
+                    },
+                )
+            )
+            print(name, result["sim_time_s"], result["team_summary"], flush=True)
+    summary = dict(
+        matched_fields=_pairing_signature(base),
+        initial_conditions_identical=True,
+        cases=results,
+    )
+    output = args.output_dir / "summary.json"
+    output.write_text(
+        json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    )
+    print(output.resolve())
 
 
 if __name__ == "__main__":

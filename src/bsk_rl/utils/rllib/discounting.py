@@ -61,7 +61,7 @@ class ContinuePreviousAction(ConnectorV2):
                         if id_tuple[1] == sa_episode.agent_id
                     ]
                     if len(id_tuples) == 0:
-                        return data
+                        continue
                     else:
                         id_tuple = id_tuples[0]
                 data[Columns.ACTIONS][id_tuple][0] = NO_ACTION
@@ -79,6 +79,7 @@ class MakeAddedStepActionValid(ConnectorV2):
         *,
         data: Optional[Any],
         episodes: List[EpisodeType],
+        shared_data=None,
         **_,
     ) -> Any:
         """Ensure that padded steps are not duplicates of ``NO_ACTION`` steps.
@@ -106,7 +107,7 @@ class MakeAddedStepActionValid(ConnectorV2):
                     max_lens[episode_id] = length
             total_steps = sum(max_lens.values())
 
-        one_ts_added = False
+        one_ts_added = bool((shared_data or {}).get("bsk_bootstrap_added", False))
         if total_steps == self.expected_train_batch_size + total_episodes:
             one_ts_added = True
 
@@ -130,9 +131,19 @@ class MakeAddedStepActionValid(ConnectorV2):
 
 
 class CondenseMultiStepActions(ConnectorV2):
-    def __init__(self, *args, **kwargs):
-        """Combine steps that used ``NO_ACTION`` on connector pass."""
+    def __init__(self, *args, gamma=None, **kwargs):
+        """Combine forced continuation; optionally discount rewards to action start.
+
+        With ``gamma`` supplied, primitive rewards occur at their interval's end.
+        A declared communication cost rate is integrated over the interval. This
+        preserves physical-time returns when teammate events subdivide an action.
+        Configure the learner with ``reward_time="step_start"`` in this mode.
+        Omit gamma to retain the existing undiscounted aggregation behavior.
+        """
         super().__init__(*args, **kwargs)
+        if gamma is not None and not 0 < gamma <= 1:
+            raise ValueError("gamma must be in (0, 1].")
+        self.gamma = gamma
 
     def __call__(
         self,
@@ -148,7 +159,14 @@ class CondenseMultiStepActions(ConnectorV2):
         for episode in self.single_agent_episode_iterator(
             episodes, agents_that_stepped_only=False
         ):
-            if NO_ACTION not in episode.actions:
+            # PPO runs its learner connector for value targets and again for the
+            # optimization batch. Never transform already start-timed rewards twice.
+            applied_gamma = episode.infos.data[0].get("bsk_action_start_gamma")
+            if self.gamma is not None and applied_gamma is not None:
+                if applied_gamma != self.gamma:
+                    raise ValueError("Episode was discounted with a different gamma.")
+                continue
+            if NO_ACTION not in episode.actions and self.gamma is None:
                 continue
 
             original_actions = np.array(episode.actions.data)
@@ -196,9 +214,28 @@ class CondenseMultiStepActions(ConnectorV2):
                     idx_end = original_action_count - 1
                 else:
                     idx_end = action_idx[i + 1] - 1
-                rewards.append(
-                    sum(original_rewards[idx_start : idx_end + 1])
-                )  # Doesn't discount over course of multistep
+                if self.gamma is None:
+                    rewards.append(sum(original_rewards[idx_start : idx_end + 1]))
+                else:
+                    elapsed, discounted = 0.0, 0.0
+                    for k in range(idx_start, idx_end + 1):
+                        info = original_infos[k + 1]
+                        dt = float(info["d_ts"])
+                        rate = float(info.get("communication_cost_rate", 0.0))
+                        # Remove the environment's undiscounted rate charge before
+                        # integrating it. Remaining reward is an endpoint impulse.
+                        impulse = original_rewards[k] + rate * dt
+                        integral = (
+                            dt
+                            if self.gamma == 1
+                            else -np.expm1(dt * np.log(self.gamma))
+                            / -np.log(self.gamma)
+                        )
+                        discounted += self.gamma**elapsed * (
+                            self.gamma**dt * impulse - rate * integral
+                        )
+                        elapsed += dt
+                    rewards.append(discounted)
                 requires_retasking.append(
                     original_infos[idx_start]["requires_retasking"]
                 )
@@ -215,12 +252,19 @@ class CondenseMultiStepActions(ConnectorV2):
                     idx_start = obs_idx[i - 1] + 1
                 d_ts.append(
                     sum(
-                        info["d_ts"]
-                        for info in original_infos[idx_start : idx_end + 1]
+                        info["d_ts"] for info in original_infos[idx_start : idx_end + 1]
                     )
                 )
             episode.infos.data = [
-                dict(d_ts=d_ts, requires_retasking=requires_retasking)
+                dict(
+                    d_ts=d_ts,
+                    requires_retasking=requires_retasking,
+                    **(
+                        {"bsk_action_start_gamma": self.gamma}
+                        if self.gamma is not None
+                        else {}
+                    ),
+                )
                 for d_ts, requires_retasking in zip(d_ts, requires_retasking)
             ]
             episode.infos.lookback = new_lookback
@@ -238,12 +282,18 @@ def compute_value_targets_time_discounted(
     step_durations,
     gamma: float,
     lambda_: float,
+    reward_time: str = "step_end",
+    lambda_time: str = "step",
 ):
     """Computes value function (vf) targets given vf predictions and rewards.
 
     Note that advantages can then easily be computed via the formula:
     advantages = targets - vf_predictions
     """
+    if reward_time not in {"step_start", "step_end"}:
+        raise ValueError("reward_time must be step_start or step_end.")
+    if lambda_time not in {"step", "second"}:
+        raise ValueError("lambda_time must be step or second.")
     # Shift step durations to associate with previous timestep
     # delta_t->t+1 comes with t+1's info, but should be used with t
     step_durations = np.concatenate((step_durations[1:], [step_durations[-1]]))
@@ -254,7 +304,16 @@ def compute_value_targets_time_discounted(
     flat_values = np.append(flat_values, 0.0)
     # intermediates = rewards + gamma * (1 - lambda_) * flat_values[1:]
     # intermediates = rewards + gamma**step_durations * (1 - lambda_) * flat_values[1:]
-    intermediates = gamma**step_durations * (rewards + (1 - lambda_) * flat_values[1:])
+    reward_discount = gamma**step_durations if reward_time == "step_end" else 1.0
+    trace = (
+        lambda_**step_durations
+        if lambda_time == "second"
+        else np.full_like(step_durations, lambda_, dtype=float)
+    )
+    intermediates = (
+        reward_discount * rewards
+        + gamma**step_durations * (1 - trace) * flat_values[1:]
+    )
     continues = 1.0 - terminateds
 
     Rs = []
@@ -262,7 +321,7 @@ def compute_value_targets_time_discounted(
     for t in reversed(range(intermediates.shape[0])):
         last = (
             intermediates[t]
-            + continues[t] * gamma ** step_durations[t] * lambda_ * last
+            + continues[t] * gamma ** step_durations[t] * trace[t] * last
         )
         # last = (
         #     intermediates[t]
@@ -316,7 +375,7 @@ class TimeDiscountedGAEPPOLearner(PPOLearner):
             rl_module=self.module,
             data={},
             episodes=episodes,
-            shared_data={},
+            shared_data={"bsk_bootstrap_added": True},
         )
 
         # print(batch_for_vf)
@@ -363,6 +422,10 @@ class TimeDiscountedGAEPPOLearner(PPOLearner):
                 ),
                 gamma=self.config.gamma,
                 lambda_=self.config.lambda_,
+                reward_time=self.config.learner_config_dict.get(
+                    "reward_time", "step_end"
+                ),
+                lambda_time=self.config.learner_config_dict.get("lambda_time", "step"),
             )
 
             # Remove the extra timesteps again from vf_preds and value targets. Now that
@@ -415,7 +478,18 @@ class TimeDiscountedGAEPPOLearner(PPOLearner):
 
 
 class TimeDiscountedGAEPPOTorchLearner(PPOTorchLearner, TimeDiscountedGAEPPOLearner):
-    pass
+    def compute_gradients(self, loss_per_module, **kwargs):
+        """Fail promptly on nonfinite updates and expose measured gradient evidence."""
+        import torch
+
+        gradients = super().compute_gradients(loss_per_module, **kwargs)
+        present = [g for g in gradients.values() if g is not None]
+        if not present or any(not torch.isfinite(g).all() for g in present):
+            raise FloatingPointError("Missing or nonfinite PPO gradients.")
+        norm = torch.sqrt(sum(g.square().sum() for g in present))
+        self.metrics.log_value(("__all_modules__", "gradient_l2"), norm, window=1)
+        self.metrics.log_value(("__all_modules__", "finite_gradients"), 1.0, window=1)
+        return gradients
 
 
 class TimeDiscountedGAEPPOTfLearner(PPOTfLearner, TimeDiscountedGAEPPOLearner):

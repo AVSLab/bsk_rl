@@ -1,26 +1,38 @@
-# Prospectus symbol-to-code mapping
+# Prospectus mapping: completion sharing and asynchronous retasking
 
-| Prospectus concept/symbol | Code location | Operational meaning |
+| Slide concept | Implementation | Meaning |
 |---|---|---|
-| Sensing-agent set $\mathcal{S}$ | `SpacecraftRole.SENSING_AGENT`; `env.sensing_satellites` | Spacecraft exposed to PettingZoo and the shared policy |
-| Passive RSO set $\mathcal{T}$ | `SpacecraftRole.PASSIVE_TARGET`; `env.passive_satellites` | Propagated spacecraft excluded from learning |
-| Local catalog $K_i$ | `sensor.data_store.catalog` | Sensor-$i$ acquisition, delivery, pending, and cooldown knowledge |
-| Physical store $B_i$ | Sensor Basilisk storage; `sensor.data_store.products` metadata | Image products physically owned by sensor $i$ |
-| Global team truth $L$ | `MultiSensorRSOTargetImageReward._team_accounting` | Private non-double-counted service and duplicate accounting |
-| Product $p$ | `ImageProductRecord` | Provenance-preserving image record |
-| Local observation $o_i$ | `SensorSatellite.observation_spec` | Own resources/environment and target-wise features available to sensor $i$ |
-| Candidate set $\mathcal{C}_i(t)$ | `PolarisScTargetProperties`; `ImageRSO` | Sensor-local eligible target candidates at a decision epoch |
-| Same-target coordination $c_{ij}$ | `known_teammate_intent` | Freshness-weighted fraction of known peers targeting candidate $j$ |
-| Shared policy $\pi_\theta$ | `GNNModule`; RLlib module `imager` | One target-wise attention module used by every sensing agent |
-| Variable action duration $\Delta t_i$ | `requires_retasking`, `NO_ACTION`, accumulated `d_ts` | Elapsed duration attributed to sensor $i$'s action |
-| Per-second discount $\gamma^{\Delta t_i}$ | `TimeDiscountedGAEPPOTorchLearner`, `gamma=0.999` | AMOS semi-Markov discount convention |
-| Image reward weight $1-\alpha$ | `MultiSensorRSOTargetImageReward.alpha` | Priority-weighted qualifying acquisition term |
-| Ground reward weight $\alpha$ | `MultiSensorRSOTargetImageReward.alpha` | Unique delivered-ground-value term |
-| Intent/status message $m_{i\rightarrow j}$ | `IntentStatusMessage`; `DirectedMessage` | Directional compact target metadata, never full datastore data |
-| Perfect metadata channel | `PerfectMetadataChannel` | Semantic-validation case without link impairment |
-| Broadcast action $a_i^b$ | `BroadcastIntent` | Finite-duration opportunity cost and sender enable |
-| LOS broadcast graph $G(t)$ | `IntentStatusCommunication._geometric_directional_pairs` | Earth-occlusion-only directional connectivity |
-| Centralized-information upper bound | `CentralizedInformationView` | Ideal read-only aggregation of sensor-local metadata |
-| Unique team value | `rewarder.team_summary["team_value"]` | Agent credits summed once, without replicated full-team reward |
-| Unique team acquisitions | `rewarder.team_summary["unique_acquisition_count"]` | Non-double-counted qualifying captures |
-| Duplicate attempt/success | `duplicate_attempt_count`; `successful_duplicate_count` | Separate acquisition-attempt and delivered-quality diagnostics |
+| Sensing-agent set | `SpacecraftRole.SENSING_AGENT`, `env.sensing_satellites` | Only these spacecraft appear in PettingZoo/RLlib |
+| Passive RSO targets | `PASSIVE_TARGET`, `BasicTargetDynamicsModel` | Actual propagating spacecraft; no target policy |
+| Local time-tagged catalog | `CompletionCatalog.records` and derived target summaries | Own completed facts plus received qualified completions |
+| Completion sharing | `CompletionCommunication` | Exposure identity/source/request/capture/completion/optional delivery timestamps; no intent |
+| Remove completed targets | `catalog.is_eligible`, `candidate_snapshot` | Suppress matching current request during service cooldown; pad with masked empty slots |
+| New request / revisit | `request_epoch_s`, `cooldown_s` | Old service does not satisfy a newer mission request or an expired revisit interval |
+| Next event `t[n+1]` | Existing Basilisk terminal events plus queued reception/heartbeat | Minimum enabled boundary, quantized to simulation ticks |
+| Decision set `I[n]` | `requires_retasking` and `retasking_mode` | Conflict: own end or known active-target completion; continuous: all surviving sensors |
+| Agents retaining previous action | `NO_ACTION`, or policy `ContinueTask` | Preserve FSW progress and original deadline |
+| Shielded candidate policy | `GNNModule` completion mask | Eligibility/continue mask; full safety shielding remains future work |
+| Own execution state | `ActiveTask`, `CompletionContext` | Mode, elapsed/remaining time, hold progress; never transmitted |
+| Observation `o_i` | `26+17K+12P` completion-v2 directed vector | Own resources/progress, local target facts and declared peer contact beacons |
+| Selected receiver | `TransmitCompletions`, `action_point_peer` | SimpleNav-driven slew and continuous valid hold; only the selected catalog receives the packet |
+| Shared policy | RLlib `imager` module | Parameter-sharing independent PPO, with local critic inputs |
+| Time discount | `discount_per_s ** elapsed_seconds` | 45,000-second reward half-life; action-start rewards and 6000-second GAE trace half-life |
+| Catalog/acquisition reward | Existing AMOS mixture in `CompletionImageReward` | Unique qualified capture and separate unique ground value |
+| Communication penalty | `communication_cost_per_s` | Optional cost on occupied communication task seconds (including slew), default zero |
+| Duplicate counts | Private `_TeamServiceAccounting` | Capture attempts and successful delivered duplicates logged separately |
+| Duplicate wasted time | `coordination_metrics().duplicate_sensor_time_s` | Work after another qualifying completion and before learning about it or ending |
+| Nonduplicate interruption time | `interrupted_nonduplicate_sensor_time_s` | Elapsed image-task duration on policy switch, excluding duplicate intervals |
+| Wasted-time fraction | `wasted_time_fraction` | Disjoint waste divided by sensing-agent count × elapsed episode time |
+| Total constellation reward | Sum of `cumulative_reward` over sensors | Avoids multiplying each unique priority by number of agents |
+| Physical spacecraft visualization | All spacecraft in Vizard `scList` | Rendering does not alter agent membership or dynamics |
+
+The three supplied slides are requirements/context for this implementation. Completion
+means a locally qualified finished exposure; ground delivery is tracked separately.
+Packet lifetime and knowledge lifetime are distinct. Full exposure history is retained
+for the bounded episode while actor summaries use the most recent relevant information
+*per fact*, not the last packet for the entire target.
+
+The next empirical question is whether completion sharing reduces the slide's duplicate
+and interrupted imaging time enough to offset communication time and policy reevaluation.
+The implementation provides the six matched experiment cells and event evidence needed
+to answer it, without adding intention sharing or private peer-state observations.

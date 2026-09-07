@@ -21,13 +21,13 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--information-case",
-        choices=("independent", "centralized_information", "intent_status"),
-        default="intent_status",
+        choices=("independent", "ideal_completion", "completion"),
+        default="completion",
     )
     parser.add_argument(
         "--los-broadcast",
         action="store_true",
-        help="Require finite LOS broadcasts for intent/status metadata.",
+        help="Require Earth-unoccluded geometry for finite completion broadcasts.",
     )
     parser.add_argument(
         "--output-dir",
@@ -43,13 +43,15 @@ def main() -> None:
         episode_duration_s=args.duration_s,
         reimage_cooldown_orbits=args.cooldown_orbits,
         information_case=args.information_case,
-        perfect_metadata_delivery=not args.los_broadcast,
+        link_mode="los" if args.los_broadcast else "ideal",
         seed=args.seed,
     )
     result = run_rollout(config)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     result_path = args.output_dir / "rollout.json"
-    result_path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    result_path.write_text(
+        json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    )
     print(result_path.resolve())
     for path in plot_evaluation(result, args.output_dir / "plots"):
         print(path.resolve())
