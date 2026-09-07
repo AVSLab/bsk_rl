@@ -98,6 +98,38 @@ def test_campaign_never_changes_the_checkpoint_config_schema():
     assert replace(independent, information_case="ideal_completion") == centralized
 
 
+def test_coverage_timeline_uses_first_qualified_completion_and_full_delivery():
+    from examples.multiagent_imaging.aggregate_baseline_monte_carlo import (
+        coverage_timeline,
+    )
+
+    records = [
+        dict(target_id=0, quality=1, completion_time=30, delivery_time=80),
+        dict(target_id=0, quality=1, completion_time=10, delivery_time=90),
+        dict(target_id=1, quality=0, completion_time=5, delivery_time=6),
+        dict(target_id=1, quality=1, completion_time=50, delivery_time=None),
+    ]
+    result = dict(
+        capture_records=records,
+        ground_delivery_records=records,
+        sim_time_s=100,
+        coverage=dict(
+            catalog_target_count=4,
+            capture_target_count=2,
+            ground_delivery_target_count=1,
+        ),
+    )
+    x, y = coverage_timeline(result)
+    np.testing.assert_array_equal(x, [0, 10, 50, 100])
+    np.testing.assert_array_equal(y, [0, 25, 50, 50])
+    x, y = coverage_timeline(result, ground=True)
+    np.testing.assert_array_equal(x, [0, 80, 100])
+    np.testing.assert_array_equal(y, [0, 25, 25])
+    result["coverage"]["ground_delivery_target_count"] = 2
+    with pytest.raises(ValueError, match="endpoint coverage"):
+        coverage_timeline(result, ground=True)
+
+
 def test_paired_aggregation_rejects_unmatched_initial_states():
     from examples.multiagent_imaging.aggregate_baseline_monte_carlo import (
         validate_results,

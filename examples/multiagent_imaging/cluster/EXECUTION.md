@@ -18,12 +18,19 @@ not modified. No source archive was uploaded.
 |---|---|---|
 | 32173090 | FAILED, exit 1:0, elapsed 1 s, batch MaxRSS 3008 K | Stopped before environment creation because `BSK_PROJECT_ROOT` was absent inside Slurm. |
 | 32173134 | FAILED, exit 1:0, elapsed 19 s, batch MaxRSS 880844 K | Explicit exports worked. Torch's CPU index lacked the `flit_core` backend needed by the downloaded `typing_extensions` source distribution. |
+| 32173261 | FAILED during dependency resolution | CPU Torch installation succeeded. Ray's optional `rllib` extra required Gymnasium 0.28.1, conflicting with the tested 0.29.1 pin. |
 
 The build correction downloads only the CPU Torch wheel from its dedicated index
 (`--no-deps`), then resolves all runtime dependencies together from PyPI under the
 existing pins. This keeps the selected CPU learner and avoids asking the Torch
 wheel index to serve unrelated build tools. The failed new environment will be
 renamed with its job ID before a fresh build; the AMOS environment remains intact.
+
+The second dependency correction installs `ray==2.35.0` with explicit RLlib
+dependency pins from the saved working preflight environment, including
+Gymnasium 0.29.1. It avoids requesting the incompatible optional `rllib` extra.
+The same Ray implementation is installed; runtime and PPO validation still must
+pass on Linux. No tested primary package version or mission setting is changed.
 
 The interactive shell reports `sbatch is aliased to sbatch --export=NONE`.
 The retry explicitly supplied `--export=ALL` and the four reviewed path variables.

@@ -300,39 +300,223 @@ def aggregate(manifest, results, output_dir, allow_partial=False):
     return summary
 
 
+def coverage_timeline(result, *, ground=False):
+    """Count each qualified target once, when its physical product is available.
+
+    Exposure completion (after the hold) makes a qualified capture available;
+    full delivery makes it available on the ground. Catalog receipt times and
+    repeated services must not move either physical coverage curve.
+    """
+    records = result["ground_delivery_records" if ground else "capture_records"]
+    timestamp = "delivery_time" if ground else "completion_time"
+    first = {}
+    for record in records:
+        time = record[timestamp]
+        if record["quality"] >= 0.5 and time is not None:
+            target = record["target_id"]
+            first[target] = min(first.get(target, float("inf")), float(time))
+    expected = result["coverage"][
+        "ground_delivery_target_count" if ground else "capture_target_count"
+    ]
+    if len(first) != expected:
+        raise ValueError("Physical event records do not reproduce endpoint coverage.")
+    times = np.asarray([0.0, *sorted(first.values()), result["sim_time_s"]])
+    if not np.all(np.isfinite(times)) or np.any(np.diff(times) < 0):
+        raise ValueError("Coverage timestamps must lie within the simulated episode.")
+    values = np.asarray([0, *range(1, len(first) + 1), len(first)], dtype=float)
+    return times, 100 * values / result["coverage"]["catalog_target_count"]
+
+
 def plot_diagnostics(results, output_dir):
+    """Export paired coverage points and individual-seed physical step curves.
+
+    Chart contract: compare information cases at matched initial-condition seeds,
+    on a fixed 0–100% mission-catalog denominator. Endpoint panels show every
+    observed seed, paired connectors, and means; the subtitle discloses missing
+    campaign cells. Small preflights additionally show step curves by seed using
+    recorded completion/delivery times. Blue/gold plus solid/dashed lines identify
+    the cases without relying on color alone. PNG/PDF are the research artifacts.
+    """
     import matplotlib
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
+    if not results:
+        raise ValueError("No baseline episodes are available to plot.")
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    cases = ("independent", "centralized_full_state")
+    labels = {"independent": "Independent", "centralized_full_state": "Centralized"}
+    present = [
+        (case, environment)
+        for environment in ("leo", "mixed")
+        for case in cases
+        if any(
+            r["case"] == case and r["target_environment"] == environment
+            for r in results
+        )
+    ]
+    first = results[0]
+    config = first["baseline_config"]
+    context = (
+        f"2 sensors · {config['n_targets']} passive targets · "
+        f"{config['episode_duration_s']:,.0f} s episodes · {len(results)}/200 episodes"
+    )
+    fig, axes = plt.subplots(1, 2, figsize=(11, 5.3), sharey=True)
+    fig.suptitle("Baseline coverage comparison", x=0.08, ha="left", fontsize=16)
+    fig.text(0.08, 0.91, context, fontsize=10, color="#444444")
     for ax, metric, title in zip(
         axes,
         ("capture_coverage_fraction", "ground_delivery_coverage_fraction"),
         ("Qualified capture", "Ground-confirmed delivery"),
     ):
-        for index, (case, environment) in enumerate(CELLS):
+        for index, (case, environment) in enumerate(present):
             values = [
                 100 * r["coverage"][metric]
                 for r in results
                 if r["case"] == case and r["target_environment"] == environment
             ]
             if values:
-                ax.scatter(np.full(len(values), index), values, alpha=0.4, s=12)
-                ax.scatter([index], [np.mean(values)], marker="_", s=160, color="black")
+                ax.scatter(
+                    np.full(len(values), index),
+                    values,
+                    alpha=0.6,
+                    s=32,
+                    facecolors="none",
+                    edgecolors="#3573B9",
+                    zorder=3,
+                )
+                ax.scatter(
+                    [index],
+                    [np.mean(values)],
+                    marker="_",
+                    s=200,
+                    color="#222222",
+                    zorder=4,
+                )
+                ax.annotate(
+                    f"{np.mean(values):.1f}%",
+                    (index, np.mean(values)),
+                    xytext=(0, 9),
+                    textcoords="offset points",
+                    ha="center",
+                    fontsize=9,
+                )
+        # Thin connectors represent paired seeds, not trends or confidence bounds.
+        for environment in ("leo", "mixed"):
+            if all((case, environment) in present for case in cases):
+                x = [present.index((case, environment)) for case in cases]
+                indexed = {
+                    (r["case"], r["seed"]): r
+                    for r in results
+                    if r["target_environment"] == environment
+                }
+                for seed in sorted({r["seed"] for r in indexed.values()}):
+                    if all((case, seed) in indexed for case in cases):
+                        ax.plot(
+                            x,
+                            [
+                                100 * indexed[case, seed]["coverage"][metric]
+                                for case in cases
+                            ],
+                            color="#AAAAAA",
+                            lw=0.7,
+                            zorder=1,
+                        )
         ax.set_xticks(
-            range(4), ["Indep.\nLEO", "Indep.\nmixed", "Central\nLEO", "Central\nmixed"]
+            range(len(present)),
+            [
+                f"{labels[case]}\n{environment.upper()} · n="
+                f"{sum(r['case'] == case and r['target_environment'] == environment for r in results)}"
+                for case, environment in present
+            ],
         )
-        ax.set_ylim(0, 102)
-        ax.axhline(100, color="gray", linewidth=0.6)
+        ax.set_xlim(-0.5, len(present) - 0.5)
+        ax.set_ylim(0, 109)
+        ax.set_yticks(range(0, 101, 20))
+        ax.axhline(100, color="#666666", linewidth=0.7, linestyle=":")
         ax.set_title(title)
         ax.grid(axis="y", alpha=0.2)
+        ax.spines[["top", "right"]].set_visible(False)
     axes[0].set_ylabel("Distinct targets / mission catalog (%)")
-    fig.tight_layout()
-    fig.savefig(Path(output_dir) / "coverage.png", dpi=160)
-    fig.savefig(Path(output_dir) / "coverage.pdf")
+    note = "Circles: individual seeds; bars: means; connectors: matched seeds."
+    if len(results) < 200:
+        note += " Partial campaign; missing episodes are not zeros."
+    fig.text(0.08, 0.035, note, fontsize=9, color="#444444")
+    fig.tight_layout(rect=(0, 0.07, 1, 0.87))
+    fig.savefig(output_dir / "coverage.png", dpi=180)
+    fig.savefig(output_dir / "coverage.pdf")
     plt.close(fig)
+
+    # Keep individual time histories readable in the bounded preflight. The full
+    # 50-seed campaign uses the endpoint distribution and paired summary tables.
+    for environment in ("leo", "mixed"):
+        seeds = sorted(
+            {r["seed"] for r in results if r["target_environment"] == environment}
+        )
+        if len(seeds) > 5:
+            continue
+        for seed in seeds:
+            pair = [
+                r
+                for r in results
+                if r["target_environment"] == environment and r["seed"] == seed
+            ]
+            fig, axes = plt.subplots(1, 2, figsize=(11, 5.1), sharey=True)
+            fig.suptitle(
+                f"Baseline coverage over time — {environment.upper()}, seed {seed}",
+                x=0.08,
+                ha="left",
+                fontsize=15,
+            )
+            fig.text(
+                0.08,
+                0.90,
+                context + " · single-seed diagnostic",
+                fontsize=10,
+                color="#444444",
+            )
+            for ax, ground, title in zip(
+                axes, (False, True), ("Qualified capture", "Ground-confirmed delivery")
+            ):
+                for result in sorted(pair, key=lambda r: cases.index(r["case"])):
+                    independent = result["case"] == "independent"
+                    x, y = coverage_timeline(result, ground=ground)
+                    ax.step(
+                        x / 3600,
+                        y,
+                        where="post",
+                        color="#3573B9" if independent else "#A87819",
+                        linestyle="-" if independent else "--",
+                        lw=1.8,
+                        label=f"{labels[result['case']]} ({y[-1]:.0f}%)",
+                    )
+                ax.set(
+                    title=title,
+                    xlabel="Elapsed mission time (hours)",
+                    xlim=(0, config["episode_duration_s"] / 3600),
+                    ylim=(0, 105),
+                )
+                ax.axhline(100, color="#666666", linestyle=":", lw=0.7)
+                ax.grid(axis="y", alpha=0.2)
+                ax.spines[["top", "right"]].set_visible(False)
+                ax.legend(loc="lower right", frameon=False, fontsize=9)
+            axes[0].set_ylabel("Distinct targets / mission catalog (%)")
+            fig.text(
+                0.08,
+                0.03,
+                "First qualified exposure completion / full physical ground delivery. Repeats do not add coverage.",
+                fontsize=9,
+                color="#444444",
+            )
+            fig.tight_layout(rect=(0, 0.065, 1, 0.87))
+            for extension in ("png", "pdf"):
+                fig.savefig(
+                    output_dir / f"coverage_time_{environment}_seed{seed}.{extension}",
+                    dpi=180,
+                )
+            plt.close(fig)
 
 
 def main():
