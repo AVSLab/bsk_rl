@@ -105,6 +105,20 @@ export PYTHONPATH="$BSK_PROJECT_ROOT/src:$BSK_PROJECT_ROOT"
 
 ## Baselines: exactly 200 episodes
 
+Before concurrent simulations, fetch just the five mission support-data files
+through Basilisk's data resolver and verify their hashes against the successful
+desktop preflight. This is file preparation, safe on the login node. Use a separate
+cache so completion runs do not write to the AMOS support-data cache:
+
+```bash
+export BSK_SUPPORT_DATA_CACHE="$BASILISK_SOURCE_ROOT/.support-data-cache"
+"$BSK_RL_PYTHON" examples/multiagent_imaging/cluster/prepare_support_data.py \
+  --output results/multiagent_imaging/support-data.json
+```
+
+Keep that cache variable exported for all baseline and PPO submissions. Do not
+launch after a missing file or hash mismatch.
+
 The [baseline runbook](../BASELINE_MONTE_CARLO.md) defines information, controllers,
 metrics, and aggregation. All four cells use seeds 0–49, two sensors, 100 targets,
 ten candidates, 45,000 seconds, and the **existing cooldown unchanged**: two median
