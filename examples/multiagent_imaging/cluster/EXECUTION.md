@@ -24,6 +24,7 @@ not modified. No source archive was uploaded.
 | 32208040 | FAILED, exit 1:0, elapsed 5:03, batch MaxRSS 6265936 K | GCC 14 configured and compiled Basilisk sources, but generated `protoc` loaded the system GCC 8 `libstdc++`, missing `GLIBCXX_3.4.32`. |
 | 32208367 | Failed during native compilation at 67% | Compiler/runtime pairing passed. Eight simultaneous GCC 14 SWIG-wrapper compilations exceeded the 32-GiB allocation and two `cc1plus` processes were killed. |
 | 32208594 | Failed during native compilation at 65% | Two simultaneous large wrapper compilations still exceeded 32 GiB. |
+| 32208739 | OUT_OF_MEMORY, exit 0:125, elapsed 3:02, batch MaxRSS 33551916 K | `CMAKE_BUILD_PARALLEL_LEVEL=1` was insufficient because Conan explicitly appended `-j128`. Slurm detected 26 OOM-kill events. |
 
 The build correction downloads only the CPU Torch wheel from its dedicated index
 (`--no-deps`), then resolves all runtime dependencies together from PyPI under the
@@ -49,6 +50,8 @@ The build and both simulation launchers also prepend that toolchain's `lib64` an
 modules with the C++ runtime that built them.
 Native build parallelism is reduced to one inside the same 32-GiB allocation;
 the eight requested CPUs remain the reviewed resource shape for Ray validation.
+The script sets Conan's documented `tools.build:jobs=1` configuration as well,
+so its explicit build-system flag cannot override the memory limit.
 
 The interactive shell reports `sbatch is aliased to sbatch --export=NONE`.
 The retry explicitly supplied `--export=ALL` and the four reviewed path variables.

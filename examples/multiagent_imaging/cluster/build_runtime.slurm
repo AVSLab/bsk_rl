@@ -88,6 +88,17 @@ path = pathlib.Path(os.environ['BSK_PROJECT_ROOT']) / 'results/multiagent_imagin
 path.write_text(json.dumps(record, indent=2, sort_keys=True) + '\n')
 PY
 fi
+# Conan otherwise reads the host's 128 CPUs and appends `-j128`, overriding
+# CMAKE_BUILD_PARALLEL_LEVEL. Set its documented build-jobs configuration too.
+"$BSK_RL_PYTHON" - <<'PY'
+import os, pathlib
+key = 'tools.build:jobs'
+conf = pathlib.Path(os.environ['CONAN_HOME']) / 'global.conf'
+lines = conf.read_text().splitlines() if conf.exists() else []
+value = os.environ['CMAKE_BUILD_PARALLEL_LEVEL']
+conf.write_text('\n'.join([line for line in lines if not line.startswith(key + '=')]
+                         + [key + '=' + value]) + '\n')
+PY
 cd "$BASILISK_SOURCE_ROOT"
 git rev-parse HEAD > "$BSK_BUILD_RECORD/basilisk-source.txt"
 # Install only the CPU wheel from the Torch index. Resolve its dependencies in
