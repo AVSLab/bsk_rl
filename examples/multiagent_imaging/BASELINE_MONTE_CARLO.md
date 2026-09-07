@@ -138,8 +138,10 @@ they do not claim measured cluster performance. The existing learned-policy
 preflight uses a different eight-CPU/32-GiB allocation.
 
 Generate the manifest **after the final source is deployed**, from its Git checkout.
-It hashes tracked/untracked relevant sources, exact configuration, versions and
-all 200 task mappings; a task rejects subsequent source changes. Put outputs in
+It hashes tracked/untracked executable/configuration inputs, exact configuration,
+versions and all 200 task mappings; a task rejects subsequent input changes.
+Documentation-only edits do not invalidate the campaign; each result separately
+records its full Git HEAD. Put outputs in
 `results/`, not inside source folders. The project and Python paths below are deployment destinations, not an assertion that they already exist:
 
 ```bash
@@ -160,7 +162,7 @@ After explicit authorization, submit a first LEO information pair before the ful
 campaign, with the account/partition from the actual cluster allocation:
 
 ```bash
-sbatch --account=ucb550_asc2 --partition=acpu --qos=cpu-normal \
+sbatch --export=ALL --account=ucb550_asc2 --partition=acpu --qos=cpu-normal \
   --array=0,100%2 examples/multiagent_imaging/cluster/baseline_mc.slurm
 ```
 
@@ -168,7 +170,7 @@ Once these have completed and been checked, submit the **remaining 198 IDs** so
 the campaign still has exactly 200 episodes:
 
 ```bash
-sbatch --account=ucb550_asc2 --partition=acpu --qos=cpu-normal \
+sbatch --export=ALL --account=ucb550_asc2 --partition=acpu --qos=cpu-normal \
   --array=1-99,101-199%8 examples/multiagent_imaging/cluster/baseline_mc.slurm
 ```
 

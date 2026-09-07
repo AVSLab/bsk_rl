@@ -330,8 +330,9 @@ def source_record():
     def git(*args):
         return subprocess.check_output(["git", *args], cwd=root, text=True).strip()
 
-    # Include hashes of tracked and untracked Python/config sources: HEAD alone
-    # does not identify the readiness work while that work remains uncommitted.
+    # Include tracked and untracked executable/configuration inputs. Documentation
+    # updates (including this campaign's execution report) must not invalidate the
+    # remaining paired tasks. HEAD is recorded separately for the full Git history.
     paths = (
         subprocess.check_output(
             [
@@ -353,7 +354,10 @@ def source_record():
     hashes = {
         p: hashlib.sha256((root / p).read_bytes()).hexdigest()
         for p in sorted(set(paths))
-        if p and (root / p).is_file()
+        if p
+        and (root / p).is_file()
+        and Path(p).suffix
+        in {".py", ".toml", ".json", ".slurm", ".sh", ".txt", ".yaml", ".yml"}
     }
     import Basilisk
     import importlib.metadata

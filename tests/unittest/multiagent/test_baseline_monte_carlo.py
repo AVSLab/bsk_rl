@@ -98,6 +98,42 @@ def test_campaign_never_changes_the_checkpoint_config_schema():
     assert replace(independent, information_case="ideal_completion") == centralized
 
 
+def test_source_fingerprint_tracks_inputs_but_allows_execution_report_updates(
+    tmp_path, monkeypatch
+):
+    import subprocess
+    from examples.multiagent_imaging import baseline_monte_carlo as baseline
+
+    example = tmp_path / "examples/multiagent_imaging"
+    example.mkdir(parents=True)
+    source = example / "baseline_monte_carlo.py"
+    source.write_text("physics = 1\n")
+    report = example / "EXECUTION.md"
+    report.write_text("Build pending.\n")
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(["git", "add", "."], cwd=tmp_path, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.invalid",
+            "commit",
+            "-qm",
+            "Fixture",
+        ],
+        cwd=tmp_path,
+        check=True,
+    )
+    monkeypatch.setattr(baseline, "__file__", str(source))
+    original = baseline.source_record()["source_fingerprint"]
+    report.write_text("Build passed.\n")
+    assert baseline.source_record()["source_fingerprint"] == original
+    source.write_text("physics = 2\n")
+    assert baseline.source_record()["source_fingerprint"] != original
+
+
 def test_coverage_timeline_uses_first_qualified_completion_and_full_delivery():
     from examples.multiagent_imaging.aggregate_baseline_monte_carlo import (
         coverage_timeline,
