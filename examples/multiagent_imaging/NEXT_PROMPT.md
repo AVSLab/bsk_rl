@@ -1,11 +1,40 @@
-# Next task prompt — authorize only setup and validation
+# Next task prompt — authorize the bounded expansion
 
-Continue on `multi-agent-space-imaging-2026`. Read `examples/multiagent_imaging/cluster/README.md`, `BASELINE_MONTE_CARLO.md`, and the prepared release/source records first.
+Continue on `multi-agent-space-imaging-2026` from commit
+`79226a64ee7f2b523d4de88ba30ea9ace5798d47`. Read
+`examples/multiagent_imaging/cluster/EXECUTION.md`, `cluster/README.md`,
+`BASELINE_MONTE_CARLO.md`, the passed one-worker gate at
+`results/multiagent_imaging/cluster-one-worker-20260908-006b71c/validation_gate.json`,
+and the two completed baseline episodes first. Preserve the separate completion-v2
+checkout/environment and do not modify AMOS.
 
-Deploy the reviewed release into `/projects/dahu1128/bsk_rl-multi-agent-space-imaging-2026`, preserving the existing AMOS checkout and environment. Use the separate `/projects/dahu1128/.venv-completion-v2` environment and the recorded Basilisk source commit. I authorize submission of the prepared `build_runtime.slurm` job on account `ucb550_asc2`, partition `acpu`, QOS `cpu-normal`. Stop and diagnose if the build or runtime audit fails.
+I authorize submission of the remaining baseline array tasks 1-99 and 101-199 from
+the existing manifest in
+`results/multiagent_imaging/baseline-mc-20260908-fd8ebd3/manifest.json`, with at most
+eight concurrent tasks. Do not regenerate the manifest or rerun tasks 0 and 100.
+Keep two sensors, 100 passive Basilisk/Vizard RSO spacecraft, ten candidates,
+45,000-second complete episodes, and the existing 11,960.807123947805-second
+cooldown for both LEO and mixed catalogs. After all 200 episodes exist, validate all
+matched initial-condition pairs and aggregate capture and ground-delivery coverage,
+duplicates, wasted sensor-seconds, service counts, resource behavior, runtimes and
+paired 95% bootstrap intervals. Generate the final baseline coverage and paired-
+difference plots.
 
-Once the runtime passes, generate the baseline manifest from the deployed sources. I authorize only the first two baseline array tasks, IDs 0 and 100: independent and centralized LEO, seed zero. Keep two sensors, 100 passive RSO spacecraft, ten candidates, 45,000-second episodes, and the existing implemented cooldown unchanged. Verify matched initial states, no radio actions, physical capture/ground delivery, resources, coverage denominators and saved artifacts.
+I also authorize the prepared four-worker directed finite-completion pilot after
+revalidating the saved one-worker gate against the current runtime. Run conflict and
+continuous retasking only, training seed zero, eight fresh PPO updates per mode,
+complete episodes, CPU learner, one Torch/BLAS thread per process, and the existing
+eight-CPU/32-GiB allocation with 1800-second rollout timeouts. Preserve shared
+target-set attention, 45,000-second reward half-life, 6000-second GAE trace half-life,
+directed SimpleNav/LOS peer pointing, completion-only durable time-tagged catalogs,
+receiver-local eligibility, 10-second minimum hold, 64-kbit/s metadata and
+300-second attempt deadline. Do not add peer intent or private peer state.
 
-I also authorize the one-worker directed-learning validation stage in `pilot.slurm`: conflict and continuous retasking, one initial and one resumed PPO update per mode, matched seed zero, complete episodes, eight CPUs/32 GiB, CPU learner, one thread/process, and 1800-second rollout timeout. Preserve the completion-v2 formulation, half-lives and communication settings. Verify actual restored weights, Adam/seed resume, finite losses/gradients, parameter changes, physical durations, resource/ownership behavior, and matched held-out evaluation.
-
-Report actual cluster runtime, memory, batch sizes, outcomes, limitations and exact commands for expansion. Stop before submitting the remaining 198 Monte Carlo tasks or four-worker learning. Do not start a broad six-cell or multi-seed learning study.
+Evaluate each final restored checkpoint on held-out seeds 10000-10004 against the
+matched closest-angle heuristic. Report actual batch sizes and complete-episode
+counts, decisions, finite losses/gradients, parameter changes, resume/restore checks,
+rewards, services, duplicates, interruption waste, radio occupancy, packet outcomes,
+resource/ownership checks, wall time and peak memory. Save reproducible configs,
+source/dependency records, checkpoints, tables and learning curves. Recommend whether
+the evidence justifies a larger multi-seed learned-policy study. Do not start the broad
+six-cell study or any additional training seeds.

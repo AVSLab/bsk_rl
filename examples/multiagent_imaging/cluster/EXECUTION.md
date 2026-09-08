@@ -130,15 +130,17 @@ Every update exceeded the requested 64-step minimum through complete episodes. T
 changed-element counts were respectively 67,664, 71,645, 72,071 and 74,197. Physical
 task histories covered both sensors for the full horizon, product metadata never
 changed physical storage ownership, and event-boundary resource histories remained
-finite.
+finite. All sensors stayed alive. Across the four episodes the minimum sampled battery
+fraction was 0.86279, maximum sampled storage fraction was 1.0, and maximum absolute
+wheel-speed fraction was about 0.1388.
 
 Directed communication was exercised in every sampled episode. Conflict updates
-recorded 29 and 19 packet-delivery records, 58 and 38 pointing/transmission records, and
-290 and 190 radio-seconds. Continuous updates recorded 29 and 28 packet-delivery records,
-92 and 60 records, and 310 and 293 radio-seconds. The distinction between record
-count and radio time reflects attempts that do not enter a completed 10-second hold;
-the saved transmission records retain their outcomes, receiver, payload bytes and
-physical start/end times.
+recorded 29 and 19 accepted packets, 58 and 38 pointing/transmission records, and
+290 and 190 radio-seconds. Each conflict episode paired every `hold_complete` outcome
+with one outcome-less start record. Continuous updates recorded 29 and 28 accepted
+packets, 92 and 60 records, and 310 and 293 radio-seconds. Their outcome counts were
+29/28 `hold_complete`, 17/2 `policy_switch`, and 46/30 outcome-less start records.
+The saved records retain receiver, payload bytes and physical start/end times.
 
 The final restored checkpoints were actually called for every policy decision on
 held-out seed 10000 and compared with the closest-angle heuristic under identical
