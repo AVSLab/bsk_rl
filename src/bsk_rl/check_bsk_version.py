@@ -25,15 +25,25 @@ def check_bsk_version():
         "r",
     )
     bsk_req = parse_version(f.read().strip())
-    try:
-        bsk_version = parse_version(version("Basilisk"))
-        if not bsk_version >= bsk_req:
-            warn(
-                f"Basilisk>={bsk_req} is required for full functionality. "
-                f"Currently installed: {bsk_version}",
-            )
-    except PackageNotFoundError:
+    # Basilisk's current wheel metadata is named ``bsk`` while released legacy
+    # wheels used ``Basilisk``.  The import package remains ``Basilisk`` in both
+    # cases.  Accept either distribution name so a source-built current runtime
+    # is not rejected after its native modules have loaded successfully.
+    bsk_version = None
+    for distribution_name in ("bsk", "Basilisk"):
+        try:
+            bsk_version = parse_version(version(distribution_name))
+            break
+        except PackageNotFoundError:
+            continue
+    if bsk_version is None:
         raise ImportError(
-            "The 'Basilisk' distribution was not found. Install from "
+            "Neither the 'bsk' nor legacy 'Basilisk' distribution was found. "
+            "Install from "
             "http://hanspeterschaub.info/basilisk/."
+        )
+    if bsk_version < bsk_req:
+        warn(
+            f"Basilisk>={bsk_req} is required for full functionality. "
+            f"Currently installed: {bsk_version}",
         )
