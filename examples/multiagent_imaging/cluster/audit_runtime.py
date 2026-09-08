@@ -15,6 +15,40 @@ BASILISK_COMMIT = "8fcb54b2fb28388efb711786630501944fddec28"
 ROOT = Path(__file__).resolve().parents[3]
 
 
+def _normalized_distribution_name(name):
+    """Use the same separator-insensitive identity as Python package metadata."""
+    return name.lower().replace("-", "_").replace(".", "_")
+
+
+def distribution_record(name):
+    """Resolve an installed distribution without accepting Ray's private vendors.
+
+    Importing RLlib prepends ``ray/thirdparty_files`` to ``sys.path``.  That
+    directory includes compatibility metadata for packages such as psutil, but
+    it is not the environment installation imported by this pilot.  Calling
+    ``importlib.metadata.version`` after the RLlib import therefore reports the
+    vendor's version.  Record every match and select the first non-vendored
+    distribution so pre-import and post-import audits have the same meaning.
+    """
+    expected_name = _normalized_distribution_name(name)
+    matches = []
+    for distribution in importlib.metadata.distributions():
+        found_name = distribution.metadata.get("Name", "")
+        if _normalized_distribution_name(found_name) != expected_name:
+            continue
+        metadata_path = str(getattr(distribution, "_path", ""))
+        normalized_path = metadata_path.replace("\\", "/")
+        matches.append(
+            {
+                "version": distribution.version,
+                "metadata_path": metadata_path,
+                "ray_vendored": "/ray/thirdparty_files/" in normalized_path,
+            }
+        )
+    selected = next((match for match in matches if not match["ray_vendored"]), None)
+    return {"selected": selected, "matches": matches}
+
+
 def command(*args, cwd=None):
     result = subprocess.run(args, cwd=cwd, text=True, capture_output=True)
     return {
@@ -33,11 +67,17 @@ def audit(*, allocation=False):
             continue
         name, expected = line.split("==")
         name = name.split("[")[0]
-        try:
-            actual = importlib.metadata.version(name)
-        except importlib.metadata.PackageNotFoundError:
-            actual = None
-        packages[name] = {"expected": expected, "actual": actual}
+        resolution = distribution_record(name)
+        selected = resolution["selected"]
+        actual = selected["version"] if selected else None
+        packages[name] = {
+            "expected": expected,
+            "actual": actual,
+            "metadata_path": selected["metadata_path"] if selected else None,
+            "shadowed": [
+                match for match in resolution["matches"] if match is not selected
+            ],
+        }
         # A CPU wheel may carry a local +cpu suffix with the same pinned release.
         if actual is None or actual.split("+")[0] != expected:
             errors.append(f"{name}: expected {expected}, found {actual}")
