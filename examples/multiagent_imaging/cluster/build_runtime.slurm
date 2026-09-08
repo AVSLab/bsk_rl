@@ -39,7 +39,15 @@ if [[ -e "$BSK_ENV_DIRECTORY" ]]; then
   else
     BSK_PREVIOUS_LOCK="$BSK_PREVIOUS_RECORD/build-tools.lock.txt"
   fi
-  diff -u "$BSK_PREVIOUS_LOCK" "$BSK_BUILD_RECORD/resume-before.lock.txt"
+  # pip freeze rewrites an editable bsk_rl line when this source checkout moves
+  # to the reviewed retry commit.  Compare the complete third-party lock while
+  # leaving project identity to the Git/source audit below.
+  grep -viE 'bsk[-_]rl' "$BSK_PREVIOUS_LOCK" \
+    > "$BSK_BUILD_RECORD/resume-expected-third-party.lock.txt"
+  grep -viE 'bsk[-_]rl' "$BSK_BUILD_RECORD/resume-before.lock.txt" \
+    > "$BSK_BUILD_RECORD/resume-actual-third-party.lock.txt"
+  diff -u "$BSK_BUILD_RECORD/resume-expected-third-party.lock.txt" \
+    "$BSK_BUILD_RECORD/resume-actual-third-party.lock.txt"
   basename "$BSK_PREVIOUS_LOCK" > "$BSK_BUILD_RECORD/resume-lock-source.txt"
   printf '%s\n' "$BSK_RESUME_BUILD_FROM" > "$BSK_BUILD_RECORD/resumed-build-job.txt"
 else
