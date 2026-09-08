@@ -1,7 +1,7 @@
 # Next task prompt — authorize the bounded expansion
 
-Continue on `multi-agent-space-imaging-2026` from commit
-`79226a64ee7f2b523d4de88ba30ea9ace5798d47`. Read
+Continue from the current remote HEAD of `multi-agent-space-imaging-2026`, which
+includes evidence commit `fd3c45278d37281abd0afa94e8cb9bbbd267c0f8`. Read
 `examples/multiagent_imaging/cluster/EXECUTION.md`, `cluster/README.md`,
 `BASELINE_MONTE_CARLO.md`, the passed one-worker gate at
 `results/multiagent_imaging/cluster-one-worker-20260908-006b71c/validation_gate.json`,

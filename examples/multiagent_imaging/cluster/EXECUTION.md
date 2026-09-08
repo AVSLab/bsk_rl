@@ -1,10 +1,12 @@
 # Authorized Alpine deployment and validation
 
-Code deployment uses Git, as requested. The desktop pushed
-`006b71c8d0c938d7fcaed250769f9de85559f17e` to
+Code deployment uses Git, as requested. The executable source used for validation was
+`006b71c8d0c938d7fcaed250769f9de85559f17e`, pushed to
 `AVSLab/bsk_rl:multi-agent-space-imaging-2026`; the separate cluster checkout at
 `/projects/dahu1128/bsk_rl-multi-agent-space-imaging-2026` fetched and verified that
-exact HEAD through the authenticated Termius session on `login-ci3`.
+exact source through the authenticated Termius session on `login-ci3`. After the jobs,
+the evidence-only runbook commits were also pushed and fast-forwarded into the cluster
+checkout. No executable source changed after the recorded validation commit.
 
 Basilisk was fetched into `/projects/dahu1128/basilisk-completion-v2` at clean
 detached commit `8fcb54b2fb28388efb711786630501944fddec28`. The new environment path
