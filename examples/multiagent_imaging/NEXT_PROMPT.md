@@ -1,40 +1,52 @@
-# Next task prompt — authorize the bounded expansion
+# Next task prompt — three-sensor baseline preflight
 
-Continue from the current remote HEAD of `multi-agent-space-imaging-2026`, which
-includes evidence commit `fd3c45278d37281abd0afa94e8cb9bbbd267c0f8`. Read
-`examples/multiagent_imaging/cluster/EXECUTION.md`, `cluster/README.md`,
-`BASELINE_MONTE_CARLO.md`, the passed one-worker gate at
-`results/multiagent_imaging/cluster-one-worker-20260908-006b71c/validation_gate.json`,
-and the two completed baseline episodes first. Preserve the separate completion-v2
-checkout/environment and do not modify AMOS.
+Continue from the current remote HEAD of `multi-agent-space-imaging-2026`. Read
+`examples/multiagent_imaging/BASELINE_MONTE_CARLO.md`, `cluster/README.md`, and
+`cluster/EXECUTION.md` first. Pull the reviewed branch into the existing separate
+cluster checkout at
+`/projects/dahu1128/bsk_rl-multi-agent-space-imaging-2026`; use
+`/projects/dahu1128/.venv-completion-v2/bin/python` and the already built separate
+Basilisk runtime. Preserve the AMOS checkout and environment unchanged.
 
-I authorize submission of the remaining baseline array tasks 1-99 and 101-199 from
-the existing manifest in
-`results/multiagent_imaging/baseline-mc-20260908-fd8ebd3/manifest.json`, with at most
-eight concurrent tasks. Do not regenerate the manifest or rerun tasks 0 and 100.
-Keep two sensors, 100 passive Basilisk/Vizard RSO spacecraft, ten candidates,
-45,000-second complete episodes, and the existing 11,960.807123947805-second
-cooldown for both LEO and mixed catalogs. After all 200 episodes exist, validate all
-matched initial-condition pairs and aggregate capture and ground-delivery coverage,
-duplicates, wasted sensor-seconds, service counts, resource behavior, runtimes and
-paired 95% bootstrap intervals. Generate the final baseline coverage and paired-
-difference plots.
+I authorize preparation and submission of only the new three-sensor matched LEO
+seed-zero baseline pair, array tasks 0 and 100. Do not submit the other 198 tasks,
+four-worker learning, or the six-cell learned-policy study.
 
-I also authorize the prepared four-worker directed finite-completion pilot after
-revalidating the saved one-worker gate against the current runtime. Run conflict and
-continuous retasking only, training seed zero, eight fresh PPO updates per mode,
-complete episodes, CPU learner, one Torch/BLAS thread per process, and the existing
-eight-CPU/32-GiB allocation with 1800-second rollout timeouts. Preserve shared
-target-set attention, 45,000-second reward half-life, 6000-second GAE trace half-life,
-directed SimpleNav/LOS peer pointing, completion-only durable time-tagged catalogs,
-receiver-local eligibility, 10-second minimum hold, 64-kbit/s metadata and
-300-second attempt deadline. Do not add peer intent or private peer state.
+Use campaign schema `three-sensor-full-state-baselines-v2`: three sensing agents,
+100 passive Basilisk/Vizard RSO spacecraft outside the PettingZoo agent list, ten
+candidates, 45,000-second complete episodes, conflict retasking, and seeds 0–49 in
+each eventual information/environment cell. Preserve the existing
+`reimage_cooldown_orbits=2.0` behavior, anchored at qualified capture time. Verify
+and report its actual derived seconds for the 700/800/700-km sensing team. Treat
+full ground delivery as the ground-confirmed coverage boundary; do not silently
+move the cooldown anchor to delivery.
 
-Evaluate each final restored checkpoint on held-out seeds 10000-10004 against the
-matched closest-angle heuristic. Report actual batch sizes and complete-episode
-counts, decisions, finite losses/gradients, parameter changes, resume/restore checks,
-rewards, services, duplicates, interruption waste, radio occupancy, packet outcomes,
-resource/ownership checks, wall time and peak memory. Save reproducible configs,
-source/dependency records, checkpoints, tables and learning curves. Recommend whether
-the evidence justifies a larger multi-seed learned-policy study. Do not start the broad
-six-cell study or any additional training seeds.
+The independent controller must read only each sensor's own resources, products,
+catalog, and declared target ephemerides. The centralized-full-state controller
+must read every live sensor's position, velocity, attitude/rate, battery, storage,
+wheel state, active task/reservation, physical onboard products and owners, request
+epochs, and durable time-tagged capture/completion/delivery catalog at every
+asynchronous decision boundary. It must jointly assign current actions and prevent
+same-target assignments or fresh/in-progress target duplication. Keep it explicitly
+labeled a maximum-information coordination reference: its greedy scheduler is not
+a proof of globally optimal future coverage. Neither baseline may select broadcast
+or directed transmission, and neither baseline trains or restores a policy.
+
+Generate a fresh manifest under a new `baseline-mc-3sensor-v2` results directory;
+do not reuse or overwrite the completed two-sensor v1 tasks. Run the runtime and
+support-data audits, submit only tasks 0 and 100, wait for both to finish, and verify
+matched initial-condition hashes, all three sensors present, 100 passive targets,
+horizon/resource status, zero radio actions/occupancy, and the centralized audit's
+one full-team read per decision boundary.
+
+Report constellation-union qualified capture coverage and fully ground-delivered
+coverage. Report existing duplicate attempts and wasted sensor-seconds plus both
+new definitions: (1) qualified ground-delivered products whose capture time is
+older than a newer product of the same target also delivered by another sensor,
+including the causally known-at-delivery subset; and (2) cross-sensor onboard
+same-target overlap, including affected targets/products, redundant acquisition
+count, and integrated excess holder sensor-seconds. Generate the partial coverage
+and duplicate-work plots for this matched pair, label them as one-seed preflight
+evidence with no uncertainty, record Slurm elapsed/MaxRSS/AllocCPUS, update
+`cluster/EXECUTION.md`, commit and push the evidence, and recommend whether the
+remaining 198 three-sensor episodes should be authorized.

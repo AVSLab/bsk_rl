@@ -1,4 +1,4 @@
-"""Matched deterministic two-sensor baselines, isolated from learned-policy studies.
+"""Matched deterministic three-sensor baselines, isolated from learned-policy studies.
 
 The centralized controller is a full-state *greedy controller*, not a learned
 policy or a proof of optimal coverage. It may inspect every sensor's current
@@ -33,7 +33,7 @@ from bsk_rl.utils.coordination import earth_unoccluded
 from examples.multiagent_imaging.config import MultiAgentImagingConfig
 from examples.multiagent_imaging.environment import R_EARTH_M, build_environment
 
-CAMPAIGN_VERSION = "two-sensor-full-state-baselines-v1"
+CAMPAIGN_VERSION = "three-sensor-full-state-baselines-v2"
 CASES = ("independent", "centralized_full_state")
 ENVIRONMENTS = ("leo", "mixed")
 CELLS = tuple((case, regime) for case in CASES for regime in ENVIRONMENTS)
@@ -48,6 +48,7 @@ ALTITUDE_BANDS_M = {
 class BaselineConfig:
     """A separate experiment contract; saved completion-v2 checkpoints do not change."""
 
+    n_sensors: int = 3
     n_targets: int = 100
     n_candidates: int = 10
     episode_duration_s: float = 45000.0
@@ -89,7 +90,6 @@ class BaselineConfig:
             physics.pop(key)
         return MultiAgentImagingConfig(
             **physics,
-            n_sensors=2,
             seed=int(seed),
             information_case="independent"
             if case == "independent"
@@ -244,7 +244,7 @@ def local_choices(sensor, config):
 
 
 def choose_joint(options, reserved=()):
-    """Small exact enumeration of the current two-agent greedy assignment only.
+    """Exactly enumerate the current multi-sensor greedy assignment.
 
     This joint controller knows ongoing assignments. Maximize new-target jobs,
     then total image jobs; minimize aggregate current pointing angle. It has no
@@ -270,20 +270,129 @@ def choose_joint(options, reserved=()):
     return {name: row["action"] for name, row in zip(names, rows)}
 
 
-def choose_actions(env, config, case):
+def centralized_state_snapshot(env):
+    """Expose every mission-relevant sensor state to the centralized controller.
+
+    This snapshot is an explicit audit boundary.  It contains live navigation,
+    attitude/resources, physical product ownership, durable completion records,
+    and the active task for every sensing spacecraft.  It is used only by the
+    no-radio centralized baseline and never enters a learned policy observation.
+    """
+    now = float(env.simulator.sim_time)
+    sensors = {}
+    for sensor in env.sensing_satellites:
+        if sensor.name not in env.agents:
+            continue
+        task = sensor.completion_task
+        sensors[sensor.name] = {
+            "position_N_m": np.asarray(sensor.dynamics.r_BN_N).tolist(),
+            "velocity_N_m_s": np.asarray(sensor.dynamics.v_BN_N).tolist(),
+            "attitude_MRP": np.asarray(sensor.dynamics.sigma_BN).tolist(),
+            "body_rate_rad_s": np.asarray(sensor.dynamics.omega_BN_B).tolist(),
+            "battery_fraction": float(sensor.dynamics.battery_charge_fraction),
+            "storage_fraction": float(sensor.dynamics.storage_level_fraction),
+            "wheel_fraction": np.asarray(
+                sensor.dynamics.wheel_speeds_fraction
+            ).tolist(),
+            "requires_retasking": bool(sensor.requires_retasking),
+            "active_task": (
+                None
+                if task is None
+                else {
+                    "mode": task.mode,
+                    "target_id": task.target_id,
+                    "start": task.start,
+                    "deadline": task.deadline,
+                    "finished": bool(task.finished),
+                }
+            ),
+            "onboard_products": [
+                asdict(product) for product in sensor.data_store.products
+            ],
+            "completion_records": [
+                asdict(record)
+                for record in sensor.data_store.catalog.records.values()
+            ],
+            "request_epochs": dict(sensor.data_store.catalog.request_epochs),
+        }
+    return {"time_s": now, "sensors": sensors}
+
+
+def _globally_reserved_targets(snapshot, cooldown_s):
+    """Find targets a full-information coordinator knows are already serviced.
+
+    Active imaging jobs reserve their targets immediately.  Qualified completed
+    exposures reserve the matching request generation until the existing
+    capture-anchored cooldown expires, whether or not the image has reached ground.
+    """
+    now = snapshot["time_s"]
+    reserved = set()
+    for state in snapshot["sensors"].values():
+        task = state["active_task"]
+        if (
+            task is not None
+            and task["mode"] == "image"
+            and not task["finished"]
+            and task["target_id"] is not None
+        ):
+            reserved.add(int(task["target_id"]))
+        for record in state["completion_records"]:
+            target_id = int(record["target_id"])
+            if (
+                record["qualified"]
+                and float(record["request_epoch"])
+                == float(state["request_epochs"][target_id])
+                and float(record["capture_time"]) + float(cooldown_s) > now
+            ):
+                reserved.add(target_id)
+    return reserved
+
+
+def _update_central_audit(audit, snapshot):
+    """Record compact proof that every live sensor was read at a decision boundary."""
+    if audit is None:
+        return
+    states = snapshot["sensors"].values()
+    audit["decision_boundaries"] += 1
+    audit["sensor_state_reads"] += len(snapshot["sensors"])
+    audit["minimum_sensors_visible"] = min(
+        audit["minimum_sensors_visible"], len(snapshot["sensors"])
+    )
+    audit["maximum_catalog_records_visible"] = max(
+        audit["maximum_catalog_records_visible"],
+        sum(len(state["completion_records"]) for state in states),
+    )
+    audit["maximum_onboard_products_visible"] = max(
+        audit["maximum_onboard_products_visible"],
+        sum(len(state["onboard_products"]) for state in states),
+    )
+    audit["last_snapshot_sha256"] = digest(snapshot)
+
+
+def choose_actions(env, config, case, *, central_audit=None):
+    """Choose one event-boundary action per live sensor under the selected contract."""
     sensors = [s for s in env.sensing_satellites if s.name in env.agents]
     options = {s.name: local_choices(s, config) for s in sensors}
     if case == "independent":
         # Do not inspect another sensor's choice/task/catalog in this branch.
         return {name: rows[0]["action"] for name, rows in options.items()}
-    reserved = {
-        s.completion_task.target_id
-        for s in sensors
-        if not s.requires_retasking
-        and s.completion_task is not None
-        and not s.completion_task.finished
-        and s.completion_task.mode == "image"
+
+    # The centralized reference reads a coherent full-team snapshot on every
+    # asynchronous event boundary.  Use its global completion history both for
+    # the coverage-first score and for current target reservations.
+    snapshot = centralized_state_snapshot(env)
+    _update_central_audit(central_audit, snapshot)
+    globally_observed = {
+        int(record["target_id"])
+        for state in snapshot["sensors"].values()
+        for record in state["completion_records"]
+        if record["qualified"]
     }
+    for rows in options.values():
+        for row in rows:
+            if row["target_id"] is not None:
+                row["new"] = int(int(row["target_id"]) not in globally_observed)
+    reserved = _globally_reserved_targets(snapshot, env.rewarder.reimage_cooldown_s)
     return choose_joint(options, reserved)
 
 
@@ -382,7 +491,9 @@ def source_record():
     }
 
 
-def coverage_metrics(target_ids, captures, services, quality_threshold):
+def coverage_metrics(
+    target_ids, captures, services, quality_threshold, sensor_names=None
+):
     """Distinct target coverage and exposure/service counts are different quantities."""
     all_ids = set(target_ids)
     qualified = [p for p in captures if p.quality >= quality_threshold]
@@ -395,7 +506,16 @@ def coverage_metrics(target_ids, captures, services, quality_threshold):
     captured_ids = {p.target_id for p in qualified}
     delivered_ids = {p.target_id for p in deliveries}
     per_sensor = {}
-    for sensor in ("sensor_0", "sensor_1"):
+    sensor_names = sorted(
+        sensor_names
+        if sensor_names is not None
+        else {p.source_sensor for p in [*qualified, *deliveries]}
+    )
+    sources_by_target = {
+        target_id: {p.source_sensor for p in qualified if p.target_id == target_id}
+        for target_id in captured_ids
+    }
+    for sensor in sensor_names:
         captured = {p.target_id for p in qualified if p.source_sensor == sensor}
         delivered = {p.target_id for p in deliveries if p.source_sensor == sensor}
         per_sensor[sensor] = {
@@ -417,11 +537,114 @@ def coverage_metrics(target_ids, captures, services, quality_threshold):
         "qualified_exposure_count": len(qualified),
         "unqualified_exposure_count": len(captures) - len(qualified),
         "qualified_ground_delivery_count": len(deliveries),
-        "cross_sensor_capture_overlap_count": len(
-            set(per_sensor["sensor_0"]["capture_target_ids"])
-            & set(per_sensor["sensor_1"]["capture_target_ids"])
+        # A target counts once when two or more distinct sensors acquired it.
+        # This generalizes the former two-set intersection to any team size.
+        "cross_sensor_capture_overlap_count": sum(
+            len(sources) >= 2 for sources in sources_by_target.values()
         ),
         "per_sensor": per_sensor,
+    }
+
+
+def duplicate_product_metrics(captures, services, quality_threshold, episode_end_s):
+    """Measure stale ground products and simultaneous cross-sensor ownership.
+
+    The stale-delivery metric implements the user's first definition: a qualified
+    ground-delivered product is stale if another sensor also delivered a newer
+    capture of the same target.  The onboard metric implements the stricter
+    coverage definition by integrating intervals in which different sensors
+    physically held qualified products for the same target.
+    """
+    delivered = {
+        entry.product.record_id: entry.product
+        for entry in services
+        if entry.product.quality >= quality_threshold
+        and entry.product.delivery_time is not None
+    }
+    qualified = [p for p in captures if p.quality >= quality_threshold]
+
+    stale_ids = set()
+    causally_avoidable_ids = set()
+    for image in delivered.values():
+        newer = [
+            other
+            for other in delivered.values()
+            if other.target_id == image.target_id
+            and other.source_sensor != image.source_sensor
+            and other.capture_time > image.capture_time
+        ]
+        if newer:
+            stale_ids.add(image.record_id)
+        if any(other.delivery_time <= image.delivery_time for other in newer):
+            # This subset was already known to be stale at the time it arrived.
+            causally_avoidable_ids.add(image.record_id)
+
+    intervals_by_target = {}
+    for image in qualified:
+        delivered_version = delivered.get(image.record_id)
+        end = (
+            float(delivered_version.delivery_time)
+            if delivered_version is not None
+            else float(episode_end_s)
+        )
+        start = float(image.capture_time)
+        if end + 1e-9 < start:
+            raise ValueError("A product cannot leave storage before capture.")
+        if end > start + 1e-9:
+            intervals_by_target.setdefault(int(image.target_id), []).append(
+                (start, end, image.source_sensor, image.record_id)
+            )
+
+    overlap_targets = set()
+    overlap_products = set()
+    redundant_acquisitions = 0
+    redundant_sensor_time_s = 0.0
+    overlap_sensor_time_s = 0.0
+    for target_id, intervals in intervals_by_target.items():
+        starts, ends = {}, {}
+        for start, end, sensor, record_id in intervals:
+            starts.setdefault(start, []).append((record_id, sensor))
+            ends.setdefault(end, []).append((record_id, sensor))
+        active = {}
+        previous = min((*starts, *ends))
+        for boundary in sorted(set(starts) | set(ends)):
+            active_sensors = set(active.values())
+            elapsed = boundary - previous
+            if len(active_sensors) >= 2 and elapsed > 0:
+                overlap_targets.add(target_id)
+                overlap_products.update(active)
+                redundant_sensor_time_s += (len(active_sensors) - 1) * elapsed
+                overlap_sensor_time_s += len(active_sensors) * elapsed
+
+            # Treat ownership as [capture, delivery): a delivery and a new capture
+            # at exactly the same instant do not create an artificial overlap.
+            for record_id, _ in ends.get(boundary, ()):
+                active.pop(record_id, None)
+            existing_sensors = set(active.values())
+            incoming = starts.get(boundary, ())
+            incoming_sensors = {sensor for _, sensor in incoming}
+            redundant_acquisitions += max(
+                0,
+                len(existing_sensors | incoming_sensors)
+                - max(1, len(existing_sensors)),
+            )
+            active.update(incoming)
+            previous = boundary
+
+    return {
+        "stale_cross_sensor_ground_delivery_count": len(stale_ids),
+        "stale_cross_sensor_ground_delivery_target_count": len(
+            {delivered[record_id].target_id for record_id in stale_ids}
+        ),
+        "causally_avoidable_stale_ground_delivery_count": len(
+            causally_avoidable_ids
+        ),
+        "stale_cross_sensor_ground_delivery_record_ids": sorted(stale_ids),
+        "cross_sensor_onboard_overlap_target_count": len(overlap_targets),
+        "cross_sensor_onboard_overlap_product_count": len(overlap_products),
+        "cross_sensor_onboard_redundant_acquisition_count": redundant_acquisitions,
+        "cross_sensor_onboard_redundant_sensor_time_s": redundant_sensor_time_s,
+        "cross_sensor_onboard_overlap_sensor_time_s": overlap_sensor_time_s,
     }
 
 
@@ -443,6 +666,28 @@ def run_episode(config, specification):
         sampled = {
             int(t.rso_target.id): {"candidate_samples": 0, "illuminated_los_samples": 0}
             for t in env.passive_satellites
+        }
+        central_audit = {
+            "enabled": specification["case"] == "centralized_full_state",
+            "decision_boundaries": 0,
+            "sensor_state_reads": 0,
+            "minimum_sensors_visible": (
+                config.n_sensors
+                if specification["case"] == "centralized_full_state"
+                else None
+            ),
+            "maximum_catalog_records_visible": 0,
+            "maximum_onboard_products_visible": 0,
+            "last_snapshot_sha256": None,
+            "fields_visible": [
+                "navigation position and velocity",
+                "attitude and body rate",
+                "battery, storage, and wheel state",
+                "active task and target reservation",
+                "physical onboard product metadata and owner",
+                "durable time-tagged completion and ground-delivery records",
+                "current request epochs",
+            ],
         }
         steps = 0
 
@@ -485,7 +730,12 @@ def run_episode(config, specification):
 
         sample_state()
         while env.agents:
-            actions = choose_actions(env, config, specification["case"])
+            actions = choose_actions(
+                env,
+                config,
+                specification["case"],
+                central_audit=central_audit,
+            )
             if 3 in actions.values():
                 raise AssertionError(
                     "Baseline campaigns never execute a transmit/broadcast action."
@@ -502,7 +752,11 @@ def run_episode(config, specification):
         captures = env.rewarder._team_accounting.capture_attempts
         services = env.rewarder.service_entries
         metrics = coverage_metrics(
-            sampled, captures, services, env.rewarder.quality_threshold
+            sampled,
+            captures,
+            services,
+            env.rewarder.quality_threshold,
+            sensor_names=[sensor.name for sensor in env.sensing_satellites],
         )
         coverage_by_regime = {}
         for regime in ALTITUDE_BANDS_M:
@@ -517,8 +771,12 @@ def run_episode(config, specification):
                     [p for p in captures if p.target_id in ids],
                     [s for s in services if s.product.target_id in ids],
                     env.rewarder.quality_threshold,
+                    sensor_names=[sensor.name for sensor in env.sensing_satellites],
                 )
         now = float(env.simulator.sim_time)
+        product_duplicates = duplicate_product_metrics(
+            captures, services, env.rewarder.quality_threshold, now
+        )
         wall = time.perf_counter() - started
         peak_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * (
             1 if sys.platform == "darwin" else 1024
@@ -549,8 +807,10 @@ def run_episode(config, specification):
             "cumulative_reward": rewards,
             "coverage": metrics,
             "coverage_by_regime": coverage_by_regime,
+            "product_duplicates": product_duplicates,
             "team_summary": env.rewarder.team_summary,
             "coordination": env.coordination_metrics(),
+            "centralized_information_audit": central_audit,
             "action_counts": {k: dict(v) for k, v in action_counts.items()},
             "resource_history": resources,
             "sampled_target_geometry": sampled,
@@ -596,8 +856,10 @@ def make_manifest(config):
         "tasks": [task_spec(i) for i in range(200)],
         "information_assumptions": {
             "independent": "Own state/catalog and declared target ephemerides only; no peer catalog, assignment or resource access.",
-            "centralized_full_state": "One joint greedy controller with instantaneous complete current sensor state/catalog/task knowledge; no communication action or information latency.",
+            "centralized_full_state": "One joint greedy controller reads every live sensor's navigation, attitude, resources, active task, physical products, request epochs, and durable time-tagged catalog at every event decision boundary; no communication action or information latency.",
         },
+        "centralized_bound_interpretation": "Maximum instantaneous mission information and joint current assignment, but not a mathematical performance upper bound because the controller has no future-trajectory optimizer.",
+        "cooldown_contract": "The existing capture-anchored revisit cooldown is preserved. Ground-confirmed coverage and stale ground delivery are separate endpoint metrics.",
         "pairing": "Identical initial spacecraft states and target priorities between information cases for each environment and seed; LEO and mixed target orbits intentionally differ.",
         "source": source_record(),
     }

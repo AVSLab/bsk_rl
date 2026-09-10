@@ -33,9 +33,9 @@ def test_information_cases_have_identical_initial_spacecraft_states(environment)
         try:
             env.reset(seed=7)
             states.append(initial_conditions(env))
-            assert env.possible_agents == ["sensor_0", "sensor_1"]
+            assert env.possible_agents == ["sensor_0", "sensor_1", "sensor_2"]
             assert len(env.passive_satellites) == 6
-            assert len(env.simulator.satellites) == 8
+            assert len(env.simulator.satellites) == 9
         finally:
             env.close()
     assert states[0] == states[1]
@@ -49,5 +49,21 @@ def test_small_episode_completes_without_any_radio_action(task):
     assert result["communication"]["radio_action_count"] == 0
     assert sum(result["coordination"]["communication_time_s"].values()) == 0
     assert result["coverage"]["catalog_target_count"] == 6
+    assert set(result["coverage"]["per_sensor"]) == {
+        "sensor_0",
+        "sensor_1",
+        "sensor_2",
+    }
     assert all("3" not in counts for counts in result["action_counts"].values())
+    audit = result["centralized_information_audit"]
+    if result["case"] == "centralized_full_state":
+        assert audit["enabled"]
+        assert audit["decision_boundaries"] == result["event_steps"]
+        assert audit["minimum_sensors_visible"] == 3
+        assert audit["sensor_state_reads"] == 3 * result["event_steps"]
+        assert audit["last_snapshot_sha256"] is not None
+    else:
+        assert not audit["enabled"]
+        assert audit["decision_boundaries"] == 0
+        assert audit["sensor_state_reads"] == 0
     json.dumps(result, allow_nan=False)

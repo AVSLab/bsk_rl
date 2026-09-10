@@ -11,7 +11,8 @@
 #SBATCH --array=0-199%8
 #SBATCH --output=baseline-mc-%A_%a.log
 
-# Each array element propagates one independent 102-spacecraft simulation.
+# Each array element propagates one independent 103-spacecraft simulation:
+# three sensing agents and 100 passive Basilisk/Vizard RSO spacecraft.
 # No Ray, learner, GPU, checkpoint, radio action, or MPI job is required.
 # Account/partition/QOS verified on the cluster via Termius on 2026-09-06.
 set -euo pipefail

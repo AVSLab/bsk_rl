@@ -1,4 +1,5 @@
 {
+  "n_sensors": 3,
   "n_targets": 100,
   "n_candidates": 10,
   "episode_duration_s": 45000.0,

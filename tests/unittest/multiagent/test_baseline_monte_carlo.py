@@ -11,6 +11,7 @@ from examples.multiagent_imaging.baseline_monte_carlo import (
     CELLS,
     choose_joint,
     coverage_metrics,
+    duplicate_product_metrics,
     exact_regimes,
     sample_orbit,
     task_spec,
@@ -63,6 +64,15 @@ def test_central_assignment_excludes_duplicate_and_in_progress_targets():
     assert choose_joint(options, reserved={0, 1, 2}) == {"sensor_0": 0, "sensor_1": 0}
 
 
+def test_central_assignment_generalizes_to_three_sensors():
+    options = {
+        "sensor_0": [choice(5, 0, 2), choice(6, 1, 3), choice(0, None, 0, 0)],
+        "sensor_1": [choice(5, 0, 1), choice(6, 2, 4), choice(0, None, 0, 0)],
+        "sensor_2": [choice(5, 1, 1), choice(6, 2, 2), choice(0, None, 0, 0)],
+    }
+    assert choose_joint(options) == {"sensor_0": 6, "sensor_1": 5, "sensor_2": 6}
+
+
 def test_coverage_uses_catalog_union_not_service_or_sensor_count():
     def product(target, source, quality=1):
         return SimpleNamespace(
@@ -73,26 +83,61 @@ def test_coverage_uses_catalog_union_not_service_or_sensor_count():
         product(0, "sensor_0"),
         product(0, "sensor_1"),
         product(1, "sensor_1"),
+        product(1, "sensor_2"),
         product(2, "sensor_0", 0),
     ]
     services = [
         SimpleNamespace(product=captures[0]),
         SimpleNamespace(product=captures[1]),
     ]
-    result = coverage_metrics(range(4), captures, services, 0.5)
+    result = coverage_metrics(
+        range(4), captures, services, 0.5, ["sensor_0", "sensor_1", "sensor_2"]
+    )
     assert result["capture_coverage_fraction"] == 0.5
     assert result["ground_delivery_coverage_fraction"] == 0.25
-    assert result["qualified_exposure_count"] == 3
+    assert result["qualified_exposure_count"] == 4
     assert result["unqualified_exposure_count"] == 1
-    assert result["cross_sensor_capture_overlap_count"] == 1
+    assert result["cross_sensor_capture_overlap_count"] == 2
     assert result["never_captured_target_ids"] == [2, 3]
+
+
+def test_duplicate_products_separate_ground_staleness_from_onboard_overlap():
+    def product(record_id, target, source, capture, delivery=None):
+        return SimpleNamespace(
+            record_id=record_id,
+            target_id=target,
+            source_sensor=source,
+            capture_time=capture,
+            delivery_time=delivery,
+            quality=1.0,
+        )
+
+    captures = [
+        product("old", 0, "sensor_0", 10),
+        product("new", 0, "sensor_1", 20),
+        product("held-a", 1, "sensor_2", 30),
+        product("held-b", 1, "sensor_0", 40),
+    ]
+    services = [
+        SimpleNamespace(product=product("old", 0, "sensor_0", 10, 100)),
+        SimpleNamespace(product=product("new", 0, "sensor_1", 20, 80)),
+    ]
+    result = duplicate_product_metrics(captures, services, 0.5, 200)
+    assert result["stale_cross_sensor_ground_delivery_count"] == 1
+    assert result["stale_cross_sensor_ground_delivery_target_count"] == 1
+    assert result["causally_avoidable_stale_ground_delivery_count"] == 1
+    assert result["cross_sensor_onboard_overlap_target_count"] == 2
+    assert result["cross_sensor_onboard_overlap_product_count"] == 4
+    assert result["cross_sensor_onboard_redundant_acquisition_count"] == 2
+    assert result["cross_sensor_onboard_redundant_sensor_time_s"] == 220
+    assert result["cross_sensor_onboard_overlap_sensor_time_s"] == 440
 
 
 def test_campaign_never_changes_the_checkpoint_config_schema():
     config = BaselineConfig()
     independent = config.environment_config("independent", 3)
     centralized = config.environment_config("centralized_full_state", 3)
-    assert independent.n_sensors == centralized.n_sensors == 2
+    assert independent.n_sensors == centralized.n_sensors == 3
     assert independent.n_peers == centralized.n_peers == 0
     assert independent.episode_duration_s == 45000
     assert replace(independent, information_case="ideal_completion") == centralized
@@ -175,7 +220,7 @@ def test_paired_aggregation_rejects_unmatched_initial_states():
         digest,
     )
 
-    config = {"n_targets": 100}
+    config = {"n_sensors": 3, "n_targets": 100}
     manifest = {
         "campaign_version": CAMPAIGN_VERSION,
         "baseline_config": config,
@@ -192,11 +237,24 @@ def test_paired_aggregation_rejects_unmatched_initial_states():
             manifest_sha256=digest(manifest),
             initial_conditions=initial,
             initial_conditions_sha256=digest(initial),
-            pettingzoo_agents=["sensor_0", "sensor_1"],
+            pettingzoo_agents=["sensor_0", "sensor_1", "sensor_2"],
             passive_target_count=100,
             communication={"radio_action_count": 0},
-            coordination={"communication_time_s": {"sensor_0": 0.0, "sensor_1": 0.0}},
-        )
+                coordination={
+                "communication_time_s": {
+                    "sensor_0": 0.0,
+                    "sensor_1": 0.0,
+                    "sensor_2": 0.0,
+                    }
+                },
+                event_steps=4,
+                centralized_information_audit={
+                    "enabled": task >= 100,
+                    "decision_boundaries": 4 if task >= 100 else 0,
+                    "sensor_state_reads": 12 if task >= 100 else 0,
+                    "last_snapshot_sha256": "snapshot" if task >= 100 else None,
+                },
+            )
 
     paired = [episode(0), episode(100)]
     assert (

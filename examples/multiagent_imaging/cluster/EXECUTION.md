@@ -156,3 +156,19 @@ The gate is `passed: true`, `workers: 1`, `validated_workers: 1`.
 The runtime build, tasks 0 and 100, and one-worker validation are complete. The
 remaining 198 baseline episodes, four-worker learning, and the broad six-cell study
 remain outside the current submission authorization and were not submitted.
+
+## Three-sensor baseline revision prepared 2026-09-10
+
+The next baseline campaign now uses three sensing agents, 100 passive RSO
+spacecraft, and the same four information/environment cells and seeds 0–49. Its
+schema is `three-sensor-full-state-baselines-v2`. It adds explicit full-state reads
+for the centralized coordinator at every asynchronous decision boundary and two
+new duplicate families: stale cross-sensor ground deliveries and simultaneous
+cross-sensor onboard ownership. It keeps ground-confirmed coverage separate from
+the existing capture-anchored two-orbit cooldown and never selects a communication
+action.
+
+The completed two-sensor tasks 0 and 100 above remain historical v1 evidence. The
+unsubmitted 198 v1 tasks are superseded and should not be launched. No three-sensor
+cluster task has been submitted; a new manifest and a matched v2 task pair 0/100
+must be generated only from the reviewed v2 source.

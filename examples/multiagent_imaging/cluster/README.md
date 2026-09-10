@@ -120,19 +120,29 @@ Keep that cache variable exported for all baseline and PPO submissions. Do not
 launch after a missing file or hash mismatch.
 
 The [baseline runbook](../BASELINE_MONTE_CARLO.md) defines information, controllers,
-metrics, and aggregation. All four cells use seeds 0–49, two sensors, 100 targets,
+metrics, and aggregation. All four cells use seeds 0–49, three sensors, 100 targets,
 ten candidates, 45,000 seconds, and the **existing cooldown unchanged**: two median
-initial sensor orbits, 11,960.807 seconds here, plus the own pending-ground-product
-restriction. Mixed targets are 50 LEO/30 MEO/20 GEO. Controllers are independent
-local greedy and centralized full-state joint greedy, with no radio action. These
-are deterministic control baselines, not restored policies or an optimality bound.
+initial sensor orbits, 11,834.835756586714 seconds for the 700/800/700-km team,
+plus the own pending-ground-product restriction. Mixed targets are 50 LEO/30 MEO/
+20 GEO. Controllers are independent local greedy and centralized-full-state joint
+greedy, with no radio action. The centralized controller reads every live sensor's
+full mission state on each asynchronous decision boundary. This is the maximum-
+information baseline, though the greedy scheduler is not an optimality proof.
+
+The v2 output adds two coverage-waste definitions: stale ground deliveries whose
+capture timestamp is older than another sensor's delivered product, and simultaneous
+cross-sensor physical ownership of the same qualified target product. The latter is
+reported as affected targets/products, redundant acquisitions, and redundant
+sensor-seconds. Ground-confirmed coverage remains separate from the existing
+capture-anchored cooldown.
 
 After runtime success, generate the final manifest; submit only once authorized:
 
 ```bash
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
-export BSK_MC_MANIFEST="$BSK_PROJECT_ROOT/results/multiagent_imaging/baseline-mc/manifest.json"
-export BSK_MC_OUTPUT="$BSK_PROJECT_ROOT/results/multiagent_imaging/baseline-mc/episodes"
+export BSK_MC_ROOT="$BSK_PROJECT_ROOT/results/multiagent_imaging/baseline-mc-3sensor-v2"
+export BSK_MC_MANIFEST="$BSK_MC_ROOT/manifest.json"
+export BSK_MC_OUTPUT="$BSK_MC_ROOT/episodes"
 "$BSK_RL_PYTHON" -m examples.multiagent_imaging.baseline_monte_carlo manifest \
   --config examples/multiagent_imaging/configs/baseline_mc.json --output "$BSK_MC_MANIFEST"
 sbatch --export=ALL --array=0,100%2 examples/multiagent_imaging/cluster/baseline_mc.slurm
@@ -148,7 +158,7 @@ and authorizing expansion, submit the remaining 198 IDs:
 sbatch --export=ALL --array=1-99,101-199%8 examples/multiagent_imaging/cluster/baseline_mc.slurm
 "$BSK_RL_PYTHON" -m examples.multiagent_imaging.aggregate_baseline_monte_carlo \
   --manifest "$BSK_MC_MANIFEST" --episodes-dir "$BSK_MC_OUTPUT" \
-  --output-dir "$BSK_PROJECT_ROOT/results/multiagent_imaging/baseline-mc/report" --plots
+  --output-dir "$BSK_MC_ROOT/report" --plots
 ```
 
 Run aggregation only after jobs complete. Each array task requests one CPU/4 GiB/

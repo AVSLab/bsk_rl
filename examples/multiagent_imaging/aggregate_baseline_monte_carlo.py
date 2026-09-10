@@ -1,4 +1,4 @@
-"""Validate and summarize the four-cell paired baseline Monte Carlo campaign."""
+"""Validate and summarize the four-cell, three-sensor baseline campaign."""
 
 from __future__ import annotations
 
@@ -53,6 +53,21 @@ def flatten(result):
     )
     row.update(
         {
+            key: result["product_duplicates"][key]
+            for key in (
+                "stale_cross_sensor_ground_delivery_count",
+                "stale_cross_sensor_ground_delivery_target_count",
+                "causally_avoidable_stale_ground_delivery_count",
+                "cross_sensor_onboard_overlap_target_count",
+                "cross_sensor_onboard_overlap_product_count",
+                "cross_sensor_onboard_redundant_acquisition_count",
+                "cross_sensor_onboard_redundant_sensor_time_s",
+                "cross_sensor_onboard_overlap_sensor_time_s",
+            )
+        }
+    )
+    row.update(
+        {
             key: result["coordination"][key]
             for key in (
                 "duplicate_sensor_time_s",
@@ -95,6 +110,14 @@ METRICS = (
     "total_constellation_reward",
     "qualified_exposure_count",
     "cross_sensor_capture_overlap_count",
+    "stale_cross_sensor_ground_delivery_count",
+    "stale_cross_sensor_ground_delivery_target_count",
+    "causally_avoidable_stale_ground_delivery_count",
+    "cross_sensor_onboard_overlap_target_count",
+    "cross_sensor_onboard_overlap_product_count",
+    "cross_sensor_onboard_redundant_acquisition_count",
+    "cross_sensor_onboard_redundant_sensor_time_s",
+    "cross_sensor_onboard_overlap_sensor_time_s",
     "duplicate_attempt_count",
     "duplicate_sensor_time_s",
     "interrupted_nonduplicate_sensor_time_s",
@@ -159,8 +182,12 @@ def validate_results(manifest, results, allow_partial=False):
             raise ValueError("Mixed source versions in campaign.")
         if result["initial_conditions_sha256"] != digest(result["initial_conditions"]):
             raise ValueError("Initial-condition fingerprint is invalid.")
+        expected_agents = [
+            f"sensor_{index}"
+            for index in range(manifest["baseline_config"]["n_sensors"])
+        ]
         if (
-            result["pettingzoo_agents"] != ["sensor_0", "sensor_1"]
+            result["pettingzoo_agents"] != expected_agents
             or result["passive_target_count"]
             != manifest["baseline_config"]["n_targets"]
         ):
@@ -169,6 +196,20 @@ def validate_results(manifest, results, allow_partial=False):
             result["coordination"]["communication_time_s"].values()
         ):
             raise ValueError("No-radio baseline executed a radio task.")
+        audit = result["centralized_information_audit"]
+        centralized = result["case"] == "centralized_full_state"
+        if bool(audit["enabled"]) != centralized:
+            raise ValueError("Centralized information-audit mode is inconsistent.")
+        if centralized and (
+            audit["decision_boundaries"] != result["event_steps"]
+            or audit["sensor_state_reads"] < audit["decision_boundaries"]
+            or audit["last_snapshot_sha256"] is None
+        ):
+            raise ValueError("Central controller did not audit every decision boundary.")
+        if not centralized and (
+            audit["decision_boundaries"] or audit["sensor_state_reads"]
+        ):
+            raise ValueError("Independent controller read centralized state.")
         by_pair[(result["target_environment"], result["seed"])][result["case"]] = (
             result["initial_conditions_sha256"]
         )
@@ -270,15 +311,17 @@ def aggregate(manifest, results, output_dir, allow_partial=False):
     write_json(output_dir / "summary.json", summary)
     write_csv(output_dir / "episodes.csv", rows)
     write_csv(output_dir / "paired_differences.csv", differences)
+    sensor_count = manifest["baseline_config"]["n_sensors"]
+    target_count = manifest["baseline_config"]["n_targets"]
     lines = [
-        "# Two-sensor deterministic Monte Carlo baselines",
+        f"# {sensor_count}-sensor deterministic Monte Carlo baselines",
         "",
         f"Completed {validation['completed_episodes']}/200 episodes; verified {validation['validated_information_pairs']} matched information pairs.",
         "",
-        "Coverage counts the union of distinct qualified targets over the 100-target mission catalog. Ground coverage additionally requires full physical downlink. Repeat services do not increase first-coverage percentages.",
+        f"Coverage counts the union of distinct qualified targets over the {target_count}-target mission catalog. Ground coverage additionally requires full physical downlink. Repeat services do not increase first-coverage percentages. Stale ground deliveries and simultaneous cross-sensor onboard ownership are reported separately.",
         "",
-        "| Cell | N | Mean capture coverage | Mean ground coverage | Capture 100% episodes |",
-        "|---|---:|---:|---:|---:|",
+        "| Cell | N | Mean capture coverage | Mean ground coverage | Capture 100% episodes | Mean stale ground products | Mean redundant onboard acquisitions |",
+        "|---|---:|---:|---:|---:|---:|---:|",
     ]
     for name, group in groups.items():
         c, g = (
@@ -286,7 +329,7 @@ def aggregate(manifest, results, output_dir, allow_partial=False):
             group["ground_delivery_coverage_fraction"],
         )
         lines.append(
-            f"| {name} | {c['n']} | {100*c['mean']:.2f}% | {100*g['mean']:.2f}% | {group['episodes_at_100_percent_capture']} |"
+            f"| {name} | {c['n']} | {100*c['mean']:.2f}% | {100*g['mean']:.2f}% | {group['episodes_at_100_percent_capture']} | {group['stale_cross_sensor_ground_delivery_count']['mean']:.2f} | {group['cross_sensor_onboard_redundant_acquisition_count']['mean']:.2f} |"
         )
     lines.extend(
         [
@@ -360,7 +403,7 @@ def plot_diagnostics(results, output_dir):
     first = results[0]
     config = first["baseline_config"]
     context = (
-        f"2 sensors · {config['n_targets']} passive targets · "
+        f"{config['n_sensors']} sensors · {config['n_targets']} passive targets · "
         f"{config['episode_duration_s']:,.0f} s episodes · {len(results)}/200 episodes"
     )
     fig, axes = plt.subplots(1, 2, figsize=(11, 5.3), sharey=True)
@@ -447,6 +490,82 @@ def plot_diagnostics(results, output_dir):
     fig.tight_layout(rect=(0, 0.07, 1, 0.87))
     fig.savefig(output_dir / "coverage.png", dpi=180)
     fig.savefig(output_dir / "coverage.pdf")
+    plt.close(fig)
+
+    # Keep the two user-defined duplicate concepts separate.  The left panel is
+    # retrospective data freshness at ground; the right panel is coverage waste
+    # caused by different spacecraft physically holding the same target product.
+    fig, axes = plt.subplots(1, 2, figsize=(11, 5.3))
+    fig.suptitle("Baseline duplicate-work comparison", x=0.08, ha="left", fontsize=16)
+    fig.text(0.08, 0.91, context, fontsize=10, color="#444444")
+    duplicate_panels = (
+        (
+            "stale_cross_sensor_ground_delivery_count",
+            "Older products delivered to ground",
+            "Qualified product count",
+        ),
+        (
+            "cross_sensor_onboard_redundant_acquisition_count",
+            "Redundant cross-sensor onboard acquisitions",
+            "Qualified acquisition count",
+        ),
+    )
+    case_colors = {"independent": "#3573B9", "centralized_full_state": "#A87819"}
+    for ax, (metric, title, ylabel) in zip(axes, duplicate_panels):
+        for index, (case, environment) in enumerate(present):
+            values = [
+                result["product_duplicates"][metric]
+                for result in results
+                if result["case"] == case
+                and result["target_environment"] == environment
+            ]
+            ax.scatter(
+                np.full(len(values), index),
+                values,
+                alpha=0.65,
+                s=32,
+                facecolors="none",
+                edgecolors=case_colors[case],
+                zorder=3,
+            )
+            if values:
+                ax.scatter(
+                    [index], [np.mean(values)], marker="_", s=220,
+                    color="#222222", zorder=4,
+                )
+        for environment in ("leo", "mixed"):
+            if all((case, environment) in present for case in cases):
+                x = [present.index((case, environment)) for case in cases]
+                indexed = {
+                    (result["case"], result["seed"]): result
+                    for result in results
+                    if result["target_environment"] == environment
+                }
+                for seed in sorted({key[1] for key in indexed}):
+                    if all((case, seed) in indexed for case in cases):
+                        ax.plot(
+                            x,
+                            [indexed[case, seed]["product_duplicates"][metric] for case in cases],
+                            color="#AAAAAA", lw=0.7, zorder=1,
+                        )
+        ax.set_xticks(
+            range(len(present)),
+            [f"{labels[case]}\n{environment.upper()}" for case, environment in present],
+        )
+        ax.set_title(title)
+        ax.set_ylabel(ylabel)
+        ax.grid(axis="y", alpha=0.2)
+        ax.spines[["top", "right"]].set_visible(False)
+    fig.text(
+        0.08,
+        0.035,
+        "Circles: individual seeds; bars: means; connectors: matched seeds. Onboard count uses overlapping physical-storage intervals.",
+        fontsize=9,
+        color="#444444",
+    )
+    fig.tight_layout(rect=(0, 0.07, 1, 0.87))
+    fig.savefig(output_dir / "duplicates.png", dpi=180)
+    fig.savefig(output_dir / "duplicates.pdf")
     plt.close(fig)
 
     # Keep individual time histories readable in the bounded preflight. The full

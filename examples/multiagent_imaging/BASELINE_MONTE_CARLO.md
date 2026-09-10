@@ -1,7 +1,7 @@
-# Two-sensor independent and centralized baselines
+# Three-sensor independent and centralized baselines
 
 This campaign prepares **200 deterministic heuristic episodes**, not policy training:
-two sensors, 100 passive RSO spacecraft, ten candidates, 45,000-second horizons,
+three sensors, 100 passive RSO spacecraft, ten candidates, 45,000-second horizons,
 and conflict retasking. Seeds 0–49 repeat in each information/environment cell.
 No job is submitted by these preparation commands.
 
@@ -20,34 +20,39 @@ its directed transmission, and its existing configurations are unchanged.
 
 **Independent:** each sensor applies the same deterministic rule using its own
 resource state, own physical image products, own completion history, and declared
-target ephemerides/illumination. It cannot inspect its teammate's catalog, action,
+target ephemerides/illumination. It cannot inspect any peer's catalog, action,
 resource state, or choices. A common target catalog and ephemerides are mission
 inputs, not peer communication. Independent sensors can duplicate each other's
-work. Their *union* coverage must be measured; two independent sensors do not
+work. Their *union* coverage must be measured; three independent sensors do not
 mathematically guarantee 100% coverage in a finite horizon.
 
-**Centralized full state:** one joint controller has instantaneous access to both
-sensors' current physical state, resources, physical ownership, catalogs, and
-ongoing tasks. It applies the same local resource constraints, then jointly assigns
-currently available target slots, avoiding another assigned or in-progress target.
+**Centralized full state:** one joint controller is invoked at every asynchronous
+environment decision boundary. At that exact simulated time it reads every live
+sensor's position, velocity, attitude, body rate, battery, storage, wheel state,
+active task, target reservation, physical onboard products and owners, current
+request epochs, and durable capture/completion/delivery catalog. It applies the
+same local resource constraints, then jointly assigns currently available target
+slots, avoiding another assigned, onboard-fresh, or in-progress target.
 The existing ideal-completion mechanism supplies immediate completion facts to
 local eligibility and conflict-retasking logic; the **additional full-state joint
 controller** uses current assignments/resources directly. Therefore this case is
 stronger than an `ideal_completion` shared decentralized policy. It has no radio
 action, network latency, bandwidth cost, or peer-state observation restrictions.
 Intent knowledge is isolated to this explicitly omniscient baseline and is not
-added to completion-v2 policy observations or transmitted payloads.
+added to completion-v2 policy observations or transmitted payloads. Every episode
+saves a compact centralized-information audit with the number of boundaries and
+sensor-state reads, peak visible catalog/product counts, and a final snapshot hash.
 
-Both controllers prioritize a target they have never qualifiedly captured, then
+All controllers prioritize a target they have never qualifiedly captured, then
 minimize current pointing angle, then prefer higher priority. The centralized
-controller enumerates current two-sensor combinations, maximizing new-target jobs,
+controller enumerates current three-sensor combinations, maximizing new-target jobs,
 then total image jobs, then minimizing total angle. It does not solve a future
 trajectory optimization. Centralized knowledge is an information advantage; this
 particular greedy policy is **not a guaranteed optimum or upper performance bound**.
 
-Both use the same ten-slot existing candidate shortlist, actual Earth-clear LOS,
+All use the same ten-slot existing candidate shortlist, actual Earth-clear LOS,
 and current target illumination above the existing reward threshold. Priority is
-normalized to a catalog total of 100 using the existing scenario. Both charge below
+normalized to a catalog total of 100 using the existing scenario. All charge below
 30% battery, desaturate above 70% wheel limit, and downlink stored products during
 current ground contact or above 80% storage. They charge if no usable candidate
 remains. Physical image holding, ground delivery, charging, and wheel dynamics
@@ -57,11 +62,13 @@ selected. One orbit can contain multiple event decisions; busy tasks continue.
 ## Existing cooldown is preserved
 
 Per the user's final instruction to use the implementation already present, this
-campaign **does not introduce a new one-orbit, fixed-5700-second, or ground-only
-cooldown**. The existing full mission configuration has
+campaign **does not introduce a new one-orbit, fixed-5700-second, or
+delivery-anchored cooldown**. The existing full mission configuration has
 `reimage_cooldown_orbits=2.0`. `MultiSensorRSOTargetImageReward.reset_post_sim_init`
 derives `cooldown_s = 2 × median(initial sensing-spacecraft orbital periods)`.
-For the existing 700/800-km two-sensor orbits this is **11,960.807123947807 seconds**.
+For the three-sensor 700/800/700-km orbit pattern this reset derives
+**11,834.835756586714 seconds**; every episode records the value derived from its
+initialized sensing orbits.
 It is the same in LEO-only and mixed catalogs, independent of each target's orbit.
 Every episode records the actual derived `reimage_cooldown_s`.
 
@@ -69,9 +76,14 @@ A qualified acquisition suppresses revisits until capture time plus that cooldow
 An own pending physical product additionally blocks that sensor's same-target
 storage partition until its full ground delivery. Receiving metadata does not move
 image bits or confer ownership. In the independent case a peer acquisition is
-unknown; in the centralized case immediate shared facts suppress both sensors for
+unknown; in the centralized case immediate shared facts suppress all sensors for
 the same cooldown. First-coverage metrics remain separate from revisit service
 counts, which can exceed 100 over a long episode.
+
+“Ground confirmation” is kept as an evaluation boundary: ground coverage changes
+only after a complete physical downlink. It is not the start of the existing
+revisit cooldown. Moving the cooldown anchor from capture to delivery would change
+the task-generation semantics and must be a separately versioned sensitivity case.
 
 ## LEO and mixed orbital populations
 
@@ -88,9 +100,10 @@ RAAN, argument of periapsis, and true anomaly are uniform 0–360°. Eccentricit
 is resampled if needed to keep perigee at least 400 km. The mixed evaluation uses
 the AMOS exact-count option: **50 LEO, 30 MEO, 20 GEO**, with regime-to-target-ID
 assignment shuffled deterministically by seed. It does not randomize mixture
-weights, unlike a separate AMOS training variant. Both sensors retain the full
-multi-agent branch's existing staggered LEO orbits (700/800 km, 97°/70° inclination).
-All 100 RSOs are live propagated Basilisk/Vizard spacecraft; only the two sensors
+weights, unlike a separate AMOS training variant. The three sensors retain the
+branch's existing staggered orbit generator: sensor 0 is 700 km/97°, sensor 1 is
+800 km/70°, and sensor 2 is 700 km/97°, with distinct RAAN and anomaly offsets.
+All 100 RSOs are live propagated Basilisk/Vizard spacecraft; only the three sensors
 are PettingZoo agents. There is no old target-killing speed shortcut.
 
 For each environment and seed, independent and centralized cases must reproduce
@@ -107,6 +120,22 @@ qualified/unqualified exposures, repeated services, reward, duplicate attempts,
 duplicate and nonduplicate-interrupted sensor-seconds, wasted-time fraction,
 actual task durations/decision counts, zero radio occupancy, time-tagged exposure
 and delivery records, catalog receipt versions, and physical onboard ownership.
+
+Two additional duplicate families implement the requested definitions:
+
+1. **Stale cross-sensor ground delivery:** a qualified delivered product counts
+   when another sensor also delivered a newer capture of the same target. The
+   report also gives the causal subset for which the newer product had already
+   reached ground before the stale one arrived.
+2. **Cross-sensor onboard overlap:** qualified physical products are represented
+   by half-open storage intervals `[capture_time, delivery_time)`, or through the
+   episode end when still onboard. The report counts affected targets and products,
+   redundant acquisitions, excess sensor-seconds `integral max(0, holders-1) dt`,
+   and all sensor-seconds during multi-sensor overlap.
+
+These do not replace the existing cooldown-relative duplicate-attempt and wasted
+task-time metrics. They answer different questions: data freshness at ground and
+catalog-coverage opportunity cost while products remain in storage.
 Event-boundary battery/storage/wheel histories, sensor survival, wall time,
 peak process RSS, and simulated-seconds/wall-second are recorded. Geometric and
 candidate occurrence counts help explain omitted targets, but are sampled at event
@@ -118,24 +147,24 @@ and paired-difference CSVs, and computes 95% bootstrap intervals over initial-st
 seeds. Central-minus-independent differences are paired by environment/seed.
 `--allow-partial` exists only for diagnostic partial reports and labels incompleteness.
 Optional coverage plots show all seed outcomes and means. No 95%→100% improvement
-is assumed. These results concern two deterministic heuristics, not learned-policy
+is assumed. These results concern deterministic heuristics, not learned-policy
 convergence or a direct controlled comparison to a previous single-agent 95% result.
 
 ## Cluster preparation and commands
 
-Live cluster inspection verified account `ucb550_asc2`, partition `acpu`, and QOS
-`cpu-normal` (24-hour maximum); the old `amilan` partition is obsolete. The requested
-`/projects/dahu1128/bsk_rl-multi-agent-space-imaging-2026` directory was absent at
-inspection. The existing `/projects/dahu1128/bsk_rl` is the AMOS checkout and its
-`/projects/dahu1128/.venv/bin/python` environment does not meet the pinned readiness
-dependencies. Deploy the supplied snapshot and create/validate the separate Python
-3.11 environment using the parent cluster preparation instructions first. Do not
-run this campaign in the old checkout/environment. The array requires no Ray or
-GPU: each task is one CPU and one Basilisk simulation. The template requests
+Live cluster work verified account `ucb550_asc2`, partition `acpu`, and QOS
+`cpu-normal` (24-hour maximum); the old `amilan` partition is obsolete. The separate
+completion-v2 checkout, Python 3.11 environment, and Basilisk source/runtime now
+exist at the paths below and passed the recorded runtime build/audit. The existing
+`/projects/dahu1128/bsk_rl` AMOS checkout and its old environment remain separate.
+Pull the reviewed three-sensor commit and regenerate a new v2 manifest before any
+new baseline run. The already completed two-sensor tasks 0 and 100 belong to the v1
+manifest and cannot be mixed into this campaign. The array requires no Ray or GPU:
+each task is one CPU and one Basilisk simulation. The template requests
 **4 GiB and one hour per episode**, at most eight concurrent episodes. These are
-conservative starting allocations, to revise from cluster preflight measurements;
-they do not claim measured cluster performance. The existing learned-policy
-preflight uses a different eight-CPU/32-GiB allocation.
+conservative given the measured two-sensor runs (about five minutes and 1.97 GB
+per episode); validate the first three-sensor pair before expanding. The existing
+learned-policy preflight uses a different eight-CPU/32-GiB allocation.
 
 Generate the manifest **after the final source is deployed**, from its Git checkout.
 It hashes tracked/untracked executable/configuration inputs, exact configuration,
@@ -151,8 +180,9 @@ export BASILISK_SOURCE_ROOT=/projects/dahu1128/basilisk-completion-v2
 cd "$BSK_PROJECT_ROOT"
 export PYTHONPATH="$BSK_PROJECT_ROOT/src:$BSK_PROJECT_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
-export BSK_MC_MANIFEST="$BSK_PROJECT_ROOT/results/multiagent_imaging/baseline-mc/manifest.json"
-export BSK_MC_OUTPUT="$BSK_PROJECT_ROOT/results/multiagent_imaging/baseline-mc/episodes"
+export BSK_MC_ROOT="$BSK_PROJECT_ROOT/results/multiagent_imaging/baseline-mc-3sensor-v2"
+export BSK_MC_MANIFEST="$BSK_MC_ROOT/manifest.json"
+export BSK_MC_OUTPUT="$BSK_MC_ROOT/episodes"
 "$BSK_RL_PYTHON" -m examples.multiagent_imaging.baseline_monte_carlo manifest \
   --config examples/multiagent_imaging/configs/baseline_mc.json \
   --output "$BSK_MC_MANIFEST"
@@ -183,7 +213,7 @@ Aggregate after the full campaign:
 ```bash
 "$BSK_RL_PYTHON" -m examples.multiagent_imaging.aggregate_baseline_monte_carlo \
   --manifest "$BSK_MC_MANIFEST" --episodes-dir "$BSK_MC_OUTPUT" \
-  --output-dir "$BSK_PROJECT_ROOT/results/multiagent_imaging/baseline-mc/report" --plots
+  --output-dir "$BSK_MC_ROOT/report" --plots
 ```
 
 Every array task checks for a Slurm job and executes `cluster/audit_runtime.py`
@@ -196,19 +226,18 @@ Source files: `baseline_monte_carlo.py` contains the scenario, controller and ru
 `cluster/baseline_mc.slurm` maps array tasks to episodes. Code comments explain the
 information boundary and physical versus catalog ownership.
 
-## Local validation evidence (2026-09-06)
+## Validation evidence (2026-09-10)
 
-The new campaign tests passed: **12 tests** covering the 200-ID/four-cell mapping,
-exact mixed population, reproducible orbital sampling, duplicate/reserved-target
-joint assignment, coverage union denominators, source/pairing validation, real
-Basilisk initial-state matching, and four short no-radio episodes. Ruff and shell
-syntax checks passed. Existing Basilisk deprecation warnings remain.
+The three-sensor v2 changes have **16 focused passing tests**, and the complete
+multi-agent unit/integration suite has **105 passing tests**. Coverage includes the
+200-ID/four-cell mapping, exact mixed population, reproducible orbital sampling,
+generic three-way joint assignment, union coverage, both new duplicate definitions,
+source/pair validation, matched real Basilisk initial states, centralized access at
+every decision boundary, and four short no-radio episodes. Ruff passes; the only
+test output is existing Basilisk deprecation warnings.
 
-Four additional saved diagnostic episodes used six targets, three candidates,
-1800-second horizons and seed 0, one per cell. All completed; qualified union
-capture counts were 4/6 for each LEO information case and 5/6 for each mixed case.
-These short episodes contained no ground deliveries and do not validate long-run
-coverage or superiority. The partial aggregator verified both initial-state pairs
-and labeled the result 4/200 incomplete. Artifacts are under
-`results/multiagent_imaging/baseline_mc_validation/` (manifest, raw episodes,
-CSV tables and partial report). The full mission baseline campaign has not run.
+The saved 45,000-second cluster pair described in `cluster/EXECUTION.md` used the
+earlier two-sensor v1 manifest. It remains valid historical evidence, but cannot be
+included in v2 statistics. No three-sensor 45,000-second episode has run yet. The
+next authorized action should therefore be a fresh matched LEO seed-zero pair
+(tasks 0 and 100), followed by review before the other 198 episodes.
