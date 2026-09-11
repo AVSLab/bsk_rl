@@ -1,16 +1,26 @@
 # Completion-v2 training and cluster-readiness evidence
 
-**September 6 continuation:** the live Alpine audit found a different AMOS checkout
+**September 11 status:** the separate Alpine runtime, one-worker two-sensor PPO
+restore/resume gate, and the complete 200-episode three-sensor independent versus
+centralized baseline campaign have run successfully. See
+[`cluster/evidence/three_sensor_v2_full_campaign`](cluster/evidence/three_sensor_v2_full_campaign/REPORT.md).
+The four-worker learned pilot and broad six-cell learned-policy study have not run.
+The next policy gate should use three sensors after versioning the extra peer/action
+slot and adding the baseline's exact LEO/mixed target-environment selection.
+
+**September 6 historical preparation:** the live Alpine audit found a different AMOS checkout
 and an incompatible Python/Basilisk environment. Prepared deployment, runtime build,
 one-worker validation, bounded learning, and the 200-episode baseline array are in
 [cluster/README.md](cluster/README.md) and [BASELINE_MONTE_CARLO.md](BASELINE_MONTE_CARLO.md).
-They have not been submitted. The local evidence below remains local evidence.
+They had not yet been submitted at that point. The local evidence below remains the
+pre-deployment record.
 
 The local preflight passed on `multi-agent-space-imaging-2026`. Directed transmission,
 target-set attention, complete-episode PPO, checkpoint evaluation and training resume
-execute against real Basilisk spacecraft. **No cluster jobs or six-cell statistical
-study were launched.** This demonstrates a working training path, not convergence or
-superiority of either retasking rule.
+execute against real Basilisk spacecraft. At the time of this local record, no cluster
+job or six-cell statistical study had launched. The later cluster work completed the
+runtime, one-worker gate, and deterministic baseline campaign; it still does not show
+learned-policy convergence or superiority of either retasking rule.
 
 ## Formulation and implementation
 

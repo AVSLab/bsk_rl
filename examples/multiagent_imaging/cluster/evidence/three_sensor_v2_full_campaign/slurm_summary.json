@@ -1,0 +1,55 @@
+{
+  "baseline_allocations": {
+    "alloc_cpus_values": [
+      2
+    ],
+    "allocated_cpu_hours": 29.236666666666668,
+    "batch_max_rss_bytes": {
+      "max": 2245398528,
+      "mean": 1926293217.28,
+      "median": 1911963648.0,
+      "min": 1835888640
+    },
+    "elapsed_s": {
+      "max": 389,
+      "mean": 263.13,
+      "median": 262.0,
+      "min": 183
+    },
+    "job_count": 200,
+    "states": [
+      "COMPLETED"
+    ]
+  },
+  "note": "The second 39-second report job was an accidental duplicate aggregation after all episode files were complete; the strict local rerun reproduced the same completeness result.",
+  "report_allocations": {
+    "alloc_cpus_values": [
+      3
+    ],
+    "allocated_cpu_hours": 0.065,
+    "batch_max_rss_bytes": {
+      "max": 1236242432,
+      "mean": 1236121600,
+      "median": 1236121600.0,
+      "min": 1236000768
+    },
+    "elapsed_s": {
+      "max": 39,
+      "mean": 39,
+      "median": 39.0,
+      "min": 39
+    },
+    "job_count": 2,
+    "states": [
+      "COMPLETED"
+    ]
+  },
+  "submitted_array_jobs": [
+    32366970,
+    32367155
+  ],
+  "submitted_report_jobs": [
+    32367947,
+    32367980
+  ]
+}

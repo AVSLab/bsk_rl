@@ -240,21 +240,21 @@ def test_paired_aggregation_rejects_unmatched_initial_states():
             pettingzoo_agents=["sensor_0", "sensor_1", "sensor_2"],
             passive_target_count=100,
             communication={"radio_action_count": 0},
-                coordination={
+            coordination={
                 "communication_time_s": {
                     "sensor_0": 0.0,
                     "sensor_1": 0.0,
                     "sensor_2": 0.0,
-                    }
-                },
-                event_steps=4,
-                centralized_information_audit={
-                    "enabled": task >= 100,
-                    "decision_boundaries": 4 if task >= 100 else 0,
-                    "sensor_state_reads": 12 if task >= 100 else 0,
-                    "last_snapshot_sha256": "snapshot" if task >= 100 else None,
-                },
-            )
+                }
+            },
+            event_steps=4,
+            centralized_information_audit={
+                "enabled": task >= 100,
+                "decision_boundaries": 4 if task >= 100 else 0,
+                "sensor_state_reads": 12 if task >= 100 else 0,
+                "last_snapshot_sha256": "snapshot" if task >= 100 else None,
+            },
+        )
 
     paired = [episode(0), episode(100)]
     assert (
@@ -269,3 +269,93 @@ def test_paired_aggregation_rejects_unmatched_initial_states():
     paired[1]["initial_conditions_sha256"] = digest(paired[1]["initial_conditions"])
     with pytest.raises(ValueError, match="initial conditions differ"):
         validate_results(manifest, paired, allow_partial=True)
+
+
+def test_pooled_pair_statistics_resample_shared_seed_blocks():
+    from examples.multiagent_imaging.aggregate_baseline_monte_carlo import (
+        summarize_seed_blocked,
+    )
+
+    rows = [
+        {"seed": 0, "environment": "leo", "effect": 1.0},
+        {"seed": 0, "environment": "mixed", "effect": 3.0},
+        {"seed": 1, "environment": "leo", "effect": 5.0},
+        {"seed": 1, "environment": "mixed", "effect": 7.0},
+    ]
+    summary = summarize_seed_blocked(rows, "effect")
+    assert summary["n"] == 4
+    assert summary["n_seed_blocks"] == 2
+    assert summary["mean"] == 4.0
+    assert summary["bootstrap_mean_ci95"] == [2.0, 6.0]
+
+
+def test_flatten_separates_positive_reward_components_from_adjustments():
+    from examples.multiagent_imaging.aggregate_baseline_monte_carlo import flatten
+
+    result = {
+        "task_id": 0,
+        "case": "independent",
+        "target_environment": "leo",
+        "seed": 0,
+        "sim_time_s": 10,
+        "horizon_reached": True,
+        "wall_time_s": 1,
+        "peak_process_rss_bytes": 1,
+        "simulated_seconds_per_wall_second": 10,
+        "total_constellation_reward": 19.0,
+        "baseline_config": {"alpha": 0.1},
+        "coverage": {
+            "capture_coverage_fraction": 1,
+            "ground_delivery_coverage_fraction": 1,
+            "capture_target_count": 1,
+            "ground_delivery_target_count": 1,
+            "qualified_exposure_count": 1,
+            "unqualified_exposure_count": 0,
+            "qualified_ground_delivery_count": 1,
+            "cross_sensor_capture_overlap_count": 0,
+        },
+        "product_duplicates": {
+            key: 0
+            for key in (
+                "stale_cross_sensor_ground_delivery_count",
+                "stale_cross_sensor_ground_delivery_target_count",
+                "causally_avoidable_stale_ground_delivery_count",
+                "cross_sensor_onboard_overlap_target_count",
+                "cross_sensor_onboard_overlap_product_count",
+                "cross_sensor_onboard_redundant_acquisition_count",
+                "cross_sensor_onboard_redundant_sensor_time_s",
+                "cross_sensor_onboard_overlap_sensor_time_s",
+            )
+        },
+        "coordination": {
+            "duplicate_sensor_time_s": 0,
+            "interrupted_nonduplicate_sensor_time_s": 0,
+            "wasted_time_fraction": 0,
+            "policy_decisions": {"sensor_0": 1},
+            "communication_time_s": {"sensor_0": 0},
+        },
+        "team_summary": {
+            "duplicate_attempt_count": 0,
+            "successful_duplicate_count": 0,
+            "unique_acquisition_count": 2,
+            "unique_service_count": 1,
+            "team_acquisition_value": 20,
+            "team_value": 10,
+        },
+        "resource_history": {
+            "sensor_0": [
+                {
+                    "battery_fraction": 1,
+                    "storage_fraction": 0,
+                    "max_wheel_fraction": 0,
+                    "alive": True,
+                }
+            ]
+        },
+    }
+    row = flatten(result)
+    assert row["acquisition_reward_component"] == 18
+    assert row["ground_delivery_reward_component"] == 1
+    assert row["reward_adjustment_component"] == 0
+    assert row["unique_acquisition_service_count"] == 2
+    assert row["unique_ground_service_count"] == 1

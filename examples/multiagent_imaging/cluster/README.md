@@ -1,13 +1,17 @@
-# Reviewed Alpine launch preparation — 2026-09-06
+# Reviewed Alpine launch and campaign record — 2026-09-11
 
-The completion branch is deployed through Git. The user authorized the runtime
-build, then (only after its audit passes) baseline tasks **0 and 100** and the
-**one-worker validation** stage. See [EXECUTION.md](EXECUTION.md) for live job
-records. The remaining 198 baseline episodes and four-worker learning still
-require separate authorization. No cluster learning/coverage result is claimed
-until its recorded job completes and its checks pass.
-The immediate priority is the [200-episode baseline campaign](../BASELINE_MONTE_CARLO.md).
-The directed-completion learning pilot is a separate, bounded workflow.
+The separate completion branch/runtime deployment, one-worker directed PPO gate,
+and all 200 three-sensor baseline episodes are complete. The full baseline evidence
+is in
+[`evidence/three_sensor_v2_full_campaign`](evidence/three_sensor_v2_full_campaign/REPORT.md),
+and [EXECUTION.md](EXECUTION.md) records the Slurm history. The broad learned-policy
+study has not started. Its next step is a fresh, bounded three-sensor directed
+completion pilot after the learned environment gains the exact LEO/mixed catalog
+selection used by the baselines.
+
+The commands below retain the reviewed deployment and launch procedure. Sections
+that describe preflight authorization are historical records rather than pending
+campaign work.
 
 ## Verified live
 
@@ -210,21 +214,19 @@ source/dependency snapshots and diagnostic learning curves are saved. One traini
 seed cannot establish robustness across trained policies or justify statistical
 superiority. No broad six-cell study is launched.
 
-## Estimates and current evidence
+## Actual resources and current evidence
 
-Saved desktop 100-RSO/45,000-second episodes took roughly 222–249 seconds, with
-single-process PPO peaks 1.15–1.35 GiB. These are not Alpine measurements. Complete
-episodes can exceed the 64-step minimum by hundreds of rows per worker. Planning
-estimates, excluding queues/build time: baseline campaign 13–20 aggregate CPU-hours
-(200 × roughly 4–6 minutes), about 2–3 hours at eight slots if speed is similar;
-one-worker learning validation 30–60 minutes; four-worker eight-update/two-mode
-pilot plus evaluation roughly 2–4 hours on its eight-CPU node. Slurm bounds are one
-CPU-hour per baseline task and 32 allocated CPU-hours per learning/build job.
-Revise from saved cluster timing/RSS and `sacct` Elapsed/MaxRSS/AllocCPUS.
+The 200 baseline allocations all completed. Median elapsed time was 262 seconds
+(range 183–389), and median batch MaxRSS was 1.781 GiB (range 1.710–2.091 GiB).
+Although the script requested one CPU, Slurm allocated two CPUs per task; the total
+was 29.237 allocated CPU-hours. These measurements replace the earlier desktop
+planning estimate.
 
-Local preparation checks include 12 baseline tests; four saved 1800-second/six-target
-episodes with matched initial states; pilot gate tests; and a real one-remote-worker
-save/restore/resumed update. These small cases do not replace mission-scale cluster
-validation or establish 100% coverage. The earlier full-mission evidence remains
-in [CLUSTER_READINESS.md](../CLUSTER_READINESS.md). A larger multi-seed study is not
-justified by the new preparation work alone.
+The earlier one-worker learning validation completed both retasking modes, exact
+checkpoint restoration, resume, and directed communication with two sensors. Its
+two-sensor recipient choice was necessarily trivial. The next learned pilot should
+start fresh with three sensors and two peer slots, after versioning that changed
+observation/action contract and adding the exact LEO/mixed target distributions.
+Run the same complete-episode one-worker gate before increasing to four workers.
+The baseline's 50 matched seeds support its information comparison; they do not
+establish convergence or robustness of any learned policy.

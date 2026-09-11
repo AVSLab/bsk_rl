@@ -1,0 +1,64 @@
+{
+  "all_reached_45000_s": true,
+  "all_three_sensors_alive_at_end": true,
+  "campaign_version": [
+    "three-sensor-full-state-baselines-v2"
+  ],
+  "cell_counts": {
+    "centralized_full_state_leo": 50,
+    "centralized_full_state_mixed": 50,
+    "independent_leo": 50,
+    "independent_mixed": 50
+  },
+  "centralized_decision_boundaries_range": [
+    695,
+    769
+  ],
+  "centralized_episode_count": 100,
+  "centralized_full_team_reads_exact": true,
+  "episode_count": 200,
+  "independent_centralized_reads_zero": true,
+  "matched_initial_condition_hashes": {
+    "leo": 50,
+    "mixed": 50
+  },
+  "passive_target_counts": [
+    100
+  ],
+  "pettingzoo_agent_lists": [
+    [
+      "sensor_0",
+      "sensor_1",
+      "sensor_2"
+    ]
+  ],
+  "reimage_cooldown_s": [
+    11834.835756586712,
+    11834.835756586714
+  ],
+  "resource_extrema": {
+    "maximum_storage_fraction": 0.8,
+    "maximum_wheel_fraction": 0.16665651882855556,
+    "minimum_battery_fraction": 0.5830897397278682
+  },
+  "runtime_audit_count": 200,
+  "source_fingerprints": [
+    "ec552c0b71e5f4469cda03762a311d3eab4a27faa2df35aeca70977e6899f569"
+  ],
+  "source_git_heads": [
+    "01d766dd069bc87952bed6e651e0fe2c52088a76",
+    "0453fc69dbab51cfec3836c7e3f7348170f98c7b"
+  ],
+  "strict_aggregation": {
+    "complete_campaign": true,
+    "completed_episodes": 200,
+    "missing_task_ids": [],
+    "validated_information_pairs": 100
+  },
+  "task_id_range": [
+    0,
+    199
+  ],
+  "unique_task_ids": 200,
+  "zero_radio_all_episodes": true
+}

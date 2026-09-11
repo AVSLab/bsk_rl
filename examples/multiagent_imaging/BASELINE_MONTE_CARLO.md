@@ -1,9 +1,10 @@
 # Three-sensor independent and centralized baselines
 
-This campaign prepares **200 deterministic heuristic episodes**, not policy training:
+This campaign completed **200 deterministic heuristic episodes**, not policy training:
 three sensors, 100 passive RSO spacecraft, ten candidates, 45,000-second horizons,
 and conflict retasking. Seeds 0–49 repeat in each information/environment cell.
-No job is submitted by these preparation commands.
+The full paired results and plots are in
+[`cluster/evidence/three_sensor_v2_full_campaign`](cluster/evidence/three_sensor_v2_full_campaign/REPORT.md).
 
 | Array IDs | Information/controller | Target catalog | Seeds |
 |---|---|---|---|
@@ -144,11 +145,18 @@ boundaries and are not a continuous visibility feasibility certificate.
 Aggregation validates all 200 expected IDs and source/config manifests, rejects
 duplicate/mismatched runs, keeps early-death episodes in statistics, writes episode
 and paired-difference CSVs, and computes 95% bootstrap intervals over initial-state
-seeds. Central-minus-independent differences are paired by environment/seed.
+seeds. Central-minus-independent differences are paired by environment/seed. The
+environment-specific intervals resample 50 paired seeds. The pooled analysis has 100
+LEO/mixed effects but resamples 50 seed blocks, keeping both environments together
+when a reused seed is drawn. This avoids treating the same seed ID as two independent
+initializations.
 `--allow-partial` exists only for diagnostic partial reports and labels incompleteness.
-Optional coverage plots show all seed outcomes and means. No 95%→100% improvement
-is assumed. These results concern deterministic heuristics, not learned-policy
-convergence or a direct controlled comparison to a previous single-agent 95% result.
+Plots show all seed outcomes, means, paired effects, productive cooldown-qualified
+services, positive reward components, and each duplicate-work family. The baseline
+reward decomposes exactly into 90% acquisition value and 10% ground-delivered value;
+all saved penalty/adjustment terms were zero. No 95%→100% improvement is assumed.
+These results concern deterministic heuristics, not learned-policy convergence or a
+direct controlled comparison to a previous single-agent 95% result.
 
 ## Cluster preparation and commands
 
@@ -226,18 +234,25 @@ Source files: `baseline_monte_carlo.py` contains the scenario, controller and ru
 `cluster/baseline_mc.slurm` maps array tasks to episodes. Code comments explain the
 information boundary and physical versus catalog ownership.
 
-## Validation evidence (2026-09-10)
+## Validation evidence (2026-09-11)
 
-The three-sensor v2 changes have **16 focused passing tests**, and the complete
-multi-agent unit/integration suite has **105 passing tests**. Coverage includes the
-200-ID/four-cell mapping, exact mixed population, reproducible orbital sampling,
-generic three-way joint assignment, union coverage, both new duplicate definitions,
-source/pair validation, matched real Basilisk initial states, centralized access at
-every decision boundary, and four short no-radio episodes. Ruff passes; the only
-test output is existing Basilisk deprecation warnings.
+The complete cluster campaign has **200/200 episodes**, four cells of 50 seeds, and
+100 validated matched information pairs. Every run reached 45,000 seconds with all
+three sensors alive, exactly 100 passive spacecraft, and zero radio activity. The
+centralized episodes recorded one full-team snapshot per decision boundary and three
+sensor-state reads per snapshot; independent episodes recorded no centralized reads.
+All paired initial-condition hashes match. The derived cooldown differs from
+11,834.835756586714 seconds only by floating-point roundoff.
 
-The saved 45,000-second cluster pair described in `cluster/EXECUTION.md` used the
-earlier two-sensor v1 manifest. It remains valid historical evidence, but cannot be
-included in v2 statistics. No three-sensor 45,000-second episode has run yet. The
-next authorized action should therefore be a fresh matched LEO seed-zero pair
-(tasks 0 and 100), followed by review before the other 198 episodes.
+The strict local rerun and **18 focused tests** pass. The tests cover campaign mapping,
+matched initialization, joint assignment, coverage and duplicate definitions,
+reward-component separation, paired/seed-blocked statistics, centralized access, and
+four short no-radio episodes. Ruff passes; test output contains only existing Basilisk
+deprecation warnings.
+
+Centralized coordination averaged 27.85 more cooldown-qualified acquisitions and
+29.88 more ground-confirmed unique services than independent control in the pooled
+paired comparison. It removed 429.50 duplicate attempts and 406.93 successful
+duplicate deliveries per episode. Coverage rose by 0.25 capture percentage points;
+most residual missed targets had no event-boundary illuminated LOS sample. See the
+full evidence report for intervals, metric definitions, resource use, and limitations.

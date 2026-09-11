@@ -151,11 +151,12 @@ continuous returned -6329.1932 versus heuristic 146.9725. This is expected for t
 updates from random initialization and proves execution/restore, not learning quality.
 The gate is `passed: true`, `workers: 1`, `validated_workers: 1`.
 
-## Submission boundary
+## Submission boundary after the 2026-09-08 validation
 
-The runtime build, tasks 0 and 100, and one-worker validation are complete. The
+At that point, the runtime build, tasks 0 and 100, and one-worker validation were complete. The
 remaining 198 baseline episodes, four-worker learning, and the broad six-cell study
-remain outside the current submission authorization and were not submitted.
+had not been submitted. The later three-sensor campaign record below supersedes this
+historical boundary for the deterministic baselines.
 
 ## Three-sensor baseline revision prepared 2026-09-10
 
@@ -169,6 +170,42 @@ the existing capture-anchored two-orbit cooldown and never selects a communicati
 action.
 
 The completed two-sensor tasks 0 and 100 above remain historical v1 evidence. The
-unsubmitted 198 v1 tasks are superseded and should not be launched. No three-sensor
-cluster task has been submitted; a new manifest and a matched v2 task pair 0/100
-must be generated only from the reviewed v2 source.
+unsubmitted 198 v1 tasks are superseded and must not be launched. At the time of
+this revision, the v2 task pair had not yet been submitted; its completed execution
+is recorded below.
+
+## Three-sensor baseline campaign completed 2026-09-11
+
+The user authorized the new LEO seed-zero pair and, after it passed, all remaining
+seeds. Array job `32366970` completed tasks 0 and 100. Array job `32367155`
+completed tasks 1–99 and 101–199. Strict report job `32367947` verified 200/200
+episodes and 100 matched information pairs. Report job `32367980` was an accidental
+duplicate launch; it also completed in 39 seconds and returned the same strict
+result. A local strict rerun reproduced the result.
+
+All four cells contain 50 seeds. Every episode reached 45,000 seconds with all
+three sensing agents alive, 100 passive Basilisk/Vizard spacecraft, and zero radio
+activity. Each environment/seed information pair has the same initial-condition
+hash. Centralized episodes recorded 695–769 decision boundaries, exactly one full
+team snapshot per boundary, and three sensor-state reads per snapshot. Independent
+episodes recorded no centralized state reads. The existing two-orbit cooldown was
+11,834.835756586714 seconds, within 2e-12 floating-point variation.
+
+The pooled paired central-minus-independent effect, resampling 50 seed blocks, was
++0.25 percentage points capture coverage, +0.18 percentage points ground coverage,
++27.85 cooldown-qualified acquisitions, +29.88 unique ground services, and +28.65
+reward per episode. It removed 429.50 duplicate attempts, 406.93 successful
+duplicate deliveries, 15.51 duplicate sensor-hours, and 98.81 excess-holder
+sensor-hours per episode. The complete tables, bootstrap intervals, plots, source
+records, and Slurm accounting are in
+[`evidence/three_sensor_v2_full_campaign`](evidence/three_sensor_v2_full_campaign/REPORT.md).
+
+The campaign reward contained only its positive 90% acquisition and 10%
+ground-delivery components. All 200 reward adjustment/penalty terms were zero. The
+baseline jobs used a median 262 seconds and median 1.781 GiB batch MaxRSS. Slurm
+allocated two CPUs per task, for 29.237 allocated CPU-hours.
+
+The four-worker learned-policy pilot and broad six-cell learned-policy study remain
+unsubmitted. The next learning task should use three sensors so directed receiver
+selection is nontrivial, version the changed peer/action schema, and add the exact
+LEO/mixed target samplers before running a new one-worker checkpoint gate.
