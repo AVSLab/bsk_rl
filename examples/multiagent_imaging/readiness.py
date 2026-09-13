@@ -12,7 +12,12 @@ import time
 
 import psutil
 
-from bsk_rl.obs.completion_observations import OBSERVATION_VERSION
+from bsk_rl.obs.completion_observations import (
+    GLOBAL_FEATURE_ORDER,
+    OBSERVATION_VERSION,
+    PEER_FEATURE_ORDER,
+    TARGET_FEATURE_ORDER,
+)
 
 
 def write_json(path, value):
@@ -31,20 +36,42 @@ def schema(config):
     settings.pop("seed")
     return dict(
         version=OBSERVATION_VERSION,
-        policy="shared-target-peer-set-attention-v2",
+        policy="shared-target-peer-set-attention-v3",
         observation=dict(
             own=26,
+            own_feature_order=list(GLOBAL_FEATURE_ORDER),
             target_features=17,
+            target_feature_order=list(TARGET_FEATURE_ORDER),
             candidates=config.n_candidates,
             peer_features=12,
+            peer_feature_order=list(PEER_FEATURE_ORDER),
             peers=config.n_peers,
+            peer_slot_identity="configured sensor names in lexical order, excluding sender",
             size=26 + 17 * config.n_candidates + 12 * config.n_peers,
         ),
         actions=dict(
-            operational=["charge", "downlink", "desat", "broadcast", "continue"],
+            identity=[
+                "charge",
+                "downlink_owned_products",
+                "desat",
+                "reserved_broadcast_masked_in_directed_mode",
+                "continue_current_task",
+                *[f"image_candidate_slot_{i}" for i in range(config.n_candidates)],
+                *[f"transmit_peer_slot_{i}" for i in range(config.n_peers)],
+            ],
             image_start=5,
             transmit_start=5 + config.n_candidates,
             size=5 + config.n_candidates + config.n_peers,
+        ),
+        masks=dict(
+            target_valid_feature=16,
+            peer_valid_feature=11,
+            continue_valid_global_feature=25,
+            invalid_logit=-1e9,
+            directed_broadcast_index_masked=True,
+            padding_excluded_from_actor_attention=True,
+            padding_excluded_from_actor_and_critic_pooling=True,
+            empty_set_identity="zero",
         ),
         settings=settings,
     )

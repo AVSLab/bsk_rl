@@ -23,7 +23,7 @@ from examples.multiagent_imaging.training_audit import parameter_change
 def test_checkpoint_outputs_optimizer_resume_and_seed_progress(tmp_path):
     torch.set_num_threads(1)
     config = MultiAgentImagingConfig(
-        n_sensors=3,
+        n_sensors=4,
         n_targets=4,
         n_candidates=2,
         episode_duration_s=360,
@@ -31,6 +31,10 @@ def test_checkpoint_outputs_optimizer_resume_and_seed_progress(tmp_path):
         imaging_duration_s=120,
         information_case="completion",
         communication_mode="directed",
+        target_population="mixed_50_30_20",
+        sensor_constellation="walker_delta",
+        walker_planes=2,
+        walker_phasing=1,
         seed=18,
     )
     ray.init(num_cpus=2, include_dashboard=False, ignore_reinit_error=True)

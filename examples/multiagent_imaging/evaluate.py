@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
+import hashlib
 import json
 from pathlib import Path
 from dataclasses import asdict
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -19,6 +22,25 @@ from examples.multiagent_imaging.config import (
     OBSERVATION_VERSION,
 )
 from examples.multiagent_imaging.environment import build_environment
+
+
+def _digest(value):
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, allow_nan=False, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def _useful_revisits(captures, quality_threshold, cooldown_s):
+    """Count qualified captures that begin a useful post-cooldown service cycle."""
+    useful, latest = [], {}
+    for product in sorted(captures, key=lambda item: (item.capture_time, item.record_id)):
+        if product.quality < quality_threshold:
+            continue
+        previous = latest.get(product.target_id)
+        if previous is not None and product.capture_time >= previous + cooldown_s:
+            useful.append(product.record_id)
+        latest[product.target_id] = max(previous or float("-inf"), product.capture_time)
+    return useful
 
 
 def _target_action(
@@ -63,6 +85,12 @@ def run_rollout(
     vizard_settings: dict | None = None,
 ) -> dict:
     """Run one matched deterministic shared-policy rollout with diagnostics."""
+    reference_case = {
+        "independent_reference": "independent",
+        "centralized_full_state_reference": "centralized_full_state",
+    }.get(controller)
+    if reference_case is not None and policy is not None:
+        raise ValueError("A heuristic reference cannot also execute policy weights.")
     env = build_environment(
         config,
         vizard_dir=vizard_dir,
@@ -83,6 +111,7 @@ def run_rollout(
                 "velocity_N_m_s": list(map(float, target.dynamics.v_BN_N)),
                 "priority": float(target.rso_target.priority),
                 "target_id": int(target.rso_target.id),
+                "regime": target.target_population_regime,
             }
             for target in env.passive_satellites
         },
@@ -107,13 +136,42 @@ def run_rollout(
     concurrent_target_conflict_time_s = 0.0
     active_conflicts: set[int] = set()
     prior_sim_time = float(env.simulator.sim_time)
+    central_audit = {
+        "enabled": reference_case == "centralized_full_state",
+        "decision_boundaries": 0,
+        "sensor_state_reads": 0,
+        "minimum_sensors_visible": (
+            config.n_sensors if reference_case == "centralized_full_state" else None
+        ),
+        "maximum_catalog_records_visible": 0,
+        "maximum_onboard_products_visible": 0,
+        "last_snapshot_sha256": None,
+    }
 
     while env.agents:
-        actions = {}
+        if reference_case is not None:
+            from examples.multiagent_imaging.baseline_monte_carlo import choose_actions
+
+            reference_config = SimpleNamespace(
+                n_candidates=config.n_candidates,
+                battery_charge_threshold=0.3,
+                wheel_desaturation_threshold=0.7,
+                storage_downlink_threshold=0.8,
+            )
+            actions = choose_actions(
+                env,
+                reference_config,
+                reference_case,
+                central_audit=central_audit,
+            )
+        else:
+            actions = {}
         for sensor in env.sensing_satellites:
             if sensor.name not in env.agents:
                 continue
-            if not sensor.requires_retasking:
+            if reference_case is not None:
+                action = actions[sensor.name]
+            elif not sensor.requires_retasking:
                 action = NO_ACTION
             else:
                 sim_time = float(env.simulator.sim_time)
@@ -265,14 +323,72 @@ def run_rollout(
             "shared_omitted_target_ids": sorted(values["shared_omitted_target_ids"]),
         }
 
+    captures = list(env.rewarder._team_accounting.capture_attempts)
+    services = list(env.rewarder.service_entries)
+    from examples.multiagent_imaging.baseline_monte_carlo import (
+        coverage_metrics,
+        duplicate_product_metrics,
+    )
+
+    coverage = coverage_metrics(
+        [target.rso_target.id for target in env.passive_satellites],
+        captures,
+        services,
+        env.rewarder.quality_threshold,
+        sensor_names=[sensor.name for sensor in env.sensing_satellites],
+    )
+    product_duplicates = duplicate_product_metrics(
+        captures,
+        services,
+        env.rewarder.quality_threshold,
+        float(env.simulator.sim_time),
+    )
+    useful_revisits = _useful_revisits(
+        captures, env.rewarder.quality_threshold, env.rewarder.reimage_cooldown_s
+    )
+    acquisition_component = (1.0 - config.alpha) * sum(
+        values["acquisition_credit"]
+        for values in env.rewarder.per_sensor_metrics.values()
+    )
+    delivery_component = config.alpha * sum(
+        values["delivery_credit"]
+        for values in env.rewarder.per_sensor_metrics.values()
+    )
+    total_reward = sum(cumulative_reward.values())
+    communication_adjustment = -config.communication_cost_per_s * sum(
+        coordination["communication_time_s"].values()
+    )
+    known_components = acquisition_component + delivery_component + communication_adjustment
+    recipient_selections = Counter(
+        entry["receiver"]
+        for entry in env.communicator.transmission_history
+        if entry.get("outcome") == "hold_complete"
+    )
+    recipient_slot_selections = Counter(
+        str(entry["peer_slot"])
+        for entry in env.communicator.transmission_history
+        if entry.get("outcome") == "hold_complete"
+    )
+    packet_outcomes = Counter(
+        entry["outcome"] for entry in env.communicator.delivery_history
+    )
+    ack_state = {
+        f"{sender}->{receiver}": dict(sorted(versions.items()))
+        for (sender, receiver), versions in sorted(env.communicator.acknowledged.items())
+    }
     result = {
         "seed": config.seed,
         "controller": controller,
         "config": config.to_dict(),
         "initial_conditions": initial_conditions,
+        "initial_conditions_sha256": _digest(initial_conditions),
         "sim_time_s": float(env.simulator.sim_time),
         "pettingzoo_agents": list(env.possible_agents),
         "passive_target_count": len(env.passive_satellites),
+        "target_regime_counts": dict(
+            Counter(target.target_population_regime for target in env.passive_satellites)
+        ),
+        "reimage_cooldown_s": float(env.rewarder.reimage_cooldown_s),
         "cumulative_reward": cumulative_reward,
         "action_counts": action_counts,
         "completed_action_d_ts": accumulated_d_ts,
@@ -291,15 +407,52 @@ def run_rollout(
             "event_count": concurrent_target_conflict_events,
             "time_s": concurrent_target_conflict_time_s,
         },
+        "centralized_information_audit": central_audit,
         "message_diagnostics": {
             "disposition_counts": message_dispositions,
             "packet_latency_s": message_ages_s,
             "delivery_history": env.communicator.delivery_history,
             "transmission_history": env.communicator.transmission_history,
+            "acknowledged_versions_by_link": ack_state,
+            "recipient_selection_counts": dict(recipient_selections),
+            "recipient_slot_selection_counts": dict(recipient_slot_selections),
+            "packet_outcome_counts": dict(packet_outcomes),
+            "payload_records_attempted": int(
+                sum(
+                    entry.get("records", 0)
+                    for entry in env.communicator.transmission_history
+                    if entry.get("outcome") == "hold_complete"
+                )
+            ),
+            "payload_bytes_attempted": int(
+                sum(
+                    entry.get("payload_bytes", 0)
+                    for entry in env.communicator.transmission_history
+                    if entry.get("outcome") == "hold_complete"
+                )
+            ),
         },
         "target_omission_diagnostics": omission_output,
         "per_sensor_metrics": env.rewarder.per_sensor_metrics,
         "team_summary": env.rewarder.team_summary,
+        "coverage": coverage,
+        "product_duplicates": product_duplicates,
+        "useful_post_cooldown_revisits": {
+            "count": len(useful_revisits),
+            "record_ids": useful_revisits,
+        },
+        "reward_decomposition": {
+            "acquisition_90_percent_component": acquisition_component,
+            "ground_delivery_10_percent_component": delivery_component,
+            "communication_time_adjustment": communication_adjustment,
+            "other_operational_penalties_or_adjustments": total_reward
+            - known_components,
+            "total_constellation_reward": total_reward,
+            "configured_empty_downlink_penalty": -1.0,
+            "configured_low_battery_penalty": 0.0,
+            "configured_full_storage_penalty": 0.0,
+            "configured_duplicate_penalty": 0.0,
+        },
         "coordination": coordination,
         "observation_version": OBSERVATION_VERSION,
         "completion_records": {

@@ -266,3 +266,18 @@ $PYTHON examples/multiagent_imaging/run_quick_demo.py \
 Result: **passed**. The run produced three per-sensor diagnostic figures and one
 multi-agent catalog overview in both vector PDF and PNG formats. A separate one-sensor
 check produced only its per-sensor figure, confirming the multi-agent-only plot gate.
+
+# Completion-v3 Walker-four local gate — September 13, 2026
+
+The current four-sensor Walker/mixed implementation passed 114 multi-agent unit
+and integration tests in 41.52 seconds using the shared local Python 3.11/Basilisk
+environment. Ruff passed the multi-agent example, changed completion modules, and
+test directories. The suite includes all three peer-slot selections with real
+Basilisk pointing, selected-receiver-only delivery, target/peer permutations,
+all-empty masks, exact 50/30/20 population construction, Walker 4/2/1 geometry,
+derived cooldown, checkpoint logit restore, and optimizer/worker-seed resume.
+
+The 3,000-second LOS validation used all three peer slots, accepted nine packets,
+and preserved physical product ownership. Its compact and full JSON outputs are
+in `results/multiagent_imaging/walker4_completion_v3_local_20260913`; the compact
+review record is committed under `cluster/evidence/walker4_completion_v3_local`.

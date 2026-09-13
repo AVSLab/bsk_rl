@@ -209,3 +209,29 @@ The four-worker learned-policy pilot and broad six-cell learned-policy study rem
 unsubmitted. The next learning task should use three sensors so directed receiver
 selection is nontrivial, version the changed peer/action schema, and add the exact
 LEO/mixed target samplers before running a new one-worker checkpoint gate.
+
+## Four-sensor Walker completion-v3 pilot prepared 2026-09-13
+
+The user replaced the earlier three-sensor/LEO-plus-mixed plan with four sensing
+agents in a Walker Delta 4/2/1 constellation and mixed targets only. The completed
+200-episode three-sensor campaign above remains immutable. The new learned contract
+uses four circular 700 km, 97 degree sensors, 100 passive spacecraft split exactly
+50 LEO/30 MEO/20 GEO, ten candidate slots, three peer slots, 45,000-second complete
+episodes, and directed finite completion. It has 232 observation values and 18
+actions under schema `completion-v3-walker4-mixed`.
+
+The local gate passed 113 multi-agent tests and Ruff. A 3,000-second real-Basilisk
+LOS run used all three peer-slot indices, accepted nine selected-recipient packets,
+and retained physical ownership. It derived the unchanged capture-anchored two-orbit
+cooldown as 11,834.835756586708 seconds.
+
+The cluster output root is
+`/projects/dahu1128/bsk_rl-multi-agent-space-imaging-2026/results/multiagent_imaging/walker4-completion-v3-20260913`.
+The staged launcher re-audits support data, runtime, source, packages, native modules,
+and allocation inside each job. The authorized one-worker gate profiles one complete
+mission and runs two updates per retasking mode through exact checkpoint resume. A
+passing gate permits a fresh four-worker run of eight updates per mode; the topology
+change is recorded and no exact one-to-four continuation is claimed. Held-out
+evaluation uses mixed seeds 10000–10004 only and pairs the restored policy with
+zero-radio independent and centralized-full-state greedy references by exact state
+hash. Job IDs and measured Slurm accounting will be appended after execution.

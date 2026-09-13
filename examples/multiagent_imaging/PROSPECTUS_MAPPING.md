@@ -13,7 +13,7 @@
 | Agents retaining previous action | `NO_ACTION`, or policy `ContinueTask` | Preserve FSW progress and original deadline |
 | Shielded candidate policy | `GNNModule` completion mask | Eligibility/continue mask; full safety shielding remains future work |
 | Own execution state | `ActiveTask`, `CompletionContext` | Mode, elapsed/remaining time, hold progress; never transmitted |
-| Observation `o_i` | `26+17K+12P` completion-v2 directed vector | Own resources/progress, local target facts and declared peer contact beacons |
+| Observation `o_i` | `26+17K+12P` completion-v3 directed vector | Own resources/progress, local target facts and declared peer contact beacons; four sensors give three peer rows |
 | Selected receiver | `TransmitCompletions`, `action_point_peer` | SimpleNav-driven slew and continuous valid hold; only the selected catalog receives the packet |
 | Shared policy | RLlib `imager` module | Parameter-sharing independent PPO, with local critic inputs |
 | Time discount | `discount_per_s ** elapsed_seconds` | 45,000-second reward half-life; action-start rewards and 6000-second GAE trace half-life |

@@ -1,5 +1,6 @@
 """Episode and update evidence, independent of the reward/policy observations."""
 
+from collections import Counter
 import numpy as np
 from ray.rllib.algorithms.callbacks import DefaultCallbacks
 
@@ -56,6 +57,47 @@ class CompletionAuditCallbacks(DefaultCallbacks):
                         "Completion metadata transferred physical product ownership."
                     )
         probes = [sensor.get_obs().tolist() for sensor in env.sensing_satellites]
+        captures = list(env.rewarder._team_accounting.capture_attempts)
+        services = list(env.rewarder.service_entries)
+        from examples.multiagent_imaging.baseline_monte_carlo import (
+            coverage_metrics,
+            duplicate_product_metrics,
+        )
+        from examples.multiagent_imaging.evaluate import _useful_revisits
+
+        coverage = coverage_metrics(
+            [target.rso_target.id for target in env.passive_satellites],
+            captures,
+            services,
+            env.rewarder.quality_threshold,
+            sensor_names=[sensor.name for sensor in env.sensing_satellites],
+        )
+        duplicate_products = duplicate_product_metrics(
+            captures,
+            services,
+            env.rewarder.quality_threshold,
+            float(env.simulator.sim_time),
+        )
+        useful_revisits = _useful_revisits(
+            captures, env.rewarder.quality_threshold, env.rewarder.reimage_cooldown_s
+        )
+        acquisition = (1.0 - env.rewarder.alpha) * sum(
+            metrics["acquisition_credit"]
+            for metrics in env.rewarder.per_sensor_metrics.values()
+        )
+        delivery = env.rewarder.alpha * sum(
+            metrics["delivery_credit"]
+            for metrics in env.rewarder.per_sensor_metrics.values()
+        )
+        communication_adjustment = -env.communication_cost_per_s * sum(
+            env.communication_time.values()
+        )
+        completed_holds = [
+            entry
+            for entry in env.communicator.transmission_history
+            if entry.get("outcome") == "hold_complete"
+        ]
+        total_reward = float(episode.get_return())
         summary = dict(
             simulated_seconds=float(env.simulator.sim_time),
             env_steps=len(episode),
@@ -64,11 +106,59 @@ class CompletionAuditCallbacks(DefaultCallbacks):
             resources=resources,
             resource_history=getattr(env_runner, "completion_resource_history", []),
             products=products,
-            constellation_reward=float(episode.get_return()),
+            constellation_reward=total_reward,
+            reward_decomposition=dict(
+                acquisition_90_percent_component=acquisition,
+                ground_delivery_10_percent_component=delivery,
+                communication_time_adjustment=communication_adjustment,
+                other_operational_penalties_or_adjustments=total_reward
+                - acquisition
+                - delivery
+                - communication_adjustment,
+            ),
             team_summary=dict(env.rewarder.team_summary),
+            coverage=coverage,
+            product_duplicates=duplicate_products,
+            useful_post_cooldown_revisits=dict(
+                count=len(useful_revisits), record_ids=useful_revisits
+            ),
             coordination=env.coordination_metrics(),
             packets=list(env.communicator.delivery_history),
             transmissions=list(env.communicator.transmission_history),
+            communication_summary=dict(
+                radio_occupancy_s=sum(env.communication_time.values()),
+                recipient_selection_counts=dict(
+                    Counter(entry["receiver"] for entry in completed_holds)
+                ),
+                peer_slot_selection_counts=dict(
+                    Counter(str(entry["peer_slot"]) for entry in completed_holds)
+                ),
+                payload_records_attempted=sum(
+                    entry.get("records", 0) for entry in completed_holds
+                ),
+                payload_bytes_attempted=sum(
+                    entry.get("payload_bytes", 0) for entry in completed_holds
+                ),
+                packet_outcome_counts=dict(
+                    Counter(
+                        packet["outcome"]
+                        for packet in env.communicator.delivery_history
+                    )
+                ),
+            ),
+            acknowledged_versions_by_link={
+                f"{sender}->{receiver}": dict(sorted(versions.items()))
+                for (sender, receiver), versions in sorted(
+                    env.communicator.acknowledged.items()
+                )
+            },
+            target_regime_counts=dict(
+                Counter(
+                    target.target_population_regime
+                    for target in env.passive_satellites
+                )
+            ),
+            reimage_cooldown_s=float(env.rewarder.reimage_cooldown_s),
             probe_observations=probes,
             next_episode_index=env._episode_seed_index,
             worker_index=env_runner.worker_index,

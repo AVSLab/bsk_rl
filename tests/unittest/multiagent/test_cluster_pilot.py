@@ -6,6 +6,7 @@ import pytest
 from examples.multiagent_imaging.cluster.learning_pilot import (
     check_gate,
     mission_config,
+    validate_mission_paths,
     validate_updates,
 )
 
@@ -13,7 +14,16 @@ from examples.multiagent_imaging.cluster.learning_pilot import (
 def test_mission_contract_is_preserved():
     for mode in ("conflict", "continuous"):
         config = mission_config(mode)
-        assert (config.n_sensors, config.n_targets, config.n_candidates) == (2, 100, 10)
+        assert (config.n_sensors, config.n_targets, config.n_candidates) == (4, 100, 10)
+        assert config.n_peers == 3
+        assert config.target_population == "mixed_50_30_20"
+        assert config.sensor_constellation == "walker_delta"
+        assert (
+            config.walker_planes,
+            config.walker_phasing,
+            config.walker_altitude_km,
+            config.walker_inclination_deg,
+        ) == (2, 1, 700, 97)
         assert config.episode_duration_s == 45000
         assert config.discount_half_life_s == pytest.approx(45000)
         assert config.gae_trace_half_life_s == 6000
@@ -54,7 +64,7 @@ def test_completed_updates_must_cover_each_sensor_physical_time():
                 simulated_seconds=45000,
                 coordination={
                     "task_history": [
-                        dict(sensor=f"sensor_{i}", start=0, end=45000) for i in range(2)
+                        dict(sensor=f"sensor_{i}", start=0, end=45000) for i in range(4)
                     ]
                 },
             )
@@ -69,3 +79,23 @@ def test_completed_updates_must_cover_each_sensor_physical_time():
     early["episodes"][0]["simulated_seconds"] = 44000
     with pytest.raises(AssertionError, match="horizon"):
         validate_updates([early], config)
+
+
+def test_gate_requires_mixed_population_radio_delivery_and_revisit():
+    config = mission_config("conflict")
+    episode = dict(
+        resources={f"sensor_{i}": [] for i in range(4)},
+        target_regime_counts={"LEO": 50, "MEO": 30, "GEO": 20},
+        reimage_cooldown_s=11834.835756586714,
+        coverage={
+            "qualified_exposure_count": 1,
+            "qualified_ground_delivery_count": 1,
+        },
+        packets=[{"outcome": "accepted"}],
+        useful_post_cooldown_revisits={"count": 1},
+    )
+    validate_mission_paths([{"episodes": [episode]}], config)
+    missing_radio = deepcopy(episode)
+    missing_radio["packets"] = []
+    with pytest.raises(AssertionError, match="packet"):
+        validate_mission_paths([{"episodes": [missing_radio]}], config)

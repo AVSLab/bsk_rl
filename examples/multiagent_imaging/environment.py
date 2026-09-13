@@ -1,4 +1,4 @@
-"""Construct the compact role-aware multi-sensor LEO environment."""
+"""Construct the role-aware multi-sensor spacecraft-imaging environment."""
 
 from __future__ import annotations
 
@@ -24,11 +24,15 @@ from bsk_rl.obs.completion_observations import (
 )
 from bsk_rl.sim import dyn, fsw, world
 from bsk_rl.sats.roles import SpacecraftRole
+from bsk_rl.utils.orbital import walker_delta
 
 from examples.multiagent_imaging.config import MultiAgentImagingConfig
+from examples.multiagent_imaging.target_population import (
+    R_EARTH_M,
+    exact_regimes,
+    sample_orbit,
+)
 
-
-R_EARTH_M = 6371e3
 
 
 def _sensor_orbit(index: int) -> orbitalMotion.ClassicElements:
@@ -55,6 +59,69 @@ def _sample_leo_target_orbit() -> orbitalMotion.ClassicElements:
     orbit.omega = np.random.uniform(0.0, 360.0) * macros.D2R
     orbit.f = np.random.uniform(0.0, 360.0) * macros.D2R
     return orbit
+
+
+class _MissionOrbitRandomizer:
+    """Generate correlated Walker sensors and seeded baseline target populations.
+
+    ``GeneralSatelliteTasking.reset`` seeds NumPy before calling this object.  A
+    bound environment reference supplies that exact episode seed for the regime
+    permutation, while all continuous orbit draws use the same reset-seeded stream.
+    """
+
+    def __init__(self, config: MultiAgentImagingConfig):
+        self.config = config
+        self.environment = None
+
+    def __call__(self, satellites):
+        config = self.config
+        sensors = [
+            satellite
+            for satellite in satellites
+            if satellite.role is SpacecraftRole.SENSING_AGENT
+        ]
+        targets = [
+            satellite
+            for satellite in satellites
+            if satellite.role is SpacecraftRole.PASSIVE_TARGET
+        ]
+        overrides = {}
+
+        if config.sensor_constellation == "walker_delta":
+            # BSK-RL's helper places the standard Walker T/P/F inter-plane
+            # anomaly offset in argument of periapsis.  For circular orbits the
+            # resulting argument of latitude is the usual F*360/T phase shift.
+            helper_phasing = (
+                config.walker_phasing * config.walker_planes / config.n_sensors
+            )
+            sensor_orbits = walker_delta(
+                n_spacecraft=config.n_sensors,
+                n_planes=config.walker_planes,
+                rel_phasing=helper_phasing,
+                altitude=config.walker_altitude_km * 1e3,
+                inc=config.walker_inclination_deg,
+            )
+            # Randomize only the common constellation orientation. Relative
+            # Walker plane and in-plane spacing remain exact and seed-repeatable.
+            anomaly_offset, raan_offset = np.random.uniform(0.0, 2 * np.pi, 2)
+            for orbit in sensor_orbits:
+                orbit.f = np.mod(orbit.f + anomaly_offset, 2 * np.pi)
+                orbit.Omega = np.mod(orbit.Omega + raan_offset, 2 * np.pi)
+            overrides.update(
+                {sensor: {"oe": orbit} for sensor, orbit in zip(sensors, sensor_orbits)}
+            )
+
+        episode_seed = int(getattr(self.environment, "seed", config.seed))
+        regimes = exact_regimes(
+            len(targets), config.target_population, episode_seed
+        )
+        for target, regime in zip(targets, regimes):
+            # Targets are always full Basilisk spacecraft; the regime label is
+            # evaluation metadata and never changes PettingZoo membership.
+            target.baseline_regime = regime
+            target.target_population_regime = regime
+            overrides[target] = {"oe": sample_orbit(regime)}
+        return overrides
 
 
 def build_environment(
@@ -195,7 +262,8 @@ def build_environment(
         loss_probability=config.packet_loss_probability,
         link_mode=config.link_mode,
     )
-    return CompletionConstellationTasking(
+    orbit_randomizer = _MissionOrbitRandomizer(config)
+    environment = CompletionConstellationTasking(
         retasking_mode=config.retasking_mode,
         default_seed=config.seed,
         communication_cost_per_s=config.communication_cost_per_s,
@@ -203,6 +271,7 @@ def build_environment(
         scenario=scenario,
         rewarder=rewarder,
         communicator=communicator,
+        sat_arg_randomizer=orbit_randomizer,
         world_type=world.GroundStationWorldModel,
         sim_rate=config.sim_rate_s,
         max_step_duration=config.max_step_duration_s,
@@ -212,6 +281,8 @@ def build_environment(
         vizard_dir=vizard_dir,
         vizard_settings=vizard_settings,
     )
+    orbit_randomizer.environment = environment
+    return environment
 
 
 __all__ = ["build_environment"]

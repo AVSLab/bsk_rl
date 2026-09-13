@@ -16,7 +16,7 @@ from bsk_rl.obs.observations import (
 )
 
 
-OBSERVATION_VERSION = "completion-v2"
+OBSERVATION_VERSION = "completion-v3-walker4-mixed"
 PEER_FEATURES = 12
 GLOBAL_FEATURES = 26  # 14 inherited own/environment features + 12 below
 TARGET_FEATURES = 17
@@ -24,6 +24,71 @@ NON_IMAGING_ACTIONS = 5  # charge, downlink, desat, broadcast, deliberate contin
 CONTINUE_ACTION = 4
 VALID_TARGET_FEATURE = 16
 CONTINUE_VALID_FEATURE = 25
+
+# These names are serialized in every checkpoint.  Keeping the order beside the
+# implementation makes a silent feature rearrangement a schema error even when
+# the flat tensor happens to retain the same length.
+GLOBAL_FEATURE_ORDER = (
+    "own_storage_fraction",
+    "own_battery_fraction",
+    "own_wheel_fraction_0",
+    "own_wheel_fraction_1",
+    "own_wheel_fraction_2",
+    "sun_direction_hill_0",
+    "sun_direction_hill_1",
+    "sun_direction_hill_2",
+    "eclipse_start",
+    "eclipse_end",
+    "ground_window_0_open",
+    "ground_window_0_close",
+    "ground_window_1_open",
+    "ground_window_1_close",
+    "task_charge",
+    "task_downlink",
+    "task_desat",
+    "task_broadcast_or_directed_transmit",
+    "task_image",
+    "task_elapsed",
+    "task_remaining",
+    "task_hold_fraction",
+    "sender_unacknowledged_fraction",
+    "last_exchange_age",
+    "last_exchange_known",
+    "continue_valid",
+)
+TARGET_FEATURE_ORDER = (
+    "priority",
+    "relative_position_hill_0",
+    "relative_position_hill_1",
+    "relative_position_hill_2",
+    "relative_velocity_hill_0",
+    "relative_velocity_hill_1",
+    "relative_velocity_hill_2",
+    "pointing_angle",
+    "range",
+    "illumination",
+    "latest_acquisition_age",
+    "latest_acquisition_known",
+    "freshest_delivered_capture_age",
+    "freshest_delivered_capture_known",
+    "own_pending_product",
+    "own_active_target",
+    "target_action_valid",
+)
+PEER_FEATURE_ORDER = (
+    "beacon_relative_position_hill_0",
+    "beacon_relative_position_hill_1",
+    "beacon_relative_position_hill_2",
+    "beacon_relative_velocity_hill_0",
+    "beacon_relative_velocity_hill_1",
+    "beacon_relative_velocity_hill_2",
+    "boresight_angle",
+    "range",
+    "sender_delta_fraction",
+    "last_pair_exchange_age",
+    "last_pair_exchange_known",
+    "peer_action_valid",
+)
 
 
 @dataclass(frozen=True)

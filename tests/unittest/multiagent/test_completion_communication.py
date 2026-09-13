@@ -110,6 +110,7 @@ def test_automatic_exchange_only_in_ideal_reference(case, shared):
         "completion_time",
         "qualified",
         "delivery_time",
+        "quality",
     }
 
 

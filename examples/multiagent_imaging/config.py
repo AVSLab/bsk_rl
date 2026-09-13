@@ -47,6 +47,15 @@ class MultiAgentImagingConfig:
     transmit_hold_s: float = 10.0
     metadata_bitrate_bps: float | None = None
     message_ttl_s: float = 600.0
+    # Mission-population and sensor-geometry fields are part of the checkpoint
+    # contract.  Legacy defaults keep earlier small examples reproducible; the
+    # completion-v3 pilot selects the explicit Walker/mixed values below.
+    target_population: str = "all_leo"
+    sensor_constellation: str = "legacy_staggered"
+    walker_altitude_km: float = 700.0
+    walker_inclination_deg: float = 97.0
+    walker_planes: int = 2
+    walker_phasing: int = 1
     seed: int = 0
 
     def __post_init__(self) -> None:
@@ -62,6 +71,25 @@ class MultiAgentImagingConfig:
             raise ValueError("retasking_mode must be conflict or continuous.")
         if self.communication_mode not in {"broadcast", "directed"}:
             raise ValueError("communication_mode must be broadcast or directed.")
+        if self.target_population not in {"all_leo", "mixed_50_30_20"}:
+            raise ValueError(
+                "target_population must be all_leo or mixed_50_30_20."
+            )
+        if self.sensor_constellation not in {"legacy_staggered", "walker_delta"}:
+            raise ValueError(
+                "sensor_constellation must be legacy_staggered or walker_delta."
+            )
+        if self.sensor_constellation == "walker_delta":
+            if self.walker_planes < 1 or self.n_sensors % self.walker_planes:
+                raise ValueError(
+                    "Walker planes must be positive and divide the sensing-agent count."
+                )
+            if not 0 <= self.walker_phasing < self.walker_planes:
+                raise ValueError("Walker phasing must satisfy 0 <= F < planes.")
+            if not 0 < self.walker_altitude_km < 100000:
+                raise ValueError("Walker altitude must be finite and positive.")
+            if not 0 <= self.walker_inclination_deg <= 180:
+                raise ValueError("Walker inclination must be in [0, 180] degrees.")
         if self.metadata_bitrate_bps is not None and (
             not math.isfinite(self.metadata_bitrate_bps)
             or self.metadata_bitrate_bps <= 0

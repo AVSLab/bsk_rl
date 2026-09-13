@@ -4,7 +4,8 @@ Payloads contain completed exposure facts only. The channel has no access to pee
 actions, reward truth, or physical image products. Ground downlink is separate.
 """
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+import json
 import math
 
 import numpy as np
@@ -24,6 +25,7 @@ class CompletionPacket:
     ready_at: float
     expires_at: float
     records: tuple[CompletionRecord, ...]
+    payload_bytes: int = 0
 
 
 @dataclass
@@ -33,6 +35,7 @@ class Transmission:
     records: tuple[CompletionRecord, ...]
     receivers: set[str]
     directed: bool = False
+    payload_bytes: int = 0
 
 
 class CompletionCommunication(CommunicationMethod):
@@ -126,13 +129,27 @@ class CompletionCommunication(CommunicationMethod):
         """Freeze the payload at action start; no delivery is possible yet."""
         if self.information_case != "completion":
             return
+        records = tuple(
+            r for r in sensor.data_store.catalog.records.values() if r.qualified
+        )
         self.transmissions[sensor.name] = Transmission(
             start=float(now),
             end=float(now + duration),
-            records=tuple(
-                r for r in sensor.data_store.catalog.records.values() if r.qualified
-            ),
+            records=records,
             receivers=self.receivers(sensor),
+            payload_bytes=self.wire_payload_bytes(records),
+        )
+
+    @staticmethod
+    def wire_payload_bytes(records):
+        """Canonical completion wire size, including the 64-byte header."""
+        return 64 + len(
+            json.dumps(
+                [asdict(record) for record in records],
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            ).encode("utf-8")
         )
 
     def delta(self, sender, receiver):
@@ -156,7 +173,12 @@ class CompletionCommunication(CommunicationMethod):
         if not records:
             raise ValueError("No unacknowledged completion records for this peer.")
         self.transmissions[sensor.name] = Transmission(
-            float(now), float("inf"), records, {receiver.name}, directed=True
+            float(now),
+            float("inf"),
+            records,
+            {receiver.name},
+            directed=True,
+            payload_bytes=self.wire_payload_bytes(records),
         )
         return records
 
@@ -170,7 +192,11 @@ class CompletionCommunication(CommunicationMethod):
                     start=transmission.start,
                     end=float(now),
                     completed=False,
-                    records=0,
+                    records=len(transmission.records),
+                    record_ids=[record.record_id for record in transmission.records],
+                    payload_bytes=transmission.payload_bytes,
+                    receivers=sorted(transmission.receivers),
+                    directed=transmission.directed,
                 )
             )
 
@@ -215,6 +241,7 @@ class CompletionCommunication(CommunicationMethod):
                 now + (0.0 if ideal else self.delay_s),
                 now + self.ttl_s,
                 delta,
+                self.wire_payload_bytes(delta),
             )
         )
 
@@ -267,6 +294,8 @@ class CompletionCommunication(CommunicationMethod):
                         end=now,
                         completed=True,
                         records=len(tx.records),
+                        record_ids=[record.record_id for record in tx.records],
+                        payload_bytes=tx.payload_bytes,
                         receivers=sorted(tx.receivers),
                         directed=tx.directed,
                     )
@@ -322,6 +351,16 @@ class CompletionCommunication(CommunicationMethod):
                     outcome=outcome,
                     changed=changed,
                     records=len(packet.records),
+                    record_ids=[record.record_id for record in packet.records],
+                    record_versions={
+                        record.record_id: record.version for record in packet.records
+                    },
+                    payload_bytes=packet.payload_bytes,
+                    acknowledged_versions=(
+                        dict(self.acknowledged.get((packet.sender, packet.receiver), {}))
+                        if outcome == "accepted"
+                        else {}
+                    ),
                 )
             )
 

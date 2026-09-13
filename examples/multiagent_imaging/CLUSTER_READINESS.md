@@ -1,4 +1,40 @@
-# Completion-v2 training and cluster-readiness evidence
+# Completion-v3 Walker-four training and cluster readiness
+
+**September 13 current stage:** the completed 200-episode three-sensor baseline
+campaign remains immutable. The new learned pilot uses four sensing agents in a
+Walker Delta 4/2/1 constellation and the mixed 50 LEO/30 MEO/20 GEO target
+population only. It does not run or compare a LEO-only cell. The checkpoint
+contract is `completion-v3-walker4-mixed`: 232 observation values, 18 actions,
+and three receiver slots per sender. See
+[WALKER4_LEARNED_PILOT.md](WALKER4_LEARNED_PILOT.md).
+
+The local four-sensor gates passed before cluster deployment. All 113 multi-agent
+unit/integration tests passed, including real-Basilisk selection of peer slots 0,
+1, and 2, selected-receiver-only delivery, numeric quality and timestamp
+provenance, ACK/delta behavior, out-of-order catalog merge, cooldown eligibility,
+physical ownership, attention padding/permutations, and four-peer checkpoint
+restore/resume. Ruff passed for the complete multi-agent example and changed core
+modules.
+
+A 3,000-second real-Basilisk LOS scenario propagated four sensing spacecraft plus
+100 passive targets. It produced exactly 50/30/20 target regimes, 54 qualified
+first-capture targets, 33 ground-delivered targets, nine accepted packets, and
+nine completed pointing holds. All three peer-slot indices were used (1/6/2 for
+slots 0/1/2); 99 records and 22,756 bytes were attempted. All four sensors were
+selected as receivers, physical product owners remained their source sensors, and
+radio-task occupancy totaled 1,425 sensor-seconds. The derived two-orbit cooldown
+was 11,834.835756586708 seconds, the documented value within floating-point
+roundoff. Full local JSON is under the git-ignored
+`results/multiagent_imaging/walker4_completion_v3_local_20260913` directory.
+
+The cluster launcher rechecks the five support files inside the allocation before
+simulation, then performs its runtime/source/package/native-module audit. The
+one-worker mission gate is authorized. A four-worker stage is authorized only if
+the saved gate reports every required check passed. Both stages remain bounded to
+conflict and continuous directed finite completion; no broad six-cell or
+multi-training-seed study is reachable from this launcher.
+
+## Historical completion-v2 evidence
 
 **September 11 status:** the separate Alpine runtime, one-worker two-sensor PPO
 restore/resume gate, and the complete 200-episode three-sensor independent versus

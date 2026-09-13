@@ -22,6 +22,7 @@ class CompletionRecord:
     completion_time: float
     qualified: bool
     delivery_time: float | None = None
+    quality: float = 1.0
 
     @property
     def version(self) -> int:
@@ -76,8 +77,10 @@ class CompletionCatalog(LocalCatalogKnowledge):
         ]
         if record.delivery_time is not None:
             times.append(record.delivery_time)
-        if not all(isfinite(t) for t in times):
+        if not all(isfinite(t) for t in times) or not isfinite(record.quality):
             raise ValueError("Completion times must be finite.")
+        if not 0.0 <= record.quality <= 1.0:
+            raise ValueError("Completion quality must be in [0, 1].")
         if (
             not 0
             <= record.request_epoch
@@ -187,6 +190,7 @@ class CompletionCatalog(LocalCatalogKnowledge):
                 capture_time=product.capture_time,
                 completion_time=completed,
                 qualified=product.quality >= self.quality_threshold,
+                quality=float(product.quality),
             ),
             completed,
         )

@@ -1,8 +1,5 @@
 """Completion-study actions using existing Basilisk FSW and hold-gated imaging."""
 
-from dataclasses import asdict
-import json
-
 import numpy as np
 from Basilisk.utilities import macros
 
@@ -50,21 +47,17 @@ class TransmitCompletions(DiscreteAction):
         snapshot = self.satellite.completion_peers
         if snapshot.time != float(self.simulator.sim_time):
             raise ValueError("Stale peer snapshot.")
-        self.peer = snapshot.peers[action]
+        self.peer_slot = int(action)
+        self.peer = snapshot.peers[self.peer_slot]
         if self.peer is None:
             raise ValueError("A masked peer cannot receive a transmission.")
         now = float(self.simulator.sim_time)
         channel = self.satellite.completion_communicator
         records = channel.begin_directed(self.satellite, self.peer, now)
-        # The versioned wire-size model includes a 64-byte transport header.
-        self.payload_bytes = 64 + len(
-            json.dumps(
-                [asdict(record) for record in records],
-                sort_keys=True,
-                separators=(",", ":"),
-                allow_nan=False,
-            ).encode("utf-8")
-        )
+        self.records = tuple(records)
+        # The communication layer owns the canonical wire schema and its 64-byte
+        # transport header; both the physical hold and packet audit use this size.
+        self.payload_bytes = channel.wire_payload_bytes(records)
         self.required_hold_s = (
             max(self.hold_s, 8 * self.payload_bytes / self.bitrate_bps)
             if self.bitrate_bps
@@ -136,10 +129,12 @@ class TransmitCompletions(DiscreteAction):
         return True
 
     def _record(self, outcome):
+        records = getattr(self, "records", ())
         self.satellite.completion_communicator.transmission_history.append(
             dict(
                 sender=self.satellite.name,
                 receiver=self.peer.name,
+                peer_slot=getattr(self, "peer_slot", None),
                 start=self.start_time,
                 end=float(self.simulator.sim_time),
                 outcome=outcome,
@@ -147,6 +142,8 @@ class TransmitCompletions(DiscreteAction):
                 required_hold_s=self.required_hold_s,
                 radio_on_s=self.radio_on_s,
                 payload_bytes=self.payload_bytes,
+                records=len(records),
+                record_ids=[record.record_id for record in records],
             )
         )
 

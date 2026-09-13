@@ -1,10 +1,11 @@
-# Completion observation/action contract: completion-v2
+# Completion observation/action contract: completion-v3-walker4-mixed
 
 The example uses ordinary composable BSK-RL observations. In broadcast mode the shape
 is `26 + 17*K` with `K+5` actions. Directed mode appends `P = N_sensors-1` peer rows:
 `26 + 17*K + 12*P` observations and `K+5+P` actions. The full two-sensor/ten-candidate
-configuration therefore has **208 observations and 16 actions**. Passive RSO count does
-not change these dimensions. `completion-v1` and legacy intent checkpoints require
+four-sensor/ten-candidate Walker pilot therefore has **232 observations and 18 actions**:
+three peer rows and three receiver actions per sender. Passive RSO count does
+not change these dimensions. `completion-v1`, `completion-v2`, and legacy intent checkpoints require
 retraining: attention, pooling and the operational head have changed even for broadcast.
 
 Checkpoint validation compares the complete semantic contract, not just dimensions.
@@ -147,9 +148,10 @@ Under continuous retasking every boundary permits a policy decision, including a
 
 ## Verification and interpretation
 
-Regression tests cover schema shape across one/two/three sensors, actor masks in all
+Regression tests cover schema shape through four sensors, actor masks in all
 forward modes, candidate/action identity, all-targets-blocked padding, hold/deadline
-preservation, no metadata transfer without the selected channel, conflict interruption,
+preservation, all three receiver slots and no metadata transfer to a nonselected peer,
+conflict interruption,
 finite radio timing, and real truncation observations. See [TEST_RESULTS.md](TEST_RESULTS.md)
 for executed checks. Three information cases crossed with two retasking modes form the
 matched study. Keep initial states, action bounds, heartbeat, quality threshold, cooldown,

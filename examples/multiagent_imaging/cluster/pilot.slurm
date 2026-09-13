@@ -17,6 +17,7 @@ set -euo pipefail
 : "${BSK_RL_PYTHON:?Set the validated Python 3.11 interpreter}"
 : "${BASILISK_SOURCE_ROOT:?Set the clean tested Basilisk source checkout}"
 : "${BSK_OUTPUT:?Set a fresh output directory}"
+: "${BSK_SUPPORT_DATA_CACHE:?Set the isolated verified support-data cache}"
 cd "$BSK_PROJECT_ROOT"
 export PYTHONPATH="$BSK_PROJECT_ROOT/src:$BSK_PROJECT_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
@@ -32,4 +33,14 @@ if [[ "${BSK_STAGE:-validate}" == learn ]]; then
   : "${BSK_VALIDATION_GATE:?Review a passed one-worker gate before four workers}"
   pilot_args+=(--validation-gate "$BSK_VALIDATION_GATE")
 fi
-exec "$BSK_RL_PYTHON" -m examples.multiagent_imaging.cluster.learning_pilot "${pilot_args[@]}"
+preflight_dir="${BSK_OUTPUT}.preflight"
+test ! -e "$BSK_OUTPUT"
+test ! -e "$preflight_dir"
+mkdir -p "$preflight_dir"
+# Re-resolve and hash the five physical support files inside the allocation,
+# immediately before the first Basilisk simulation. Runtime/package/source checks
+# run inside learning_pilot and are saved in the new campaign directory.
+"$BSK_RL_PYTHON" examples/multiagent_imaging/cluster/prepare_support_data.py \
+  --output "$preflight_dir/support-data-audit.json"
+"$BSK_RL_PYTHON" -m examples.multiagent_imaging.cluster.learning_pilot "${pilot_args[@]}"
+cp "$preflight_dir/support-data-audit.json" "$BSK_OUTPUT/support-data-audit.json"

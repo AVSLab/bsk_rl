@@ -39,17 +39,20 @@ sensors at every environment boundary. Policy action 4 deliberately continues an
 task. Selecting the same current target or operational mode also preserves the original
 progress and deadline. It does not restart the action.
 
-The actor uses `completion-v2`: **26 own/global + 17 per target candidate + 12 per peer**
+The current Walker pilot actor uses `completion-v3-walker4-mixed`: **26 own/global + 17 per target candidate + 12 per peer**
 in directed mode. There are **K+5+P actions**, with P=N_sensors−1. Broadcast mode omits
 peer rows/actions. Padding is excluded inside attention and pooling, and all-empty target
 sets preserve resource-sensitive operational choices. Old checkpoints require retraining.
 Critic inputs remain local. See the exact contract linked above.
 
-Production preflight configurations are `mission_preflight_{conflict,continuous}.json`:
-**two sensors, 100 passive RSOs, ten candidates, 45,000 seconds**, directed LOS transmission,
+The four-sensor production pilot configurations are
+`walker4_mixed_preflight_{conflict,continuous}.json`:
+**four sensors, 100 mixed passive RSOs, ten candidates, 45,000 seconds**, directed LOS transmission,
 10-second minimum hold, optional 64 kbit/s airtime, and 45,000-second discount half-life.
 Tiny configurations remain regression tools. Full-scale one-update preflight is a plumbing
 and cost check; it does not establish policy convergence or a comparison between methods.
+The full formulation and staged evaluation are in
+[WALKER4_LEARNED_PILOT.md](WALKER4_LEARNED_PILOT.md).
 
 ## Local verification and matched experiments
 
@@ -131,23 +134,20 @@ interactive Vizard rendering is a separate visual check.
 
 ## Scope and next work
 
-The metadata link is a finite-duration, boundary-sampled omnidirectional channel, with
-ideal ACK bookkeeping. It has no finite-byte bandwidth, antenna pointing, RF budget, or
-metadata-radio power model. Broadcasts occupy time and optionally incur
-`communication_cost_per_s`. These limits are explicit in the architecture note.
+The production metadata link is receiver-selective and physically points the sender,
+with Earth LOS, finite payload airtime, a 25 W transmitter sink, continuous lock, and
+ideal small ACK bookkeeping. Receiver antenna pointing, contention, noisy navigation,
+and a detailed RF link budget remain outside this pilot.
 
-Next, run paired learned-policy pilot experiments across all six cells with multiple
-matched seeds; inspect learning stability, source ownership, and waste/communication
-tradeoffs before scaling sensor/target count or launching cluster training. Keep peer
-intent and peer-state observations absent for this completion-sharing study. See
-[NEXT_PROMPT.md](NEXT_PROMPT.md) for a ready-to-use follow-up request and
-[TEST_RESULTS.md](TEST_RESULTS.md) for validation evidence.
+The authorized next run is only the staged four-sensor mixed-population gate and bounded
+conflict/continuous pilot. Keep peer intent and private peer-state observations absent.
+Do not start the broad six-cell or multi-training-seed study from this launcher.
 
 ## Restored policy evaluation and cluster launcher
 
 ```bash
 $PYTHON -m examples.multiagent_imaging.evaluate \
-  --config examples/multiagent_imaging/configs/mission_preflight_conflict.json \
+  --config examples/multiagent_imaging/configs/walker4_mixed_preflight_conflict.json \
   --checkpoint results/multiagent_imaging/cluster_readiness/conflict/checkpoint_0001 \
   --seed 101 --output results/multiagent_imaging/restored_evaluation.json
 ```

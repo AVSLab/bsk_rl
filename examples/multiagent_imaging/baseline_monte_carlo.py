@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from dataclasses import asdict, dataclass
-from functools import partial
 import hashlib
 from itertools import product
 import json
@@ -24,24 +23,23 @@ import sys
 import time
 
 import numpy as np
-from Basilisk.utilities import macros, orbitalMotion
 
 from bsk_rl import NO_ACTION
 from bsk_rl.obs.completion_observations import NON_IMAGING_ACTIONS, candidate_snapshot
 from bsk_rl.obs.observations import _angle_to_target, _target_shadowFactor
 from bsk_rl.utils.coordination import earth_unoccluded
 from examples.multiagent_imaging.config import MultiAgentImagingConfig
-from examples.multiagent_imaging.environment import R_EARTH_M, build_environment
+from examples.multiagent_imaging.environment import build_environment
+from examples.multiagent_imaging.target_population import (
+    ALTITUDE_BANDS_M,
+    exact_regimes as _shared_exact_regimes,
+    sample_orbit,  # noqa: F401 - historical public import used by tests/scripts
+)
 
 CAMPAIGN_VERSION = "three-sensor-full-state-baselines-v2"
 CASES = ("independent", "centralized_full_state")
 ENVIRONMENTS = ("leo", "mixed")
 CELLS = tuple((case, regime) for case in CASES for regime in ENVIRONMENTS)
-ALTITUDE_BANDS_M = {
-    "LEO": (400e3, 2000e3),
-    "MEO": (2000e3, 35000e3),
-    "GEO": (35786e3 - 300e3, 35786e3 + 300e3),
-}
 
 
 @dataclass(frozen=True)
@@ -78,7 +76,7 @@ class BaselineConfig:
         # Reuse the physics configuration validation without extending its schema.
         self.environment_config("independent", 0)
 
-    def environment_config(self, case, seed):
+    def environment_config(self, case, seed, target_environment="leo"):
         if case not in CASES:
             raise ValueError(f"Unknown information case: {case}")
         physics = asdict(self)
@@ -91,6 +89,11 @@ class BaselineConfig:
         return MultiAgentImagingConfig(
             **physics,
             seed=int(seed),
+            target_population=(
+                "all_leo"
+                if target_environment == "leo"
+                else "mixed_50_30_20"
+            ),
             information_case="independent"
             if case == "independent"
             else "ideal_completion",
@@ -114,46 +117,14 @@ def task_spec(task_id):
 
 def exact_regimes(count, environment, seed):
     """AMOS evaluation's 50/30/20 mix, largest remainders, then seeded ID shuffle."""
-    if environment == "leo":
-        return ["LEO"] * count
-    if environment != "mixed":
-        raise ValueError("target_environment must be leo or mixed.")
-    raw = count * np.asarray([0.5, 0.3, 0.2])
-    counts = np.floor(raw).astype(int)
-    order = sorted(range(3), key=lambda i: (-(raw[i] - counts[i]), i))
-    for index in order[: count - int(counts.sum())]:
-        counts[index] += 1
-    names = [r for r, n in zip(ALTITUDE_BANDS_M, counts) for _ in range(n)]
-    return list(np.random.default_rng(seed).permutation(names))
-
-
-def sample_orbit(regime):
-    """Reuse the documented AMOS altitude, eccentricity, inclination distributions.
-
-    Draw from the environment's reset-seeded NumPy stream, not wall-clock entropy.
-    Unlike the old AMOS speed shortcut, these targets remain live spacecraft.
-    """
-    orbit = orbitalMotion.ClassicElements()
-    orbit.a = R_EARTH_M + np.random.uniform(*ALTITUDE_BANDS_M[regime])
-    e_max = {"LEO": 0.02, "MEO": 0.10, "GEO": 0.0015}[regime]
-    orbit.e = np.random.uniform(0.0, e_max)
-    while orbit.a * (1 - orbit.e) < R_EARTH_M + 400e3:
-        orbit.e = np.random.uniform(0.0, e_max)
-    orbit.i = (
-        np.random.uniform(0.0, {"LEO": 180, "MEO": 120, "GEO": 15}[regime]) * macros.D2R
-    )
-    orbit.Omega, orbit.omega, orbit.f = np.random.uniform(0.0, 360.0, 3) * macros.D2R
-    return orbit
+    return _shared_exact_regimes(count, environment, seed)
 
 
 def build_baseline(config, case, target_environment, seed):
-    """Configure orbital randomizers before reset, leaving the training builder intact."""
-    env = build_environment(config.environment_config(case, seed))
-    regimes = exact_regimes(config.n_targets, target_environment, seed)
-    for target, regime in zip(env.passive_satellites, regimes):
-        target.sat_args_generator["oe"] = partial(sample_orbit, regime)
-        target.baseline_regime = regime
-    return env
+    """Build the historical controller with the shared exact population sampler."""
+    return build_environment(
+        config.environment_config(case, seed, target_environment)
+    )
 
 
 def _operational_action(sensor, config):

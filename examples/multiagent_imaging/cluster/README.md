@@ -1,13 +1,19 @@
-# Reviewed Alpine launch and campaign record — 2026-09-11
+# Reviewed Alpine launch and campaign record — 2026-09-13
+
+The current authorized learned pilot is `completion-v3-walker4-mixed`: four
+Walker Delta 4/2/1 sensing agents, 100 live passive targets in the exact 50 LEO/
+30 MEO/20 GEO mix, ten candidates, directed completion transfer, and no LEO-only
+evaluation. Read [../WALKER4_LEARNED_PILOT.md](../WALKER4_LEARNED_PILOT.md) for
+the full contract. The 200-episode three-sensor campaign below is completed,
+immutable historical evidence and must not be rerun or overwritten.
 
 The separate completion branch/runtime deployment, one-worker directed PPO gate,
 and all 200 three-sensor baseline episodes are complete. The full baseline evidence
 is in
 [`evidence/three_sensor_v2_full_campaign`](evidence/three_sensor_v2_full_campaign/REPORT.md),
 and [EXECUTION.md](EXECUTION.md) records the Slurm history. The broad learned-policy
-study has not started. Its next step is a fresh, bounded three-sensor directed
-completion pilot after the learned environment gains the exact LEO/mixed catalog
-selection used by the baselines.
+study has not started. The current next step is the bounded four-sensor directed
+completion gate and pilot defined above.
 
 The commands below retain the reviewed deployment and launch procedure. Sections
 that describe preflight authorization are historical records rather than pending
@@ -168,12 +174,12 @@ sbatch --export=ALL --array=1-99,101-199%8 examples/multiagent_imaging/cluster/b
 Run aggregation only after jobs complete. Each array task requests one CPU/4 GiB/
 one hour; maximum eight tasks concurrently. No Ray or learner is started.
 
-## Directed learning: one worker before four
+## Directed Walker-four learning: one worker before four
 
 Use `pilot.slurm` for the staged learning workflow. It requests one eight-CPU/32-GiB
 node, CPU learner, one Torch/BLAS thread per process, 1800-second rollout timeout.
-It preserves completion-v2 shared target-set attention, two sensors/100 passive
-RSOs/ten candidates/45,000-second complete episodes, 45,000-second reward half-life,
+It preserves completion-v3 shared target-set attention, four Walker sensors/100 mixed
+passive RSOs/ten candidates/45,000-second complete episodes, 45,000-second reward half-life,
 6000-second GAE trace half-life, directed LOS SimpleNav pointing, minimum hold 10
 seconds, 64 kbit/s metadata, and 300-second attempt deadline.
 
@@ -183,9 +189,13 @@ logits, restores PPO/Adam/worker seeds, performs a second update, then evaluates
 restored weights and the heuristic on matched held-out seed 10000:
 
 ```bash
+export BSK_SUPPORT_DATA_CACHE="$BASILISK_SOURCE_ROOT/.support-data-cache"
+export BSK_PILOT_ROOT="$BSK_PROJECT_ROOT/results/multiagent_imaging/walker4-completion-v3-20260913"
+mkdir -p "$BSK_PILOT_ROOT"
 export BSK_STAGE=validate
-export BSK_OUTPUT="$BSK_PROJECT_ROOT/results/multiagent_imaging/cluster-one-worker"
-sbatch --export=ALL examples/multiagent_imaging/cluster/pilot.slurm
+export BSK_OUTPUT="$BSK_PILOT_ROOT/one-worker"
+sbatch --export=ALL examples/multiagent_imaging/cluster/pilot.slurm \
+  | tee "$BSK_PILOT_ROOT/submission-one-worker.txt"
 ```
 
 The gate is written only after both modes pass finite losses/gradients, weight
@@ -197,18 +207,20 @@ After reviewing the evidence and explicitly authorizing four workers:
 
 ```bash
 export BSK_STAGE=learn
-export BSK_VALIDATION_GATE="$BSK_PROJECT_ROOT/results/multiagent_imaging/cluster-one-worker/validation_gate.json"
-export BSK_OUTPUT="$BSK_PROJECT_ROOT/results/multiagent_imaging/cluster-four-worker-pilot"
+export BSK_VALIDATION_GATE="$BSK_PILOT_ROOT/one-worker/validation_gate.json"
+export BSK_OUTPUT="$BSK_PILOT_ROOT/four-worker"
 export BSK_UPDATES=8
-sbatch --export=ALL examples/multiagent_imaging/cluster/pilot.slurm
+sbatch --export=ALL examples/multiagent_imaging/cluster/pilot.slurm \
+  | tee "$BSK_PILOT_ROOT/submission-four-worker.txt"
 ```
 
 Four-worker learning starts fresh matched seed-zero policies. It does not claim
 an exact one-to-four-worker resume; resume requires the saved topology. The two
 validation updates plus eight learning updates keep total work at **ten per mode**.
 Only finite-directed completion/conflict and completion/continuous are included.
-Final checkpoints are restored and compared against the heuristic on seeds
-10000–10004. Actual batch sizes/decisions, losses, gradients, parameter changes,
+Final checkpoints are restored and compared on mixed seeds 10000–10004 against
+zero-radio independent and centralized-full-state greedy references with exact
+initial-condition hashes. Actual batch sizes/decisions, losses, gradients, parameter changes,
 resource histories, services/duplicates/waste, radio/packet records, checkpoints,
 source/dependency snapshots and diagnostic learning curves are saved. One training
 seed cannot establish robustness across trained policies or justify statistical
@@ -224,9 +236,8 @@ planning estimate.
 
 The earlier one-worker learning validation completed both retasking modes, exact
 checkpoint restoration, resume, and directed communication with two sensors. Its
-two-sensor recipient choice was necessarily trivial. The next learned pilot should
-start fresh with three sensors and two peer slots, after versioning that changed
-observation/action contract and adding the exact LEO/mixed target distributions.
-Run the same complete-episode one-worker gate before increasing to four workers.
+two-sensor recipient choice was necessarily trivial. The current pilot replaces that
+recommendation with four Walker sensors, three peer slots, and mixed targets only. It
+still runs the same complete-episode one-worker gate before increasing to four workers.
 The baseline's 50 matched seeds support its information comparison; they do not
 establish convergence or robustness of any learned policy.

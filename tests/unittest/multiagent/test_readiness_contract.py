@@ -16,6 +16,13 @@ def test_schema_permits_matched_held_out_seeds_only():
         replace(config, n_candidates=5),
         replace(config, discount_per_s=0.999),
         replace(config, transmit_hold_s=20),
+        replace(config, target_population="mixed_50_30_20"),
+        replace(
+            config,
+            n_sensors=4,
+            sensor_constellation="walker_delta",
+            walker_planes=2,
+        ),
     ):
         with pytest.raises(ValueError, match="schema mismatch"):
             validate_schema(schema(config), changed)
@@ -23,6 +30,26 @@ def test_schema_permits_matched_held_out_seeds_only():
     legacy["version"] = "completion-v1"
     with pytest.raises(ValueError):
         validate_schema(legacy, config)
+
+
+@pytest.mark.parametrize(
+    "section,key",
+    [
+        ("observation", "target_feature_order"),
+        ("observation", "peer_feature_order"),
+        ("actions", "identity"),
+        ("masks", "target_valid_feature"),
+    ],
+)
+def test_schema_rejects_feature_action_and_mask_identity_changes(section, key):
+    config = MultiAgentImagingConfig(
+        n_sensors=4, communication_mode="directed", information_case="completion"
+    )
+    changed = schema(config)
+    value = changed[section][key]
+    changed[section][key] = list(reversed(value)) if isinstance(value, list) else -1
+    with pytest.raises(ValueError, match="schema mismatch"):
+        validate_schema(changed, config)
 
 
 def test_worker_specific_seed_streams_are_reproducible_and_distinct():

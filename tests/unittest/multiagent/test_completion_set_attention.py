@@ -13,24 +13,24 @@ from examples.multiagent_imaging.train import target_attention_config
 
 def module_and_obs():
     cfg = MultiAgentImagingConfig(
-        n_sensors=3,
+        n_sensors=4,
         n_candidates=3,
         communication_mode="directed",
         information_case="completion",
     )
-    size = 26 + 3 * 17 + 2 * 12
+    size = 26 + 3 * 17 + 3 * 12
     torch.manual_seed(72)
     module = RLModuleSpec(
         module_class=GNNModule,
         catalog_class=PPOCatalog,
         observation_space=gym.spaces.Box(-np.inf, np.inf, (size,), np.float32),
-        action_space=gym.spaces.Discrete(10),
+        action_space=gym.spaces.Discrete(11),
         model_config_dict=target_attention_config(cfg),
     ).build()
     obs = torch.randn(2, size)
     obs[:, 25] = 1
     obs[:, 26:77].reshape(2, 3, 17)[:, :, -1] = torch.tensor([1, 0, 1])
-    obs[:, 77:].reshape(2, 2, 12)[:, :, -1] = 1
+    obs[:, 77:].reshape(2, 3, 12)[:, :, -1] = 1
     return module, obs
 
 
@@ -50,8 +50,8 @@ def test_target_and_peer_permutation_equivariance():
     module, obs = module_and_obs()
     changed = obs.clone()
     changed[:, 26:77] = obs[:, 26:77].reshape(2, 3, 17)[:, [2, 0, 1]].reshape(2, -1)
-    changed[:, 77:] = obs[:, 77:].reshape(2, 2, 12)[:, [1, 0]].reshape(2, -1)
-    permutation = [0, 1, 2, 3, 4, 7, 5, 6, 9, 8]
+    changed[:, 77:] = obs[:, 77:].reshape(2, 3, 12)[:, [2, 0, 1]].reshape(2, -1)
+    permutation = [0, 1, 2, 3, 4, 7, 5, 6, 10, 8, 9]
     torch.testing.assert_close(
         logits(module, changed),
         logits(module, obs)[:, permutation],
