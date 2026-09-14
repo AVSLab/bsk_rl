@@ -65,9 +65,15 @@ def t_summary(values: list[float]) -> dict:
     }
 
 
-def resource_metrics(history: list[dict]) -> dict:
+def resource_metrics(history: list[dict] | dict[str, list[dict]]) -> dict:
     if not history:
         raise AssertionError("Resource history is empty.")
+    if isinstance(history, dict):
+        history = [
+            {"sensor": sensor, **sample}
+            for sensor, samples in history.items()
+            for sample in samples
+        ]
     latest: dict[str, dict] = {}
     for sample in history:
         latest[sample["sensor"]] = sample
@@ -85,7 +91,7 @@ def resource_metrics(history: list[dict]) -> dict:
     ]
     if not all(math.isfinite(value) for value in values):
         raise AssertionError("Resource history contains a nonfinite value.")
-    return {
+    metrics = {
         "minimum_battery_fraction": min(
             float(sample["battery_fraction"]) for sample in history
         ),
@@ -93,13 +99,27 @@ def resource_metrics(history: list[dict]) -> dict:
             float(sample["storage_fraction"]) for sample in history
         ),
         "maximum_absolute_wheel_fraction": max(wheels),
-        "sensors_ever_inactive": len(
-            {sample["sensor"] for sample in history if not sample["alive"]}
+        "sensors_reaching_zero_battery": len(
+            {
+                sample["sensor"]
+                for sample in history
+                if float(sample["battery_fraction"]) <= 0.0
+            }
         ),
-        "sensors_inactive_at_end": sum(
-            not sample["alive"] for sample in latest.values()
+        "zero_battery_sensors_at_end": sum(
+            float(sample["battery_fraction"]) <= 0.0 for sample in latest.values()
         ),
     }
+    if all("alive" in sample for sample in history):
+        metrics.update(
+            sensors_ever_inactive=len(
+                {sample["sensor"] for sample in history if not sample["alive"]}
+            ),
+            sensors_inactive_at_end=sum(
+                not sample["alive"] for sample in latest.values()
+            ),
+        )
+    return metrics
 
 
 def flatten_update(stage: str, mode: str, record: dict) -> dict:
@@ -155,7 +175,7 @@ def flatten_update(stage: str, mode: str, record: dict) -> dict:
             r["maximum_absolute_wheel_fraction"] for r in resource_rows
         ),
         "episodes_with_inactive_sensor": sum(
-            r["sensors_ever_inactive"] > 0 for r in resource_rows
+            r.get("sensors_ever_inactive", 0) > 0 for r in resource_rows
         ),
         "matched_restored_actions": record["restore_validation"]["matched_actions"],
         "restored_logit_max_error": record["restore_validation"][
@@ -254,7 +274,15 @@ def result_metrics(result: dict) -> dict:
         "simulated_seconds_per_wall_second": result["measurement"][
             "sim_seconds_per_wall_second"
         ],
-        **resources,
+        "minimum_battery_fraction": resources["minimum_battery_fraction"],
+        "maximum_storage_fraction": resources["maximum_storage_fraction"],
+        "maximum_absolute_wheel_fraction": resources[
+            "maximum_absolute_wheel_fraction"
+        ],
+        "sensors_reaching_zero_battery": resources[
+            "sensors_reaching_zero_battery"
+        ],
+        "zero_battery_sensors_at_end": resources["zero_battery_sensors_at_end"],
     }
 
 
