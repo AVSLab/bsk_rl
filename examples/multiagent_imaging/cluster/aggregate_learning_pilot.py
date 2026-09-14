@@ -382,6 +382,21 @@ def aggregate(validation_root: Path, pilot_root: Path, output: Path) -> dict:
         slot_counts: Counter = Counter()
         packet_counts: Counter = Counter()
         ack_links: set[str] = set()
+        training_recipient_counts: Counter = Counter()
+        training_slot_counts: Counter = Counter()
+        training_packet_counts: Counter = Counter()
+        training_ack_links: set[str] = set()
+        for record in pilot_records:
+            for episode in record["episodes"]:
+                communication = episode["communication_summary"]
+                training_recipient_counts.update(
+                    communication["recipient_selection_counts"]
+                )
+                training_slot_counts.update(
+                    communication["peer_slot_selection_counts"]
+                )
+                training_packet_counts.update(communication["packet_outcome_counts"])
+                training_ack_links.update(episode["acknowledged_versions_by_link"])
 
         for pair in mode_pairs:
             results = {}
@@ -468,7 +483,36 @@ def aggregate(validation_root: Path, pilot_root: Path, output: Path) -> dict:
             "peer_slot_selection_counts": dict(sorted(slot_counts.items())),
             "packet_outcome_counts": dict(sorted(packet_counts.items())),
             "acknowledged_links": sorted(ack_links),
+            "training_recipient_selection_counts": dict(
+                sorted(training_recipient_counts.items())
+            ),
+            "training_peer_slot_selection_counts": dict(
+                sorted(training_slot_counts.items())
+            ),
+            "training_packet_outcome_counts": dict(
+                sorted(training_packet_counts.items())
+            ),
+            "training_acknowledged_links": sorted(training_ack_links),
         }
+
+    no_go_reasons = []
+    for mode in MODES:
+        policy = summary["modes"][mode]["controller_metrics"]["policy"]
+        if policy["first_capture_coverage"]["mean"] == 0:
+            no_go_reasons.append(f"{mode} final policy had zero held-out capture coverage")
+        if policy["zero_battery_sensors_at_end"]["mean"] > 0:
+            no_go_reasons.append(
+                f"{mode} final policy depleted sensors to zero battery"
+            )
+        if not summary["modes"][mode]["packet_outcome_counts"].get("accepted", 0):
+            no_go_reasons.append(
+                f"{mode} final policy delivered no held-out completion packets"
+            )
+    summary["recommendation"] = {
+        "decision": "NO-GO" if no_go_reasons else "GO",
+        "scope": "multi-seed learned study",
+        "reasons": no_go_reasons,
+    }
 
     write_csv(output / "updates.csv", update_rows)
     write_csv(output / "held_out_metrics.csv", evaluation_rows)
@@ -491,6 +535,13 @@ def write_report(path: Path, summary: dict) -> None:
         "immutable cluster results directory. Eight four-worker updates plus the two "
         "one-worker gate updates were run per mode. This is mechanics and early-learning "
         "evidence, not convergence evidence.",
+        "",
+        "## Recommendation",
+        "",
+        f"**{summary['recommendation']['decision']} for a multi-seed learned study.** "
+        + "; ".join(summary["recommendation"]["reasons"])
+        + ". The implementation and checkpoint mechanics passed, but these final policies "
+        "are not operational candidates.",
         "",
         "## Held-out paired effects",
         "",
@@ -531,8 +582,16 @@ def write_report(path: Path, summary: dict) -> None:
     for mode in MODES:
         data = summary["modes"][mode]
         lines.append(
-            f"- **{mode}:** recipient selections `{data['recipient_selection_counts']}`; "
-            f"peer slots `{data['peer_slot_selection_counts']}`; packet outcomes "
+            f"- **{mode} training:** recipient selections "
+            f"`{data['training_recipient_selection_counts']}`; peer slots "
+            f"`{data['training_peer_slot_selection_counts']}`; packet outcomes "
+            f"`{data['training_packet_outcome_counts']}`; ACK links "
+            f"{len(data['training_acknowledged_links'])}."
+        )
+        lines.append(
+            f"- **{mode} final held-out policy:** recipient selections "
+            f"`{data['recipient_selection_counts']}`; peer slots "
+            f"`{data['peer_slot_selection_counts']}`; packet outcomes "
             f"`{data['packet_outcome_counts']}`; ACK links {len(data['acknowledged_links'])}."
         )
     lines += [
