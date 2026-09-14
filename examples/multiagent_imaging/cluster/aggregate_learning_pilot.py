@@ -220,6 +220,28 @@ def result_metrics(result: dict) -> dict:
     products = result["product_duplicates"]
     messages = result["message_diagnostics"]
     resources = resource_metrics(result["resource_history"])
+    # Centralized control performs ideal catalog synchronization at an event
+    # boundary. Those durable merges appear in delivery_history, but they are
+    # not radio packets. Count a transport packet only when the sender completed
+    # a physical pointing hold; retain all merges as a separate audit metric.
+    completed_transmissions = [
+        entry
+        for entry in messages["transmission_history"]
+        if entry.get("outcome") == "hold_complete"
+    ]
+    accepted_catalog_merges = messages["packet_outcome_counts"].get("accepted", 0)
+    accepted_transport_packets = (
+        accepted_catalog_merges if completed_transmissions else 0
+    )
+    action_selections = sum(
+        count
+        for sensor_counts in result["action_counts"].values()
+        for count in sensor_counts.values()
+    )
+    downlink_selections = sum(
+        sensor_counts.get("action_downlink", 0)
+        for sensor_counts in result["action_counts"].values()
+    )
     return {
         "first_capture_coverage": result["coverage"]["capture_coverage_fraction"],
         "ground_delivery_coverage": result["coverage"][
@@ -270,7 +292,10 @@ def result_metrics(result: dict) -> dict:
         "policy_decisions": sum(coordination["policy_decisions"].values()),
         "payload_records_attempted": messages["payload_records_attempted"],
         "payload_bytes_attempted": messages["payload_bytes_attempted"],
-        "accepted_packets": messages["packet_outcome_counts"].get("accepted", 0),
+        "accepted_transport_packets": accepted_transport_packets,
+        "accepted_catalog_merges": accepted_catalog_merges,
+        "downlink_action_selections": downlink_selections,
+        "other_action_selections": action_selections - downlink_selections,
         "useful_revisits": result["useful_post_cooldown_revisits"]["count"],
         "wall_time_s": result["measurement"]["wall_time_s"],
         "peak_rss_bytes": result["measurement"]["peak_rss_bytes"],
@@ -319,6 +344,8 @@ def validate_result(result: dict, *, policy: bool) -> None:
         result["broadcast_time_s"].values()
     ):
         raise AssertionError("A heuristic reference used the radio.")
+    if not policy and result_metrics(result)["accepted_transport_packets"]:
+        raise AssertionError("A heuristic reference recorded a transport packet.")
 
 
 def copy_artifact(source: Path, destination: Path) -> None:
@@ -575,6 +602,26 @@ def write_report(path: Path, summary: dict) -> None:
         "coordination reference, not a guaranteed global optimum. The learned actor has "
         "receiver-local information only. It selects one of three peer slots and receives "
         "completion metadata only after physical directed pointing and a successful packet.",
+        "Centralized catalog updates are counted as ideal catalog merges rather than "
+        "transport packets; both heuristic references have zero physical radio packets.",
+        "",
+        "## Held-out action behavior",
+        "",
+    ]
+    for mode in MODES:
+        policy = summary["modes"][mode]["controller_metrics"]["policy"]
+        lines.append(
+            f"- **{mode}:** mean downlink selections "
+            f"{policy['downlink_action_selections']['mean']:.1f}; mean selections of all "
+            f"other actions {policy['other_action_selections']['mean']:.1f}."
+        )
+    lines += [
+        "",
+        "Both restored final policies selected downlink at every held-out decision, "
+        "despite having no physical products to deliver. That collapse explains the "
+        "zero capture/ground coverage, zero useful revisits, zero completion packets, "
+        "and repeated operational penalties; it is a policy-quality failure rather "
+        "than a checkpoint or simulator-execution failure.",
         "",
         "## Communication validation",
         "",
