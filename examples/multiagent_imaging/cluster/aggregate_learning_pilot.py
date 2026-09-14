@@ -263,6 +263,9 @@ def result_metrics(result: dict) -> dict:
         "excess_holder_sensor_seconds": products[
             "cross_sensor_onboard_redundant_sensor_time_s"
         ],
+        "overlap_sensor_seconds": products[
+            "cross_sensor_onboard_overlap_sensor_time_s"
+        ],
         "radio_occupancy_s": sum(coordination["communication_time_s"].values()),
         "policy_decisions": sum(coordination["policy_decisions"].values()),
         "payload_records_attempted": messages["payload_records_attempted"],
