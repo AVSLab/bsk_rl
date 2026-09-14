@@ -127,6 +127,7 @@ def flatten_update(stage: str, mode: str, record: dict) -> dict:
     communications = [episode["communication_summary"] for episode in episodes]
     rewards = [episode["reward_decomposition"] for episode in episodes]
     resource_rows = [resource_metrics(episode["resource_history"]) for episode in episodes]
+    simulated_seconds = sum(e["simulated_seconds"] for e in episodes)
     return {
         "stage": stage,
         "mode": mode,
@@ -144,7 +145,9 @@ def flatten_update(stage: str, mode: str, record: dict) -> dict:
         "changed_parameter_elements": record["parameter_change"]["changed_elements"],
         "wall_time_s": record["measurement"]["wall_time_s"],
         "peak_rss_bytes": record["measurement"]["peak_rss_bytes"],
-        "simulated_seconds": sum(e["simulated_seconds"] for e in episodes),
+        "simulated_seconds": simulated_seconds,
+        "simulated_seconds_per_wall_second": simulated_seconds
+        / record["measurement"]["wall_time_s"],
         "mean_constellation_reward": mean(e["constellation_reward"] for e in episodes),
         "mean_acquisition_reward": mean(
             r["acquisition_90_percent_component"] for r in rewards
@@ -365,6 +368,27 @@ def aggregate(validation_root: Path, pilot_root: Path, output: Path) -> dict:
     if gate["runtime"]["source_sha256"] != pilot["runtime"]["source_sha256"]:
         raise AssertionError("Gate and pilot executable-source hashes differ.")
     output.mkdir(parents=True, exist_ok=True)
+
+    # Keep compact copies of the records needed to reproduce and audit the two
+    # Slurm stages. Full checkpoints and episode histories remain in the raw
+    # cluster result tree because they are too large for Git.
+    for source, name in (
+        (validation_root / "runtime.json", "one_worker_runtime.json"),
+        (pilot_root / "runtime.json", "four_worker_runtime.json"),
+        (
+            validation_root / "support-data-audit.json",
+            "one_worker_support_data_audit.json",
+        ),
+        (
+            pilot_root / "support-data-audit.json",
+            "four_worker_support_data_audit.json",
+        ),
+        (validation_root / "plan.json", "one_worker_plan.json"),
+        (pilot_root / "plan.json", "four_worker_plan.json"),
+        (validation_root / "validation_gate.json", "validation_gate.json"),
+        (pilot_root / "pilot_summary.json", "pilot_summary.json"),
+    ):
+        copy_artifact(source, output / name)
 
     update_rows = []
     evaluation_rows = []
@@ -653,7 +677,9 @@ def write_report(path: Path, summary: dict) -> None:
         "",
         "See `summary.json` for every controller mean and paired interval, "
         "`held_out_metrics.csv` for all 30 evaluations, `paired_differences.csv` for the "
-        "20 exact-seed effects, and `updates.csv` for all 20 gate/pilot updates.",
+        "20 exact-seed effects, and `updates.csv` for all 20 gate/pilot updates. Runtime, "
+        "package/native-module hashes, support-data audits, launch plans, checkpoint "
+        "manifests, exact submissions, and Slurm accounting are retained beside them.",
     ]
     path.write_text("\n".join(lines) + "\n")
 

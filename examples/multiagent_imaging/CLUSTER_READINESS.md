@@ -1,12 +1,36 @@
 # Completion-v3 Walker-four training and cluster readiness
 
-**September 13 current stage:** the completed 200-episode three-sensor baseline
+**September 13 completed stage:** the completed 200-episode three-sensor baseline
 campaign remains immutable. The new learned pilot uses four sensing agents in a
 Walker Delta 4/2/1 constellation and the mixed 50 LEO/30 MEO/20 GEO target
 population only. It does not run or compare a LEO-only cell. The checkpoint
 contract is `completion-v3-walker4-mixed`: 232 observation values, 18 actions,
 and three receiver slots per sender. See
 [WALKER4_LEARNED_PILOT.md](WALKER4_LEARNED_PILOT.md).
+
+The bounded Alpine pilot is complete. One-worker job `32528119` passed the
+complete-episode, finite-gradient, exact checkpoint restore, and update-boundary
+resume gate in 46:42 with 5.46 GiB batch MaxRSS. Four-worker job `32530057`
+completed eight fresh updates per retasking mode in 3:59:44 with 12.36 GiB batch
+MaxRSS. Slurm charged nine CPUs for each job, although the script requested eight;
+both used one CPU Torch/BLAS thread per process. The gate and four-worker stages
+repeated the runtime, native-module, source, allocation, and five-file support-data
+audits successfully.
+
+The result is **NO-GO for a multi-training-seed study**. All 20 optimization
+updates had finite nonzero gradients and parameter changes, all 68 training
+episodes reached 45,000 seconds, and training exercised all three receiver slots
+with 879 accepted conflict packets and 721 accepted continuous packets. However,
+both final restored policies selected empty downlink at every held-out decision.
+They achieved zero qualified capture and zero ground coverage on every matched
+seed 10000--10004, sent no completion packets, and depleted two of four sensors.
+Their mean return was -17,953, comprising one -1 empty-downlink penalty for each
+of the mean 17,951 decisions plus two -1 sensor-failure penalties. The matched
+independent references achieved 100% capture and ground coverage; the
+centralized-full-state greedy references achieved 100% capture and 100% conflict
+/ 99.6% continuous ground coverage. This separates a passed implementation gate
+from failed policy quality. See
+[`cluster/evidence/walker4_completion_v3_cluster_pilot`](cluster/evidence/walker4_completion_v3_cluster_pilot/REPORT.md).
 
 The local four-sensor gates passed before cluster deployment. All 113 multi-agent
 unit/integration tests passed, including real-Basilisk selection of peer slots 0,

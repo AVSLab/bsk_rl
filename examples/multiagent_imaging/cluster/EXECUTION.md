@@ -227,11 +227,48 @@ cooldown as 11,834.835756586708 seconds.
 
 The cluster output root is
 `/projects/dahu1128/bsk_rl-multi-agent-space-imaging-2026/results/multiagent_imaging/walker4-completion-v3-20260913`.
-The staged launcher re-audits support data, runtime, source, packages, native modules,
-and allocation inside each job. The authorized one-worker gate profiles one complete
-mission and runs two updates per retasking mode through exact checkpoint resume. A
-passing gate permits a fresh four-worker run of eight updates per mode; the topology
-change is recorded and no exact one-to-four continuation is claimed. Held-out
-evaluation uses mixed seeds 10000–10004 only and pairs the restored policy with
-zero-radio independent and centralized-full-state greedy references by exact state
-hash. Job IDs and measured Slurm accounting will be appended after execution.
+The staged launcher re-audited support data, runtime, source, packages, native
+modules, and allocation inside each job. One-worker job `32528119` completed in
+46:42 on `c3cpu-e2-u2`; its batch MaxRSS was 5.46 GiB. It profiled a complete
+mission and ran two updates per retasking mode through exact checkpoint resume.
+Four-worker job `32530057` then started fresh because the topology changed and
+completed eight updates per mode in 3:59:44 on `c3cpu-e2-u15`; its batch MaxRSS
+was 12.36 GiB. Both jobs requested eight CPUs and 32 GiB. Slurm recorded nine
+allocated CPUs for each job.
+
+All 20 updates had finite losses, finite nonzero gradients, nonzero parameter
+changes, exact saved/restored logits and actions, complete 45,000-second episodes,
+and consistent worker-specific seed streams. The eight four-worker updates per
+mode contained 32 episodes; the one-worker gate contained two per mode. Training
+used all three receiver slots and every sensor appeared as a receiver. Conflict
+training accepted 879 directed packets; continuous training accepted 721. Physical
+image ownership remained with the source sensor, and no training episode lost a
+sensor.
+
+The held-out policy gate failed decisively. On each exactly paired mixed seed
+10000–10004, both restored final policies selected `action_downlink` at every
+decision even though they had no products. Each mode averaged 17,951 downlink
+selections and zero selections of all other actions. Both therefore had zero
+capture and ground coverage, zero useful revisits, zero radio occupancy, no
+completion packets, and two sensors at zero battery at the horizon. Mean return
+was -17,953: 17,951 empty-downlink penalties plus two sensor-failure penalties.
+This result is an exact deterministic-policy collapse, not a simulator or restore
+failure.
+
+The paired zero-radio references show that the held-out mission itself was
+serviceable. The independent reference reached 100% capture and ground coverage
+in both retasking modes. The centralized-full-state greedy reference reached 100%
+capture in both modes, 100% ground coverage in conflict, and 99.6% in continuous.
+Centralized conflict eliminated the independent reference's mean 704.4 duplicate
+attempts and 86,785 duplicate sensor-seconds; continuous reduced mean attempts
+from 772.4 to 10 and mean total wasted time from 101,285.8 to 48,424.8
+sensor-seconds. Its ideal event-boundary catalog merges are recorded separately
+from transport packets: both heuristic references had zero transmit actions and
+zero physical radio activity.
+
+The compact source/runtime/checkpoint records, exact-seed tables, 95% paired
+intervals, and diagnostic plots are in
+[`evidence/walker4_completion_v3_cluster_pilot`](evidence/walker4_completion_v3_cluster_pilot/REPORT.md).
+This is **NO-GO for the broad six-cell or a multi-training-seed learned study**.
+The next task should diagnose and prevent empty-downlink policy collapse before
+requesting more cluster training.

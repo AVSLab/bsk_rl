@@ -1,0 +1,2872 @@
+{
+  "basilisk_commit": "8fcb54b2fb28388efb711786630501944fddec28",
+  "held_out_seeds": [
+    10000,
+    10001,
+    10002,
+    10003,
+    10004
+  ],
+  "modes": {
+    "conflict": {
+      "acknowledged_links": [],
+      "controller_metrics": {
+        "centralized_full_state": {
+          "accepted_catalog_merges": {
+            "ci95_half_width": 91.88061894612333,
+            "ci95_high": 3684.6806189461236,
+            "ci95_low": 3500.919381053877,
+            "mean": 3592.8,
+            "n": 5,
+            "standard_deviation": 73.9979729452098
+          },
+          "accepted_transport_packets": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "acquisition_reward_component": {
+            "ci95_half_width": 6.029017473783221,
+            "ci95_high": 362.47792051730426,
+            "ci95_low": 350.41988556973786,
+            "mean": 356.44890304352106,
+            "n": 5,
+            "standard_deviation": 4.855594977791902
+          },
+          "causally_avoidable_stale_ground_deliveries": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "communication_time_adjustment": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_acquisitions": {
+            "ci95_half_width": 5.149538535858164,
+            "ci95_high": 401.34953853585813,
+            "ci95_low": 391.05046146414185,
+            "mean": 396.2,
+            "n": 5,
+            "standard_deviation": 4.147288270665544
+          },
+          "cooldown_ground_services": {
+            "ci95_half_width": 23.119636940353114,
+            "ci95_high": 405.3196369403531,
+            "ci95_low": 359.08036305964686,
+            "mean": 382.2,
+            "n": 5,
+            "standard_deviation": 18.619881847100963
+          },
+          "cross_sensor_onboard_overlap_products": {
+            "ci95_half_width": 6.475727138834825,
+            "ci95_high": 9.275727138834824,
+            "ci95_low": -3.6757271388348256,
+            "mean": 2.8,
+            "n": 5,
+            "standard_deviation": 5.215361924162119
+          },
+          "cross_sensor_onboard_overlap_targets": {
+            "ci95_half_width": 3.2378635694174127,
+            "ci95_high": 4.637863569417412,
+            "ci95_low": -1.8378635694174128,
+            "mean": 1.4,
+            "n": 5,
+            "standard_deviation": 2.6076809620810595
+          },
+          "downlink_action_selections": {
+            "ci95_half_width": 12.57088987123126,
+            "ci95_high": 82.57088987123126,
+            "ci95_low": 57.42911012876874,
+            "mean": 70.0,
+            "n": 5,
+            "standard_deviation": 10.124228365658293
+          },
+          "duplicate_attempts": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "duplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "excess_holder_sensor_seconds": {
+            "ci95_half_width": 1167.8886557417868,
+            "ci95_high": 1614.288655741787,
+            "ci95_low": -721.4886557417868,
+            "mean": 446.4,
+            "n": 5,
+            "standard_deviation": 940.5834891172607
+          },
+          "first_capture_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 1.0,
+            "ci95_low": 1.0,
+            "mean": 1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 1.0,
+            "ci95_low": 1.0,
+            "mean": 1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_reward_component": {
+            "ci95_half_width": 2.1880350310367067,
+            "ci95_high": 40.50496533939797,
+            "ci95_low": 36.12889527732456,
+            "mean": 38.316930308361265,
+            "n": 5,
+            "standard_deviation": 1.7621796510183052
+          },
+          "interrupted_nonduplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "maximum_absolute_wheel_fraction": {
+            "ci95_half_width": 0.006321657695673059,
+            "ci95_high": 0.1320312895309464,
+            "ci95_low": 0.11938797413960028,
+            "mean": 0.12570963183527334,
+            "n": 5,
+            "standard_deviation": 0.005091278884479363
+          },
+          "maximum_storage_fraction": {
+            "ci95_half_width": 0.04511189332598087,
+            "ci95_high": 0.6171118933259808,
+            "ci95_low": 0.5268881066740191,
+            "mean": 0.572,
+            "n": 5,
+            "standard_deviation": 0.03633180424916988
+          },
+          "minimum_battery_fraction": {
+            "ci95_half_width": 0.01503156485515632,
+            "ci95_high": 0.8769601872429311,
+            "ci95_low": 0.8468970575326185,
+            "mean": 0.8619286223877748,
+            "n": 5,
+            "standard_deviation": 0.012105984289551357
+          },
+          "other_action_selections": {
+            "ci95_half_width": 37.79434305989937,
+            "ci95_high": 3683.7943430598993,
+            "ci95_low": 3608.2056569401007,
+            "mean": 3646.0,
+            "n": 5,
+            "standard_deviation": 30.438462510448847
+          },
+          "other_operational_penalties_or_adjustments": {
+            "ci95_half_width": 8.047406805543886e-14,
+            "ci95_high": 1.1458011937192367e-13,
+            "ci95_low": -4.636801673895405e-14,
+            "mean": 3.410605131648481e-14,
+            "n": 5,
+            "standard_deviation": 6.481146926371014e-14
+          },
+          "overlap_sensor_seconds": {
+            "ci95_half_width": 2335.7773114835736,
+            "ci95_high": 3228.577311483574,
+            "ci95_low": -1442.9773114835737,
+            "mean": 892.8,
+            "n": 5,
+            "standard_deviation": 1881.1669782345214
+          },
+          "payload_bytes_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "payload_records_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "peak_rss_bytes": {
+            "ci95_half_width": 48822638.086668335,
+            "ci95_high": 2875012666.8866687,
+            "ci95_low": 2777367390.7133317,
+            "mean": 2826190028.8,
+            "n": 5,
+            "standard_deviation": 39320329.94215571
+          },
+          "policy_decisions": {
+            "ci95_half_width": 10.064374154779985,
+            "ci95_high": 950.86437415478,
+            "ci95_low": 930.7356258452199,
+            "mean": 940.8,
+            "n": 5,
+            "standard_deviation": 8.105553651663778
+          },
+          "radio_occupancy_s": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "redundant_acquisitions": {
+            "ci95_half_width": 3.2378635694174127,
+            "ci95_high": 4.637863569417412,
+            "ci95_low": -1.8378635694174128,
+            "mean": 1.4,
+            "n": 5,
+            "standard_deviation": 2.6076809620810595
+          },
+          "sensors_reaching_zero_battery": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "simulated_seconds_per_wall_second": {
+            "ci95_half_width": 36.00405959730317,
+            "ci95_high": 238.95613644656095,
+            "ci95_low": 166.94801725195464,
+            "mean": 202.9520768492578,
+            "n": 5,
+            "standard_deviation": 28.996620381510514
+          },
+          "stale_cross_sensor_ground_deliveries": {
+            "ci95_half_width": 21.97780351794963,
+            "ci95_high": 264.57780351794963,
+            "ci95_low": 220.62219648205036,
+            "mean": 242.6,
+            "n": 5,
+            "standard_deviation": 17.700282483621553
+          },
+          "successful_duplicates": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "total_reward": {
+            "ci95_half_width": 6.8716934642117,
+            "ci95_high": 401.63752681609407,
+            "ci95_low": 387.89413988767063,
+            "mean": 394.76583335188235,
+            "n": 5,
+            "standard_deviation": 5.534261663503593
+          },
+          "useful_revisits": {
+            "ci95_half_width": 5.149538535858164,
+            "ci95_high": 301.34953853585813,
+            "ci95_low": 291.05046146414185,
+            "mean": 296.2,
+            "n": 5,
+            "standard_deviation": 4.147288270665544
+          },
+          "wall_time_s": {
+            "ci95_half_width": 49.642848260115215,
+            "ci95_high": 275.9396377493244,
+            "ci95_low": 176.65394122909396,
+            "mean": 226.29678948920917,
+            "n": 5,
+            "standard_deviation": 39.98090331356168
+          },
+          "wasted_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "wasted_time_fraction": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "zero_battery_sensors_at_end": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          }
+        },
+        "independent": {
+          "accepted_catalog_merges": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "accepted_transport_packets": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "acquisition_reward_component": {
+            "ci95_half_width": 5.9291021111450855,
+            "ci95_high": 331.92923107162966,
+            "ci95_low": 320.0710268493395,
+            "mean": 326.0001289604846,
+            "n": 5,
+            "standard_deviation": 4.775126056422935
+          },
+          "causally_avoidable_stale_ground_deliveries": {
+            "ci95_half_width": 29.95988828147175,
+            "ci95_high": 220.15988828147175,
+            "ci95_low": 160.24011171852823,
+            "mean": 190.2,
+            "n": 5,
+            "standard_deviation": 24.128820940941146
+          },
+          "communication_time_adjustment": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_acquisitions": {
+            "ci95_half_width": 3.662382628097132,
+            "ci95_high": 364.8623826280971,
+            "ci95_low": 357.53761737190285,
+            "mean": 361.2,
+            "n": 5,
+            "standard_deviation": 2.9495762407505253
+          },
+          "cooldown_ground_services": {
+            "ci95_half_width": 16.626247218156614,
+            "ci95_high": 354.0262472181566,
+            "ci95_low": 320.77375278184337,
+            "mean": 337.4,
+            "n": 5,
+            "standard_deviation": 13.390294993016397
+          },
+          "cross_sensor_onboard_overlap_products": {
+            "ci95_half_width": 60.03416540408093,
+            "ci95_high": 700.8341654040809,
+            "ci95_low": 580.765834595919,
+            "mean": 640.8,
+            "n": 5,
+            "standard_deviation": 48.34976732105336
+          },
+          "cross_sensor_onboard_overlap_targets": {
+            "ci95_half_width": 2.8585251909870273,
+            "ci95_high": 92.45852519098702,
+            "ci95_low": 86.74147480901297,
+            "mean": 89.6,
+            "n": 5,
+            "standard_deviation": 2.3021728866442674
+          },
+          "downlink_action_selections": {
+            "ci95_half_width": 24.64632664044549,
+            "ci95_high": 287.64632664044547,
+            "ci95_low": 238.3536733595545,
+            "mean": 263.0,
+            "n": 5,
+            "standard_deviation": 19.849433241279208
+          },
+          "duplicate_attempts": {
+            "ci95_half_width": 36.14287470805391,
+            "ci95_high": 740.5428747080539,
+            "ci95_low": 668.2571252919461,
+            "mean": 704.4,
+            "n": 5,
+            "standard_deviation": 29.10841802640604
+          },
+          "duplicate_sensor_seconds": {
+            "ci95_half_width": 3814.7741042793486,
+            "ci95_high": 90600.17410427934,
+            "ci95_low": 82970.62589572064,
+            "mean": 86785.4,
+            "n": 5,
+            "standard_deviation": 3072.3078947266986
+          },
+          "excess_holder_sensor_seconds": {
+            "ci95_half_width": 61310.398370910436,
+            "ci95_high": 889362.5983709104,
+            "ci95_low": 766741.8016290895,
+            "mean": 828052.2,
+            "n": 5,
+            "standard_deviation": 49377.60816098731
+          },
+          "first_capture_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 1.0,
+            "ci95_low": 1.0,
+            "mean": 1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 1.0,
+            "ci95_low": 1.0,
+            "mean": 1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_reward_component": {
+            "ci95_half_width": 1.7450783553209417,
+            "ci95_high": 35.6693858446387,
+            "ci95_low": 32.17922913399681,
+            "mean": 33.924307489317755,
+            "n": 5,
+            "standard_deviation": 1.4054352528908236
+          },
+          "interrupted_nonduplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "maximum_absolute_wheel_fraction": {
+            "ci95_half_width": 0.007472712224475176,
+            "ci95_high": 0.13868745694218115,
+            "ci95_low": 0.12374203249323079,
+            "mean": 0.13121474471770597,
+            "n": 5,
+            "standard_deviation": 0.006018304658333862
+          },
+          "maximum_storage_fraction": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.8,
+            "ci95_low": 0.8,
+            "mean": 0.8,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "minimum_battery_fraction": {
+            "ci95_half_width": 0.07748211409933502,
+            "ci95_high": 0.8694092941505215,
+            "ci95_low": 0.7144450659518514,
+            "mean": 0.7919271800511865,
+            "n": 5,
+            "standard_deviation": 0.06240183673797685
+          },
+          "other_action_selections": {
+            "ci95_half_width": 133.82811018163832,
+            "ci95_high": 5816.428110181639,
+            "ci95_low": 5548.771889818362,
+            "mean": 5682.6,
+            "n": 5,
+            "standard_deviation": 107.78125996665653
+          },
+          "other_operational_penalties_or_adjustments": {
+            "ci95_half_width": 6.312905282351945e-14,
+            "ci95_high": 9.723510414000425e-14,
+            "ci95_low": -2.9023001507034643e-14,
+            "mean": 3.410605131648481e-14,
+            "n": 5,
+            "standard_deviation": 5.084229945850415e-14
+          },
+          "overlap_sensor_seconds": {
+            "ci95_half_width": 137349.60143515296,
+            "ci95_high": 1631371.001435153,
+            "ci95_low": 1356671.7985648469,
+            "mean": 1494021.4,
+            "n": 5,
+            "standard_deviation": 110617.36640012724
+          },
+          "payload_bytes_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "payload_records_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "peak_rss_bytes": {
+            "ci95_half_width": 52386967.47903915,
+            "ci95_high": 2883848548.2790394,
+            "ci95_low": 2779074613.320961,
+            "mean": 2831461580.8,
+            "n": 5,
+            "standard_deviation": 42190936.96428657
+          },
+          "policy_decisions": {
+            "ci95_half_width": 41.674431780366675,
+            "ci95_high": 1550.6744317803666,
+            "ci95_low": 1467.3255682196334,
+            "mean": 1509.0,
+            "n": 5,
+            "standard_deviation": 33.56337289367682
+          },
+          "radio_occupancy_s": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "redundant_acquisitions": {
+            "ci95_half_width": 45.10847562884155,
+            "ci95_high": 462.50847562884155,
+            "ci95_low": 372.2915243711584,
+            "mean": 417.4,
+            "n": 5,
+            "standard_deviation": 36.329051735491255
+          },
+          "sensors_reaching_zero_battery": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "simulated_seconds_per_wall_second": {
+            "ci95_half_width": 30.85205806912891,
+            "ci95_high": 185.76693702264456,
+            "ci95_low": 124.06282088438675,
+            "mean": 154.91487895351565,
+            "n": 5,
+            "standard_deviation": 24.847348488609278
+          },
+          "stale_cross_sensor_ground_deliveries": {
+            "ci95_half_width": 72.90481738260452,
+            "ci95_high": 969.9048173826045,
+            "ci95_low": 824.0951826173955,
+            "mean": 897.0,
+            "n": 5,
+            "standard_deviation": 58.715415352358704
+          },
+          "successful_duplicates": {
+            "ci95_half_width": 57.636486014614704,
+            "ci95_high": 722.8364860146147,
+            "ci95_low": 607.5635139853854,
+            "mean": 665.2,
+            "n": 5,
+            "standard_deviation": 46.418746213141084
+          },
+          "total_reward": {
+            "ci95_half_width": 6.868636241313185,
+            "ci95_high": 366.7930726911155,
+            "ci95_low": 353.05580020848913,
+            "mean": 359.92443644980233,
+            "n": 5,
+            "standard_deviation": 5.5317994652736875
+          },
+          "useful_revisits": {
+            "ci95_half_width": 10.125463481488223,
+            "ci95_high": 57.125463481488225,
+            "ci95_low": 36.874536518511775,
+            "mean": 47.0,
+            "n": 5,
+            "standard_deviation": 8.154753215150045
+          },
+          "wall_time_s": {
+            "ci95_half_width": 75.06052635874849,
+            "ci95_high": 373.29219088815057,
+            "ci95_low": 223.17113817065356,
+            "mean": 298.23166452940205,
+            "n": 5,
+            "standard_deviation": 60.45156054080139
+          },
+          "wasted_sensor_seconds": {
+            "ci95_half_width": 3814.7741042793486,
+            "ci95_high": 90600.17410427934,
+            "ci95_low": 82970.62589572064,
+            "mean": 86785.4,
+            "n": 5,
+            "standard_deviation": 3072.3078947266986
+          },
+          "wasted_time_fraction": {
+            "ci95_half_width": 0.021193189468218607,
+            "ci95_high": 0.5033343005793297,
+            "ci95_low": 0.4609479216428925,
+            "mean": 0.48214111111111113,
+            "n": 5,
+            "standard_deviation": 0.017068377192926105
+          },
+          "zero_battery_sensors_at_end": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          }
+        },
+        "policy": {
+          "accepted_catalog_merges": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "accepted_transport_packets": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "acquisition_reward_component": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "causally_avoidable_stale_ground_deliveries": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "communication_time_adjustment": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_acquisitions": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_ground_services": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cross_sensor_onboard_overlap_products": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cross_sensor_onboard_overlap_targets": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "downlink_action_selections": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": 17956.621872857948,
+            "ci95_low": 17945.378127142052,
+            "mean": 17951.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "duplicate_attempts": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "duplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "excess_holder_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "first_capture_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_reward_component": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "interrupted_nonduplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "maximum_absolute_wheel_fraction": {
+            "ci95_half_width": 0.01912186577293297,
+            "ci95_high": 0.1502693169177512,
+            "ci95_low": 0.11202558537188527,
+            "mean": 0.13114745114481824,
+            "n": 5,
+            "standard_deviation": 0.015400193450559341
+          },
+          "maximum_storage_fraction": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "minimum_battery_fraction": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "other_action_selections": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "other_operational_penalties_or_adjustments": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": -17947.378127142052,
+            "ci95_low": -17958.621872857948,
+            "mean": -17953.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "overlap_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "payload_bytes_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "payload_records_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "peak_rss_bytes": {
+            "ci95_half_width": 93272048.43272491,
+            "ci95_high": 2921166013.232725,
+            "ci95_low": 2734621916.367275,
+            "mean": 2827893964.8,
+            "n": 5,
+            "standard_deviation": 75118589.70515005
+          },
+          "policy_decisions": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": 17956.621872857948,
+            "ci95_low": 17945.378127142052,
+            "mean": 17951.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "radio_occupancy_s": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "redundant_acquisitions": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "sensors_reaching_zero_battery": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 2.0,
+            "ci95_low": 2.0,
+            "mean": 2.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "simulated_seconds_per_wall_second": {
+            "ci95_half_width": 40.16654693723641,
+            "ci95_high": 155.11725439978196,
+            "ci95_low": 74.78416052530912,
+            "mean": 114.95070746254554,
+            "n": 5,
+            "standard_deviation": 32.34896638329106
+          },
+          "stale_cross_sensor_ground_deliveries": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "successful_duplicates": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "total_reward": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": -17947.378127142052,
+            "ci95_low": -17958.621872857948,
+            "mean": -17953.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "useful_revisits": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "wall_time_s": {
+            "ci95_half_width": 244.3727152018372,
+            "ci95_high": 680.144058479232,
+            "ci95_low": 191.39862807555755,
+            "mean": 435.77134327739475,
+            "n": 5,
+            "standard_deviation": 196.8106633963416
+          },
+          "wasted_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "wasted_time_fraction": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "zero_battery_sensors_at_end": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 2.0,
+            "ci95_low": 2.0,
+            "mean": 2.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          }
+        }
+      },
+      "gate_updates": 2,
+      "packet_outcome_counts": {},
+      "paired_effects": {
+        "policy_minus_centralized_full_state": {
+          "acquisition_reward_component": {
+            "ci95_half_width": 6.029017473783221,
+            "ci95_high": -350.41988556973786,
+            "ci95_low": -362.47792051730426,
+            "mean": -356.44890304352106,
+            "n": 5,
+            "standard_deviation": 4.855594977791902
+          },
+          "causally_avoidable_stale_ground_deliveries": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "communication_time_adjustment": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_acquisitions": {
+            "ci95_half_width": 5.149538535858164,
+            "ci95_high": -391.05046146414185,
+            "ci95_low": -401.34953853585813,
+            "mean": -396.2,
+            "n": 5,
+            "standard_deviation": 4.147288270665544
+          },
+          "cooldown_ground_services": {
+            "ci95_half_width": 23.119636940353114,
+            "ci95_high": -359.08036305964686,
+            "ci95_low": -405.3196369403531,
+            "mean": -382.2,
+            "n": 5,
+            "standard_deviation": 18.619881847100963
+          },
+          "cross_sensor_onboard_overlap_products": {
+            "ci95_half_width": 6.475727138834825,
+            "ci95_high": 3.6757271388348256,
+            "ci95_low": -9.275727138834824,
+            "mean": -2.8,
+            "n": 5,
+            "standard_deviation": 5.215361924162119
+          },
+          "cross_sensor_onboard_overlap_targets": {
+            "ci95_half_width": 3.2378635694174127,
+            "ci95_high": 1.8378635694174128,
+            "ci95_low": -4.637863569417412,
+            "mean": -1.4,
+            "n": 5,
+            "standard_deviation": 2.6076809620810595
+          },
+          "duplicate_attempts": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "duplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "excess_holder_sensor_seconds": {
+            "ci95_half_width": 1167.8886557417868,
+            "ci95_high": 721.4886557417868,
+            "ci95_low": -1614.288655741787,
+            "mean": -446.4,
+            "n": 5,
+            "standard_deviation": 940.5834891172607
+          },
+          "first_capture_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": -1.0,
+            "ci95_low": -1.0,
+            "mean": -1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": -1.0,
+            "ci95_low": -1.0,
+            "mean": -1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_reward_component": {
+            "ci95_half_width": 2.1880350310367067,
+            "ci95_high": -36.12889527732456,
+            "ci95_low": -40.50496533939797,
+            "mean": -38.316930308361265,
+            "n": 5,
+            "standard_deviation": 1.7621796510183052
+          },
+          "interrupted_nonduplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "other_operational_penalties_or_adjustments": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": -17947.378127142052,
+            "ci95_low": -17958.621872857948,
+            "mean": -17953.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "overlap_sensor_seconds": {
+            "ci95_half_width": 2335.7773114835736,
+            "ci95_high": 1442.9773114835737,
+            "ci95_low": -3228.577311483574,
+            "mean": -892.8,
+            "n": 5,
+            "standard_deviation": 1881.1669782345214
+          },
+          "radio_occupancy_s": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "redundant_acquisitions": {
+            "ci95_half_width": 3.2378635694174127,
+            "ci95_high": 1.8378635694174128,
+            "ci95_low": -4.637863569417412,
+            "mean": -1.4,
+            "n": 5,
+            "standard_deviation": 2.6076809620810595
+          },
+          "stale_cross_sensor_ground_deliveries": {
+            "ci95_half_width": 21.97780351794963,
+            "ci95_high": -220.62219648205036,
+            "ci95_low": -264.57780351794963,
+            "mean": -242.6,
+            "n": 5,
+            "standard_deviation": 17.700282483621553
+          },
+          "successful_duplicates": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "total_reward": {
+            "ci95_half_width": 8.814197243617908,
+            "ci95_high": -18338.951636108264,
+            "ci95_low": -18356.580030595498,
+            "mean": -18347.76583335188,
+            "n": 5,
+            "standard_deviation": 7.098697599647592
+          },
+          "useful_revisits": {
+            "ci95_half_width": 5.149538535858164,
+            "ci95_high": -291.05046146414185,
+            "ci95_low": -301.34953853585813,
+            "mean": -296.2,
+            "n": 5,
+            "standard_deviation": 4.147288270665544
+          },
+          "wasted_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "wasted_time_fraction": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          }
+        },
+        "policy_minus_independent": {
+          "acquisition_reward_component": {
+            "ci95_half_width": 5.9291021111450855,
+            "ci95_high": -320.0710268493395,
+            "ci95_low": -331.92923107162966,
+            "mean": -326.0001289604846,
+            "n": 5,
+            "standard_deviation": 4.775126056422935
+          },
+          "causally_avoidable_stale_ground_deliveries": {
+            "ci95_half_width": 29.95988828147175,
+            "ci95_high": -160.24011171852823,
+            "ci95_low": -220.15988828147175,
+            "mean": -190.2,
+            "n": 5,
+            "standard_deviation": 24.128820940941146
+          },
+          "communication_time_adjustment": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_acquisitions": {
+            "ci95_half_width": 3.662382628097132,
+            "ci95_high": -357.53761737190285,
+            "ci95_low": -364.8623826280971,
+            "mean": -361.2,
+            "n": 5,
+            "standard_deviation": 2.9495762407505253
+          },
+          "cooldown_ground_services": {
+            "ci95_half_width": 16.626247218156614,
+            "ci95_high": -320.77375278184337,
+            "ci95_low": -354.0262472181566,
+            "mean": -337.4,
+            "n": 5,
+            "standard_deviation": 13.390294993016397
+          },
+          "cross_sensor_onboard_overlap_products": {
+            "ci95_half_width": 60.03416540408093,
+            "ci95_high": -580.765834595919,
+            "ci95_low": -700.8341654040809,
+            "mean": -640.8,
+            "n": 5,
+            "standard_deviation": 48.34976732105336
+          },
+          "cross_sensor_onboard_overlap_targets": {
+            "ci95_half_width": 2.8585251909870273,
+            "ci95_high": -86.74147480901297,
+            "ci95_low": -92.45852519098702,
+            "mean": -89.6,
+            "n": 5,
+            "standard_deviation": 2.3021728866442674
+          },
+          "duplicate_attempts": {
+            "ci95_half_width": 36.14287470805391,
+            "ci95_high": -668.2571252919461,
+            "ci95_low": -740.5428747080539,
+            "mean": -704.4,
+            "n": 5,
+            "standard_deviation": 29.10841802640604
+          },
+          "duplicate_sensor_seconds": {
+            "ci95_half_width": 3814.7741042793486,
+            "ci95_high": -82970.62589572064,
+            "ci95_low": -90600.17410427934,
+            "mean": -86785.4,
+            "n": 5,
+            "standard_deviation": 3072.3078947266986
+          },
+          "excess_holder_sensor_seconds": {
+            "ci95_half_width": 61310.398370910436,
+            "ci95_high": -766741.8016290895,
+            "ci95_low": -889362.5983709104,
+            "mean": -828052.2,
+            "n": 5,
+            "standard_deviation": 49377.60816098731
+          },
+          "first_capture_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": -1.0,
+            "ci95_low": -1.0,
+            "mean": -1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": -1.0,
+            "ci95_low": -1.0,
+            "mean": -1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_reward_component": {
+            "ci95_half_width": 1.7450783553209417,
+            "ci95_high": -32.17922913399681,
+            "ci95_low": -35.6693858446387,
+            "mean": -33.924307489317755,
+            "n": 5,
+            "standard_deviation": 1.4054352528908236
+          },
+          "interrupted_nonduplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "other_operational_penalties_or_adjustments": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": -17947.378127142052,
+            "ci95_low": -17958.621872857948,
+            "mean": -17953.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "overlap_sensor_seconds": {
+            "ci95_half_width": 137349.60143515296,
+            "ci95_high": -1356671.7985648469,
+            "ci95_low": -1631371.001435153,
+            "mean": -1494021.4,
+            "n": 5,
+            "standard_deviation": 110617.36640012724
+          },
+          "radio_occupancy_s": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "redundant_acquisitions": {
+            "ci95_half_width": 45.10847562884155,
+            "ci95_high": -372.2915243711584,
+            "ci95_low": -462.50847562884155,
+            "mean": -417.4,
+            "n": 5,
+            "standard_deviation": 36.329051735491255
+          },
+          "stale_cross_sensor_ground_deliveries": {
+            "ci95_half_width": 72.90481738260452,
+            "ci95_high": -824.0951826173955,
+            "ci95_low": -969.9048173826045,
+            "mean": -897.0,
+            "n": 5,
+            "standard_deviation": 58.715415352358704
+          },
+          "successful_duplicates": {
+            "ci95_half_width": 57.636486014614704,
+            "ci95_high": -607.5635139853854,
+            "ci95_low": -722.8364860146147,
+            "mean": -665.2,
+            "n": 5,
+            "standard_deviation": 46.418746213141084
+          },
+          "total_reward": {
+            "ci95_half_width": 10.952435477999336,
+            "ci95_high": -18301.9720009718,
+            "ci95_low": -18323.8768719278,
+            "mean": -18312.9244364498,
+            "n": 5,
+            "standard_deviation": 8.82077236180118
+          },
+          "useful_revisits": {
+            "ci95_half_width": 10.125463481488223,
+            "ci95_high": -36.874536518511775,
+            "ci95_low": -57.125463481488225,
+            "mean": -47.0,
+            "n": 5,
+            "standard_deviation": 8.154753215150045
+          },
+          "wasted_sensor_seconds": {
+            "ci95_half_width": 3814.7741042793486,
+            "ci95_high": -82970.62589572064,
+            "ci95_low": -90600.17410427934,
+            "mean": -86785.4,
+            "n": 5,
+            "standard_deviation": 3072.3078947266986
+          },
+          "wasted_time_fraction": {
+            "ci95_half_width": 0.021193189468218607,
+            "ci95_high": -0.4609479216428925,
+            "ci95_low": -0.5033343005793297,
+            "mean": -0.48214111111111113,
+            "n": 5,
+            "standard_deviation": 0.017068377192926105
+          }
+        }
+      },
+      "peer_slot_selection_counts": {},
+      "pilot_updates": 8,
+      "recipient_selection_counts": {},
+      "training_acknowledged_links": [
+        "sensor_0->sensor_2",
+        "sensor_0->sensor_3",
+        "sensor_1->sensor_2",
+        "sensor_1->sensor_3",
+        "sensor_2->sensor_0",
+        "sensor_2->sensor_1",
+        "sensor_3->sensor_0",
+        "sensor_3->sensor_1"
+      ],
+      "training_packet_outcome_counts": {
+        "accepted": 879
+      },
+      "training_peer_slot_selection_counts": {
+        "0": 237,
+        "1": 408,
+        "2": 234
+      },
+      "training_recipient_selection_counts": {
+        "sensor_0": 237,
+        "sensor_1": 222,
+        "sensor_2": 186,
+        "sensor_3": 234
+      }
+    },
+    "continuous": {
+      "acknowledged_links": [],
+      "controller_metrics": {
+        "centralized_full_state": {
+          "accepted_catalog_merges": {
+            "ci95_half_width": 361.2702433297195,
+            "ci95_high": 3758.4702433297193,
+            "ci95_low": 3035.9297566702803,
+            "mean": 3397.2,
+            "n": 5,
+            "standard_deviation": 290.9565259622131
+          },
+          "accepted_transport_packets": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "acquisition_reward_component": {
+            "ci95_half_width": 41.01315745196476,
+            "ci95_high": 346.73083922555463,
+            "ci95_low": 264.7045243216252,
+            "mean": 305.7176817735899,
+            "n": 5,
+            "standard_deviation": 33.03080182021529
+          },
+          "causally_avoidable_stale_ground_deliveries": {
+            "ci95_half_width": 0.5552890210395597,
+            "ci95_high": 0.7552890210395597,
+            "ci95_low": -0.35528902103955967,
+            "mean": 0.2,
+            "n": 5,
+            "standard_deviation": 0.4472135954999579
+          },
+          "communication_time_adjustment": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_acquisitions": {
+            "ci95_half_width": 38.975198024053235,
+            "ci95_high": 376.3751980240532,
+            "ci95_low": 298.42480197594676,
+            "mean": 337.4,
+            "n": 5,
+            "standard_deviation": 31.38948868650141
+          },
+          "cooldown_ground_services": {
+            "ci95_half_width": 48.936371015569286,
+            "ci95_high": 345.53637101556933,
+            "ci95_low": 247.66362898443074,
+            "mean": 296.6,
+            "n": 5,
+            "standard_deviation": 39.41192712872589
+          },
+          "cross_sensor_onboard_overlap_products": {
+            "ci95_half_width": 28.19151555391142,
+            "ci95_high": 58.191515553911415,
+            "ci95_low": 1.8084844460885812,
+            "mean": 30.0,
+            "n": 5,
+            "standard_deviation": 22.704625079485456
+          },
+          "cross_sensor_onboard_overlap_targets": {
+            "ci95_half_width": 10.48452727786243,
+            "ci95_high": 22.884527277862432,
+            "ci95_low": 1.9154727221375705,
+            "mean": 12.4,
+            "n": 5,
+            "standard_deviation": 8.44393273303382
+          },
+          "downlink_action_selections": {
+            "ci95_half_width": 307.14636522584016,
+            "ci95_high": 1163.7463652258402,
+            "ci95_low": 549.4536347741598,
+            "mean": 856.6,
+            "n": 5,
+            "standard_deviation": 247.36673179714364
+          },
+          "duplicate_attempts": {
+            "ci95_half_width": 4.728115642019849,
+            "ci95_high": 14.728115642019848,
+            "ci95_low": 5.271884357980151,
+            "mean": 10.0,
+            "n": 5,
+            "standard_deviation": 3.8078865529319543
+          },
+          "duplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "excess_holder_sensor_seconds": {
+            "ci95_half_width": 36664.300722451146,
+            "ci95_high": 88769.30072245115,
+            "ci95_low": 15440.699277548854,
+            "mean": 52105.0,
+            "n": 5,
+            "standard_deviation": 29528.359343180582
+          },
+          "first_capture_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 1.0,
+            "ci95_low": 1.0,
+            "mean": 1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_coverage": {
+            "ci95_half_width": 0.006800873806582576,
+            "ci95_high": 1.0028008738065826,
+            "ci95_low": 0.9891991261934174,
+            "mean": 0.996,
+            "n": 5,
+            "standard_deviation": 0.005477225575051666
+          },
+          "ground_delivery_reward_component": {
+            "ci95_half_width": 5.093756951382294,
+            "ci95_high": 35.078877930119056,
+            "ci95_low": 24.891364027354467,
+            "mean": 29.98512097873676,
+            "n": 5,
+            "standard_deviation": 4.102363408096793
+          },
+          "interrupted_nonduplicate_sensor_seconds": {
+            "ci95_half_width": 9681.974585517026,
+            "ci95_high": 58106.77458551703,
+            "ci95_low": 38742.82541448298,
+            "mean": 48424.8,
+            "n": 5,
+            "standard_deviation": 7797.580182338621
+          },
+          "maximum_absolute_wheel_fraction": {
+            "ci95_half_width": 0.00993291179714743,
+            "ci95_high": 0.1268789590938026,
+            "ci95_low": 0.10701313549950774,
+            "mean": 0.11694604729665517,
+            "n": 5,
+            "standard_deviation": 0.00799967769985819
+          },
+          "maximum_storage_fraction": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 1.0,
+            "ci95_low": 1.0,
+            "mean": 1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "minimum_battery_fraction": {
+            "ci95_half_width": 0.28382900781363785,
+            "ci95_high": 0.8277936957004655,
+            "ci95_low": 0.26013568007318977,
+            "mean": 0.5439646878868276,
+            "n": 5,
+            "standard_deviation": 0.22858761164391864
+          },
+          "other_action_selections": {
+            "ci95_half_width": 339.17728872736046,
+            "ci95_high": 2041.7772887273604,
+            "ci95_low": 1363.4227112726394,
+            "mean": 1702.6,
+            "n": 5,
+            "standard_deviation": 273.16350415090227
+          },
+          "other_operational_penalties_or_adjustments": {
+            "ci95_half_width": 9.202561754527246e-14,
+            "ci95_high": 4.6550882456626045e-14,
+            "ci95_low": -1.3750035263391889e-13,
+            "mean": -4.5474735088646414e-14,
+            "n": 5,
+            "standard_deviation": 7.411475059146424e-14
+          },
+          "overlap_sensor_seconds": {
+            "ci95_half_width": 73376.28666506155,
+            "ci95_high": 177054.08666506154,
+            "ci95_low": 30301.51333493844,
+            "mean": 103677.79999999999,
+            "n": 5,
+            "standard_deviation": 59095.12297305083
+          },
+          "payload_bytes_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "payload_records_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "peak_rss_bytes": {
+            "ci95_half_width": 33695541.51806543,
+            "ci95_high": 3069635176.7180653,
+            "ci95_low": 3002244093.6819344,
+            "mean": 3035939635.2,
+            "n": 5,
+            "standard_deviation": 27137407.19454744
+          },
+          "policy_decisions": {
+            "ci95_half_width": 68.94534318147318,
+            "ci95_high": 2628.145343181473,
+            "ci95_low": 2490.2546568185267,
+            "mean": 2559.2,
+            "n": 5,
+            "standard_deviation": 55.526570216428816
+          },
+          "radio_occupancy_s": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "redundant_acquisitions": {
+            "ci95_half_width": 17.72581363232523,
+            "ci95_high": 35.325813632325236,
+            "ci95_low": -0.12581363232522946,
+            "mean": 17.6,
+            "n": 5,
+            "standard_deviation": 14.27585373979434
+          },
+          "sensors_reaching_zero_battery": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "simulated_seconds_per_wall_second": {
+            "ci95_half_width": 47.782011208765084,
+            "ci95_high": 244.96282729720164,
+            "ci95_low": 149.39880487967147,
+            "mean": 197.18081608843656,
+            "n": 5,
+            "standard_deviation": 38.48223938028981
+          },
+          "stale_cross_sensor_ground_deliveries": {
+            "ci95_half_width": 54.96660141074743,
+            "ci95_high": 202.76660141074746,
+            "ci95_low": 92.83339858925258,
+            "mean": 147.8,
+            "n": 5,
+            "standard_deviation": 44.26849895806272
+          },
+          "successful_duplicates": {
+            "ci95_half_width": 0.5552890210395597,
+            "ci95_high": 0.7552890210395597,
+            "ci95_low": -0.35528902103955967,
+            "mean": 0.2,
+            "n": 5,
+            "standard_deviation": 0.4472135954999579
+          },
+          "total_reward": {
+            "ci95_half_width": 45.62455735167041,
+            "ci95_high": 381.3273601039971,
+            "ci95_low": 290.0782454006562,
+            "mean": 335.70280275232665,
+            "n": 5,
+            "standard_deviation": 36.74468891557817
+          },
+          "useful_revisits": {
+            "ci95_half_width": 38.975198024053235,
+            "ci95_high": 276.37519802405325,
+            "ci95_low": 198.42480197594676,
+            "mean": 237.4,
+            "n": 5,
+            "standard_deviation": 31.38948868650141
+          },
+          "wall_time_s": {
+            "ci95_half_width": 62.25595611228093,
+            "ci95_high": 298.284833443481,
+            "ci95_low": 173.77292121891912,
+            "mean": 236.02887733120005,
+            "n": 5,
+            "standard_deviation": 50.139132810762426
+          },
+          "wasted_sensor_seconds": {
+            "ci95_half_width": 9681.974585517026,
+            "ci95_high": 58106.77458551703,
+            "ci95_low": 38742.82541448298,
+            "mean": 48424.8,
+            "n": 5,
+            "standard_deviation": 7797.580182338621
+          },
+          "wasted_time_fraction": {
+            "ci95_half_width": 0.05378874769731681,
+            "ci95_high": 0.32281541436398353,
+            "ci95_low": 0.21523791896934988,
+            "mean": 0.2690266666666667,
+            "n": 5,
+            "standard_deviation": 0.04331988990188123
+          },
+          "zero_battery_sensors_at_end": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          }
+        },
+        "independent": {
+          "accepted_catalog_merges": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "accepted_transport_packets": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "acquisition_reward_component": {
+            "ci95_half_width": 9.648651213270439,
+            "ci95_high": 318.2747943367871,
+            "ci95_low": 298.9774919102462,
+            "mean": 308.62614312351667,
+            "n": 5,
+            "standard_deviation": 7.77074250942969
+          },
+          "causally_avoidable_stale_ground_deliveries": {
+            "ci95_half_width": 25.104959932992852,
+            "ci95_high": 174.50495993299285,
+            "ci95_low": 124.29504006700715,
+            "mean": 149.4,
+            "n": 5,
+            "standard_deviation": 20.21880312976018
+          },
+          "communication_time_adjustment": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_acquisitions": {
+            "ci95_half_width": 9.956565966697243,
+            "ci95_high": 351.5565659666973,
+            "ci95_low": 331.64343403330275,
+            "mean": 341.6,
+            "n": 5,
+            "standard_deviation": 8.018728078691781
+          },
+          "cooldown_ground_services": {
+            "ci95_half_width": 16.30792249384023,
+            "ci95_high": 336.30792249384024,
+            "ci95_low": 303.69207750615976,
+            "mean": 320.0,
+            "n": 5,
+            "standard_deviation": 13.133925536563698
+          },
+          "cross_sensor_onboard_overlap_products": {
+            "ci95_half_width": 34.47714362443132,
+            "ci95_high": 554.4771436244313,
+            "ci95_low": 485.52285637556867,
+            "mean": 520.0,
+            "n": 5,
+            "standard_deviation": 27.76688675382964
+          },
+          "cross_sensor_onboard_overlap_targets": {
+            "ci95_half_width": 2.0402621419747713,
+            "ci95_high": 88.24026214197477,
+            "ci95_low": 84.15973785802524,
+            "mean": 86.2,
+            "n": 5,
+            "standard_deviation": 1.6431676725154984
+          },
+          "downlink_action_selections": {
+            "ci95_half_width": 120.14021572014873,
+            "ci95_high": 1033.1402157201487,
+            "ci95_low": 792.8597842798513,
+            "mean": 913.0,
+            "n": 5,
+            "standard_deviation": 96.7574286553751
+          },
+          "duplicate_attempts": {
+            "ci95_half_width": 22.41194917960152,
+            "ci95_high": 794.8119491796015,
+            "ci95_low": 749.9880508203985,
+            "mean": 772.4,
+            "n": 5,
+            "standard_deviation": 18.04993074778959
+          },
+          "duplicate_sensor_seconds": {
+            "ci95_half_width": 4468.053926736481,
+            "ci95_high": 100514.05392673648,
+            "ci95_low": 91577.94607326352,
+            "mean": 96046.0,
+            "n": 5,
+            "standard_deviation": 3598.4404260734955
+          },
+          "excess_holder_sensor_seconds": {
+            "ci95_half_width": 86715.4650132505,
+            "ci95_high": 737610.0650132505,
+            "ci95_low": 564179.1349867495,
+            "mean": 650894.6,
+            "n": 5,
+            "standard_deviation": 69838.10848884727
+          },
+          "first_capture_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 1.0,
+            "ci95_low": 1.0,
+            "mean": 1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 1.0,
+            "ci95_low": 1.0,
+            "mean": 1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_reward_component": {
+            "ci95_half_width": 1.5766945828874253,
+            "ci95_high": 33.548683189096586,
+            "ci95_low": 30.39529402332174,
+            "mean": 31.971988606209162,
+            "n": 5,
+            "standard_deviation": 1.2698238695559552
+          },
+          "interrupted_nonduplicate_sensor_seconds": {
+            "ci95_half_width": 1593.0542806371639,
+            "ci95_high": 6832.854280637164,
+            "ci95_low": 3646.745719362836,
+            "mean": 5239.8,
+            "n": 5,
+            "standard_deviation": 1282.9994933748023
+          },
+          "maximum_absolute_wheel_fraction": {
+            "ci95_half_width": 0.011374934270602629,
+            "ci95_high": 0.15513940940621648,
+            "ci95_low": 0.13238954086501123,
+            "mean": 0.14376447513561386,
+            "n": 5,
+            "standard_deviation": 0.009161040577046605
+          },
+          "maximum_storage_fraction": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.8,
+            "ci95_low": 0.8,
+            "mean": 0.8,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "minimum_battery_fraction": {
+            "ci95_half_width": 0.06192125592625836,
+            "ci95_high": 0.8426761644952355,
+            "ci95_low": 0.7188336526427187,
+            "mean": 0.7807549085689771,
+            "n": 5,
+            "standard_deviation": 0.049869575034659754
+          },
+          "other_action_selections": {
+            "ci95_half_width": 127.95285749492275,
+            "ci95_high": 4299.752857494923,
+            "ci95_low": 4043.8471425050775,
+            "mean": 4171.8,
+            "n": 5,
+            "standard_deviation": 103.04950266740738
+          },
+          "other_operational_penalties_or_adjustments": {
+            "ci95_half_width": 3.1564526411759725e-14,
+            "ci95_high": 4.293321018392133e-14,
+            "ci95_low": -2.0195842639598122e-14,
+            "mean": 1.1368683772161604e-14,
+            "n": 5,
+            "standard_deviation": 2.5421149729252075e-14
+          },
+          "overlap_sensor_seconds": {
+            "ci95_half_width": 130736.65250259062,
+            "ci95_high": 1314236.0525025905,
+            "ci95_low": 1052762.7474974093,
+            "mean": 1183499.4,
+            "n": 5,
+            "standard_deviation": 105291.49004216818
+          },
+          "payload_bytes_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "payload_records_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "peak_rss_bytes": {
+            "ci95_half_width": 17537786.27754596,
+            "ci95_high": 3022450221.4775457,
+            "ci95_low": 2987374648.922454,
+            "mean": 3004912435.2,
+            "n": 5,
+            "standard_deviation": 14124421.987684848
+          },
+          "policy_decisions": {
+            "ci95_half_width": 120.86436700252872,
+            "ci95_high": 5205.664367002529,
+            "ci95_low": 4963.935632997472,
+            "mean": 5084.8,
+            "n": 5,
+            "standard_deviation": 97.34063899523159
+          },
+          "radio_occupancy_s": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "redundant_acquisitions": {
+            "ci95_half_width": 23.13963374698056,
+            "ci95_high": 351.53963374698054,
+            "ci95_low": 305.2603662530194,
+            "mean": 328.4,
+            "n": 5,
+            "standard_deviation": 18.635986692418516
+          },
+          "sensors_reaching_zero_battery": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "simulated_seconds_per_wall_second": {
+            "ci95_half_width": 34.43119058276699,
+            "ci95_high": 183.6335821902834,
+            "ci95_low": 114.77120102474942,
+            "mean": 149.2023916075164,
+            "n": 5,
+            "standard_deviation": 27.72987751322123
+          },
+          "stale_cross_sensor_ground_deliveries": {
+            "ci95_half_width": 51.214689024437924,
+            "ci95_high": 839.8146890244379,
+            "ci95_low": 737.3853109755621,
+            "mean": 788.6,
+            "n": 5,
+            "standard_deviation": 41.24681805909396
+          },
+          "successful_duplicates": {
+            "ci95_half_width": 34.08362020857007,
+            "ci95_high": 610.0836202085701,
+            "ci95_low": 541.9163797914299,
+            "mean": 576.0,
+            "n": 5,
+            "standard_deviation": 27.44995446262161
+          },
+          "total_reward": {
+            "ci95_half_width": 8.790475444800983,
+            "ci95_high": 349.3886071745268,
+            "ci95_low": 331.80765628492486,
+            "mean": 340.5981317297258,
+            "n": 5,
+            "standard_deviation": 7.079592754173096
+          },
+          "useful_revisits": {
+            "ci95_half_width": 21.960259168128722,
+            "ci95_high": 71.56025916812872,
+            "ci95_low": 27.63974083187128,
+            "mean": 49.6,
+            "n": 5,
+            "standard_deviation": 17.686152775547317
+          },
+          "wall_time_s": {
+            "ci95_half_width": 78.80648941082015,
+            "ci95_high": 389.82288012621996,
+            "ci95_low": 232.20990130457963,
+            "mean": 311.0163907153998,
+            "n": 5,
+            "standard_deviation": 63.46845001934848
+          },
+          "wasted_sensor_seconds": {
+            "ci95_half_width": 3684.165267496762,
+            "ci95_high": 104969.96526749677,
+            "ci95_low": 97601.63473250324,
+            "mean": 101285.8,
+            "n": 5,
+            "standard_deviation": 2967.119343740659
+          },
+          "wasted_time_fraction": {
+            "ci95_half_width": 0.020467584819426475,
+            "ci95_high": 0.5831664737083153,
+            "ci95_low": 0.5422313040694624,
+            "mean": 0.5626988888888889,
+            "n": 5,
+            "standard_deviation": 0.016483996354114787
+          },
+          "zero_battery_sensors_at_end": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          }
+        },
+        "policy": {
+          "accepted_catalog_merges": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "accepted_transport_packets": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "acquisition_reward_component": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "causally_avoidable_stale_ground_deliveries": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "communication_time_adjustment": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_acquisitions": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_ground_services": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cross_sensor_onboard_overlap_products": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cross_sensor_onboard_overlap_targets": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "downlink_action_selections": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": 17956.621872857948,
+            "ci95_low": 17945.378127142052,
+            "mean": 17951.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "duplicate_attempts": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "duplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "excess_holder_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "first_capture_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_reward_component": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "interrupted_nonduplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "maximum_absolute_wheel_fraction": {
+            "ci95_half_width": 0.01912186577293297,
+            "ci95_high": 0.1502693169177512,
+            "ci95_low": 0.11202558537188527,
+            "mean": 0.13114745114481824,
+            "n": 5,
+            "standard_deviation": 0.015400193450559341
+          },
+          "maximum_storage_fraction": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "minimum_battery_fraction": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "other_action_selections": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "other_operational_penalties_or_adjustments": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": -17947.378127142052,
+            "ci95_low": -17958.621872857948,
+            "mean": -17953.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "overlap_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "payload_bytes_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "payload_records_attempted": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "peak_rss_bytes": {
+            "ci95_half_width": 25084298.020561956,
+            "ci95_high": 3031979197.220562,
+            "ci95_low": 2981810601.1794376,
+            "mean": 3006894899.2,
+            "n": 5,
+            "standard_deviation": 20202162.627610818
+          },
+          "policy_decisions": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": 17956.621872857948,
+            "ci95_low": 17945.378127142052,
+            "mean": 17951.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "radio_occupancy_s": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "redundant_acquisitions": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "sensors_reaching_zero_battery": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 2.0,
+            "ci95_low": 2.0,
+            "mean": 2.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "simulated_seconds_per_wall_second": {
+            "ci95_half_width": 41.3038739980356,
+            "ci95_high": 152.07022975780697,
+            "ci95_low": 69.46248176173577,
+            "mean": 110.76635575977137,
+            "n": 5,
+            "standard_deviation": 33.264936454457235
+          },
+          "stale_cross_sensor_ground_deliveries": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "successful_duplicates": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "total_reward": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": -17947.378127142052,
+            "ci95_low": -17958.621872857948,
+            "mean": -17953.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "useful_revisits": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "wall_time_s": {
+            "ci95_half_width": 263.34244246300096,
+            "ci95_high": 719.9151215660038,
+            "ci95_low": 193.23023664000192,
+            "mean": 456.5726791030029,
+            "n": 5,
+            "standard_deviation": 212.08832892309118
+          },
+          "wasted_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "wasted_time_fraction": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "zero_battery_sensors_at_end": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 2.0,
+            "ci95_low": 2.0,
+            "mean": 2.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          }
+        }
+      },
+      "gate_updates": 2,
+      "packet_outcome_counts": {},
+      "paired_effects": {
+        "policy_minus_centralized_full_state": {
+          "acquisition_reward_component": {
+            "ci95_half_width": 41.01315745196476,
+            "ci95_high": -264.7045243216252,
+            "ci95_low": -346.73083922555463,
+            "mean": -305.7176817735899,
+            "n": 5,
+            "standard_deviation": 33.03080182021529
+          },
+          "causally_avoidable_stale_ground_deliveries": {
+            "ci95_half_width": 0.5552890210395597,
+            "ci95_high": 0.35528902103955967,
+            "ci95_low": -0.7552890210395597,
+            "mean": -0.2,
+            "n": 5,
+            "standard_deviation": 0.4472135954999579
+          },
+          "communication_time_adjustment": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_acquisitions": {
+            "ci95_half_width": 38.975198024053235,
+            "ci95_high": -298.42480197594676,
+            "ci95_low": -376.3751980240532,
+            "mean": -337.4,
+            "n": 5,
+            "standard_deviation": 31.38948868650141
+          },
+          "cooldown_ground_services": {
+            "ci95_half_width": 48.936371015569286,
+            "ci95_high": -247.66362898443074,
+            "ci95_low": -345.53637101556933,
+            "mean": -296.6,
+            "n": 5,
+            "standard_deviation": 39.41192712872589
+          },
+          "cross_sensor_onboard_overlap_products": {
+            "ci95_half_width": 28.19151555391142,
+            "ci95_high": -1.8084844460885812,
+            "ci95_low": -58.191515553911415,
+            "mean": -30.0,
+            "n": 5,
+            "standard_deviation": 22.704625079485456
+          },
+          "cross_sensor_onboard_overlap_targets": {
+            "ci95_half_width": 10.48452727786243,
+            "ci95_high": -1.9154727221375705,
+            "ci95_low": -22.884527277862432,
+            "mean": -12.4,
+            "n": 5,
+            "standard_deviation": 8.44393273303382
+          },
+          "duplicate_attempts": {
+            "ci95_half_width": 4.728115642019849,
+            "ci95_high": -5.271884357980151,
+            "ci95_low": -14.728115642019848,
+            "mean": -10.0,
+            "n": 5,
+            "standard_deviation": 3.8078865529319543
+          },
+          "duplicate_sensor_seconds": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "excess_holder_sensor_seconds": {
+            "ci95_half_width": 36664.300722451146,
+            "ci95_high": -15440.699277548854,
+            "ci95_low": -88769.30072245115,
+            "mean": -52105.0,
+            "n": 5,
+            "standard_deviation": 29528.359343180582
+          },
+          "first_capture_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": -1.0,
+            "ci95_low": -1.0,
+            "mean": -1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_coverage": {
+            "ci95_half_width": 0.006800873806582576,
+            "ci95_high": -0.9891991261934174,
+            "ci95_low": -1.0028008738065826,
+            "mean": -0.996,
+            "n": 5,
+            "standard_deviation": 0.005477225575051666
+          },
+          "ground_delivery_reward_component": {
+            "ci95_half_width": 5.093756951382294,
+            "ci95_high": -24.891364027354467,
+            "ci95_low": -35.078877930119056,
+            "mean": -29.98512097873676,
+            "n": 5,
+            "standard_deviation": 4.102363408096793
+          },
+          "interrupted_nonduplicate_sensor_seconds": {
+            "ci95_half_width": 9681.974585517026,
+            "ci95_high": -38742.82541448298,
+            "ci95_low": -58106.77458551703,
+            "mean": -48424.8,
+            "n": 5,
+            "standard_deviation": 7797.580182338621
+          },
+          "other_operational_penalties_or_adjustments": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": -17947.378127142052,
+            "ci95_low": -17958.621872857948,
+            "mean": -17953.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "overlap_sensor_seconds": {
+            "ci95_half_width": 73376.28666506155,
+            "ci95_high": -30301.51333493844,
+            "ci95_low": -177054.08666506154,
+            "mean": -103677.79999999999,
+            "n": 5,
+            "standard_deviation": 59095.12297305083
+          },
+          "radio_occupancy_s": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "redundant_acquisitions": {
+            "ci95_half_width": 17.72581363232523,
+            "ci95_high": 0.12581363232522946,
+            "ci95_low": -35.325813632325236,
+            "mean": -17.6,
+            "n": 5,
+            "standard_deviation": 14.27585373979434
+          },
+          "stale_cross_sensor_ground_deliveries": {
+            "ci95_half_width": 54.96660141074743,
+            "ci95_high": -92.83339858925258,
+            "ci95_low": -202.76660141074746,
+            "mean": -147.8,
+            "n": 5,
+            "standard_deviation": 44.26849895806272
+          },
+          "successful_duplicates": {
+            "ci95_half_width": 0.5552890210395597,
+            "ci95_high": 0.35528902103955967,
+            "ci95_low": -0.7552890210395597,
+            "mean": -0.2,
+            "n": 5,
+            "standard_deviation": 0.4472135954999579
+          },
+          "total_reward": {
+            "ci95_half_width": 47.947097038688334,
+            "ci95_high": -18240.755705713636,
+            "ci95_low": -18336.649899791017,
+            "mean": -18288.702802752327,
+            "n": 5,
+            "standard_deviation": 38.61519469683444
+          },
+          "useful_revisits": {
+            "ci95_half_width": 38.975198024053235,
+            "ci95_high": -198.42480197594676,
+            "ci95_low": -276.37519802405325,
+            "mean": -237.4,
+            "n": 5,
+            "standard_deviation": 31.38948868650141
+          },
+          "wasted_sensor_seconds": {
+            "ci95_half_width": 9681.974585517026,
+            "ci95_high": -38742.82541448298,
+            "ci95_low": -58106.77458551703,
+            "mean": -48424.8,
+            "n": 5,
+            "standard_deviation": 7797.580182338621
+          },
+          "wasted_time_fraction": {
+            "ci95_half_width": 0.05378874769731681,
+            "ci95_high": -0.21523791896934988,
+            "ci95_low": -0.32281541436398353,
+            "mean": -0.2690266666666667,
+            "n": 5,
+            "standard_deviation": 0.04331988990188123
+          }
+        },
+        "policy_minus_independent": {
+          "acquisition_reward_component": {
+            "ci95_half_width": 9.648651213270439,
+            "ci95_high": -298.9774919102462,
+            "ci95_low": -318.2747943367871,
+            "mean": -308.62614312351667,
+            "n": 5,
+            "standard_deviation": 7.77074250942969
+          },
+          "causally_avoidable_stale_ground_deliveries": {
+            "ci95_half_width": 25.104959932992852,
+            "ci95_high": -124.29504006700715,
+            "ci95_low": -174.50495993299285,
+            "mean": -149.4,
+            "n": 5,
+            "standard_deviation": 20.21880312976018
+          },
+          "communication_time_adjustment": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "cooldown_acquisitions": {
+            "ci95_half_width": 9.956565966697243,
+            "ci95_high": -331.64343403330275,
+            "ci95_low": -351.5565659666973,
+            "mean": -341.6,
+            "n": 5,
+            "standard_deviation": 8.018728078691781
+          },
+          "cooldown_ground_services": {
+            "ci95_half_width": 16.30792249384023,
+            "ci95_high": -303.69207750615976,
+            "ci95_low": -336.30792249384024,
+            "mean": -320.0,
+            "n": 5,
+            "standard_deviation": 13.133925536563698
+          },
+          "cross_sensor_onboard_overlap_products": {
+            "ci95_half_width": 34.47714362443132,
+            "ci95_high": -485.52285637556867,
+            "ci95_low": -554.4771436244313,
+            "mean": -520.0,
+            "n": 5,
+            "standard_deviation": 27.76688675382964
+          },
+          "cross_sensor_onboard_overlap_targets": {
+            "ci95_half_width": 2.0402621419747713,
+            "ci95_high": -84.15973785802524,
+            "ci95_low": -88.24026214197477,
+            "mean": -86.2,
+            "n": 5,
+            "standard_deviation": 1.6431676725154984
+          },
+          "duplicate_attempts": {
+            "ci95_half_width": 22.41194917960152,
+            "ci95_high": -749.9880508203985,
+            "ci95_low": -794.8119491796015,
+            "mean": -772.4,
+            "n": 5,
+            "standard_deviation": 18.04993074778959
+          },
+          "duplicate_sensor_seconds": {
+            "ci95_half_width": 4468.053926736481,
+            "ci95_high": -91577.94607326352,
+            "ci95_low": -100514.05392673648,
+            "mean": -96046.0,
+            "n": 5,
+            "standard_deviation": 3598.4404260734955
+          },
+          "excess_holder_sensor_seconds": {
+            "ci95_half_width": 86715.4650132505,
+            "ci95_high": -564179.1349867495,
+            "ci95_low": -737610.0650132505,
+            "mean": -650894.6,
+            "n": 5,
+            "standard_deviation": 69838.10848884727
+          },
+          "first_capture_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": -1.0,
+            "ci95_low": -1.0,
+            "mean": -1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_coverage": {
+            "ci95_half_width": 0.0,
+            "ci95_high": -1.0,
+            "ci95_low": -1.0,
+            "mean": -1.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "ground_delivery_reward_component": {
+            "ci95_half_width": 1.5766945828874253,
+            "ci95_high": -30.39529402332174,
+            "ci95_low": -33.548683189096586,
+            "mean": -31.971988606209162,
+            "n": 5,
+            "standard_deviation": 1.2698238695559552
+          },
+          "interrupted_nonduplicate_sensor_seconds": {
+            "ci95_half_width": 1593.0542806371639,
+            "ci95_high": -3646.745719362836,
+            "ci95_low": -6832.854280637164,
+            "mean": -5239.8,
+            "n": 5,
+            "standard_deviation": 1282.9994933748023
+          },
+          "other_operational_penalties_or_adjustments": {
+            "ci95_half_width": 5.621872857947336,
+            "ci95_high": -17947.378127142052,
+            "ci95_low": -17958.621872857948,
+            "mean": -17953.0,
+            "n": 5,
+            "standard_deviation": 4.527692569068709
+          },
+          "overlap_sensor_seconds": {
+            "ci95_half_width": 130736.65250259062,
+            "ci95_high": -1052762.7474974093,
+            "ci95_low": -1314236.0525025905,
+            "mean": -1183499.4,
+            "n": 5,
+            "standard_deviation": 105291.49004216818
+          },
+          "radio_occupancy_s": {
+            "ci95_half_width": 0.0,
+            "ci95_high": 0.0,
+            "ci95_low": 0.0,
+            "mean": 0.0,
+            "n": 5,
+            "standard_deviation": 0.0
+          },
+          "redundant_acquisitions": {
+            "ci95_half_width": 23.13963374698056,
+            "ci95_high": -305.2603662530194,
+            "ci95_low": -351.53963374698054,
+            "mean": -328.4,
+            "n": 5,
+            "standard_deviation": 18.635986692418516
+          },
+          "stale_cross_sensor_ground_deliveries": {
+            "ci95_half_width": 51.214689024437924,
+            "ci95_high": -737.3853109755621,
+            "ci95_low": -839.8146890244379,
+            "mean": -788.6,
+            "n": 5,
+            "standard_deviation": 41.24681805909396
+          },
+          "successful_duplicates": {
+            "ci95_half_width": 34.08362020857007,
+            "ci95_high": -541.9163797914299,
+            "ci95_low": -610.0836202085701,
+            "mean": -576.0,
+            "n": 5,
+            "standard_deviation": 27.44995446262161
+          },
+          "total_reward": {
+            "ci95_half_width": 10.719046938132761,
+            "ci95_high": -18282.879084791595,
+            "ci95_low": -18304.317178667858,
+            "mean": -18293.598131729726,
+            "n": 5,
+            "standard_deviation": 8.63280803312273
+          },
+          "useful_revisits": {
+            "ci95_half_width": 21.960259168128722,
+            "ci95_high": -27.63974083187128,
+            "ci95_low": -71.56025916812872,
+            "mean": -49.6,
+            "n": 5,
+            "standard_deviation": 17.686152775547317
+          },
+          "wasted_sensor_seconds": {
+            "ci95_half_width": 3684.165267496762,
+            "ci95_high": -97601.63473250324,
+            "ci95_low": -104969.96526749677,
+            "mean": -101285.8,
+            "n": 5,
+            "standard_deviation": 2967.119343740659
+          },
+          "wasted_time_fraction": {
+            "ci95_half_width": 0.020467584819426475,
+            "ci95_high": -0.5422313040694624,
+            "ci95_low": -0.5831664737083153,
+            "mean": -0.5626988888888889,
+            "n": 5,
+            "standard_deviation": 0.016483996354114787
+          }
+        }
+      },
+      "peer_slot_selection_counts": {},
+      "pilot_updates": 8,
+      "recipient_selection_counts": {},
+      "training_acknowledged_links": [
+        "sensor_0->sensor_2",
+        "sensor_0->sensor_3",
+        "sensor_1->sensor_2",
+        "sensor_1->sensor_3",
+        "sensor_2->sensor_0",
+        "sensor_2->sensor_1",
+        "sensor_3->sensor_0",
+        "sensor_3->sensor_1"
+      ],
+      "training_packet_outcome_counts": {
+        "accepted": 721
+      },
+      "training_peer_slot_selection_counts": {
+        "0": 169,
+        "1": 361,
+        "2": 191
+      },
+      "training_recipient_selection_counts": {
+        "sensor_0": 169,
+        "sensor_1": 189,
+        "sensor_2": 172,
+        "sensor_3": 191
+      }
+    }
+  },
+  "passed": true,
+  "pilot_workers": 4,
+  "recommendation": {
+    "decision": "NO-GO",
+    "reasons": [
+      "conflict final policy had zero held-out capture coverage",
+      "conflict final policy depleted sensors to zero battery",
+      "conflict final policy delivered no held-out completion packets",
+      "continuous final policy had zero held-out capture coverage",
+      "continuous final policy depleted sensors to zero battery",
+      "continuous final policy delivered no held-out completion packets"
+    ],
+    "scope": "multi-seed learned study"
+  },
+  "source_sha256": {
+    "examples/multiagent_imaging/__init__.py": "6ee52b5d8ad24511d82d3b2919cd50d16cd8788b501f20f5f96f2b9535e0fa4c",
+    "examples/multiagent_imaging/aggregate_baseline_monte_carlo.py": "d8a036a605793e14fc725dfa6a412ae957f5b86a589089c1691d9c87910a1810",
+    "examples/multiagent_imaging/baseline_monte_carlo.py": "4e76814289119acb5b9fd6162737e7b4b0ddf5034e9bb58d6b2737005aaa209c",
+    "examples/multiagent_imaging/checkpoints.py": "19c096cf92235b5395547ab80494721e220c05be0254fafc92780bab12e4a2aa",
+    "examples/multiagent_imaging/cluster/audit_runtime.py": "aa79b60bfddec84b83fc70a11179cf807b1f77d8689a18544e6c005ab8c2e91c",
+    "examples/multiagent_imaging/cluster/baseline_mc.slurm": "18b82d60772c7b6f622f3d04408e968be5514ec6c9cd208e612b91d7652e1e67",
+    "examples/multiagent_imaging/cluster/build_runtime.slurm": "5be04c7f82d00c7e5a73d191bf186f54ed66ed00c59b09ea229a00d1e61de1ef",
+    "examples/multiagent_imaging/cluster/deploy_release.sh": "d2abd06ea0e7f07ce58fa26867f0984916d470dda385d73334812269813e8e2d",
+    "examples/multiagent_imaging/cluster/evidence/three_sensor_v2_full_campaign/campaign_validation.json": "716174a96aecf076f23e9ba8993bbea2ec8654ba5ea1d8cf3e9b08f8378cb2ea",
+    "examples/multiagent_imaging/cluster/evidence/three_sensor_v2_full_campaign/manifest.json": "6a3e4953ca31f7a41d4e8052e350cc6660a02ff102584f206169a5ec19439943",
+    "examples/multiagent_imaging/cluster/evidence/three_sensor_v2_full_campaign/runtime-login-audit.json": "411b1bf2648357fe54fae78e3b5e8bda6a0da315697e8e5fb9d6746023dd35d3",
+    "examples/multiagent_imaging/cluster/evidence/three_sensor_v2_full_campaign/slurm_summary.json": "533108c859a858c668dd8796b3226a8c99809f509c79abbf8b1a22409add69fe",
+    "examples/multiagent_imaging/cluster/evidence/three_sensor_v2_full_campaign/summary.json": "b70a973279fbc085c3dd55b946f6ec18dd10aeec522c7472d44298870571c621",
+    "examples/multiagent_imaging/cluster/evidence/three_sensor_v2_full_campaign/support-data-audit.json": "eb61eb345a57832d2ff61cac0d56ca4819cc77aa05b6ce0cf36422442639beb1",
+    "examples/multiagent_imaging/cluster/evidence/walker4_completion_v3_local/summary.json": "8d5dcfe13957e2d306a9721cb7e857ae68519ae04a8df7c9f056fc336984b1ca",
+    "examples/multiagent_imaging/cluster/learning_pilot.py": "b3f19fe5369f8c5e539141f43406712e56110ebb589b5f32481d6ac7dddf37e5",
+    "examples/multiagent_imaging/cluster/pilot.slurm": "e9c4a61cabce89d735857d01230cbee3f362b7ba5c98b8444c881cf477ee7dac",
+    "examples/multiagent_imaging/cluster/prepare_release.py": "acd4d3a4b1fde928313a61821580563cfcfe959b47457777b77215a7454f869f",
+    "examples/multiagent_imaging/cluster/prepare_support_data.py": "30bd3ace10649ead20580b0640e3bb5b6a48c687a8bd75e1e2d50c27d1fa0ba8",
+    "examples/multiagent_imaging/cluster/requirements.txt": "ad8f327995c770055fccf2f99efeead44e5d2868419d86878d10b13fd5ef7495",
+    "examples/multiagent_imaging/cluster/train.slurm": "e5518161b2f8fb1204008a202652938c654214e8930df705e1781d3505cbfcdf",
+    "examples/multiagent_imaging/config.py": "1f27c94f2bc77051b65675bef38d2c5547ba4885770d827e5ff01c9c4c28c648",
+    "examples/multiagent_imaging/configs/baseline_mc.json": "10e66353480ee3a595217177570bf790343df9beee4e05cc71ddf10d8d01ccd2",
+    "examples/multiagent_imaging/configs/completion_conflict.json": "a3e2a5a93109816a72095d1a5c6db8e6285f13d0f64cef04b7a8926c18608eb2",
+    "examples/multiagent_imaging/configs/completion_continuous.json": "49472ef05ee5eddd37f4e0511eb3879d87a1aee98f346a62fcb3797b34e33efc",
+    "examples/multiagent_imaging/configs/full.json": "db94fd8d9d58ce0977deff4cbb0781faa2047e9af6ef26dc817e8fe66ce5446c",
+    "examples/multiagent_imaging/configs/full_centralized_information.json": "8fa6a767a7bc89bba7c2822d9dd230b092d54aa98671579532b6956afe883029",
+    "examples/multiagent_imaging/configs/full_intent_status.json": "d3da8df93e097bbfb9bb80808624b4b4f823fffebf982934251209e58854e0f3",
+    "examples/multiagent_imaging/configs/ideal_completion_conflict.json": "555fd287e5e2044a531bcd67601e829c139247e0b9b92d4e4a04752af3fee2b0",
+    "examples/multiagent_imaging/configs/ideal_completion_continuous.json": "c799b8971c8b82ca7b90decc2eefc4cd17058f871325d74dff27cc2bde4088a7",
+    "examples/multiagent_imaging/configs/independent_conflict.json": "ff814eb4e6424a83fe1f68246d170b446f6c388150b1d7c73df88405dff91bf7",
+    "examples/multiagent_imaging/configs/independent_continuous.json": "9ef3d3bed7742b0b295d2881a95d4958ab4d64fa6514c84a788ca9d38ff5413e",
+    "examples/multiagent_imaging/configs/mission_preflight_conflict.json": "dc41c3c0a5c199afa1056c03484eea45e212fe5a605c453d5927b0766d7538c4",
+    "examples/multiagent_imaging/configs/mission_preflight_continuous.json": "b779e2420b04f7c1068b501df938bef16ae76e77955ef34d597f9582297930dc",
+    "examples/multiagent_imaging/configs/smoke.json": "21c9e9d97fa0a2e4e619edbf90f4f6b1087a51b16c436b886ff546b3001bf770",
+    "examples/multiagent_imaging/configs/smoke_los_broadcast.json": "b47f4732cb2bbde28c4c857ad6926d975411b9037f94fa86432961961a747c07",
+    "examples/multiagent_imaging/configs/validation_centralized_information.json": "555fd287e5e2044a531bcd67601e829c139247e0b9b92d4e4a04752af3fee2b0",
+    "examples/multiagent_imaging/configs/validation_independent.json": "ff814eb4e6424a83fe1f68246d170b446f6c388150b1d7c73df88405dff91bf7",
+    "examples/multiagent_imaging/configs/validation_intent_los.json": "a3e2a5a93109816a72095d1a5c6db8e6285f13d0f64cef04b7a8926c18608eb2",
+    "examples/multiagent_imaging/configs/validation_intent_perfect.json": "555fd287e5e2044a531bcd67601e829c139247e0b9b92d4e4a04752af3fee2b0",
+    "examples/multiagent_imaging/configs/walker4_mixed_preflight_conflict.json": "af0dd31e4f4fc6ebedbf5d721e8e92152c8eec55324d973228668b38e3b3c8bb",
+    "examples/multiagent_imaging/configs/walker4_mixed_preflight_continuous.json": "ec7e38c62d116bd4e5a2e26712ae3d95b8fd8d9f39b62aa8d35fdd003166eabd",
+    "examples/multiagent_imaging/environment.py": "6d10ff27830fe6dd4afa8ba83f74ac17336b036c6ce64ff28035d09d4387586e",
+    "examples/multiagent_imaging/evaluate.py": "8b7cd8677e0a08b387e7005f4a3e74f9cb2849ed44cdd2b0f3f22f81c42cef66",
+    "examples/multiagent_imaging/plot_evaluation.py": "435042496290669af7b6e9873094a8482808ad4ef7a2ec3922621cfddb960fe7",
+    "examples/multiagent_imaging/plot_readiness.py": "d418395c7c10bf731a05f596b2c17f30100ea978108cc74810dd6b7c87ad9457",
+    "examples/multiagent_imaging/readiness.py": "8d4f0395437c82d2326fb96dfdf0c9f6459a0166cf65e028e24de5ded3c8c374",
+    "examples/multiagent_imaging/run_matched_validation.py": "3f9c6994e033cc55e678a1ae34e033afe71a17efe85853c7b4081c282c757029",
+    "examples/multiagent_imaging/run_quick_demo.py": "80d98cd8756264115cf2a54ae0f280c342150ef411ae559713e432b2aa112655",
+    "examples/multiagent_imaging/run_vizard_demo.py": "22a86e5101c2715a9d6ba3bbf324ad5ea000d65df20c95cd7d117796cfe2e6ad",
+    "examples/multiagent_imaging/target_population.py": "100f3c6e601b6fbfaafe8fa1c0eba8f4a36bbc5351ae4a411694bc03179e90a6",
+    "examples/multiagent_imaging/train.py": "9d4a892f6358737775f2b92703713a65c6ce48d79e45fd24e4147a3f3e8d6e8c",
+    "examples/multiagent_imaging/training_audit.py": "31141aac4510a0887546013ee66ba6ddd89bb2924e375bc2c05117bf6c92e8a3",
+    "src/bsk_rl/__init__.py": "a307a6714d2d07ec3924341a710318cd2c813b79cd78dc7778c321c00fbb4cc9",
+    "src/bsk_rl/act/__init__.py": "1904753ffa9b82cb5a1fa2d2b9e77718fa4cf689070aedc56c535cc50e9011b8",
+    "src/bsk_rl/act/actions.py": "01c54646f1dcc3ab66b9e054aac521bc2928502703a57bdadb3f14fc723b3c0d",
+    "src/bsk_rl/act/completion_actions.py": "20445d32bfe562ec3ec5f47ce2371e69a8eadbd0d26b0db1f0ac6ea634aaa57c",
+    "src/bsk_rl/act/discrete_actions.py": "013a89b7b6542f2374cc2f3b50ef9080d79fb04c3927b4d2ba7e1f541680bab1",
+    "src/bsk_rl/check_bsk_version.py": "bd62654d5dd3ffa53b78e5d4c729ea174522c20e2dfd921263ae1b6bab9e21bb",
+    "src/bsk_rl/comm/__init__.py": "a0563bf410cf4d4c467d4ea1574494af5fd97f3bac01dd0bb7626ee5120beee0",
+    "src/bsk_rl/comm/communication.py": "db54fd5f5fca959e7b6b14b2d211ab00eeea17af03f6a73a4d83e540bf6a0bd8",
+    "src/bsk_rl/comm/completion_communication.py": "8b374eaa2c5f4682838f8623e8194aa7d7b389fefaa7185b7fc8f61fc4b9ef65",
+    "src/bsk_rl/comm/rso_communication.py": "d892d7734672b4c66d36c5e7b1dfd7f61c67ca9a382835be0ab8b1fbc8909dee",
+    "src/bsk_rl/comm/typed_messages.py": "a6cf7bfdc299a3c5cd0b34aa8a56b5c089f8aa32f20a751d5f508593d596b3bd",
+    "src/bsk_rl/completion_gym.py": "7a7c99a9f79ae1e631cf0b2925b4353d30dbc2944eb6ee9f1ab2a117d78a6953",
+    "src/bsk_rl/data/__init__.py": "498be223101dd6dbebed6a6e4a5efcd0f8850e84a1e975aaab6f7ee910d16315",
+    "src/bsk_rl/data/base.py": "68e922ee617ebf50430fe2285cade2ad09d2a16dfbd645e294cbca21294a998d",
+    "src/bsk_rl/data/completion_catalog.py": "ff3f0e5f71cfe1bd5dfdf363bbfc29f1b9ad28b7c6f46f3dc0da55c8eeabd346",
+    "src/bsk_rl/data/completion_reward.py": "ae1c0c7842bf1fba0b36428d8fa5feed1c1f81b25b3120e8d2284869b635a449",
+    "src/bsk_rl/data/composition.py": "cbd30c018fa527c41106eaa04c7e1c603504f27b7d332fc1112c1a630f415857",
+    "src/bsk_rl/data/multiagent_rso_data.py": "36e6df7f3e02dd34b498f70ad8ced8429805c8e492d333c0d6fa3a371f59474e",
+    "src/bsk_rl/data/multiagent_rso_reward.py": "feadc34ebcfca55317d9e210a4dbf7caad785118835e6a4ee48209f501ad7ae0",
+    "src/bsk_rl/data/nadir_data.py": "b2a17b0b579356d9de5800d81dbb9ccd7727476fa3afe23050f853b3a6d08dac",
+    "src/bsk_rl/data/no_data.py": "ef3d1e655f32b1a3efa9b4a397c0ac835897fd992a33b122b590905f888bfa9e",
+    "src/bsk_rl/data/rso_targets_data.py": "22d45d58172bb358bf86928041f211f89f1f078a89fdb2eff4ef3f496f99f8fa",
+    "src/bsk_rl/data/unique_image_data.py": "9513e122ef63daaaf602f54db73bd3a30941fdc5b0bd8fc48e2df05e5c189c3c",
+    "src/bsk_rl/finish_install.py": "bf100020048b4a324c657022eafbe7b3550fd316bea01a57e907105acb45690a",
+    "src/bsk_rl/gym.py": "45469f1a03d1f49c5b8f0490d5ee1ad6c4ad917469dfae1f2166b5f611325758",
+    "src/bsk_rl/obs/__init__.py": "46cd250fd43d366c70573b64019b4f181b796ebd05921b693cbdb909703584cf",
+    "src/bsk_rl/obs/completion_observations.py": "ed7df9c6141d94bbe13cac50972c22889c659982a31813d64fad77e80d14602e",
+    "src/bsk_rl/obs/observations.py": "8b3871e3320a34c7218026b8b466bc6fa9df24bd6f0cc7262e8dbb524bab5b08",
+    "src/bsk_rl/sats/__init__.py": "690bbbb611a4ba71ee39ac80c90a66f7dc364e36002d93b023637724957ecfce",
+    "src/bsk_rl/sats/access_satellite.py": "ca36ea9f86321696a94bcda681a2b0ae432d63d086f91271072a96706eab4e57",
+    "src/bsk_rl/sats/roles.py": "816b5d20e6b878430d671c797d38c8ee313280470883e3f683ddf23ecb21903b",
+    "src/bsk_rl/sats/satellite.py": "5608c6726dd818bfcd92dc79e0fe7e606e9da6cd2318be44f696d14af08b99cb",
+    "src/bsk_rl/scene/__init__.py": "7c4ce78ded0d313121fc7bd601a4762122845cf56c256df075c865bb3a1577f7",
+    "src/bsk_rl/scene/rso_targets.py": "4215b75e432a48db89675c96af2c3d96094d1b14a370a29a44c9de32da2994ab",
+    "src/bsk_rl/scene/scenario.py": "4b47d744d409b272b3b8e01286280ed3868310102b70e9882fb94abab130dfa4",
+    "src/bsk_rl/scene/targets.py": "bfebadabe830f4d13a418f98329f799741503b76c833867c41d019216dd43004",
+    "src/bsk_rl/sim/__init__.py": "9085b5f6f5e574c073c8182900108d1481848efec0eebedb6577ffc8d747a9f5",
+    "src/bsk_rl/sim/dyn.py": "6bed5f3a893301bf0fa1678dfb1a0aa4214d84cc2007b298c8f55f941df8c98d",
+    "src/bsk_rl/sim/fsw.py": "55140fc2218c8d9b8e88f0f308cc9a2db29043be8f3092381276e48dfe68a278",
+    "src/bsk_rl/sim/simulator.py": "58ad1ebf0d339a17be521ef179b70daa7823fd55ca693710000f6d5d27fa1901",
+    "src/bsk_rl/sim/world.py": "cdc02d6dea972fc528085b527957eaf21b2f909c8415b060f442d47077a14bf4",
+    "src/bsk_rl/utils/__init__.py": "aaa8a518049375e0ffce641f22d9fb6f3a90776764530ad7b55f139987f08a21",
+    "src/bsk_rl/utils/actuator_primitives.py": "76280bb5c06c5dfabc043ea0681bcc04430e40385da3422402760a1aed8bda93",
+    "src/bsk_rl/utils/amos_vizard.py": "5e34e520230b36802f0733c20d2b76536d2e1b0a7df4e28231ec7ebbcd07c939",
+    "src/bsk_rl/utils/attitude.py": "d0829331238de7b204eeb6521da87d26d1684209f01ca68258f4f643aa0ae237",
+    "src/bsk_rl/utils/coordination.py": "a99028d3f6d9a5699d3bd886f27b74e4f707a355c618d2a0754707b7df63646b",
+    "src/bsk_rl/utils/functional.py": "c0408b003ad7cc3ac90897e2b9114e5f409b86e174dc5eab336587449041e6e6",
+    "src/bsk_rl/utils/logging_config.py": "51f994fc142f01130e0f87c3c91aa56054604956e3e7d2df98b0dc7c3ff840d1",
+    "src/bsk_rl/utils/multiagent_vizard.py": "9843fcad13e87cadf5eaa8333071303a1c2ac8bab906ed6b3b4c2311af36cdf8",
+    "src/bsk_rl/utils/orbital.py": "9faa1049abe8acae4fd014a13f43faa5e477d951ed9c18f3de5c72d8c8c17e09",
+    "src/bsk_rl/utils/profiling.py": "c37936d704f0d004f4e8493e6b112442a2000230bd746391ef8322f15fccd5ca",
+    "src/bsk_rl/utils/rllib/__init__.py": "ef46b2767f4d3503dece913d54d381b1ac665746bfc84db53431641dcc534b76",
+    "src/bsk_rl/utils/rllib/callbacks.py": "c210208f1cbe20975c16b5e61a0e3ef2fbd9d7e9486269e81aef7faabe0628df",
+    "src/bsk_rl/utils/rllib/discounting.py": "0f4802950531bfba856ddaa515c57c46c71143a9a94097d997d67df504840eef",
+    "src/bsk_rl/utils/rllib/target_gnn_module.py": "fbe9d630e74ccfdfb4ec31fb44e540a9caf426e8116bebe34837bd9a013e1dff",
+    "src/bsk_rl/utils/utils.py": "83ae7005f925b6ad8b70315e74f66a112fc9d0bc91c7c2fbaeed0d13066c535a",
+    "src/bsk_rl/utils/vizard.py": "21a5070f6190629221924f3030080666e8f6127b86a8083b8fc75dd6de2fa392"
+  },
+  "topology_transition": "fresh policy: one-to-four-worker seed state has no exact continuation mapping",
+  "validation_workers": 1
+}

@@ -98,3 +98,28 @@ five seeds are too few for a broad performance claim.
 
 The exact Alpine commands and job history are in `cluster/README.md` and
 `cluster/EXECUTION.md`.
+
+## Completed cluster result
+
+Jobs `32528119` and `32530057` completed the one-worker and four-worker stages.
+Every physics, schema, optimization, restore, resume, and evidence-integrity gate
+passed. During sampling the policy selected all three peer slots and completed
+directed transfers, so receiver selection and completion transport were exercised
+in the exact mission configuration.
+
+The final deterministic policy did not pass the operational performance gate.
+For both retasking modes, every held-out action was empty downlink: a mean 17,951
+downlink selections and zero charge, image, continue, desaturate, or transmit
+selections. All five mixed held-out seeds consequently had 0% qualified-capture
+and ground-confirmed coverage, no useful revisit, no final-policy packet, and two
+depleted sensors. The independent and centralized references on the same state
+hashes established that the scenarios were serviceable. This is therefore a
+policy-collapse result after a deliberately small ten-update budget; it does not
+invalidate the directed transport implementation and it does not demonstrate that
+the architecture cannot learn with a corrected training setup.
+
+Do not expand this checkpoint to more training seeds. First add a resource and
+empty-operation action shield, evaluate every checkpoint before choosing the
+final one, and use a curriculum or behavior-cloned heuristic warm start so early
+updates contain useful imaging behavior. The full result is in
+[`cluster/evidence/walker4_completion_v3_cluster_pilot`](cluster/evidence/walker4_completion_v3_cluster_pilot/REPORT.md).

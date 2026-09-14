@@ -1,0 +1,6 @@
+{
+  "matched_actions": true,
+  "max_logit_error": 0.0,
+  "policy_sha256": "57d39b927e72bce18eade8b76f769695ec6841b8635420a422e667b40cb111f7",
+  "probe_count": 16
+}
