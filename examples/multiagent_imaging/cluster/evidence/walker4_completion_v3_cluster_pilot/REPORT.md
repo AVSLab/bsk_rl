@@ -2,6 +2,8 @@
 
 This compact record validates the authorized one-worker gate and four-worker pilot. Full checkpoints, event histories, and raw episodes remain in the immutable cluster results directory. Eight four-worker updates plus the two one-worker gate updates were run per mode. This is mechanics and early-learning evidence, not convergence evidence.
 
+Executable source: `9ec3071ca5dd481e098b28cd84b813a035286789`; Basilisk: `8fcb54b2fb28388efb711786630501944fddec28`.
+
 ## Recommendation
 
 **NO-GO for a multi-seed learned study.** conflict final policy had zero held-out capture coverage; conflict final policy depleted sensors to zero battery; conflict final policy delivered no held-out completion packets; continuous final policy had zero held-out capture coverage; continuous final policy depleted sensors to zero battery; continuous final policy delivered no held-out completion packets. The implementation and checkpoint mechanics passed, but these final policies are not operational candidates.

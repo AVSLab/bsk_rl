@@ -235,6 +235,9 @@ Four-worker job `32530057` then started fresh because the topology changed and
 completed eight updates per mode in 3:59:44 on `c3cpu-e2-u15`; its batch MaxRSS
 was 12.36 GiB. Both jobs requested eight CPUs and 32 GiB. Slurm recorded nine
 allocated CPUs for each job.
+Both runtime records resolve the executable checkout to
+`9ec3071ca5dd481e098b28cd84b813a035286789` and Basilisk to
+`8fcb54b2fb28388efb711786630501944fddec28`.
 
 All 20 updates had finite losses, finite nonzero gradients, nonzero parameter
 changes, exact saved/restored logits and actions, complete 45,000-second episodes,

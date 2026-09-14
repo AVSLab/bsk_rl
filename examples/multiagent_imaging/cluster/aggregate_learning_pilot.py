@@ -397,6 +397,7 @@ def aggregate(validation_root: Path, pilot_root: Path, output: Path) -> dict:
     paired_rows = []
     summary = {
         "passed": True,
+        "git_commit": pilot["runtime"]["git"]["stdout"].strip(),
         "source_sha256": pilot["runtime"]["source_sha256"],
         "basilisk_commit": pilot["runtime"]["loaded"]["basilisk_commit"],
         "validation_workers": gate["validated_workers"],
@@ -588,6 +589,9 @@ def write_report(path: Path, summary: dict) -> None:
         "immutable cluster results directory. Eight four-worker updates plus the two "
         "one-worker gate updates were run per mode. This is mechanics and early-learning "
         "evidence, not convergence evidence.",
+        "",
+        f"Executable source: `{summary['git_commit']}`; Basilisk: "
+        f"`{summary['basilisk_commit']}`.",
         "",
         "## Recommendation",
         "",

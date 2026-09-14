@@ -16,6 +16,8 @@ MaxRSS. Slurm charged nine CPUs for each job, although the script requested eigh
 both used one CPU Torch/BLAS thread per process. The gate and four-worker stages
 repeated the runtime, native-module, source, allocation, and five-file support-data
 audits successfully.
+Both jobs executed Git commit `9ec3071ca5dd481e098b28cd84b813a035286789`
+and Basilisk commit `8fcb54b2fb28388efb711786630501944fddec28`.
 
 The result is **NO-GO for a multi-training-seed study**. All 20 optimization
 updates had finite nonzero gradients and parameter changes, all 68 training
