@@ -65,10 +65,48 @@ def t_summary(values: list[float]) -> dict:
     }
 
 
+def resource_metrics(history: list[dict]) -> dict:
+    if not history:
+        raise AssertionError("Resource history is empty.")
+    latest: dict[str, dict] = {}
+    for sample in history:
+        latest[sample["sensor"]] = sample
+    if sorted(latest) != EXPECTED_AGENTS:
+        raise AssertionError("Resource history does not cover every sensing agent.")
+    wheels = [
+        abs(float(value))
+        for sample in history
+        for value in sample["wheel_speed_fraction"]
+    ]
+    values = [
+        *(float(sample["battery_fraction"]) for sample in history),
+        *(float(sample["storage_fraction"]) for sample in history),
+        *wheels,
+    ]
+    if not all(math.isfinite(value) for value in values):
+        raise AssertionError("Resource history contains a nonfinite value.")
+    return {
+        "minimum_battery_fraction": min(
+            float(sample["battery_fraction"]) for sample in history
+        ),
+        "maximum_storage_fraction": max(
+            float(sample["storage_fraction"]) for sample in history
+        ),
+        "maximum_absolute_wheel_fraction": max(wheels),
+        "sensors_ever_inactive": len(
+            {sample["sensor"] for sample in history if not sample["alive"]}
+        ),
+        "sensors_inactive_at_end": sum(
+            not sample["alive"] for sample in latest.values()
+        ),
+    }
+
+
 def flatten_update(stage: str, mode: str, record: dict) -> dict:
     episodes = record["episodes"]
     communications = [episode["communication_summary"] for episode in episodes]
     rewards = [episode["reward_decomposition"] for episode in episodes]
+    resource_rows = [resource_metrics(episode["resource_history"]) for episode in episodes]
     return {
         "stage": stage,
         "mode": mode,
@@ -106,6 +144,18 @@ def flatten_update(stage: str, mode: str, record: dict) -> dict:
         ),
         "payload_bytes_attempted": sum(
             c["payload_bytes_attempted"] for c in communications
+        ),
+        "minimum_battery_fraction": min(
+            r["minimum_battery_fraction"] for r in resource_rows
+        ),
+        "maximum_storage_fraction": max(
+            r["maximum_storage_fraction"] for r in resource_rows
+        ),
+        "maximum_absolute_wheel_fraction": max(
+            r["maximum_absolute_wheel_fraction"] for r in resource_rows
+        ),
+        "episodes_with_inactive_sensor": sum(
+            r["sensors_ever_inactive"] > 0 for r in resource_rows
         ),
         "matched_restored_actions": record["restore_validation"]["matched_actions"],
         "restored_logit_max_error": record["restore_validation"][
@@ -149,6 +199,7 @@ def result_metrics(result: dict) -> dict:
     coordination = result["coordination"]
     products = result["product_duplicates"]
     messages = result["message_diagnostics"]
+    resources = resource_metrics(result["resource_history"])
     return {
         "first_capture_coverage": result["coverage"]["capture_coverage_fraction"],
         "ground_delivery_coverage": result["coverage"][
@@ -203,6 +254,7 @@ def result_metrics(result: dict) -> dict:
         "simulated_seconds_per_wall_second": result["measurement"][
             "sim_seconds_per_wall_second"
         ],
+        **resources,
     }
 
 
@@ -217,6 +269,14 @@ def validate_result(result: dict, *, policy: bool) -> None:
         raise AssertionError("Held-out population is not exact 50/30/20 mixed.")
     if not math.isclose(result["reimage_cooldown_s"], EXPECTED_COOLDOWN_S):
         raise AssertionError("Held-out cooldown differs from the reviewed contract.")
+    resource_metrics(result["resource_history"])
+    for sensor, products in result["onboard_products"].items():
+        if any(
+            product["storage_owner"] != sensor
+            or product["source_sensor"] != sensor
+            for product in products
+        ):
+            raise AssertionError("Completion metadata changed physical product ownership.")
     if policy:
         decisions = sum(result["coordination"]["policy_decisions"].values())
         if result["restored_policy_calls"] != decisions or decisions <= 0:
