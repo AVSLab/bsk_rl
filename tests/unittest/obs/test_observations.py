@@ -234,6 +234,13 @@ class TestOpportunityProperties:
 
 
 class TestEclipse:
+    def test_default_norm_preserves_seconds(self):
+        ob = obs.Eclipse()
+        ob.simulator = MagicMock(sim_time=10.0)
+        ob.satellite = MagicMock(dynamics=MagicMock(orbital_period=100.0))
+        ob.satellite.trajectory.next_eclipse.return_value = (20.0, 30.0)
+        assert ob.get_obs() == [10.0, 20.0]
+
     def test_obs(self):
         ob = obs.Eclipse(norm=100.0)
         ob.simulator = MagicMock(sim_time=10.0)
@@ -242,7 +249,7 @@ class TestEclipse:
         assert ob.get_obs() == [0.1, 0.2]
 
     def test_obs_orbital_period(self):
-        ob = obs.Eclipse()
+        ob = obs.Eclipse(norm=None)
         ob.simulator = MagicMock(sim_time=10.0)
         ob.satellite = MagicMock(dynamics=MagicMock(orbital_period=100.0))
         ob.satellite.trajectory.next_eclipse.return_value = (20.0, 30.0)

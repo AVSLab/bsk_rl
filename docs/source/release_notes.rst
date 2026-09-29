@@ -10,7 +10,8 @@ Development - |version|
   reward. See issue #248.
 * Add :func:`~bsk_rl.utils.orbital.orbital_period` and use the satellite orbital
   period for observation time normalization when ``norm`` is ``None``.
-  :class:`~bsk_rl.obs.Eclipse` supports this explicitly, and
+  :class:`~bsk_rl.obs.Eclipse` supports this explicitly with ``norm=None``;
+  its default remains normalization in seconds. Also,
   :class:`~bsk_rl.data.RSOInspectionReward` uses one orbital period when
   ``min_time_for_completion`` is not set. See issue #225.
 * Fix a bug where extending an access opportunity window across a generation seam
