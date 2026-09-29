@@ -482,11 +482,12 @@ class OpportunityProperties(Observation):
 
 
 class Eclipse(Observation):
-    def __init__(self, norm=None, name="eclipse"):
+    def __init__(self, norm=1.0, name="eclipse"):
         """Include a tuple of the next eclipse start and end times in the observation.
 
         Args:
-            norm: Value to normalize by. If ``None``, the satellite orbital period is used.
+            norm: Value to normalize by, in seconds by default. If ``None``, the
+                satellite orbital period is used.
             name: Name of the observation.
         """
         super().__init__(name=name)

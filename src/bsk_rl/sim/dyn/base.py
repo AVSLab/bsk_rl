@@ -206,7 +206,7 @@ class DynamicsModel(DynamicsModelABC):
 
     @property
     def semi_major_axis(self):
-        """Semimajor axis of the satellite's orbit [km]."""
+        """Semimajor axis of the satellite's orbit [m]."""
         return self._compute_oes().a
 
     @property

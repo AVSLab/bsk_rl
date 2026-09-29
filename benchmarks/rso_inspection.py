@@ -92,7 +92,7 @@ class InspectorSat(sats.Satellite):
             dict(prop="sun_hat_Hc", fn=sun_hat_chief),
             chief_name="RSO",
         ),
-        obs.Eclipse(),
+        obs.Eclipse(norm=None),
         obs.Time(),
     ]
 

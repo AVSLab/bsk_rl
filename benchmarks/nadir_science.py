@@ -25,7 +25,7 @@ class ScanningSatellite(sats.AccessSatellite):
             type="ground_station",
             n_ahead_observe=1,
         ),
-        obs.Eclipse(),
+        obs.Eclipse(norm=None),
         obs.Time(),
     ]
     action_spec: ClassVar[list[act.Action]] = [
