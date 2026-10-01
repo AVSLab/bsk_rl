@@ -16,12 +16,15 @@ class TestSimulator:
             self.sim = sim
             self.rate = rate
 
-    def mock_sim(self, **kwargs):
-        Simulator.InitializeSimulation = MagicMock()
-        Simulator.ConfigureStopTime = MagicMock()
-        Simulator.ExecuteSimulation = MagicMock()
-        Simulator.eventMap = {}
+    @pytest.fixture(autouse=True)
+    def restore_simulator_methods(self, monkeypatch):
+        # Restore inherited Basilisk methods after each unit test so physical
+        # integration tests can also run after these tests in the same process.
+        for name in ("InitializeSimulation", "ConfigureStopTime", "ExecuteSimulation"):
+            monkeypatch.setattr(Simulator, name, MagicMock())
+        monkeypatch.setattr(Simulator, "eventMap", {}, raising=False)
 
+    def mock_sim(self, **kwargs):
         sat = MagicMock(
             set_dynamics=MagicMock(return_value=self.dyn),
             set_fsw=MagicMock(return_value=self.fsw),
