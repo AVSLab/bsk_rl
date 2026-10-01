@@ -21,7 +21,7 @@ class TestImagingSatellite:
     env = gym.make(
         "SatelliteTasking-v1",
         satellite=ImageSat(
-            "EO-1",
+            "EO_1",
             initial_generation_duration=1000.0,
             generation_duration=100.0,
             sat_args=ImageSat.default_sat_args(

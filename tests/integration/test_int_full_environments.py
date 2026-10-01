@@ -22,7 +22,7 @@ multi_env = gym.make(
     "GeneralSatelliteTasking-v1",
     satellites=[
         FullFeaturedSatellite(
-            "Sentinel-2A",
+            "Sentinel_2A",
             sat_args=FullFeaturedSatellite.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.01,
@@ -30,7 +30,7 @@ multi_env = gym.make(
             ),
         ),
         FullFeaturedSatellite(
-            "Sentinel-2B",
+            "Sentinel_2B",
             sat_args=FullFeaturedSatellite.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.01,
@@ -49,7 +49,7 @@ multi_env = gym.make(
 parallel_env = ConstellationTasking(
     satellites=[
         FullFeaturedSatellite(
-            "Sentinel-2A",
+            "Sentinel_2A",
             sat_args=FullFeaturedSatellite.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.01,
@@ -57,7 +57,7 @@ parallel_env = ConstellationTasking(
             ),
         ),
         FullFeaturedSatellite(
-            "Sentinel-2B",
+            "Sentinel_2B",
             sat_args=FullFeaturedSatellite.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.01,
@@ -75,7 +75,7 @@ parallel_env = ConstellationTasking(
 parallel_meta_env = ConstellationTasking(
     satellites=[
         FullFeaturedSatellite(
-            "Sentinel-2A",
+            "Sentinel_2A",
             sat_args=FullFeaturedSatellite.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.01,
@@ -83,7 +83,7 @@ parallel_meta_env = ConstellationTasking(
             ),
         ),
         FullFeaturedSatellite(
-            "Sentinel-2B",
+            "Sentinel_2B",
             sat_args=FullFeaturedSatellite.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.01,
@@ -91,7 +91,7 @@ parallel_meta_env = ConstellationTasking(
             ),
         ),
         FullFeaturedSatellite(
-            "Sentinel-2C",
+            "Sentinel_2C",
             sat_args=FullFeaturedSatellite.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.01,
@@ -105,8 +105,8 @@ parallel_meta_env = ConstellationTasking(
     max_step_duration=1e9,
     time_limit=5700.0,
     meta_agent_groupings={
-        "DoubleSat": ["Sentinel-2A", "Sentinel-2C"],
-        "SingleSat": ["Sentinel-2B"],
+        "DoubleSat": ["Sentinel_2A", "Sentinel_2C"],
+        "SingleSat": ["Sentinel_2B"],
     },
 )
 

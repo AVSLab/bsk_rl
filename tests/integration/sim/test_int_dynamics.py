@@ -36,7 +36,7 @@ class TestImagingDynModelStorage:
         env = gym.make(
             "SatelliteTasking-v1",
             satellite=ImageSat(
-                "EO-1",
+                "EO_1",
                 sat_args=ImageSat.default_sat_args(
                     oe=random_orbit,
                     dataStorageCapacity=storage_capacity,
@@ -76,7 +76,7 @@ class TestImagingDynModelStorage:
         env = gym.make(
             "SatelliteTasking-v1",
             satellite=ImageSat(
-                "EO-1",
+                "EO_1",
                 sat_args=ImageSat.default_sat_args(
                     oe=random_orbit,
                     dataStorageCapacity=storage_capacity,
