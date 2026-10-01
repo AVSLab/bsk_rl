@@ -1,6 +1,7 @@
 """Satellites are the agents in the environment."""
 
 import inspect
+import keyword
 import logging
 from abc import ABC
 from typing import TYPE_CHECKING, Any, Optional, Union
@@ -21,7 +22,6 @@ from bsk_rl.utils.functional import (
     collect_default_args,
     compose_types,
     safe_dict_merge,
-    valid_func_name,
 )
 from bsk_rl.utils.orbital import TrajectorySimulator
 
@@ -49,6 +49,22 @@ class Satellite(ABC, Resetable):
     action_spec: list["Action"] = AbstractClassProperty()
 
     _dyn_type = None
+
+    @property
+    def name(self) -> str:
+        """Environment identifier, also used directly in simulator event names."""
+        return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        if not isinstance(value, str) or not value:
+            raise ValueError("Satellite name must be a nonempty string.")
+        if not value.isidentifier() or keyword.iskeyword(value):
+            raise ValueError(
+                "Satellite name must be a valid Python identifier, for example "
+                "'camera_a' rather than 'camera-a'."
+            )
+        self._name = value
 
     @classmethod
     def get_dyn_type(cls) -> type["dyn.DynamicsModelABC"]:
@@ -128,7 +144,8 @@ class Satellite(ABC, Resetable):
         """The base satellite agent class.
 
         Args:
-            name: Identifier for satellite; does not need to be unique.
+            name: Valid Python identifier for the satellite, such as ``camera_a``.
+                Duplicate names receive numeric suffixes in the environment.
             sat_args: Arguments for :class:`~bsk_rl.sim.dyn.DynamicsModelABC` and
                 :class:`~bsk_rl.sim.fsw.FSWModelABC` construction. Should be in the form of
                 a dictionary with keys corresponding to the arguments of the constructor
@@ -395,9 +412,7 @@ class Satellite(ABC, Resetable):
         self.logger.info(f"setting timed terminal event at {t_close:.1f}")
 
         # Create new timed terminal event
-        self._timed_terminal_event_name = valid_func_name(
-            f"timed_terminal_{t_close}_{self.name}"
-        )
+        self._timed_terminal_event_name = f"timed_terminal_{self.name}"
 
         def side_effect(sim):
             self.logger.info(f"timed termination at {t_close:.1f} " + info)

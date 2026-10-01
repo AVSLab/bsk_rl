@@ -245,7 +245,7 @@ def rewarder_config(
 env_args = dict(
     satellites=[
         RSOSat("RSO", sat_args=rso_sat_args),
-        InspectorSat("Inspector-1", sat_args=inspector_sat_args),
+        InspectorSat("Inspector_1", sat_args=inspector_sat_args),
     ],
     sat_arg_randomizer=sat_arg_randomizer,
     scenario=scene.SphericalRSO(

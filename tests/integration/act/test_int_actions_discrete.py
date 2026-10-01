@@ -29,7 +29,7 @@ class TestImagingAndDownlink:
     env = gym.make(
         "SatelliteTasking-v1",
         satellite=ImageSat(
-            "EO-1",
+            "EO_1",
             sat_args=ImageSat.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.05,
@@ -214,7 +214,7 @@ class TestNadirImagingActions:
     env = gym.make(
         "SatelliteTasking-v1",
         satellite=ImageSat(
-            "EO-1",
+            "EO_1",
             sat_args=ImageSat.default_sat_args(
                 oe=random_orbit,
                 imageAttErrorRequirement=0.05,
