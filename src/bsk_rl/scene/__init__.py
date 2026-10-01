@@ -16,6 +16,12 @@ These RSO scenarios can be used with :class:`RSOInspectionReward`.
 """
 
 from bsk_rl.scene.rso_points import RSOPoints, SphericalRSO
+from bsk_rl.scene.rso_targets import (
+    RSOPriorityEvent,
+    RSOTarget,
+    RSOTargetCatalog,
+    RSOTargets,
+)
 from bsk_rl.scene.scenario import Scenario, UniformNadirScanning
 from bsk_rl.scene.targets import CityTargets, UniformTargets
 
@@ -27,4 +33,8 @@ __all__ = [
     "UniformNadirScanning",
     "RSOPoints",
     "SphericalRSO",
+    "RSOTarget",
+    "RSOTargetCatalog",
+    "RSOPriorityEvent",
+    "RSOTargets",
 ]

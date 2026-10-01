@@ -160,6 +160,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         if isinstance(satellites, Satellite):
             satellites = [satellites]
+        if scenario is not None:
+            scenario.validate_satellite_names(satellites)
         self.satellites = deepcopy(satellites)
 
         self.dtype = dtype
@@ -530,6 +532,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         }
         self.reward_dict = self.rewarder.reward(new_data)
 
+        self.scenario.after_step(self.simulator.sim_time)
         self.communicator.communicate()
 
         for satellite in self.satellites:
