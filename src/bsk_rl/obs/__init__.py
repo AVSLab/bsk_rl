@@ -44,6 +44,7 @@ from bsk_rl.obs.observations import (
     Time,
 )
 from bsk_rl.obs.relative_observations import RelativeProperties
+from bsk_rl.obs.rso_imaging import RSOTargetProperties
 
 __doc_title__ = "Observations"
 __all__ = [
@@ -54,4 +55,5 @@ __all__ = [
     "OpportunityProperties",
     "Eclipse",
     "ResourceRewardWeight",
+    "RSOTargetProperties",
 ]
