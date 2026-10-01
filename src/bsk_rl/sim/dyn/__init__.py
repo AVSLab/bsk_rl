@@ -56,6 +56,7 @@ from bsk_rl.sim.dyn.relative_motion import (
     LOSCommDynModel,
     MaxRangeDynModel,
 )
+from bsk_rl.sim.dyn.rso_imaging import RSOTargetDynModel, SpaceToSpaceImagingDynModel
 from bsk_rl.sim.dyn.rso_inspection import RSODynModel, RSOInspectorDynModel
 
 
@@ -87,4 +88,6 @@ __all__ = [
     "FullFeaturedDynModel",
     "RSODynModel",
     "RSOInspectorDynModel",
+    "RSOTargetDynModel",
+    "SpaceToSpaceImagingDynModel",
 ]
