@@ -5,6 +5,30 @@ Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
 
+* Add :doc:`the space-to-space imaging example <examples/space_to_space_rso_imaging>`
+  for independently orbiting spacecraft:
+  replayable RSO catalogs, explicitly named observers, moving-target access,
+  continuous and cumulative acquisition holds, optional ground-station downlink,
+  independently sized target observations and image actions, owned image ledgers, configurable
+  acquisition/delivery rewards, and replayable policy evaluation with plots.
+  Acquisition currently uses a temporary BSK-RL gate; adopting the proposed
+  Basilisk controller update is tracked in `#358
+  <https://github.com/AVSLab/bsk_rl/issues/358>`_.
+  Existing RSO surface-point inspection is unchanged.
+
+* Validate satellite names at construction and renaming so simulator events use
+  those names directly. Names must be valid Python identifiers, for example
+  ``EO_1`` rather than ``EO-1``. Target catalog IDs may still contain punctuation.
+  RSO image rewards default to full priority credit after complete downlink;
+  acquisition shaping is available through explicit reward callbacks.
+
+* Fix incorrect eclipse-observation test assertions that assumed countdowns could
+  not increase across a long step. The tests now use the same simulation start
+  date, orbit, and random seed on every run, so the results are repeatable.
+  They check shadow entry and countdown rollover to later orbits.
+  Eclipse prediction is unchanged.
+  See `#359 <https://github.com/AVSLab/bsk_rl/issues/359>`_.
+
 * Fix a bug where condensing ``NO_ACTION`` steps for sMDP discounting dropped the
   final observation and ``d_ts``, and could give the last super-action an empty
   reward. See issue #248.
