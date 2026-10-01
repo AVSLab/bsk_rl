@@ -22,12 +22,13 @@ Earth Observation
    cloud_environment_with_reimaging
    aeos
 
-RSO Inspection
-~~~~~~~~~~~~~~
+RSO Missions
+~~~~~~~~~~~~
 .. toctree::
    :maxdepth: 1
 
    rso_inspection
+   space_to_space_rso_imaging
 
 Training
 --------
