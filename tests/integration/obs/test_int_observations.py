@@ -2,7 +2,7 @@ from typing import ClassVar
 
 import gymnasium as gym
 import numpy as np
-from pytest import approx
+from pytest import approx, fixture
 
 from bsk_rl import act, data, obs, sats
 from bsk_rl.scene import UniformTargets
@@ -31,7 +31,7 @@ class TestComposedState:
     env = gym.make(
         "SatelliteTasking-v1",
         satellite=ComposedPropSat(
-            "Explorer 1",
+            "Explorer_1",
             sat_args=ComposedPropSat.default_sat_args(oe=random_orbit),
         ),
         scenario=UniformTargets(n_targets=1000),
@@ -157,26 +157,62 @@ class TestEclipse:
         observation_spec: ClassVar[list[obs.Observation]] = [obs.Eclipse()]
         action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
-    env = gym.make(
-        "SatelliteTasking-v1",
-        satellite=EclipseSat(
-            "PinkFloyd",
-            obs_type=list,
-            sat_args=EclipseSat.default_sat_args(oe=random_orbit()),
-        ),
-        scenario=UniformTargets(n_targets=0),
-        rewarder=data.NoReward(),
-        sim_rate=1.0,
-        max_step_duration=5700.0,
-        time_limit=5800.0,
-        disable_env_checker=True,
-    )
+    @fixture
+    def env(self):
+        # This orbit starts just before eclipse and reproduces the old failure
+        # after a 5700-second step, when the next ingress moves to another orbit.
+        env = gym.make(
+            "SatelliteTasking-v1",
+            satellite=self.EclipseSat(
+                "PinkFloyd",
+                obs_type=list,
+                sat_args=self.EclipseSat.default_sat_args(
+                    oe=random_orbit(i=45, Omega=0, omega=0, f=34)
+                ),
+            ),
+            scenario=UniformTargets(n_targets=0),
+            rewarder=data.NoReward(),
+            world_args=dict(utc_init="2025 JAN 01 00:00:00.000 (UTC)"),
+            sim_rate=1.0,
+            max_step_duration=10.0,
+            time_limit=5800.0,
+            disable_env_checker=True,
+        )
+        yield env
+        env.close()
 
-    def test_eclipse_state(self):
-        observation1, _ = self.env.reset()
-        observation2, _reward, _terminated, _truncated, _info = self.env.step(0)
-        assert (observation2[0] - observation1[0]) < 0.05
-        assert (observation2[1] - observation1[1]) < 0.05
+    def test_eclipse_state(self, env):
+        observation1, _ = env.reset(seed=0)
+        assert min(observation1) > env.unwrapped.max_step_duration
+        observation2, _reward, _terminated, _truncated, _info = env.step(0)
+        elapsed = env.unwrapped.simulator.sim_time
+        assert elapsed == approx(10.0)
+        assert observation2 == approx(np.asarray(observation1) - elapsed)
+
+    def test_eclipse_state_rolls_over_after_ingress(self, env):
+        observation1, _ = env.reset(seed=0)
+        # Cross ingress but remain before the first egress. The egress countdown
+        # continues, while ingress now refers to the following orbit.
+        env.unwrapped.simulator.max_step_duration = observation1[0] + 30.0
+        observation2, _reward, _terminated, _truncated, _info = env.step(0)
+        elapsed = env.unwrapped.simulator.sim_time
+        assert observation1[0] < elapsed < observation1[1]
+        assert observation2[0] + elapsed > observation1[1]
+        assert observation2[1] == approx(observation1[1] - elapsed)
+
+    def test_eclipse_state_after_full_orbit(self, env):
+        env.unwrapped.max_step_duration = 5700.0
+        observation1, _ = env.reset(seed=0)
+        observation2, _reward, _terminated, _truncated, _info = env.step(0)
+        elapsed = env.unwrapped.simulator.sim_time
+        assert elapsed == approx(5700.0)
+        # Start and end are the next independent transitions, not necessarily
+        # the same eclipse. Their absolute times must advance past this step.
+        assert np.all(np.isfinite(observation2))
+        assert min(observation2) > 0
+        assert observation2[0] > observation1[0]
+        assert observation2[0] + elapsed > observation1[0]
+        assert observation2[1] + elapsed > observation1[1]
 
 
 class TestGroundStationProperties:
