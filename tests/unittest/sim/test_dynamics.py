@@ -94,6 +94,7 @@ class TestBasicDynamicsModel:
             # Check that call to rv2elem happens only once
             assert dyn.semi_major_axis == 1.0
             mocked.rv2elem.assert_called_once()
+            assert dyn.orbital_period == 2 * np.pi
             assert dyn.eccentricity == 2.0
             assert dyn.inclination == 3.0
             assert dyn.ascending_node == 4.0

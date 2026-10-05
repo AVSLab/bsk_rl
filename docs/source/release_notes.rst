@@ -8,6 +8,14 @@ Development - |version|
 * Fix a bug where condensing ``NO_ACTION`` steps for sMDP discounting dropped the
   final observation and ``d_ts``, and could give the last super-action an empty
   reward. See issue #248.
+* Add :func:`~bsk_rl.utils.orbital.orbital_period` and use the satellite orbital
+  period for observation time normalization when ``norm`` is ``None``.
+  :class:`~bsk_rl.obs.Eclipse` supports this explicitly with ``norm=None``;
+  its default remains normalization in seconds. Also,
+  :class:`~bsk_rl.data.RSOInspectionReward` uses one orbital period when
+  ``min_time_for_completion`` is not set. Example and benchmark orbit metrics
+  use the satellite's calculated period; fixed-orbit example durations use
+  the period of their configured orbit. See issue #225.
 * Fix a bug where extending an access opportunity window across a generation seam
   could leave the satellite's ``opportunities`` list out of close-time order, which
   corrupted ``bisect``-based opportunity lookups. See issue #205.

@@ -92,7 +92,7 @@ class InspectorSat(sats.Satellite):
             dict(prop="sun_hat_Hc", fn=sun_hat_chief),
             chief_name="RSO",
         ),
-        obs.Eclipse(norm=5700),
+        obs.Eclipse(norm=None),
         obs.Time(),
     ]
 
@@ -100,7 +100,7 @@ class InspectorSat(sats.Satellite):
         act.ImpulsiveThrustHill(
             chief_name="RSO",
             max_dv=1.0,
-            max_drift_duration=5700.0 * 2,
+            max_drift_duration=5700.0 * 2,  # Fixed cap; orbit is randomized at reset.
             fsw_action="action_inspect_rso",
         )
     ]
@@ -231,12 +231,13 @@ def rewarder_config(
             inspection_reward_scale=inspection_reward_scale,
             completion_bonus=completion_bonus,
             completion_threshold=completion_threshold,
-            min_time_for_completion=5700.0,
         ),
         data.ResourceReward(
-            resource_fn=lambda sat: sat.fsw.dv_available
-            if isinstance(sat.fsw, fsw.MagicOrbitalManeuverFSWModel)
-            else 0.0,
+            resource_fn=lambda sat: (
+                sat.fsw.dv_available
+                if isinstance(sat.fsw, fsw.MagicOrbitalManeuverFSWModel)
+                else 0.0
+            ),
             reward_weight=fuel_penalty_weight,
         ),
     )
@@ -256,7 +257,7 @@ env_args = dict(
         theta_solar_max=np.radians(60),
     ),
     rewarder=rewarder_config(),
-    time_limit=5700.0 * 10,
+    time_limit=5700.0 * 10,  # Fixed horizon; orbit is randomized at reset.
     sim_rate=5.0,
     episode_data_callback=episode_data_callback,
     satellite_data_callback=satellite_data_callback,
