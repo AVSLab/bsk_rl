@@ -100,7 +100,7 @@ class InspectorSat(sats.Satellite):
         act.ImpulsiveThrustHill(
             chief_name="RSO",
             max_dv=1.0,
-            max_drift_duration=5700.0 * 2,
+            max_drift_duration=5700.0 * 2,  # Fixed cap; orbit is randomized at reset.
             fsw_action="action_inspect_rso",
         )
     ]
@@ -257,7 +257,7 @@ env_args = dict(
         theta_solar_max=np.radians(60),
     ),
     rewarder=rewarder_config(),
-    time_limit=5700.0 * 10,
+    time_limit=5700.0 * 10,  # Fixed horizon; orbit is randomized at reset.
     sim_rate=5.0,
     episode_data_callback=episode_data_callback,
     satellite_data_callback=satellite_data_callback,

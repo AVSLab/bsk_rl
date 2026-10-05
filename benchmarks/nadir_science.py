@@ -67,7 +67,8 @@ DURATION = 5 * ORBIT_PERIOD
 def episode_data_callback(env):
     reward = env.rewarder.cum_reward
     reward = sum(reward.values()) / len(reward)
-    orbits = env.simulator.sim_time / ORBIT_PERIOD
+    period = env.satellites[0].dynamics.orbital_period
+    orbits = env.simulator.sim_time / period
 
     data = dict(
         reward=reward,
@@ -75,14 +76,14 @@ def episode_data_callback(env):
     )
     if orbits > 0:
         data["reward_per_orbit"] = reward / orbits
-    if orbits < DURATION / ORBIT_PERIOD:
+    if env.simulator.sim_time < env.simulator.time_limit:
         data["orbits_complete_partial_only"] = orbits
 
     return data
 
 
 def satellite_data_callback(env, sat):
-    orbits = env.simulator.sim_time / ORBIT_PERIOD
+    orbits = env.simulator.sim_time / sat.dynamics.orbital_period
     data = dict(
         alive=float(sat.is_alive()),
         rw_status_valid=float(sat.dynamics.rw_speeds_valid()),

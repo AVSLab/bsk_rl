@@ -81,7 +81,7 @@ def satellite_data_callback(env, satellite):
     reward = env.rewarder.cum_reward[satellite.name]
 
     duration = max(env.simulator.sim_time, 0.01)
-    orbits = duration / ORBIT_PERIOD
+    orbits = duration / satellite.dynamics.orbital_period
 
     data["imaged"] = imaged
     data["imaged_per_orbit"] = imaged / orbits
