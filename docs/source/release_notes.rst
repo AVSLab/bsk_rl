@@ -13,7 +13,9 @@ Development - |version|
   :class:`~bsk_rl.obs.Eclipse` supports this explicitly with ``norm=None``;
   its default remains normalization in seconds. Also,
   :class:`~bsk_rl.data.RSOInspectionReward` uses one orbital period when
-  ``min_time_for_completion`` is not set. See issue #225.
+  ``min_time_for_completion`` is not set. Example and benchmark orbit metrics
+  use the satellite's calculated period; fixed-orbit example durations use
+  the period of their configured orbit. See issue #225.
 * Fix a bug where extending an access opportunity window across a generation seam
   could leave the satellite's ``opportunities`` list out of close-time order, which
   corrupted ``bisect``-based opportunity lookups. See issue #205.

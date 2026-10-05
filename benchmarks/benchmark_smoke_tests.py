@@ -10,10 +10,14 @@ the regular test job, which lacks RLlib. Run from the ``benchmarks`` directory::
 """
 
 from copy import deepcopy
+from unittest.mock import MagicMock
 
 import pytest
 from aeos import aeos_single
+from aeos import satellite_data_callback as aeos_satellite_data
+from nadir_science import episode_data_callback as nadir_episode_data
 from nadir_science import nadir_science
+from nadir_science import satellite_data_callback as nadir_satellite_data
 from rso_inspection import rso_inspection
 
 from bsk_rl import ConstellationTasking
@@ -27,6 +31,37 @@ BENCHMARK_ENVS = {
 }
 
 N_STEPS = 3
+
+
+@pytest.mark.parametrize("period", [3000.0, 6000.0, 12000.0])
+def test_aeos_metrics_use_satellite_period(period):
+    satellite = MagicMock(imaged=4, missed=2, dynamics=MagicMock(orbital_period=period))
+    satellite.name = "EO1"
+    env = MagicMock(
+        simulator=MagicMock(sim_time=2 * period),
+        rewarder=MagicMock(cum_reward={"EO1": 6.0}),
+    )
+    metrics = aeos_satellite_data(env, satellite)
+    assert metrics["orbits_completed"] == pytest.approx(2.0)
+    assert metrics["imaged_per_orbit"] == pytest.approx(2.0)
+    assert metrics["reward_per_orbit"] == pytest.approx(3.0)
+
+
+@pytest.mark.parametrize("period", [3000.0, 6000.0, 12000.0])
+def test_nadir_metrics_use_satellite_period(period):
+    satellite = MagicMock(dynamics=MagicMock(orbital_period=period))
+    env = MagicMock(
+        satellites=[satellite],
+        simulator=MagicMock(sim_time=2 * period, time_limit=3 * period),
+        rewarder=MagicMock(cum_reward={"Scanner": 6.0}),
+    )
+    metrics = nadir_episode_data(env)
+    assert metrics["orbits_complete"] == pytest.approx(2.0)
+    assert metrics["reward_per_orbit"] == pytest.approx(3.0)
+    assert metrics["orbits_complete_partial_only"] == pytest.approx(2.0)
+    assert nadir_satellite_data(env, satellite)["orbits_complete"] == pytest.approx(2.0)
+    env.simulator.sim_time = env.simulator.time_limit
+    assert "orbits_complete_partial_only" not in nadir_episode_data(env)
 
 
 @pytest.mark.parametrize("name", list(BENCHMARK_ENVS))

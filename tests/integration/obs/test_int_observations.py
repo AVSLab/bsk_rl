@@ -2,7 +2,7 @@ from typing import ClassVar
 
 import gymnasium as gym
 import numpy as np
-from pytest import approx
+from pytest import approx, mark
 
 from bsk_rl import act, data, obs, sats
 from bsk_rl.scene import UniformTargets
@@ -90,6 +90,59 @@ class TestSatProperties:
         assert observation[6] == approx(45)
         observation, _reward, _terminated, _truncated, _info = self.env.step(0)
         assert observation[6] == approx(45)
+
+
+class TestOrbitalPeriodNormalization:
+    class PeriodSat(sats.Satellite):
+        dyn_type = dyn.BasicDynamicsModel
+        fsw_type = fsw.BasicFSWModel
+        observation_spec: ClassVar[list[obs.Observation]] = [
+            obs.SatProperties(
+                dict(prop="elapsed", fn=lambda sat: sat.simulator.sim_time, norm=None)
+            ),
+            obs.Eclipse(name="eclipse_seconds"),
+            obs.Eclipse(norm=None, name="eclipse_period"),
+            obs.Time(),
+        ]
+        action_spec: ClassVar[list[act.Action]] = [act.Drift()]
+
+    @mark.parametrize("altitude", [500.0, 800.0])
+    def test_period_normalization_with_real_dynamics(self, altitude):
+        satellite = self.PeriodSat(
+            "PeriodSat",
+            sat_args=dict(oe=lambda: random_orbit(a=6371 + altitude)),
+            obs_type=dict,
+        )
+        env = gym.make(
+            "SatelliteTasking-v1",
+            satellite=satellite,
+            sim_rate=1.0,
+            max_step_duration=10.0,
+            time_limit=100.0,
+            disable_env_checker=True,
+        )
+        try:
+            for _ in range(2):
+                env.reset(seed=0)
+                observation, _, _, _, _ = env.step(0)
+                sat = env.unwrapped.satellite
+                period = sat.dynamics.orbital_period
+                expected_period = (
+                    2
+                    * np.pi
+                    * np.sqrt(sat.dynamics.semi_major_axis**3 / sat.dynamics.mu)
+                )
+                assert period == approx(expected_period)
+                assert observation["sat_props"]["elapsed_normd"] == approx(
+                    env.unwrapped.simulator.sim_time / period
+                )
+                np.testing.assert_allclose(
+                    observation["eclipse_period"],
+                    np.array(observation["eclipse_seconds"]) / period,
+                )
+                assert observation["time"] == approx(0.1)
+        finally:
+            env.close()
 
 
 class TestTime:
