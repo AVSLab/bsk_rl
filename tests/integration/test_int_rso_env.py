@@ -65,18 +65,20 @@ def inspector_sat_args(**kwargs):
     )
 
 
-@pytest.mark.repeat(10)
-def test_inspection():
+@pytest.mark.parametrize("true_anomaly, eclipsed", [(90, True), (270, False)])
+def test_inspection(true_anomaly, eclipsed):
     env = ConstellationTasking(
         satellites=[
             RSOSat(
                 "RSO",
-                sat_args=dict(oe=random_circular_orbit(i=0, alt=500, Omega=0, f=0)),
+                sat_args=dict(
+                    oe=random_circular_orbit(i=0, alt=500, Omega=0, f=true_anomaly)
+                ),
             ),
             InspectorSat(
                 "Inspector",
                 sat_args=inspector_sat_args(
-                    oe=random_circular_orbit(i=0, alt=500.01, Omega=0, f=0)
+                    oe=random_circular_orbit(i=0, alt=500.01, Omega=0, f=true_anomaly)
                 ),
                 obs_type=dict,
             ),
@@ -89,23 +91,29 @@ def test_inspection():
             theta_solar_max=np.radians(90),  # Generous illumination angle
         ),
         rewarder=(data.RSOInspectionReward()),
+        # At this epoch, 90 and 270 degrees place the satellites well inside
+        # eclipse and sunlight, respectively, throughout the 100-second step.
+        world_args=dict(utc_init="2018 JAN 01 00:00:00.000 (UTC)"),
         time_limit=60000,
         sim_rate=1.0,
         # log_level="INFO",
     )
 
-    observation, _ = env.reset()
+    observation, _ = env.reset(seed=0)
     in_eclipse_start = (
         observation["Inspector"]["eclipse"][0] > observation["Inspector"]["eclipse"][1]
     )
 
     duration = 100
+    assert bool(in_eclipse_start) == eclipsed
+    assert min(observation["Inspector"]["eclipse"]) > duration
     observation, reward, _, _, _ = env.step(
         dict(RSO=0, Inspector=[0.0, 0.0, 0.0, duration])
     )
     in_eclipse_end = (
         observation["Inspector"]["eclipse"][0] > observation["Inspector"]["eclipse"][1]
     )
+    assert bool(in_eclipse_end) == eclipsed
 
     # Check that nothing is imaged in eclipse
     if in_eclipse_start and in_eclipse_end:
