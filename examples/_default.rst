@@ -9,6 +9,7 @@ Environments
    simple_environment
    satellite_configuration
    multiagent_envs
+   mixed_environment
    fault_environment
    communication_action
    cloud_environment
