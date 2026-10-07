@@ -1,11 +1,13 @@
 """Data composition classes."""
 
 import logging
+from collections.abc import Mapping, Sequence
+from copy import copy
 from typing import TYPE_CHECKING, Optional
 
 from bsk_rl.data.base import Data, DataStore, GlobalReward
 from bsk_rl.sats import Satellite
-from bsk_rl.scene.scenario import Scenario
+from bsk_rl.scene import MixedScenario, Scenario
 
 if TYPE_CHECKING:
     from bsk_rl.sats import Satellite
@@ -187,13 +189,13 @@ class ComposedReward(GlobalReward):
             rewarder.reset_overwrite_previous()
 
     def link_scenario(self, scenario: Scenario) -> None:
-        """Link the rewarder to the scenario."""
+        """Link every component to the shared scenario."""
         super().link_scenario(scenario)
         for rewarder in self.rewarders:
             rewarder.link_scenario(scenario)
 
     def initial_data(self, satellite: Satellite) -> ComposedData:
-        """Furnish the DataStore with :class:`ComposedData`."""
+        """Furnish every component's initial data in a fixed order."""
         return ComposedData(
             *[rewarder.initial_data(satellite) for rewarder in self.rewarders]
         )
@@ -251,5 +253,288 @@ class ComposedReward(GlobalReward):
         return any(rewarder.is_terminated(satellite) for rewarder in self.rewarders)
 
 
+class MixedData(Data):
+    """Knowledge indexed by reward channel, independent of local capabilities.
+
+    Channel IDs distinguish independent rewarders even when they use the same data
+    class. An absent channel contributes no data; an empty MixedData is the identity.
+    """
+
+    def __init__(self, data: Optional[Mapping[str, Data]] = None) -> None:
+        """Copy the channel mapping; values follow the Data copying contract."""
+        self.data = {} if data is None else dict(data)
+
+    def __add__(self, other: "MixedData") -> "MixedData":
+        """Merge matching channels and copy channels present on only one side."""
+        if not isinstance(other, MixedData):
+            return NotImplemented
+        merged = {key: copy(value) for key, value in self.data.items()}
+        for key, value in other.data.items():
+            if key in self.data:
+                if type(self.data[key]) is not type(value):
+                    raise TypeError(f"Incompatible data types for channel {key!r}.")
+                merged[key] = self.data[key] + value
+            else:
+                merged[key] = copy(value)
+        return MixedData(merged)
+
+    def __getattr__(self, name: str):
+        """Forward unambiguous attributes for existing observations and actions."""
+        # Avoid recursion when deepcopy probes an incompletely constructed object.
+        data = self.__dict__.get("data", {})
+        matches = [value for value in data.values() if hasattr(value, name)]
+        if len(matches) == 1:
+            return getattr(matches[0], name)
+        if matches:
+            raise AttributeError(
+                f"Ambiguous attribute {name!r}; select a MixedData channel explicitly."
+            )
+        raise AttributeError(f"No Data in MixedData has attribute {name!r}.")
+
+    def __repr__(self) -> str:
+        """Represent the channel mapping."""
+        return f"MixedData({self.data!r})"
+
+
+class MixedDataStore(DataStore):
+    """Poll local channel stores while retaining any communicated channels."""
+
+    data_type = MixedData
+
+    def __init__(
+        self,
+        satellite: Satellite,
+        data_stores: Mapping[str, DataStore],
+        initial_data: Optional[MixedData] = None,
+    ) -> None:
+        """Initialize explicit channel or scenario bindings."""
+        self.data_stores = dict(data_stores)
+        if initial_data is None:
+            initial_data = MixedData(
+                {key: store.data for key, store in self.data_stores.items()}
+            )
+        super().__init__(satellite, initial_data)
+        self.pass_data()
+
+    def pass_data(self) -> None:
+        """Synchronize component data with the parent channel mapping."""
+        for key, store in self.data_stores.items():
+            store.data = self.data.data[key]
+
+    def __getattr__(self, name: str):
+        """Forward attributes only when one local component provides them."""
+        stores = self.__dict__.get("data_stores", {})
+        matches = [store for store in stores.values() if hasattr(store, name)]
+        if len(matches) == 1:
+            return getattr(matches[0], name)
+        if matches:
+            raise AttributeError(
+                f"Ambiguous attribute {name!r}; select a datastore channel explicitly."
+            )
+        raise AttributeError(f"No DataStore in MixedDataStore has attribute {name!r}.")
+
+    def get_log_state(self) -> dict:
+        """Collect log states from locally active channels."""
+        return {key: store.get_log_state() for key, store in self.data_stores.items()}
+
+    def compare_log_states(self, prev_state: dict, new_state: dict) -> MixedData:
+        """Generate deltas only for locally active channels."""
+        return MixedData(
+            {
+                key: store.compare_log_states(prev_state[key], new_state[key])
+                for key, store in self.data_stores.items()
+            }
+        )
+
+    def update_from_logs(self) -> MixedData:
+        """Update local knowledge and synchronize component stores."""
+        self.pass_data()
+        new_data = super().update_from_logs()
+        self.pass_data()
+        return new_data
+
+    def update_with_communicated_data(self) -> None:
+        """Merge received knowledge and synchronize local stores."""
+        super().update_with_communicated_data()
+        self.pass_data()
+
+
+class MixedReward(GlobalReward):
+    """Route named reward channels to selected satellites and scenarios.
+
+    Args:
+        rewarders: Channel ID to independent rewarder instance.
+        satellite_mapping: Channel ID to names of satellites producing that data.
+            Satellites may belong to several channels or none.
+        scenario_mapping: Channel ID to scenario ID in MixedScenario. For an ordinary
+            Scenario this may be omitted, and every channel uses that scenario.
+    """
+
+    data_store_type = MixedDataStore
+
+    def __init__(
+        self,
+        rewarders: Mapping[str, GlobalReward],
+        satellite_mapping: Mapping[str, Sequence[str]],
+        scenario_mapping: Optional[Mapping[str, str]] = None,
+    ) -> None:
+        """Initialize explicit channel or scenario bindings."""
+        super().__init__()
+        self.rewarders = dict(rewarders)
+        self.satellite_mapping = {
+            key: frozenset(names) for key, names in satellite_mapping.items()
+        }
+        self.scenario_mapping = (
+            None if scenario_mapping is None else dict(scenario_mapping)
+        )
+        if self.rewarders.keys() != self.satellite_mapping.keys():
+            raise ValueError("Every reward channel must have a satellite mapping.")
+        if len({id(r) for r in self.rewarders.values()}) != len(self.rewarders):
+            raise ValueError(
+                "Each reward channel requires an independent rewarder instance."
+            )
+        if (
+            self.scenario_mapping is not None
+            and self.rewarders.keys() != self.scenario_mapping.keys()
+        ):
+            raise ValueError("Every reward channel must have a scenario mapping.")
+
+    def link_scenario(self, scenario: Scenario) -> None:
+        """Bind reward channels to the selected scenario instances."""
+        super().link_scenario(scenario)
+        if isinstance(scenario, MixedScenario):
+            if self.scenario_mapping is None:
+                raise ValueError("MixedScenario requires an explicit scenario mapping.")
+            known_names = {sat.name for sat in scenario.satellites}
+            for key, rewarder in self.rewarders.items():
+                scene_id = self.scenario_mapping[key]
+                if scene_id not in scenario.scenarios:
+                    raise ValueError(
+                        f"Unknown scenario {scene_id!r} for channel {key!r}."
+                    )
+                names = self.satellite_mapping[key]
+                if not names <= known_names:
+                    raise ValueError(
+                        f"Unknown satellites for channel {key!r}: {sorted(names - known_names)}"
+                    )
+                if not names <= set(scenario.satellite_mapping[scene_id]):
+                    raise ValueError(
+                        f"Reward channel {key!r} contains satellites outside its scenario."
+                    )
+                rewarder.link_scenario(scenario.scenarios[scene_id])
+        else:
+            if self.scenario_mapping is not None:
+                raise ValueError("Scenario IDs require a MixedScenario.")
+            known_names = {sat.name for sat in scenario.satellites}
+            for key, rewarder in self.rewarders.items():
+                if not self.satellite_mapping[key] <= known_names:
+                    raise ValueError(f"Unknown satellites for channel {key!r}.")
+                rewarder.link_scenario(scenario)
+
+    def pass_data(self) -> None:
+        """Synchronize component data with the parent channel mapping."""
+        for key, rewarder in self.rewarders.items():
+            if key not in self.data.data:
+                self.data.data[key] = rewarder.data_type()
+            rewarder.data = self.data.data[key]
+
+    def reset_overwrite_previous(self) -> None:
+        """Clear episode state and reset each component once."""
+        super().reset_overwrite_previous()
+        for rewarder in self.rewarders.values():
+            rewarder.reset_overwrite_previous()
+        self.pass_data()
+
+    def reset_pre_sim_init(self) -> None:
+        """Prepare each component before simulator construction."""
+        self.pass_data()
+        for rewarder in self.rewarders.values():
+            rewarder.reset_pre_sim_init()
+
+    def reset_during_sim_init(self) -> None:
+        """Prepare each component during simulator construction."""
+        self.pass_data()
+        for rewarder in self.rewarders.values():
+            rewarder.reset_during_sim_init()
+
+    def reset_post_sim_init(self) -> None:
+        """Finalize component setup after simulator initialization."""
+        self.pass_data()
+        for rewarder in self.rewarders.values():
+            rewarder.reset_post_sim_init()
+
+    def initial_data(self, satellite: Satellite) -> MixedData:
+        """Provide initial knowledge for the satellite's assigned channels."""
+        return MixedData(
+            {
+                key: rewarder.initial_data(satellite)
+                for key, rewarder in self.rewarders.items()
+                if satellite.name in self.satellite_mapping[key]
+            }
+        )
+
+    def create_data_store(self, satellite: Satellite) -> None:
+        """Create assigned stores using each rewarder's setup hooks."""
+        stores = {}
+        for key, rewarder in self.rewarders.items():
+            if satellite.name in self.satellite_mapping[key]:
+                # Preserve rewarder-specific setup (e.g. imaging access filters).
+                rewarder.create_data_store(satellite)
+                stores[key] = satellite.data_store
+        satellite.data_store = MixedDataStore(satellite, stores)
+        self.cum_reward[satellite.name] = 0.0
+
+    def calculate_reward(self, new_data_dict: dict[str, MixedData]) -> dict[str, float]:
+        """Route local deltas and sum rewards against previous global data."""
+        self.pass_data()
+        reward = {name: 0.0 for name in new_data_dict}
+        for key, rewarder in self.rewarders.items():
+            channel_data = {
+                name: delta.data[key]
+                for name, delta in new_data_dict.items()
+                if name in self.satellite_mapping[key] and key in delta.data
+            }
+            if not channel_data:
+                continue
+            reward_i = rewarder.calculate_reward(channel_data)
+            for name, value in reward_i.items():
+                if name not in channel_data:
+                    raise ValueError(
+                        f"Channel {key!r} returned reward for unassigned satellite {name!r}."
+                    )
+                reward[name] += value
+                rewarder.cum_reward[name] += value
+        return reward
+
+    def reward(self, new_data_dict: dict[str, MixedData]) -> dict[str, float]:
+        """Calculate rewards, merge global deltas, and synchronize child data."""
+        reward = super().reward(new_data_dict)
+        self.pass_data()
+        return reward
+
+    def is_truncated(self, satellite: Satellite) -> bool:
+        """Check only rewarders assigned to this satellite."""
+        return any(
+            r.is_truncated(satellite)
+            for key, r in self.rewarders.items()
+            if satellite.name in self.satellite_mapping[key]
+        )
+
+    def is_terminated(self, satellite: Satellite) -> bool:
+        """Check only rewarders assigned to this satellite."""
+        return any(
+            r.is_terminated(satellite)
+            for key, r in self.rewarders.items()
+            if satellite.name in self.satellite_mapping[key]
+        )
+
+
 __doc_title__ = "Data Composition"
-__all__ = ["ComposedReward", "ComposedDataStore", "ComposedData"]
+__all__ = [
+    "ComposedReward",
+    "ComposedDataStore",
+    "ComposedData",
+    "MixedReward",
+    "MixedDataStore",
+    "MixedData",
+]

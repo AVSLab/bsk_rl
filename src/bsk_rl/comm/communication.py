@@ -90,6 +90,8 @@ class CommunicationMethod(ABC, Resetable):
             final_data += satellite.data_store.data
         for satellite in self.satellites:
             satellite.data_store.data = copy(final_data)
+            if hasattr(satellite.data_store, "pass_data"):
+                satellite.data_store.pass_data()
 
 
 class NoCommunication(CommunicationMethod):
