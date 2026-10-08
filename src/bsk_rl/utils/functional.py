@@ -5,7 +5,7 @@ import warnings
 from copy import deepcopy
 from functools import wraps
 from types import new_class
-from typing import Any, Callable, ParamSpec, TypeVar
+from typing import Any, Callable, Optional, ParamSpec, TypeVar
 from unittest.mock import MagicMock
 
 import numpy as np
@@ -115,23 +115,41 @@ def vectorize_nested_dict(dictionary: dict) -> tuple[list[str], np.ndarray]:
     return list(np.concatenate(keys)), np.concatenate(values)
 
 
-def aliveness_checker(func: Callable[..., bool]) -> Callable[..., bool]:
-    """Decorate function to evaluate when checking for satellite aliveness."""
+def aliveness_checker(
+    func: Optional[Callable[..., bool]] = None,
+    *,
+    continuous: bool = False,
+    check_rate: Optional[float] = None,
+) -> Callable:
+    """Decorate function to evaluate when checking for satellite aliveness.
 
-    @wraps(func)
-    def inner(*args, log_failure=False, **kwargs) -> bool:
-        self = args[0]
-        alive = func(*args, **kwargs)
-        if not alive and log_failure:
-            self.satellite.logger.warning(f"failed {func.__name__} check")
-        return alive
+    Checkers are evaluated at environment steps. Set ``continuous=True`` to also
+    evaluate the checker during integration via a Basilisk event that terminates
+    the environment step on failure. ``check_rate`` (seconds) sets how often a
+    continuous checker is evaluated and defaults to the simulator rate.
+    """
 
-    inner.__doc__ = (
-        "*Decorated with* :class:`~bsk_rl.utils.functional.aliveness_checker`\n\n"
-        + str(func.__doc__)
-    )
-    inner.is_aliveness_checker = True
-    return inner
+    def decorator(func: Callable[..., bool]) -> Callable[..., bool]:
+        @wraps(func)
+        def inner(*args, log_failure=False, **kwargs) -> bool:
+            self = args[0]
+            alive = func(*args, **kwargs)
+            if not alive and log_failure:
+                self.satellite.logger.warning(f"failed {func.__name__} check")
+            return alive
+
+        inner.__doc__ = (
+            "*Decorated with* :class:`~bsk_rl.utils.functional.aliveness_checker`\n\n"
+            + str(func.__doc__)
+        )
+        inner.is_aliveness_checker = True
+        inner.continuous = continuous
+        inner.check_rate = check_rate
+        return inner
+
+    if func is None:
+        return decorator
+    return decorator(func)
 
 
 def check_aliveness_checkers(model: Any, log_failure=False) -> bool:
@@ -158,7 +176,7 @@ def check_aliveness_checkers(model: Any, log_failure=False) -> bool:
 
 def is_property(obj: Any, attr_name: str) -> bool:
     """Check if obj has an ``@property`` called ``attr_name`` without calling it."""
-    cls = type(obj)
+    cls = obj.__class__
     attribute = getattr(cls, attr_name, None)
     return attribute is not None and isinstance(attribute, property)
 
