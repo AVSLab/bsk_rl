@@ -42,6 +42,7 @@ Development - |version|
 * Add a CI smoke test that builds and steps each benchmark environment. See issue #340.
 * Update files for compatibility with Ruff 0.16.0's new default lint rules, excluding C408.
 * Update ``np2EigenMatrix3d`` and ``np2EigenVectorXd`` import path to prevent deprecation warning while preserving compatibility with older versions of Basilisk.
+* Add support for configurable RSO attitude dynamics and new relative attitude observations, enabling inspection of spinning and tumbling targets. Update the `RSO Inspection <examples/rso_inspection.ipynb>`_ example to demonstrate non-nadir-pointing targets. See issue #355.
 
 Version 1.3.0
 -------------
