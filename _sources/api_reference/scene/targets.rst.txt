@@ -1,0 +1,13 @@
+.. _bsk_rl.scene.targets:
+.. currentmodule:: bsk_rl.scene.targets
+
+Target Scenarios
+================
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.scene.targets
+   :members:
+   :show-inheritance:
+

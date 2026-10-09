@@ -1,0 +1,528 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Space-to-Space RSO Targets &mdash; BSK-RL v1.3.6 1.3.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=70d8fd07"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Target Scenarios" href="targets.html" />
+    <link rel="prev" title="RSO Scenarios" href="rso_points.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL v1.3.6
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.GeneralSatelliteTasking"><code class="docutils literal notranslate"><span class="pre">GeneralSatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.SatelliteTasking"><code class="docutils literal notranslate"><span class="pre">SatelliteTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#bsk_rl.ConstellationTasking"><code class="docutils literal notranslate"><span class="pre">ConstellationTasking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sats/index.html">Satellites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../obs/index.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../act/index.html">Actions</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Scenario</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.Scenario"><code class="docutils literal notranslate"><span class="pre">Scenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.UniformTargets"><code class="docutils literal notranslate"><span class="pre">UniformTargets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.CityTargets"><code class="docutils literal notranslate"><span class="pre">CityTargets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.UniformNadirScanning"><code class="docutils literal notranslate"><span class="pre">UniformNadirScanning</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.RSOPoints"><code class="docutils literal notranslate"><span class="pre">RSOPoints</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.SphericalRSO"><code class="docutils literal notranslate"><span class="pre">SphericalRSO</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.RSOTarget"><code class="docutils literal notranslate"><span class="pre">RSOTarget</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.RSOTargetCatalog"><code class="docutils literal notranslate"><span class="pre">RSOTargetCatalog</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.RSOPriorityEvent"><code class="docutils literal notranslate"><span class="pre">RSOPriorityEvent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#bsk_rl.scene.RSOTargets"><code class="docutils literal notranslate"><span class="pre">RSOTargets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="rso_points.html">RSO Scenarios</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Space-to-Space RSO Targets</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget"><code class="docutils literal notranslate"><span class="pre">RSOTarget</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget.id"><code class="docutils literal notranslate"><span class="pre">RSOTarget.id</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget.satellite_name"><code class="docutils literal notranslate"><span class="pre">RSOTarget.satellite_name</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget.rN"><code class="docutils literal notranslate"><span class="pre">RSOTarget.rN</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget.vN"><code class="docutils literal notranslate"><span class="pre">RSOTarget.vN</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget.priority"><code class="docutils literal notranslate"><span class="pre">RSOTarget.priority</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget.sigma_init"><code class="docutils literal notranslate"><span class="pre">RSOTarget.sigma_init</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget.omega_init"><code class="docutils literal notranslate"><span class="pre">RSOTarget.omega_init</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget.wheel_speeds_rpm"><code class="docutils literal notranslate"><span class="pre">RSOTarget.wheel_speeds_rpm</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget.disturbance_torque_Nm"><code class="docutils literal notranslate"><span class="pre">RSOTarget.disturbance_torque_Nm</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget.physical_parameters"><code class="docutils literal notranslate"><span class="pre">RSOTarget.physical_parameters</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget.sat_args"><code class="docutils literal notranslate"><span class="pre">RSOTarget.sat_args()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog"><code class="docutils literal notranslate"><span class="pre">RSOTargetCatalog</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.targets"><code class="docutils literal notranslate"><span class="pre">RSOTargetCatalog.targets</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.utc_init"><code class="docutils literal notranslate"><span class="pre">RSOTargetCatalog.utc_init</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.priority_events"><code class="docutils literal notranslate"><span class="pre">RSOTargetCatalog.priority_events</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.to_dict"><code class="docutils literal notranslate"><span class="pre">RSOTargetCatalog.to_dict()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.save"><code class="docutils literal notranslate"><span class="pre">RSOTargetCatalog.save()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.from_dict"><code class="docutils literal notranslate"><span class="pre">RSOTargetCatalog.from_dict()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.load"><code class="docutils literal notranslate"><span class="pre">RSOTargetCatalog.load()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOPriorityEvent"><code class="docutils literal notranslate"><span class="pre">RSOPriorityEvent</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOPriorityEvent.time_s"><code class="docutils literal notranslate"><span class="pre">RSOPriorityEvent.time_s</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOPriorityEvent.priorities"><code class="docutils literal notranslate"><span class="pre">RSOPriorityEvent.priorities</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargets"><code class="docutils literal notranslate"><span class="pre">RSOTargets</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargets.catalog"><code class="docutils literal notranslate"><span class="pre">RSOTargets.catalog</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargets.validate_satellite_names"><code class="docutils literal notranslate"><span class="pre">RSOTargets.validate_satellite_names()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargets.link_satellites"><code class="docutils literal notranslate"><span class="pre">RSOTargets.link_satellites()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargets.reset_overwrite_previous"><code class="docutils literal notranslate"><span class="pre">RSOTargets.reset_overwrite_previous()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargets.reset_pre_sim_init"><code class="docutils literal notranslate"><span class="pre">RSOTargets.reset_pre_sim_init()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargets.partition_name"><code class="docutils literal notranslate"><span class="pre">RSOTargets.partition_name()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargets.reset_during_sim_init"><code class="docutils literal notranslate"><span class="pre">RSOTargets.reset_during_sim_init()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargets.is_eligible"><code class="docutils literal notranslate"><span class="pre">RSOTargets.is_eligible()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargets.after_step"><code class="docutils literal notranslate"><span class="pre">RSOTargets.after_step()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="targets.html">Target Scenarios</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../data/index.html">Data &amp; Reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comm/index.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim/index.html">Simulation (BSK)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL v1.3.6</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Scenario</a></li>
+      <li class="breadcrumb-item active">Space-to-Space RSO Targets</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_reference/scene/rso_targets.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="space-to-space-rso-targets">
+<span id="bsk-rl-scene-rso-targets"></span><h1>Space-to-Space RSO Targets<a class="headerlink" href="#space-to-space-rso-targets" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-bsk_rl.scene.rso_targets">Independent spacecraft targets for space-to-space imaging.</p>
+<p>Unlike <a class="reference internal" href="index.html#bsk_rl.scene.RSOPoints" title="bsk_rl.scene.RSOPoints"><code class="xref py py-class docutils literal notranslate"><span class="pre">RSOPoints</span></code></a>, these targets are whole spacecraft,
+not surface points on one nearby RSO. Catalog states are Earth-centered J2000,
+in meters and meters per second, at the catalog’s optional <code class="docutils literal notranslate"><span class="pre">utc_init</span></code> or the
+environment’s realized epoch when no catalog epoch is specified.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RSOTarget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">satellite_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rN</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vN</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega_init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wheel_speeds_rpm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disturbance_torque_Nm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">physical_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTarget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Immutable definition of one independently orbiting imaging target.</p>
+<p>IDs are nonempty strings; they have no relationship to simulator indices.
+<code class="docutils literal notranslate"><span class="pre">satellite_name</span></code> is <a class="reference internal" href="../sats/index.html#bsk_rl.sats.Satellite.name" title="bsk_rl.sats.Satellite.name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">name</span></code></a>, the environment’s
+agent identifier. It is distinct from the Basilisk spacecraft model’s name
+and binds exactly one explicitly supplied satellite, rather than a group.
+Physical parameters are optional <code class="docutils literal notranslate"><span class="pre">(sat_args</span> <span class="pre">key,</span> <span class="pre">scalar</span> <span class="pre">value)</span></code> pairs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>str</em>)</p></li>
+<li><p><strong>satellite_name</strong> (<em>str</em>)</p></li>
+<li><p><strong>rN</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>vN</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>priority</strong> (<em>float</em>)</p></li>
+<li><p><strong>sigma_init</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>omega_init</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>wheel_speeds_rpm</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>disturbance_torque_Nm</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>physical_parameters</strong> (<em>tuple</em><em>[</em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em><em>, </em><em>...</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget.id">
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget.id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget.satellite_name">
+<span class="sig-name descname"><span class="pre">satellite_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget.satellite_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget.rN">
+<span class="sig-name descname"><span class="pre">rN</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget.rN" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget.vN">
+<span class="sig-name descname"><span class="pre">vN</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget.vN" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget.priority">
+<span class="sig-name descname"><span class="pre">priority</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget.priority" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget.sigma_init">
+<span class="sig-name descname"><span class="pre">sigma_init</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0)</span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget.sigma_init" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget.omega_init">
+<span class="sig-name descname"><span class="pre">omega_init</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0)</span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget.omega_init" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget.wheel_speeds_rpm">
+<span class="sig-name descname"><span class="pre">wheel_speeds_rpm</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0)</span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget.wheel_speeds_rpm" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget.disturbance_torque_Nm">
+<span class="sig-name descname"><span class="pre">disturbance_torque_Nm</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0)</span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget.disturbance_torque_Nm" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget.physical_parameters">
+<span class="sig-name descname"><span class="pre">physical_parameters</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget.physical_parameters" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTarget.sat_args">
+<span class="sig-name descname"><span class="pre">sat_args</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTarget.sat_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTarget.sat_args" title="Link to this definition"></a></dt>
+<dd><p>Return deterministic target dynamics arguments for this epoch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargetCatalog">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RSOTargetCatalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget" title="bsk_rl.scene.rso_targets.RSOTarget"><span class="pre">RSOTarget</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utc_init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority_events</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOPriorityEvent" title="bsk_rl.scene.rso_targets.RSOPriorityEvent"><span class="pre">RSOPriorityEvent</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargetCatalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Replayable target definitions, ordering, optional epoch, and priority events.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">utc_init</span></code> is omitted, target states refer to the environment’s realized
+epoch on each reset. After reset,
+<a class="reference internal" href="index.html#bsk_rl.scene.RSOTargets.catalog" title="bsk_rl.scene.RSOTargets.catalog"><code class="xref py py-attr docutils literal notranslate"><span class="pre">catalog</span></code></a> contains that explicit epoch and can
+be saved for replay. An explicitly supplied catalog
+epoch must match the environment; states are never silently retimed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>targets</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget" title="bsk_rl.scene.rso_targets.RSOTarget"><em>RSOTarget</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
+<li><p><strong>utc_init</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>priority_events</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOPriorityEvent" title="bsk_rl.scene.rso_targets.RSOPriorityEvent"><em>RSOPriorityEvent</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargetCatalog.targets">
+<span class="sig-name descname"><span class="pre">targets</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTarget" title="bsk_rl.scene.rso_targets.RSOTarget"><span class="pre">RSOTarget</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.targets" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargetCatalog.utc_init">
+<span class="sig-name descname"><span class="pre">utc_init</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.utc_init" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargetCatalog.priority_events">
+<span class="sig-name descname"><span class="pre">priority_events</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOPriorityEvent" title="bsk_rl.scene.rso_targets.RSOPriorityEvent"><span class="pre">RSOPriorityEvent</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.priority_events" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargetCatalog.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargetCatalog.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.to_dict" title="Link to this definition"></a></dt>
+<dd><p>Return a versioned, JSON-compatible mission target definition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargetCatalog.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargetCatalog.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.save" title="Link to this definition"></a></dt>
+<dd><p>Save target definitions and their optional epoch without rounding.</p>
+<p>Save <code class="docutils literal notranslate"><span class="pre">env.scenario.catalog</span></code> after reset to include the realized epoch
+when the original definition omitted it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargetCatalog.from_dict">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog" title="bsk_rl.scene.rso_targets.RSOTargetCatalog"><span class="pre">RSOTargetCatalog</span></a></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargetCatalog.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.from_dict" title="Link to this definition"></a></dt>
+<dd><p>Validate and load the supported schema and units.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>values</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog" title="bsk_rl.scene.rso_targets.RSOTargetCatalog"><em>RSOTargetCatalog</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargetCatalog.load">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog" title="bsk_rl.scene.rso_targets.RSOTargetCatalog"><span class="pre">RSOTargetCatalog</span></a></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargetCatalog.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog.load" title="Link to this definition"></a></dt>
+<dd><p>Load a saved catalog without resampling any target.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog" title="bsk_rl.scene.rso_targets.RSOTargetCatalog"><em>RSOTargetCatalog</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOPriorityEvent">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RSOPriorityEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priorities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOPriorityEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOPriorityEvent" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Priority changes applied at the first decision boundary at/after time_s.</p>
+<p>Changes occur after the preceding step’s reward and before its observation.
+Events at zero occur before the initial observation. They do not clear pending
+images or cooldowns. Pairs are <code class="docutils literal notranslate"><span class="pre">(target</span> <span class="pre">ID,</span> <span class="pre">new</span> <span class="pre">priority)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time_s</strong> (<em>float</em>)</p></li>
+<li><p><strong>priorities</strong> (<em>tuple</em><em>[</em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em><em>, </em><em>...</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOPriorityEvent.time_s">
+<span class="sig-name descname"><span class="pre">time_s</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOPriorityEvent.time_s" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOPriorityEvent.priorities">
+<span class="sig-name descname"><span class="pre">priorities</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOPriorityEvent.priorities" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargets">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RSOTargets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">catalog</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog" title="bsk_rl.scene.rso_targets.RSOTargetCatalog"><span class="pre">RSOTargetCatalog</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">imager_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargets" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="index.html#bsk_rl.scene.Scenario" title="bsk_rl.scene.scenario.Scenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scenario</span></code></a></p>
+<p>Select participants by explicit identity, independently of list order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>catalog</strong> (<a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog" title="bsk_rl.scene.rso_targets.RSOTargetCatalog"><em>RSOTargetCatalog</em></a>)</p></li>
+<li><p><strong>imager_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargets.catalog">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">catalog</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#bsk_rl.scene.rso_targets.RSOTargetCatalog" title="bsk_rl.scene.rso_targets.RSOTargetCatalog"><span class="pre">RSOTargetCatalog</span></a></span><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargets.catalog" title="Link to this definition"></a></dt>
+<dd><p>Configured catalog before reset, or the epoch-resolved episode snapshot.</p>
+<p>The input definition remains immutable. Save this property after reset
+to retain the realized epoch without pinning subsequent episode resets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargets.validate_satellite_names">
+<span class="sig-name descname"><span class="pre">validate_satellite_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellites</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargets.validate_satellite_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargets.validate_satellite_names" title="Link to this definition"></a></dt>
+<dd><p>Reject ambiguous/missing original names before the environment renames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargets.link_satellites">
+<span class="sig-name descname"><span class="pre">link_satellites</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellites</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargets.link_satellites"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargets.link_satellites" title="Link to this definition"></a></dt>
+<dd><p>Bind only the copied participants used by the actual environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargets.reset_overwrite_previous">
+<span class="sig-name descname"><span class="pre">reset_overwrite_previous</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargets.reset_overwrite_previous"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargets.reset_overwrite_previous" title="Link to this definition"></a></dt>
+<dd><p>Drop runtime bindings, centralized eligibility, and event history.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargets.reset_pre_sim_init">
+<span class="sig-name descname"><span class="pre">reset_pre_sim_init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargets.reset_pre_sim_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargets.reset_pre_sim_init" title="Link to this definition"></a></dt>
+<dd><p>Bind this episode’s objects and override only catalog target conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargets.partition_name">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">partition_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargets.partition_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargets.partition_name" title="Link to this definition"></a></dt>
+<dd><p>Bounded simulator-safe partition name, independent of array position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target_id</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargets.reset_during_sim_init">
+<span class="sig-name descname"><span class="pre">reset_during_sim_init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargets.reset_during_sim_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargets.reset_during_sim_init" title="Link to this definition"></a></dt>
+<dd><p>Register each target separately in each imager’s access model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargets.is_eligible">
+<span class="sig-name descname"><span class="pre">is_eligible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargets.is_eligible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargets.is_eligible" title="Link to this definition"></a></dt>
+<dd><p>Centralized pending visibility and quality-verified shared cooldown.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_id</strong> (<em>str</em>)</p></li>
+<li><p><strong>time_s</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bsk_rl.scene.rso_targets.RSOTargets.after_step">
+<span class="sig-name descname"><span class="pre">after_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/bsk_rl/scene/rso_targets.html#RSOTargets.after_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bsk_rl.scene.rso_targets.RSOTargets.after_step" title="Link to this definition"></a></dt>
+<dd><p>Apply due priority events after reward, before the next observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sim_time</strong> (<em>float</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rso_points.html" class="btn btn-neutral float-left" title="RSO Scenarios" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="targets.html" class="btn btn-neutral float-right" title="Target Scenarios" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

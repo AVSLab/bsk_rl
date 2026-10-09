@@ -1,0 +1,613 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Space-to-Space RSO Imaging &mdash; BSK-RL v1.3.6 1.3.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=70d8fd07"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="space_to_space_rso_imaging_demo" href="space_to_space_rso_imaging_demo.html" />
+    <link rel="prev" title="RSO Inspection" href="rso_inspection.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL v1.3.6
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#environments">Environments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="simple_environment.html">Getting Started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="satellite_configuration.html">Satellite Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="multiagent_envs.html">Multi-Agent Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html">Fault Environment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html#Configure-Satellite-Pareameters">Configure Satellite Pareameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="communication_action.html">Broadcast Communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cloud_environment.html">Cloud Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#earth-observation">Earth Observation</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#rso-missions">RSO Missions</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="rso_inspection.html">RSO Inspection</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Space-to-Space RSO Imaging</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#Acquisition-controller-support">Acquisition-controller support</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Define-the-target-catalog">Define the target catalog</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Define-passive-spacecraft-targets">Define passive spacecraft targets</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Define-the-imager">Define the imager</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#Acquisition-constraints">Acquisition constraints</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#Imager-initial-conditions">Imager initial conditions</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#Choose-acquisition-and-delivery-rewards">Choose acquisition and delivery rewards</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Construct-the-environment">Construct the environment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Acquire-and-deliver">Acquire and deliver</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#Product-ownership,-partial-downlink,-and-cooldown">Product ownership, partial downlink, and cooldown</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#Replay-the-initial-conditions">Replay the initial conditions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Other-observation-and-priority-settings">Other observation and priority settings</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#Policy-evaluation-and-time-history-plots">Policy evaluation and time-history plots</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#Full-mission-replay-and-policy-adapters">Full mission replay and policy adapters</a><ul>
+<li class="toctree-l7"><a class="reference internal" href="space_to_space_rso_imaging_demo.html">space_to_space_rso_imaging_demo</a></li>
+<li class="toctree-l7"><a class="reference internal" href="space_to_space_rso_imaging_evaluation.html">space_to_space_rso_imaging_evaluation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#benchmarks">Benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL v1.3.6</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Space-to-Space RSO Imaging</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/space_to_space_rso_imaging.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Space-to-Space-RSO-Imaging">
+<h1>Space-to-Space RSO Imaging<a class="headerlink" href="#Space-to-Space-RSO-Imaging" title="Link to this heading"></a></h1>
+<p>This example constructs an imager and three independently orbiting resident space objects (RSOs), takes an image, downlinks it, and replays the initial conditions. Each target is a whole spacecraft with its own propagated state. For inspecting surface points on one nearby RSO, see the <a class="reference internal" href="rso_inspection.html"><span class="doc">RSO inspection example</span></a>.</p>
+<p>The notebook uses a short deterministic demonstration by default. The optional policy-evaluation section can also save time histories and plots. A trained checkpoint and Vizard are not required.</p>
+<section id="Acquisition-controller-support">
+<h2>Acquisition-controller support<a class="headerlink" href="#Acquisition-controller-support" title="Link to this heading"></a></h2>
+<p>The acquisition logic currently lives in a temporary BSK-RL gate and uses the existing Basilisk message API. This example does not require the proposed <code class="docutils literal notranslate"><span class="pre">simpleInstrumentController</span></code> extension. After that extension is merged into Basilisk, BSK-RL will switch to the native controller in a follow-up change.</p>
+<p>The upstream work is tracked in <a class="reference external" href="https://github.com/AVSLab/basilisk/issues/1602">Basilisk #1602</a>, and the later BSK-RL replacement in <a class="reference external" href="https://github.com/AVSLab/bsk_rl/issues/358">#358</a>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">orbitalMotion</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConstellationTasking</span><span class="p">,</span> <span class="n">act</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">sats</span><span class="p">,</span> <span class="n">scene</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.orbital</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_circular_orbit</span>
+
+<span class="n">EPOCH</span> <span class="o">=</span> <span class="s2">"2026 JUN 21 00:00:00.000 (UTC)"</span>
+<span class="n">RUN_EVALUATION</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Enable the optional policy/plot run at the end.</span>
+<span class="n">run_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"bsk_rso_example_"</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Define-the-target-catalog">
+<h2>Define the target catalog<a class="headerlink" href="#Define-the-target-catalog" title="Link to this heading"></a></h2>
+<p>The catalog fixes target states and their order. Positions are Earth-centered J2000 vectors in meters, and velocities are in meters per second. Its <code class="docutils literal notranslate"><span class="pre">utc_init</span></code> is optional: when omitted, these states refer to the environment’s realized epoch on each reset. An isolated random generator makes catalog sampling independent of unrelated NumPy draws.</p>
+<p>Here we omit the catalog epoch and specify the demonstration’s fixed epoch only in the environment. The file saved below is an unpinned template. After reset we save <code class="docutils literal notranslate"><span class="pre">env.scenario.catalog</span></code> separately, which includes the actual epoch for replay. A catalog with an explicit epoch must match the environment.</p>
+<p>The stable target <code class="docutils literal notranslate"><span class="pre">id</span></code> identifies the mission object. <code class="docutils literal notranslate"><span class="pre">satellite_name</span></code> binds it to one BSK-RL <code class="docutils literal notranslate"><span class="pre">Satellite.name</span></code>, rather than to Basilisk’s internal spacecraft name. Neither field is an array index. Names such as <code class="docutils literal notranslate"><span class="pre">debris</span></code> identify one supplied spacecraft, not a group. Satellite names must be valid Python identifiers, such as <code class="docutils literal notranslate"><span class="pre">debris_1</span></code> rather than <code class="docutils literal notranslate"><span class="pre">debris-1</span></code>. Target IDs can still contain punctuation. Names and order in the environment do not assign spacecraft roles.</p>
+<p>The target inclinations and orbital phases vary, while the imager will use a fixed 45-degree inclination. The catalog also retains attitude, wheel speeds, disturbance torque, physical parameters, and optional priority events.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">make_catalog</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_targets</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Realize target conditions with an isolated RNG, then save/replay the result."""</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_targets</span><span class="p">):</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">elements</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">7.2e6</span> <span class="o">+</span> <span class="n">index</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">90</span><span class="p">))</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">Omega</span><span class="p">,</span> <span class="n">elements</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">MU_EARTH</span> <span class="o">*</span> <span class="mf">1e9</span><span class="p">,</span> <span class="n">elements</span><span class="p">)</span>
+        <span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">scene</span><span class="o">.</span><span class="n">RSOTarget</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"rso-</span><span class="si">{</span><span class="mi">83</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">17</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">index</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"object_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">rN</span><span class="p">,</span>
+                <span class="n">vN</span><span class="p">,</span>
+                <span class="n">priority</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">scene</span><span class="o">.</span><span class="n">RSOTargetCatalog</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">targets</span><span class="p">))</span>
+
+
+<span class="n">catalog</span> <span class="o">=</span> <span class="n">make_catalog</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">template_path</span> <span class="o">=</span> <span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"catalog_template.json"</span>
+<span class="n">catalog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">template_path</span><span class="p">)</span>
+<span class="n">loaded_catalog</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">RSOTargetCatalog</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">template_path</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">loaded_catalog</span> <span class="o">==</span> <span class="n">catalog</span>
+<span class="p">[(</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">satellite_name</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">priority</span><span class="p">)</span> <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">catalog</span><span class="o">.</span><span class="n">targets</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[(&#39;rso-83&#39;, &#39;object_0&#39;, 1.0),
+ (&#39;rso-100&#39;, &#39;object_1&#39;, 2.0),
+ (&#39;rso-117&#39;, &#39;object_2&#39;, 3.0)]
+</pre></div></div>
+</div>
+</section>
+<section id="Define-passive-spacecraft-targets">
+<h2>Define passive spacecraft targets<a class="headerlink" href="#Define-passive-spacecraft-targets" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">RSOTargetDynModel</span></code> propagates the target’s gravity, drag, attitude, and resources. Its eclipse model supplies illumination to the imager. Catalog conditions are applied to the environment’s copied spacecraft on each reset.</p>
+<p>The targets use the ordinary <code class="docutils literal notranslate"><span class="pre">Satellite</span></code> and <code class="docutils literal notranslate"><span class="pre">FSWModel</span></code> classes with a drift action. They are passive because they are not commanded to maneuver, and remain healthy spacecraft in the simulation.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">PassiveRSO</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">RSOTargetDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">FSWModel</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">()]</span>
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Drift</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">1e9</span><span class="p">)]</span>  <span class="c1"># [s]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Define-the-imager">
+<h2>Define the imager<a class="headerlink" href="#Define-the-imager" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SpaceToSpaceImagingDynModel</span></code> extends <code class="docutils literal notranslate"><span class="pre">ImagingDynModel</span></code>, which provides the instrument, storage, and transmitter. Ground stations are optional. This example composes <code class="docutils literal notranslate"><span class="pre">GroundStationDynModel</span></code> with it because we want to demonstrate downlink. That component connects the spacecraft transmitter to the access messages of the ground stations in the world model. The <code class="docutils literal notranslate"><span class="pre">Downlink</span></code> action enables the transmitter; data flows only during a station contact. An imaging-only mission can use
+<code class="docutils literal notranslate"><span class="pre">SpaceToSpaceImagingDynModel</span></code> alone.</p>
+<p>The compact observation below contains storage usage and four properties per target. <code class="docutils literal notranslate"><span class="pre">valid=0</span></code> identifies padded rows when fewer targets are eligible. The default <code class="docutils literal notranslate"><span class="pre">RSOTargetProperties()</span></code> instead provides the full normalized geometry row, described below.</p>
+<p>The three resource actions occupy indices 0, 1, and 2. <code class="docutils literal notranslate"><span class="pre">ImageRSO(3)</span></code> adds indices 3 through 5. Its integer slots select from the same ordered candidate snapshot as the observation. Explicit stable-ID tasking is also available.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Imager</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">AccessSatellite</span><span class="p">):</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="p">(</span><span class="n">dyn</span><span class="o">.</span><span class="n">SpaceToSpaceImagingDynModel</span><span class="p">,</span> <span class="n">dyn</span><span class="o">.</span><span class="n">GroundStationDynModel</span><span class="p">)</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">SpaceToSpaceImagingFSWModel</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"storage_level_fraction"</span><span class="p">)),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">RSOTargetProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"valid"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"target_distance"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"target_illumination_factor"</span><span class="p">),</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>  <span class="c1"># [s]</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Downlink</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mi">90</span><span class="p">),</span>  <span class="c1"># [s]</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Desat</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>  <span class="c1"># [s]</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">ImageRSO</span><span class="p">(</span>
+            <span class="mi">3</span><span class="p">,</span>
+            <span class="n">max_duration</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>  <span class="c1"># [s]</span>
+            <span class="n">min_pointing_hold_s</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>  <span class="c1"># [s]</span>
+            <span class="n">hold_mode</span><span class="o">=</span><span class="s2">"cumulative"</span><span class="p">,</span>
+            <span class="n">require_illumination_during_hold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<section id="Acquisition-constraints">
+<h3>Acquisition constraints<a class="headerlink" href="#Acquisition-constraints" title="Link to this heading"></a></h3>
+<p>The temporary BSK-RL acquisition gate checks spacecraft access, attitude error, optional angular-rate error, and optional target illumination. A sampled interval counts toward the hold only when both endpoints are valid. <code class="docutils literal notranslate"><span class="pre">cumulative</span></code> preserves valid intervals across interruptions, while <code class="docutils literal notranslate"><span class="pre">continuous</span></code> resets the hold after an invalid sample. A zero hold still requires valid fresh guidance.</p>
+<p>The gate runs before the instrument and storage in the dynamics task. It emits one image command only after the hold completes and storage is ready. Switching target or FSW mode clears unfinished hold state and the old command. Acquisition must finish before the action’s exclusive <code class="docutils literal notranslate"><span class="pre">max_duration</span></code> deadline.</p>
+<p>The gate also verifies that a full image actually reached storage before publishing an acquisition. Records include the stable target ID, imager, capture time, size in bits, valid hold time, and mean illumination over valid hold intervals. The gate sums illumination times the length of each valid interval, then divides by the valid hold time. This gives a time-weighted average even when update intervals differ; interruptions do not add time or illumination. The result is frozen when the image is
+commanded.</p>
+<p>Here illumination is recorded for reward quality but does not interrupt pointing hold. To require a lit target throughout each valid interval, enable <code class="docutils literal notranslate"><span class="pre">require_illumination_during_hold</span></code> and choose <code class="docutils literal notranslate"><span class="pre">hold_illumination_threshold</span></code>.</p>
+<p>Access includes Earth occlusion using a polar radius of 0.98 times the equatorial radius. Range is unlimited by default; set <code class="docutils literal notranslate"><span class="pre">imageTargetMaximumRange</span></code> to a positive distance in meters for a finite limit. This model does not calculate optical resolution, glare, or a detailed sensor image.</p>
+</section>
+<section id="Imager-initial-conditions">
+<h3>Imager initial conditions<a class="headerlink" href="#Imager-initial-conditions" title="Link to this heading"></a></h3>
+<p>The fixed imager orbit makes this short example repeatable. The larger battery and zero initial wheel speeds give the demonstration enough time to acquire and downlink an image. <code class="docutils literal notranslate"><span class="pre">instrumentBaudRate</span></code> follows the existing imaging-model convention: bits per image, divided internally by the dynamics period for one instrument tick.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">scanner_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">oe</span><span class="o">=</span><span class="n">random_circular_orbit</span><span class="p">(</span>
+        <span class="n">i</span><span class="o">=</span><span class="mf">45.0</span><span class="p">,</span> <span class="n">alt</span><span class="o">=</span><span class="mf">600.0</span><span class="p">,</span> <span class="n">Omega</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="mf">0.0</span>
+    <span class="p">),</span>  <span class="c1"># [deg, km, deg, deg]</span>
+    <span class="n">sigma_init</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># [MRP]</span>
+    <span class="n">omega_init</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># [rad/s]</span>
+    <span class="n">wheelSpeeds</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>  <span class="c1"># [rpm]</span>
+    <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="mf">6000.0</span><span class="p">,</span>  <span class="c1"># [rpm]</span>
+    <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>  <span class="c1"># [J]</span>
+    <span class="n">storedCharge_Init</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>  <span class="c1"># [J]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Choose-acquisition-and-delivery-rewards">
+<h2>Choose acquisition and delivery rewards<a class="headerlink" href="#Choose-acquisition-and-delivery-rewards" title="Link to this heading"></a></h2>
+<p>The rewarder accepts separate callbacks with signature <code class="docutils literal notranslate"><span class="pre">(record,</span> <span class="pre">target)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code>. Each callback can use the current target priority and the image record, for example to scale by quality or discount delivery delay. The reusable class defaults to zero acquisition reward and full current-priority reward after complete delivery.</p>
+<p>This example rewards the mission objective: all priority credit comes after useful complete delivery, equivalent to a delivery weight <code class="docutils literal notranslate"><span class="pre">alpha=1.0</span></code>. For an earlier training signal, explicitly choose acquisition weight <code class="docutils literal notranslate"><span class="pre">1-alpha=0.9</span></code> and delivery weight <code class="docutils literal notranslate"><span class="pre">alpha=0.1</span></code>. The optional AMOS configuration retains that training split. A quality threshold of 0.5 means the average target illumination over valid hold intervals must be at least one half. A dark product can occupy storage and be transmitted
+without earning useful-service reward.</p>
+<p>Priorities are read at each reward boundary, so acquisition and delivery can use different priorities. Delivery credit is withheld until the entire owned product has been transmitted.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">make_rewarder</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Keep this mission's stage weights outside the reusable rewarder."""</span>
+    <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">RSOImageReward</span><span class="p">(</span>
+        <span class="n">acquisition_reward_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">delivery_reward_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">target</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+        <span class="n">quality_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">cooldown_s</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>  <span class="c1"># [s]</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Construct-the-environment">
+<h2>Construct the environment<a class="headerlink" href="#Construct-the-environment" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">RSOTargets</span></code> selects imagers by explicit environment name and binds target definitions to the copied spacecraft. Extra spacecraft are permitted and do not become targets automatically. The environment resolves its world epoch before binding targets. An unpinned catalog follows that epoch on every reset without changing the original immutable template. An explicitly supplied catalog epoch is checked against it.</p>
+<p>Target storage partitions and access messages use explicit maps from target IDs. Each imager registers its own access outputs, so a target’s catalog position is never used as a Basilisk message index.</p>
+<p>A catalog fixes the target spacecraft. The imager’s other initial conditions and the world must also be preserved to replay the entire mission.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">make_environment</span><span class="p">(</span><span class="n">target_catalog</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create fresh spacecraft and episode state from a saved target catalog."""</span>
+    <span class="n">scanner</span> <span class="o">=</span> <span class="n">Imager</span><span class="p">(</span><span class="s2">"imager"</span><span class="p">,</span> <span class="n">sat_args</span><span class="o">=</span><span class="n">scanner_args</span><span class="p">)</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">PassiveRSO</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">satellite_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">target_catalog</span><span class="o">.</span><span class="n">targets</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ConstellationTasking</span><span class="p">(</span>
+        <span class="n">satellites</span><span class="o">=</span><span class="p">[</span><span class="o">*</span><span class="n">targets</span><span class="p">,</span> <span class="n">scanner</span><span class="p">],</span>
+        <span class="n">scenario</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">RSOTargets</span><span class="p">(</span><span class="n">target_catalog</span><span class="p">,</span> <span class="p">[</span><span class="n">scanner</span><span class="o">.</span><span class="n">name</span><span class="p">]),</span>
+        <span class="n">rewarder</span><span class="o">=</span><span class="n">make_rewarder</span><span class="p">(),</span>
+        <span class="n">world_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">utc_init</span><span class="o">=</span><span class="n">target_catalog</span><span class="o">.</span><span class="n">utc_init</span>
+            <span class="k">if</span> <span class="n">target_catalog</span><span class="o">.</span><span class="n">utc_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">EPOCH</span>
+        <span class="p">),</span>
+        <span class="n">time_limit</span><span class="o">=</span><span class="mi">1200</span><span class="p">,</span>  <span class="c1"># [s]</span>
+        <span class="n">max_step_duration</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>  <span class="c1"># [s]</span>
+        <span class="n">log_level</span><span class="o">=</span><span class="s2">"ERROR"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">make_environment</span><span class="p">(</span><span class="n">loaded_catalog</span><span class="p">)</span>
+<span class="n">initial</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">catalog_path</span> <span class="o">=</span> <span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"catalog.json"</span>
+<span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">catalog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">catalog_path</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">catalog</span><span class="o">.</span><span class="n">utc_init</span> <span class="o">==</span> <span class="n">env</span><span class="o">.</span><span class="n">world_args</span><span class="p">[</span><span class="s2">"utc_init"</span><span class="p">]</span>
+<span class="n">realized_world</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">world_args</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">realized_satellites</span> <span class="o">=</span> <span class="p">{</span><span class="n">sat</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">sat</span><span class="o">.</span><span class="n">sat_args</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">}</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Initial imager observation shape:"</span><span class="p">,</span> <span class="n">initial</span><span class="p">[</span><span class="s2">"imager"</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Initial imager observation shape: (13,)
+</pre></div></div>
+</div>
+</section>
+<section id="Acquire-and-deliver">
+<h2>Acquire and deliver<a class="headerlink" href="#Acquire-and-deliver" title="Link to this heading"></a></h2>
+<p>The small policy below downlinks whenever the imager owns a pending image. Otherwise it images the first valid candidate or charges if there is no eligible target. This demonstrates task selection and bookkeeping without a learned policy.</p>
+<p>Eligibility and physical access are different. A candidate can be eligible yet occulted. Empty slots raise an error and never select a different spacecraft. If a snapshot becomes stale, <code class="docutils literal notranslate"><span class="pre">ImageRSO</span></code> warns and attempts the originally observed target ID; an unavailable or newly ineligible target still raises an error.</p>
+<p>A variable-duration image action stops once a physically stored acquisition is recognized, or at its deadline. The fixed-duration downlink action uses the ground-station windows provided by the composed dynamics.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">reward_total</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">):</span>
+    <span class="n">imager</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">sat</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span> <span class="k">if</span> <span class="n">sat</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"imager"</span><span class="p">)</span>
+    <span class="n">store</span> <span class="o">=</span> <span class="n">imager</span><span class="o">.</span><span class="n">data_store</span>
+    <span class="k">if</span> <span class="n">store</span><span class="o">.</span><span class="n">products</span><span class="p">:</span>
+        <span class="n">choice</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Downlink owned products.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">imager</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_dict</span><span class="p">()[</span><span class="s2">"rso_targets"</span><span class="p">]</span>
+        <span class="n">choice</span> <span class="o">=</span> <span class="mi">3</span> <span class="k">if</span> <span class="n">rows</span><span class="p">[</span><span class="s2">"rso_targets_0"</span><span class="p">][</span><span class="s2">"valid"</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+        <span class="p">{</span><span class="n">sat</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">choice</span> <span class="k">if</span> <span class="n">sat</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"imager"</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">reward_total</span> <span class="o">+=</span> <span class="n">reward</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"imager"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">deliveries</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">terminated</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">truncated</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="k">break</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">sim_time_s</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">,</span>
+        <span class="n">captures</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">captures</span><span class="p">),</span>
+        <span class="n">deliveries</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">deliveries</span><span class="p">),</span>
+        <span class="n">reward</span><span class="o">=</span><span class="n">reward_total</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">captures</span>
+<span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">deliveries</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;sim_time_s&#39;: 156.0, &#39;captures&#39;: 1, &#39;deliveries&#39;: 1, &#39;reward&#39;: 3.0}
+</pre></div></div>
+</div>
+<section id="Product-ownership,-partial-downlink,-and-cooldown">
+<h3>Product ownership, partial downlink, and cooldown<a class="headerlink" href="#Product-ownership,-partial-downlink,-and-cooldown" title="Link to this heading"></a></h3>
+<p>Each image belongs to the imager that physically stored it. The datastore keeps a FIFO ledger per target partition and tracks remaining bits. A step can transmit part of one image or finish several. Partial transmission earns no completed-delivery reward.</p>
+<p>The transmitter uses one-bit packets by default so a partially transmitted buffer can resume across contacts. The image ledger defines complete delivery. Delivery timestamps are recognition times at environment boundaries, rather than interpolated arrival times. Removed image bits are assumed received over the existing access-gated transmitter, without packet loss modeling.</p>
+<p>Pending products are centrally visible to all imagers after reward calculation. This shared knowledge is a mission modeling choice, independent of the communication component. A useful full delivery establishes cooldown from its capture time. A target becomes eligible again once no products remain pending and the cooldown deadline has passed. Unsuccessful-quality delivery releases pending state without useful-service cooldown.</p>
+<p>For multiple imagers, choose <code class="docutils literal notranslate"><span class="pre">multi_imager_credit=&quot;shared&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;per_imager&quot;</span></code> explicitly. Shared mode splits each stage value across simultaneous qualified records. Later duplicate captures or deliveries in the same pending service do not receive extra credit. Per-imager mode credits each owner once per pending service. Qualified duplicate deliveries can extend the global cooldown to the latest qualified capture time.</p>
+</section>
+</section>
+<section id="Replay-the-initial-conditions">
+<h2>Replay the initial conditions<a class="headerlink" href="#Replay-the-initial-conditions" title="Link to this heading"></a></h2>
+<p>Load the resolved target catalog saved after reset without invoking its original randomizer, and restore the realized imager and world arguments. The saved catalog contains the exact environment epoch even though the input template omitted it. A different reset seed now gives the same initial observation. A target catalog by itself does not freeze the scanner orbit, resources, or ground stations.</p>
+<p>Reset rebuilds bindings against the new episode’s spacecraft and clears candidate snapshots, native holds, records, action events, image ledgers, partial transmission state, pending products, cooldowns, and reward uniqueness.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">replay</span> <span class="o">=</span> <span class="n">make_environment</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">RSOTargetCatalog</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">catalog_path</span><span class="p">))</span>
+<span class="n">replay</span><span class="o">.</span><span class="n">world_args_generator</span> <span class="o">=</span> <span class="n">realized_world</span>
+<span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="n">replay</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+    <span class="n">satellite</span><span class="o">.</span><span class="n">sat_args_generator</span> <span class="o">=</span> <span class="n">realized_satellites</span><span class="p">[</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+<span class="n">repeated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">replay</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">999</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_equal</span><span class="p">(</span><span class="n">initial</span><span class="p">[</span><span class="s2">"imager"</span><span class="p">],</span> <span class="n">repeated</span><span class="p">[</span><span class="s2">"imager"</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Initial imager observation reproduced exactly."</span><span class="p">)</span>
+<span class="n">replay</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Initial imager observation reproduced exactly.
+</pre></div></div>
+</div>
+</section>
+<section id="Other-observation-and-priority-settings">
+<h2>Other observation and priority settings<a class="headerlink" href="#Other-observation-and-priority-settings" title="Link to this heading"></a></h2>
+<p>When no properties are supplied, <code class="docutils literal notranslate"><span class="pre">RSOTargetProperties</span></code> returns this normalized 11-value row:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Property</p></th>
+<th class="head"><p>Normalization</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">priority</span></code></p></td>
+<td><p>2</p></td>
+<td><p>Current mission priority</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_elevation_angle</span></code></p></td>
+<td><p>90 degrees</p></td>
+<td><p>Elevation relative to the observer radial direction</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rel_pos_vector_r_BR_H</span></code></p></td>
+<td><p>15960 km</p></td>
+<td><p>Three relative-position components in the observer Hill frame</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rel_vel_vector_v_BR_H</span></code></p></td>
+<td><p>16000 m/s</p></td>
+<td><p>Three inertial-velocity-difference components expressed in that frame</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">angle_to_target</span></code></p></td>
+<td><p>90 degrees</p></td>
+<td><p>Angle from the instrument boresight</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_distance</span></code></p></td>
+<td><p>15960 km</p></td>
+<td><p>Range</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_illumination_factor</span></code></p></td>
+<td><p>1</p></td>
+<td><p>Illuminated fraction, zero in darkness and one in full light</p></td>
+</tr>
+</tbody>
+</table>
+<p>Relative velocity is not the derivative of position in the rotating Hill frame. Padding is a zero row. Include the <code class="docutils literal notranslate"><span class="pre">valid</span></code> property when a numeric mask is useful, as in this example.</p>
+<p>Observation and action counts are independent. For example, <code class="docutils literal notranslate"><span class="pre">RSOTargetProperties(n_ahead_observe=20)</span></code> can provide context while <code class="docutils literal notranslate"><span class="pre">ImageRSO(10)</span></code> selects from the first ten rows. <code class="docutils literal notranslate"><span class="pre">candidate_ids()</span></code> exposes ordered stable IDs, including <code class="docutils literal notranslate"><span class="pre">None</span></code> padding, without adding numeric features. A shared snapshot keeps action decoding consistent with observed slots. Eligible targets are ordered by ascending elevation in [-21, 90] degrees, then filled with the nearest remaining targets; catalog order
+breaks ties.</p>
+<p>Priority events run at the first decision boundary at or after their requested time, after the preceding step’s reward and before the next observation. Events at zero apply before the initial observation. Equal-time events follow catalog order and leave pending products and cooldowns intact.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This alternative catalog demonstrates priority events without changing the run above.</span>
+<span class="n">event</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">RSOPriorityEvent</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="p">((</span><span class="n">catalog</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),))</span>  <span class="c1"># [s]</span>
+<span class="n">event_catalog</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">RSOTargetCatalog</span><span class="p">(</span><span class="n">catalog</span><span class="o">.</span><span class="n">targets</span><span class="p">,</span> <span class="n">catalog</span><span class="o">.</span><span class="n">utc_init</span><span class="p">,</span> <span class="p">(</span><span class="n">event</span><span class="p">,))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">event_catalog</span><span class="o">.</span><span class="n">priority_events</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(RSOPriorityEvent(time_s=600, priorities=((&#39;rso-83&#39;, 5.0),)),)
+</pre></div></div>
+</div>
+</section>
+<section id="Policy-evaluation-and-time-history-plots">
+<h2>Policy evaluation and time-history plots<a class="headerlink" href="#Policy-evaluation-and-time-history-plots" title="Link to this heading"></a></h2>
+<p>The companion evaluator runs a bounded episode and records attempts, physically acquired images, completed deliveries, acquisition/delivery reward, storage, battery charge, wheel usage, and the action timeline. The <code class="docutils literal notranslate"><span class="pre">priority</span></code>, <code class="docutils literal notranslate"><span class="pre">nearest</span></code>, and <code class="docutils literal notranslate"><span class="pre">random</span></code> baselines manage resources and choose only physically accessible, illuminated candidates. They are example policies, separate from optimized research heuristics.</p>
+<p>Set <code class="docutils literal notranslate"><span class="pre">RUN_EVALUATION=True</span></code> in the first cell to run the short evaluation below. Matplotlib is required for plots. The default notebook demonstration above already covers acquisition, delivery, and replay.</p>
+<p>From the repository root, a longer run can be launched with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/space_to_space_rso_imaging_evaluation.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--policy<span class="w"> </span>priority<span class="w"> </span>--seed<span class="w"> </span><span class="m">0</span><span class="w"> </span>--horizon<span class="w"> </span><span class="m">900</span><span class="w"> </span>--output<span class="w"> </span>results/priority_seed0
+</pre></div>
+</div>
+<p>The output includes <code class="docutils literal notranslate"><span class="pre">mission.json</span></code>, <code class="docutils literal notranslate"><span class="pre">catalog.json</span></code>, <code class="docutils literal notranslate"><span class="pre">summary.json</span></code>, action/attempt/capture/delivery CSV files, performance and action plots in PNG/PDF, and a checkpoint hash when supplied. Use <code class="docutils literal notranslate"><span class="pre">--no-plots</span></code> for data only. Output directories must be empty so earlier evidence is preserved.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">RUN_EVALUATION</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">examples.space_to_space_rso_imaging_evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluate</span>
+
+    <span class="n">evaluation_directory</span> <span class="o">=</span> <span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"evaluation"</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">evaluation_directory</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">240</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Evaluation files:"</span><span class="p">,</span> <span class="n">evaluation_directory</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Optional evaluation skipped. Set RUN_EVALUATION=True to run it."</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Optional evaluation skipped. Set RUN_EVALUATION=True to run it.
+</pre></div></div>
+</div>
+<section id="Full-mission-replay-and-policy-adapters">
+<h3>Full mission replay and policy adapters<a class="headerlink" href="#Full-mission-replay-and-policy-adapters" title="Link to this heading"></a></h3>
+<p>The script’s <code class="docutils literal notranslate"><span class="pre">mission_manifest</span></code> records the realized target catalog/hash, all spacecraft arguments, world and ground-station settings, sampling rates, observation keys and normalization, action settings, reward callback weights, cooldown, seed and NumPy RNG state, source locations/hashes, dependency versions, and Basilisk binary fingerprints. <code class="docutils literal notranslate"><span class="pre">replay_environment</span></code> reconstructs the example’s reward recipe rather than attempting to serialize arbitrary Python callbacks. Custom mission callbacks
+need their own replay recipe.</p>
+<p>Replay a whole mission while comparing policies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/space_to_space_rso_imaging_evaluation.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--policy<span class="w"> </span>nearest<span class="w"> </span>--manifest<span class="w"> </span>results/priority_seed0/mission.json<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--output<span class="w"> </span>results/nearest_replay
+</pre></div>
+</div>
+<p>A fixed catalog alone can be supplied with <code class="docutils literal notranslate"><span class="pre">--catalog</span> <span class="pre">path/to/catalog.json</span></code>. It leaves imager and world sampling to the chosen environment configuration.</p>
+<p>The RLlib adapter uses a stateless PyTorch RLModule and validates its observation/action spaces before inference. It loads the module for evaluation, disables gradients and dropout, and starts no training workers. Supply the exact module directory, rather than a guessed checkpoint parent. Use <code class="docutils literal notranslate"><span class="pre">--stochastic</span></code> for categorical action sampling.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/space_to_space_rso_imaging_evaluation.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--policy<span class="w"> </span>rllib<span class="w"> </span>--checkpoint<span class="w"> </span>/path/to/rl_module<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--manifest<span class="w"> </span>results/priority_seed0/mission.json<span class="w"> </span>--output<span class="w"> </span>results/learned
+</pre></div>
+</div>
+<p>For a custom policy, pass <code class="docutils literal notranslate"><span class="pre">--policy</span> <span class="pre">custom</span> <span class="pre">--policy-factory</span> <span class="pre">module:function</span></code> or <code class="docutils literal notranslate"><span class="pre">file.py:function</span></code>. The factory receives environment, RNG, checkpoint, and stochastic settings, and returns <code class="docutils literal notranslate"><span class="pre">policy(observation,</span> <span class="pre">context)</span></code>. Context contains stable candidate IDs, resources, physical access, illumination, and the action layout. Return an integer action index. Invalid or padded actions fail with the decision context saved for inspection. Recurrent policies require a custom adapter.</p>
+<p>The optional <code class="docutils literal notranslate"><span class="pre">--amos-profile</span></code> flag lives only in the example. It selects 14 global features and ten default target rows for a 124-input, 13-action layout. The global features are storage, battery, wheel fractions, Hill-frame Sun direction, eclipse times, and ground-station windows. Charge/downlink/desaturation durations are 300/300/150 seconds. Imaging has a 300-second deadline and a 10-second cumulative hold, with illumination gating disabled. The profile preserves its research observation
+and action layout, while corrected physical holds, safe padding, and complete-delivery accounting can change historical results. Matching dimensions alone does not establish checkpoint equivalence.</p>
+<p>A short baseline run validates the example flow. It does not establish mission-scale performance or a statistical policy comparison. Mixed ground/space imaging, realistic inter-satellite communication, optical quality beyond illumination, training campaigns, and publication results require separate modeling and validation.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rso_inspection.html" class="btn btn-neutral float-left" title="RSO Inspection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="space_to_space_rso_imaging_demo.html" class="btn btn-neutral float-right" title="space_to_space_rso_imaging_demo" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

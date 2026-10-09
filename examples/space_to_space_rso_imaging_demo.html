@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>space_to_space_rso_imaging_demo &mdash; BSK-RL v1.3.6 1.3.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=70d8fd07"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="space_to_space_rso_imaging_evaluation" href="space_to_space_rso_imaging_evaluation.html" />
+    <link rel="prev" title="Space-to-Space RSO Imaging" href="space_to_space_rso_imaging.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL v1.3.6
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#environments">Environments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="simple_environment.html">Getting Started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="satellite_configuration.html">Satellite Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="multiagent_envs.html">Multi-Agent Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html">Fault Environment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html#Configure-Satellite-Pareameters">Configure Satellite Pareameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="communication_action.html">Broadcast Communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cloud_environment.html">Cloud Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#earth-observation">Earth Observation</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#rso-missions">RSO Missions</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="rso_inspection.html">RSO Inspection</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="space_to_space_rso_imaging.html">Space-to-Space RSO Imaging</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="space_to_space_rso_imaging.html#Acquisition-controller-support">Acquisition-controller support</a></li>
+<li class="toctree-l5"><a class="reference internal" href="space_to_space_rso_imaging.html#Define-the-target-catalog">Define the target catalog</a></li>
+<li class="toctree-l5"><a class="reference internal" href="space_to_space_rso_imaging.html#Define-passive-spacecraft-targets">Define passive spacecraft targets</a></li>
+<li class="toctree-l5"><a class="reference internal" href="space_to_space_rso_imaging.html#Define-the-imager">Define the imager</a></li>
+<li class="toctree-l5"><a class="reference internal" href="space_to_space_rso_imaging.html#Choose-acquisition-and-delivery-rewards">Choose acquisition and delivery rewards</a></li>
+<li class="toctree-l5"><a class="reference internal" href="space_to_space_rso_imaging.html#Construct-the-environment">Construct the environment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="space_to_space_rso_imaging.html#Acquire-and-deliver">Acquire and deliver</a></li>
+<li class="toctree-l5"><a class="reference internal" href="space_to_space_rso_imaging.html#Replay-the-initial-conditions">Replay the initial conditions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="space_to_space_rso_imaging.html#Other-observation-and-priority-settings">Other observation and priority settings</a></li>
+<li class="toctree-l5 current"><a class="reference internal" href="space_to_space_rso_imaging.html#Policy-evaluation-and-time-history-plots">Policy evaluation and time-history plots</a><ul class="current">
+<li class="toctree-l6 current"><a class="reference internal" href="space_to_space_rso_imaging.html#Full-mission-replay-and-policy-adapters">Full mission replay and policy adapters</a><ul class="current">
+<li class="toctree-l7 current"><a class="current reference internal" href="#">space_to_space_rso_imaging_demo</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="#examples.space_to_space_rso_imaging_demo.sun_in_hill"><code class="docutils literal notranslate"><span class="pre">sun_in_hill()</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="#examples.space_to_space_rso_imaging_demo.make_catalog"><code class="docutils literal notranslate"><span class="pre">make_catalog()</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="#examples.space_to_space_rso_imaging_demo.amos_observation_spec"><code class="docutils literal notranslate"><span class="pre">amos_observation_spec()</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="#examples.space_to_space_rso_imaging_demo.make_rewarder"><code class="docutils literal notranslate"><span class="pre">make_rewarder()</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="#examples.space_to_space_rso_imaging_demo.build_environment"><code class="docutils literal notranslate"><span class="pre">build_environment()</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="#examples.space_to_space_rso_imaging_demo.mission_manifest"><code class="docutils literal notranslate"><span class="pre">mission_manifest()</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="#examples.space_to_space_rso_imaging_demo.replay_environment"><code class="docutils literal notranslate"><span class="pre">replay_environment()</span></code></a></li>
+<li class="toctree-l8"><a class="reference internal" href="#examples.space_to_space_rso_imaging_demo.run_demo"><code class="docutils literal notranslate"><span class="pre">run_demo()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="space_to_space_rso_imaging_evaluation.html">space_to_space_rso_imaging_evaluation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#benchmarks">Benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL v1.3.6</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+          <li class="breadcrumb-item"><a href="space_to_space_rso_imaging.html">Space-to-Space RSO Imaging</a></li>
+      <li class="breadcrumb-item active">space_to_space_rso_imaging_demo</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/space_to_space_rso_imaging_demo.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="space-to-space-rso-imaging-demo">
+<span id="examples-space-to-space-rso-imaging-demo"></span><h1>space_to_space_rso_imaging_demo<a class="headerlink" href="#space-to-space-rso-imaging-demo" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p id="module-examples.space_to_space_rso_imaging_demo">A small public space-to-space RSO imaging example.</p>
+<p>Run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">examples/space_to_space_rso_imaging_demo.py</span></code> after installing BSK-RL.
+The demo uses standard ground stations and saves a replayable catalog/manifest.
+It requires neither a trained policy nor Vizard. The
+<a class="reference internal" href="space_to_space_rso_imaging.html"><span class="doc">accompanying notebook</span></a> walks through each
+configuration step and explains acquisition, delivery, and replay.</p>
+<p>Ground-station support is explicitly composed with the spacecraft imaging
+dynamics. The native Basilisk instrument controller checks pointing, access,
+illumination, and hold timing before the instrument generates data. The Python
+image recorder confirms that a complete product reached storage. Downlink reward
+is assigned only when all its bits have left the imager’s storage.</p>
+<p><code class="docutils literal notranslate"><span class="pre">make_rewarder</span></code> defines the example’s 90% acquisition and 10% delivery weights
+as callbacks. The reusable rewarder has no mission-specific alpha parameter.
+The optional AMOS profile lives in this example and preserves the 124-input,
+13-action schema used by its research policies. It does not reconstruct paper
+conditions without a saved mission manifest.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="examples.space_to_space_rso_imaging_demo.sun_in_hill">
+<span class="sig-name descname"><span class="pre">sun_in_hill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/examples/space_to_space_rso_imaging_demo.html#sun_in_hill"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#examples.space_to_space_rso_imaging_demo.sun_in_hill" title="Link to this definition"></a></dt>
+<dd><p>Dimensionless Sun direction in the imager Hill frame, as in AMOS v9.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="examples.space_to_space_rso_imaging_demo.make_catalog">
+<span class="sig-name descname"><span class="pre">make_catalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/examples/space_to_space_rso_imaging_demo.html#make_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#examples.space_to_space_rso_imaging_demo.make_catalog" title="Link to this definition"></a></dt>
+<dd><p>Realize target conditions with an isolated RNG, then save/replay the result.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="examples.space_to_space_rso_imaging_demo.amos_observation_spec">
+<span class="sig-name descname"><span class="pre">amos_observation_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/examples/space_to_space_rso_imaging_demo.html#amos_observation_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#examples.space_to_space_rso_imaging_demo.amos_observation_spec" title="Link to this definition"></a></dt>
+<dd><p>AMOS v9 full-action layout: 14 global + 11*K target features.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="examples.space_to_space_rso_imaging_demo.make_rewarder">
+<span class="sig-name descname"><span class="pre">make_rewarder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acquisition_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delivery_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/examples/space_to_space_rso_imaging_demo.html#make_rewarder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#examples.space_to_space_rso_imaging_demo.make_rewarder" title="Link to this definition"></a></dt>
+<dd><p>Define this example’s reward recipe outside the generic image rewarder.</p>
+<p>Callbacks receive an image record and the current runtime target. The default
+recipe assigns all priority credit to useful complete delivery. To provide
+an earlier training signal, pass acquisition_weight=0.9, delivery_weight=0.1.
+The explicit weights can be saved and reconstructed by the replay helper.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="examples.space_to_space_rso_imaging_demo.build_environment">
+<span class="sig-name descname"><span class="pre">build_environment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">catalog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amos_profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1200</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/examples/space_to_space_rso_imaging_demo.html#build_environment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#examples.space_to_space_rso_imaging_demo.build_environment" title="Link to this definition"></a></dt>
+<dd><p>Construct one imager and explicitly bound passive spacecraft targets.</p>
+<p>The AMOS profile preserves observation dimensions, action indices, hold mode,
+and alpha mapping. Correct acquisition/delivery semantics intentionally differ
+from the historical bugs; this is not a bit-for-bit research reproduction.</p>
+<p>Catalogs can omit their epoch. This example fixes the world epoch once, and
+the scene inherits its realized value. An explicit catalog epoch is also
+used for the world. Save <code class="docutils literal notranslate"><span class="pre">env.scenario.catalog</span></code> after reset for replay.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="examples.space_to_space_rso_imaging_demo.mission_manifest">
+<span class="sig-name descname"><span class="pre">mission_manifest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/examples/space_to_space_rso_imaging_demo.html#mission_manifest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#examples.space_to_space_rso_imaging_demo.mission_manifest" title="Link to this definition"></a></dt>
+<dd><p>Record realized mission settings; keep checkpoint details explicit if supplied.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="examples.space_to_space_rso_imaging_demo.replay_environment">
+<span class="sig-name descname"><span class="pre">replay_environment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manifest</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/examples/space_to_space_rso_imaging_demo.html#replay_environment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#examples.space_to_space_rso_imaging_demo.replay_environment" title="Link to this definition"></a></dt>
+<dd><p>Freeze scanner and world separately from the replayed target catalog.</p>
+<p>This helper supports this example’s two profiles. For a different environment,
+replay the catalog and apply the manifest to that environment’s own constructor.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="examples.space_to_space_rso_imaging_demo.run_demo">
+<span class="sig-name descname"><span class="pre">run_demo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/examples/space_to_space_rso_imaging_demo.html#run_demo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#examples.space_to_space_rso_imaging_demo.run_demo" title="Link to this definition"></a></dt>
+<dd><p>Run a bounded acquisition/downlink demo using standard ground access.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="space_to_space_rso_imaging.html" class="btn btn-neutral float-left" title="Space-to-Space RSO Imaging" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="space_to_space_rso_imaging_evaluation.html" class="btn btn-neutral float-right" title="space_to_space_rso_imaging_evaluation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

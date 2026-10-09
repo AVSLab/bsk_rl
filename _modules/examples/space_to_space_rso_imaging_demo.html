@@ -1,0 +1,568 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>examples.space_to_space_rso_imaging_demo &mdash; BSK-RL v1.3.6 1.3.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=70d8fd07"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL v1.3.6
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL v1.3.6</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">examples.space_to_space_rso_imaging_demo</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for examples.space_to_space_rso_imaging_demo</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""A small public space-to-space RSO imaging example.</span>
+
+<span class="sd">Run ``python examples/space_to_space_rso_imaging_demo.py`` after installing BSK-RL.</span>
+<span class="sd">The demo uses standard ground stations and saves a replayable catalog/manifest.</span>
+<span class="sd">It requires neither a trained policy nor Vizard. The</span>
+<span class="sd">:doc:`accompanying notebook &lt;space_to_space_rso_imaging&gt;` walks through each</span>
+<span class="sd">configuration step and explains acquisition, delivery, and replay.</span>
+
+<span class="sd">Ground-station support is explicitly composed with the spacecraft imaging</span>
+<span class="sd">dynamics. The native Basilisk instrument controller checks pointing, access,</span>
+<span class="sd">illumination, and hold timing before the instrument generates data. The Python</span>
+<span class="sd">image recorder confirms that a complete product reached storage. Downlink reward</span>
+<span class="sd">is assigned only when all its bits have left the imager's storage.</span>
+
+<span class="sd">``make_rewarder`` defines the example's 90% acquisition and 10% delivery weights</span>
+<span class="sd">as callbacks. The reusable rewarder has no mission-specific alpha parameter.</span>
+<span class="sd">The optional AMOS profile lives in this example and preserves the 124-input,</span>
+<span class="sd">13-action schema used by its research policies. It does not reconstruct paper</span>
+<span class="sd">conditions without a saved mission manifest.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.metadata</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk</span><span class="w"> </span><span class="kn">import</span> <span class="vm">__file__</span> <span class="k">as</span> <span class="n">basilisk_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">orbitalMotion</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConstellationTasking</span><span class="p">,</span> <span class="n">act</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">sats</span><span class="p">,</span> <span class="n">scene</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.orbital</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_circular_orbit</span><span class="p">,</span> <span class="n">rv2HN</span>
+
+<span class="n">EPOCH</span> <span class="o">=</span> <span class="s2">"2026 JUN 21 00:00:00.000 (UTC)"</span>
+
+
+<div class="viewcode-block" id="sun_in_hill">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_demo.html#examples.space_to_space_rso_imaging_demo.sun_in_hill">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sun_in_hill</span><span class="p">(</span><span class="n">satellite</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Dimensionless Sun direction in the imager Hill frame, as in AMOS v9."""</span>
+    <span class="n">world</span> <span class="o">=</span> <span class="n">satellite</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">world</span>
+    <span class="n">sun</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="n">world</span><span class="o">.</span><span class="n">sun_index</span><span class="p">]</span>
+        <span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">PositionVector</span>
+    <span class="p">)</span>
+    <span class="n">relative</span> <span class="o">=</span> <span class="n">sun</span> <span class="o">-</span> <span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_N</span>
+    <span class="n">hill</span> <span class="o">=</span> <span class="n">rv2HN</span><span class="p">(</span><span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_N</span><span class="p">,</span> <span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">v_BN_N</span><span class="p">)</span> <span class="o">@</span> <span class="n">relative</span>
+    <span class="k">return</span> <span class="n">hill</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">hill</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="make_catalog">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_demo.html#examples.space_to_space_rso_imaging_demo.make_catalog">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_catalog</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_targets</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Realize target conditions with an isolated RNG, then save/replay the result."""</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_targets</span><span class="p">):</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">elements</span><span class="o">.</span><span class="n">e</span> <span class="o">=</span> <span class="mf">7.2e6</span> <span class="o">+</span> <span class="n">index</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">90</span><span class="p">))</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">Omega</span><span class="p">,</span> <span class="n">elements</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">rN</span><span class="p">,</span> <span class="n">vN</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">elem2rv</span><span class="p">(</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">MU_EARTH</span> <span class="o">*</span> <span class="mf">1e9</span><span class="p">,</span> <span class="n">elements</span><span class="p">)</span>
+        <span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">scene</span><span class="o">.</span><span class="n">RSOTarget</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"rso-</span><span class="si">{</span><span class="mi">83</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">17</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">index</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"object_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">rN</span><span class="p">,</span>
+                <span class="n">vN</span><span class="p">,</span>
+                <span class="n">priority</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">scene</span><span class="o">.</span><span class="n">RSOTargetCatalog</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">targets</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="amos_observation_spec">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_demo.html#examples.space_to_space_rso_imaging_demo.amos_observation_spec">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">amos_observation_spec</span><span class="p">(</span><span class="n">n_candidates</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""AMOS v9 full-action layout: 14 global + 11*K target features."""</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"storage_level_fraction"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"battery_charge_fraction"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"wheel_speeds_fraction"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"s_hat_H"</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="n">sun_in_hill</span><span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_open"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_close"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">"ground_station"</span><span class="p">,</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">RSOTargetProperties</span><span class="p">(</span><span class="n">n_ahead_observe</span><span class="o">=</span><span class="n">n_candidates</span><span class="p">),</span>
+    <span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="make_rewarder">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_demo.html#examples.space_to_space_rso_imaging_demo.make_rewarder">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_rewarder</span><span class="p">(</span><span class="n">acquisition_weight</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">delivery_weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Define this example's reward recipe outside the generic image rewarder.</span>
+
+<span class="sd">    Callbacks receive an image record and the current runtime target. The default</span>
+<span class="sd">    recipe assigns all priority credit to useful complete delivery. To provide</span>
+<span class="sd">    an earlier training signal, pass acquisition_weight=0.9, delivery_weight=0.1.</span>
+<span class="sd">    The explicit weights can be saved and reconstructed by the replay helper.</span>
+<span class="sd">    """</span>
+    <span class="n">rewarder</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">RSOImageReward</span><span class="p">(</span>
+        <span class="n">acquisition_reward_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">acquisition_weight</span>
+        <span class="o">*</span> <span class="n">target</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+        <span class="n">delivery_reward_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">delivery_weight</span> <span class="o">*</span> <span class="n">target</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">rewarder</span><span class="o">.</span><span class="n">example_weights</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">acquisition_weight</span><span class="o">=</span><span class="n">acquisition_weight</span><span class="p">,</span> <span class="n">delivery_weight</span><span class="o">=</span><span class="n">delivery_weight</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">rewarder</span></div>
+
+
+
+<div class="viewcode-block" id="build_environment">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_demo.html#examples.space_to_space_rso_imaging_demo.build_environment">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_environment</span><span class="p">(</span><span class="n">catalog</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">amos_profile</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">time_limit</span><span class="o">=</span><span class="mi">1200</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Construct one imager and explicitly bound passive spacecraft targets.</span>
+
+<span class="sd">    The AMOS profile preserves observation dimensions, action indices, hold mode,</span>
+<span class="sd">    and alpha mapping. Correct acquisition/delivery semantics intentionally differ</span>
+<span class="sd">    from the historical bugs; this is not a bit-for-bit research reproduction.</span>
+
+<span class="sd">    Catalogs can omit their epoch. This example fixes the world epoch once, and</span>
+<span class="sd">    the scene inherits its realized value. An explicit catalog epoch is also</span>
+<span class="sd">    used for the world. Save ``env.scenario.catalog`` after reset for replay.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">catalog</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">catalog</span> <span class="o">=</span> <span class="n">make_catalog</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">10</span> <span class="k">if</span> <span class="n">amos_profile</span> <span class="k">else</span> <span class="mi">3</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Imager</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">AccessSatellite</span><span class="p">):</span>
+        <span class="n">dyn_type</span> <span class="o">=</span> <span class="p">(</span><span class="n">dyn</span><span class="o">.</span><span class="n">SpaceToSpaceImagingDynModel</span><span class="p">,</span> <span class="n">dyn</span><span class="o">.</span><span class="n">GroundStationDynModel</span><span class="p">)</span>
+        <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">SpaceToSpaceImagingFSWModel</span>
+        <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">amos_observation_spec</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">amos_profile</span>
+            <span class="k">else</span> <span class="p">[</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"storage_level_fraction"</span><span class="p">)),</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">RSOTargetProperties</span><span class="p">(</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"valid"</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"target_distance"</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"target_illumination_factor"</span><span class="p">),</span>
+                    <span class="n">n_ahead_observe</span><span class="o">=</span><span class="n">count</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mi">300</span> <span class="k">if</span> <span class="n">amos_profile</span> <span class="k">else</span> <span class="mi">60</span><span class="p">),</span>
+            <span class="n">act</span><span class="o">.</span><span class="n">Downlink</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mi">300</span> <span class="k">if</span> <span class="n">amos_profile</span> <span class="k">else</span> <span class="mi">90</span><span class="p">),</span>
+            <span class="n">act</span><span class="o">.</span><span class="n">Desat</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mi">150</span> <span class="k">if</span> <span class="n">amos_profile</span> <span class="k">else</span> <span class="mi">60</span><span class="p">),</span>
+            <span class="n">act</span><span class="o">.</span><span class="n">ImageRSO</span><span class="p">(</span>
+                <span class="n">count</span><span class="p">,</span>
+                <span class="n">max_duration</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+                <span class="n">min_pointing_hold_s</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="n">hold_mode</span><span class="o">=</span><span class="s2">"cumulative"</span><span class="p">,</span>
+                <span class="n">require_illumination_during_hold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">]</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">PassiveRSO</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+        <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">RSOTargetDynModel</span>
+        <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">FSWModel</span>
+        <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">()]</span>
+        <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Drift</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">1e9</span><span class="p">)]</span>
+
+    <span class="n">scanner_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">oe</span><span class="o">=</span><span class="n">random_circular_orbit</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mf">45.0</span><span class="p">,</span> <span class="n">alt</span><span class="o">=</span><span class="mf">600.0</span><span class="p">,</span> <span class="n">Omega</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span>
+        <span class="n">sigma_init</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">omega_init</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">wheelSpeeds</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="mf">6000.0</span><span class="p">,</span>
+        <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>
+        <span class="n">storedCharge_Init</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">amos_profile</span><span class="p">:</span>
+        <span class="n">scanner_args</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.0025</span><span class="p">,</span>
+            <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+            <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mi">50</span> <span class="o">*</span> <span class="mf">4e6</span><span class="p">,</span>
+            <span class="n">instrumentBaudRate</span><span class="o">=</span><span class="mf">4e6</span><span class="p">,</span>
+            <span class="n">transmitterBaudRate</span><span class="o">=-</span><span class="mf">4e6</span><span class="p">,</span>
+            <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">,</span>
+            <span class="n">storedCharge_Init</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">,</span>
+            <span class="n">basePowerDraw</span><span class="o">=-</span><span class="mf">10.0</span><span class="p">,</span>
+            <span class="n">instrumentPowerDraw</span><span class="o">=-</span><span class="mf">30.0</span><span class="p">,</span>
+            <span class="n">transmitterPowerDraw</span><span class="o">=-</span><span class="mf">25.0</span><span class="p">,</span>
+            <span class="n">thrusterPowerDraw</span><span class="o">=-</span><span class="mf">80.0</span><span class="p">,</span>
+            <span class="n">panelArea</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="mf">6000.0</span><span class="p">,</span>
+            <span class="n">desatAttitude</span><span class="o">=</span><span class="s2">"sun"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">scanner</span> <span class="o">=</span> <span class="n">Imager</span><span class="p">(</span>
+        <span class="s2">"imager"</span><span class="p">,</span>
+        <span class="n">sat_args</span><span class="o">=</span><span class="n">scanner_args</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">PassiveRSO</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">satellite_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">catalog</span><span class="o">.</span><span class="n">targets</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ConstellationTasking</span><span class="p">(</span>
+        <span class="n">satellites</span><span class="o">=</span><span class="p">[</span><span class="o">*</span><span class="n">targets</span><span class="p">,</span> <span class="n">scanner</span><span class="p">],</span>
+        <span class="n">scenario</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">RSOTargets</span><span class="p">(</span><span class="n">catalog</span><span class="p">,</span> <span class="p">[</span><span class="n">scanner</span><span class="o">.</span><span class="n">name</span><span class="p">]),</span>
+        <span class="n">rewarder</span><span class="o">=</span><span class="n">make_rewarder</span><span class="p">(</span>
+            <span class="n">acquisition_weight</span><span class="o">=</span><span class="mf">0.9</span> <span class="k">if</span> <span class="n">amos_profile</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">delivery_weight</span><span class="o">=</span><span class="mf">0.1</span> <span class="k">if</span> <span class="n">amos_profile</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">cooldown_s</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">world_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">utc_init</span><span class="o">=</span><span class="n">catalog</span><span class="o">.</span><span class="n">utc_init</span> <span class="k">if</span> <span class="n">catalog</span><span class="o">.</span><span class="n">utc_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">EPOCH</span>
+        <span class="p">),</span>
+        <span class="n">time_limit</span><span class="o">=</span><span class="n">time_limit</span><span class="p">,</span>
+        <span class="n">max_step_duration</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+        <span class="n">log_level</span><span class="o">=</span><span class="s2">"ERROR"</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="mission_manifest">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_demo.html#examples.space_to_space_rso_imaging_demo.mission_manifest">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mission_manifest</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Record realized mission settings; keep checkpoint details explicit if supplied."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">serializable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">serializable</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">serializable</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">"orbital_elements"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="n">key</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"e"</span><span class="p">,</span> <span class="s2">"i"</span><span class="p">,</span> <span class="s2">"Omega"</span><span class="p">,</span> <span class="s2">"omega"</span><span class="p">,</span> <span class="s2">"f"</span><span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"special_float"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)}</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot serialize mission value </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">imager</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+        <span class="n">sat</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span> <span class="k">if</span> <span class="n">sat</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">imager_names</span>
+    <span class="p">)</span>
+    <span class="n">action_settings</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">imager</span><span class="o">.</span><span class="n">action_builder</span><span class="o">.</span><span class="n">action_spec</span><span class="p">:</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">value</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"satellite"</span><span class="p">,</span> <span class="s2">"simulator"</span><span class="p">,</span> <span class="s2">"event_name"</span><span class="p">,</span> <span class="s2">"chosen_target_ids"</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">action_settings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="n">serializable</span><span class="p">(</span><span class="n">fields</span><span class="p">))</span>
+        <span class="p">)</span>
+    <span class="n">catalog</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">catalog</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">bsk_rl</span>
+
+    <span class="n">source</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">bsk_rl</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># An installed package inside another repository's .venv must not inherit</span>
+        <span class="c1"># that repository's HEAD as its own source revision.</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s2">"git"</span><span class="p">,</span>
+                <span class="s2">"-C"</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">parent</span><span class="p">),</span>
+                <span class="s2">"ls-files"</span><span class="p">,</span>
+                <span class="s2">"--error-unmatch"</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">commit</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">parent</span><span class="p">),</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">],</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">):</span>
+        <span class="n">commit</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">schema_version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">catalog</span><span class="o">=</span><span class="n">catalog</span><span class="p">,</span>
+        <span class="n">catalog_sha256</span><span class="o">=</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">catalog</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">(),</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+        <span class="n">amos_profile</span><span class="o">=</span><span class="n">imager</span><span class="o">.</span><span class="n">observation_space</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">124</span><span class="p">,),</span>
+        <span class="n">numpy_random_state</span><span class="o">=</span><span class="n">serializable</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">get_state</span><span class="p">()),</span>
+        <span class="n">bsk_rl_commit</span><span class="o">=</span><span class="n">commit</span><span class="p">,</span>
+        <span class="n">bsk_rl_import_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">),</span>
+        <span class="n">bsk_rl_source_tree_sha256</span><span class="o">=</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span>
+            <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+                <span class="o">+</span> <span class="s2">"  "</span>
+                <span class="o">+</span> <span class="n">path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+                <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*.py"</span><span class="p">))</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">(),</span>
+        <span class="n">python</span><span class="o">=</span><span class="n">platform</span><span class="o">.</span><span class="n">python_version</span><span class="p">(),</span>
+        <span class="n">versions</span><span class="o">=</span><span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">importlib</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"bsk_rl"</span><span class="p">,</span> <span class="s2">"bsk"</span><span class="p">,</span> <span class="s2">"numpy"</span><span class="p">,</span> <span class="s2">"gymnasium"</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="n">basilisk_import_path</span><span class="o">=</span><span class="n">basilisk_path</span><span class="p">,</span>
+        <span class="n">basilisk_binary_hashes</span><span class="o">=</span><span class="p">{</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">basilisk_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">)):</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span>
+                <span class="n">path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">basilisk_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*.so"</span><span class="p">))</span>
+        <span class="p">},</span>
+        <span class="n">world_args</span><span class="o">=</span><span class="n">serializable</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">world_args</span><span class="p">),</span>
+        <span class="n">satellite_args</span><span class="o">=</span><span class="p">{</span><span class="n">sat</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">serializable</span><span class="p">(</span><span class="n">sat</span><span class="o">.</span><span class="n">sat_args</span><span class="p">)</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">},</span>
+        <span class="n">rates</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">sim_s</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">sim_rate</span><span class="p">,</span>
+            <span class="n">dynamics_s</span><span class="o">=</span><span class="n">imager</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">dyn_rate</span><span class="p">,</span>
+            <span class="n">fsw_s</span><span class="o">=</span><span class="n">imager</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">fsw_rate</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">time_limit_s</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">time_limit</span><span class="p">,</span>
+        <span class="n">max_step_duration_s</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">max_step_duration</span><span class="p">,</span>
+        <span class="n">observation_keys</span><span class="o">=</span><span class="n">imager</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_array_keys</span><span class="p">(),</span>
+        <span class="n">observation_dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+        <span class="n">rso_properties</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">properties</span>
+            <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">imager</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">observation_spec</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">RSOTargetProperties</span><span class="p">)</span>
+        <span class="p">],</span>
+        <span class="n">actions</span><span class="o">=</span><span class="n">action_settings</span><span class="p">,</span>
+        <span class="n">reward</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="o">**</span><span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">example_weights</span><span class="p">,</span>
+            <span class="n">quality_threshold</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">quality_threshold</span><span class="p">,</span>
+            <span class="n">cooldown_s</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">cooldown_s</span><span class="p">,</span>
+            <span class="n">multi_imager_credit</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">multi_imager_credit</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">checkpoint</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="replay_environment">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_demo.html#examples.space_to_space_rso_imaging_demo.replay_environment">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">replay_environment</span><span class="p">(</span><span class="n">manifest</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Freeze scanner and world separately from the replayed target catalog.</span>
+
+<span class="sd">    This helper supports this example's two profiles. For a different environment,</span>
+<span class="sd">    replay the catalog and apply the manifest to that environment's own constructor.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">restore</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">restore</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">"orbital_elements"</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">elements</span> <span class="o">=</span> <span class="n">orbitalMotion</span><span class="o">.</span><span class="n">ClassicElements</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">[</span><span class="s2">"orbital_elements"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">elements</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">elements</span>
+            <span class="k">if</span> <span class="s2">"special_float"</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">"special_float"</span><span class="p">])</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">restore</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">if</span> <span class="n">manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schema_version"</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Unsupported mission manifest version."</span><span class="p">)</span>
+    <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">[</span><span class="s2">"catalog"</span><span class="p">],</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">digest</span> <span class="o">!=</span> <span class="n">manifest</span><span class="p">[</span><span class="s2">"catalog_sha256"</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Mission catalog hash does not match manifest."</span><span class="p">)</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">build_environment</span><span class="p">(</span>
+        <span class="n">scene</span><span class="o">.</span><span class="n">RSOTargetCatalog</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">manifest</span><span class="p">[</span><span class="s2">"catalog"</span><span class="p">]),</span>
+        <span class="n">amos_profile</span><span class="o">=</span><span class="n">manifest</span><span class="p">[</span><span class="s2">"amos_profile"</span><span class="p">],</span>
+        <span class="n">time_limit</span><span class="o">=</span><span class="n">manifest</span><span class="p">[</span><span class="s2">"time_limit_s"</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">world_args_generator</span> <span class="o">=</span> <span class="n">restore</span><span class="p">(</span><span class="n">manifest</span><span class="p">[</span><span class="s2">"world_args"</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+        <span class="n">satellite</span><span class="o">.</span><span class="n">sat_args_generator</span> <span class="o">=</span> <span class="n">restore</span><span class="p">(</span>
+            <span class="n">manifest</span><span class="p">[</span><span class="s2">"satellite_args"</span><span class="p">][</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">sim_rate</span> <span class="o">=</span> <span class="n">manifest</span><span class="p">[</span><span class="s2">"rates"</span><span class="p">][</span><span class="s2">"sim_s"</span><span class="p">]</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">max_step_duration</span> <span class="o">=</span> <span class="n">manifest</span><span class="p">[</span><span class="s2">"max_step_duration_s"</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">satellite</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">satellite</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">imager_names</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">action</span><span class="p">,</span> <span class="n">saved</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="n">satellite</span><span class="o">.</span><span class="n">action_builder</span><span class="o">.</span><span class="n">action_spec</span><span class="p">,</span> <span class="n">manifest</span><span class="p">[</span><span class="s2">"actions"</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">!=</span> <span class="n">saved</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Manifest action layout does not match example."</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">saved</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">restore</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="n">reward_settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">manifest</span><span class="p">[</span><span class="s2">"reward"</span><span class="p">])</span>
+    <span class="c1"># Replay manifests written before stage weights moved into example callbacks.</span>
+    <span class="k">if</span> <span class="s2">"alpha"</span> <span class="ow">in</span> <span class="n">reward_settings</span><span class="p">:</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">reward_settings</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"alpha"</span><span class="p">)</span>
+        <span class="n">reward_settings</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">acquisition_weight</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">delivery_weight</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">rewarder</span> <span class="o">=</span> <span class="n">make_rewarder</span><span class="p">(</span><span class="o">**</span><span class="n">reward_settings</span><span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">link_scenario</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">env</span></div>
+
+
+
+<div class="viewcode-block" id="run_demo">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_demo.html#examples.space_to_space_rso_imaging_demo.run_demo">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_demo</span><span class="p">(</span><span class="n">output_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run a bounded acquisition/downlink demo using standard ground access."""</span>
+    <span class="n">catalog</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">RSOTargetCatalog</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">make_catalog</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">build_environment</span><span class="p">(</span><span class="n">catalog</span><span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">manifest</span> <span class="o">=</span> <span class="n">mission_manifest</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">output_directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_directory</span><span class="p">)</span>
+        <span class="n">output_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">catalog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"catalog.json"</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">output_directory</span> <span class="o">/</span> <span class="s2">"mission.json"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">reward_total</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">):</span>
+        <span class="n">imager</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">sat</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span> <span class="k">if</span> <span class="n">sat</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"imager"</span><span class="p">)</span>
+        <span class="n">store</span> <span class="o">=</span> <span class="n">imager</span><span class="o">.</span><span class="n">data_store</span>
+        <span class="c1"># Downlink stored images; otherwise image a valid observation slot.</span>
+        <span class="k">if</span> <span class="n">store</span><span class="o">.</span><span class="n">products</span><span class="p">:</span>
+            <span class="n">choice</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">imager</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">obs_dict</span><span class="p">()[</span><span class="s2">"rso_targets"</span><span class="p">][</span><span class="s2">"rso_targets_0"</span><span class="p">]</span>
+            <span class="n">choice</span> <span class="o">=</span> <span class="mi">3</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"valid"</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">sat</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">choice</span> <span class="k">if</span> <span class="n">sat</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"imager"</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">reward_total</span> <span class="o">+=</span> <span class="n">reward</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"imager"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">deliveries</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">terminated</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">truncated</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">break</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">sim_time_s</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">,</span>
+        <span class="n">captures</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">captures</span><span class="p">),</span>
+        <span class="n">deliveries</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">deliveries</span><span class="p">),</span>
+        <span class="n">reward</span><span class="o">=</span><span class="n">reward_total</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">run_demo</span><span class="p">(</span><span class="s2">"rso_imaging_demo"</span><span class="p">),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

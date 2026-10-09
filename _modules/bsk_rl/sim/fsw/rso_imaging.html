@@ -1,0 +1,445 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.sim.fsw.rso_imaging &mdash; BSK-RL v1.3.6 1.3.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=70d8fd07"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.6
+              <img src="../../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BSK-RL v1.3.6</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.sim.fsw.rso_imaging</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.sim.fsw.rso_imaging</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Moving-target pointing with a physical hold-before-storage acquisition gate."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">weakref</span><span class="w"> </span><span class="kn">import</span> <span class="n">proxy</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">messaging</span><span class="p">,</span> <span class="n">sysModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">macros</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim.dyn.rso_imaging</span><span class="w"> </span><span class="kn">import</span> <span class="n">SpaceToSpaceImagingDynModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim.fsw.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">action</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim.fsw.ground_imaging</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImagingFSWModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.functional</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_args</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.rso_imaging</span><span class="w"> </span><span class="kn">import</span> <span class="n">RSOImageRecord</span><span class="p">,</span> <span class="n">illumination_factor</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_AcquisitionGate</span><span class="p">(</span><span class="n">sysModel</span><span class="o">.</span><span class="n">SysModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Write a one-tick instrument command only after a valid sampled hold.</span>
+
+<span class="sd">    Runs in the dynamics task before instrument and storage. Hold time counts an</span>
+<span class="sd">    interval only when both endpoints are valid. Guidance must have been written</span>
+<span class="sd">    after the task started and be no older than one FSW/dynamics sampling interval.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsw</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span> <span class="o">=</span> <span class="n">proxy</span><span class="p">(</span><span class="n">fsw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ModelTag</span> <span class="o">=</span> <span class="s2">"rsoAcquisitionGate"</span> <span class="o">+</span> <span class="n">fsw</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">DeviceCmdMsg</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">guidance</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">AttGuidMsgReader</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">guidance</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">access</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">AccessMsgReader</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">EclipseMsgReader</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">records</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">Reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_time_ns</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Disarm the physical instrument on cancellation, switching, or deadline."""</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"pulse"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_capture</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pulse</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">completed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">held_s</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">illumination_integral</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_valid</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_time_ns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_illumination</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">messaging</span><span class="o">.</span><span class="n">DeviceCmdMsgPayload</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">duration</span><span class="p">,</span>
+        <span class="n">hold_s</span><span class="p">,</span>
+        <span class="n">hold_mode</span><span class="p">,</span>
+        <span class="n">require_illumination</span><span class="p">,</span>
+        <span class="n">illumination_threshold</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="c1"># Read the gateway header: addAuthor redirects writes to this message.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">guidance</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">access</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rso_access_messages</span><span class="p">[</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
+        <span class="n">target_dyn</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">target_spacecraft</span><span class="o">.</span><span class="n">dynamics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="n">target_dyn</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">eclipseObject</span><span class="o">.</span><span class="n">eclipseOutMsgs</span><span class="p">[</span><span class="n">target_dyn</span><span class="o">.</span><span class="n">eclipse_index</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time_ns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deadline_ns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time_ns</span> <span class="o">+</span> <span class="n">macros</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hold_s</span> <span class="o">=</span> <span class="n">hold_s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hold_mode</span> <span class="o">=</span> <span class="n">hold_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">require_illumination</span> <span class="o">=</span> <span class="n">require_illumination</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">illumination_threshold</span> <span class="o">=</span> <span class="n">illumination_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">completed</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_partition_level</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageUnitDataOutMsg</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rso_partition_names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">storedDataName</span><span class="p">,</span> <span class="n">message</span><span class="o">.</span><span class="n">storedData</span><span class="p">))</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_capture</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Confirm storage contains the full physical image before publishing it."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pulse</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">completed</span><span class="p">:</span>
+            <span class="n">record</span><span class="p">,</span> <span class="n">initial_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pulse</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_level</span><span class="p">()</span> <span class="o">-</span> <span class="n">initial_level</span> <span class="o">&gt;=</span> <span class="n">record</span><span class="o">.</span><span class="n">size_bits</span> <span class="o">-</span> <span class="mf">1e-6</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">completed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"completed"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">now_ns</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="n">guidance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">guidance</span>
+        <span class="n">guidance_age</span> <span class="o">=</span> <span class="n">now_ns</span> <span class="o">-</span> <span class="n">guidance</span><span class="o">.</span><span class="n">timeWritten</span><span class="p">()</span>
+        <span class="n">fresh_guidance</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">guidance</span><span class="o">.</span><span class="n">isWritten</span><span class="p">()</span>
+            <span class="ow">and</span> <span class="n">guidance</span><span class="o">.</span><span class="n">timeWritten</span><span class="p">()</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time_ns</span>
+            <span class="ow">and</span> <span class="mi">0</span>
+            <span class="o">&lt;=</span> <span class="n">guidance_age</span>
+            <span class="o">&lt;=</span> <span class="n">macros</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">fsw_rate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">dyn_rate</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="n">guidance</span><span class="p">()</span>
+        <span class="n">controller</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">insControl</span>
+        <span class="n">pointing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">sigma_BR</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">controller</span><span class="o">.</span><span class="n">attErrTolerance</span>
+        <span class="k">if</span> <span class="n">controller</span><span class="o">.</span><span class="n">useRateTolerance</span><span class="p">:</span>
+            <span class="n">pointing</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">pointing</span>
+                <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">omega_BR_B</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">controller</span><span class="o">.</span><span class="n">rateErrTolerance</span>
+            <span class="p">)</span>
+        <span class="n">maximum_age</span> <span class="o">=</span> <span class="n">macros</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">dyn_rate</span><span class="p">)</span>
+        <span class="n">access_age</span> <span class="o">=</span> <span class="n">now_ns</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">access</span><span class="o">.</span><span class="n">timeWritten</span><span class="p">()</span>
+        <span class="n">illumination_age</span> <span class="o">=</span> <span class="n">now_ns</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">timeWritten</span><span class="p">()</span>
+        <span class="n">illumination</span> <span class="o">=</span> <span class="n">illumination_factor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="p">())</span>
+        <span class="n">illuminated</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_illumination</span> <span class="ow">or</span> <span class="n">illumination</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination_threshold</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="n">fresh_guidance</span>
+            <span class="ow">and</span> <span class="n">pointing</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">access</span><span class="o">.</span><span class="n">isWritten</span><span class="p">()</span>
+            <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">access_age</span> <span class="o">&lt;=</span> <span class="n">maximum_age</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">access</span><span class="p">()</span><span class="o">.</span><span class="n">hasAccess</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">isWritten</span><span class="p">()</span>
+            <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">illumination_age</span> <span class="o">&lt;=</span> <span class="n">maximum_age</span>
+            <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">illumination</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">illumination</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+            <span class="ow">and</span> <span class="n">illuminated</span>
+        <span class="p">),</span> <span class="n">illumination</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">UpdateState</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_time_ns</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">current_time_ns</span> <span class="o">*</span> <span class="n">macros</span><span class="o">.</span><span class="n">NANO2SEC</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="n">messaging</span><span class="o">.</span><span class="n">DeviceCmdMsgPayload</span><span class="p">(),</span> <span class="n">current_time_ns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">moduleID</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pulse</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_capture</span><span class="p">()</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">current_time_ns</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deadline_ns</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+            <span class="k">return</span>
+        <span class="n">valid</span><span class="p">,</span> <span class="n">illumination</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid</span><span class="p">(</span><span class="n">current_time_ns</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_time_ns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">valid</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_valid</span><span class="p">:</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_time_ns</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_time_ns</span><span class="p">)</span> <span class="o">*</span> <span class="n">macros</span><span class="o">.</span><span class="n">NANO2SEC</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">held_s</span> <span class="o">+=</span> <span class="n">dt</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">illumination_integral</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">illumination</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_illumination</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">valid</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">hold_mode</span> <span class="o">==</span> <span class="s2">"continuous"</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">held_s</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">illumination_integral</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_time_ns</span> <span class="o">=</span> <span class="n">current_time_ns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_valid</span> <span class="o">=</span> <span class="n">valid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_illumination</span> <span class="o">=</span> <span class="n">illumination</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">held_s</span> <span class="o">+</span> <span class="mf">1e-9</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">hold_s</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">dynamics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">dynamics</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeBaudRate</span> <span class="o">*</span> <span class="n">dynamics</span><span class="o">.</span><span class="n">dyn_rate</span>
+        <span class="k">if</span> <span class="n">dynamics</span><span class="o">.</span><span class="n">storageUnit</span><span class="o">.</span><span class="n">storageCapacity</span> <span class="o">-</span> <span class="n">dynamics</span><span class="o">.</span><span class="n">storage_level</span> <span class="o">&lt;</span> <span class="n">size</span> <span class="o">-</span> <span class="mf">1e-6</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">quality</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">illumination_integral</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">held_s</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">held_s</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="k">else</span> <span class="n">illumination</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">RSOImageRecord</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sequence</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">now</span><span class="p">,</span>
+            <span class="n">size</span><span class="p">,</span>
+            <span class="n">quality</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">held_s</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pulse</span> <span class="o">=</span> <span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition_level</span><span class="p">())</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">DeviceCmdMsgPayload</span><span class="p">()</span>
+        <span class="n">payload</span><span class="o">.</span><span class="n">deviceCmd</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">current_time_ns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">moduleID</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SpaceToSpaceImagingFSWModel">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_imaging.html#bsk_rl.sim.fsw.SpaceToSpaceImagingFSWModel">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SpaceToSpaceImagingFSWModel</span><span class="p">(</span><span class="n">ImagingFSWModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Point at an RSO spacecraft and gate acquisition before physical storage.</span>
+
+<span class="sd">    ``rso_capture`` temporarily evaluates sampled pointing, access, illumination,</span>
+<span class="sd">    and hold constraints in the dynamics task, before instrument and storage.</span>
+<span class="sd">    Continuous holds reset on a constraint break; cumulative holds pause. A zero</span>
+<span class="sd">    hold still requires fresh valid guidance, and the action deadline is exclusive.</span>
+
+<span class="sd">    The gate uses the existing Basilisk message API and confirms each full stored</span>
+<span class="sd">    image once. It will be replaced by ``simpleInstrumentController`` when the</span>
+<span class="sd">    corresponding upstream extension is available. This migration is tracked in</span>
+<span class="sd">    `BSK-RL #358 &lt;https://github.com/AVSLab/bsk_rl/issues/358&gt;`_ and</span>
+<span class="sd">    `Basilisk #1602 &lt;https://github.com/AVSLab/basilisk/issues/1602&gt;`_.</span>
+<span class="sd">    """</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_requires_dyn</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_requires_dyn</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="n">SpaceToSpaceImagingDynModel</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_gateway_msgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_set_gateway_msgs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rso_capture</span> <span class="o">=</span> <span class="n">_AcquisitionGate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeStatusInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rso_capture</span><span class="o">.</span><span class="n">command</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">AddModelToTask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rso_capture</span><span class="p">,</span> <span class="n">ModelPriority</span><span class="o">=</span><span class="mi">900</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">sensor</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">,</span> <span class="s2">"vizard_data"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"genericSensorList"</span><span class="p">,</span> <span class="p">[]</span>
+        <span class="p">):</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">DeviceCmdMsgReader</span><span class="p">()</span>
+            <span class="n">command</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rso_capture</span><span class="o">.</span><span class="n">command</span><span class="p">)</span>
+            <span class="n">sensor</span><span class="o">.</span><span class="n">genericSensorCmdInMsg</span> <span class="o">=</span> <span class="n">command</span>
+
+<div class="viewcode-block" id="SpaceToSpaceImagingFSWModel.LocPointTask">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_imaging.html#bsk_rl.sim.fsw.SpaceToSpaceImagingFSWModel.LocPointTask">[docs]</a>
+    <span class="k">class</span><span class="w"> </span><span class="nc">LocPointTask</span><span class="p">(</span><span class="n">ImagingFSWModel</span><span class="o">.</span><span class="n">LocPointTask</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Moving-target guidance with tolerances and an independent acquisition gate."""</span>
+
+<div class="viewcode-block" id="SpaceToSpaceImagingFSWModel.LocPointTask.setup_location_pointing">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_imaging.html#bsk_rl.sim.fsw.SpaceToSpaceImagingFSWModel.LocPointTask.setup_location_pointing">[docs]</a>
+        <span class="nd">@default_args</span><span class="p">(</span><span class="n">inst_pHat_B</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">setup_location_pointing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inst_pHat_B</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">"""Subscribe to observer navigation; target is bound when tasked."""</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">pHat_B</span> <span class="o">=</span> <span class="n">inst_pHat_B</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">scAttInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">attOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">scTransInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">transOutMsg</span>
+            <span class="p">)</span>
+            <span class="c1"># A harmless initial binding permits Basilisk initialization. Imaging</span>
+            <span class="c1"># replaces it with the explicitly selected target before acquisition.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">scTargetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">transOutMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">useBoresightRateDamping</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">messaging</span><span class="o">.</span><span class="n">AttGuidMsg_C_addAuthor</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">attGuidOutMsg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attGuidMsg</span>
+            <span class="p">)</span>
+            <span class="n">messaging</span><span class="o">.</span><span class="n">AttRefMsg_C_addAuthor</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">attRefOutMsg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">attRefMsg</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_to_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1198</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SpaceToSpaceImagingFSWModel.LocPointTask.setup_instrument_controller">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_imaging.html#bsk_rl.sim.fsw.SpaceToSpaceImagingFSWModel.LocPointTask.setup_instrument_controller">[docs]</a>
+        <span class="nd">@default_args</span><span class="p">(</span><span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">setup_instrument_controller</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">imageAttErrorRequirement</span><span class="p">,</span> <span class="n">imageRateErrorRequirement</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">"""Configure tolerances; acquisition gate owns the instrument command."""</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">imageAttErrorRequirement</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="n">imageAttErrorRequirement</span> <span class="o">&lt;</span> <span class="mi">0</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Pointing tolerance must be finite and nonnegative."</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">imageRateErrorRequirement</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">imageRateErrorRequirement</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="n">imageRateErrorRequirement</span> <span class="o">&lt;</span> <span class="mi">0</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Rate tolerance must be finite and nonnegative."</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">attErrTolerance</span> <span class="o">=</span> <span class="n">imageAttErrorRequirement</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">useRateTolerance</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="n">imageRateErrorRequirement</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">imageRateErrorRequirement</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">rateErrTolerance</span> <span class="o">=</span> <span class="n">imageRateErrorRequirement</span>
+            <span class="c1"># The inherited controller supplies tolerance configuration;</span>
+            <span class="c1"># the physical instrument subscribes exclusively to the hold gate.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">controllerStatus</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="SpaceToSpaceImagingFSWModel.LocPointTask.reset_for_action">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_imaging.html#bsk_rl.sim.fsw.SpaceToSpaceImagingFSWModel.LocPointTask.reset_for_action">[docs]</a>
+        <span class="k">def</span><span class="w"> </span><span class="nf">reset_for_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">"""Clear an old acquisition before any FSW mode change."""</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">rso_capture</span><span class="o">.</span><span class="n">check_capture</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">rso_capture</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">Reset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time_ns</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insControl</span><span class="o">.</span><span class="n">controllerStatus</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">reset_for_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="SpaceToSpaceImagingFSWModel.action_image_rso">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_imaging.html#bsk_rl.sim.fsw.SpaceToSpaceImagingFSWModel.action_image_rso">[docs]</a>
+    <span class="nd">@action</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_image_rso</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">duration</span><span class="o">=</span><span class="mf">300.0</span><span class="p">,</span>  <span class="c1"># [s]</span>
+        <span class="n">hold_s</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>  <span class="c1"># [s]</span>
+        <span class="n">hold_mode</span><span class="o">=</span><span class="s2">"cumulative"</span><span class="p">,</span>
+        <span class="n">require_illumination</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">illumination_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># [-]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Track a bound target; keep the instrument gated until acquisition."""</span>
+        <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rso_access_messages</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Target is not bound to this observer."</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locPoint</span><span class="o">.</span><span class="n">scTargetInMsg</span><span class="o">.</span><span class="n">subscribeTo</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">target_spacecraft</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">simpleNavObject</span><span class="o">.</span><span class="n">transOutMsg</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrument</span><span class="o">.</span><span class="n">nodeDataName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rso_partition_names</span><span class="p">[</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">id</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">instrumentPowerSink</span><span class="o">.</span><span class="n">powerStatus</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rso_capture</span><span class="o">.</span><span class="n">start</span><span class="p">(</span>
+            <span class="n">target</span><span class="p">,</span>
+            <span class="n">duration</span><span class="p">,</span>
+            <span class="n">hold_s</span><span class="p">,</span>
+            <span class="n">hold_mode</span><span class="p">,</span>
+            <span class="n">require_illumination</span><span class="p">,</span>
+            <span class="n">illumination_threshold</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">enableTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LocPointTask</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SpaceToSpaceImagingFSWModel.action_image">
+<a class="viewcode-back" href="../../../../api_reference/sim/fsw/rso_imaging.html#bsk_rl.sim.fsw.SpaceToSpaceImagingFSWModel.action_image">[docs]</a>
+    <span class="nd">@action</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Reject ground-target actions on this spacecraft-specific FSW model."""</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Use ImageRSO with SpaceToSpaceImagingFSWModel."</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">"Space-to-Space RSO Imaging"</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"SpaceToSpaceImagingFSWModel"</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

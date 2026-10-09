@@ -1,0 +1,642 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-Agent Environments &mdash; BSK-RL v1.3.6 1.3.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=70d8fd07"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Fault Environment Example" href="fault_environment.html" />
+    <link rel="prev" title="Satellite Configuration" href="satellite_configuration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL v1.3.6
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#environments">Environments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="simple_environment.html">Getting Started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="satellite_configuration.html">Satellite Configuration</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Multi-Agent Environments</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Configuring-the-Environment">Configuring the Environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Gym-API">Gym API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#PettingZoo-API">PettingZoo API</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html">Fault Environment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html#Configure-Satellite-Pareameters">Configure Satellite Pareameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="communication_action.html">Broadcast Communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cloud_environment.html">Cloud Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#earth-observation">Earth Observation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#rso-missions">RSO Missions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#benchmarks">Benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL v1.3.6</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Multi-Agent Environments</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/multiagent_envs.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Multi-Agent-Environments">
+<h1>Multi-Agent Environments<a class="headerlink" href="#Multi-Agent-Environments" title="Link to this heading"></a></h1>
+<p>Two multiagent environments are given in the package:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api_reference/index.html#bsk_rl.GeneralSatelliteTasking"><span class="std std-ref">GeneralSatelliteTasking</span></a>, a <a class="reference external" href="https://gymnasium.farama.org">Gymnasium</a>-based environment and the basis for all other environments.</p></li>
+<li><p><a class="reference internal" href="../api_reference/index.html#bsk_rl.ConstellationTasking"><span class="std std-ref">ConstellationTasking</span></a>, which implements the <a class="reference external" href="https://pettingzoo.farama.org/api/parallel/">PettingZoo parallel API</a>.</p></li>
+</ul>
+<p>The latter is preferable for multi-agent RL (MARL) settings, as most algorithms are designed for this kind of API.</p>
+<section id="Configuring-the-Environment">
+<h2>Configuring the Environment<a class="headerlink" href="#Configuring-the-Environment" title="Link to this heading"></a></h2>
+<p>For this example, a multisatellite target imaging environment will be used. The goal is to maximize the value of unique images taken.</p>
+<p>As usual, the satellite type is defined first.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">act</span><span class="p">,</span> <span class="n">comm</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">sats</span><span class="p">,</span> <span class="n">scene</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ImagingSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">ImagingSatellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_open"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mf">5700.0</span><span class="p">),</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">n_ahead_image</span><span class="o">=</span><span class="mi">10</span><span class="p">)]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">FullFeaturedDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">SteeringImagerFSWModel</span>
+</pre></div>
+</div>
+</div>
+<p>Satellite properties are set to give the satellite near-unlimited power and storage resources. To randomize some parameters in a correlated manner across satellites, a <code class="docutils literal notranslate"><span class="pre">sat_arg_randomizer</span></code> is set and passed to the environment. In this case, the satellites are distributed in a trivial single-plane Walker-delta constellation.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.orbital</span><span class="w"> </span><span class="kn">import</span> <span class="n">walker_delta_args</span>
+
+<span class="n">sat_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>
+    <span class="n">storedCharge_Init</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>
+    <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mf">1e12</span><span class="p">,</span>
+    <span class="n">u_max</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+    <span class="n">K1</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">K3</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
+    <span class="n">omega_max</span><span class="o">=</span><span class="mf">0.087</span><span class="p">,</span>
+    <span class="n">servo_Ki</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+    <span class="n">servo_P</span><span class="o">=</span><span class="mi">150</span> <span class="o">/</span> <span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">sat_arg_randomizer</span> <span class="o">=</span> <span class="n">walker_delta_args</span><span class="p">(</span><span class="n">altitude</span><span class="o">=</span><span class="mf">800.0</span><span class="p">,</span> <span class="n">inc</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">n_planes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Gym-API">
+<h2>Gym API<a class="headerlink" href="#Gym-API" title="Link to this heading"></a></h2>
+<p>GeneralSatelliteTasking uses tuples of actions and observations to interact with the environment.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneralSatelliteTasking</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">GeneralSatelliteTasking</span><span class="p">(</span>
+    <span class="n">satellites</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">ImagingSatellite</span><span class="p">(</span><span class="s2">"EO_1"</span><span class="p">,</span> <span class="n">sat_args</span><span class="p">),</span>
+        <span class="n">ImagingSatellite</span><span class="p">(</span><span class="s2">"EO_2"</span><span class="p">,</span> <span class="n">sat_args</span><span class="p">),</span>
+        <span class="n">ImagingSatellite</span><span class="p">(</span><span class="s2">"EO_3"</span><span class="p">,</span> <span class="n">sat_args</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">UniformTargets</span><span class="p">(</span><span class="mi">1000</span><span class="p">),</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+    <span class="n">communicator</span><span class="o">=</span><span class="n">comm</span><span class="o">.</span><span class="n">LOSCommunication</span><span class="p">(),</span>  <span class="c1"># Note that dyn must inherit from LOSCommunication</span>
+    <span class="n">sat_arg_randomizer</span><span class="o">=</span><span class="n">sat_arg_randomizer</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">"INFO"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="n">env</span><span class="o">.</span><span class="n">observation_space</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,079 </span>gym                            INFO       Resetting environment with seed=1489774677
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,081 </span>scene.targets                  INFO       Generating 1000 targets
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,142 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Finding opportunity windows from 0.00 to 600.00 seconds
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,162 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>Finding opportunity windows from 0.00 to 600.00 seconds
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,180 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Finding opportunity windows from 0.00 to 600.00 seconds
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,200 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Environment reset
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Tuple(Box(-1e+16, 1e+16, (20,), float64), Box(-1e+16, 1e+16, (20,), float64), Box(-1e+16, 1e+16, (20,), float64))
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Tuple(Discrete(10), Discrete(10), Discrete(10))
+</pre></div></div>
+</div>
+<p>Consequently, actions are passed as a tuple. The step will stop the first time any satellite completes an action.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">([</span><span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">8</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,209 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,210 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>target index 7 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,210 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Target(tgt-21) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,211 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Target(tgt-21) window enabled: 175.2 to 347.9
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,211 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>setting timed terminal event at 347.9
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,212 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>target index 9 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,212 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>Target(tgt-495) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,213 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>Target(tgt-495) window enabled: 272.0 to 423.0
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,213 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>setting timed terminal event at 423.0
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,214 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>target index 8 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,214 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Target(tgt-46) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,214 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Target(tgt-46) window enabled: 48.9 to 258.0
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,214 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>setting timed terminal event at 258.0
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,224 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;69.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>imaged Target(tgt-46)
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,224 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;69.00&gt; </span>Total reward: {&#39;EO_3&#39;: 0.36322604160711547}
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,225 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;69.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Satellite EO_3 requires retasking
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,226 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;69.00&gt; </span>Step reward: 0.36322604160711547
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">observation</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(array([ 5.54838889e-01, -1.21052632e-02,  3.96518779e-01,  3.43700679e-04,
+         4.00618298e-01,  5.73864178e-03,  8.87507488e-01,  1.11297820e-02,
+         6.05191815e-01,  1.86273449e-02,  6.99271722e-01,  4.17283986e-02,
+         4.11556970e-01,  3.49191309e-02,  6.35378469e-01,  3.13112621e-02,
+         3.90265899e-01,  3.54808930e-02,  4.75131738e-01,  4.01741207e-02]),
+ array([ 0.09565391, -0.01210526,  0.57807873, -0.01210526,  0.79438897,
+        -0.01210526,  0.71649669,  0.00454153,  0.6945792 , -0.01210526,
+         0.17517995, -0.0110013 ,  0.54347646, -0.00147769,  0.09128502,
+        -0.00242772,  0.27945702,  0.02346577,  0.96329673,  0.03561796]),
+ array([ 0.74792683,  0.00824828,  0.67173192, -0.01202916,  0.29799914,
+         0.00203726,  0.82997368, -0.00999403,  0.60402212,  0.00318044,
+         0.6292962 ,  0.01252983,  0.97245257,  0.00457631,  0.43840897,
+         0.02776229,  0.3349179 ,  0.02453297,  0.25897984,  0.03807899]))
+</pre></div></div>
+</div>
+<p>At this point, either every satellite can be retasked, or satellites can continue their previous action by passing <code class="docutils literal notranslate"><span class="pre">None</span></code> as the action. To see which satellites must be retasked (i.e. their previous action is done and they have nothing more to do), look at <code class="docutils literal notranslate"><span class="pre">&quot;requires_retasking&quot;</span></code> in each satellite’s info.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">info</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;EO_1&#39;: {&#39;requires_retasking&#39;: False},
+ &#39;EO_2&#39;: {&#39;requires_retasking&#39;: False},
+ &#39;EO_3&#39;: {&#39;requires_retasking&#39;: True},
+ &#39;d_ts&#39;: 69.0}
+</pre></div></div>
+</div>
+<p>Based on this list, we decide here to only retask the satellite that needs it.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">actions</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="mi">0</span> <span class="k">if</span> <span class="n">info</span><span class="p">[</span><span class="n">sat</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="s2">"requires_retasking"</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellites</span>
+<span class="p">]</span>
+<span class="n">actions</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[None, None, 0]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,239 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;69.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,240 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;69.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>target index 0 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,240 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;69.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Target(tgt-415) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,241 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;69.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Target(tgt-415) window enabled: 116.0 to 184.6
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,241 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;69.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>setting timed terminal event at 184.6
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,248 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>imaged Target(tgt-415)
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,249 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span>Total reward: {&#39;EO_3&#39;: 0.7479268319313249}
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,249 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Satellite EO_3 requires retasking
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,251 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span>Step reward: 0.7479268319313249
+</pre></div></div>
+</div>
+<p>In this environment, the environment will stop if any agent dies. To demonstrate this, one satellite is forcibly killed.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">messaging</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">isnt_alive</span><span class="p">(</span><span class="n">log_failure</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Mock satellite 0 dying."""</span>
+    <span class="bp">self</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">death_message</span> <span class="o">=</span> <span class="n">messaging</span><span class="o">.</span><span class="n">PowerStorageStatusMsgPayload</span><span class="p">()</span>
+    <span class="n">death_message</span><span class="o">.</span><span class="n">storageLevel</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">powerMonitor</span><span class="o">.</span><span class="n">batPowerOutMsg</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">death_message</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">is_alive</span><span class="p">(</span><span class="n">log_failure</span><span class="o">=</span><span class="n">log_failure</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">is_alive</span><span class="p">(</span>
+        <span class="n">log_failure</span><span class="o">=</span><span class="n">log_failure</span>
+    <span class="p">)</span>
+
+
+<span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_alive</span> <span class="o">=</span> <span class="n">isnt_alive</span>
+<span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">([</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,255 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,255 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>target index 6 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,255 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Target(tgt-50) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,256 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Target(tgt-50) window enabled: 247.5 to 406.2
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,256 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>setting timed terminal event at 406.2
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,257 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>target index 7 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,257 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>Target(tgt-495) window enabled: 272.0 to 423.0
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,258 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>setting timed terminal event at 423.0
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,258 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>target index 9 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,258 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Target(tgt-728) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,259 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Target(tgt-728) window enabled: 395.4 to 532.9
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,259 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;119.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>setting timed terminal event at 532.9
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,274 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;250.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>imaged Target(tgt-50)
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,275 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;250.00&gt; </span>Total reward: {&#39;EO_1&#39;: 0.6353784689053376}
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,276 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;250.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Satellite EO_1 requires retasking
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,277 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;250.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,278 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;250.00&gt; </span>Step reward: -0.36462153109466244
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,278 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;250.00&gt; </span>Episode terminated: True
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,278 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;250.00&gt; </span>Episode truncated: False
+</pre></div></div>
+</div>
+</section>
+<section id="PettingZoo-API">
+<h2>PettingZoo API<a class="headerlink" href="#PettingZoo-API" title="Link to this heading"></a></h2>
+<p>The <a class="reference external" href="https://pettingzoo.farama.org/api/parallel/">PettingZoo parallel API</a> environment, ConstellationTasking, is largely the same as GeneralSatelliteTasking. See their documentation for a full description of the API. It tends to separate things into dictionaries keyed by agent, rather than tuples.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConstellationTasking</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">ConstellationTasking</span><span class="p">(</span>
+    <span class="n">satellites</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">ImagingSatellite</span><span class="p">(</span><span class="s2">"EO_1"</span><span class="p">,</span> <span class="n">sat_args</span><span class="p">),</span>
+        <span class="n">ImagingSatellite</span><span class="p">(</span><span class="s2">"EO_2"</span><span class="p">,</span> <span class="n">sat_args</span><span class="p">),</span>
+        <span class="n">ImagingSatellite</span><span class="p">(</span><span class="s2">"EO_3"</span><span class="p">,</span> <span class="n">sat_args</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">UniformTargets</span><span class="p">(</span><span class="mi">1000</span><span class="p">),</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+    <span class="n">communicator</span><span class="o">=</span><span class="n">comm</span><span class="o">.</span><span class="n">LOSCommunication</span><span class="p">(),</span>  <span class="c1"># Note that dyn must inherit from LOSCommunication</span>
+    <span class="n">sat_arg_randomizer</span><span class="o">=</span><span class="n">sat_arg_randomizer</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">"INFO"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="n">env</span><span class="o">.</span><span class="n">observation_spaces</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,283 </span>                               <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-intense-fg">Creating logger for new env on PID=4353. Old environments in process may now log times incorrectly.</span>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,285 </span>gym                            INFO       Resetting environment with seed=1695223587
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,286 </span>scene.targets                  INFO       Generating 1000 targets
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,321 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Finding opportunity windows from 0.00 to 600.00 seconds
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,337 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>Finding opportunity windows from 0.00 to 600.00 seconds
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,353 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Finding opportunity windows from 0.00 to 600.00 seconds
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,371 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Environment reset
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;EO_1&#39;: Box(-1e+16, 1e+16, (20,), float64),
+ &#39;EO_2&#39;: Box(-1e+16, 1e+16, (20,), float64),
+ &#39;EO_3&#39;: Box(-1e+16, 1e+16, (20,), float64)}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env</span><span class="o">.</span><span class="n">action_spaces</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;EO_1&#39;: Discrete(10), &#39;EO_2&#39;: Discrete(10), &#39;EO_3&#39;: Discrete(10)}
+</pre></div></div>
+</div>
+<p>Actions are passed as a dictionary; the agent names can be accessed through the <code class="docutils literal notranslate"><span class="pre">agents</span></code> property.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="mi">7</span><span class="p">,</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="mi">9</span><span class="p">,</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,379 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,379 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>target index 7 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,379 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Target(tgt-258) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,380 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Target(tgt-258) window enabled: 238.5 to 393.7
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,380 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>setting timed terminal event at 393.7
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,381 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>target index 9 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,381 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>Target(tgt-862) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,382 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>Target(tgt-862) window enabled: 202.3 to 392.4
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,382 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>setting timed terminal event at 392.4
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,382 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>target index 8 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,383 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Target(tgt-322) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,383 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Target(tgt-322) window enabled: 185.7 to 383.5
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,384 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>setting timed terminal event at 383.5
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,405 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>imaged Target(tgt-322)
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,406 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span>Total reward: {&#39;EO_3&#39;: 0.27063871580842536}
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,407 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Satellite EO_3 requires retasking
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,408 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>Finding opportunity windows from 600.00 to 1200.00 seconds
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,425 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span>Step reward: {&#39;EO_3&#39;: 0.27063871580842536}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">observation</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;EO_1&#39;: array([ 0.53291125, -0.03025384,  0.91776037, -0.01668187,  0.81167823,
+        -0.01201434,  0.7783906 ,  0.00123209,  0.67792725,  0.00106611,
+         0.72246119,  0.00885151,  0.23344019,  0.04980685,  0.61727075,
+         0.0689083 ,  0.7128729 ,  0.06701304,  0.77136137,  0.06106554]),
+ &#39;EO_2&#39;: array([ 0.23592454, -0.01434972,  0.51814557, -0.02879151,  0.54066821,
+         0.0200837 ,  0.24121457, -0.00243385,  0.96926913,  0.00251162,
+         0.43603718,  0.0146898 ,  0.04167836,  0.05520686,  0.70880415,
+         0.06661947,  0.93100359,  0.08954977,  0.35736168,  0.09027651]),
+ &#39;EO_3&#39;: array([ 0.48004245, -0.01330987,  0.17601787, -0.01254677,  0.47938225,
+        -0.00844393,  0.85902157, -0.00795876,  0.42546797,  0.01229061,
+         0.22918905,  0.0372347 ,  0.82992061,  0.04652148,  0.37617259,
+         0.04192761,  0.3683573 ,  0.06880267,  0.55170211,  0.0630848 ])}
+</pre></div></div>
+</div>
+<p>Other than compatibility with MARL algorithms, the main benefit of the PettingZoo API is that it allows for individual agents to fail without terminating the entire environment.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Immediately kill satellite 0</span>
+<span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_alive</span> <span class="o">=</span> <span class="n">isnt_alive</span>
+<span class="n">env</span><span class="o">.</span><span class="n">agents</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&#39;EO_1&#39;, &#39;EO_2&#39;, &#39;EO_3&#39;]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="mi">7</span><span class="p">,</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="mi">9</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,435 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,436 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>target index 7 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,436 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Target(tgt-117) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,437 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Target(tgt-117) window enabled: 580.8 to 600.0
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,437 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>setting timed terminal event at 600.0
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,437 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>target index 9 tasked
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,438 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>Target(tgt-912) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,438 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>Target(tgt-912) window enabled: 702.6 to 887.4
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,438 </span><span class="ansi-green-intense-fg">sats.satellite.EO_2            </span>INFO       <span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-green-intense-fg">EO_2: </span>setting timed terminal event at 887.4
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,439 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;188.00&gt; </span><span class="ansi-blue-fg">EO_3: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,461 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;384.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>timed termination at 383.5 for Target(tgt-322) window
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,463 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;384.00&gt; </span>Total reward: {}
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,463 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;384.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Satellite EO_3 requires retasking
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,464 </span><span class="ansi-cyan-fg">sats.satellite.EO_1            </span>INFO       <span class="ansi-yellow-fg">&lt;384.00&gt; </span><span class="ansi-cyan-fg">EO_1: </span>Finding opportunity windows from 600.00 to 1200.00 seconds
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,481 </span><span class="ansi-blue-fg">sats.satellite.EO_3            </span>INFO       <span class="ansi-yellow-fg">&lt;384.00&gt; </span><span class="ansi-blue-fg">EO_3: </span>Finding opportunity windows from 600.00 to 1200.00 seconds
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,502 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;384.00&gt; </span>Step reward: {&#39;EO_1&#39;: -1.0}
+<span class="ansi-black-intense-fg">2026-10-09 20:35:35,503 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;384.00&gt; </span>Episode terminated: [&#39;EO_1&#39;]
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="satellite_configuration.html" class="btn btn-neutral float-left" title="Satellite Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fault_environment.html" class="btn btn-neutral float-right" title="Fault Environment Example" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

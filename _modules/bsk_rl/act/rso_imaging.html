@@ -1,0 +1,261 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bsk_rl.act.rso_imaging &mdash; BSK-RL v1.3.6 1.3.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=70d8fd07"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            BSK-RL v1.3.6
+              <img src="../../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BSK-RL v1.3.6</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bsk_rl.act.rso_imaging</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bsk_rl.act.rso_imaging</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Discrete actions for independent RSO spacecraft imaging."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">macros</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.act.discrete_actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiscreteAction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.rso_imaging</span><span class="w"> </span><span class="kn">import</span> <span class="n">candidate_snapshot</span>
+
+
+<div class="viewcode-block" id="ImageRSO">
+<a class="viewcode-back" href="../../../api_reference/act/rso_imaging.html#bsk_rl.act.ImageRSO">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ImageRSO</span><span class="p">(</span><span class="n">DiscreteAction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Image one of the observed candidate slots, or explicitly task a catalog ID.</span>
+
+<span class="sd">    Uses :class:`~bsk_rl.sim.fsw.SpaceToSpaceImagingFSWModel` to track a whole</span>
+<span class="sd">    spacecraft. For surface inspection of a nearby RSO, see</span>
+<span class="sd">    :class:`~bsk_rl.sim.fsw.RSOInspectorFSWModel`. An empty candidate slot raises</span>
+<span class="sd">    ``ValueError``; it never tasks a duplicated or padded target.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_ahead_image</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">max_duration</span><span class="o">=</span><span class="mf">300.0</span><span class="p">,</span>
+        <span class="n">min_pointing_hold_s</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+        <span class="n">hold_mode</span><span class="o">=</span><span class="s2">"cumulative"</span><span class="p">,</span>
+        <span class="n">require_illumination_during_hold</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">hold_illumination_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">variable_duration_imaging</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"image_rso"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Configure candidate count, deadline [s], hold [s], and quality gate."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n_ahead_image</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">n_ahead_image</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Candidate count must be a positive integer."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">max_duration</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">max_duration</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">min_pointing_hold_s</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">min_pointing_hold_s</span> <span class="o">&lt;</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Duration must be positive and hold nonnegative."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hold_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"cumulative"</span><span class="p">,</span> <span class="s2">"continuous"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Hold mode must be cumulative or continuous."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">hold_illumination_threshold</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Illumination threshold must be in [0, 1]."</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">n_ahead_image</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_duration</span> <span class="o">=</span> <span class="n">max_duration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_pointing_hold_s</span> <span class="o">=</span> <span class="n">min_pointing_hold_s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hold_mode</span> <span class="o">=</span> <span class="n">hold_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">require_illumination_during_hold</span> <span class="o">=</span> <span class="n">require_illumination_during_hold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hold_illumination_threshold</span> <span class="o">=</span> <span class="n">hold_illumination_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variable_duration_imaging</span> <span class="o">=</span> <span class="n">variable_duration_imaging</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_overwrite_previous</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ImageRSO.reset_overwrite_previous">
+<a class="viewcode-back" href="../../../api_reference/act/rso_imaging.html#bsk_rl.act.ImageRSO.reset_overwrite_previous">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_overwrite_previous</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Drop event names and per-episode selection history."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chosen_target_ids</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">rso_scenario</span><span class="o">.</span><span class="n">is_eligible</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"RSO target is pending or in cooldown."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">eventMap</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">delete_event</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_name</span><span class="p">)</span>
+        <span class="n">fsw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">fsw</span>
+        <span class="n">fsw</span><span class="o">.</span><span class="n">action_image_rso</span><span class="p">(</span>
+            <span class="n">target</span><span class="p">,</span>
+            <span class="n">duration</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_duration</span><span class="p">,</span>
+            <span class="n">hold_s</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pointing_hold_s</span><span class="p">,</span>
+            <span class="n">hold_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hold_mode</span><span class="p">,</span>
+            <span class="n">require_illumination</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">require_illumination_during_hold</span><span class="p">,</span>
+            <span class="n">illumination_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hold_illumination_threshold</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chosen_target_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">update_timed_terminal_event</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_duration</span><span class="p">,</span>
+            <span class="n">info</span><span class="o">=</span><span class="s2">"RSO imaging deadline"</span><span class="p">,</span>
+            <span class="n">extra_actions</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sim</span><span class="p">:</span> <span class="n">fsw</span><span class="o">.</span><span class="n">rso_capture</span><span class="o">.</span><span class="n">cancel</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_duration_imaging</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"rso_image_success_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">createNewEvent</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">event_name</span><span class="p">,</span>
+                <span class="n">macros</span><span class="o">.</span><span class="n">sec2nano</span><span class="p">(</span><span class="n">fsw</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">dyn_rate</span><span class="p">),</span>
+                <span class="kc">True</span><span class="p">,</span>
+                <span class="n">conditionFunction</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sim</span><span class="p">:</span> <span class="n">fsw</span><span class="o">.</span><span class="n">rso_capture</span><span class="o">.</span><span class="n">check_capture</span><span class="p">(),</span>
+                <span class="n">actionFunction</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sim</span><span class="p">:</span> <span class="nb">setattr</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">,</span> <span class="s2">"requires_retasking"</span><span class="p">,</span> <span class="kc">True</span>
+                <span class="p">),</span>
+                <span class="n">terminal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">variable_interval</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span>
+
+<div class="viewcode-block" id="ImageRSO.set_action">
+<a class="viewcode-back" href="../../../api_reference/act/rso_imaging.html#bsk_rl.act.ImageRSO.set_action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Decode the same ordered snapshot used to construct observations."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">action</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_actions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"RSO imaging action index out of range."</span><span class="p">)</span>
+        <span class="n">snapshot</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">,</span> <span class="s2">"_rso_candidate_snapshot"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">snapshot</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">snapshot</span> <span class="o">=</span> <span class="n">candidate_snapshot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_actions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">snapshot</span><span class="o">.</span><span class="n">time</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span>
+            <span class="ow">or</span> <span class="n">snapshot</span><span class="o">.</span><span class="n">revision</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">rso_scenario</span><span class="o">.</span><span class="n">revision</span>
+        <span class="p">):</span>
+            <span class="c1"># Attribute the warning to the caller selecting this action.</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">"RSO candidates changed since the observation; attempting the "</span>
+                <span class="s2">"original target ID. Obtain a fresh observation for current candidates."</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">snapshot</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_actions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"RSO snapshot does not contain all action candidates."</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">snapshot</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="n">action</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"RSO imaging action selected an empty candidate slot."</span><span class="p">)</span>
+        <span class="c1"># Preserve the observed slot's ID while using its current episode binding.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">rso_scenario</span><span class="o">.</span><span class="n">targets_by_id</span><span class="p">[</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"The observed RSO target is no longer in the scenario."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task</span><span class="p">(</span><span class="n">target</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImageRSO.set_action_override">
+<a class="viewcode-back" href="../../../api_reference/act/rso_imaging.html#bsk_rl.act.ImageRSO.set_action_override">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_action_override</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">prev_action_key</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Task an explicitly identified target without parsing spacecraft names."""</span>
+        <span class="n">target_id</span> <span class="o">=</span> <span class="n">action</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"id"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">target_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Expected an RSO target ID or RSOTarget definition."</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">rso_scenario</span><span class="o">.</span><span class="n">targets_by_id</span><span class="p">[</span><span class="n">target_id</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown RSO target </span><span class="si">{</span><span class="n">target_id</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task</span><span class="p">(</span><span class="n">target</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">__doc_title__</span> <span class="o">=</span> <span class="s2">"Space-to-Space RSO Imaging"</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"ImageRSO"</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

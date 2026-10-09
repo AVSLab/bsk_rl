@@ -1,0 +1,842 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>examples.space_to_space_rso_imaging_evaluation &mdash; BSK-RL v1.3.6 1.3.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=70d8fd07"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BSK-RL v1.3.6
+              <img src="../../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BSK-RL v1.3.6</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">examples.space_to_space_rso_imaging_evaluation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for examples.space_to_space_rso_imaging_evaluation</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Evaluate an RSO imaging policy and save a replayable mission and plots.</span>
+
+<span class="sd">Run ``python examples/space_to_space_rso_imaging_evaluation.py --help``.</span>
+<span class="sd">The default priority baseline needs no checkpoint or learning framework.</span>
+<span class="sd">Matplotlib is optional with ``--no-plots``. The</span>
+<span class="sd">:doc:`space-to-space imaging notebook &lt;space_to_space_rso_imaging&gt;` explains</span>
+<span class="sd">the environment, reward callbacks, replay, and policy adapters.</span>
+
+<span class="sd">The priority, nearest-target, and random baselines first manage battery charge,</span>
+<span class="sd">wheel speed, and stored images. They then choose an accessible, illuminated</span>
+<span class="sd">candidate. A saved catalog fixes target states, while a mission manifest also</span>
+<span class="sd">fixes the imager, world, and action/reward settings. Output CSV files distinguish</span>
+<span class="sd">attempts, physically stored acquisitions, and fully completed deliveries.</span>
+
+<span class="sd">The RLlib adapter loads one PyTorch RLModule for inference. Custom policies use</span>
+<span class="sd">``module:function`` factories returning ``policy(observation, context)``.</span>
+<span class="sd">The context includes stable candidate IDs, physical access, resources, and action</span>
+<span class="sd">indices. Empty slots remain empty. See the notebook for runnable commands.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.metadata</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">act</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">scene</span>
+
+<span class="k">if</span> <span class="n">__package__</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.space_to_space_rso_imaging_demo</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">build_environment</span><span class="p">,</span>
+        <span class="n">make_catalog</span><span class="p">,</span>
+        <span class="n">mission_manifest</span><span class="p">,</span>
+        <span class="n">replay_environment</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">space_to_space_rso_imaging_demo</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">build_environment</span><span class="p">,</span>
+        <span class="n">make_catalog</span><span class="p">,</span>
+        <span class="n">mission_manifest</span><span class="p">,</span>
+        <span class="n">replay_environment</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="checkpoint_fingerprint">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_evaluation.html#examples.space_to_space_rso_imaging_evaluation.checkpoint_fingerprint">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">checkpoint_fingerprint</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Hash an exact checkpoint file or directory without loading its contents."""</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">[</span><span class="n">root</span><span class="p">]</span> <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*"</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">())</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Checkpoint contains no files."</span><span class="p">)</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+        <span class="o">+</span> <span class="s2">"  "</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="n">file</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+        <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span>
+        <span class="n">tree_sha256</span><span class="o">=</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">(),</span>
+        <span class="n">hash_algorithm</span><span class="o">=</span><span class="s2">"SHA256 of sorted file-SHA256, two spaces, relative path, newline"</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="decision_context">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_evaluation.html#examples.space_to_space_rso_imaging_evaluation.decision_context">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">decision_context</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">imager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Expose IDs and physical diagnostics without changing observation columns."""</span>
+    <span class="n">target_observation</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+        <span class="n">spec</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">imager</span><span class="o">.</span><span class="n">observation_builder</span><span class="o">.</span><span class="n">observation_spec</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">RSOTargetProperties</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">candidates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">target_observation</span><span class="o">.</span><span class="n">get_obs</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">slot</span><span class="p">,</span> <span class="n">target_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">target_observation</span><span class="o">.</span><span class="n">candidate_ids</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">target_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">targets_by_id</span><span class="p">[</span><span class="n">target_id</span><span class="p">]</span>
+        <span class="n">dynamics</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">target_spacecraft</span><span class="o">.</span><span class="n">dynamics</span>
+        <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">,</span>
+                <span class="n">priority</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+                <span class="n">distance_m</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_N</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_N</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">illumination</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">slot</span><span class="p">][</span><span class="s2">"target_illumination_factor"</span><span class="p">]),</span>
+                <span class="n">has_access</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span>
+                    <span class="n">imager</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">rso_access_messages</span><span class="p">[</span><span class="n">target_id</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">hasAccess</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">imager</span><span class="o">.</span><span class="n">action_builder</span><span class="o">.</span><span class="n">action_spec</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">n_actions</span><span class="p">):</span>
+            <span class="n">actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span>
+                    <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">candidate_slot</span><span class="o">=</span><span class="n">slot</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">act</span><span class="o">.</span><span class="n">ImageRSO</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">time_s</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">),</span>
+        <span class="n">imager_name</span><span class="o">=</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">candidates</span><span class="o">=</span><span class="n">candidates</span><span class="p">,</span>
+        <span class="n">actions</span><span class="o">=</span><span class="n">actions</span><span class="p">,</span>
+        <span class="n">storage_bits</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">storage_level</span><span class="p">),</span>
+        <span class="n">battery_fraction</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">battery_charge_fraction</span><span class="p">),</span>
+        <span class="n">wheel_fraction</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">wheel_speeds_fraction</span><span class="p">))),</span>
+        <span class="n">quality_threshold</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">quality_threshold</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="baseline_policy">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_evaluation.html#examples.space_to_space_rso_imaging_evaluation.baseline_policy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">baseline_policy</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Use resource guards, downlink stored products, then select an image slot."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">policy</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">modes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">action</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">context</span><span class="p">[</span><span class="s2">"actions"</span><span class="p">])</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">context</span><span class="p">[</span><span class="s2">"battery_fraction"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">modes</span><span class="p">[</span><span class="s2">"Charge"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">context</span><span class="p">[</span><span class="s2">"wheel_fraction"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.8</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">modes</span><span class="p">[</span><span class="s2">"Desat"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">context</span><span class="p">[</span><span class="s2">"storage_bits"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">modes</span><span class="p">[</span><span class="s2">"Downlink"</span><span class="p">]</span>
+        <span class="n">eligible</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">index</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">context</span><span class="p">[</span><span class="s2">"actions"</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">action</span><span class="p">[</span><span class="s2">"candidate_slot"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="p">(</span><span class="n">candidate</span> <span class="o">:=</span> <span class="n">context</span><span class="p">[</span><span class="s2">"candidates"</span><span class="p">][</span><span class="n">action</span><span class="p">[</span><span class="s2">"candidate_slot"</span><span class="p">]])</span>
+            <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">candidate</span><span class="p">[</span><span class="s2">"has_access"</span><span class="p">]</span>
+            <span class="ow">and</span> <span class="n">candidate</span><span class="p">[</span><span class="s2">"illumination"</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">context</span><span class="p">[</span><span class="s2">"quality_threshold"</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">eligible</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">modes</span><span class="p">[</span><span class="s2">"Charge"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"random"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">eligible</span><span class="p">))</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">ranking</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+            <span class="n">candidate</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">"candidates"</span><span class="p">][</span>
+                <span class="n">context</span><span class="p">[</span><span class="s2">"actions"</span><span class="p">][</span><span class="n">index</span><span class="p">][</span><span class="s2">"candidate_slot"</span><span class="p">]</span>
+            <span class="p">]</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="o">-</span><span class="n">candidate</span><span class="p">[</span><span class="s2">"priority"</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"priority"</span>
+                <span class="k">else</span> <span class="n">candidate</span><span class="p">[</span><span class="s2">"distance_m"</span><span class="p">],</span>
+                <span class="n">index</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">eligible</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">ranking</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">policy</span></div>
+
+
+
+<div class="viewcode-block" id="load_policy">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_evaluation.html#examples.space_to_space_rso_imaging_evaluation.load_policy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_policy</span><span class="p">(</span>
+    <span class="n">kind</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">imager</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">factory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stochastic</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Load a stateless discrete policy, without creating workers or an algorithm."""</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"priority"</span><span class="p">,</span> <span class="s2">"nearest"</span><span class="p">,</span> <span class="s2">"random"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">or</span> <span class="n">factory</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Checkpoint/factory options require rllib/custom policy."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">baseline_policy</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"custom"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">factory</span> <span class="ow">or</span> <span class="s2">":"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">factory</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Custom policies require --policy-factory module:function or file.py:function."</span>
+            <span class="p">)</span>
+        <span class="n">module_name</span><span class="p">,</span> <span class="n">function_name</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">module_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".py"</span><span class="p">):</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">spec_from_file_location</span><span class="p">(</span>
+                <span class="s2">"rso_user_policy"</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">exec_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+        <span class="n">policy</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">function_name</span><span class="p">)(</span>
+            <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
+            <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span>
+            <span class="n">checkpoint</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span>
+            <span class="n">stochastic</span><span class="o">=</span><span class="n">stochastic</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">policy</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">"Policy factory must return a callable policy(observation, context)."</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">wrapped</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">policy</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="n">wrapped</span><span class="o">.</span><span class="n">provenance</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">adapter_source</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">),</span>
+            <span class="n">adapter_sha256</span><span class="o">=</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">policy</span><span class="p">,</span> <span class="s2">"close"</span><span class="p">):</span>
+            <span class="n">wrapped</span><span class="o">.</span><span class="n">close</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">close</span>
+        <span class="k">return</span> <span class="n">wrapped</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">!=</span> <span class="s2">"rllib"</span> <span class="ow">or</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"RLlib policies require an exact RLModule directory via --checkpoint."</span>
+        <span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.core.columns</span><span class="w"> </span><span class="kn">import</span> <span class="n">Columns</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.core.rl_module.rl_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">RLModule</span>
+
+    <span class="n">module</span> <span class="o">=</span> <span class="n">RLModule</span><span class="o">.</span><span class="n">from_checkpoint</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">"This adapter supports PyTorch RLModules only; use a custom adapter otherwise."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">is_stateful</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Recurrent modules require a custom policy adapter."</span><span class="p">)</span>
+    <span class="c1"># Ray 2.35 stores spaces on config; newer modules expose them directly.</span>
+    <span class="n">spaces</span> <span class="o">=</span> <span class="n">module</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">"observation_space"</span><span class="p">)</span> <span class="k">else</span> <span class="n">module</span><span class="o">.</span><span class="n">config</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">spaces</span><span class="o">.</span><span class="n">observation_space</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">imager</span><span class="o">.</span><span class="n">observation_space</span><span class="o">.</span><span class="n">shape</span>
+        <span class="ow">or</span> <span class="n">spaces</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">n</span> <span class="o">!=</span> <span class="n">imager</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">n</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Checkpoint observation/action spaces do not match the environment profile."</span>
+        <span class="p">)</span>
+    <span class="n">module</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>  <span class="c1"># Disable training-time dropout as well as gradient recording.</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">policy</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">inference_mode</span><span class="p">():</span>
+            <span class="n">vector</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">forward_inference</span><span class="p">({</span><span class="n">Columns</span><span class="o">.</span><span class="n">OBS</span><span class="p">:</span> <span class="n">vector</span><span class="p">})</span>
+            <span class="n">logits</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">Columns</span><span class="o">.</span><span class="n">ACTION_DIST_INPUTS</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">logits</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">imager</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">n</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Expected finite discrete logits with shape (1, action_count)."</span>
+            <span class="p">)</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="n">logits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">stochastic</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">))</span>
+        <span class="n">probabilities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">logits</span> <span class="o">-</span> <span class="n">logits</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">logits</span><span class="p">),</span> <span class="n">p</span><span class="o">=</span><span class="n">probabilities</span> <span class="o">/</span> <span class="n">probabilities</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span>
+
+    <span class="n">policy</span><span class="o">.</span><span class="n">provenance</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">importlib</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"ray"</span><span class="p">,</span> <span class="s2">"torch"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">policy</span></div>
+
+
+
+<div class="viewcode-block" id="validate_action">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_evaluation.html#examples.space_to_space_rso_imaging_evaluation.validate_action">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_action</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Reject malformed, out-of-range and padded actions without substitution."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">action</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Policy must return an integer discrete action."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">action</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">context</span><span class="p">[</span><span class="s2">"actions"</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Policy action is outside the environment action space."</span><span class="p">)</span>
+    <span class="n">slot</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">"actions"</span><span class="p">][</span><span class="n">action</span><span class="p">][</span><span class="s2">"candidate_slot"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">slot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">context</span><span class="p">[</span><span class="s2">"candidates"</span><span class="p">][</span><span class="n">slot</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Policy selected a padded image slot; no real target was substituted."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">action</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="write_csv">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_evaluation.html#examples.space_to_space_rso_imaging_evaluation.write_csv">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">fields</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Keep empty event tables readable with the same explicit schema."""</span>
+    <span class="k">with</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"w"</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">fieldnames</span><span class="o">=</span><span class="n">fields</span><span class="p">)</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_results">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_evaluation.html#examples.space_to_space_rso_imaging_evaluation.plot_results">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_results</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">decisions</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot physical products, credited rewards, resources, and action intervals."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">"Agg"</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+    <span class="n">times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="s2">"time_s"</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">states</span><span class="p">])</span> <span class="o">/</span> <span class="mi">60</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">attempt_times</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">row</span><span class="p">[</span><span class="s2">"start_s"</span><span class="p">]</span> <span class="o">/</span> <span class="mi">60</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">decisions</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"target_id"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">]</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">attempt_times</span><span class="p">,</span> <span class="n">times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">*</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">attempt_times</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">attempt_times</span><span class="p">)],</span>
+        <span class="n">where</span><span class="o">=</span><span class="s2">"post"</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">"Imaging attempts"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"captures"</span><span class="p">,</span> <span class="s2">"Acquired images"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"deliveries"</span><span class="p">,</span> <span class="s2">"Completed deliveries"</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">states</span><span class="p">],</span> <span class="n">where</span><span class="o">=</span><span class="s2">"post"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Cumulative count"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"acquisition_reward"</span><span class="p">,</span> <span class="s2">"Acquisition"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"delivery_reward"</span><span class="p">,</span> <span class="s2">"Delivery"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"total_reward"</span><span class="p">,</span> <span class="s2">"Total (including penalties)"</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">states</span><span class="p">],</span> <span class="n">where</span><span class="o">=</span><span class="s2">"post"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Cumulative reward"</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+        <span class="n">times</span><span class="p">,</span>
+        <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">"storage_bits"</span><span class="p">]</span> <span class="o">/</span> <span class="mf">1e6</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">states</span><span class="p">],</span>
+        <span class="n">where</span><span class="o">=</span><span class="s2">"post"</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">"Onboard images"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Storage [Mbit]"</span><span class="p">)</span>
+    <span class="n">resource_axis</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+    <span class="n">resource_axis</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="n">times</span><span class="p">,</span>
+        <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">"battery_fraction"</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">states</span><span class="p">],</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">"tab:orange"</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">"Battery"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">resource_axis</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="n">times</span><span class="p">,</span>
+        <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">"wheel_fraction"</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">states</span><span class="p">],</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">"tab:green"</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">"Max wheel fraction"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">resource_axis</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Resource fraction"</span><span class="p">)</span>
+    <span class="n">resource_axis</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper right"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">:</span>
+        <span class="n">axis</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+        <span class="n">axis</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper left"</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Simulation time [min]"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"png"</span><span class="p">,</span> <span class="s2">"pdf"</span><span class="p">):</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"performance.</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">160</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+    <span class="n">modes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"action_type"</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">decisions</span><span class="p">))</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">decisions</span><span class="p">:</span>
+        <span class="n">axis</span><span class="o">.</span><span class="n">broken_barh</span><span class="p">(</span>
+            <span class="p">[(</span><span class="n">row</span><span class="p">[</span><span class="s2">"start_s"</span><span class="p">]</span> <span class="o">/</span> <span class="mi">60</span><span class="p">,</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"end_s"</span><span class="p">]</span> <span class="o">-</span> <span class="n">row</span><span class="p">[</span><span class="s2">"start_s"</span><span class="p">])</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)],</span>
+            <span class="p">(</span><span class="n">modes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"action_type"</span><span class="p">])</span> <span class="o">-</span> <span class="mf">0.35</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"target_id"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">axis</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">"start_s"</span><span class="p">]</span> <span class="o">/</span> <span class="mi">60</span><span class="p">,</span>
+                <span class="n">modes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"action_type"</span><span class="p">]),</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">"target_id"</span><span class="p">],</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                <span class="n">va</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">modes</span><span class="p">)),</span> <span class="n">modes</span><span class="p">)</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Simulation time [min]"</span><span class="p">)</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Commanded actions and selected target IDs"</span><span class="p">)</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"x"</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"png"</span><span class="p">,</span> <span class="s2">"pdf"</span><span class="p">):</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"actions.</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">160</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="evaluate">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_evaluation.html#examples.space_to_space_rso_imaging_evaluation.evaluate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span>
+    <span class="n">output</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">policy</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_steps</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">catalog_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">manifest_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">profile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">checkpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">factory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">stochastic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">plots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run one bounded episode; never overwrite an existing output directory.</span>
+
+<span class="sd">    Times/resources are sampled at decision boundaries. Capture timestamps come</span>
+<span class="sd">    from the physical gate; delivery timestamps are boundary recognition times.</span>
+<span class="sd">    Catalog replay alone fixes targets; mission replay fixes scanner/world too.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">horizon</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">horizon</span><span class="p">)</span> <span class="ow">or</span> <span class="n">horizon</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Horizon must be finite and positive."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_steps</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">max_steps</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"max_steps must be a positive integer."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">manifest_path</span> <span class="ow">and</span> <span class="p">(</span><span class="n">catalog_path</span> <span class="ow">or</span> <span class="n">profile</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"A mission manifest supplies its own catalog and profile."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">profile</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"compact"</span><span class="p">,</span> <span class="s2">"amos"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Unknown environment profile."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stochastic</span> <span class="ow">and</span> <span class="n">policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"rllib"</span><span class="p">,</span> <span class="s2">"custom"</span><span class="p">,</span> <span class="s2">"random"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Stochastic mode requires a stochastic policy adapter."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">plots</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>  <span class="c1"># noqa: F401 -- fail before simulation if extra is absent</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">output</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">selected_policy</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">states</span><span class="p">,</span> <span class="n">decisions</span><span class="p">,</span> <span class="n">observations</span><span class="p">,</span> <span class="n">capture_rows</span><span class="p">,</span> <span class="n">delivery_rows</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="n">summary</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s2">"error"</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
+        <span class="n">inference_mode</span><span class="o">=</span><span class="s2">"stochastic"</span>
+        <span class="k">if</span> <span class="n">stochastic</span> <span class="ow">or</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">"random"</span>
+        <span class="k">else</span> <span class="s2">"deterministic"</span><span class="p">,</span>
+        <span class="n">factory</span><span class="o">=</span><span class="n">factory</span><span class="p">,</span>
+        <span class="n">evaluator_source_sha256</span><span class="o">=</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">(),</span>
+        <span class="n">environment_source_sha256</span><span class="o">=</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">build_environment</span><span class="o">.</span><span class="vm">__module__</span><span class="p">]</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">(),</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">checkpoint</span><span class="p">:</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="s2">"checkpoint"</span><span class="p">]</span> <span class="o">=</span> <span class="n">checkpoint_fingerprint</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">manifest_path</span><span class="p">:</span>
+            <span class="n">saved</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">replay_environment</span><span class="p">(</span><span class="n">saved</span><span class="p">)</span>
+            <span class="n">limit</span> <span class="o">=</span> <span class="n">horizon</span> <span class="k">if</span> <span class="n">horizon</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">saved</span><span class="p">[</span><span class="s2">"time_limit_s"</span><span class="p">]</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">time_limit_generator</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">limit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">catalog</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">scene</span><span class="o">.</span><span class="n">RSOTargetCatalog</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">catalog_path</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">catalog_path</span>
+                <span class="k">else</span> <span class="n">make_catalog</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">build_environment</span><span class="p">(</span>
+                <span class="n">catalog</span><span class="p">,</span>
+                <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+                <span class="n">amos_profile</span><span class="o">=</span><span class="n">profile</span> <span class="o">==</span> <span class="s2">"amos"</span><span class="p">,</span>
+                <span class="n">time_limit</span><span class="o">=</span><span class="n">horizon</span> <span class="k">if</span> <span class="n">horizon</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">900</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">vectors</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">imagers</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"This evaluation example supports one imager per episode."</span><span class="p">)</span>
+        <span class="n">imager</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">imagers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">manifest</span> <span class="o">=</span> <span class="n">mission_manifest</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
+        <span class="n">manifest</span><span class="p">[</span><span class="s2">"policy_rng"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="s2">"numpy.PCG64"</span><span class="p">,</span> <span class="n">independent_of_mission_rng</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">catalog</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"catalog.json"</span><span class="p">)</span>
+        <span class="c1"># Keep provenance even if adapter loading fails.</span>
+        <span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"policy.json"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"mission.json"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">allow_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"initial_observation.npy"</span><span class="p">,</span> <span class="n">vectors</span><span class="p">[</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">selected_policy</span> <span class="o">=</span> <span class="n">load_policy</span><span class="p">(</span>
+            <span class="n">policy</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">imager</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">,</span> <span class="n">factory</span><span class="p">,</span> <span class="n">stochastic</span>
+        <span class="p">)</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">selected_policy</span><span class="p">,</span> <span class="s2">"provenance"</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"mission.json"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">allow_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="n">totals</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">acquisition_reward</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">delivery_reward</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">total_reward</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">attempts</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">():</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">decision_context</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">imager</span><span class="p">)</span>
+            <span class="n">states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span>
+                    <span class="n">time_s</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s2">"time_s"</span><span class="p">],</span>
+                    <span class="n">storage_bits</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s2">"storage_bits"</span><span class="p">],</span>
+                    <span class="n">battery_fraction</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s2">"battery_fraction"</span><span class="p">],</span>
+                    <span class="n">wheel_fraction</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s2">"wheel_fraction"</span><span class="p">],</span>
+                    <span class="n">attempts</span><span class="o">=</span><span class="n">attempts</span><span class="p">,</span>
+                    <span class="n">captures</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">captures</span><span class="p">),</span>
+                    <span class="n">deliveries</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">deliveries</span><span class="p">),</span>
+                    <span class="o">**</span><span class="n">totals</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">context</span>
+
+        <span class="n">context</span> <span class="o">=</span> <span class="n">sample</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_steps</span><span class="p">):</span>
+            <span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vectors</span><span class="p">[</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">action</span> <span class="o">=</span> <span class="n">validate_action</span><span class="p">(</span>
+                    <span class="n">selected_policy</span><span class="p">(</span><span class="n">vector</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">context</span><span class="p">),</span> <span class="n">context</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"failed_decision.json"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+                    <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="p">)</span>
+                <span class="k">raise</span>
+            <span class="n">descriptor</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">"actions"</span><span class="p">][</span><span class="n">action</span><span class="p">]</span>
+            <span class="n">slot</span> <span class="o">=</span> <span class="n">descriptor</span><span class="p">[</span><span class="s2">"candidate_slot"</span><span class="p">]</span>
+            <span class="n">target_id</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="kc">None</span> <span class="k">if</span> <span class="n">slot</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">context</span><span class="p">[</span><span class="s2">"candidates"</span><span class="p">][</span><span class="n">slot</span><span class="p">][</span><span class="s2">"target_id"</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">before_captures</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">captures</span><span class="p">)</span>
+            <span class="n">before_deliveries</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">deliveries</span><span class="p">)</span>
+            <span class="n">stage_priorities</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">target</span><span class="o">.</span><span class="n">priority</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">targets_by_id</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="n">commanded</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">sat</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span>
+                <span class="k">if</span> <span class="n">sat</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">imager</span><span class="o">.</span><span class="n">name</span> <span class="ow">and</span> <span class="n">sat</span><span class="o">.</span><span class="n">requires_retasking</span>
+            <span class="p">}</span>
+            <span class="n">commanded</span><span class="p">[</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">action</span>
+            <span class="n">vectors</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">commanded</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span> <span class="o">&lt;=</span> <span class="n">context</span><span class="p">[</span><span class="s2">"time_s"</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Simulation made no time progress."</span><span class="p">)</span>
+            <span class="n">attempts</span> <span class="o">+=</span> <span class="n">slot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">components</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">last_reward_components</span>
+            <span class="n">totals</span><span class="p">[</span><span class="s2">"acquisition_reward"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">components</span><span class="p">[</span><span class="s2">"acquisition"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mf">0.0</span>
+            <span class="p">)</span>
+            <span class="n">totals</span><span class="p">[</span><span class="s2">"delivery_reward"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">components</span><span class="p">[</span><span class="s2">"delivery"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">totals</span><span class="p">[</span><span class="s2">"total_reward"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">rewards</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">start_s</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s2">"time_s"</span><span class="p">],</span>
+                <span class="n">end_s</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sim_time</span><span class="p">),</span>
+                <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+                <span class="n">action_type</span><span class="o">=</span><span class="n">descriptor</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span>
+                <span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">,</span>
+                <span class="n">reward</span><span class="o">=</span><span class="n">rewards</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="n">acquisition_reward</span><span class="o">=</span><span class="n">components</span><span class="p">[</span><span class="s2">"acquisition"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="n">delivery_reward</span><span class="o">=</span><span class="n">components</span><span class="p">[</span><span class="s2">"delivery"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="n">candidate_ids</span><span class="o">=</span><span class="p">[</span>
+                    <span class="kc">None</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">item</span><span class="p">[</span><span class="s2">"target_id"</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">context</span><span class="p">[</span><span class="s2">"candidates"</span><span class="p">]</span>
+                <span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">decisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="n">observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vector</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">records</span><span class="p">,</span> <span class="n">previous</span><span class="p">,</span> <span class="n">destination</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">captures</span><span class="p">,</span> <span class="n">before_captures</span><span class="p">,</span> <span class="n">capture_rows</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">deliveries</span><span class="p">,</span> <span class="n">before_deliveries</span><span class="p">,</span> <span class="n">delivery_rows</span><span class="p">),</span>
+            <span class="p">):</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">records</span><span class="p">)</span> <span class="o">-</span> <span class="n">previous</span><span class="p">):</span>
+                    <span class="n">destination</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="nb">dict</span><span class="p">(</span>
+                            <span class="o">**</span><span class="n">asdict</span><span class="p">(</span><span class="n">records</span><span class="p">[</span><span class="n">key</span><span class="p">]),</span>
+                            <span class="n">stage_priority</span><span class="o">=</span><span class="n">stage_priorities</span><span class="p">[</span><span class="n">records</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">target_id</span><span class="p">],</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">sample</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">terminated</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">or</span> <span class="n">truncated</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+                <span class="n">summary</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">"terminated"</span> <span class="k">if</span> <span class="n">terminated</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"time_limit"</span>
+                <span class="p">)</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">summary</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"max_steps"</span>
+        <span class="n">summary</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">states</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">steps</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">decisions</span><span class="p">),</span>
+            <span class="n">pending_products</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">products</span><span class="p">),</span>
+            <span class="n">remaining_bits</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">imager</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">remaining_bits</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span>
+        <span class="p">)</span>
+        <span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"policy.json"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">summary</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">raise</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">write_csv</span><span class="p">(</span>
+            <span class="n">output</span> <span class="o">/</span> <span class="s2">"states.csv"</span><span class="p">,</span>
+            <span class="n">states</span><span class="p">,</span>
+            <span class="p">[</span>
+                <span class="s2">"time_s"</span><span class="p">,</span>
+                <span class="s2">"storage_bits"</span><span class="p">,</span>
+                <span class="s2">"battery_fraction"</span><span class="p">,</span>
+                <span class="s2">"wheel_fraction"</span><span class="p">,</span>
+                <span class="s2">"attempts"</span><span class="p">,</span>
+                <span class="s2">"captures"</span><span class="p">,</span>
+                <span class="s2">"deliveries"</span><span class="p">,</span>
+                <span class="s2">"acquisition_reward"</span><span class="p">,</span>
+                <span class="s2">"delivery_reward"</span><span class="p">,</span>
+                <span class="s2">"total_reward"</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">csv_decisions</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">candidate_ids</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"candidate_ids"</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">decisions</span>
+        <span class="p">]</span>
+        <span class="n">write_csv</span><span class="p">(</span>
+            <span class="n">output</span> <span class="o">/</span> <span class="s2">"decisions.csv"</span><span class="p">,</span>
+            <span class="n">csv_decisions</span><span class="p">,</span>
+            <span class="p">[</span>
+                <span class="s2">"start_s"</span><span class="p">,</span>
+                <span class="s2">"end_s"</span><span class="p">,</span>
+                <span class="s2">"action"</span><span class="p">,</span>
+                <span class="s2">"action_type"</span><span class="p">,</span>
+                <span class="s2">"target_id"</span><span class="p">,</span>
+                <span class="s2">"reward"</span><span class="p">,</span>
+                <span class="s2">"acquisition_reward"</span><span class="p">,</span>
+                <span class="s2">"delivery_reward"</span><span class="p">,</span>
+                <span class="s2">"candidate_ids"</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">event_fields</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">"record_id"</span><span class="p">,</span>
+            <span class="s2">"target_id"</span><span class="p">,</span>
+            <span class="s2">"source_imager"</span><span class="p">,</span>
+            <span class="s2">"capture_time"</span><span class="p">,</span>
+            <span class="s2">"size_bits"</span><span class="p">,</span>
+            <span class="s2">"quality"</span><span class="p">,</span>
+            <span class="s2">"hold_valid_time_s"</span><span class="p">,</span>
+            <span class="s2">"delivery_time"</span><span class="p">,</span>
+            <span class="s2">"stage_priority"</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">write_csv</span><span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"captures.csv"</span><span class="p">,</span> <span class="n">capture_rows</span><span class="p">,</span> <span class="n">event_fields</span><span class="p">)</span>
+        <span class="n">write_csv</span><span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"deliveries.csv"</span><span class="p">,</span> <span class="n">delivery_rows</span><span class="p">,</span> <span class="n">event_fields</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">observations</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"decision_observations.npy"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">observations</span><span class="p">))</span>
+        <span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"summary.json"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">allow_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">selected_policy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">selected_policy</span><span class="p">,</span> <span class="s2">"close"</span><span class="p">):</span>
+                <span class="n">selected_policy</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">plots</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">plot_results</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">decisions</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="n">summary</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="n">status</span><span class="o">=</span><span class="s2">"plot_error"</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+            <span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"summary.json"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">raise</span>
+    <span class="k">return</span> <span class="n">summary</span></div>
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../examples/space_to_space_rso_imaging_evaluation.html#examples.space_to_space_rso_imaging_evaluation.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Command-line entry point for a single reproducible evaluation."""</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--output"</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"New output directory; existing directories are rejected."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--policy"</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">"priority"</span><span class="p">,</span> <span class="s2">"nearest"</span><span class="p">,</span> <span class="s2">"random"</span><span class="p">,</span> <span class="s2">"rllib"</span><span class="p">,</span> <span class="s2">"custom"</span><span class="p">],</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"priority"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--seed"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--horizon"</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Simulation seconds; defaults to 900 or the replayed manifest horizon."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--max-steps"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">()</span>
+    <span class="n">inputs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--catalog"</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">"catalog_path"</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Fix target conditions; scanner/world still use example settings."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">inputs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--mission"</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">"manifest_path"</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Replay targets, scanner, world and configuration."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--profile"</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">"compact"</span><span class="p">,</span> <span class="s2">"amos"</span><span class="p">],</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"New mission observation/action profile; AMOS uses 124 features/13 actions."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--checkpoint"</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Exact RLModule directory or checkpoint passed to a custom adapter."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--policy-factory"</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">"factory"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Custom adapter factory as module:function or file.py:function."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--stochastic"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Sample RLlib logits using a separate seeded policy RNG."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--no-plots"</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">"plots"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_false"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Write data only; no Matplotlib dependency."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">evaluate</span><span class="p">(</span><span class="o">**</span><span class="nb">vars</span><span class="p">(</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">())),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

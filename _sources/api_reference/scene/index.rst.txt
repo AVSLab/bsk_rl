@@ -1,0 +1,26 @@
+.. _bsk_rl.scene:
+.. currentmodule:: bsk_rl.scene
+
+Scenario
+========
+
+
+
+.. automodule:: bsk_rl.scene
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   rso_points
+   rso_targets
+   targets
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
