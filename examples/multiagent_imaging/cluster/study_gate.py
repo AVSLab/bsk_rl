@@ -14,8 +14,8 @@ def digest(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 def source_gate(root=ROOT):
     manifest=json.loads((root/'completion-release.json').read_text())
-    for name,expected in manifest['source_sha256'].items():
-        if digest(root/name)!=expected:raise ValueError('Source mismatch: '+name)
+    from examples.multiagent_imaging.cluster.release_manifest import validate_study_manifest
+    validate_study_manifest(root, manifest)
     from examples.multiagent_imaging.config import MultiAgentImagingConfig
     from examples.multiagent_imaging.readiness import schema
     configs={}

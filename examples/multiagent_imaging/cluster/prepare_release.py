@@ -8,8 +8,8 @@ import subprocess
 import tarfile
 
 
-def prepare(output):
-    root = Path(__file__).resolve().parents[3]
+def prepare(output, *, root=None):
+    root = Path(root).resolve() if root is not None else Path(__file__).resolve().parents[3]
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=True)
     if any(output.iterdir()):
@@ -44,7 +44,11 @@ def prepare(output):
         (root / "src/bsk_rl", root / "examples/multiagent_imaging")
         for path in folder.rglob("*.py") if "__pycache__" not in path.parts
         and "evidence" not in path.parts]
-    names = sorted(set(names) | set(required_python))
+    # Evidence and bytecode are historical/runtime artifacts, not release source.
+    names = sorted(name for name in set(names) | set(required_python)
+                   if "evidence" not in Path(name).parts
+                   and "__pycache__" not in Path(name).parts
+                   and not name.endswith((".pyc", ".pyo")))
     hashes = {}
     with tarfile.open(output / "source-overlay.tar.gz", "w:gz") as archive:
         for name in sorted(set(names)):
@@ -77,6 +81,17 @@ def prepare(output):
             for name in ("base.bundle", "source-overlay.tar.gz", "deploy_release.sh")
         },
     )
+    from examples.multiagent_imaging.cluster.release_manifest import (
+        STUDY_CONFIGS, validate_study_manifest,
+    )
+    record["release_id"] = (
+        "multiagent-space-imaging-" + record["base_commit"][:12]
+        + "-" + record["archives"]["source-overlay.tar.gz"][:12]
+    )
+    record["config_sha256"] = {
+        arm: hashes[name] for arm, name in STUDY_CONFIGS.items()
+    }
+    validate_study_manifest(root, record)
     (output / "release.json").write_text(
         json.dumps(record, indent=2, sort_keys=True) + "\n"
     )
