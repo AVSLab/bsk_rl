@@ -5,6 +5,13 @@ Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
 
+* Add :class:`~bsk_rl.scene.MixedScenario` and :class:`~bsk_rl.data.MixedReward`
+  to combine independent scenarios and rewarders with different data types.
+  Explicit scenario and reward-channel IDs bind named satellite groups, including
+  overlapping assignments and passive target spacecraft. Communication shares
+  channel data while preserving local data production and reward attribution.
+  See :doc:`the mixed ground and space imaging example <examples/mixed_environment>`.
+
 * Add :doc:`the space-to-space imaging example <examples/space_to_space_rso_imaging>`
   for independently orbiting spacecraft:
   replayable RSO catalogs, explicitly named observers, moving-target access,

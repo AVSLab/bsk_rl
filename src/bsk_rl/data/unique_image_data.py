@@ -159,9 +159,11 @@ class UniqueImageReward(GlobalReward):
         """Override the access filter in addition to creating the data store."""
         super().create_data_store(satellite)
 
+        data_store = satellite.data_store
+
         def unique_target_filter(opportunity):
             if opportunity["type"] == "target":
-                return opportunity["object"] not in satellite.data_store.data.imaged
+                return opportunity["object"] not in data_store.data.imaged
             return True
 
         satellite.add_access_filter(unique_target_filter)
