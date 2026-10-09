@@ -1,0 +1,162 @@
+{
+  "version": "gnc-study-dashboard-v2",
+  "project": "gnc-multiagent-imaging",
+  "group": "walker4_t200_cd1_amosbest_<release-sha-prefix>",
+  "separate_runs": [
+    "catalog_tx",
+    "geometry_only"
+  ],
+  "continuation": "same saved ID, resume=must; preserve name/group",
+  "primary_x": "lifetime/true_decisions",
+  "secondary_x": [
+    "training/iteration",
+    "episode/index",
+    "status/elapsed_wall_h",
+    "status/lifetime_driver_wall_h"
+  ],
+  "colors": {
+    "catalog_tx": {
+      "map": "plasma",
+      "shades": [
+        0.22,
+        0.42,
+        0.62,
+        0.82
+      ],
+      "linestyle": "-"
+    },
+    "geometry_only": {
+      "map": "viridis",
+      "shades": [
+        0.22,
+        0.42,
+        0.62,
+        0.82
+      ],
+      "linestyle": "--"
+    },
+    "sensor_markers": [
+      "o",
+      "s",
+      "^",
+      "D"
+    ]
+  },
+  "panels": [
+    {
+      "title": "Owned rewards",
+      "keys": [
+        "mission/constellation_reward",
+        "agent/sensor_<0..3>/reward",
+        "lifetime/reward"
+      ],
+      "units": "reward; lifetime sum is experience, not policy quality"
+    },
+    {
+      "title": "Physical visits and union coverage",
+      "keys": [
+        "mission/useful_delivered_visits",
+        "mission/capture_coverage_fraction",
+        "mission/ground_coverage_fraction"
+      ],
+      "units": "visits / fraction of 200 targets"
+    },
+    {
+      "title": "Latency and censoring",
+      "keys": [
+        "mission/latency/useful_product_median_s",
+        "mission/latency/useful_product_n",
+        "mission/latency/censored_qualified_n",
+        "mission/latency/undelivered_qualified_fraction",
+        "lifetime/useful_delivery_delay_pooled_median_s",
+        "lifetime/useful_delivery_delay_valid_n"
+      ],
+      "units": "seconds / valid product counts / fraction"
+    },
+    {
+      "title": "Duplication and execution time",
+      "keys": [
+        "mission/pending_duplicate_acquisitions",
+        "mission/redundant_imaging_sensor_s",
+        "mission/unaware_redundant_imaging_sensor_s",
+        "mission/redundant_execution_fraction",
+        "mission/fresh_overlap_target_s",
+        "mission/excess_inventory_target_sensor_s"
+      ],
+      "units": "counts / sensor-seconds / dimensionless / target-seconds / target-sensor-seconds"
+    },
+    {
+      "title": "Agent actions and physical resources",
+      "keys": [
+        "agent/sensor_<0..3>/action/*",
+        "agent/sensor_<0..3>/storage_fraction",
+        "agent/sensor_<0..3>/battery_fraction",
+        "agent/sensor_<0..3>/maximum_wheel_fraction",
+        "agent/sensor_<0..3>/radio_task_occupancy_s",
+        "agent/sensor_<0..3>/radio_on_s",
+        "agent/sensor_<0..3>/radio_on_fraction"
+      ],
+      "units": "true selections / fractions / seconds; sparse event trajectories retained in raw episode spool"
+    },
+    {
+      "title": "Transport",
+      "keys": [
+        "mission/packets/*",
+        "mission/unique_acknowledged_versions"
+      ],
+      "units": "physical packet counts / distinct per-link record revisions; neither is a ground downlink"
+    },
+    {
+      "title": "PPO and critic",
+      "keys": [
+        "losses/*",
+        "learner_metrics/*",
+        "training/gradient_l2",
+        "training/parameter_delta_l2"
+      ],
+      "units": "finite update diagnostics; presentations distinct from true decisions"
+    },
+    {
+      "title": "Operational status",
+      "keys": [
+        "status/state",
+        "status/elapsed_wall_h",
+        "status/allocated_cpu_h",
+        "mission/reached_horizon",
+        "lifetime/failed_horizon_episodes",
+        "status/lifetime_driver_wall_h",
+        "status/lifetime_driver_allocated_cpu_h"
+      ],
+      "units": "heartbeat every 30s; no synthetic iteration/decision increment; driver lifetime cost persists separately from full allocation job-exit/sacct cost"
+    },
+    {
+      "title": "Current mission telemetry (not lifetime experience)",
+      "keys": [
+        "progress/sim_time_s",
+        "progress/episode_index",
+        "progress/seed",
+        "progress/constellation_reward",
+        "progress/sensor_<0..3>/reward",
+        "progress/sensor_<0..3>/storage_fraction",
+        "progress/sensor_<0..3>/battery_fraction",
+        "progress/sensor_<0..3>/true_decisions",
+        "progress/sensor_<0..3>/action/*"
+      ],
+      "units": "Episode counters reset; driver heartbeat reads worker-local evaluation spool; no synthetic decision/iteration count",
+      "x": "status/lifetime_driver_wall_h"
+    }
+  ],
+  "availability": "Definition prepared and fake-SDK tested; no new live run/dashboard created",
+  "aggregate_contract": "Counts sum; rate numerator/denominator sum; pooled latency uses actual product delays; undefined values omitted and valid n published; episode means have *_valid_n.",
+  "display_names": {
+    "catalog_tx": "With communication",
+    "geometry_only": "Without communication"
+  },
+  "display_agents": {
+    "sensor_0": "Spacecraft 1",
+    "sensor_1": "Spacecraft 2",
+    "sensor_2": "Spacecraft 3",
+    "sensor_3": "Spacecraft 4"
+  },
+  "navigation_assumption": "Both policies receive current position/velocity only from peers in line of sight; inventory data requires physical communication."
+}

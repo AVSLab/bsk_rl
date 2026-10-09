@@ -1,5 +1,12 @@
 # Four-sensor Walker completion-v3 learned pilot
 
+> Historical pilot contract.  The physics/transport results below are retained,
+> while learned-policy recovery now uses the versioned
+> `completion-v4-operational-mask` contract documented in
+> [CLUSTER_READINESS.md](CLUSTER_READINESS.md).  V4 calibrates the separate action
+> heads, masks empty downlink and unsafe newly started powered tasks, makes entropy
+> regularization explicit, and tests probability/sample behavior before training.
+
 This is the reviewed learned-policy contract after the completed three-sensor
 baseline campaign. The baseline evidence under
 `cluster/evidence/three_sensor_v2_full_campaign` is immutable and is not reused as

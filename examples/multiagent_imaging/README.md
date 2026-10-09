@@ -1,5 +1,13 @@
 # Multi-agent space imaging 2026 — completion sharing
 
+Use branch `multi-agent-space-imaging-2026` in
+`/Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026` for all current
+work. [CANONICAL_WORKSPACE.md](CANONICAL_WORKSPACE.md) records the consolidated
+source and evidence locations. GNC names in historical release manifests identify
+paper-era artifacts; they do not identify a separate development branch.
+The newer opt-in onboard-inventory study and its distinct checkpoint schema are
+documented in [STUDY_IMPLEMENTATION.md](STUDY_IMPLEMENTATION.md).
+
 Option 2 is implemented on the existing AMOS-derived `multi-agent-space-imaging-2026`
 branch: persistent time-tagged completion catalogs, conflict/continuous retasking,
 directed physical metadata transmissions (with a broadcast baseline), and shared target-set

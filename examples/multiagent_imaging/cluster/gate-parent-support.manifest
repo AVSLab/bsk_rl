@@ -1,0 +1,37 @@
+{
+  "cache": "/projects/dahu1128/basilisk-completion-v2/.support-data-cache",
+  "errors": [],
+  "files": {
+    "GGM03S.txt": {
+      "expected_sha256": "71f8736f98c5d8c972d0f6d56a2389302f72b8ac7517c605d312162ca446a3a1",
+      "path": "/projects/dahu1128/basilisk-completion-v2/supportData/LocalGravData/GGM03S.txt",
+      "sha256": "71f8736f98c5d8c972d0f6d56a2389302f72b8ac7517c605d312162ca446a3a1",
+      "size_bytes": 1350695
+    },
+    "de-403-masses.tpc": {
+      "expected_sha256": "5cd68fcd3f59ddc21ed8bbad3a341126b8e092a29ac8f0ae585db718af8e7468",
+      "path": "/projects/dahu1128/basilisk-completion-v2/.support-data-cache/supportData/EphemerisData/de-403-masses.tpc",
+      "sha256": "5cd68fcd3f59ddc21ed8bbad3a341126b8e092a29ac8f0ae585db718af8e7468",
+      "size_bytes": 1992
+    },
+    "de430.bsp": {
+      "expected_sha256": "6e1b277c5f07135a84950604b83e56b736be696a7f3560bcddb1d4aeb944fca1",
+      "path": "/projects/dahu1128/basilisk-completion-v2/.support-data-cache/supportData/EphemerisData/de430.bsp",
+      "sha256": "6e1b277c5f07135a84950604b83e56b736be696a7f3560bcddb1d4aeb944fca1",
+      "size_bytes": 119741440
+    },
+    "naif0012.tls": {
+      "expected_sha256": "678e32bdb5a744117a467cd9601cd6b373f0e9bc9bbde1371d5eee39600a039b",
+      "path": "/projects/dahu1128/basilisk-completion-v2/.support-data-cache/supportData/EphemerisData/naif0012.tls",
+      "sha256": "678e32bdb5a744117a467cd9601cd6b373f0e9bc9bbde1371d5eee39600a039b",
+      "size_bytes": 5257
+    },
+    "pck00010.tpc": {
+      "expected_sha256": "59468328349aa730d18bf1f8d7e86efe6e40b75dfb921908f99321b3a7a701d2",
+      "path": "/projects/dahu1128/basilisk-completion-v2/.support-data-cache/supportData/EphemerisData/pck00010.tpc",
+      "sha256": "59468328349aa730d18bf1f8d7e86efe6e40b75dfb921908f99321b3a7a701d2",
+      "size_bytes": 126143
+    }
+  },
+  "passed": true
+}

@@ -1,3 +1,9 @@
+> Status 2026-09-13: the completion-v4 operational mask, calibrated action-head
+> initialization, explicit entropy regularization, probability/sample gate, and
+> 1,200-second local PPO regressions are implemented.  The next step is the fresh
+> one-worker 45,000-second cluster recovery gate in `cluster/README.md`; do not use
+> the completion-v3 checkpoints with the changed schema.
+
 Continue from the final Walker-4 completion-v3 cluster-pilot evidence commit on
 `multi-agent-space-imaging-2026`. Read
 `examples/multiagent_imaging/cluster/evidence/walker4_completion_v3_cluster_pilot/REPORT.md`,

@@ -37,6 +37,14 @@ def prepare(output):
         .decode()
         .split("\0")
     )
+    # Inherited global ignore rules can hide import-critical __init__.py and
+    # utils.py. An immutable release must include the actual package tree,
+    # rather than assuming Git visibility establishes executable completeness.
+    required_python = [str(path.relative_to(root)) for folder in
+        (root / "src/bsk_rl", root / "examples/multiagent_imaging")
+        for path in folder.rglob("*.py") if "__pycache__" not in path.parts
+        and "evidence" not in path.parts]
+    names = sorted(set(names) | set(required_python))
     hashes = {}
     with tarfile.open(output / "source-overlay.tar.gz", "w:gz") as archive:
         for name in sorted(set(names)):
@@ -45,6 +53,9 @@ def prepare(output):
                 continue
             archive.add(path, arcname=name)
             hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+    missing = sorted(set(required_python) - set(hashes))
+    if missing:
+        raise RuntimeError("Import-critical Python files missing from release: " + repr(missing))
     # Base history is small enough to bundle; this avoids relying on an unpushed
     # branch name. Dirty/new readiness files are preserved in the overlay above.
     subprocess.run(
@@ -59,7 +70,7 @@ def prepare(output):
         base_commit=subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=root, text=True
         ).strip(),
-        branch="multi-agent-space-imaging-2026",
+        branch=subprocess.check_output(["git", "branch", "--show-current"],cwd=root,text=True).strip(),
         source_sha256=hashes,
         archives={
             name: hashlib.sha256((output / name).read_bytes()).hexdigest()

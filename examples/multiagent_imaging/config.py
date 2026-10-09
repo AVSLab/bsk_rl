@@ -39,9 +39,19 @@ class MultiAgentImagingConfig:
     message_delay_s: float = 0.0
     packet_loss_probability: float = 0.0
     communication_cost_per_s: float = 0.0
+    # State-local action shielding.  Downlinking an empty buffer previously
+    # allowed a high-entropy policy's tiny logit preference to create a rapid
+    # empty-downlink loop.  The battery reserve prevents starting a new powered
+    # task when only charging is operationally safe; an already active task may
+    # still use the explicit continue action.
+    empty_storage_mask_fraction: float = 1e-6
+    minimum_task_battery_fraction: float = 0.05
     # One mission-length half-life: a reward at 45,000 s retains half its weight.
     discount_per_s: float = math.exp(math.log(0.5) / 45000.0)
     gae_trace_half_life_s: float = 6000.0
+    # Explicit AMOS-parity ablation. None retains the physical-second multi-agent trace.
+    gae_lambda_per_decision: float | None = None
+    policy_model_profile: str = "completion_default"
     communication_mode: str = "broadcast"
     transmit_duration_s: float = 300.0
     transmit_hold_s: float = 10.0
@@ -57,24 +67,34 @@ class MultiAgentImagingConfig:
     walker_planes: int = 2
     walker_phasing: int = 1
     seed: int = 0
+    inventory_chunk_records: int = 256
 
     def __post_init__(self) -> None:
+        if self.gae_lambda_per_decision is not None and (
+            not math.isfinite(self.gae_lambda_per_decision)
+            or not 0 <= self.gae_lambda_per_decision <= 1
+        ):
+            raise ValueError("Per-decision GAE lambda must be finite and in [0, 1].")
+        if self.policy_model_profile not in {"completion_default", "amos_attention"}:
+            raise ValueError("Unknown policy model profile.")
         if self.information_case not in {
             "independent",
             "ideal_completion",
-            "completion",
+            "completion", "catalog_tx", "geometry_only",
         }:
             raise ValueError(
                 "Use independent, ideal_completion, or completion; legacy intent checkpoints/configurations use a different contract."
             )
+        if self.inventory_chunk_records < 1:
+            raise ValueError("Positive inventory chunk record limit required")
+        if self.is_study and (self.communication_mode != "directed" or self.link_mode != "los"):
+            raise ValueError("Study requires directed LOS navigation/transport")
         if self.retasking_mode not in {"conflict", "continuous"}:
             raise ValueError("retasking_mode must be conflict or continuous.")
         if self.communication_mode not in {"broadcast", "directed"}:
             raise ValueError("communication_mode must be broadcast or directed.")
         if self.target_population not in {"all_leo", "mixed_50_30_20"}:
-            raise ValueError(
-                "target_population must be all_leo or mixed_50_30_20."
-            )
+            raise ValueError("target_population must be all_leo or mixed_50_30_20.")
         if self.sensor_constellation not in {"legacy_staggered", "walker_delta"}:
             raise ValueError(
                 "sensor_constellation must be legacy_staggered or walker_delta."
@@ -134,6 +154,22 @@ class MultiAgentImagingConfig:
             raise ValueError("Require n_targets >= n_candidates >= 1.")
         if not 0.0 <= self.alpha <= 1.0:
             raise ValueError("alpha must be in [0, 1].")
+        if not 0.0 <= self.empty_storage_mask_fraction < 1.0:
+            raise ValueError("empty_storage_mask_fraction must be in [0, 1).")
+        if not 0.0 <= self.minimum_task_battery_fraction < 1.0:
+            raise ValueError("minimum_task_battery_fraction must be in [0, 1).")
+
+    @property
+    def is_study(self): return self.information_case in {"catalog_tx", "geometry_only"}
+
+    @property
+    def peer_features(self): return 18 if self.is_study else 12
+
+    @property
+    def target_features(self): return 21 if self.is_study else TARGET_FEATURES
+
+    @property
+    def observation_version(self): return "walker-inventory-navigation-v1" if self.is_study else OBSERVATION_VERSION
 
     @property
     def n_peers(self):
@@ -152,7 +188,27 @@ class MultiAgentImagingConfig:
         return cls(**json.loads(Path(path).read_text()))
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        values = asdict(self)
+        if not self.is_study: values.pop("inventory_chunk_records")
+        # Preserve the exact semantic contract of historical checkpoints when
+        # these new, opt-in experimental fields are not selected.
+        if self.gae_lambda_per_decision is None:
+            values.pop("gae_lambda_per_decision")
+        if self.policy_model_profile == "completion_default":
+            values.pop("policy_model_profile")
+        return values
+
+    @property
+    def effective_gae_lambda(self):
+        return (
+            self.gae_lambda_per_decision
+            if self.gae_lambda_per_decision is not None
+            else math.exp(math.log(0.5) / self.gae_trace_half_life_s)
+        )
+
+    @property
+    def gae_lambda_time(self):
+        return "step" if self.gae_lambda_per_decision is not None else "second"
 
 
 __all__ = [

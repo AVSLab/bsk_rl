@@ -148,7 +148,7 @@ def build_environment(
                 n_ahead_observe=2,
             ),
             CompletionContext(),
-            CompletionTargets(config.n_candidates),
+            CompletionTargets(config.n_candidates, study=config.is_study),
         ] + ([CompletionPeers()] if config.n_peers else [])
         action_spec = [
             act.Charge(duration=config.charge_duration_s),
@@ -178,7 +178,18 @@ def build_environment(
                 )
             )
         completion_n_candidates = config.n_candidates
+        completion_study = config.is_study
+        completion_metadata_bitrate_bps = config.metadata_bitrate_bps
+        completion_transmit_duration_s = config.transmit_duration_s
+        completion_transmit_hold_s = config.transmit_hold_s
         completion_communication_mode = config.communication_mode
+        # These values are read by RLlib's action-space sampler.  They are also
+        # serialized into the policy model config, so sampling and policy logits
+        # use the same receiver-local resource rules.
+        completion_empty_storage_mask_fraction = config.empty_storage_mask_fraction
+        completion_minimum_task_battery_fraction = (
+            config.minimum_task_battery_fraction
+        )
         dyn_type = dyn.ImagingSCDynModel
         fsw_type = fsw.ImagingSCFSWModel
 
@@ -261,6 +272,7 @@ def build_environment(
         delay_s=config.message_delay_s,
         loss_probability=config.packet_loss_probability,
         link_mode=config.link_mode,
+        inventory_chunk_records=config.inventory_chunk_records,
     )
     orbit_randomizer = _MissionOrbitRandomizer(config)
     environment = CompletionConstellationTasking(

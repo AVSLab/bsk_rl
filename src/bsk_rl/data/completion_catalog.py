@@ -50,6 +50,10 @@ class CompletionCatalog(LocalCatalogKnowledge):
         self.version_received_at: dict[str, dict[int, float]] = {}
         self.request_epochs = {int(t): 0.0 for t in self.targets}
         self.revision = 0
+        from bsk_rl.data.onboard_inventory import ReceivedInventory
+        self.inventory_revision = 0
+        self.owned_inventory = {}
+        self.received_inventory = ReceivedInventory()
 
     def set_request_epoch(self, target_id: int, epoch: float) -> None:
         """Open a new service requirement; never erase older exposure history."""
@@ -181,7 +185,7 @@ class CompletionCatalog(LocalCatalogKnowledge):
             if completion_time is None
             else float(completion_time)
         )
-        return self.merge_record(
+        changed = self.merge_record(
             CompletionRecord(
                 record_id=product.record_id,
                 source_sensor=product.source_sensor,
@@ -194,6 +198,8 @@ class CompletionCatalog(LocalCatalogKnowledge):
             ),
             completed,
         )
+        self._inventory_revision(self.records[product.record_id], "onboard", completed)
+        return changed
 
     def record_delivery(self, product, cooldown_until=None):
         """Attach ground receipt to the exact locally owned exposure."""
@@ -204,9 +210,53 @@ class CompletionCatalog(LocalCatalogKnowledge):
         state.pending_record_ids = tuple(
             r for r in state.pending_record_ids if r != product.record_id
         )
-        return self.merge_record(
+        changed = self.merge_record(
             replace(record, delivery_time=product.delivery_time), product.delivery_time
         )
+        self._inventory_revision(self.records[product.record_id], "delivered", product.delivery_time)
+        return changed
+
+    def _inventory_revision(self, fact, status, now):
+        from bsk_rl.data.onboard_inventory import InventoryEntry
+        old = self.owned_inventory.get(fact.record_id)
+        if old and old.fact == fact and old.status == status:
+            return
+        if fact.source_sensor != self.sensor_id:
+            raise ValueError("Only physical owner may revise inventory")
+        self.inventory_revision += 1
+        self.owned_inventory[fact.record_id] = InventoryEntry(fact, self.inventory_revision, status, float(now))
+
+    def record_drop(self, record_id, now):
+        """Explicit removal tombstone; caller must separately remove physical bits."""
+        fact = self.records[record_id]
+        if fact.source_sensor != self.sensor_id or now < fact.completion_time:
+            raise ValueError("Drop requires a locally owned completed product")
+        state = self.target(fact.target_id)
+        state.pending_record_ids = tuple(r for r in state.pending_record_ids if r != record_id)
+        if self.owned_inventory.get(record_id) and self.owned_inventory[record_id].status == "delivered":
+            raise ValueError("Delivered image cannot be dropped")
+        self._inventory_revision(fact, "dropped", now)
+
+    def receive_inventory(self, snapshot, now, ttl):
+        # Validate before merging durable completion facts. No pending products
+        # or storage reservation is created by a remote receipt.
+        from copy import deepcopy
+        trial = deepcopy(self)
+        changed = trial.received_inventory.receive(snapshot, now, ttl)
+        for entry in snapshot.entries:
+            if entry.fact.qualified != (entry.fact.quality >= self.quality_threshold):
+                raise ValueError("Inventory quality/qualification mismatch")
+            if (entry.status == "delivered") != (entry.fact.delivery_time is not None):
+                raise ValueError("Inventory status/delivery mismatch")
+            trial.merge_record(entry.fact, now)
+        # These are metadata only; local pending physical products are untouched.
+        self.received_inventory = trial.received_inventory
+        self.records = trial.records
+        self.received_at = trial.received_at
+        self.version_received_at = trial.version_received_at
+        self.revision = trial.revision
+        for entry in snapshot.entries: self._refresh_target(entry.fact.target_id)
+        return changed
 
     def is_eligible(self, target_id, sim_time):
         # Local storage uses one partition per target: do not overwrite an onboard

@@ -24,11 +24,10 @@ def distribution_record(name):
     """Resolve an installed distribution without accepting Ray's private vendors.
 
     Importing RLlib prepends ``ray/thirdparty_files`` to ``sys.path``.  That
-    directory includes compatibility metadata for packages such as psutil, but
-    it is not the environment installation imported by this pilot.  Calling
-    ``importlib.metadata.version`` after the RLlib import therefore reports the
-    vendor's version.  Record every match and select the first non-vendored
-    distribution so pre-import and post-import audits have the same meaning.
+    directory includes actual private vendors such as psutil. This helper
+    records installed distribution metadata only; it does not establish what
+    a process imports. Use the separate effective-import gate for loaded paths,
+    versions and file hashes after the training import order.
     """
     expected_name = _normalized_distribution_name(name)
     matches = []
@@ -138,7 +137,7 @@ def audit(*, allocation=False):
         errors.append(f"Native import/source check failed: {exc}")
 
     slurm = {
-        key: value for key, value in os.environ.items() if key.startswith("SLURM_")
+        key: os.environ[key] for key in ("SLURM_JOB_ID","SLURM_CPUS_PER_TASK","SLURM_JOB_NUM_NODES","SLURM_MEM_PER_NODE","SLURM_JOB_ACCOUNT","SLURM_JOB_PARTITION") if key in os.environ
     }
     if allocation:
         if not slurm.get("SLURM_JOB_ID"):

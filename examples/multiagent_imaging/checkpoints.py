@@ -13,6 +13,9 @@ from ray.rllib.core.rl_module.rl_module import RLModuleSpec
 
 from bsk_rl.utils.rllib.target_gnn_module import GNNModule
 from examples.multiagent_imaging.readiness import schema, validate_schema, write_json
+from examples.multiagent_imaging.checkpoint_topology import (
+    WorkerTopologyError, collect_all_workers, expected_indices, validate_seed_states,
+)
 
 
 def optimizer_digest(algorithm):
@@ -46,17 +49,24 @@ def optimizer_digest(algorithm):
     return digest.hexdigest()
 
 
-def _runner_seed_state(runner):
+def _runner_seed_state(runner, *, include_pending=True):
     env = getattr(runner, "env", None)
     if env is None:
         return None
     task = env.unwrapped.par_env
-    return dict(
+    state = dict(
         worker_index=runner.worker_index,
         next_episode_index=task._episode_seed_index,
         base_seed=task.default_seed,
         torch_rng=torch.get_rng_state().tolist(),
     )
+    if task.communicator.information_case in {"catalog_tx", "geometry_only"}:
+        import copy
+        state["study_audit_state"] = copy.deepcopy(getattr(
+            runner, "study_audit_state", dict(episode_hashes={}, true_decisions=0, reward=0.0)))
+        if include_pending:
+            state["pending_completed_episodes"] = copy.deepcopy(getattr(runner, "completion_audits", []))
+    return state
 
 
 def _restore_runner_seed_state(runner, states):
@@ -64,26 +74,36 @@ def _restore_runner_seed_state(runner, states):
         (s for s in states if s and s["worker_index"] == runner.worker_index), None
     )
     if state is None or getattr(runner, "env", None) is None:
-        return
+        raise ValueError("Missing resume state or environment for configured worker.")
     task = runner.env.unwrapped.par_env
     if task.default_seed != state["base_seed"]:
         raise ValueError("Resume worker seed stream differs from checkpoint.")
     task._episode_seed_index = state["next_episode_index"]
     runner._needs_initial_reset = True
+    if "study_audit_state" in state:
+        import copy
+        runner.study_audit_state=copy.deepcopy(state["study_audit_state"])
+        runner.completion_audits=copy.deepcopy(state["pending_completed_episodes"])
     torch.set_rng_state(torch.tensor(state["torch_rng"], dtype=torch.uint8))
 
 
 def save_checkpoint(algorithm, config, output, probes):
     """Save PPO optimizer state plus an independently loadable policy and probes."""
     output = Path(output).resolve()
-    output.mkdir(parents=True, exist_ok=True)
+    output.mkdir(parents=True, exist_ok=False)
+    try:
+        seed_states, before = collect_all_workers(
+            algorithm, _runner_seed_state, phase="before-save", require_accounting=config.is_study)
+        write_json(output / "worker-save-before.json", before)
+    except WorkerTopologyError as error:
+        write_json(output / "worker-save-failed.json", error.evidence)
+        raise
     algorithm.save_to_path(str(output / "algorithm"))
     module = algorithm.get_module("imager")
     observations = torch.as_tensor(probes, dtype=torch.float32)
-    with torch.no_grad():
-        expected = module.forward_inference({Columns.OBS: observations})[
-            Columns.ACTION_DIST_INPUTS
-        ].cpu()
+    from examples.multiagent_imaging.training_audit import frozen_policy_logits
+
+    expected = frozen_policy_logits(module, observations)
     state = {
         key: value.detach().cpu().clone() for key, value in module.state_dict().items()
     }
@@ -93,16 +113,28 @@ def save_checkpoint(algorithm, config, output, probes):
     )
     metadata = dict(
         schema=schema(config),
+        lifetime_metrics=getattr(algorithm,"study_lifetime_state",None),
+        training_accounting=getattr(algorithm,"study_accounting_state",None),
         config=config.to_dict(),
         model_config=module.config.model_config_dict,
         inference_only=module.config.inference_only,
         policy_sha256=hashlib.sha256((output / "policy.pt").read_bytes()).hexdigest(),
         optimizer_sha256=optimizer_digest(algorithm),
         training_iteration=algorithm.training_iteration,
-        worker_seed_states=algorithm.env_runner_group.foreach_worker(
-            _runner_seed_state
-        ),
+        worker_seed_states=seed_states,
+        worker_topology=dict(expected_indices=expected_indices(algorithm),
+                             configured_remote_workers=int(algorithm.config.num_env_runners)),
     )
+    try:
+        after_states, after = collect_all_workers(
+            algorithm, _runner_seed_state, phase="after-save", require_accounting=config.is_study)
+        write_json(output / "worker-save-after.json", after)
+        if {s["worker_index"]: s for s in seed_states} != {s["worker_index"]: s for s in after_states}:
+            raise WorkerTopologyError(dict(passed=False, phase="after-save", error="State advanced during checkpoint save",
+                                           expected_indices=expected_indices(algorithm)))
+    except WorkerTopologyError as error:
+        write_json(output / "worker-save-failed.json", error.evidence)
+        raise
     write_json(output / "manifest.json", metadata)
     restored, evidence = load_policy(output, config)
     # Matching stored probes includes logits, not just coincidentally equal actions.
@@ -152,7 +184,10 @@ def load_policy(checkpoint, config):
     return module, evidence
 
 
-def policy_callable(module):
+def policy_callable(module, *, deterministic=True, seed=None):
+    """Return deterministic argmax or reproducible categorical policy sampling."""
+    rng = np.random.default_rng(seed)
+
     def policy(observation):
         with torch.no_grad():
             batch = {
@@ -160,7 +195,14 @@ def policy_callable(module):
                     observation, dtype=torch.float32
                 ).unsqueeze(0)
             }
-            return int(module.forward_inference(batch)[Columns.ACTIONS][0])
+            output = module.forward_inference(batch)
+            if deterministic:
+                return int(output[Columns.ACTIONS][0])
+            logits = output[Columns.ACTION_DIST_INPUTS][0].cpu().numpy()
+            logits = logits - np.max(logits)
+            probabilities = np.exp(logits)
+            probabilities /= probabilities.sum()
+            return int(rng.choice(len(probabilities), p=probabilities))
 
     return policy
 
@@ -176,8 +218,24 @@ def resume_checkpoint(checkpoint, config, *, resources=None):
     validate_schema(metadata["schema"], config)
     # Validate the exported weights as well before opening the full Ray checkpoint.
     load_policy(checkpoint, config)
+    saved_expected = metadata.get("worker_topology", {}).get("expected_indices")
+    if resources is not None:
+        requested = list(range(resources.num_env_runners + 1))
+        if saved_expected is not None and saved_expected != requested:
+            raise WorkerTopologyError(dict(passed=False, phase="manifest-before-restore", expected_indices=requested,
+                                           saved_expected_indices=saved_expected))
+        saved_expected = requested
+    if saved_expected is None:
+        raise WorkerTopologyError(dict(passed=False, phase="manifest-before-restore", error="Legacy checkpoint requires explicit launcher topology"))
+    validate_seed_states(metadata["worker_seed_states"], saved_expected, require_accounting=config.is_study)
     register_env("MultiAgentImaging-RLlib", make_rllib_env)
     algorithm = PPO.from_checkpoint(str(checkpoint.resolve() / "algorithm"))
+    # Historical incomplete manifests are rejected; no state is reconstructed.
+    try:
+        validate_seed_states(metadata["worker_seed_states"], expected_indices(algorithm), require_accounting=config.is_study)
+    except WorkerTopologyError:
+        algorithm.stop()
+        raise
     # Ray restores the saved topology. Reject a launcher that would otherwise
     # misleadingly report four workers while actually resuming a one-worker run.
     if resources is not None:
@@ -212,14 +270,102 @@ def resume_checkpoint(checkpoint, config, *, resources=None):
     payload = torch.load(
         checkpoint / "policy.pt", map_location="cpu", weights_only=True
     )
-    with torch.no_grad():
-        logits = algorithm.get_module("imager").forward_inference(
-            {Columns.OBS: payload["observations"]}
-        )[Columns.ACTION_DIST_INPUTS]
-    torch.testing.assert_close(logits.cpu(), payload["logits"], atol=1e-6, rtol=1e-6)
-    algorithm.env_runner_group.foreach_worker(
-        lambda runner: _restore_runner_seed_state(
-            runner, metadata["worker_seed_states"]
-        )
+    from examples.multiagent_imaging.training_audit import frozen_policy_logits
+
+    logits = frozen_policy_logits(
+        algorithm.get_module("imager"), payload["observations"]
     )
+    torch.testing.assert_close(logits.cpu(), payload["logits"], atol=1e-6, rtol=1e-6)
+    def restore_and_read(runner):
+        _restore_runner_seed_state(runner, metadata["worker_seed_states"])
+        return _runner_seed_state(runner)
+    restored, _ = collect_all_workers(algorithm, restore_and_read, phase="restore", require_accounting=config.is_study)
+    if {s["worker_index"]: s for s in restored} != {s["worker_index"]: s for s in metadata["worker_seed_states"]}:
+        algorithm.stop()
+        raise WorkerTopologyError(dict(passed=False, phase="restore", error="Restored full worker state differs"))
+    algorithm.study_lifetime_state = metadata.get("lifetime_metrics")
+    algorithm.study_accounting_state = metadata.get("training_accounting")
     return algorithm
+
+
+def _state_digest(weights):
+    digest = hashlib.sha256()
+    for name, value in sorted(weights.items()):
+        array = value.detach().cpu().numpy()
+        digest.update(name.encode())
+        digest.update(str(array.dtype).encode())
+        digest.update(str(array.shape).encode())
+        digest.update(array.tobytes())
+    return digest.hexdigest()
+
+
+def _worker_restore_readback(runner):
+    from examples.multiagent_imaging.cluster.effective_imports import require_effective_imports
+    runtime = require_effective_imports()
+    env = runner.env.unwrapped
+    assert getattr(env, "_restore_only_guard", False), "Worker restore-only guard missing"
+    assert env._restore_step_calls == 0, "Restore attempted environment stepping"
+    assert env.par_env.simulator.sim_time == 0, "Restore advanced physical simulation time"
+    return {"seed_state": _runner_seed_state(runner), "runtime": runtime,
+            "no_environment_steps": True, "sim_time_s": env.par_env.simulator.sim_time}
+
+
+def study_driver_restore_evidence(algorithm, metadata):
+    """Compare the entire dedup/aggregate state, not just decision count."""
+    evidence={}
+    for field, attribute in (("lifetime_metrics","study_lifetime_state"),("training_accounting","study_accounting_state")):
+        expected=metadata.get(field)
+        if expected is not None:
+            assert getattr(algorithm,attribute,None)==expected, f"Restored driver {field} differs"
+            evidence[field+"_matches_checkpoint"]=True
+            evidence[field+"_sha256"]=hashlib.sha256(json.dumps(expected,sort_keys=True,allow_nan=False).encode()).hexdigest()
+    return evidence
+
+
+def zero_update_resume_evidence(algorithm, checkpoint):
+    """Readback only: no train, sampler, new probes, checkpoint write or RNG draw."""
+    checkpoint = Path(checkpoint)
+    metadata = json.loads((checkpoint / "manifest.json").read_text())
+    driver_state=study_driver_restore_evidence(algorithm,metadata)
+    from examples.multiagent_imaging.cluster.effective_imports import require_effective_imports
+    driver_runtime = require_effective_imports()
+    payload = torch.load(checkpoint / "policy.pt", map_location="cpu", weights_only=True)
+    weights = algorithm.get_module("imager").state_dict()
+    assert set(weights) == set(payload["weights"]), "Restored model weight keys differ"
+    assert all(torch.equal(weights[n].cpu(), v) for n, v in payload["weights"].items()), "Algorithm weights differ from exported policy"
+    expected_optimizer = metadata["optimizer_sha256"]
+    assert optimizer_digest(algorithm) == expected_optimizer
+    assert algorithm.training_iteration == metadata["training_iteration"]
+    from examples.multiagent_imaging.training_audit import frozen_policy_logits
+    logits = frozen_policy_logits(algorithm.get_module("imager"), payload["observations"]).cpu()
+    assert torch.equal(logits, payload["logits"]), "Same-runtime probe logits did not restore exactly"
+    expected = {s["worker_index"]: s for s in metadata["worker_seed_states"] if s}
+    validate_seed_states(metadata["worker_seed_states"], expected_indices(algorithm),
+                         require_accounting=bool(metadata.get("lifetime_metrics") is not None))
+    readbacks, topology = collect_all_workers(algorithm, _worker_restore_readback, phase="zero-update-readback",
+                                             require_accounting=bool(metadata.get("lifetime_metrics") is not None))
+    actual = {x["seed_state"]["worker_index"]: x for x in readbacks if x["seed_state"]}
+    assert set(actual) == set(expected), "Worker topology/readback differs"
+    workers = []
+    for index, saved in sorted(expected.items()):
+        got = actual[index]["seed_state"]
+        worker_runtime = actual[index]["runtime"]
+        assert worker_runtime["basilisk"] == driver_runtime["basilisk"], "Worker native import differs from driver"
+        assert worker_runtime["bsk_rl"] == driver_runtime["bsk_rl"], "Worker source import differs from driver"
+        for name, module in driver_runtime["modules"].items():
+            for key in ("version", "path", "file_sha256"):
+                assert worker_runtime["modules"][name][key] == module[key], f"Worker effective {name} differs"
+        assert got == saved, f"Worker {index} seed/index/Torch RNG did not restore exactly"
+        workers.append({"worker_index": index, "base_seed": got["base_seed"], "next_episode_index": got["next_episode_index"],
+                        "torch_rng_sha256": hashlib.sha256(bytes(got["torch_rng"])).hexdigest(), "matches_checkpoint": True,
+                        "runtime": actual[index]["runtime"],
+                        "no_environment_steps": actual[index].get("no_environment_steps", False),
+                        "sim_time_s": actual[index].get("sim_time_s")})
+    identity = json.loads((checkpoint / "wandb.json").read_text())
+    return {"passed": True, "checkpoint": str(checkpoint), "training_iteration": algorithm.training_iteration, **driver_state,
+            "policy_decisions_lifetime": metadata["policy_decisions_lifetime"], "optimizer_sha256": expected_optimizer,
+            "exported_policy_sha256": hashlib.sha256((checkpoint / "policy.pt").read_bytes()).hexdigest(),
+            "restored_weights_sha256": _state_digest(weights), "exported_weights_sha256": _state_digest(payload["weights"]),
+            "max_logit_error": float((logits-payload["logits"]).abs().max()), "exact_logits": True,
+            "workers": workers, "worker_topology": topology, "driver_runtime": driver_runtime, "wandb_id": identity["id"],
+            "new_ppo_updates": 0, "new_sampled_episodes": 0}

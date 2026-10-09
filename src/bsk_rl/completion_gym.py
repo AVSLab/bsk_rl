@@ -1,6 +1,7 @@
 """Asynchronous completion-aware decisions over real sensing and passive spacecraft."""
 
 from dataclasses import asdict, dataclass
+from collections import Counter
 import math
 
 from bsk_rl.gym import NO_ACTION, SensingAgentConstellationTasking
@@ -63,7 +64,16 @@ class CompletionConstellationTasking(SensingAgentConstellationTasking):
             seed = (int(self.default_seed) + self._episode_seed_index) % 2**32
             self._episode_seed_index += 1
         self.task_history = []
+        self.reward_events = []
+        self._reward_event_index = 0
+        self._reward_logged_index = -1
+        self.episode_reward_by_agent = {s.name: 0.0 for s in self.sensing_satellites}
+        self.agent_live_until_s = {}
+        self.decision_records = []
         self.decision_counts = {s.name: 0 for s in self.sensing_satellites}
+        self.action_selection_counts = {
+            s.name: Counter() for s in self.sensing_satellites
+        }
         self.communication_time = {s.name: 0.0 for s in self.sensing_satellites}
         for sensor in self.sensing_satellites:
             sensor.completion_task = None
@@ -98,6 +108,21 @@ class CompletionConstellationTasking(SensingAgentConstellationTasking):
     def _step(self, actions):
         now = float(self.simulator.sim_time)
         physical_actions = list(actions)
+        cap=getattr(self,"study_remaining_true_budget",None)
+        selected=sum(sensor.role is SpacecraftRole.SENSING_AGENT and sensor.is_alive() and action is not None and action != NO_ACTION
+            for sensor,action in zip(self.satellites,actions))
+        episode_cap=getattr(self,"study_remaining_episode_budget",None)
+        episode_exhausted=episode_cap is not None and episode_cap<=0 and sum(self.decision_counts.values())==0 and selected>0
+        if episode_exhausted or (cap is not None and sum(self.decision_counts.values())+selected>cap):
+            import os,json
+            from pathlib import Path
+            folder=os.environ.get("BSK_STUDY_EPISODE_SPOOL")
+            if folder:
+                dest=Path(folder);dest.mkdir(parents=True,exist_ok=True)
+                (dest/f"budget-failure-{self.default_seed}-{self._episode_seed_index}.failed").write_text(json.dumps(dict(
+                    reached_horizon=False,simulated_seconds=now,true_decisions=self.decision_counts,
+                    reason="Predeclared episode cap prevents first action" if episode_exhausted else "Predeclared true-decision cap prevents another action",task_history=self.task_history)))
+            raise RuntimeError("Predeclared sampling cap reached; truthful partial failure retained")
 
         # 1. Decode the exact snapshot the actor saw. A policy-selected continue
         # remains in RLlib's trajectory, but does not call the resetting FSW builder.
@@ -112,7 +137,37 @@ class CompletionConstellationTasking(SensingAgentConstellationTasking):
             if not sensor.is_alive():
                 physical_actions[index] = NO_ACTION
                 continue
+            battery_ok = (
+                sensor.dynamics.battery_charge_fraction
+                > sensor.completion_minimum_task_battery_fraction
+            )
+            if action == 1 and (
+                sensor.dynamics.storage_level_fraction
+                <= sensor.completion_empty_storage_mask_fraction
+                or not battery_ok
+            ):
+                raise ValueError(
+                    "Downlink is masked without local stored products or below "
+                    "the local battery reserve."
+                )
+            starts_powered_task = action in {2, 3} or action >= NON_IMAGING_ACTIONS
+            if starts_powered_task and action != CONTINUE_ACTION and not battery_ok:
+                raise ValueError(
+                    "A new powered task is masked below the local battery reserve."
+                )
+            selected_mask=None
+            if getattr(sensor,"completion_study",False):
+                from bsk_rl.obs.completion_observations import private_action_mask
+                selected_mask=private_action_mask(sensor).tolist()
+                if not 0 <= int(action)<len(selected_mask) or not selected_mask[int(action)]:
+                    raise ValueError("Action does not match saved private mask")
+            self.decision_records.append(dict(action_mask=selected_mask,sensor=sensor.name, time_s=now, action=int(action),
+                candidate_ids=[None if t is None else int(t.id) for t in getattr(sensor.completion_candidates, "targets", ())],
+                peer_ids=[None if p is None else p.name for p in getattr(sensor.completion_peers, "peers", ())]))
             self.decision_counts[sensor.name] += 1
+            self.action_selection_counts[sensor.name][
+                sensor.action_description[int(action)]
+            ] += 1
             target_id = None
             epoch = 0.0
             count = sensor.completion_n_candidates
@@ -126,6 +181,8 @@ class CompletionConstellationTasking(SensingAgentConstellationTasking):
                 slot = int(action) - peer_start
                 if not 0 <= slot < len(snapshot.peers) or snapshot.peers[slot] is None:
                     raise ValueError("A masked recipient cannot be selected.")
+                if not self.communicator.transmit_eligible(sensor, snapshot.peers[slot]):
+                    raise ValueError("Transmit action is masked")
                 receiver = snapshot.peers[slot].name
                 same_task = (
                     task is not None
@@ -276,6 +333,22 @@ class CompletionConstellationTasking(SensingAgentConstellationTasking):
             sensor.completion_peers = None
             sensor.observation_builder.obs_dict_cache = None
 
+        self._reward_event_index += 1
+        for sensor in self.sensing_satellites:
+            if not sensor.is_alive(): self.agent_live_until_s.setdefault(sensor.name, end)
+
+    def _get_reward(self):
+        # Log actual API rewards, including newly failed-agent penalties applied
+        # by the parent. Repeated readback cannot duplicate an event increment.
+        reward = super()._get_reward()
+        if self._reward_logged_index != self._reward_event_index:
+            for sensor, value in reward.items():
+                self.episode_reward_by_agent[sensor] += float(value)
+                self.reward_events.append(dict(sensor=sensor,time_s=float(self.simulator.sim_time),
+                    reward=float(value),cumulative_reward=self.episode_reward_by_agent[sensor]))
+            self._reward_logged_index = self._reward_event_index
+        return reward
+
     def _get_obs(self):
         # RLlib bootstraps time-limit truncations from a real final observation,
         # including agents still executing actions when the horizon is reached.
@@ -288,7 +361,12 @@ class CompletionConstellationTasking(SensingAgentConstellationTasking):
             self.generate_obs_retasking_only = original
 
     def _get_info(self):
-        info = super()._get_info()
+        if any(getattr(sensor,"completion_study",False) for sensor in self.sensing_satellites):
+            info={sensor.name:{"requires_retasking":sensor.requires_retasking,"d_ts":self.latest_step_duration}
+                for sensor in self.sensing_satellites if sensor.name not in self.previously_dead}
+            info["__common__"]={"d_ts":self.latest_step_duration}
+        else:
+            info = super()._get_info()
         for sensor in self.sensing_satellites:
             if sensor.name in info:
                 info[sensor.name]["retask_reason"] = getattr(

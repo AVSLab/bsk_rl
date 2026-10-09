@@ -136,3 +136,36 @@ def test_trace_half_life_is_measured_in_seconds():
         lambda_time="second",
     )
     np.testing.assert_allclose(actual[0], gamma**6000 * 0.5, rtol=1e-6)
+
+
+def test_amos_trace_is_per_decision_and_resume_keeps_reward_discount():
+    from bsk_rl.utils.rllib.discounting import compute_value_targets_time_discounted
+
+    gamma, trace = 0.9915045428565076, 0.8713548569911232
+    actual = compute_value_targets_time_discounted(
+        np.zeros(3),
+        np.array([0.0, 1.0, 0.0]),
+        np.array([0, 0, 1]),
+        np.zeros(3),
+        np.array([0.0, 300.0, 1.0]),
+        gamma,
+        trace,
+        reward_time="step_start",
+        lambda_time="step",
+    )
+    np.testing.assert_allclose(actual[0], gamma**300 * trace, rtol=1e-6)
+    args, kwargs = CondenseMultiStepActions(gamma=gamma).get_ctor_args_and_kwargs()
+    assert CondenseMultiStepActions(*args, **kwargs).gamma == gamma
+
+def test_four_sensor_real_decisions_survive_condensation_under_shared_policy():
+    from examples.multiagent_imaging.train import make_shared_policy_mapping
+    episodes=[]
+    for i in range(4):
+        episode=_timed_episode([3,7,5],[i,NO_ACTION,4],[1,2,3])
+        episode.agent_id=f'sensor_{i}';episodes.append(episode)
+    CondenseMultiStepActions(gamma=.99)(data=None,episodes=episodes)
+    mapping=make_shared_policy_mapping({f'sensor_{i}' for i in range(4)})
+    assert sum(len(e.actions) for e in episodes)==8
+    assert {mapping(e.agent_id) for e in episodes}=={'imager'}
+    assert all(NO_ACTION not in list(e.actions) for e in episodes)
+    assert all([v['d_ts'] for v in e.infos]==[0,10,5] for e in episodes)

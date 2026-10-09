@@ -24,3 +24,4 @@ pyyaml==6.0.2
 typer==0.15.2
 rich==13.9.4
 grpcio==1.71.0
+wandb==0.26.1

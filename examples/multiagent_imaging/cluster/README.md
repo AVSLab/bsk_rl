@@ -1,5 +1,33 @@
 # Reviewed Alpine launch and campaign record — 2026-09-13
 
+The current runnable job is the **completion-v4 one-worker recovery gate**.  It
+uses the same four-sensor Walker/mixed mission and physical directed link as the
+completed v3 pilot, but rejects the old checkpoints because the operational mask
+changed.  Before collecting a PPO episode it runs a real-Basilisk initialization
+gate over all four sensors and verifies calibrated probabilities plus empirical
+categorical samples.  After two update/restore steps per retasking mode it runs
+both deterministic and reproducibly stochastic policy evaluation.  The job fails
+unless both selections capture and ground-deliver without battery exhaustion and
+the restored stochastic policy selects a receiver and completes a packet.
+
+After pulling the reviewed recovery commit, use a fresh result path:
+
+```bash
+export BSK_PROJECT_ROOT=/projects/dahu1128/bsk_rl-multi-agent-space-imaging-2026
+export BSK_RL_PYTHON=/projects/dahu1128/.venv-completion-v2/bin/python
+export BASILISK_SOURCE_ROOT=/projects/dahu1128/basilisk-completion-v2
+export BSK_SUPPORT_DATA_CACHE="$BASILISK_SOURCE_ROOT/.support-data-cache"
+export BSK_STAGE=validate
+export BSK_OUTPUT="$BSK_PROJECT_ROOT/results/multiagent_imaging/walker4-completion-v4-recovery-$(date +%Y%m%d-%H%M%S)/one-worker"
+sbatch --export=ALL examples/multiagent_imaging/cluster/pilot.slurm
+```
+
+This submits one node with eight requested CPUs and 32 GiB for at most four hours.
+It does not submit a four-worker follow-on.  Preserve the output even when the
+behavior gate fails; a failed recovery gate is diagnostic evidence.
+
+## Historical v3 launch record
+
 The current authorized learned pilot is `completion-v3-walker4-mixed`: four
 Walker Delta 4/2/1 sensing agents, 100 live passive targets in the exact 50 LEO/
 30 MEO/20 GEO mix, ten candidates, directed completion transfer, and no LEO-only

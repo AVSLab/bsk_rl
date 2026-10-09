@@ -16,7 +16,7 @@ from bsk_rl.obs.observations import (
 )
 
 
-OBSERVATION_VERSION = "completion-v3-walker4-mixed"
+OBSERVATION_VERSION = "completion-v4-operational-mask"
 PEER_FEATURES = 12
 GLOBAL_FEATURES = 26  # 14 inherited own/environment features + 12 below
 TARGET_FEATURES = 17
@@ -24,6 +24,8 @@ NON_IMAGING_ACTIONS = 5  # charge, downlink, desat, broadcast, deliberate contin
 CONTINUE_ACTION = 4
 VALID_TARGET_FEATURE = 16
 CONTINUE_VALID_FEATURE = 25
+STORAGE_FRACTION_FEATURE = 0
+BATTERY_FRACTION_FEATURE = 1
 
 # These names are serialized in every checkpoint.  Keeping the order beside the
 # implementation makes a silent feature rearrangement a schema error even when
@@ -190,10 +192,11 @@ class CompletionTargets(Observation):
     the inherited imaging model; it is not a rotating-frame position derivative.
     """
 
-    def __init__(self, n_targets, norm_time=12000.0):
+    def __init__(self, n_targets, norm_time=12000.0, study=False):
         """Configure the fixed candidate count and service-age normalization."""
         super().__init__(name="completion_targets")
         self.n_targets, self.norm_time = int(n_targets), float(norm_time)
+        self.study = study
 
     def get_obs(self):
         """Encode the cached candidate tuple with explicit validity and knownness."""
@@ -204,7 +207,7 @@ class CompletionTargets(Observation):
         result = {}
         for index, target in enumerate(snapshot.targets):
             if target is None:
-                result[f"slot_{index}"] = np.zeros(TARGET_FEATURES)
+                result[f"slot_{index}"] = np.zeros(21 if self.study else TARGET_FEATURES)
                 continue
             opportunity = {"object": target}
             acquired = catalog.target(target.id).latest_acquisition_time
@@ -228,6 +231,14 @@ class CompletionTargets(Observation):
                 ),
                 1.0,
             ]
+            if self.study:
+                received = catalog.received_inventory.current(now, target_id=target.id)
+                entries = [(e, epoch, ttl) for (owner, rid), (e, epoch, ttl) in catalog.received_inventory.entries.items() if e.fact.target_id == target.id]
+                latest = max((epoch for e, epoch, ttl in entries), default=None)
+                values.extend([sum(e.fact.qualified for e in received) / 3,
+                    sum(not e.fact.qualified for e in received) / 3,
+                    0 if latest is None else (now-latest)/self.norm_time,
+                    float(any(now < epoch+ttl for e, epoch, ttl in entries))])
             result[f"slot_{index}"] = np.asarray(values, dtype=float)
         return result
 
@@ -254,11 +265,11 @@ def peer_snapshot(sensor):
         return cached
     channel = sensor.completion_communicator
     contacts = (
-        channel.receivers(sensor) if channel.information_case == "completion" else set()
+        channel.receivers(sensor) if channel.information_case in {"completion", "catalog_tx", "geometry_only"} else set()
     )
     peers = tuple(
         peer
-        if peer.name in contacts and channel.delta(sensor.name, peer.name)
+        if peer.name in contacts and (channel.information_case in {"catalog_tx", "geometry_only"} or channel.delta(sensor.name, peer.name))
         else None
         for peer in sorted(channel.sensors, key=lambda p: p.name)
         if peer is not sensor
@@ -278,9 +289,10 @@ class CompletionPeers(Observation):
         sensor, now = self.satellite, float(self.simulator.sim_time)
         channel = sensor.completion_communicator
         result = {}
+        study = channel.information_case in {"catalog_tx", "geometry_only"}
         for index, peer in enumerate(peer_snapshot(sensor).peers):
             if peer is None:
-                result[f"peer_{index}"] = np.zeros(PEER_FEATURES)
+                result[f"peer_{index}"] = np.zeros(18 if study else PEER_FEATURES)
                 continue
             # This read represents an ideal fresh navigation beacon, not arbitrary
             # actor access to uncommunicated peer state. The same beacon drives FSW.
@@ -295,7 +307,7 @@ class CompletionPeers(Observation):
                 np.arccos(np.clip(boresight @ relative / max(distance, 1e-9), -1, 1))
             )
             exchange = channel.peer_exchange.get((sensor.name, peer.name))
-            result[f"peer_{index}"] = np.array(
+            values = list(
                 [
                     *(hill @ relative / 15960e3),
                     *(hill @ velocity / 12000),
@@ -308,4 +320,27 @@ class CompletionPeers(Observation):
                     1.0,
                 ]
             )
+            if study:
+                catalog = sensor.data_store.catalog
+                current = catalog.received_inventory.current(now, owner=peer.name)
+                epoch = catalog.received_inventory.snapshot_epoch.get(peer.name)
+                values = values[:-1] + [sum(e.fact.qualified for e in current)/max(1,len(catalog.targets)),
+                    sum(not e.fact.qualified for e in current)/max(1,len(catalog.targets)),
+                    0 if epoch is None else (now-epoch)/self.norm_time,
+                    float(epoch is not None and now < epoch+channel.ttl_s),
+                    float(epoch is not None), 1.0,
+                    float(channel.transmit_eligible(sensor, peer))]
+            result[f"peer_{index}"] = np.array(values)
         return result
+
+def private_action_mask(sensor):
+    """Study decoder/sampler mask, using only own state and declared beacons."""
+    channel=sensor.completion_communicator
+    battery=sensor.dynamics.battery_charge_fraction>sensor.completion_minimum_task_battery_fraction
+    candidates=candidate_snapshot(sensor,sensor.completion_n_candidates).targets
+    peers=peer_snapshot(sensor).peers
+    return np.asarray([1,
+        int(battery and sensor.dynamics.storage_level_fraction>sensor.completion_empty_storage_mask_fraction),
+        int(battery),0,int(can_continue(sensor)),
+        *[int(battery and t is not None) for t in candidates],
+        *[int(battery and p is not None and channel.transmit_eligible(sensor,p)) for p in peers]],dtype=np.int8)

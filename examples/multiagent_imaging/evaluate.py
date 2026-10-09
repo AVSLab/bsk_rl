@@ -51,10 +51,10 @@ def _target_action(
     """Apply one shared deterministic target rule to every sensing agent."""
     target_features = np.asarray(
         observation[
-            GLOBAL_FEATURES : GLOBAL_FEATURES + config.n_candidates * TARGET_FEATURES
+            GLOBAL_FEATURES : GLOBAL_FEATURES + config.n_candidates * config.target_features
         ],
         dtype=float,
-    ).reshape(config.n_candidates, TARGET_FEATURES)
+    ).reshape(config.n_candidates, config.target_features)
     priorities = target_features[:, 0]
     unavailable = target_features[:, 16] < 0.5
     if np.all(unavailable):
@@ -454,7 +454,7 @@ def run_rollout(
             "configured_duplicate_penalty": 0.0,
         },
         "coordination": coordination,
-        "observation_version": OBSERVATION_VERSION,
+        "observation_version": config.observation_version,
         "completion_records": {
             s.name: [asdict(r) for r in s.data_store.catalog.records.values()]
             for s in env.sensing_satellites
@@ -514,6 +514,20 @@ def run_rollout(
             for sensor in env.sensing_satellites
         },
     }
+    if config.is_study:
+        from examples.multiagent_imaging.study_metrics import mission_metrics
+        evidence=dict(simulated_seconds=result["sim_time_s"],policy_decisions=dict(env.decision_counts),
+            radio_power_intervals=env.communicator.radio_audit(result["sim_time_s"]),
+            capture_products=[asdict(p) for p in captures],delivered_products=[asdict(e) for e in services],
+            agent_live_until_s={s.name:env.agent_live_until_s.get(s.name,result["sim_time_s"]) for s in env.sensing_satellites},
+            first_receipts={s.name:dict(s.data_store.catalog.received_at) for s in env.sensing_satellites},
+            coordination=coordination,reimage_cooldown_s=env.rewarder.reimage_cooldown_s,
+            reward_by_agent=cumulative_reward,constellation_reward=total_reward,
+            coverage=coverage,team_summary=dict(env.rewarder.team_summary))
+        result["mission_metrics"]=mission_metrics(evidence,config.episode_duration_s)
+        result["raw_metric_evidence"]=evidence
+        result["decision_records"]=list(env.decision_records)
+        result["reward_event_audit"]=list(env.reward_events)
     env.close()
 
     # Unknown legacy summary timestamps use infinities internally. Export null,

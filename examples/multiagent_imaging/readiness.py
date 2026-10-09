@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import hashlib
 import importlib.metadata
 import json
+import os
 from pathlib import Path
 import platform
 import subprocess
@@ -34,7 +35,7 @@ def schema(config):
     """
     settings = config.to_dict()
     settings.pop("seed")
-    return dict(
+    contract = dict(
         version=OBSERVATION_VERSION,
         policy="shared-target-peer-set-attention-v3",
         observation=dict(
@@ -67,6 +68,13 @@ def schema(config):
             target_valid_feature=16,
             peer_valid_feature=11,
             continue_valid_global_feature=25,
+            own_storage_fraction_feature=0,
+            own_battery_fraction_feature=1,
+            empty_storage_mask_fraction=config.empty_storage_mask_fraction,
+            minimum_task_battery_fraction=config.minimum_task_battery_fraction,
+            charge_always_valid=True,
+            downlink_requires_local_product=True,
+            new_powered_tasks_require_battery_reserve=True,
             invalid_logit=-1e9,
             directed_broadcast_index_masked=True,
             padding_excluded_from_actor_attention=True,
@@ -75,6 +83,17 @@ def schema(config):
         ),
         settings=settings,
     )
+
+    if config.is_study:
+        contract["version"] = config.observation_version
+        contract["protocol"] = "completed-onboard-v1"
+        contract["navigation"] = "ideal navigation-only current position/velocity beacon when LOS; unknown outside LOS"
+        o = contract["observation"]
+        o.update(target_features=21, peer_features=18, size=26+21*config.n_candidates+18*config.n_peers)
+        o["target_feature_order"] += ["received_onboard_qualified_fraction", "received_onboard_low_quality_fraction", "inventory_snapshot_age", "inventory_status_known"]
+        o["peer_feature_order"] = list(PEER_FEATURE_ORDER[:-1])+["received_qualified_inventory_fraction", "received_low_quality_inventory_fraction", "snapshot_age", "snapshot_fresh", "snapshot_known", "navigation_observation_valid", "transmit_eligible"]
+        contract["masks"].update(peer_valid_feature=16, peer_transmit_eligible_feature=17)
+    return contract
 
 
 def validate_schema(saved, config):
@@ -139,11 +158,22 @@ def provenance(config):
         python=platform.python_version(),
         platform=platform.platform(),
         packages=versions,
+        packages_are_distribution_metadata=True,
+        effective_imports=(
+            __import__("examples.multiagent_imaging.cluster.effective_imports", fromlist=["effective_import_record"]).effective_import_record()
+            if os.environ.get("BSK_REQUIRE_EXTERNAL_PSUTIL") == "1" else None
+        ),
         basilisk_version=getattr(Basilisk, "__version__", "unknown"),
         basilisk_path=str(Basilisk.__path__[0]),
         basilisk_git_commit=basilisk_source_commit(Basilisk.__path__[0]),
         discount_half_life_s=config.discount_half_life_s,
-        gae_trace_half_life_s=config.gae_trace_half_life_s,
+        gae_trace_half_life_s=(
+            config.gae_trace_half_life_s
+            if config.gae_lambda_per_decision is None
+            else None
+        ),
+        effective_gae_lambda=config.effective_gae_lambda,
+        gae_lambda_time=config.gae_lambda_time,
     )
 
 

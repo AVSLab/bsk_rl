@@ -145,6 +145,10 @@ class CondenseMultiStepActions(ConnectorV2):
             raise ValueError("gamma must be in (0, 1].")
         self.gamma = gamma
 
+    def get_ctor_args_and_kwargs(self):
+        args, kwargs = super().get_ctor_args_and_kwargs()
+        return args, {**kwargs, "gamma": self.gamma}
+
     def __call__(
         self,
         *,

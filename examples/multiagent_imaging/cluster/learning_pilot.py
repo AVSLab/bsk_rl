@@ -10,6 +10,7 @@ import numpy as np
 from examples.multiagent_imaging.cluster.audit_runtime import audit
 from examples.multiagent_imaging.config import MultiAgentImagingConfig
 from examples.multiagent_imaging.readiness import measure, write_json
+from bsk_rl.obs.completion_observations import NON_IMAGING_ACTIONS
 
 
 MODES = ("conflict", "continuous")
@@ -87,12 +88,11 @@ def validate_mission_paths(records, config):
 
 
 def evaluate_checkpoint(config, checkpoint, output, seeds):
-    """Pair restored policy, independent, and full-state greedy references by seed."""
+    """Pair deterministic and stochastic restored policy with both references."""
     from examples.multiagent_imaging.checkpoints import load_policy, policy_callable
     from examples.multiagent_imaging.evaluate import run_rollout
 
     module, evidence = load_policy(checkpoint, config)
-    policy = policy_callable(module)
     output = Path(output)
     pairs = []
     for seed in seeds:
@@ -103,25 +103,40 @@ def evaluate_checkpoint(config, checkpoint, output, seeds):
         )
         results = {}
         runs = (
-            ("policy", policy_config, "closest_angle", True),
+            ("policy", policy_config, "closest_angle", "deterministic"),
+            (
+                "policy_stochastic",
+                policy_config,
+                "closest_angle",
+                "stochastic",
+            ),
             (
                 "independent",
                 independent_config,
                 "independent_reference",
-                False,
+                None,
             ),
             (
                 "centralized_full_state",
                 centralized_config,
                 "centralized_full_state_reference",
-                False,
+                None,
             ),
         )
-        for label, eval_config, controller, uses_policy in runs:
+        for label, eval_config, controller, policy_selection in runs:
             calls = []
+            selected_policy = (
+                policy_callable(
+                    module,
+                    deterministic=policy_selection == "deterministic",
+                    seed=seed,
+                )
+                if policy_selection is not None
+                else None
+            )
 
             def counted(observation):
-                action = policy(observation)
+                action = selected_policy(observation)
                 calls.append(action)
                 return action
 
@@ -129,11 +144,11 @@ def evaluate_checkpoint(config, checkpoint, output, seeds):
                 result = run_rollout(
                     eval_config,
                     controller=controller,
-                    policy=counted if uses_policy else None,
+                    policy=counted if policy_selection is not None else None,
                 )
             if not np.isclose(result["sim_time_s"], config.episode_duration_s):
                 raise AssertionError("Held-out episode ended early.")
-            if uses_policy and (
+            if policy_selection is not None and (
                 not calls
                 or len(calls)
                 != sum(result["coordination"]["policy_decisions"].values())
@@ -141,20 +156,24 @@ def evaluate_checkpoint(config, checkpoint, output, seeds):
                 raise AssertionError(
                     "Evaluation did not execute the restored policy at every decision."
                 )
-            if not uses_policy and (
+            if policy_selection is None and (
                 result["message_diagnostics"]["transmission_history"]
                 or any(result["broadcast_time_s"].values())
             ):
                 raise AssertionError("Heuristic references must have zero radio activity.")
             result.update(
                 controller=(
-                    "restored-target-set-attention"
-                    if uses_policy
+                    f"restored-target-set-attention-{policy_selection}"
+                    if policy_selection is not None
                     else controller
                 ),
                 checkpoint=str(checkpoint) if calls else None,
                 restored_policy_calls=len(calls),
                 restore_validation=evidence if calls else None,
+                policy_selection=policy_selection,
+                restored_policy_action_counts={
+                    str(action): calls.count(action) for action in sorted(set(calls))
+                },
             )
             measurement["sim_seconds_per_wall_second"] = (
                 result["sim_time_s"] / measurement["wall_time_s"]
@@ -170,6 +189,24 @@ def evaluate_checkpoint(config, checkpoint, output, seeds):
             coordination = result["coordination"]
             products = result["product_duplicates"]
             rewards = result["reward_decomposition"]
+            selected = {
+                int(action): int(count)
+                for action, count in result.get(
+                    "restored_policy_action_counts", {}
+                ).items()
+            }
+            selected_types = set()
+            for action, count in selected.items():
+                if not count:
+                    continue
+                selected_types.add(
+                    "image"
+                    if NON_IMAGING_ACTIONS <= action < NON_IMAGING_ACTIONS + config.n_candidates
+                    else "transmit"
+                    if action >= NON_IMAGING_ACTIONS + config.n_candidates
+                    else ("charge", "downlink", "desat", "broadcast", "continue")[action]
+                )
+            histories = result["resource_history"].values()
             return dict(
                 acquisition_reward_component=rewards[
                     "acquisition_90_percent_component"
@@ -232,16 +269,32 @@ def evaluate_checkpoint(config, checkpoint, output, seeds):
                     coordination["communication_time_s"].values()
                 ),
                 useful_revisits=result["useful_post_cooldown_revisits"]["count"],
+                selected_action_type_count=len(selected_types),
+                selected_downlink_count=selected.get(1, 0),
+                selected_transmit_count=sum(
+                    count
+                    for action, count in selected.items()
+                    if action >= NON_IMAGING_ACTIONS + config.n_candidates
+                ),
+                accepted_completion_packets=result["message_diagnostics"][
+                    "packet_outcome_counts"
+                ].get("accepted", 0),
+                minimum_battery_fraction=min(
+                    sample["battery_fraction"]
+                    for history in histories
+                    for sample in history
+                ),
             )
 
         values = {label: metrics(result) for label, result in results.items()}
-        differences = {
-            f"policy_minus_{reference}": {
-                key: values["policy"][key] - values[reference][key]
-                for key in values["policy"]
-            }
-            for reference in ("independent", "centralized_full_state")
-        }
+        differences = {}
+        for policy_label in ("policy", "policy_stochastic"):
+            for reference in ("independent", "centralized_full_state"):
+                prefix = "policy" if policy_label == "policy" else policy_label
+                differences[f"{prefix}_minus_{reference}"] = {
+                    key: values[policy_label][key] - values[reference][key]
+                    for key in values[policy_label]
+                }
         pairs.append(
             dict(
                 seed=seed,
@@ -255,6 +308,41 @@ def evaluate_checkpoint(config, checkpoint, output, seeds):
     if len(pairs) > 1:
         plot_paired_effects(pairs, output / "paired_effects.png")
     return pairs
+
+
+def validate_restored_policy_behavior(pairs, config):
+    """Make mission behavior, rather than finite tensors, the learning gate.
+
+    PPO trains its categorical policy by sampling.  Deterministic argmax remains
+    a separately reported deployment diagnostic, but two gate updates cannot be
+    expected to make every useful action its maximum logit.  Communication is
+    therefore required from the restored stochastic policy; the focused physical
+    link tests and sampled training episodes independently cover the same path.
+    """
+    failures = []
+    for pair in pairs:
+        for label in ("policy", "policy_stochastic"):
+            values = pair["metrics"][label]
+            prefix = f"seed {pair['seed']} {label}"
+            if values["first_capture_coverage"] <= 0:
+                failures.append(f"{prefix}: no qualified capture")
+            if values["ground_delivery_coverage"] <= 0:
+                failures.append(f"{prefix}: no full ground delivery")
+            if values["selected_action_type_count"] < 2:
+                failures.append(f"{prefix}: fewer than two selected action types")
+            if values["minimum_battery_fraction"] <= 0:
+                failures.append(f"{prefix}: a sensor exhausted its battery")
+        stochastic = pair["metrics"]["policy_stochastic"]
+        if stochastic["selected_transmit_count"] <= 0:
+            failures.append(
+                f"seed {pair['seed']} stochastic: no selected recipient transmission"
+            )
+        if stochastic["accepted_completion_packets"] <= 0:
+            failures.append(
+                f"seed {pair['seed']} stochastic: no accepted completion packet"
+            )
+    if failures:
+        raise AssertionError("Restored policy behavior gate failed: " + "; ".join(failures))
 
 
 def check_gate(gate, runtime):
@@ -379,6 +467,7 @@ def run(stage, output, *, gate_path=None, updates=8):
             output / mode / "evaluation",
             HELD_OUT_SEEDS[:1] if stage == "validate" else HELD_OUT_SEEDS,
         )
+        validate_restored_policy_behavior(pairs, config)
         record["modes"][mode] = dict(
             checkpoint=checkpoint, updates=len(trained), paired_evaluation=pairs
         )

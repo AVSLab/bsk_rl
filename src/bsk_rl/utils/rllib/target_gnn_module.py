@@ -349,6 +349,8 @@ class GNNActor(nn.Module):
         dropout: float = 0.0,
         condition_on_spacecraft: bool = False,
         valid_feature: int | None = None,
+        action_head_init_gain: float | None = None,
+        initial_imaging_logit_bias: float = 0.0,
     ):
         """Configure shared encoders, attention and output dimensions."""
         super(GNNActor, self).__init__()
@@ -435,6 +437,18 @@ class GNNActor(nn.Module):
         if self.non_imaging_actions > 0:
             self.no_action_head = nn.Linear(tgt_encoded_dim, non_imaging_actions)
 
+        if action_head_init_gain is not None:
+            # Calibrate separately parameterized completion-action heads onto one
+            # initial logit scale.  Leaving the option unset preserves historical
+            # GNNActor initialization for other BSK-RL users.
+            nn.init.orthogonal_(self.out_layer_g.weight, gain=action_head_init_gain)
+            nn.init.constant_(self.out_layer_g.bias, initial_imaging_logit_bias)
+            if self.non_imaging_actions > 0:
+                nn.init.orthogonal_(
+                    self.no_action_head.weight, gain=action_head_init_gain
+                )
+                nn.init.zeros_(self.no_action_head.bias)
+
     def forward(self, x):
         """Encode the item set and preserve its declared masking and ordering."""
         if isinstance(x, dict) and "obs" in x:
@@ -503,9 +517,19 @@ class PeerSetHead(nn.Module):
     order permutes transmission logits and leaves imaging/operational values fixed.
     """
 
-    def __init__(self, base, base_inputs, own_features, peer_features, critic=False):
+    def __init__(
+        self,
+        base,
+        base_inputs,
+        own_features,
+        peer_features,
+        critic=False,
+        action_head_init_gain=None,
+        observation_valid_feature=-1,
+    ):
         """Configure shared encoders, attention and output dimensions."""
         super().__init__()
+        self.observation_valid_feature = observation_valid_feature
         self.base, self.base_inputs, self.own_features = base, base_inputs, own_features
         self.peer_features, self.critic = peer_features, critic
         self.encode = nn.Sequential(
@@ -515,13 +539,16 @@ class PeerSetHead(nn.Module):
         self.score = nn.Sequential(
             nn.Linear(64 + own_features, 64), nn.ReLU(), nn.Linear(64, 1)
         )
+        if not critic and action_head_init_gain is not None:
+            nn.init.orthogonal_(self.score[-1].weight, gain=action_head_init_gain)
+            nn.init.zeros_(self.score[-1].bias)
 
     def forward(self, batch):
         """Encode the item set and preserve its declared masking and ordering."""
         x = batch["obs"] if isinstance(batch, dict) else batch
         base = x[:, : self.base_inputs]
         peers = x[:, self.base_inputs :].reshape(x.shape[0], -1, self.peer_features)
-        valid = peers[:, :, -1] > 0.5
+        valid = peers[:, :, self.observation_valid_feature] > 0.5
         peers = peers.masked_fill(~valid.unsqueeze(-1), 0.0)
         encoded = self.encode(peers)
         pooled, _, _ = masked_pool(encoded, valid)
@@ -583,6 +610,10 @@ class GNNModule(PPOTorchRLModule, nn.Module):
             dropout=dropout,
             non_imaging_actions=model_config.get("non_imaging_actions", 1),
             condition_on_spacecraft=model_config.get("condition_on_spacecraft", False),
+            action_head_init_gain=model_config.get("action_head_init_gain"),
+            initial_imaging_logit_bias=model_config.get(
+                "initial_imaging_logit_bias", 0.01
+            ),
         )
 
         # Only build the critic network when this is a learner module.
@@ -610,7 +641,12 @@ class GNNModule(PPOTorchRLModule, nn.Module):
 
         if n_peers:
             self.pi_head = PeerSetHead(
-                self.pi_head, base_inputs, model_config["obs_sat"], peer_features
+                self.pi_head,
+                base_inputs,
+                model_config["obs_sat"],
+                peer_features,
+                action_head_init_gain=model_config.get("action_head_init_gain"),
+                observation_valid_feature=model_config.get("peer_observation_valid_feature", -1),
             )
             if hasattr(self, "vf"):
                 self.vf = PeerSetHead(
@@ -619,6 +655,7 @@ class GNNModule(PPOTorchRLModule, nn.Module):
                     model_config["obs_sat"],
                     peer_features,
                     critic=True,
+                    observation_valid_feature=model_config.get("peer_observation_valid_feature", -1),
                 )
         self.action_dist_cls = catalog.get_action_dist_cls(framework=self.framework)
 
@@ -637,33 +674,54 @@ class GNNModule(PPOTorchRLModule, nn.Module):
                 CONTINUE_ACTION,
                 CONTINUE_VALID_FEATURE,
                 VALID_TARGET_FEATURE,
+                STORAGE_FRACTION_FEATURE,
+                BATTERY_FRACTION_FEATURE,
                 OBSERVATION_VERSION,
             )
 
             if (
                 self.config.model_config_dict.get("observation_version")
-                != OBSERVATION_VERSION
+                not in {OBSERVATION_VERSION, "walker-inventory-navigation-v1"}
             ):
                 raise ValueError("Completion observation/checkpoint version mismatch.")
             features = batch[Columns.OBS]
             count = self.config.model_config_dict["n_targets"]
-            target_end = GLOBAL_FEATURES + count * TARGET_FEATURES
+            target_features = self.config.model_config_dict.get("target_features", TARGET_FEATURES)
+            target_end = GLOBAL_FEATURES + count * target_features
             targets = features[:, GLOBAL_FEATURES:target_end].reshape(
-                features.shape[0], count, TARGET_FEATURES
+                features.shape[0], count, target_features
             )
             mask = torch.ones_like(logits, dtype=torch.bool)
+            battery_ok = (
+                features[:, BATTERY_FRACTION_FEATURE]
+                > self.config.model_config_dict.get(
+                    "minimum_task_battery_fraction", 0.0
+                )
+            )
+            # Index 0 (charge) is deliberately always valid.  All other newly
+            # started powered tasks use only the actor's own resource features.
+            mask[:, 1] = (
+                features[:, STORAGE_FRACTION_FEATURE]
+                > self.config.model_config_dict.get(
+                    "empty_storage_mask_fraction", 0.0
+                )
+            ) & battery_ok
+            mask[:, 2] = battery_ok
+            mask[:, 3] = battery_ok
             mask[:, NON_IMAGING_ACTIONS : NON_IMAGING_ACTIONS + count] = (
                 targets[:, :, VALID_TARGET_FEATURE] > 0.5
-            )
+            ) & battery_ok.unsqueeze(1)
             if self.config.model_config_dict.get("n_peers", 0):
-                peers = features[:, target_end:].reshape(features.shape[0], -1, 12)
-                mask[:, NON_IMAGING_ACTIONS + count :] = peers[:, :, -1] > 0.5
+                peers = features[:, target_end:].reshape(features.shape[0], -1, self.config.model_config_dict.get("peer_features", 12))
+                mask[:, NON_IMAGING_ACTIONS + count :] = (
+                    peers[:, :, -1] > 0.5
+                ) & battery_ok.unsqueeze(1)
                 mask[:, 3] = False  # Directed mode reserves baseline index 3.
             if self.config.model_config_dict.get("communication_mode") == "directed":
                 mask[:, 3] = False
             if self.config.model_config_dict.get("information_case") in {
                 "independent",
-                "ideal_completion",
+                "ideal_completion", "geometry_only",
             }:
                 mask[:, 3] = False
                 mask[:, NON_IMAGING_ACTIONS + count :] = False

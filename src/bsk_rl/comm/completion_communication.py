@@ -26,6 +26,7 @@ class CompletionPacket:
     expires_at: float
     records: tuple[CompletionRecord, ...]
     payload_bytes: int = 0
+    inventory_snapshot: object = None
 
 
 @dataclass
@@ -36,6 +37,7 @@ class Transmission:
     receivers: set[str]
     directed: bool = False
     payload_bytes: int = 0
+    inventory_snapshot: object = None
 
 
 class CompletionCommunication(CommunicationMethod):
@@ -56,10 +58,11 @@ class CompletionCommunication(CommunicationMethod):
         loss_probability=0.0,
         ttl_s=600.0,
         link_mode="los",
+        inventory_chunk_records=256,
     ):
         """Configure transport timing, impairment, and geometric link assumptions."""
         super().__init__(min_period=0.0)
-        if information_case not in {"independent", "ideal_completion", "completion"}:
+        if information_case not in {"independent", "ideal_completion", "completion", "catalog_tx", "geometry_only"}:
             raise ValueError("Unknown completion information case.")
         if link_mode not in {"ideal", "los"}:
             raise ValueError("link_mode must be ideal or los.")
@@ -78,6 +81,7 @@ class CompletionCommunication(CommunicationMethod):
             float(ttl_s),
         )
         self.link_mode = link_mode
+        self.inventory_chunk_records = int(inventory_chunk_records)
 
     def link_satellites(self, satellites):
         """Register sensing spacecraft only as metadata senders and receivers."""
@@ -97,6 +101,8 @@ class CompletionCommunication(CommunicationMethod):
         self.transmission_history = []
         self.last_exchange = {}
         self.peer_exchange = {}
+        self.inventory_refresh = {}
+        self.inventory_record_refresh = {}
 
     def reset_post_sim_init(self):
         """Bind new local catalogs and initialize the episode-local random stream."""
@@ -155,6 +161,9 @@ class CompletionCommunication(CommunicationMethod):
     def delta(self, sender, receiver):
         """Sender-local facts minus its ACK history; never read the peer catalog."""
         ack = self.acknowledged.get((sender, receiver), {})
+        if self.information_case == "geometry_only": return ()
+        if self.information_case == "catalog_tx":
+            return self._inventory_delta(sender, receiver)
         return tuple(
             r
             for r in self.catalogs[sender].records.values()
@@ -163,22 +172,55 @@ class CompletionCommunication(CommunicationMethod):
             and ack.get(r.record_id, 0) < r.version
         )
 
+    def _inventory_delta(self, sender, receiver):
+        ack = self.acknowledged.get((sender, receiver), {})
+        now = float(next(s for s in self.sensors if s.name == sender).simulator.sim_time)
+        refresh = now >= self.inventory_refresh.get((sender, receiver), float("-inf")) + self.ttl_s
+        return tuple(e for e in sorted(self.catalogs[sender].owned_inventory.values(), key=lambda e: (ack.get(e.record_id, 0) >= e.version, e.revision, e.record_id))
+            if now >= self.inventory_record_refresh.get((sender, receiver, e.record_id), float("-inf")) + self.ttl_s or ack.get(e.record_id, 0) < e.version)
+
+    def transmit_eligible(self, sensor, peer):
+        eligible = (self.information_case in {"completion", "catalog_tx"} and peer is not None
+                and peer.name in self.receivers(sensor) and bool(self.delta(sensor.name, peer.name)))
+        if not eligible: return False
+        if self.information_case == "catalog_tx":
+            snapshot = self.frozen_inventory(sensor.name, peer.name, float(sensor.simulator.sim_time))
+            bitrate = getattr(sensor,"completion_metadata_bitrate_bps",None)
+            duration = getattr(sensor,"completion_transmit_duration_s",300.)
+            hold = getattr(sensor,"completion_transmit_hold_s",10.)
+            if bitrate and max(hold,8*snapshot.wire_bytes()/bitrate)>duration: return False
+        return True
+
+    def frozen_inventory(self, sender, receiver, now):
+        from bsk_rl.data.onboard_inventory import InventorySnapshot
+        catalog = self.catalogs[sender]
+        all_entries = tuple(sorted(catalog.owned_inventory.values(), key=lambda e: (e.revision, e.record_id)))
+        complete = len(all_entries) <= self.inventory_chunk_records
+        records = all_entries if complete else self.delta(sender,receiver)[:self.inventory_chunk_records]
+        return InventorySnapshot(sender,catalog.inventory_revision,float(now),records,complete)
+
     def begin_directed(self, sensor, receiver, now):
         """Freeze one recipient's delta. Only the physical hold gate can finish it."""
-        if self.information_case != "completion" or receiver.name not in self.receivers(
+        if self.information_case not in {"completion", "catalog_tx"} or receiver.name not in self.receivers(
             sensor
         ):
             raise ValueError("Directed transmission requires a discovered contact.")
+        if not self.transmit_eligible(sensor,receiver): raise ValueError("No feasible inventory packet")
         records = self.delta(sensor.name, receiver.name)
         if not records:
             raise ValueError("No unacknowledged completion records for this peer.")
+        snapshot = None
+        if self.information_case == "catalog_tx":
+            snapshot = self.frozen_inventory(sensor.name,receiver.name,now)
+            records = snapshot.entries
         self.transmissions[sensor.name] = Transmission(
             float(now),
             float("inf"),
             records,
             {receiver.name},
             directed=True,
-            payload_bytes=self.wire_payload_bytes(records),
+            payload_bytes=snapshot.wire_bytes() if snapshot else self.wire_payload_bytes(records),
+            inventory_snapshot=snapshot,
         )
         return records
 
@@ -186,6 +228,15 @@ class CompletionCommunication(CommunicationMethod):
         """Discard an unfinished radio operation without delivering its snapshot."""
         transmission = self.transmissions.pop(sender, None)
         if transmission is not None:
+            # Failure can cancel in the communication layer before an action
+            # callback runs. Preserve powered time in that path as well.
+            sensor=next((s for s in self.sensors if s.name==sender),None)
+            action=getattr(sensor,"_active_completion_transmit",None)
+            radio={}
+            if action is not None and not getattr(action,"_audit_recorded",False):
+                radio=dict(radio_on_s=action.radio_on_s+(max(0.,float(now)-action.last_time) if action.was_valid else 0.),
+                    outcome="cancelled_without_action_audit")
+                action._audit_recorded=True
             self.transmission_history.append(
                 dict(
                     sender=sender,
@@ -197,12 +248,15 @@ class CompletionCommunication(CommunicationMethod):
                     payload_bytes=transmission.payload_bytes,
                     receivers=sorted(transmission.receivers),
                     directed=transmission.directed,
+                    **radio,
                 )
             )
 
     def backlog(self, sender):
         """Number of records not yet acknowledged by every configured peer."""
         peers = [p.name for p in self.sensors if p.name != sender]
+        if self.information_case in {"catalog_tx", "geometry_only"}:
+            return len({r.record_id for peer in peers for r in self.delta(sender, peer)})
         return sum(
             any(
                 self.acknowledged.get((sender, p), {}).get(r.record_id, 0) < r.version
@@ -213,6 +267,21 @@ class CompletionCommunication(CommunicationMethod):
             if r.qualified
         )
 
+    def radio_audit(self, now):
+        """Evaluation-only powered durations; include an unfinished final task.
+
+        Action hold rows are authoritative. Generic packet/completion rows do
+        not carry radio_on_s and must not be counted a second time.
+        """
+        rows = [dict(row) for row in self.transmission_history if "radio_on_s" in row]
+        for sensor in self.sensors:
+            action = getattr(sensor, "_active_completion_transmit", None)
+            if action is not None and sensor.name in self.transmissions and not getattr(action,"_audit_recorded",False):
+                rows.append(dict(sender=sensor.name, start=action.start_time,
+                    end=float(now), outcome="unfinished_at_episode_end",
+                    radio_on_s=action.radio_on_s + (max(0., float(now)-action.last_time) if action.was_valid else 0.)))
+        return rows
+
     def next_event_time(self, now):
         """Let the environment stop at packet arrival even if all agents are busy."""
         return min(
@@ -221,7 +290,7 @@ class CompletionCommunication(CommunicationMethod):
             default=float("inf"),
         )
 
-    def _queue(self, sender, receiver, records, now, *, ideal=False):
+    def _queue(self, sender, receiver, records, now, *, ideal=False, snapshot=None):
         ack = self.acknowledged.get((sender, receiver), {})
         # An exposure's original owner already knows the fact it generated.
         delta = tuple(
@@ -229,6 +298,7 @@ class CompletionCommunication(CommunicationMethod):
             for r in records
             if r.source_sensor != receiver and ack.get(r.record_id, 0) < r.version
         )
+        if snapshot is not None: delta = snapshot.entries
         if not delta:
             return
         self.sequence += 1
@@ -239,15 +309,16 @@ class CompletionCommunication(CommunicationMethod):
                 self.sequence,
                 now,
                 now + (0.0 if ideal else self.delay_s),
-                now + self.ttl_s,
+                snapshot.epoch + self.ttl_s if snapshot else now + self.ttl_s,
                 delta,
-                self.wire_payload_bytes(delta),
+                snapshot.wire_bytes() if snapshot else self.wire_payload_bytes(delta),
+                snapshot,
             )
         )
 
     def communicate(self):
         """Finish transmissions first, then deliver only packets ready by now."""
-        if self.information_case == "independent":
+        if self.information_case in {"independent", "geometry_only"}:
             return
         now = float(self.sensors[0].simulator.sim_time)
         if self.information_case == "ideal_completion":
@@ -286,7 +357,7 @@ class CompletionCommunication(CommunicationMethod):
                 if now + 1e-9 < tx.end:
                     continue  # A teammate's shorter action cannot finish this radio.
                 for receiver in sorted(tx.receivers):
-                    self._queue(sensor.name, receiver, tx.records, now)
+                    self._queue(sensor.name, receiver, tx.records, now, snapshot=tx.inventory_snapshot)
                 self.transmission_history.append(
                     dict(
                         sender=sensor.name,
@@ -312,7 +383,7 @@ class CompletionCommunication(CommunicationMethod):
             outcome = "accepted"
             if packet.receiver not in alive:
                 outcome = "receiver_unavailable"
-            elif now > packet.expires_at:
+            elif now >= packet.expires_at:
                 outcome = "expired"
             elif (
                 self.information_case != "ideal_completion"
@@ -321,8 +392,14 @@ class CompletionCommunication(CommunicationMethod):
                 outcome = "lost"
             changed = 0
             if outcome == "accepted":
+                if packet.inventory_snapshot is not None:
+                    changed += self.catalogs[packet.receiver].receive_inventory(packet.inventory_snapshot, now, self.ttl_s)
+                    self.inventory_refresh[(packet.sender, packet.receiver)] = packet.inventory_snapshot.epoch
+                    for entry in packet.inventory_snapshot.entries:
+                        self.inventory_record_refresh[(packet.sender, packet.receiver,entry.record_id)] = packet.inventory_snapshot.epoch
                 for record in packet.records:
-                    changed += self.catalogs[packet.receiver].merge_record(record, now)
+                    if packet.inventory_snapshot is None:
+                        changed += self.catalogs[packet.receiver].merge_record(record, now)
                     ack = self.acknowledged.setdefault(
                         (packet.sender, packet.receiver), {}
                     )
@@ -356,6 +433,7 @@ class CompletionCommunication(CommunicationMethod):
                         record.record_id: record.version for record in packet.records
                     },
                     payload_bytes=packet.payload_bytes,
+                    inventory_snapshot=(asdict(packet.inventory_snapshot) if packet.inventory_snapshot else None),
                     acknowledged_versions=(
                         dict(self.acknowledged.get((packet.sender, packet.receiver), {}))
                         if outcome == "accepted"

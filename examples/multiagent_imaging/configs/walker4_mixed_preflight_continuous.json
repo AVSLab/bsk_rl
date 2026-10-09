@@ -29,5 +29,7 @@
   "walker_altitude_km": 700.0,
   "walker_inclination_deg": 97.0,
   "walker_planes": 2,
-  "walker_phasing": 1
+  "walker_phasing": 1,
+  "empty_storage_mask_fraction": 0.000001,
+  "minimum_task_battery_fraction": 0.05
 }

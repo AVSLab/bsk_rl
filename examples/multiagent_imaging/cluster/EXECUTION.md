@@ -275,3 +275,34 @@ intervals, and diagnostic plots are in
 This is **NO-GO for the broad six-cell or a multi-training-seed learned study**.
 The next task should diagnose and prevent empty-downlink policy collapse before
 requesting more cluster training.
+
+## Completion-v4 local recovery prepared 2026-09-13
+
+The exact real-Basilisk initial observation batch proved that the v3 actor's
+probabilities were close to uniform but its deterministic action was not: a random
+operational-head offset made downlink the argmax for every sensor.  The v3 evidence
+did not retain final per-action probabilities, so it cannot distinguish a small
+argmax lead from a low-entropy final collapse.  Either way, all-downlink should
+have failed the learning gate.
+
+The recovery change introduces schema `completion-v4-operational-mask`.
+The action identities and 232/18 tensor sizes remain fixed, but old checkpoints
+are rejected because resource masking semantics changed.  Empty local storage
+masks downlink; a 5% local battery reserve masks newly started powered tasks;
+charge is always valid.  All three action heads use a common small initialization
+scale, and PPO now declares entropy coefficient 0.02 and gradient clip 1.0.
+
+Local conflict and continuous tests each completed a real 1,200-second PPO update.
+Both saved/restored logits exactly, reported finite nonzero gradients and weight
+changes, and retained normalized initial entropy above 0.999995.  Seed-7000
+deterministic evaluation produced 29% and 18% qualified-capture coverage.  The
+stochastic evaluations produced 25% and 9%, selected valid resource actions and
+peer recipients, and accepted three directed packets in total.  No full ground
+delivery occurred during this short regression horizon.
+
+No completion-v4 Slurm job has been submitted yet.  The next authorized unit is a
+fresh one-worker 45,000-second recovery gate in a new output directory.  It must
+pass initialization, restore/resume, deterministic and stochastic capture,
+ground-delivery, battery, and multi-action checks.  The restored stochastic policy
+must also select a recipient and complete a packet.  Failure stops before any
+four-worker learning.

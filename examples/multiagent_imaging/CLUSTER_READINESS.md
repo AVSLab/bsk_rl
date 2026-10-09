@@ -1,4 +1,54 @@
-# Completion-v3 Walker-four training and cluster readiness
+# Walker-four training and cluster readiness
+
+## September 13 completion-v4 policy recovery
+
+The completion-v3 physics and communication evidence remains immutable, but its
+learned-policy acceptance test was incomplete.  Reproducing the exact real-Basilisk
+reset showed that all ten image slots were valid and the untrained categorical
+policy was high-entropy (normalized entropy 0.997--0.998).  Its separately
+initialized operational head nevertheless put downlink a few hundredths of a logit
+above every other action for all four sensors.  Deterministic `argmax` therefore
+selected downlink everywhere even though stochastic PPO sampling remained broad.
+The earlier run also inherited RLlib's `entropy_coeff=0.0`, did not save per-action
+probabilities, and allowed downlink with empty storage.  Finite gradients and exact
+restore were real, but they were not sufficient policy-quality gates.
+
+The recovery contract is now `completion-v4-operational-mask`.  It keeps the same
+232 observations, 18 action identities, four Walker sensing agents, 100 passive
+mixed-orbit RSO spacecraft, and directed completion link.  The changed contract:
+
+- calibrates imaging, operational, and peer output heads with gain `0.01` and a
+  `0.01` shared imaging prior, keeping valid initial probabilities effectively
+  uniform while avoiding a deterministic empty-operation tie break;
+- masks downlink when receiver-local physical storage is at or below `1e-6` and
+  masks newly started powered tasks at or below a 5% local battery reserve;
+- leaves charge valid for every finite observation and preserves continue for an
+  already active task;
+- makes PPO entropy regularization explicit at `0.02` with gradient clipping at
+  `1.0`; and
+- records exact logits, probabilities, masks, categorical sample frequencies,
+  action counts, learner entropy, gradients, and parameter changes.
+
+The local real-Basilisk gate passed for conflict and continuous retasking.  Across
+the four initial sensor observations, normalized entropy was at least 0.999995 and
+the largest valid probability was at most 1.017 times the smallest; 4,096 samples
+per row matched those probabilities.  One 1,200-second PPO update in each mode had
+finite losses and gradients, nonzero parameter changes, and exact checkpoint
+restore.  On matched seed 7000, deterministic capture coverage was 29% (conflict)
+and 18% (continuous), rather than zero/all-downlink.  Stochastic rollouts used
+resource actions and selected peers, accepting two and one completion packets.
+The short horizon contained no full ground delivery, so the 45,000-second
+one-worker recovery job remains the next required gate.  See
+[`cluster/evidence/walker4_policy_recovery_v4_local`](cluster/evidence/walker4_policy_recovery_v4_local/REPORT.md).
+
+The mission-scale launcher now fails unless both deterministic and stochastic
+restored rollouts capture and ground-deliver products without battery exhaustion.
+It additionally requires the restored stochastic policy—the policy PPO actually
+samples during training—to select a receiver and complete at least one directed
+catalog packet.  Deterministic argmax remains a separately reported deployment
+diagnostic.  A four-worker run cannot use a failed one-worker gate.
+
+## Historical completion-v3 pilot
 
 **September 13 completed stage:** the completed 200-episode three-sensor baseline
 campaign remains immutable. The new learned pilot uses four sensing agents in a

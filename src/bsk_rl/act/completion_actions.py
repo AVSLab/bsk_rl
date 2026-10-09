@@ -57,7 +57,7 @@ class TransmitCompletions(DiscreteAction):
         self.records = tuple(records)
         # The communication layer owns the canonical wire schema and its 64-byte
         # transport header; both the physical hold and packet audit use this size.
-        self.payload_bytes = channel.wire_payload_bytes(records)
+        self.payload_bytes = channel.transmissions[self.satellite.name].payload_bytes
         self.required_hold_s = (
             max(self.hold_s, 8 * self.payload_bytes / self.bitrate_bps)
             if self.bitrate_bps
@@ -65,6 +65,7 @@ class TransmitCompletions(DiscreteAction):
         )
         self.held_s, self.last_time, self.was_valid = 0.0, now, False
         self.start_time, self.radio_on_s = now, 0.0
+        self._audit_recorded = False
         self.satellite._active_completion_transmit = self
         self.satellite.fsw.action_point_peer(self.peer)
         self.event_name = "completion_tx_" + self.satellite.name
@@ -129,6 +130,8 @@ class TransmitCompletions(DiscreteAction):
         return True
 
     def _record(self, outcome):
+        if getattr(self,"_audit_recorded",False): return
+        self._audit_recorded = True
         records = getattr(self, "records", ())
         self.satellite.completion_communicator.transmission_history.append(
             dict(
@@ -151,6 +154,11 @@ class TransmitCompletions(DiscreteAction):
         """Stop the hold event and radio without modifying any receiver catalog."""
         self.simulator.setEventActivity(self.event_name, False)
         if self.satellite.name in self.satellite.completion_communicator.transmissions:
+            # Account for powered time after the last FSW tick, including a
+            # retasking boundary between ticks. This changes audit time only.
+            if self.was_valid:
+                self.radio_on_s += max(0., float(self.simulator.sim_time)-self.last_time)
+            self.last_time = float(self.simulator.sim_time)
             self._record(reason)
             self.satellite.completion_communicator.cancel_transmission(
                 self.satellite.name, self.simulator.sim_time
