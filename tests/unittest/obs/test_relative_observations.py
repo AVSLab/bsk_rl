@@ -4,7 +4,11 @@ import numpy as np
 import pytest
 
 from bsk_rl.obs import RelativeProperties
-from bsk_rl.obs.relative_observations import rso_imaged_regions
+from bsk_rl.obs.relative_observations import (
+    rso_imaged_regions,
+    rso_omega_BH,
+    rso_sigma_BH,
+)
 
 
 class TestRelativeProperties:
@@ -52,6 +56,21 @@ class TestRelativeProperties:
         ob.satellite = deputy
         ob.chief = chief
         assert ob.get_obs() == {"prop": 3.0}
+
+
+class TestRSOAttitudeProperties:
+    def test_sigma_BH(self):
+        rso = MagicMock()
+        rso.dynamics.BN = np.eye(3)
+        rso.dynamics.HN = np.eye(3)
+
+        np.testing.assert_allclose(rso_sigma_BH(None, rso), np.zeros(3))
+
+    def test_omega_BH(self):
+        rso = MagicMock()
+        rso.dynamics.omega_BH_H = np.array([0.1, 0.2, 0.3])
+
+        np.testing.assert_allclose(rso_omega_BH(None, rso), [0.1, 0.2, 0.3])
 
 
 class TestRSOImagedRegions:
