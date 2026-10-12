@@ -1,0 +1,506 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Space-to-Space RSO Imaging\n",
+    "\n",
+    "This example constructs an imager and three independently orbiting resident space objects (RSOs), takes an image, downlinks it, and replays the initial conditions. Each target is a whole spacecraft with its own propagated state. For inspecting surface points on one nearby RSO, see the [RSO inspection example](rso_inspection.ipynb).\n",
+    "\n",
+    "The notebook uses a short deterministic demonstration by default. The optional policy-evaluation section can also save time histories and plots. A trained checkpoint and Vizard are not required.\n",
+    "\n",
+    "## Acquisition-controller support\n",
+    "\n",
+    "The acquisition logic currently lives in a temporary BSK-RL gate and uses the existing Basilisk message API. This example does not require the proposed `simpleInstrumentController` extension. After that extension is merged into Basilisk, BSK-RL will switch to the native controller in a follow-up change.\n",
+    "\n",
+    "The upstream work is tracked in [Basilisk #1602](https://github.com/AVSLab/basilisk/issues/1602), and the later BSK-RL replacement in [#358](https://github.com/AVSLab/bsk_rl/issues/358).\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import tempfile\n",
+    "from pathlib import Path\n",
+    "from typing import ClassVar\n",
+    "\n",
+    "import numpy as np\n",
+    "from Basilisk.utilities import orbitalMotion\n",
+    "\n",
+    "from bsk_rl import ConstellationTasking, act, data, obs, sats, scene\n",
+    "from bsk_rl.sim import dyn, fsw\n",
+    "from bsk_rl.utils.orbital import random_circular_orbit\n",
+    "\n",
+    "EPOCH = \"2026 JUN 21 00:00:00.000 (UTC)\"\n",
+    "RUN_EVALUATION = False  # Enable the optional policy/plot run at the end.\n",
+    "run_directory = Path(tempfile.mkdtemp(prefix=\"bsk_rso_example_\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Define the target catalog\n",
+    "\n",
+    "The catalog fixes target states and their order. Positions are Earth-centered J2000 vectors in meters, and velocities are in meters per second. Its `utc_init` is optional: when omitted, these states refer to the environment's realized epoch on each reset. An isolated random generator makes catalog sampling independent of unrelated NumPy draws.\n",
+    "\n",
+    "Here we omit the catalog epoch and specify the demonstration's fixed epoch only in the environment. The file saved below is an unpinned template. After reset we save `env.scenario.catalog` separately, which includes the actual epoch for replay. A catalog with an explicit epoch must match the environment.\n",
+    "\n",
+    "The stable target `id` identifies the mission object. `satellite_name` binds it to one BSK-RL `Satellite.name`, rather than to Basilisk's internal spacecraft name. Neither field is an array index. Names such as `debris` identify one supplied spacecraft, not a group. Satellite names must be valid Python identifiers, such as `debris_1` rather than `debris-1`. Target IDs can still contain punctuation. Names and order in the environment do not assign spacecraft roles.\n",
+    "\n",
+    "The target inclinations and orbital phases vary, while the imager will use a fixed 45-degree inclination. The catalog also retains attitude, wheel speeds, disturbance torque, physical parameters, and optional priority events."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def make_catalog(seed=0, n_targets=3):\n",
+    "    \"\"\"Realize target conditions with an isolated RNG, then save/replay the result.\"\"\"\n",
+    "    rng = np.random.default_rng(seed)\n",
+    "    targets = []\n",
+    "    for index in range(n_targets):\n",
+    "        elements = orbitalMotion.ClassicElements()\n",
+    "        elements.a, elements.e = 7.2e6 + index * 1e5, 0.0\n",
+    "        elements.i = np.radians(rng.uniform(0, 90))\n",
+    "        elements.Omega, elements.omega = 0.0, 0.0\n",
+    "        elements.f = rng.uniform(0, 0.1)\n",
+    "        rN, vN = orbitalMotion.elem2rv(orbitalMotion.MU_EARTH * 1e9, elements)\n",
+    "        targets.append(\n",
+    "            scene.RSOTarget(\n",
+    "                f\"rso-{83 + 17 * index}\",\n",
+    "                f\"object_{index}\",\n",
+    "                rN,\n",
+    "                vN,\n",
+    "                priority=float(index + 1),\n",
+    "            )\n",
+    "        )\n",
+    "    return scene.RSOTargetCatalog(tuple(targets))\n",
+    "\n",
+    "\n",
+    "catalog = make_catalog(seed=0)\n",
+    "template_path = run_directory / \"catalog_template.json\"\n",
+    "catalog.save(template_path)\n",
+    "loaded_catalog = scene.RSOTargetCatalog.load(template_path)\n",
+    "assert loaded_catalog == catalog\n",
+    "[(target.id, target.satellite_name, target.priority) for target in catalog.targets]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Define passive spacecraft targets\n",
+    "\n",
+    "`RSOTargetDynModel` propagates the target's gravity, drag, attitude, and resources. Its eclipse model supplies illumination to the imager. Catalog conditions are applied to the environment's copied spacecraft on each reset.\n",
+    "\n",
+    "The targets use the ordinary `Satellite` and `FSWModel` classes with a drift action. They are passive because they are not commanded to maneuver, and remain healthy spacecraft in the simulation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "class PassiveRSO(sats.Satellite):\n",
+    "    dyn_type = dyn.RSOTargetDynModel\n",
+    "    fsw_type = fsw.FSWModel\n",
+    "    observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]\n",
+    "    action_spec: ClassVar[list[act.Action]] = [act.Drift(duration=1e9)]  # [s]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Define the imager\n",
+    "\n",
+    "`SpaceToSpaceImagingDynModel` extends `ImagingDynModel`, which provides the instrument, storage, and transmitter. Ground stations are optional. This example composes `GroundStationDynModel` with it because we want to demonstrate downlink. That component connects the spacecraft transmitter to the access messages of the ground stations in the world model. The `Downlink` action enables the transmitter; data flows only during a station contact. An imaging-only mission can use `SpaceToSpaceImagingDynModel` alone.\n",
+    "\n",
+    "The compact observation below contains storage usage and four properties per target. `valid=0` identifies padded rows when fewer targets are eligible. The default `RSOTargetProperties()` instead provides the full normalized geometry row, described below.\n",
+    "\n",
+    "The three resource actions occupy indices 0, 1, and 2. `ImageRSO(3)` adds indices 3 through 5. Its integer slots select from the same ordered candidate snapshot as the observation. Explicit stable-ID tasking is also available."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "class Imager(sats.AccessSatellite):\n",
+    "    dyn_type = (dyn.SpaceToSpaceImagingDynModel, dyn.GroundStationDynModel)\n",
+    "    fsw_type = fsw.SpaceToSpaceImagingFSWModel\n",
+    "    observation_spec: ClassVar[list[obs.Observation]] = [\n",
+    "        obs.SatProperties(dict(prop=\"storage_level_fraction\")),\n",
+    "        obs.RSOTargetProperties(\n",
+    "            dict(prop=\"valid\"),\n",
+    "            dict(prop=\"priority\"),\n",
+    "            dict(prop=\"target_distance\"),\n",
+    "            dict(prop=\"target_illumination_factor\"),\n",
+    "            n_ahead_observe=3,\n",
+    "        ),\n",
+    "    ]\n",
+    "    action_spec: ClassVar[list[act.Action]] = [\n",
+    "        act.Charge(duration=60),  # [s]\n",
+    "        act.Downlink(duration=90),  # [s]\n",
+    "        act.Desat(duration=60),  # [s]\n",
+    "        act.ImageRSO(\n",
+    "            3,\n",
+    "            max_duration=300,  # [s]\n",
+    "            min_pointing_hold_s=10,  # [s]\n",
+    "            hold_mode=\"cumulative\",\n",
+    "            require_illumination_during_hold=False,\n",
+    "        ),\n",
+    "    ]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Acquisition constraints\n",
+    "\n",
+    "The temporary BSK-RL acquisition gate checks spacecraft access, attitude error, optional angular-rate error, and optional target illumination. A sampled interval counts toward the hold only when both endpoints are valid. `cumulative` preserves valid intervals across interruptions, while `continuous` resets the hold after an invalid sample. A zero hold still requires valid fresh guidance.\n",
+    "\n",
+    "The gate runs before the instrument and storage in the dynamics task. It emits one image command only after the hold completes and storage is ready. Switching target or FSW mode clears unfinished hold state and the old command. Acquisition must finish before the action's exclusive `max_duration` deadline.\n",
+    "\n",
+    "The gate also verifies that a full image actually reached storage before publishing an acquisition. Records include the stable target ID, imager, capture time, size in bits, valid hold time, and mean illumination over valid hold intervals. The gate sums illumination times the length of each valid interval, then divides by the valid hold time. This gives a time-weighted average even when update intervals differ; interruptions do not add time or illumination. The result is frozen when the image is commanded.\n",
+    "\n",
+    "Here illumination is recorded for reward quality but does not interrupt pointing hold. To require a lit target throughout each valid interval, enable `require_illumination_during_hold` and choose `hold_illumination_threshold`.\n",
+    "\n",
+    "Access includes Earth occlusion using a polar radius of 0.98 times the equatorial radius. Range is unlimited by default; set `imageTargetMaximumRange` to a positive distance in meters for a finite limit. This model does not calculate optical resolution, glare, or a detailed sensor image."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Imager initial conditions\n",
+    "\n",
+    "The fixed imager orbit makes this short example repeatable. The larger battery and zero initial wheel speeds give the demonstration enough time to acquire and downlink an image. `instrumentBaudRate` follows the existing imaging-model convention: bits per image, divided internally by the dynamics period for one instrument tick."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "scanner_args = dict(\n",
+    "    oe=random_circular_orbit(\n",
+    "        i=45.0, alt=600.0, Omega=0.0, f=0.0\n",
+    "    ),  # [deg, km, deg, deg]\n",
+    "    sigma_init=[0, 0, 0],  # [MRP]\n",
+    "    omega_init=[0, 0, 0],  # [rad/s]\n",
+    "    wheelSpeeds=[0.0, 0.0, 0.0],  # [rpm]\n",
+    "    maxWheelSpeed=6000.0,  # [rpm]\n",
+    "    batteryStorageCapacity=1e9,  # [J]\n",
+    "    storedCharge_Init=1e9,  # [J]\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Choose acquisition and delivery rewards\n",
+    "\n",
+    "The rewarder accepts separate callbacks with signature `(record, target) -> float`. Each callback can use the current target priority and the image record, for example to scale by quality or discount delivery delay. The reusable class defaults to zero acquisition reward and full current-priority reward after complete delivery.\n",
+    "\n",
+    "This example rewards the mission objective: all priority credit comes after useful complete delivery, equivalent to a delivery weight `alpha=1.0`. For an earlier training signal, explicitly choose acquisition weight `1-alpha=0.9` and delivery weight `alpha=0.1`. The optional AMOS configuration retains that training split. A quality threshold of 0.5 means the average target illumination over valid hold intervals must be at least one half. A dark product can occupy storage and be transmitted without earning useful-service reward.\n",
+    "\n",
+    "Priorities are read at each reward boundary, so acquisition and delivery can use different priorities. Delivery credit is withheld until the entire owned product has been transmitted."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def make_rewarder():\n",
+    "    \"\"\"Keep this mission's stage weights outside the reusable rewarder.\"\"\"\n",
+    "    return data.RSOImageReward(\n",
+    "        acquisition_reward_fn=lambda record, target: 0.0,\n",
+    "        delivery_reward_fn=lambda record, target: target.priority,\n",
+    "        quality_threshold=0.5,\n",
+    "        cooldown_s=0,  # [s]\n",
+    "    )"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Construct the environment\n",
+    "\n",
+    "`RSOTargets` selects imagers by explicit environment name and binds target definitions to the copied spacecraft. Extra spacecraft are permitted and do not become targets automatically. The environment resolves its world epoch before binding targets. An unpinned catalog follows that epoch on every reset without changing the original immutable template. An explicitly supplied catalog epoch is checked against it.\n",
+    "\n",
+    "Target storage partitions and access messages use explicit maps from target IDs. Each imager registers its own access outputs, so a target's catalog position is never used as a Basilisk message index.\n",
+    "\n",
+    "A catalog fixes the target spacecraft. The imager's other initial conditions and the world must also be preserved to replay the entire mission."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def make_environment(target_catalog):\n",
+    "    \"\"\"Create fresh spacecraft and episode state from a saved target catalog.\"\"\"\n",
+    "    scanner = Imager(\"imager\", sat_args=scanner_args)\n",
+    "    targets = [PassiveRSO(target.satellite_name) for target in target_catalog.targets]\n",
+    "    return ConstellationTasking(\n",
+    "        satellites=[*targets, scanner],\n",
+    "        scenario=scene.RSOTargets(target_catalog, [scanner.name]),\n",
+    "        rewarder=make_rewarder(),\n",
+    "        world_args=dict(\n",
+    "            utc_init=target_catalog.utc_init\n",
+    "            if target_catalog.utc_init is not None\n",
+    "            else EPOCH\n",
+    "        ),\n",
+    "        time_limit=1200,  # [s]\n",
+    "        max_step_duration=300,  # [s]\n",
+    "        log_level=\"ERROR\",\n",
+    "    )\n",
+    "\n",
+    "\n",
+    "env = make_environment(loaded_catalog)\n",
+    "initial, _ = env.reset(seed=0)\n",
+    "catalog_path = run_directory / \"catalog.json\"\n",
+    "env.scenario.catalog.save(catalog_path)\n",
+    "assert env.scenario.catalog.utc_init == env.world_args[\"utc_init\"]\n",
+    "realized_world = env.world_args.copy()\n",
+    "realized_satellites = {sat.name: sat.sat_args.copy() for sat in env.satellites}\n",
+    "print(\"Initial imager observation shape:\", initial[\"imager\"].shape)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Acquire and deliver\n",
+    "\n",
+    "The small policy below downlinks whenever the imager owns a pending image. Otherwise it images the first valid candidate or charges if there is no eligible target. This demonstrates task selection and bookkeeping without a learned policy.\n",
+    "\n",
+    "Eligibility and physical access are different. A candidate can be eligible yet occulted. Empty slots raise an error and never select a different spacecraft. If a snapshot becomes stale, `ImageRSO` warns and attempts the originally observed target ID; an unavailable or newly ineligible target still raises an error.\n",
+    "\n",
+    "A variable-duration image action stops once a physically stored acquisition is recognized, or at its deadline. The fixed-duration downlink action uses the ground-station windows provided by the composed dynamics."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "reward_total = 0.0\n",
+    "for step in range(30):\n",
+    "    imager = next(sat for sat in env.satellites if sat.name == \"imager\")\n",
+    "    store = imager.data_store\n",
+    "    if store.products:\n",
+    "        choice = 1  # Downlink owned products.\n",
+    "    else:\n",
+    "        rows = imager.observation_builder.obs_dict()[\"rso_targets\"]\n",
+    "        choice = 3 if rows[\"rso_targets_0\"][\"valid\"] else 0\n",
+    "    _, reward, terminated, truncated, _ = env.step(\n",
+    "        {sat.name: choice if sat.name == \"imager\" else 0 for sat in env.satellites}\n",
+    "    )\n",
+    "    reward_total += reward.get(\"imager\", 0.0)\n",
+    "    if store.data.deliveries or all(terminated.values()) or all(truncated.values()):\n",
+    "        break\n",
+    "\n",
+    "print(\n",
+    "    dict(\n",
+    "        sim_time_s=env.simulator.sim_time,\n",
+    "        captures=len(env.rewarder.data.captures),\n",
+    "        deliveries=len(env.rewarder.data.deliveries),\n",
+    "        reward=reward_total,\n",
+    "    )\n",
+    ")\n",
+    "assert env.rewarder.data.captures\n",
+    "assert env.rewarder.data.deliveries"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Product ownership, partial downlink, and cooldown\n",
+    "\n",
+    "Each image belongs to the imager that physically stored it. The datastore keeps a FIFO ledger per target partition and tracks remaining bits. A step can transmit part of one image or finish several. Partial transmission earns no completed-delivery reward.\n",
+    "\n",
+    "The transmitter uses one-bit packets by default so a partially transmitted buffer can resume across contacts. The image ledger defines complete delivery. Delivery timestamps are recognition times at environment boundaries, rather than interpolated arrival times. Removed image bits are assumed received over the existing access-gated transmitter, without packet loss modeling.\n",
+    "\n",
+    "Pending products are centrally visible to all imagers after reward calculation. This shared knowledge is a mission modeling choice, independent of the communication component. A useful full delivery establishes cooldown from its capture time. A target becomes eligible again once no products remain pending and the cooldown deadline has passed. Unsuccessful-quality delivery releases pending state without useful-service cooldown.\n",
+    "\n",
+    "For multiple imagers, choose `multi_imager_credit=\"shared\"` or `\"per_imager\"` explicitly. Shared mode splits each stage value across simultaneous qualified records. Later duplicate captures or deliveries in the same pending service do not receive extra credit. Per-imager mode credits each owner once per pending service. Qualified duplicate deliveries can extend the global cooldown to the latest qualified capture time."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Replay the initial conditions\n",
+    "\n",
+    "Load the resolved target catalog saved after reset without invoking its original randomizer, and restore the realized imager and world arguments. The saved catalog contains the exact environment epoch even though the input template omitted it. A different reset seed now gives the same initial observation. A target catalog by itself does not freeze the scanner orbit, resources, or ground stations.\n",
+    "\n",
+    "Reset rebuilds bindings against the new episode's spacecraft and clears candidate snapshots, native holds, records, action events, image ledgers, partial transmission state, pending products, cooldowns, and reward uniqueness."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "replay = make_environment(scene.RSOTargetCatalog.load(catalog_path))\n",
+    "replay.world_args_generator = realized_world\n",
+    "for satellite in replay.satellites:\n",
+    "    satellite.sat_args_generator = realized_satellites[satellite.name]\n",
+    "repeated, _ = replay.reset(seed=999)\n",
+    "np.testing.assert_array_equal(initial[\"imager\"], repeated[\"imager\"])\n",
+    "print(\"Initial imager observation reproduced exactly.\")\n",
+    "replay.close()\n",
+    "env.close()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Other observation and priority settings\n",
+    "\n",
+    "When no properties are supplied, `RSOTargetProperties` returns this normalized 11-value row:\n",
+    "\n",
+    "| Property | Normalization | Meaning |\n",
+    "| --- | --- | --- |\n",
+    "| `priority` | 2 | Current mission priority |\n",
+    "| `target_elevation_angle` | 90 degrees | Elevation relative to the observer radial direction |\n",
+    "| `rel_pos_vector_r_BR_H` | 15960 km | Three relative-position components in the observer Hill frame |\n",
+    "| `rel_vel_vector_v_BR_H` | 16000 m/s | Three inertial-velocity-difference components expressed in that frame |\n",
+    "| `angle_to_target` | 90 degrees | Angle from the instrument boresight |\n",
+    "| `target_distance` | 15960 km | Range |\n",
+    "| `target_illumination_factor` | 1 | Illuminated fraction, zero in darkness and one in full light |\n",
+    "\n",
+    "Relative velocity is not the derivative of position in the rotating Hill frame. Padding is a zero row. Include the `valid` property when a numeric mask is useful, as in this example.\n",
+    "\n",
+    "Observation and action counts are independent. For example, `RSOTargetProperties(n_ahead_observe=20)` can provide context while `ImageRSO(10)` selects from the first ten rows. `candidate_ids()` exposes ordered stable IDs, including `None` padding, without adding numeric features. A shared snapshot keeps action decoding consistent with observed slots. Eligible targets are ordered by ascending elevation in [-21, 90] degrees, then filled with the nearest remaining targets; catalog order breaks ties.\n",
+    "\n",
+    "Priority events run at the first decision boundary at or after their requested time, after the preceding step's reward and before the next observation. Events at zero apply before the initial observation. Equal-time events follow catalog order and leave pending products and cooldowns intact."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# This alternative catalog demonstrates priority events without changing the run above.\n",
+    "event = scene.RSOPriorityEvent(600, ((catalog.targets[0].id, 5.0),))  # [s]\n",
+    "event_catalog = scene.RSOTargetCatalog(catalog.targets, catalog.utc_init, (event,))\n",
+    "print(event_catalog.priority_events)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Policy evaluation and time-history plots\n",
+    "\n",
+    "The companion evaluator runs a bounded episode and records attempts, physically acquired images, completed deliveries, acquisition/delivery reward, storage, battery charge, wheel usage, and the action timeline. The `priority`, `nearest`, and `random` baselines manage resources and choose only physically accessible, illuminated candidates. They are example policies, separate from optimized research heuristics.\n",
+    "\n",
+    "Set `RUN_EVALUATION=True` in the first cell to run the short evaluation below. Matplotlib is required for plots. The default notebook demonstration above already covers acquisition, delivery, and replay.\n",
+    "\n",
+    "From the repository root, a longer run can be launched with:\n",
+    "\n",
+    "```bash\n",
+    "python examples/space_to_space_rso_imaging_evaluation.py \\\n",
+    "    --policy priority --seed 0 --horizon 900 --output results/priority_seed0\n",
+    "```\n",
+    "\n",
+    "The output includes `mission.json`, `catalog.json`, `summary.json`, action/attempt/capture/delivery CSV files, performance and action plots in PNG/PDF, and a checkpoint hash when supplied. Use `--no-plots` for data only. Output directories must be empty so earlier evidence is preserved."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "if RUN_EVALUATION:\n",
+    "    from examples.space_to_space_rso_imaging_evaluation import evaluate\n",
+    "\n",
+    "    evaluation_directory = run_directory / \"evaluation\"\n",
+    "    result = evaluate(evaluation_directory, horizon=240, policy=\"priority\", seed=0)\n",
+    "    print(result)\n",
+    "    print(\"Evaluation files:\", evaluation_directory)\n",
+    "else:\n",
+    "    print(\"Optional evaluation skipped. Set RUN_EVALUATION=True to run it.\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Full mission replay and policy adapters\n",
+    "\n",
+    "The script's `mission_manifest` records the realized target catalog/hash, all spacecraft arguments, world and ground-station settings, sampling rates, observation keys and normalization, action settings, reward callback weights, cooldown, seed and NumPy RNG state, source locations/hashes, dependency versions, and Basilisk binary fingerprints. `replay_environment` reconstructs the example's reward recipe rather than attempting to serialize arbitrary Python callbacks. Custom mission callbacks need their own replay recipe.\n",
+    "\n",
+    "Replay a whole mission while comparing policies:\n",
+    "\n",
+    "```bash\n",
+    "python examples/space_to_space_rso_imaging_evaluation.py \\\n",
+    "    --policy nearest --manifest results/priority_seed0/mission.json \\\n",
+    "    --output results/nearest_replay\n",
+    "```\n",
+    "\n",
+    "A fixed catalog alone can be supplied with `--catalog path/to/catalog.json`. It leaves imager and world sampling to the chosen environment configuration.\n",
+    "\n",
+    "The RLlib adapter uses a stateless PyTorch RLModule and validates its observation/action spaces before inference. It loads the module for evaluation, disables gradients and dropout, and starts no training workers. Supply the exact module directory, rather than a guessed checkpoint parent. Use `--stochastic` for categorical action sampling.\n",
+    "\n",
+    "```bash\n",
+    "python examples/space_to_space_rso_imaging_evaluation.py \\\n",
+    "    --policy rllib --checkpoint /path/to/rl_module \\\n",
+    "    --manifest results/priority_seed0/mission.json --output results/learned\n",
+    "```\n",
+    "\n",
+    "For a custom policy, pass `--policy custom --policy-factory module:function` or `file.py:function`. The factory receives environment, RNG, checkpoint, and stochastic settings, and returns `policy(observation, context)`. Context contains stable candidate IDs, resources, physical access, illumination, and the action layout. Return an integer action index. Invalid or padded actions fail with the decision context saved for inspection. Recurrent policies require a custom adapter.\n",
+    "\n",
+    "The optional `--amos-profile` flag lives only in the example. It selects 14 global features and ten default target rows for a 124-input, 13-action layout. The global features are storage, battery, wheel fractions, Hill-frame Sun direction, eclipse times, and ground-station windows. Charge/downlink/desaturation durations are 300/300/150 seconds. Imaging has a 300-second deadline and a 10-second cumulative hold, with illumination gating disabled. The profile preserves its research observation and action layout, while corrected physical holds, safe padding, and complete-delivery accounting can change historical results. Matching dimensions alone does not establish checkpoint equivalence.\n",
+    "\n",
+    "A short baseline run validates the example flow. It does not establish mission-scale performance or a statistical policy comparison. Mixed ground/space imaging, realistic inter-satellite communication, optical quality beyond illumination, training campaigns, and publication results require separate modeling and validation."
+   ]
+  },
+  {
+   "cell_type": "raw",
+   "metadata": {
+    "raw_mimetype": "text/restructuredtext"
+   },
+   "source": [
+    ".. toctree::\n",
+    "   :hidden:\n",
+    "\n",
+    "   space_to_space_rso_imaging_demo\n",
+    "   space_to_space_rso_imaging_evaluation\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

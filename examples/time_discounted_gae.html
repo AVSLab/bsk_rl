@@ -1,0 +1,809 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Time-Discounted GAE &mdash; BSK-RL v1.3.7 1.3.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=d4a0791e"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Asynchronous Multiagent Decision Making" href="async_multiagent_training.html" />
+    <link rel="prev" title="Training with RLlib PPO" href="rllib_training.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL v1.3.7
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#environments">Environments</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#training">Training</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="rllib_training.html">Training with RLlib PPO</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Time-Discounted GAE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#RLlib-Version">RLlib Version</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Define-the-Environment">Define the Environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#RLlib-Configuration">RLlib Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="async_multiagent_training.html">Asynchronous Multiagent Decision Making</a></li>
+<li class="toctree-l3"><a class="reference internal" href="curriculum_learning.html">Training with Curriculum Learning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="training_with_shield.html">Shielded training with action masking and action replacement</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#benchmarks">Benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL v1.3.7</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Time-Discounted GAE</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/time_discounted_gae.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Time-Discounted-GAE">
+<h1>Time-Discounted GAE<a class="headerlink" href="#Time-Discounted-GAE" title="Link to this heading"></a></h1>
+<p>In semi-MDPs, each step has an associated duration. Instead of the usual value equation</p>
+<p><span class="math">\begin{equation}
+V(s_1) = r_1 + \gamma r_2 + \gamma^2 r_3 + ...
+\end{equation}</span></p>
+<p>one discount based on step duration</p>
+<p><span class="math">\begin{equation}
+V_{\Delta t}(s_1) = \gamma^{\Delta t_1} r_1 + \gamma^{\Delta t_1 + \Delta t_2}  r_2 + \gamma^{\Delta t_1 + \Delta t_2 + \Delta t_3} r_3 + ...
+\end{equation}</span></p>
+<p>using the convention that reward is given at the end of a step.</p>
+<p>The generalized advantage estimator can be rewritten accordingly. In our implementation, the exponential decay <code class="docutils literal notranslate"><span class="pre">lambda</span></code> is per-step (as opposed to timewise).</p>
+<section id="RLlib-Version">
+<h2>RLlib Version<a class="headerlink" href="#RLlib-Version" title="Link to this heading"></a></h2>
+<p>RLlib is actively developed and can change significantly from version to version. For this script, the following version is used:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+
+<span class="n">version</span><span class="p">(</span><span class="s2">"ray"</span><span class="p">)</span>  <span class="c1"># Parent package of RLlib</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&#39;2.35.0&#39;
+</pre></div></div>
+</div>
+</section>
+<section id="Define-the-Environment">
+<h2>Define the Environment<a class="headerlink" href="#Define-the-Environment" title="Link to this heading"></a></h2>
+<p>A simple single-satellite environment is defined, as in :doc:<code class="docutils literal notranslate"><span class="pre">examples/rllib_training</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">act</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">sats</span><span class="p">,</span> <span class="n">scene</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ScanningDownlinkDynModel</span><span class="p">(</span>
+    <span class="n">dyn</span><span class="o">.</span><span class="n">ContinuousImagingDynModel</span><span class="p">,</span> <span class="n">dyn</span><span class="o">.</span><span class="n">GroundStationDynModel</span>
+<span class="p">):</span>
+    <span class="c1"># Define some custom properties to be accessed in the state</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">instrument_pointing_error</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">r_BN_P_unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_BN_P</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_BN_P</span><span class="p">)</span>
+        <span class="n">c_hat_P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">fsw</span><span class="o">.</span><span class="n">c_hat_P</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="o">-</span><span class="n">r_BN_P_unit</span><span class="p">,</span> <span class="n">c_hat_P</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solar_pointing_error</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">gravFactory</span><span class="o">.</span><span class="n">spiceObject</span><span class="o">.</span><span class="n">planetStateOutMsgs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">sun_index</span><span class="p">]</span>
+            <span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">PositionVector</span>
+        <span class="p">)</span>
+        <span class="n">a_hat_N</span> <span class="o">=</span> <span class="n">a</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">nHat_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellite</span><span class="o">.</span><span class="n">sat_args</span><span class="p">[</span><span class="s2">"nHat_B"</span><span class="p">]</span>
+        <span class="n">NB</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BN</span><span class="p">)</span>
+        <span class="n">nHat_N</span> <span class="o">=</span> <span class="n">NB</span> <span class="o">@</span> <span class="n">nHat_B</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">nHat_N</span><span class="p">,</span> <span class="n">a_hat_N</span><span class="p">))</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ScanningSatellite</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">AccessSatellite</span><span class="p">):</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">SatProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"storage_level_fraction"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"battery_charge_fraction"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"wheel_speeds_fraction"</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"instrument_pointing_error"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"solar_pointing_error"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">OpportunityProperties</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_open"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="s2">"opportunity_close"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">"ground_station"</span><span class="p">,</span>
+            <span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Eclipse</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="mi">5700</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Scan</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">180.0</span><span class="p">),</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">120.0</span><span class="p">),</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Downlink</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">60.0</span><span class="p">),</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Desat</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">60.0</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">ScanningDownlinkDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">ContinuousImagingFSWModel</span>
+
+
+<span class="n">sat</span> <span class="o">=</span> <span class="n">ScanningSatellite</span><span class="p">(</span>
+    <span class="s2">"Scanner_1"</span><span class="p">,</span>
+    <span class="n">sat_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="c1"># Data</span>
+        <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mi">5000</span> <span class="o">*</span> <span class="mf">8e6</span><span class="p">,</span>  <span class="c1"># bits</span>
+        <span class="n">storageInit</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span> <span class="o">*</span> <span class="mi">5000</span> <span class="o">*</span> <span class="mf">8e6</span><span class="p">,</span>
+        <span class="n">instrumentBaudRate</span><span class="o">=</span><span class="mf">0.5</span> <span class="o">*</span> <span class="mf">8e6</span><span class="p">,</span>
+        <span class="n">transmitterBaudRate</span><span class="o">=-</span><span class="mi">50</span> <span class="o">*</span> <span class="mf">8e6</span><span class="p">,</span>
+        <span class="c1"># Power</span>
+        <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mi">200</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">,</span>  <span class="c1"># W*s</span>
+        <span class="n">storedCharge_Init</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="mi">200</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">,</span>
+        <span class="n">basePowerDraw</span><span class="o">=-</span><span class="mf">10.0</span><span class="p">,</span>  <span class="c1"># W</span>
+        <span class="n">instrumentPowerDraw</span><span class="o">=-</span><span class="mf">30.0</span><span class="p">,</span>  <span class="c1"># W</span>
+        <span class="n">transmitterPowerDraw</span><span class="o">=-</span><span class="mf">25.0</span><span class="p">,</span>  <span class="c1"># W</span>
+        <span class="n">thrusterPowerDraw</span><span class="o">=-</span><span class="mf">80.0</span><span class="p">,</span>  <span class="c1"># W</span>
+        <span class="n">panelArea</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="c1"># Attitude</span>
+        <span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">imageRateErrorRequirement</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">disturbance_vector</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>  <span class="c1"># N*m</span>
+        <span class="n">maxWheelSpeed</span><span class="o">=</span><span class="mf">6000.0</span><span class="p">,</span>  <span class="c1"># RPM</span>
+        <span class="n">wheelSpeeds</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">3000</span><span class="p">,</span> <span class="mi">3000</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="n">desatAttitude</span><span class="o">=</span><span class="s2">"nadir"</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="n">duration</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mf">5700.0</span>  <span class="c1"># About 5 orbits</span>
+<span class="n">env_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">satellite</span><span class="o">=</span><span class="n">sat</span><span class="p">,</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">UniformNadirScanning</span><span class="p">(</span><span class="n">value_per_second</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="n">duration</span><span class="p">),</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">ScanningTimeReward</span><span class="p">(),</span>
+    <span class="n">time_limit</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+    <span class="n">failure_penalty</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">terminate_on_time_limit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="RLlib-Configuration">
+<h2>RLlib Configuration<a class="headerlink" href="#RLlib-Configuration" title="Link to this heading"></a></h2>
+<p>The configuration is mostly the same as in the standard example.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">bsk_rl.utils.rllib</span>  <span class="c1"># noqa To access "SatelliteTasking-RLlib"</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.algorithms.ppo</span><span class="w"> </span><span class="kn">import</span> <span class="n">PPOConfig</span>
+
+
+<span class="n">N_CPUS</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="n">training_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">lr</span><span class="o">=</span><span class="mf">0.00003</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span>
+    <span class="n">train_batch_size</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span>
+    <span class="n">num_sgd_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">fcnet_hiddens</span><span class="o">=</span><span class="p">[</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">],</span> <span class="n">vf_share_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">lambda_</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span>
+    <span class="n">use_kl_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">clip_param</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">grad_clip</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">reward_time</span><span class="o">=</span><span class="s2">"step_end"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">PPOConfig</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">env_runners</span><span class="p">(</span><span class="n">num_env_runners</span><span class="o">=</span><span class="n">N_CPUS</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sample_timeout_s</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">environment</span><span class="p">(</span>
+        <span class="n">env</span><span class="o">=</span><span class="s2">"SatelliteTasking-RLlib"</span><span class="p">,</span>
+        <span class="n">env_config</span><span class="o">=</span><span class="n">env_args</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">reporting</span><span class="p">(</span>
+        <span class="n">metrics_num_episodes_for_smoothing</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">metrics_episode_collection_timeout_s</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">checkpointing</span><span class="p">(</span><span class="n">export_native_model_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">framework</span><span class="p">(</span><span class="n">framework</span><span class="o">=</span><span class="s2">"torch"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">api_stack</span><span class="p">(</span>
+        <span class="n">enable_rl_module_and_learner</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">enable_env_runner_and_connector_v2</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Rewards can also be distributed at the start of the step by setting <code class="docutils literal notranslate"><span class="pre">reward_time=&quot;step_start&quot;</span></code>.</p>
+<p>The additional setting that must be configured is the appropriate learner class. This uses the <code class="docutils literal notranslate"><span class="pre">d_ts</span></code> key from the info dict to discount by the step length, not just the step count.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.utils.rllib.discounting</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeDiscountedGAEPPOTorchLearner</span>
+
+<span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="p">(</span><span class="n">learner_class</span><span class="o">=</span><span class="n">TimeDiscountedGAEPPOTorchLearner</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;ray.rllib.algorithms.ppo.ppo.PPOConfig at 0x7f76f1e3be50&gt;
+</pre></div></div>
+</div>
+<p>Training can then proceed as normal.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">tune</span>
+
+<span class="n">ray</span><span class="o">.</span><span class="n">init</span><span class="p">(</span>
+    <span class="n">ignore_reinit_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">num_cpus</span><span class="o">=</span><span class="n">N_CPUS</span><span class="p">,</span>
+    <span class="n">object_store_memory</span><span class="o">=</span><span class="mi">2_000_000_000</span><span class="p">,</span>  <span class="c1"># 2 GB</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the training</span>
+<span class="n">tune</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="s2">"PPO"</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+    <span class="n">stop</span><span class="o">=</span><span class="p">{</span><span class="s2">"training_iteration"</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>  <span class="c1"># Adjust the number of iterations as needed</span>
+<span class="p">)</span>
+
+<span class="c1"># Shutdown Ray</span>
+<span class="n">ray</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2026-10-12 02:08:13,152 INFO worker.py:1783 -- Started a local Ray instance.
+2026-10-12 02:08:16,096 INFO tune.py:616 -- [output] This uses the legacy output and progress reporter, as Jupyter notebooks are not supported by the new engine, yet. For more information, please see https://github.com/ray-project/ray/issues/36949
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:130: UserWarning: <span class="ansi-yellow-fg">WARN: Box bound precision lowered by casting to float32</span>
+  gym.logger.warn(f&#34;Box bound precision lowered by casting to {self.dtype}&#34;)
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/gymnasium/utils/passive_env_checker.py:164: UserWarning: <span class="ansi-yellow-fg">WARN: The obs returned by the `reset()` method was expecting numpy array dtype to be float32, actual type: float64</span>
+  logger.warn(
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/gymnasium/utils/passive_env_checker.py:188: UserWarning: <span class="ansi-yellow-fg">WARN: The obs returned by the `reset()` method is not within the observation space.</span>
+  logger.warn(f&#34;{pre} is not within the observation space.&#34;)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div class="tuneStatus">
+  <div style="display: flex;flex-direction: row">
+    <div style="display: flex;flex-direction: column;">
+      <h3>Tune Status</h3>
+      <table>
+<tbody>
+<tr><td>Current time:</td><td>2026-10-12 02:09:02</td></tr>
+<tr><td>Running for: </td><td>00:00:46.30        </td></tr>
+<tr><td>Memory:      </td><td>4.8/15.6 GiB       </td></tr>
+</tbody>
+</table>
+    </div>
+    <div class="vDivider"></div>
+    <div class="systemInfo">
+      <h3>System Info</h3>
+      Using FIFO scheduling algorithm.<br>Logical resource usage: 3.0/3 CPUs, 0/0 GPUs
+    </div>
+
+  </div>
+  <div class="hDivider"></div>
+  <div class="trialStatus">
+    <h3>Trial Status</h3>
+    <table>
+<thead>
+<tr><th>Trial name                            </th><th>status    </th><th>loc            </th><th style="text-align: right;">  iter</th><th style="text-align: right;">  total time (s)</th><th style="text-align: right;">     num_env_steps_sample
+d_lifetime</th><th style="text-align: right;">   num_episodes_lifetim
+e</th><th style="text-align: right;">     num_env_steps_traine
+d_lifetime</th></tr>
+</thead>
+<tbody>
+<tr><td>PPO_SatelliteTasking-RLlib_c9547_00000</td><td>TERMINATED</td><td>10.1.0.180:6061</td><td style="text-align: right;">     2</td><td style="text-align: right;">         33.8134</td><td style="text-align: right;">8000</td><td style="text-align: right;">43</td><td style="text-align: right;">8000</td></tr>
+</tbody>
+</table>
+  </div>
+</div>
+<style>
+.tuneStatus {
+  color: var(--jp-ui-font-color1);
+}
+.tuneStatus .systemInfo {
+  display: flex;
+  flex-direction: column;
+}
+.tuneStatus td {
+  white-space: nowrap;
+}
+.tuneStatus .trialStatus {
+  display: flex;
+  flex-direction: column;
+}
+.tuneStatus h3 {
+  font-weight: bold;
+}
+.tuneStatus .hDivider {
+  border-bottom-width: var(--jp-border-width);
+  border-bottom-color: var(--jp-border-color0);
+  border-bottom-style: solid;
+}
+.tuneStatus .vDivider {
+  border-left-width: var(--jp-border-width);
+  border-left-color: var(--jp-border-color0);
+  border-left-style: solid;
+  margin: 0.5em 1em 0.5em 1em;
+}
+</style></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:27,457 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(PPO pid=6061)</span> Install gputil for GPU system monitoring.
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:29,977 </span><span class="ansi-cyan-fg">sats.satellite.Scanner_1       </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24780.00&gt; </span><span class="ansi-cyan-fg">Scanner_1: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:31,229 </span><span class="ansi-cyan-fg">sats.satellite.Scanner_1       </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;20520.00&gt; </span><span class="ansi-cyan-fg">Scanner_1: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:32,981 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:32,989 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;60.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:32,999 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;240.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,011 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;420.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,018 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;540.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,022 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;600.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,026 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;660.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,037 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;840.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,042 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;900.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,047 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;960.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,054 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;1080.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,063 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;1200.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,069 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;1260.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,081 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;1440.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,087 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;1560.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,092 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;1620.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,098 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;1740.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,105 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;1860.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,111 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;1980.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,116 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2040.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,120 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2100.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,129 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2280.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,136 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2400.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,142 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2520.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,146 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2580.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,151 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2640.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,155 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2700.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,160 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2760.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,171 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2940.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,183 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;3120.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,194 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;3300.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,200 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;3360.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,205 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;3420.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,215 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;3540.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,225 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;3720.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,237 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;3900.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,246 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4020.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,251 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4080.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,255 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4140.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,260 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4200.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,264 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4260.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,270 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4380.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,275 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4440.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,284 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4620.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,290 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4740.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,298 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4920.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,303 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4980.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,309 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;5100.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,314 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;5160.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,320 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;5280.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,326 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;5400.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,335 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;5580.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,339 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;5640.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,347 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;5820.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,354 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;5940.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,358 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6000.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,362 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6060.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,369 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6180.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,373 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6240.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,382 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6360.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,389 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6480.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,393 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6540.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,401 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6660.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,406 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6720.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,414 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6900.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,418 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6960.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,423 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;7020.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,429 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;7140.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,435 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;7260.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,440 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;7320.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,449 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;7500.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,457 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;7680.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,461 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;7740.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,468 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;7860.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,472 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;7920.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,479 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8040.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,484 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8100.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,489 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8160.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,494 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8220.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,500 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8280.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,510 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8460.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,515 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8520.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,520 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8580.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,524 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8640.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,531 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8760.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,535 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8820.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,540 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;8880.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,548 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;9060.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,552 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;9120.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,559 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;9240.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,567 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;9420.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,571 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;9480.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,576 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;9540.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,580 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;9600.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,592 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;9780.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,600 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;9960.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,605 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10020.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,609 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10080.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,614 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10140.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,620 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10260.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,624 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10320.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,629 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10380.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,633 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10440.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,641 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10620.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,646 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10680.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,650 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10740.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,655 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10800.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,659 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10860.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,664 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10920.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,668 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10980.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,672 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;11040.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,677 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;11100.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,681 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;11160.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,690 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;11340.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,696 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;11460.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,705 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;11640.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,709 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;11700.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,715 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;11820.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,724 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12000.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,728 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12060.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,733 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12120.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,739 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12240.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,745 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12360.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,754 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12540.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,760 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12660.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,766 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12780.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,770 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12840.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,775 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12900.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,779 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12960.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,783 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13020.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,788 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13080.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,793 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13140.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,799 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13200.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,804 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13260.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,811 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13320.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,818 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13380.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,823 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13440.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,833 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13620.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,839 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13740.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,844 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13800.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,848 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13860.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,854 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;13980.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,859 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14040.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,865 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14160.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,870 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14220.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,874 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14280.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,878 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14340.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,883 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14400.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,887 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14460.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,894 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14520.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,900 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14640.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,905 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14700.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,911 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14820.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,920 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;15000.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,924 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;15060.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,930 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;15120.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,935 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;15180.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,940 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;15240.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,946 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;15360.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,954 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;15540.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,959 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;15600.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,965 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;15720.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,971 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;15840.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,980 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;16020.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,986 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;16140.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,993 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;16260.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:33,997 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;16320.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,006 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;16500.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,014 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;16680.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,021 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;16800.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,029 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;16980.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,036 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;17100.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,045 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;17280.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,049 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;17340.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,056 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;17460.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,061 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;17520.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,067 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;17640.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,072 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;17700.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,077 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;17760.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,081 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;17820.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,086 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;17880.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,096 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;18060.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,103 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;18180.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,108 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;18240.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,117 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;18420.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,125 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;18600.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,130 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;18660.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,135 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;18720.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,139 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;18780.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,148 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;18960.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,153 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19020.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,158 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19080.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,162 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19140.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,167 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19200.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,172 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19260.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,176 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19320.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,181 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19380.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,187 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19500.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,194 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19620.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,199 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19680.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,204 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19740.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,213 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;19860.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,224 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;20040.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,229 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;20100.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,236 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;20160.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,242 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;20220.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,251 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;20340.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,257 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;20400.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,263 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;20460.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,276 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;20640.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,283 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;20700.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,295 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;20880.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,310 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;21060.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,316 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;21120.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,329 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;21300.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,336 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;21420.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,348 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;21600.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,354 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;21660.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,360 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;21720.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,365 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;21780.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,377 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;21960.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,383 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22020.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,389 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22080.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,397 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22200.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,403 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22260.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,409 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22320.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,416 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22440.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,423 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22500.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,427 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22560.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,434 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22680.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,439 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22740.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,446 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22860.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,450 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;22920.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,459 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;23100.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,464 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;23160.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,469 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;23220.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,477 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;23400.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,482 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;23460.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,487 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;23520.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,492 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;23580.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,497 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;23640.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,509 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;23820.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,514 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;23880.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,523 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24060.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,528 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24120.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,533 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24180.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,538 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24240.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,542 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24300.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,549 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24420.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,554 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24480.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,561 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24600.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,567 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24720.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,576 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24900.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,583 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25020.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,588 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25080.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,593 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25140.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,599 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25260.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,607 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25380.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,612 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25440.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,619 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25560.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,624 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25620.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,628 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25680.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,635 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25800.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,642 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25920.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,647 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;25980.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,652 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;26040.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,658 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;26160.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,663 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;26220.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,670 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;26340.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,677 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;26460.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,681 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;26520.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,686 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;26580.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,693 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;26700.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,700 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;26820.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,708 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;26940.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,713 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27000.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,718 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27060.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,727 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27240.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,734 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27360.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,739 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27420.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,743 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27480.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,750 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27600.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,755 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27660.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,760 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27720.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,765 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27780.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,771 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27900.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,776 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;27960.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,783 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;28080.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,788 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;28140.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,805 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;28200.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,811 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;28260.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,820 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;28440.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:34,825 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;28500.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:35,421 </span><span class="ansi-cyan-fg">sats.satellite.Scanner_1       </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10800.00&gt; </span><span class="ansi-cyan-fg">Scanner_1: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span><span class="ansi-green-fg"> [repeated 6x across cluster] (Ray deduplicates logs by default. Set RAY_DEDUP_LOGS=0 to disable log deduplication, or see https://docs.ray.io/en/master/ray-observability/user-guides/configure-logging.html#log-deduplication for more options.)</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:38,335 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:38,341 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;60.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:41,066 </span><span class="ansi-cyan-fg">sats.satellite.Scanner_1       </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12180.00&gt; </span><span class="ansi-cyan-fg">Scanner_1: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span><span class="ansi-green-fg"> [repeated 6x across cluster]</span>
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div class="trialProgress">
+  <h3>Trial Progress</h3>
+  <table>
+<thead>
+<tr><th>Trial name                            </th><th>env_runners                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         </th><th>fault_tolerance                                                                           </th><th>learners                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 </th><th>num_agent_steps_sampled_lifetime  </th><th style="text-align: right;">  num_env_steps_sampled_lifetime</th><th style="text-align: right;">  num_env_steps_trained_lifetime</th><th style="text-align: right;">  num_episodes_lifetime</th><th>perf                                                                                                   </th><th>timers                                                                                                                                                                           </th></tr>
+</thead>
+<tbody>
+<tr><td>PPO_SatelliteTasking-RLlib_c9547_00000</td><td>{&#x27;num_episodes&#x27;: 23, &#x27;episode_duration_sec_mean&#x27;: 1.5436960985000212, &#x27;num_env_steps_sampled_lifetime&#x27;: 16000, &#x27;module_episode_returns_mean&#x27;: {&#x27;default_policy&#x27;: -0.19184210526315776}, &#x27;num_module_steps_sampled_lifetime&#x27;: {&#x27;default_policy&#x27;: 12000}, &#x27;episode_return_min&#x27;: -0.7253333333333332, &#x27;num_module_steps_sampled&#x27;: {&#x27;default_policy&#x27;: 4000}, &#x27;episode_len_mean&#x27;: 239.5, &#x27;num_agent_steps_sampled&#x27;: {&#x27;default_agent&#x27;: 4000}, &#x27;num_env_steps_sampled&#x27;: 4000, &#x27;sample&#x27;: np.float64(13.06312483040219), &#x27;episode_return_mean&#x27;: -0.19184210526315776, &#x27;episode_len_max&#x27;: 272, &#x27;episode_return_max&#x27;: 0.34164912280701765, &#x27;agent_episode_returns_mean&#x27;: {&#x27;default_agent&#x27;: -0.19184210526315776}, &#x27;episode_len_min&#x27;: 207, &#x27;num_agent_steps_sampled_lifetime&#x27;: {&#x27;default_agent&#x27;: 12000}, &#x27;time_between_sampling&#x27;: np.float64(3.814116704999975)}</td><td>{&#x27;num_healthy_workers&#x27;: 2, &#x27;num_in_flight_async_reqs&#x27;: 0, &#x27;num_remote_worker_restarts&#x27;: 0}</td><td>{&#x27;default_policy&#x27;: {&#x27;policy_loss&#x27;: -0.1784229576587677, &#x27;mean_kl_loss&#x27;: 0.016583293676376343, &#x27;default_optimizer_learning_rate&#x27;: 5e-05, &#x27;entropy&#x27;: 1.3517144918441772, &#x27;curr_entropy_coeff&#x27;: 0.0, &#x27;total_loss&#x27;: -0.17481091618537903, &#x27;vf_loss&#x27;: 0.00029538580565713346, &#x27;curr_kl_coeff&#x27;: 0.20000000298023224, &#x27;num_module_steps_trained&#x27;: 4000, &#x27;vf_explained_var&#x27;: -0.009781837463378906, &#x27;vf_loss_unclipped&#x27;: 0.00029538580565713346, &#x27;num_trainable_parameters&#x27;: 139013.0, &#x27;num_non_trainable_parameters&#x27;: 0.0}, &#x27;__all_modules__&#x27;: {&#x27;total_loss&#x27;: -0.17481091618537903, &#x27;num_module_steps_trained&#x27;: 4000, &#x27;num_env_steps_trained&#x27;: 4000, &#x27;num_trainable_parameters&#x27;: 139013.0, &#x27;num_non_trainable_parameters&#x27;: 0.0}}</td><td>{&#x27;default_agent&#x27;: 8000}           </td><td style="text-align: right;">                            8000</td><td style="text-align: right;">                            8000</td><td style="text-align: right;">                     43</td><td>{&#x27;cpu_util_percent&#x27;: np.float64(45.862500000000004), &#x27;ram_util_percent&#x27;: np.float64(31.03333333333333)}</td><td>{&#x27;env_runner_sampling_timer&#x27;: 13.157602587749995, &#x27;learner_update_timer&#x27;: 3.694647654440002, &#x27;synch_weights&#x27;: 0.004749709180029526, &#x27;synch_env_connectors&#x27;: 0.005219343659949799}</td></tr>
+</tbody>
+</table>
+</div>
+<style>
+.trialProgress {
+  display: flex;
+  flex-direction: column;
+  color: var(--jp-ui-font-color1);
+}
+.trialProgress h3 {
+  font-weight: bold;
+}
+.trialProgress td {
+  white-space: nowrap;
+}
+</style></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:40,481 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;28500.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span><span class="ansi-green-fg"> [repeated 534x across cluster]</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:45,685 </span><span class="ansi-cyan-fg">sats.satellite.Scanner_1       </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;10920.00&gt; </span><span class="ansi-cyan-fg">Scanner_1: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:46,182 </span><span class="ansi-cyan-fg">sats.satellite.Scanner_1       </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6120.00&gt; </span><span class="ansi-cyan-fg">Scanner_1: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:47,442 </span><span class="ansi-cyan-fg">sats.satellite.Scanner_1       </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;21420.00&gt; </span><span class="ansi-cyan-fg">Scanner_1: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:48,223 </span><span class="ansi-cyan-fg">sats.satellite.Scanner_1       </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;12540.00&gt; </span><span class="ansi-cyan-fg">Scanner_1: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:46,182 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6120.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span><span class="ansi-green-fg"> [repeated 58x across cluster]</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:53,674 </span><span class="ansi-cyan-fg">sats.satellite.Scanner_1       </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;24720.00&gt; </span><span class="ansi-cyan-fg">Scanner_1: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span><span class="ansi-green-fg"> [repeated 4x across cluster]</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6111)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:55,070 </span>utils.orbital                  <span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;14220.00&gt; </span><span class="ansi-yellow-intense-fg">Could not find eclipse transitions in next 12000.0 seconds</span><span class="ansi-green-fg"> [repeated 135x across cluster]</span>
+<span class="ansi-cyan-fg">(SingleAgentEnvRunner pid=6112)</span> <span class="ansi-black-intense-fg">2026-10-12 02:08:58,824 </span><span class="ansi-cyan-fg">sats.satellite.Scanner_1       </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;21180.00&gt; </span><span class="ansi-cyan-fg">Scanner_1: </span><span class="ansi-yellow-intense-fg">failed battery_valid check</span><span class="ansi-green-fg"> [repeated 8x across cluster]</span>
+2026-10-12 02:09:02,447 INFO tune.py:1009 -- Wrote the latest version of all result files and experiment state to &#39;/home/runner/ray_results/PPO_2026-10-12_02-08-16&#39; in 0.0122s.
+2026-10-12 02:09:02,490 INFO tune.py:1041 -- Total run time: 46.39 seconds (46.29 seconds for the tuning loop).
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rllib_training.html" class="btn btn-neutral float-left" title="Training with RLlib PPO" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="async_multiagent_training.html" class="btn btn-neutral float-right" title="Asynchronous Multiagent Decision Making" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

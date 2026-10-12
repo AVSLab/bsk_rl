@@ -1,0 +1,13 @@
+.. _bsk_rl.utils.rllib.discounting:
+.. currentmodule:: bsk_rl.utils.rllib.discounting
+
+Semi-MDP Discounting in RLlib
+=============================
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.utils.rllib.discounting
+   :members:
+   :show-inheritance:
+
