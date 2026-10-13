@@ -10,8 +10,11 @@ import time
 
 
 class WorkerTopologyError(AssertionError):
-    def __init__(self, evidence):
+    def __init__(self, evidence, *, readbacks=None):
         self.evidence = evidence
+        # Preserve successful replies when another actor fails. Checkpoint
+        # callers retain their existing fail-closed behavior and evidence shape.
+        self.readbacks = [] if readbacks is None else readbacks
         super().__init__("Incomplete or changed worker state: " + str(evidence))
 
 
@@ -129,6 +132,6 @@ def collect_all_workers(algorithm, reader, *, phase, timeout_s=45, require_accou
         or evidence["elapsed_s"] > timeout_s
     )
     if not evidence["passed"]:
-        raise WorkerTopologyError(evidence)
+        raise WorkerTopologyError(evidence, readbacks=values)
     algorithm._checkpoint_worker_identities = identities
     return values, evidence

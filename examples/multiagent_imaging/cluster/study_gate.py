@@ -73,10 +73,20 @@ def verify(output, parallel=False):
         folder=output/arm
         resources=json.loads((folder/'launcher.json').read_text())
         assert resources['num_env_runners']==expected_runners and resources['num_learners']==0 and resources['torch_threads']==1
-        if parallel: assert resources['ray_cpus']==32
+        if parallel: validate_parallel_cpu_allocation(resources, output)
         if launcher is not None: assert resources==launcher, 'Arms use different sampler topology'
         launcher=resources
         driver=json.loads((output/'preflight/effective-driver.json').read_text())
+        initial_modules=json.loads((folder/'initial-worker-modules.json').read_text())
+        assert initial_modules['passed'] and initial_modules['driver_rng_unchanged']
+        assert initial_modules['topology']['passed']
+        assert {r['worker_index'] for r in initial_modules['workers']}==set(range(expected_runners+1))
+        assert len(initial_modules['workers'])==expected_runners+1
+        assert all(r['passed'] and r['episode_state_unchanged'] and
+            r['rng_before_sha256']==r['rng_after_sha256'] and
+            r['actor_sha256']==initial_modules['driver_actor_sha256'] and
+            r['module_modes'] and r['dropout'] and all(p==.1 for p in r['dropout'].values())
+            for r in initial_modules['workers'])
         worker_files=list((folder/'effective-worker-runtime').glob('*.json'))
         assert len(worker_files)>=2, 'Local and remote effective-import evidence missing'
         assert {int(path.name.split('-')[1]) for path in worker_files}==set(range(expected_runners+1)), 'Effective evidence missing for an actual worker'
@@ -110,6 +120,7 @@ def verify(output, parallel=False):
             expected_hashes[key]=e['initial_conditions_sha256']
         training+=episodes
         payload=torch.load(folder/'checkpoint_0000/policy.pt',map_location='cpu',weights_only=True)
+        assert _state_digest({k:v for k,v in payload['weights'].items() if not k.startswith('vf.')})==initial_modules['driver_actor_sha256']
         weights[arm]=_state_digest(payload['weights'])
         resume=json.loads((output/(arm+'-resume')/'zero-update-resume.json').read_text())
         assert resume['passed'] and resume['new_sampled_episodes']==resume['new_ppo_updates']==0
@@ -168,6 +179,15 @@ def verify(output, parallel=False):
         long_launch_requires_separate_approval=True)
     write_json(output/'readiness-acceptance.json',result)
     return result
+
+def validate_parallel_cpu_allocation(resources, output):
+    """Tie verifier resources to the reviewed allocation, without adding samplers."""
+    expected=int(os.environ.get('BSK_EXPECTED_CPUS','32'))
+    actual=json.loads((Path(output)/'allocation-gate.json').read_text())['allocated_cpus']
+    assert resources['ray_cpus']==actual==expected, 'Parallel CPU allocation differs'
+    assert resources['num_env_runners']==28 and resources['num_learners']==0
+    assert resources['torch_threads']==1
+    return actual
 
 def allocation(cpus, wall_s, cap):
     if cpus*wall_s/3600>cap:raise ValueError('Effective allocation reservation exceeds cap')

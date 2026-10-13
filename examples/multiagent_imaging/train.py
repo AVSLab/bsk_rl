@@ -100,9 +100,10 @@ def make_rllib_env(env_config):
         wrapped._study_contract=schema(experiment)
         runner_module.check_multiagent_environments=check_study_static_contract
     import os
-    if os.environ.get("BSK_ZERO_UPDATE_RESTORE") == "1":
+    if (os.environ.get("BSK_ZERO_UPDATE_RESTORE") == "1"
+            or os.environ.get("BSK_STARTUP_ONLY_GATE") == "1"):
         # Ray 2.35's startup checker otherwise calls env.step even on restoration.
-        # In this zero-update process only, validate spaces without advancing time.
+        # Restore/startup-only processes validate spaces without advancing time.
         from examples.multiagent_imaging.readiness import schema
         import ray.rllib.env.multi_agent_env_runner as runner_module
         wrapped._restore_contract = schema(experiment)
@@ -423,25 +424,38 @@ def train_run(
     write_json(output / "provenance.json", provenance(experiment))
     write_json(output / "launcher.json", asdict(resources))
     save_reproduction_bundle(output)
+    from examples.multiagent_imaging.memory_profile import MemoryProfile, ray_memory_options
+    ray_options = ray_memory_options()
+    memory_profile = MemoryProfile(output)
+    memory_profile.start()
+    # Include the initial probe fixture in the driver memory measurements.
     # A zero-update gate uses saved probes; do not construct a new mission fixture.
-    initial_observations = (
-        None if resume and iterations == 0 else real_initial_observation_batch(experiment)
-    )
+    try:
+        initial_observations = (
+            None if resume and iterations == 0 else real_initial_observation_batch(experiment)
+        )
+        memory_profile.mark("after-initial-probes")
+    except Exception:
+        memory_profile.close()
+        raise
     if experiment.is_study:
         from examples.multiagent_imaging.sampling_budget import configure_environment
         write_json(output / "sampling-budget.json", configure_environment(
             max_training_episodes, max_sampled_true_decisions, resources.num_env_runners))
         os.environ["BSK_STUDY_EPISODE_SPOOL"] = str(output/"episode-spool")
         os.environ["BSK_STUDY_RUNTIME_OUTPUT"]=str(output/"effective-worker-runtime")
-    ray_options = {}
     if os.environ.get("BSK_RL_RAY_TMPDIR"):
         ray_options["_temp_dir"] = os.environ["BSK_RL_RAY_TMPDIR"]
-    ray.init(
-        ignore_reinit_error=True,
-        num_cpus=resources.ray_cpus,
-        include_dashboard=False,
-        **ray_options,
-    )
+    try:
+        ray.init(
+            ignore_reinit_error=True,
+            num_cpus=resources.ray_cpus,
+            include_dashboard=False,
+            **ray_options,
+        )
+    except Exception:
+        memory_profile.close()
+        raise
     algorithm = None
     logger = None
     failed = True
@@ -464,6 +478,10 @@ def train_run(
                 )
             )
         write_json(output / "startup.json", startup)
+        memory_profile.mark("after-startup")
+        if experiment.is_study and resume is None:
+            from examples.multiagent_imaging.worker_initial_evidence import initialize_shared_policy
+            initialize_shared_policy(algorithm, output)
         effective = actual_ppo_settings(algorithm.config)
         if resume and ppo_settings is not None:
             different = {
@@ -531,8 +549,10 @@ def train_run(
             new_decisions = policy_decisions_lifetime - starting_true_decisions
             if max_true_decisions is not None and new_decisions >= max_true_decisions: break
             before = algorithm.get_weights([SHARED_POLICY_ID])[SHARED_POLICY_ID]
+            memory_profile.mark("before-sampling-and-learning")
             with measure() as measurement:
                 result = algorithm.train()
+            memory_profile.mark("after-sampling-and-learning")
             # Preserve evidence and fail before an incomplete worker set can be
             # accepted as a checkpoint. This readback never samples or restores.
             from examples.multiagent_imaging.checkpoint_topology import collect_all_workers, WorkerTopologyError
@@ -668,6 +688,7 @@ def train_run(
             record["checkpoint"] = str(checkpoint)
             records.append(record)
             write_json(output / "updates.json", records)
+            memory_profile.mark("after-checkpoint")
             logger.log_update(record)
             print(
                 json.dumps(
@@ -702,6 +723,7 @@ def train_run(
         if algorithm is not None:
             algorithm.stop()
         ray.shutdown()
+        memory_profile.close()
     return records
 
 

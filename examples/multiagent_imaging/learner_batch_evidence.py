@@ -2,7 +2,9 @@
 
 import gzip
 import json
+import os
 from pathlib import Path
+import tempfile
 
 import numpy as np
 from ray.rllib.connectors.connector_v2 import ConnectorV2
@@ -84,20 +86,35 @@ def save_raw_episodes(directory, episodes):
     if (directory / "raw-episodes.json.gz").exists():
         return
     directory.mkdir(parents=True, exist_ok=True)
-    records = [
-        dict(
-            id=episode.id_,
-            multi_agent_episode_id=episode.multi_agent_episode_id,
-            agent_id=episode.agent_id,
-            module_id=episode.module_id,
-            observations=numeric(episode.observations.data).tolist(),
-            actions=list(episode.actions.data),
-            rewards=list(episode.rewards.data),
-            infos=list(episode.infos.data),
-            terminated=episode.is_terminated,
-            truncated=episode.is_truncated,
-        )
-        for episode in episodes
-    ]
-    with gzip.open(directory / "raw-episodes.json.gz", "xt") as stream:
-        json.dump(records, stream, default=lambda value: numeric(value).tolist())
+    # Keep only one agent episode's JSON conversion live. The previous list
+    # duplicated every observation as Python floats before compression started.
+    # Publish a complete file atomically, without replacing historical evidence.
+    handle, temporary = tempfile.mkstemp(dir=directory, suffix=".json.gz.partial")
+    os.close(handle)
+    try:
+        with gzip.open(temporary, "wt") as stream:
+            stream.write("[")
+            for index, episode in enumerate(episodes):
+                if index:
+                    stream.write(",")
+                record = dict(
+                    id=episode.id_,
+                    multi_agent_episode_id=episode.multi_agent_episode_id,
+                    agent_id=episode.agent_id,
+                    module_id=episode.module_id,
+                    observations=numeric(episode.observations.data).tolist(),
+                    actions=list(episode.actions.data),
+                    rewards=list(episode.rewards.data),
+                    infos=list(episode.infos.data),
+                    terminated=episode.is_terminated,
+                    truncated=episode.is_truncated,
+                )
+                json.dump(record, stream, default=lambda value: numeric(value).tolist())
+                del record
+            stream.write("]")
+        try:
+            os.link(temporary, directory / "raw-episodes.json.gz")
+        except FileExistsError:
+            pass
+    finally:
+        os.unlink(temporary)
