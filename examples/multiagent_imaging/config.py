@@ -33,6 +33,10 @@ class MultiAgentImagingConfig:
     min_pointing_hold_s: float = 10.0
     reimage_cooldown_orbits: float = 2.0
     alpha: float = 0.1
+    # Experimental, unit-tested opt-in objective. Native/PPO qualification and
+    # independent episode-accounting support are still required before launch.
+    # Old checkpoints retain source-owned returns.
+    reward_credit_mode: str = "owned"
     information_case: str = "independent"
     retasking_mode: str = "conflict"
     link_mode: str = "los"
@@ -70,6 +74,8 @@ class MultiAgentImagingConfig:
     inventory_chunk_records: int = 256
 
     def __post_init__(self) -> None:
+        if self.reward_credit_mode not in {"owned", "team_mean"}:
+            raise ValueError("Unknown reward credit mode")
         if self.gae_lambda_per_decision is not None and (
             not math.isfinite(self.gae_lambda_per_decision)
             or not 0 <= self.gae_lambda_per_decision <= 1
@@ -189,6 +195,8 @@ class MultiAgentImagingConfig:
 
     def to_dict(self) -> dict:
         values = asdict(self)
+        if self.reward_credit_mode == "owned":
+            values.pop("reward_credit_mode")
         if not self.is_study: values.pop("inventory_chunk_records")
         # Preserve the exact semantic contract of historical checkpoints when
         # these new, opt-in experimental fields are not selected.

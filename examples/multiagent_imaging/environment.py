@@ -262,6 +262,7 @@ def build_environment(
     )
     rewarder = CompletionImageReward(
         alpha=config.alpha,
+        reward_credit_mode=config.reward_credit_mode,
         reimage_cooldown_orbits=config.reimage_cooldown_orbits,
         quality_threshold=0.5,
         hide_pending_targets=True,

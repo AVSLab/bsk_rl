@@ -308,6 +308,7 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
         hide_pending_targets: bool = True,
         duplicate_penalty: float = 0.0,
         communication_penalty: float = 0.0,
+        reward_credit_mode: str = "owned",
     ) -> None:
         """Configure the AMOS reward mixture and separate optional penalties."""
         super().__init__()
@@ -321,6 +322,9 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
         self.hide_pending_targets = bool(hide_pending_targets)
         self.duplicate_penalty = float(duplicate_penalty)
         self.communication_penalty = float(communication_penalty)
+        if reward_credit_mode not in {"owned", "team_mean"}:
+            raise ValueError("reward_credit_mode must be owned or team_mean")
+        self.reward_credit_mode = reward_credit_mode
 
     @property
     def sensing_satellites(self):
@@ -337,6 +341,7 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
         self.old_storage_by_sensor: dict[str, np.ndarray] = {}
         self.per_sensor_metrics: dict[str, dict[str, float]] = {}
         self.team_summary: dict[str, float] = {}
+        self.last_owned_science_reward: dict[str, float] = {}
         self.reimage_cooldown_s: Optional[float] = None
         self._team_accounting: Optional[_TeamServiceAccounting] = None
 
@@ -605,6 +610,13 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
         for sensor_id, value in delivery_credit.items():
             self.per_sensor_metrics[sensor_id]["delivery_credit"] += float(value)
             reward[sensor_id] += self.reward_fn(self.alpha * value)
+        # Share the unique science return, conserving its team sum. Physical
+        # products and source-owned metric credits above are never reassigned.
+        # Penalties below remain local so the sender still pays its own costs.
+        self.last_owned_science_reward = dict(reward)
+        if self.reward_credit_mode == "team_mean" and reward:
+            mean_science_reward = sum(reward.values()) / len(reward)
+            reward = {sensor_id: mean_science_reward for sensor_id in reward}
         for entry in self._team_accounting.entries:
             if entry.product in deliveries and entry.successful_duplicate:
                 self.per_sensor_metrics[entry.product.source_sensor][
