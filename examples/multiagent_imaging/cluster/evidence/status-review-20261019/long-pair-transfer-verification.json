@@ -1,0 +1,11 @@
+{
+  "observed_utc": "2026-10-15T01:04:25.892748+00:00",
+  "transport": "SCP over user-authenticated SSH master, explicitly authorized after Termius access",
+  "archive_bytes": 3244360920,
+  "archive_sha256": "03e172312485a723d59b15cf696ca2fb9bc2318448e5725549d84a89b9c2698a",
+  "manifest_files_verified": 6884,
+  "all_size_and_sha256_checks_passed": true,
+  "peak_hash_read_bytes": 1048576,
+  "extracted": false,
+  "scientific_reconstruction_complete": false
+}

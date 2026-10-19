@@ -168,3 +168,8 @@ wandb/
 
 # Reproducible multi-agent experiment launch specifications
 !examples/multiagent_imaging/configs/*.json
+
+# Historical local staging copies. Their non-cache contents are preserved in
+# cluster/evidence/archived-local-audits-20261019.tar.gz with a tracked hash index.
+/examples/multiagent_imaging/cluster/evidence/walker4_failure_audit_20260929/
+/examples/multiagent_imaging/cluster/evidence/walker4_policy_recovery_v4_local/

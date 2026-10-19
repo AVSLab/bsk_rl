@@ -1,0 +1,37 @@
+{
+  "scheduler_observed_utc": "2026-10-15T00:27:17.306861+00:00",
+  "scheduler": "JobID|State|ElapsedRaw|AllocCPUS|ExitCode|Start|End\n33993838|OUT_OF_MEMORY|71442|56|0:125|2026-10-13T21:16:23|2026-10-14T17:07:05\n33993840|CANCELLED by 1098135|67094|56|0:0|2026-10-13T21:16:23|2026-10-14T15:54:37\n",
+  "jobs": {
+    "with_communication": {
+      "observed_utc": "2026-10-15T00:17:14Z",
+      "job_id": 33993838,
+      "state": "OUT_OF_MEMORY",
+      "exit_code": "0:125",
+      "elapsed_s": 71442,
+      "allocated_cpus": 56,
+      "allocated_cpu_hours": 1111.32,
+      "previous_failed_attempt_s": 7,
+      "cumulative_arm_cpu_hours": 1111.4288888888889,
+      "evidence_download_complete": false,
+      "rerun_authorized": false
+    },
+    "without_communication": {
+      "observed_utc": "2026-10-14T21:54:38Z",
+      "job_id": 33993840,
+      "state": "CANCELLED",
+      "reason": "Demonstrated worker replacement during training: original PID1336890 disappeared, new PID2071918 logged; actor13 restarting.",
+      "cause_of_death": "unconfirmed; cgroup peak near200GiB",
+      "elapsed_s": 67094,
+      "allocated_cpus": 56,
+      "allocated_cpu_hours": 1043.6844444444444,
+      "previous_failed_attempt_s": 10,
+      "cumulative_arm_cpu_hours": 1043.84,
+      "remote_preserved_log": "/projects/dahu1128/multiagent-24h-v14-git-evidence-20261013/without-worker-replacement-20261014T2155.log",
+      "download_complete": false,
+      "remote_evidence_report": "/projects/dahu1128/multiagent-24h-v14-git-evidence-20261013/monitor-20261014T215401257192Z.json",
+      "remote_evidence_sha256": "3bbd14217009a6504ac196813d6b52f16d1a28b805f0979bff43539ab448a43f"
+    }
+  },
+  "precedence": "The later 2026-10-15 transfer verification supersedes the false download-complete fields in these earlier observations.",
+  "new_remote_commands_this_review": false
+}

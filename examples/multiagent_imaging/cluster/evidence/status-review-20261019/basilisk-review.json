@@ -1,0 +1,57 @@
+{
+  "cluster_native_pin": "8fcb54b2fb28388efb711786630501944fddec28",
+  "reviewed_develop_pin": "9c4e12e787017dcdd815c44dfac0235b769fdc4e",
+  "local_test_native_pin": "c1bf0d7d67df7ae5bb74cd008d4c79cc3d106063",
+  "local_test_native_source_dirty_recorded": true,
+  "candidate_built": false,
+  "candidate_training_qualified": false,
+  "existing_job_runtime_changed": false,
+  "canonical_scientific_source_changed": false,
+  "findings": [
+    {
+      "change": "C++ const-reference message reads and deque recorder histories",
+      "already_in_cluster_pin": true
+    },
+    {
+      "change": "Python source lifetime and collectible payload cycles",
+      "commit": "c8f42c9df07daaffc34646d5e8b7d97f29bf7991",
+      "reference": "https://github.com/AVSLab/basilisk/commit/c8f42c9df0"
+    },
+    {
+      "change": "Flat state storage and reusable integration workspaces",
+      "reference": "https://github.com/AVSLab/basilisk/pull/1590"
+    },
+    {
+      "change": "Grouped native bindings reduce cold-start overhead",
+      "reference": "https://github.com/AVSLab/basilisk/pull/1597",
+      "not_a_measured_training_heap_saving": true
+    },
+    {
+      "change": "Gravity/environment epoch and ground access/frame corrections",
+      "reference": "https://github.com/AVSLab/basilisk/commit/9c4e12e787017dcdd815c44dfac0235b769fdc4e",
+      "requires_numerical_mission_comparison": true
+    }
+  ],
+  "dependency_conflicts_to_avoid": [
+    {
+      "file": "requirements_dev.txt",
+      "new_development_requirement": "psutil>=7.0.0,<=7.2.2",
+      "required_training_runtime": "psutil==6.1.0",
+      "resolution": "Keep native build/test tools in a separate environment from training"
+    },
+    {
+      "extra": "examples",
+      "new_requirement_on_python311": "scipy==1.17.1",
+      "tested_training_requirement": "scipy==1.14.1",
+      "resolution": "Do not install optional example extras into the pinned training runtime"
+    }
+  ],
+  "required_qualification": [
+    "Clean pinned old/new native builds, using the same BSK-RL source and scenario",
+    "Full 45000-second fixed-action mission parity, both communication arms; numerical differences assessed against native bug fixes",
+    "Repeated full missions and reset memory plateaus; native plus Python allocation ownership profiling",
+    "Local PPO updates, retained target reconstruction, actor/critic changes, dropout-preserving exact restore within each native build",
+    "Separately authorized Linux compute canary with intended runner topology, cgroup memory headroom, effective psutil readback, W&B and final cost",
+    "New immutable source, runtime, manifest and output paths; retained old runtime for historical checkpoints"
+  ]
+}

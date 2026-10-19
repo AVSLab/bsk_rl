@@ -1,0 +1,110 @@
+{
+  "canonical_branch": "multi-agent-space-imaging-2026",
+  "diagnostic": {
+    "allocated_cpu_hours": 30.13111111111111,
+    "heldout_comparison": false,
+    "independent_one_update_checks_passed": true,
+    "job_id": 34007144,
+    "state": "COMPLETED"
+  },
+  "git_hygiene": {
+    "historical_archive": "examples/multiagent_imaging/cluster/evidence/archived-local-audits-20261019.tar.gz",
+    "historical_files_verified": 377,
+    "original_staging_directories_preserved": true,
+    "pre_edit_backup": "results/multiagent_imaging/branch-status-audit-20261019T215131Z"
+  },
+  "implementation": {
+    "alpha_sweep": "Historical preparation retired; submit/run blocked because referenced controls failed",
+    "committed_base": "Directed private metadata delivery, action masks, asynchronous physical-time PPO accounting, retained targets, full-topology zero-update restore",
+    "communication_utility_or_forwarding_redesign": false,
+    "cooperative_reward": "Experimental team_mean option with unit tests; default owned unchanged; no native/PPO or independent accounting qualification",
+    "memory_fixes_integrated": false,
+    "new_basilisk_candidate_built_or_qualified": false,
+    "reward_discount_redesign": false,
+    "target_conditioned_transmit_scores": false
+  },
+  "interpretation": {
+    "communication_advantage": "Not established",
+    "cooperation_blockers": [
+      "Owned return gives no direct teammate-benefit credit to sender",
+      "Declared per-second gamma has about 81.24 second half-life",
+      "Raw transmit scores omit target-set context",
+      "Physical send opportunity cost, stale/no-op metadata eligibility, restricted LOS network",
+      "Reliability and final evaluation incomplete"
+    ],
+    "training_progress": "Observed improvement in stochastic training missions at the dated 2026-10-14 snapshot; not held-out convergence"
+  },
+  "long_pair": {
+    "allocated_cpu_hours_including_prior_failed_attempts": 2155.268888888889,
+    "archive_bytes": 3244360920,
+    "archive_outer_hash_rechecked_this_review": true,
+    "archive_sha256": "03e172312485a723d59b15cf696ca2fb9bc2318448e5725549d84a89b9c2698a",
+    "final_heldout_comparison_available": false,
+    "per_file_transfer_verification_20261015": 6884,
+    "per_file_transfer_verification_repeated_this_review": false,
+    "scientific_reconstruction_complete": false,
+    "terminal": true,
+    "with_communication": {
+      "allocated_cpu_hours": 1111.32,
+      "elapsed_s": 71442,
+      "job_id": 33993838,
+      "state": "OUT_OF_MEMORY"
+    },
+    "without_communication": {
+      "allocated_cpu_hours": 1043.6844444444444,
+      "elapsed_s": 67094,
+      "job_id": 33993840,
+      "reason": "Demonstrated worker replacement; worker death cause unconfirmed",
+      "state": "CANCELLED"
+    }
+  },
+  "next_work": [
+    "Stream terminal evidence and repair memory while preserving scientific semantics",
+    "Qualify cooperative credit and target-conditioned communication with causal fixtures",
+    "Run bounded local learning and prepare gated paired held-out training, with separate cluster authorization"
+  ],
+  "reviewed_base_commit": "5eb4de0875897c4b48f0c20478b7de61ea5b4231",
+  "reviewed_utc": "2026-10-19T21:53:30.717770+00:00",
+  "supporting_evidence": {
+    "basilisk-review.json": {
+      "bytes": 2699,
+      "original_path": "results/multiagent_imaging/ram-basilisk-audit-20261014/basilisk-review.json",
+      "sha256": "419395ac1c3cfd3a67b294ee00da07c657bb81aebbad75838b20e5b91bfee79e"
+    },
+    "communication-audit-findings.json": {
+      "bytes": 24731,
+      "original_path": "results/multiagent_imaging/communication-cause-audit-20261014/audit-findings.json",
+      "sha256": "105fe8aef8b212bb886434bc1ef8e37023261305bb7d65e4818d1d93a1ca7925"
+    },
+    "diagnostic-independent-verification.json": {
+      "bytes": 3503,
+      "original_path": "results/multiagent_imaging/additional-2h-diagnostic-20261013/review-20261013/independent-results-v3/independent-verification.json",
+      "sha256": "7d4d754e913def8b5f883625ecefbd1791f06b682c41d6430aafcfc6491a25e5"
+    },
+    "long-pair-transfer-verification.json": {
+      "bytes": 461,
+      "original_path": "results/multiagent_imaging/cooperative-credit-20261014/terminal-collection-20261015/transfer-verification.json",
+      "sha256": "246df670d86407c5fd15f2e04a7351985e833ac899ae87e54fb69511033e5821"
+    },
+    "memory-analysis.json": {
+      "bytes": 4552,
+      "original_path": "results/multiagent_imaging/ram-basilisk-audit-20261014/memory-analysis.json",
+      "sha256": "8e97a64168cd9853cd1da261148f3adff9e02d5e2b9c897d8eb81b1b8e6097ad"
+    },
+    "performance-summary.json": {
+      "bytes": 10298,
+      "original_path": "results/multiagent_imaging/current-performance-20261014/performance-summary.json",
+      "sha256": "84cbfe74e6816d4653f490f1e44fe8db9d11b1df6a32f6152359b499c5ac0ce3"
+    }
+  },
+  "verification": {
+    "cluster_jobs_submitted": 0,
+    "command": "PYTHONPATH=.:src /Users/dahu1128/Repositories/bsk_rl/.venv/bin/python -m pytest tests/unittest/multiagent -q",
+    "diff_check_passed": true,
+    "elapsed_s": 16.68,
+    "new_PPO_updates": 0,
+    "new_native_missions": 0,
+    "passed": 280,
+    "shell_syntax_passed": true
+  }
+}

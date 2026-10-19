@@ -1,0 +1,221 @@
+{
+  "observed_utc": "2026-10-14T14:19:31.103482+00:00",
+  "learning_seed": 3105,
+  "summary_scope": "Stochastic training outcomes, not held-out convergence or communication benefit",
+  "smoothing": "Nonoverlapping 28 complete mission batches; no confidence interval over training seeds",
+  "training_axes": "Cumulative true policy decisions over all four agents, not repeated PPO presentations",
+  "runs": {
+    "with_communication": {
+      "run_id": "0fc31890",
+      "complete_missions": 616,
+      "all_missions_45000_s": true,
+      "completed_optimizer_updates": 22,
+      "completed_update_true_decisions": 901227,
+      "latest_collected_true_decisions": 901227,
+      "first_28": {
+        "mission/constellation_reward": 178.88000168479374,
+        "mission/useful_delivered_visits": 256.92857142857144,
+        "mission/capture_coverage_fraction": 0.91,
+        "mission/ground_coverage_fraction": 0.8049999999999999,
+        "mission/redundant_execution_fraction": 0.12312094840622252,
+        "mean_agent/reward": 44.720000421198435,
+        "mean_agent/actual_images": 132.4375,
+        "mean_agent/qualified_images": 115.49107142857143,
+        "mean_agent/delivered_products": 81.67857142857143,
+        "mean_agent/useful_delivered_products": 64.23214285714286
+      },
+      "latest_28": {
+        "mission/constellation_reward": 428.5509280530353,
+        "mission/useful_delivered_visits": 779.1785714285714,
+        "mission/capture_coverage_fraction": 0.9983928571428572,
+        "mission/ground_coverage_fraction": 0.9982142857142857,
+        "mission/redundant_execution_fraction": 0.4642093208022021,
+        "mean_agent/reward": 107.13773201325883,
+        "mean_agent/actual_images": 368.00892857142856,
+        "mean_agent/qualified_images": 361.3125,
+        "mean_agent/delivered_products": 333.4375,
+        "mean_agent/useful_delivered_products": 194.79464285714286
+      },
+      "relative_change_percent": {
+        "mission/constellation_reward": 139.57453265692004,
+        "mission/useful_delivered_visits": 203.26661106477619,
+        "mission/capture_coverage_fraction": 9.713500784929362,
+        "mission/ground_coverage_fraction": 24.001774622892636,
+        "mission/redundant_execution_fraction": 277.0352054717774,
+        "mean_agent/reward": 139.57453265692004,
+        "mean_agent/actual_images": 177.87366008224902,
+        "mean_agent/qualified_images": 212.84885968303053,
+        "mean_agent/delivered_products": 308.2313073895933,
+        "mean_agent/useful_delivered_products": 203.26661106477619
+      },
+      "latest_agents": {
+        "sensor_0": {
+          "reward": 106.27843690292798,
+          "actual_images": 369.2857142857143,
+          "qualified_images": 362.39285714285717,
+          "delivered_products": 335.42857142857144,
+          "useful_delivered_products": 196.28571428571428
+        },
+        "sensor_1": {
+          "reward": 110.01157947176823,
+          "actual_images": 370.57142857142856,
+          "qualified_images": 364.07142857142856,
+          "delivered_products": 336.7857142857143,
+          "useful_delivered_products": 199.67857142857142
+        },
+        "sensor_2": {
+          "reward": 105.97275552993445,
+          "actual_images": 367.42857142857144,
+          "qualified_images": 361.14285714285717,
+          "delivered_products": 332.35714285714283,
+          "useful_delivered_products": 193.07142857142858
+        },
+        "sensor_3": {
+          "reward": 106.28815614840455,
+          "actual_images": 364.75,
+          "qualified_images": 357.64285714285717,
+          "delivered_products": 329.17857142857144,
+          "useful_delivered_products": 190.14285714285714
+        }
+      },
+      "latest_optimizer": {
+        "training/parameter_delta_l2": 0.15764943545801066,
+        "training/episodes": 28,
+        "losses/total_loss": 0.14497579634189606,
+        "training/parameter_delta_critic_l2": 0.09424850278065133,
+        "training/parameter_delta_actor_l2": 0.12637469772005402,
+        "training/gradient_l2": 1.4864001274108887,
+        "losses/policy_loss": 0.15498077869415283,
+        "losses/vf_loss": 0.0267343670129776,
+        "update/complete_episodes": 28,
+        "training/policy_decisions_total": 901227,
+        "training/iteration": 22,
+        "update/new_sampled_true_decisions": 48464,
+        "update/condensed_learner_rows": 48464,
+        "update/repeated_learner_presentations": 1453952
+      },
+      "source_sha256": "034ce267be302ebe24fcde874f447355c6a026954b103b31ba85f74a9a8cdbf3",
+      "historical_context_ratios": {
+        "illuminated": 0.8582244655581948,
+        "delivered": 0.8073547215496368
+      }
+    },
+    "without_communication": {
+      "run_id": "238d5947",
+      "complete_missions": 644,
+      "all_missions_45000_s": true,
+      "completed_optimizer_updates": 22,
+      "completed_update_true_decisions": 927363,
+      "latest_collected_true_decisions": 977279,
+      "first_28": {
+        "mission/constellation_reward": 177.0397683976073,
+        "mission/useful_delivered_visits": 258.9642857142857,
+        "mission/capture_coverage_fraction": 0.8994642857142858,
+        "mission/ground_coverage_fraction": 0.8048214285714286,
+        "mission/redundant_execution_fraction": 0.14509229983494218,
+        "mean_agent/reward": 44.259942099401826,
+        "mean_agent/actual_images": 136.67857142857142,
+        "mean_agent/qualified_images": 118.47321428571429,
+        "mean_agent/delivered_products": 84.41071428571429,
+        "mean_agent/useful_delivered_products": 64.74107142857143
+      },
+      "latest_28": {
+        "mission/constellation_reward": 435.53752519022197,
+        "mission/useful_delivered_visits": 788.9285714285714,
+        "mission/capture_coverage_fraction": 0.9980357142857142,
+        "mission/ground_coverage_fraction": 0.9976785714285715,
+        "mission/redundant_execution_fraction": 0.4758615416995144,
+        "mean_agent/reward": 108.88438129755549,
+        "mean_agent/actual_images": 373.66964285714283,
+        "mean_agent/qualified_images": 367.5,
+        "mean_agent/delivered_products": 341.7767857142857,
+        "mean_agent/useful_delivered_products": 197.23214285714286
+      },
+      "relative_change_percent": {
+        "mission/constellation_reward": 146.01112458081383,
+        "mission/useful_delivered_visits": 204.64763480899185,
+        "mission/capture_coverage_fraction": 10.958904109589017,
+        "mission/ground_coverage_fraction": 23.96272465054361,
+        "mission/redundant_execution_fraction": 227.97160306980948,
+        "mean_agent/reward": 146.01112458081383,
+        "mean_agent/actual_images": 173.39299712568592,
+        "mean_agent/qualified_images": 210.19669907302733,
+        "mean_agent/delivered_products": 304.8973979268035,
+        "mean_agent/useful_delivered_products": 204.64763480899185
+      },
+      "latest_agents": {
+        "sensor_0": {
+          "reward": 107.68747392952238,
+          "actual_images": 370.60714285714283,
+          "qualified_images": 364.32142857142856,
+          "delivered_products": 337.14285714285717,
+          "useful_delivered_products": 193.25
+        },
+        "sensor_1": {
+          "reward": 112.50114883936094,
+          "actual_images": 376.0357142857143,
+          "qualified_images": 370.14285714285717,
+          "delivered_products": 343.85714285714283,
+          "useful_delivered_products": 201.57142857142858
+        },
+        "sensor_2": {
+          "reward": 111.46476773247407,
+          "actual_images": 382.2142857142857,
+          "qualified_images": 376.14285714285717,
+          "delivered_products": 351.14285714285717,
+          "useful_delivered_products": 203.0
+        },
+        "sensor_3": {
+          "reward": 103.88413468886452,
+          "actual_images": 365.82142857142856,
+          "qualified_images": 359.39285714285717,
+          "delivered_products": 334.9642857142857,
+          "useful_delivered_products": 191.10714285714286
+        }
+      },
+      "latest_optimizer": {
+        "training/parameter_delta_l2": 0.14658970382059058,
+        "training/episodes": 28,
+        "losses/total_loss": -0.11294564604759216,
+        "training/parameter_delta_critic_l2": 0.0889351945377289,
+        "training/parameter_delta_actor_l2": 0.11652927717421398,
+        "training/gradient_l2": 2.9448275566101074,
+        "losses/policy_loss": -0.11243827641010284,
+        "losses/vf_loss": 0.034466441720724106,
+        "update/complete_episodes": 28,
+        "training/policy_decisions_total": 927363,
+        "training/iteration": 22,
+        "update/new_sampled_true_decisions": 49422,
+        "update/condensed_learner_rows": 49422,
+        "update/repeated_learner_presentations": 1482752
+      },
+      "source_sha256": "a7f3fabf565d8912ac5c72159a59b6bd1ab5017761b3e659c005761d242f688a",
+      "historical_context_ratios": {
+        "illuminated": 0.8729216152019003,
+        "delivered": 0.8275466966447597
+      }
+    }
+  },
+  "historical_reference": {
+    "policy": "AMOS mixed-trained target-set attention alpha=0.1, checkpoint 119",
+    "evaluation_scene_seed": 0,
+    "inference": "deterministic / act_random=False",
+    "horizon_s": 45000,
+    "targets": 100,
+    "cooldown_orbits": 1,
+    "illuminated_images": 421,
+    "independently_counted_qualified_useful_deliveries": 413,
+    "comparable_reward": false,
+    "reward_evaluation_mix": "100 percent ground value, not training alpha=0.1 reward",
+    "caveats": [
+      "100 targets versus 200",
+      "single spacecraft versus four sharing team credit",
+      "historical deterministic held-out run versus current stochastic training missions",
+      "different native/source/model and initial-state distributions",
+      "historical dynamic HIO/SHIO priorities and orbit are not identical"
+    ],
+    "source": "/Users/dahu1128/Repositories/bsk_rl/artifacts/amos_2026/evaluations/mixed_a0p1_one_orbit_seed0_common100d00i_20260822/RL_seed0_RL_latest100d00i_mixed_20260822_113953/metrics_RL_randomFalse_seed0_latest_amos2026_MIXED_GAT_fullActions_10d90i_ONE_ORBIT_COOLDOWN_ABLATION_100targets_COMMON100d00i.json",
+    "source_sha256": "0ff777ca0b4c6f48201e56bedb1efc7007de42307122cdfda567e39d312d21be",
+    "verified_deliveries_sha256": "44150c05604b18596dcf8e962fcdf813b58d7bcc19748ccc9d2dce53113b0263"
+  }
+}

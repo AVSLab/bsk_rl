@@ -1,0 +1,96 @@
+{
+  "passed": true,
+  "scope": "Read-only offline reconstruction; no mission sampling or optimization",
+  "missions": 28,
+  "duration_s": 45000,
+  "true_decisions": 28730,
+  "useful_delivered_visits": 7536.0,
+  "useful_delivered_visits_mean": 269.14285714285717,
+  "ground_coverage_fraction_mean": 0.8300000000000001,
+  "actual_images": 15267,
+  "qualified_images": 13213,
+  "censored_qualified_n": 3568,
+  "pooled_useful_product_delay_median_s": 4977.0,
+  "duplicate_acquisitions": 2378,
+  "redundant_sensor_s": 603668.9375332284,
+  "agent_decisions": {
+    "sensor_0": 7144,
+    "sensor_1": 7338,
+    "sensor_2": 6917,
+    "sensor_3": 7331
+  },
+  "target_max_abs_error": 0.0,
+  "losses": {
+    "policy_loss": -0.2667621374130249,
+    "total_loss": -0.307760089635849,
+    "vf_loss": 0.020016759634017944
+  },
+  "learner_metrics": {
+    "actor_gradient_l2_after_shared_clip": 0.3082089778601307,
+    "actor_gradient_l2_before_clip": 0.6380937131635234,
+    "critic_gradient_l2_after_shared_clip": 0.03758343463586955,
+    "critic_gradient_l2_before_clip": 0.0778100415073691,
+    "curr_entropy_coeff": 0.023694512589767867,
+    "default_optimizer_learning_rate": 3.3530429669626683e-06,
+    "entropy": 2.575056791305542,
+    "gradients_default_optimizer_global_norm": 0.6428200602531433,
+    "mean_kl_loss": 0.0,
+    "normalized_entropy": 0.9910969292600608,
+    "normalized_entropy_sum": 854277.9803695679,
+    "num_module_steps_trained": 28730.0,
+    "num_non_trainable_parameters": 0.0,
+    "num_trainable_parameters": 430345.0,
+    "policy_loss": -0.2667621374130249,
+    "ppo_ratio_clip_fraction": 0.40720829002079,
+    "ppo_ratio_clipped_presentations": 350994.0,
+    "shared_global_clip_scale": 0.483015224099452,
+    "total_loss": -0.307760089635849,
+    "valid_minibatch_presentations": 861952.0,
+    "value_target_abs_max_observed": 1.7924870252609253,
+    "vf_clamp_fraction": 0.0,
+    "vf_clamped_presentations": 0.0,
+    "vf_explained_var": 0.11698460578918457,
+    "vf_loss": 0.020016759634017944,
+    "vf_loss_unclipped": 0.020016759634017944,
+    "vf_mse": 0.0243432169937384,
+    "vf_squared_error_sum": 20982.684574186802
+  },
+  "parameter_change": {
+    "actor_l2": 3.3870531013181857,
+    "changed_elements": 418071,
+    "critic_l2": 1.2642602409963997,
+    "l2": 3.6153122504305784,
+    "max_absolute": 0.05048505589365959
+  },
+  "memory": {
+    "job_cgroup_peak_bytes": 114116993024,
+    "job_cgroup_peak_GiB": 106.27973175048828,
+    "capacity_GiB": 200,
+    "limit_failcnt_max": 0,
+    "profile_samples": 80,
+    "long_duration_growth_tested": false
+  },
+  "final_cost": {
+    "sacct_elapsed_s": 1937,
+    "allocated_cpus": 56,
+    "allocated_cpu_hours": 30.13111111111111
+  },
+  "restore": {
+    "iteration": 1,
+    "workers": 29,
+    "optimizer_matches": true,
+    "logits_exact": true,
+    "lifetime_accounting_matches": true
+  },
+  "provenance": {
+    "local_python": "3.13.2 (main, Feb  4 2025, 14:51:09) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "local_numpy": "2.2.4",
+    "no_local_native_import": true,
+    "pure_reconstruction_ast_extraction": true,
+    "source_file_hashes": {
+      "examples/multiagent_imaging/fixed_batch_diagnostic.py": "116e37cd5a1cefb82e6209b42fb5c69b1f969ba9c9324e0b7580f50b7525bf72",
+      "examples/multiagent_imaging/episode_accounting.py": "e28c3c5d6ce4a9fed28a62707fe9f4cb7aec3032f8cd664f070fe6316c807c3f",
+      "examples/multiagent_imaging/study_metrics.py": "a3c36d0643834e8f5d2f9fcbda5bb9e4aadd8ed7ccfa6c1801e18d31f2a8f518"
+    }
+  }
+}
