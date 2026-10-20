@@ -1,0 +1,621 @@
+{
+  "arm": "geometry_only",
+  "recorders": "on",
+  "config_sha256": "b40766e25d002e70c46159b72d768822f9cfce033b69cbd0070c99f348836fd8",
+  "native_build": {
+    "schemaVersion": 4,
+    "artifact": {
+      "basiliskVersion": "2.13.0b0",
+      "sourceRevision": "c1bf0d7d67df7ae5bb74cd008d4c79cc3d106063",
+      "sourceDirty": true,
+      "extensionAbiVersion": 3
+    },
+    "features": {
+      "vizInterface": true,
+      "opNav": false,
+      "mujoco": false,
+      "rustModules": false
+    },
+    "diagnostics": {
+      "target": {
+        "system": "Darwin",
+        "processor": "arm64",
+        "pointerSizeBytes": 8,
+        "osxArchitectures": "arm64",
+        "osxDeploymentTarget": ""
+      },
+      "build": {
+        "configuration": "Release",
+        "multiConfig": false,
+        "availableConfigurations": [],
+        "generator": "Ninja",
+        "generatorPlatform": "",
+        "generatorToolset": "",
+        "pythonLimitedApi": "0x03090000"
+      },
+      "compilers": {
+        "c": {
+          "id": "AppleClang",
+          "version": "21.0.0.21000101",
+          "executable": "cc",
+          "launcher": "",
+          "frontendVariant": "GNU",
+          "simulatedId": "",
+          "simulatedVersion": "",
+          "target": "",
+          "standard": "",
+          "extensions": ""
+        },
+        "cxx": {
+          "id": "AppleClang",
+          "version": "21.0.0.21000101",
+          "executable": "c++",
+          "launcher": "",
+          "frontendVariant": "GNU",
+          "simulatedId": "",
+          "simulatedVersion": "",
+          "target": "",
+          "standard": "17",
+          "extensions": "OFF"
+        },
+        "rust": {
+          "id": "",
+          "version": "",
+          "executable": "",
+          "launcher": "",
+          "target": ""
+        }
+      },
+      "conanSettings": {
+        "buildType": "Release",
+        "cxxStandard": "17",
+        "cxxStandardLibrary": "libc++",
+        "compilerRuntime": "",
+        "compilerRuntimeType": ""
+      },
+      "tools": {
+        "cmake": "3.31.6",
+        "conan": "2.15.1",
+        "swig": "4.4.1",
+        "python": "3.11.9",
+        "cargo": "",
+        "corrosion": ""
+      }
+    },
+    "abi": {
+      "capture": "compiled",
+      "contractHeader": "architecture/utilities/bskAbiDescriptor.h",
+      "build": {
+        "configuration": "Release",
+        "debugRuntime": false,
+        "assertionsDisabled": true
+      },
+      "target": {
+        "system": "Darwin",
+        "architecture": "arm64",
+        "pointerSizeBytes": 8,
+        "endianness": "little",
+        "instructionSet": "NEON"
+      },
+      "c": {
+        "compiler": {
+          "id": "AppleClang",
+          "version": "21.0.0 (clang-2100.1.1.101)",
+          "majorVersion": 21,
+          "minorVersion": 0,
+          "patchVersion": 0,
+          "languageStandard": 201710,
+          "msvcVersion": 0
+        },
+        "runtime": {
+          "family": "libSystem",
+          "majorVersion": 0,
+          "minorVersion": 0
+        },
+        "fundamentalTypes": {
+          "charIsSigned": true,
+          "shortSize": 2,
+          "intSize": 4,
+          "longSize": 8,
+          "longLongSize": 8,
+          "sizeTSize": 8,
+          "pointerSize": 8
+        },
+        "layoutCanaries": {
+          "packingCanarySize": 12,
+          "packingCanaryAlignment": 4,
+          "packingCanaryUint32Offset": 4,
+          "packingCanaryUint16Offset": 8,
+          "msgHeaderSize": 32,
+          "msgHeaderAlignment": 8,
+          "msgHeaderIsWrittenOffset": 8,
+          "msgHeaderTimeWrittenOffset": 16,
+          "msgHeaderModuleIdOffset": 24
+        }
+      },
+      "cxx": {
+        "compiler": {
+          "id": "AppleClang",
+          "version": "21.0.0 (clang-2100.1.1.101)",
+          "majorVersion": 21,
+          "minorVersion": 0,
+          "patchVersion": 0,
+          "frontend": "GNU",
+          "languageStandard": 201703,
+          "abiFamily": "itanium",
+          "abiVersion": 1002,
+          "msvcFullVersion": 0
+        },
+        "standardLibrary": {
+          "family": "libc++",
+          "version": 210106,
+          "abiVersion": 1,
+          "libstdcxxRelease": 0,
+          "msvcStlUpdate": 0,
+          "useCxx11Abi": null,
+          "iteratorDebugLevel": null,
+          "debugMode": false,
+          "assertionsEnabled": false
+        },
+        "runtime": {
+          "linkage": "system",
+          "debug": false,
+          "exceptions": true,
+          "rtti": true
+        },
+        "layoutCanaries": {
+          "stdStringSize": 24,
+          "stdStringAlignment": 8,
+          "stdVectorIntSize": 24,
+          "stdVectorIntAlignment": 8,
+          "sysModelSize": 56,
+          "sysModelAlignment": 8,
+          "bskLoggerSize": 40,
+          "bskLoggerAlignment": 8,
+          "msgHeaderSize": 32,
+          "msgHeaderAlignment": 8,
+          "readFunctorSize": 160,
+          "readFunctorAlignment": 8,
+          "messageSize": 304,
+          "messageAlignment": 8
+        }
+      },
+      "dependencies": {
+        "eigen": {
+          "version": "3.4.0",
+          "maxAlignBytes": 16,
+          "maxStaticAlignBytes": 16,
+          "vectorization": "NEON",
+          "indexSize": 8,
+          "vector3dSize": 24,
+          "vector3dAlignment": 8,
+          "vectorXdSize": 16,
+          "vectorXdAlignment": 8,
+          "matrix3dSize": 72,
+          "matrix3dAlignment": 8
+        },
+        "swig": {
+          "runtimeVersion": "5"
+        },
+        "python": {
+          "implementation": "CPython",
+          "versionMajor": 3,
+          "versionMinor": 11,
+          "versionMicro": 9,
+          "versionHex": 51055088,
+          "limitedApi": 50921472,
+          "soabi": "cpython-311-darwin",
+          "debug": false,
+          "freeThreaded": false
+        }
+      }
+    }
+  },
+  "missions": [
+    {
+      "mission": 0,
+      "steps": 1151,
+      "simulated_seconds": 45000,
+      "science_trace_sha256": "46778268d6415bb4be535d062428efcfcc582b5bb72d031a35099c43dbff2d6d",
+      "decisions": {
+        "sensor_0": 305,
+        "sensor_1": 275,
+        "sensor_2": 307,
+        "sensor_3": 283
+      },
+      "reward": {
+        "sensor_0": 67.55110930587941,
+        "sensor_1": 61.996353635181094,
+        "sensor_2": 68.82299172632322,
+        "sensor_3": 49.80134877688557
+      },
+      "recorder_count": 400,
+      "recorder_samples": 18000400
+    }
+  ],
+  "memory": [
+    {
+      "label": "before-build",
+      "mission": -1,
+      "sim_time_s": 0,
+      "rss_bytes": 315375616,
+      "uss_bytes": 203538432
+    },
+    {
+      "label": "reset",
+      "mission": 0,
+      "sim_time_s": 0,
+      "rss_bytes": 404471808,
+      "uss_bytes": 289374208
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 918.0000000000001,
+      "rss_bytes": 259391488,
+      "uss_bytes": 146980864
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 1805.0,
+      "rss_bytes": 383041536,
+      "uss_bytes": 270565376
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 2760.0,
+      "rss_bytes": 409878528,
+      "uss_bytes": 297385984
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 3660.0000000000005,
+      "rss_bytes": 278560768,
+      "uss_bytes": 166002688
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 4548.0,
+      "rss_bytes": 212303872,
+      "uss_bytes": 168574976
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 5447.0,
+      "rss_bytes": 236486656,
+      "uss_bytes": 193576960
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 6312.0,
+      "rss_bytes": 296894464,
+      "uss_bytes": 253984768
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 7240.0,
+      "rss_bytes": 360759296,
+      "uss_bytes": 317849600
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 8114.000000000001,
+      "rss_bytes": 218431488,
+      "uss_bytes": 175603712
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 9089.0,
+      "rss_bytes": 257753088,
+      "uss_bytes": 214843392
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 9952.0,
+      "rss_bytes": 305086464,
+      "uss_bytes": 262176768
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 10834.0,
+      "rss_bytes": 251674624,
+      "uss_bytes": 208764928
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 11771.0,
+      "rss_bytes": 296468480,
+      "uss_bytes": 253558784
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 12608.0,
+      "rss_bytes": 262176768,
+      "uss_bytes": 219267072
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 13508.0,
+      "rss_bytes": 253165568,
+      "uss_bytes": 210255872
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 14408.0,
+      "rss_bytes": 252641280,
+      "uss_bytes": 209731584
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 15308.000000000002,
+      "rss_bytes": 240533504,
+      "uss_bytes": 197623808
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 16208.000000000002,
+      "rss_bytes": 211304448,
+      "uss_bytes": 168394752
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 17108.0,
+      "rss_bytes": 206716928,
+      "uss_bytes": 163889152
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 18008.0,
+      "rss_bytes": 187924480,
+      "uss_bytes": 145014784
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 18908.0,
+      "rss_bytes": 195428352,
+      "uss_bytes": 152600576
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 19808.0,
+      "rss_bytes": 154877952,
+      "uss_bytes": 117702656
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 20708.0,
+      "rss_bytes": 142016512,
+      "uss_bytes": 121044992
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 21608.0,
+      "rss_bytes": 141885440,
+      "uss_bytes": 122847232
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 22508.0,
+      "rss_bytes": 273563648,
+      "uss_bytes": 254541824
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 23414.0,
+      "rss_bytes": 274595840,
+      "uss_bytes": 255606784
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 24350.0,
+      "rss_bytes": 383303680,
+      "uss_bytes": 361119744
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 25212.0,
+      "rss_bytes": 276905984,
+      "uss_bytes": 257884160
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 26144.0,
+      "rss_bytes": 264273920,
+      "uss_bytes": 245219328
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 27007.0,
+      "rss_bytes": 297615360,
+      "uss_bytes": 278478848
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 27900.0,
+      "rss_bytes": 289521664,
+      "uss_bytes": 270467072
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 28809.0,
+      "rss_bytes": 295501824,
+      "uss_bytes": 275709952
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 29703.000000000004,
+      "rss_bytes": 143785984,
+      "uss_bytes": 124567552
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 30634.000000000004,
+      "rss_bytes": 280150016,
+      "uss_bytes": 259915776
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 31516.000000000004,
+      "rss_bytes": 142901248,
+      "uss_bytes": 121159680
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 32487.000000000004,
+      "rss_bytes": 296615936,
+      "uss_bytes": 276070400
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 33367.0,
+      "rss_bytes": 290029568,
+      "uss_bytes": 271892480
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 34258.0,
+      "rss_bytes": 315031552,
+      "uss_bytes": 294141952
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 35113.0,
+      "rss_bytes": 295550976,
+      "uss_bytes": 275415040
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 36033.0,
+      "rss_bytes": 228900864,
+      "uss_bytes": 207011840
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 36927.0,
+      "rss_bytes": 331890688,
+      "uss_bytes": 306823168
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 37827.0,
+      "rss_bytes": 309624832,
+      "uss_bytes": 286785536
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 38727.0,
+      "rss_bytes": 330448896,
+      "uss_bytes": 308789248
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 39602.0,
+      "rss_bytes": 349503488,
+      "uss_bytes": 328122368
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 40588.0,
+      "rss_bytes": 330940416,
+      "uss_bytes": 308772864
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 41436.0,
+      "rss_bytes": 178028544,
+      "uss_bytes": 156598272
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 42319.0,
+      "rss_bytes": 324632576,
+      "uss_bytes": 304267264
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 43248.0,
+      "rss_bytes": 334790656,
+      "uss_bytes": 311427072
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 44109.0,
+      "rss_bytes": 316637184,
+      "uss_bytes": 293879808
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 45000.0,
+      "rss_bytes": 332578816,
+      "uss_bytes": 311836672
+    },
+    {
+      "label": "mission-end",
+      "mission": 0,
+      "sim_time_s": 45000,
+      "rss_bytes": 333479936,
+      "uss_bytes": 312737792
+    },
+    {
+      "label": "after-close",
+      "mission": 1,
+      "sim_time_s": 0,
+      "rss_bytes": 500154368,
+      "uss_bytes": 238223360
+    }
+  ],
+  "max_rss_bytes": 1004797952,
+  "wall_s": 460.03461395809427,
+  "new_PPO_updates": 0,
+  "cluster_jobs": 0,
+  "scope": "Local full native missions; identical fixed controller, no learning or native-version comparison"
+}

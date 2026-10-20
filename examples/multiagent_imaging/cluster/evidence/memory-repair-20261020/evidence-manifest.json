@@ -1,0 +1,135 @@
+{
+  "schema": "evidence-sha256-v1",
+  "files": [
+    {
+      "path": "archive-audit.json",
+      "bytes": 16286,
+      "sha256": "f7e577e488541992c52d7ab7d7d115855e1921fda1a98304586f1212ec9668a2"
+    },
+    {
+      "path": "catalog_tx-recorders-off.json",
+      "bytes": 31145,
+      "sha256": "c4978984f492068758473b0afb01ab2a59db265c12c71bb54b0e1a9557267d04"
+    },
+    {
+      "path": "catalog_tx-recorders-on.json",
+      "bytes": 14652,
+      "sha256": "3c6ae2f63050f776f4a91b2aa08d8c27bbc082cb8f1bdf735d581347b03264a3"
+    },
+    {
+      "path": "completed-core-source-verification.json",
+      "bytes": 1161,
+      "sha256": "d504edc3dd566a4bf7cd04ea6062df453e0e8e6faf7462cdf3b87c230bb1f6b9"
+    },
+    {
+      "path": "executed-core-source-verification.json",
+      "bytes": 978,
+      "sha256": "5a419ea5d9e9ed752eb99bdff4e7f5e4e2235eae22b1e10b10e73e4163e755a7"
+    },
+    {
+      "path": "final-verification.json",
+      "bytes": 8834,
+      "sha256": "e5ea66b34c3fe3211146dfdb5d4d76b1a0e8e5d784eb6c1450d9a939e161bac7"
+    },
+    {
+      "path": "geometry_only-recorders-off.json",
+      "bytes": 31142,
+      "sha256": "58d050009bfd8c7a47a41d9e40ab84603c4bc26d1cf2b07497ebe3c3f20abea1"
+    },
+    {
+      "path": "geometry_only-recorders-on.json",
+      "bytes": 14655,
+      "sha256": "f46ac414feaa5a1bb9dd7dd57ff95680c92354e6bf65974bc999440b2ac015dd"
+    },
+    {
+      "path": "historical-memory-analysis.json",
+      "bytes": 4552,
+      "sha256": "8e97a64168cd9853cd1da261148f3adff9e02d5e2b9c897d8eb81b1b8e6097ad"
+    },
+    {
+      "path": "historical-memory-window-transfer.json",
+      "bytes": 295,
+      "sha256": "02d762b34114837c573b8ebd0caea72392aa183d9e64abd0dcb2bb31f4a6b7a7"
+    },
+    {
+      "path": "historical-memory-window.json",
+      "bytes": 357739,
+      "sha256": "9ea8fe768eff26dc6dcf6be9d1c9d54136c69e525e438524c9c2e8514f811098"
+    },
+    {
+      "path": "independent-logit-review.json",
+      "bytes": 32335,
+      "sha256": "b338ce021a2c8ba022d55c488dc3d382ee55aba339aefe289a7aa4409c40e6ae"
+    },
+    {
+      "path": "individual-missions.jsonl",
+      "bytes": 1248093,
+      "sha256": "73fd1eeaf083780156ffabef3b89d8246d08e74364df7f31a2336e79f1b5fbff"
+    },
+    {
+      "path": "local-training-qualification.json",
+      "bytes": 10362,
+      "sha256": "fd3f3b9460f9921cea48a23dc711f78c47d0119d4be1cff9a6dd6c306c661354"
+    },
+    {
+      "path": "local-training-storage-and-memory.json",
+      "bytes": 49418,
+      "sha256": "6324c13ca42030d587db3d85c1c1cf79b849ea267f21aaa3d02dec5c1ef732df"
+    },
+    {
+      "path": "native-parity.json",
+      "bytes": 16552,
+      "sha256": "2aa18426d89d53179e7148c4f691495732e667a60f3ea5644066bfa2b8640dd5"
+    },
+    {
+      "path": "science-invariants.json",
+      "bytes": 10814,
+      "sha256": "94bc161898255e9acb81322cb9df664ad009e4a2fa6fc4d489ef50de0c77aeb0"
+    },
+    {
+      "path": "scientific-audit.json",
+      "bytes": 42780,
+      "sha256": "911b85fb1aa157e8dace8232a8b1df70a8f65236422dac310fa865038ac1f899"
+    },
+    {
+      "path": "storage-journal-16.json",
+      "bytes": 414,
+      "sha256": "b8be3bf1e3d00d45f4a490975a6626155ef44bbbf052b854ee39168470feb540"
+    },
+    {
+      "path": "storage-journal-64.json",
+      "bytes": 413,
+      "sha256": "3159e073979da8334fb859cc64067bea9ee69692a10456f0fc670197222c0f26"
+    },
+    {
+      "path": "storage-legacy-16.json",
+      "bytes": 414,
+      "sha256": "8e6e99b1fbc5b70530cd79d764848dec2a72bc830a01bf35345953be01fc946c"
+    },
+    {
+      "path": "terminal-log-review.json",
+      "bytes": 1335,
+      "sha256": "c3e126e3df9e3d358f0488dbe0fdea5042623533be706509bde0fe3ebad764a2"
+    },
+    {
+      "path": "with_communication-bootstrap-updates.json",
+      "bytes": 3756,
+      "sha256": "1f36039b574b84a6083532d96737cee9ac6936e6b528ea209168b5e5ef5f88db"
+    },
+    {
+      "path": "with_communication-training-updates.json",
+      "bytes": 114945,
+      "sha256": "4386c3e1cbee13de0b8fb871a3864f99d0d184a2d6d8ca9b475cd168159064d7"
+    },
+    {
+      "path": "without_communication-bootstrap-updates.json",
+      "bytes": 3840,
+      "sha256": "afa9e2e7def903edf93114bfd6a8991a51b7d4b89aa480a61cdaf4e60f484d7e"
+    },
+    {
+      "path": "without_communication-training-updates.json",
+      "bytes": 117734,
+      "sha256": "73376c2ba12f52d370b93f0deee92dca7eaa75f5f69faa428d7b1725ed323337"
+    }
+  ]
+}

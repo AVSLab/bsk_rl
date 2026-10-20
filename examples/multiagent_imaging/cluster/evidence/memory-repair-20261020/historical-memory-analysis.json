@@ -1,0 +1,115 @@
+{
+  "source_sha256": "9ea8fe768eff26dc6dcf6be9d1c9d54136c69e525e438524c9c2e8514f811098",
+  "interpretation": "Periodic process snapshots are sequential, not simultaneous. Cumulative peak can fall between samples. USS identifies private process pages, not Python/native allocation ownership.",
+  "arms": {
+    "with_communication": {
+      "sample_count": 63,
+      "first_utc": "2026-10-14T20:10:59.222871+00:00",
+      "last_utc": "2026-10-14T20:39:38.067474+00:00",
+      "updates_json_GiB": 6.057155183516443,
+      "max_observed_current": {
+        "utc": "2026-10-14T20:26:56.346452+00:00",
+        "phase": "after-sampling-and-learning",
+        "job_GiB": 190.5906524658203,
+        "job_peak_GiB": 194.98126220703125,
+        "driver_private_GiB": 33.911231994628906,
+        "remote_workers_private_GiB": 149.74677276611328,
+        "remote_workers_mean_private_GiB": 5.348099027361188,
+        "all_process_PSS_GiB": 187.56755447387695,
+        "cgroup_cache_GiB": 1.6101417541503906,
+        "worker_count": 28,
+        "errors": [],
+        "failcnt": 0
+      },
+      "first_cumulative_peak": {
+        "utc": "2026-10-14T20:28:18.304008+00:00",
+        "phase": "after-sampling-and-learning",
+        "job_GiB": 179.9941864013672,
+        "job_peak_GiB": 199.27535247802734,
+        "driver_private_GiB": 24.175121307373047,
+        "remote_workers_private_GiB": 149.74677276611328,
+        "remote_workers_mean_private_GiB": 5.348099027361188,
+        "all_process_PSS_GiB": 177.8313341140747,
+        "cgroup_cache_GiB": 1.6105804443359375,
+        "worker_count": 28,
+        "errors": [],
+        "failcnt": 0
+      },
+      "latest": {
+        "utc": "2026-10-14T20:39:38.067474+00:00",
+        "phase": "before-sampling-and-learning",
+        "job_GiB": 145.71698760986328,
+        "job_peak_GiB": 199.27535247802734,
+        "driver_private_GiB": 11.711906433105469,
+        "remote_workers_private_GiB": 127.80869674682617,
+        "remote_workers_mean_private_GiB": 4.564596312386649,
+        "all_process_PSS_GiB": 143.42943859100342,
+        "cgroup_cache_GiB": 1.6156082153320312,
+        "worker_count": 28,
+        "errors": [],
+        "failcnt": 0
+      }
+    },
+    "without_communication": {
+      "sample_count": 63,
+      "first_utc": "2026-10-14T20:12:08.451464+00:00",
+      "last_utc": "2026-10-14T20:39:30.363712+00:00",
+      "updates_json_GiB": 5.43054373562336,
+      "max_observed_current": {
+        "utc": "2026-10-14T20:32:36.904175+00:00",
+        "phase": "after-sampling-and-learning",
+        "job_GiB": 190.21396255493164,
+        "job_peak_GiB": 194.35653686523438,
+        "driver_private_GiB": 33.00929260253906,
+        "remote_workers_private_GiB": 150.20925903320312,
+        "remote_workers_mean_private_GiB": 5.364616394042969,
+        "all_process_PSS_GiB": 187.15760135650635,
+        "cgroup_cache_GiB": 1.6021347045898438,
+        "worker_count": 28,
+        "errors": [],
+        "failcnt": 0
+      },
+      "first_cumulative_peak": {
+        "utc": "2026-10-14T20:33:06.613277+00:00",
+        "phase": "after-sampling-and-learning",
+        "job_GiB": 178.61986923217773,
+        "job_peak_GiB": 196.74626922607422,
+        "driver_private_GiB": 22.234554290771484,
+        "remote_workers_private_GiB": 150.2100830078125,
+        "remote_workers_mean_private_GiB": 5.364645821707589,
+        "all_process_PSS_GiB": 176.3833532333374,
+        "cgroup_cache_GiB": 1.6025199890136719,
+        "worker_count": 28,
+        "errors": [],
+        "failcnt": 0
+      },
+      "latest": {
+        "utc": "2026-10-14T20:39:30.363712+00:00",
+        "phase": "before-sampling-and-learning",
+        "job_GiB": 124.94161605834961,
+        "job_peak_GiB": 196.74626922607422,
+        "driver_private_GiB": 11.122550964355469,
+        "remote_workers_private_GiB": 107.37915802001953,
+        "remote_workers_mean_private_GiB": 3.834969929286412,
+        "all_process_PSS_GiB": 122.43999195098877,
+        "cgroup_cache_GiB": 1.6049919128417969,
+        "worker_count": 28,
+        "errors": [],
+        "failcnt": 0
+      }
+    }
+  },
+  "recorder_payload_lower_bound": {
+    "state_payload_bytes": 272,
+    "eclipse_payload_bytes": 8,
+    "timestamp_bytes_per_recorder_sample": 16,
+    "passive_targets": 200,
+    "seconds": 45000,
+    "assumed_recorded_samples": 45000,
+    "GiB_per_environment": 2.6151537895202637,
+    "GiB_28_remote_environments": 73.22430610656738,
+    "estimated_from_source": true,
+    "live_heap_not_measured": true,
+    "existing_cluster_pin_already_uses_deque": true
+  }
+}

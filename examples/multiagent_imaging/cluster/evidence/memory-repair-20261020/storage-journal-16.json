@@ -1,0 +1,11 @@
+{
+  "mode": "journal",
+  "updates": 16,
+  "episode_bytes": 5104038,
+  "episode_sha256": "71e15f40566fc496c0354a3bf161b29b8e5105702d23e7e7970b7e2081be848f",
+  "peak_python_allocation_bytes": 11010093,
+  "process_peak_rss_bytes": 115556352,
+  "all_scientific_payloads_roundtrip": true,
+  "wall_s": 13.940274249995127,
+  "scope": "Real archived mission storage replay; no native simulation or cluster savings claim"
+}

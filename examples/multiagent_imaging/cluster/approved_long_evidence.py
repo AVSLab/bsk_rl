@@ -44,7 +44,7 @@ def validate_heldout(summary):
 
 def verify(root, phase, config_path):
     from examples.multiagent_imaging.config import MultiAgentImagingConfig
-    from examples.multiagent_imaging.episode_accounting import reconcile_episode_audits, verify_retained_learner_batch
+    from examples.multiagent_imaging.episode_accounting import verify_retained_learner_batch
     from examples.multiagent_imaging.study_metrics import mission_metrics
     root = Path(root); folder = root / phase
     read = lambda p: json.loads(p.read_text())
@@ -70,36 +70,51 @@ def verify(root, phase, config_path):
         assert worker['passed'] and worker['basilisk'] == driver['basilisk'] and worker['bsk_rl'] == driver['bsk_rl']
         for name, module in driver['modules'].items():
             assert all(worker['modules'][name][k] == module[k] for k in ('version', 'path', 'file_sha256'))
-    updates = read(folder / 'updates.json')
+    from examples.multiagent_imaging.update_evidence import UpdateRecords
+    from examples.multiagent_imaging.episode_accounting import content_hash
+    import hashlib
+    updates = UpdateRecords(folder)
     assert updates and (phase != 'bootstrap' or len(updates) == 1)
-    episodes = []
+    episode_hashes = {}
+    decisions, mission_count = 0, 0
+    batch = None
+    last_update = None
     for update in updates:
         validate_update(update)
         topology = read(folder / f"worker-topology-{update['iteration']:04d}.json")
         assert topology['passed']
         for e in update['episodes']:
             assert mission_metrics(e, 45000) == e['mission_metrics']
-        episodes.extend(update['episodes'])
-    recovered, accounting = reconcile_episode_audits(episodes, folder / 'episode-spool')
-    assert len(recovered) == len(episodes), 'Unaccounted or duplicated complete missions'
-    assert accounting['new_sampled_true_decisions'] == sum(u['actual_policy_decisions'] for u in updates)
-    batch = None
-    if phase == 'bootstrap':
-        batch = verify_retained_learner_batch(folder / 'learner_batch',
-            MultiAgentImagingConfig.from_json(config_path), episodes, updates[0]['condensed_learner_rows'])
+            identity = e['lifetime_episode_id']
+            assert identity not in episode_hashes, 'Repeated learned mission'
+            episode_hashes[identity] = content_hash(e)
+        decisions += update['actual_policy_decisions']
+        mission_count += len(update['episodes'])
+        if phase == 'bootstrap':
+            batch = verify_retained_learner_batch(folder / 'learner_batch',
+                MultiAgentImagingConfig.from_json(config_path), update['episodes'], update['condensed_learner_rows'])
+        last_update = {k: update[k] for k in ('iteration', 'policy_decisions_lifetime')}
+    spool_ids = set()
+    for path in sorted((folder / 'episode-spool').glob('*.json')):
+        episode = read(path)
+        identity = episode['lifetime_episode_id']
+        assert path.name == hashlib.sha256(identity.encode()).hexdigest() + '.json'
+        assert identity not in spool_ids and episode_hashes.get(identity) == content_hash(episode), 'Unaccounted or conflicting spool mission'
+        spool_ids.add(identity)
+    assert spool_ids == set(episode_hashes), 'Missing completed spool mission'
     identity = read(folder / 'wandb.json')
     import wandb
     live = wandb.Api(timeout=60).run(identity['entity'] + '/' + identity['project'] + '/' + identity['id'])
     assert live.id == identity['id']
-    assert live.summary.get('training/iteration') == updates[-1]['iteration']
-    assert live.summary.get('lifetime/true_decisions') == updates[-1]['policy_decisions_lifetime']
+    assert live.summary.get('training/iteration') == last_update['iteration']
+    assert live.summary.get('lifetime/true_decisions') == last_update['policy_decisions_lifetime']
     required = ['losses/policy_loss', 'losses/vf_loss', 'mission/constellation_reward',
         'mission/useful_delivered_visits'] + [f'agent/sensor_{i}/reward' for i in range(4)] + [f'agent/sensor_{i}/storage_fraction' for i in range(4)]
     assert all(live.summary.get(k) is not None for k in required), 'Missing live W&B metrics'
-    return dict(passed=True, phase=phase, updates=len(updates), complete_missions=len(episodes),
-        new_true_decisions=accounting['new_sampled_true_decisions'],
-        lifetime_true_decisions=updates[-1]['policy_decisions_lifetime'],
-        training_iteration=updates[-1]['iteration'], wandb_id=live.id, wandb_url=live.url,
+    return dict(passed=True, phase=phase, updates=len(updates), complete_missions=mission_count,
+        new_true_decisions=decisions,
+        lifetime_true_decisions=last_update['policy_decisions_lifetime'],
+        training_iteration=last_update['iteration'], wandb_id=live.id, wandb_url=live.url,
         learner_batch_verification=batch, operational_scope='Acceptance evidence, not convergence or cooperation benefit')
 
 

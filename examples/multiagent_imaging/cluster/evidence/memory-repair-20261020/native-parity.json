@@ -1,0 +1,482 @@
+{
+  "passed": true,
+  "arms": {
+    "catalog_tx": {
+      "full_mission_numeric_trace_parity": true,
+      "signed_zero_normalized_in_numeric_hash": true,
+      "final_scientific_evidence_byte_identical": true,
+      "off_full_missions": 3,
+      "on_full_missions": 1,
+      "horizon_s": 45000,
+      "on_recorder_samples": 18000400,
+      "off_recorder_samples": 0,
+      "on_peak_RSS_bytes": 990937088,
+      "off_peak_RSS_bytes": 374702080,
+      "off_end_USS_bytes": [
+        253378560,
+        243515392,
+        236732416
+      ],
+      "native_build": {
+        "schemaVersion": 4,
+        "artifact": {
+          "basiliskVersion": "2.13.0b0",
+          "sourceRevision": "c1bf0d7d67df7ae5bb74cd008d4c79cc3d106063",
+          "sourceDirty": true,
+          "extensionAbiVersion": 3
+        },
+        "features": {
+          "vizInterface": true,
+          "opNav": false,
+          "mujoco": false,
+          "rustModules": false
+        },
+        "diagnostics": {
+          "target": {
+            "system": "Darwin",
+            "processor": "arm64",
+            "pointerSizeBytes": 8,
+            "osxArchitectures": "arm64",
+            "osxDeploymentTarget": ""
+          },
+          "build": {
+            "configuration": "Release",
+            "multiConfig": false,
+            "availableConfigurations": [],
+            "generator": "Ninja",
+            "generatorPlatform": "",
+            "generatorToolset": "",
+            "pythonLimitedApi": "0x03090000"
+          },
+          "compilers": {
+            "c": {
+              "id": "AppleClang",
+              "version": "21.0.0.21000101",
+              "executable": "cc",
+              "launcher": "",
+              "frontendVariant": "GNU",
+              "simulatedId": "",
+              "simulatedVersion": "",
+              "target": "",
+              "standard": "",
+              "extensions": ""
+            },
+            "cxx": {
+              "id": "AppleClang",
+              "version": "21.0.0.21000101",
+              "executable": "c++",
+              "launcher": "",
+              "frontendVariant": "GNU",
+              "simulatedId": "",
+              "simulatedVersion": "",
+              "target": "",
+              "standard": "17",
+              "extensions": "OFF"
+            },
+            "rust": {
+              "id": "",
+              "version": "",
+              "executable": "",
+              "launcher": "",
+              "target": ""
+            }
+          },
+          "conanSettings": {
+            "buildType": "Release",
+            "cxxStandard": "17",
+            "cxxStandardLibrary": "libc++",
+            "compilerRuntime": "",
+            "compilerRuntimeType": ""
+          },
+          "tools": {
+            "cmake": "3.31.6",
+            "conan": "2.15.1",
+            "swig": "4.4.1",
+            "python": "3.11.9",
+            "cargo": "",
+            "corrosion": ""
+          }
+        },
+        "abi": {
+          "capture": "compiled",
+          "contractHeader": "architecture/utilities/bskAbiDescriptor.h",
+          "build": {
+            "configuration": "Release",
+            "debugRuntime": false,
+            "assertionsDisabled": true
+          },
+          "target": {
+            "system": "Darwin",
+            "architecture": "arm64",
+            "pointerSizeBytes": 8,
+            "endianness": "little",
+            "instructionSet": "NEON"
+          },
+          "c": {
+            "compiler": {
+              "id": "AppleClang",
+              "version": "21.0.0 (clang-2100.1.1.101)",
+              "majorVersion": 21,
+              "minorVersion": 0,
+              "patchVersion": 0,
+              "languageStandard": 201710,
+              "msvcVersion": 0
+            },
+            "runtime": {
+              "family": "libSystem",
+              "majorVersion": 0,
+              "minorVersion": 0
+            },
+            "fundamentalTypes": {
+              "charIsSigned": true,
+              "shortSize": 2,
+              "intSize": 4,
+              "longSize": 8,
+              "longLongSize": 8,
+              "sizeTSize": 8,
+              "pointerSize": 8
+            },
+            "layoutCanaries": {
+              "packingCanarySize": 12,
+              "packingCanaryAlignment": 4,
+              "packingCanaryUint32Offset": 4,
+              "packingCanaryUint16Offset": 8,
+              "msgHeaderSize": 32,
+              "msgHeaderAlignment": 8,
+              "msgHeaderIsWrittenOffset": 8,
+              "msgHeaderTimeWrittenOffset": 16,
+              "msgHeaderModuleIdOffset": 24
+            }
+          },
+          "cxx": {
+            "compiler": {
+              "id": "AppleClang",
+              "version": "21.0.0 (clang-2100.1.1.101)",
+              "majorVersion": 21,
+              "minorVersion": 0,
+              "patchVersion": 0,
+              "frontend": "GNU",
+              "languageStandard": 201703,
+              "abiFamily": "itanium",
+              "abiVersion": 1002,
+              "msvcFullVersion": 0
+            },
+            "standardLibrary": {
+              "family": "libc++",
+              "version": 210106,
+              "abiVersion": 1,
+              "libstdcxxRelease": 0,
+              "msvcStlUpdate": 0,
+              "useCxx11Abi": null,
+              "iteratorDebugLevel": null,
+              "debugMode": false,
+              "assertionsEnabled": false
+            },
+            "runtime": {
+              "linkage": "system",
+              "debug": false,
+              "exceptions": true,
+              "rtti": true
+            },
+            "layoutCanaries": {
+              "stdStringSize": 24,
+              "stdStringAlignment": 8,
+              "stdVectorIntSize": 24,
+              "stdVectorIntAlignment": 8,
+              "sysModelSize": 56,
+              "sysModelAlignment": 8,
+              "bskLoggerSize": 40,
+              "bskLoggerAlignment": 8,
+              "msgHeaderSize": 32,
+              "msgHeaderAlignment": 8,
+              "readFunctorSize": 160,
+              "readFunctorAlignment": 8,
+              "messageSize": 304,
+              "messageAlignment": 8
+            }
+          },
+          "dependencies": {
+            "eigen": {
+              "version": "3.4.0",
+              "maxAlignBytes": 16,
+              "maxStaticAlignBytes": 16,
+              "vectorization": "NEON",
+              "indexSize": 8,
+              "vector3dSize": 24,
+              "vector3dAlignment": 8,
+              "vectorXdSize": 16,
+              "vectorXdAlignment": 8,
+              "matrix3dSize": 72,
+              "matrix3dAlignment": 8
+            },
+            "swig": {
+              "runtimeVersion": "5"
+            },
+            "python": {
+              "implementation": "CPython",
+              "versionMajor": 3,
+              "versionMinor": 11,
+              "versionMicro": 9,
+              "versionHex": 51055088,
+              "limitedApi": 50921472,
+              "soabi": "cpython-311-darwin",
+              "debug": false,
+              "freeThreaded": false
+            }
+          }
+        }
+      },
+      "file_sha256": {
+        "native-catalog-on-v2/result.json": "3c6ae2f63050f776f4a91b2aa08d8c27bbc082cb8f1bdf735d581347b03264a3",
+        "native-catalog-on-v2/science-0.json": "6be47a6b8ca8d2e52c47fa574c5f7c3d87ab0584178fc1ffb35f09b5fb3610a8",
+        "native-catalog-on-v2/trace-0.jsonl": "bf75924bb44fd45267dc4b989aa17df5b98aa53ca6574ba463fa97f6bc338347",
+        "native-catalog-off/result.json": "c4978984f492068758473b0afb01ab2a59db265c12c71bb54b0e1a9557267d04",
+        "native-catalog-off/science-0.json": "6be47a6b8ca8d2e52c47fa574c5f7c3d87ab0584178fc1ffb35f09b5fb3610a8",
+        "native-catalog-off/science-1.json": "6be47a6b8ca8d2e52c47fa574c5f7c3d87ab0584178fc1ffb35f09b5fb3610a8",
+        "native-catalog-off/science-2.json": "6be47a6b8ca8d2e52c47fa574c5f7c3d87ab0584178fc1ffb35f09b5fb3610a8",
+        "native-catalog-off/trace-0.jsonl": "bf75924bb44fd45267dc4b989aa17df5b98aa53ca6574ba463fa97f6bc338347",
+        "native-catalog-off/trace-1.jsonl": "bf75924bb44fd45267dc4b989aa17df5b98aa53ca6574ba463fa97f6bc338347",
+        "native-catalog-off/trace-2.jsonl": "bf75924bb44fd45267dc4b989aa17df5b98aa53ca6574ba463fa97f6bc338347"
+      }
+    },
+    "geometry_only": {
+      "full_mission_numeric_trace_parity": true,
+      "signed_zero_normalized_in_numeric_hash": true,
+      "final_scientific_evidence_byte_identical": true,
+      "off_full_missions": 3,
+      "on_full_missions": 1,
+      "horizon_s": 45000,
+      "on_recorder_samples": 18000400,
+      "off_recorder_samples": 0,
+      "on_peak_RSS_bytes": 1004797952,
+      "off_peak_RSS_bytes": 357515264,
+      "off_end_USS_bytes": [
+        244809728,
+        240517120,
+        249348096
+      ],
+      "native_build": {
+        "schemaVersion": 4,
+        "artifact": {
+          "basiliskVersion": "2.13.0b0",
+          "sourceRevision": "c1bf0d7d67df7ae5bb74cd008d4c79cc3d106063",
+          "sourceDirty": true,
+          "extensionAbiVersion": 3
+        },
+        "features": {
+          "vizInterface": true,
+          "opNav": false,
+          "mujoco": false,
+          "rustModules": false
+        },
+        "diagnostics": {
+          "target": {
+            "system": "Darwin",
+            "processor": "arm64",
+            "pointerSizeBytes": 8,
+            "osxArchitectures": "arm64",
+            "osxDeploymentTarget": ""
+          },
+          "build": {
+            "configuration": "Release",
+            "multiConfig": false,
+            "availableConfigurations": [],
+            "generator": "Ninja",
+            "generatorPlatform": "",
+            "generatorToolset": "",
+            "pythonLimitedApi": "0x03090000"
+          },
+          "compilers": {
+            "c": {
+              "id": "AppleClang",
+              "version": "21.0.0.21000101",
+              "executable": "cc",
+              "launcher": "",
+              "frontendVariant": "GNU",
+              "simulatedId": "",
+              "simulatedVersion": "",
+              "target": "",
+              "standard": "",
+              "extensions": ""
+            },
+            "cxx": {
+              "id": "AppleClang",
+              "version": "21.0.0.21000101",
+              "executable": "c++",
+              "launcher": "",
+              "frontendVariant": "GNU",
+              "simulatedId": "",
+              "simulatedVersion": "",
+              "target": "",
+              "standard": "17",
+              "extensions": "OFF"
+            },
+            "rust": {
+              "id": "",
+              "version": "",
+              "executable": "",
+              "launcher": "",
+              "target": ""
+            }
+          },
+          "conanSettings": {
+            "buildType": "Release",
+            "cxxStandard": "17",
+            "cxxStandardLibrary": "libc++",
+            "compilerRuntime": "",
+            "compilerRuntimeType": ""
+          },
+          "tools": {
+            "cmake": "3.31.6",
+            "conan": "2.15.1",
+            "swig": "4.4.1",
+            "python": "3.11.9",
+            "cargo": "",
+            "corrosion": ""
+          }
+        },
+        "abi": {
+          "capture": "compiled",
+          "contractHeader": "architecture/utilities/bskAbiDescriptor.h",
+          "build": {
+            "configuration": "Release",
+            "debugRuntime": false,
+            "assertionsDisabled": true
+          },
+          "target": {
+            "system": "Darwin",
+            "architecture": "arm64",
+            "pointerSizeBytes": 8,
+            "endianness": "little",
+            "instructionSet": "NEON"
+          },
+          "c": {
+            "compiler": {
+              "id": "AppleClang",
+              "version": "21.0.0 (clang-2100.1.1.101)",
+              "majorVersion": 21,
+              "minorVersion": 0,
+              "patchVersion": 0,
+              "languageStandard": 201710,
+              "msvcVersion": 0
+            },
+            "runtime": {
+              "family": "libSystem",
+              "majorVersion": 0,
+              "minorVersion": 0
+            },
+            "fundamentalTypes": {
+              "charIsSigned": true,
+              "shortSize": 2,
+              "intSize": 4,
+              "longSize": 8,
+              "longLongSize": 8,
+              "sizeTSize": 8,
+              "pointerSize": 8
+            },
+            "layoutCanaries": {
+              "packingCanarySize": 12,
+              "packingCanaryAlignment": 4,
+              "packingCanaryUint32Offset": 4,
+              "packingCanaryUint16Offset": 8,
+              "msgHeaderSize": 32,
+              "msgHeaderAlignment": 8,
+              "msgHeaderIsWrittenOffset": 8,
+              "msgHeaderTimeWrittenOffset": 16,
+              "msgHeaderModuleIdOffset": 24
+            }
+          },
+          "cxx": {
+            "compiler": {
+              "id": "AppleClang",
+              "version": "21.0.0 (clang-2100.1.1.101)",
+              "majorVersion": 21,
+              "minorVersion": 0,
+              "patchVersion": 0,
+              "frontend": "GNU",
+              "languageStandard": 201703,
+              "abiFamily": "itanium",
+              "abiVersion": 1002,
+              "msvcFullVersion": 0
+            },
+            "standardLibrary": {
+              "family": "libc++",
+              "version": 210106,
+              "abiVersion": 1,
+              "libstdcxxRelease": 0,
+              "msvcStlUpdate": 0,
+              "useCxx11Abi": null,
+              "iteratorDebugLevel": null,
+              "debugMode": false,
+              "assertionsEnabled": false
+            },
+            "runtime": {
+              "linkage": "system",
+              "debug": false,
+              "exceptions": true,
+              "rtti": true
+            },
+            "layoutCanaries": {
+              "stdStringSize": 24,
+              "stdStringAlignment": 8,
+              "stdVectorIntSize": 24,
+              "stdVectorIntAlignment": 8,
+              "sysModelSize": 56,
+              "sysModelAlignment": 8,
+              "bskLoggerSize": 40,
+              "bskLoggerAlignment": 8,
+              "msgHeaderSize": 32,
+              "msgHeaderAlignment": 8,
+              "readFunctorSize": 160,
+              "readFunctorAlignment": 8,
+              "messageSize": 304,
+              "messageAlignment": 8
+            }
+          },
+          "dependencies": {
+            "eigen": {
+              "version": "3.4.0",
+              "maxAlignBytes": 16,
+              "maxStaticAlignBytes": 16,
+              "vectorization": "NEON",
+              "indexSize": 8,
+              "vector3dSize": 24,
+              "vector3dAlignment": 8,
+              "vectorXdSize": 16,
+              "vectorXdAlignment": 8,
+              "matrix3dSize": 72,
+              "matrix3dAlignment": 8
+            },
+            "swig": {
+              "runtimeVersion": "5"
+            },
+            "python": {
+              "implementation": "CPython",
+              "versionMajor": 3,
+              "versionMinor": 11,
+              "versionMicro": 9,
+              "versionHex": 51055088,
+              "limitedApi": 50921472,
+              "soabi": "cpython-311-darwin",
+              "debug": false,
+              "freeThreaded": false
+            }
+          }
+        }
+      },
+      "file_sha256": {
+        "native-control-on/result.json": "f46ac414feaa5a1bb9dd7dd57ff95680c92354e6bf65974bc999440b2ac015dd",
+        "native-control-on/science-0.json": "1fa0f4ceae959339a0edbab539f89fb32d47fda5c6bbd8b0480b4ead03509f02",
+        "native-control-on/trace-0.jsonl": "c050fdfbf0d4c873e884ef31a62b924dee5ae0267ea88b290a38362108d06ef7",
+        "native-control-off/result.json": "58d050009bfd8c7a47a41d9e40ab84603c4bc26d1cf2b07497ebe3c3f20abea1",
+        "native-control-off/science-0.json": "1fa0f4ceae959339a0edbab539f89fb32d47fda5c6bbd8b0480b4ead03509f02",
+        "native-control-off/science-1.json": "1fa0f4ceae959339a0edbab539f89fb32d47fda5c6bbd8b0480b4ead03509f02",
+        "native-control-off/science-2.json": "1fa0f4ceae959339a0edbab539f89fb32d47fda5c6bbd8b0480b4ead03509f02",
+        "native-control-off/trace-0.jsonl": "c050fdfbf0d4c873e884ef31a62b924dee5ae0267ea88b290a38362108d06ef7",
+        "native-control-off/trace-1.jsonl": "c050fdfbf0d4c873e884ef31a62b924dee5ae0267ea88b290a38362108d06ef7",
+        "native-control-off/trace-2.jsonl": "c050fdfbf0d4c873e884ef31a62b924dee5ae0267ea88b290a38362108d06ef7"
+      }
+    }
+  },
+  "scope": "Eight local full native missions, one repeated fixed-controller seed; not 29-worker Linux memory or long-duration leak qualification"
+}

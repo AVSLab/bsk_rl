@@ -1,0 +1,7 @@
+{
+  "transport": "Termius SFTP",
+  "remote_path": "/projects/dahu1128/multiagent-24h-v14-git-evidence-20261013/memory-window-20261014T203941268290Z.json",
+  "bytes": 357739,
+  "sha256": "9ea8fe768eff26dc6dcf6be9d1c9d54136c69e525e438524c9c2e8514f811098",
+  "outer_size_and_hash_verified": true
+}

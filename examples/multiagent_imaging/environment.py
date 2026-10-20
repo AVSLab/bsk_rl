@@ -129,6 +129,7 @@ def build_environment(
     *,
     vizard_dir: str | None = None,
     vizard_settings: dict | None = None,
+    target_recorders_enabled: bool | None = None,
 ):
     """Build a real Basilisk environment with sensing agents and passive RSOs."""
 
@@ -242,6 +243,13 @@ def build_environment(
         "storedCharge_Init": 5e11,
         "basePowerDraw": 0.0,
     }
+    # Diagnostic histories are unused by the task, observations and rewards.
+    # Keep full physical target propagation, but opt in to its 1 Hz recorders.
+    # This operational option deliberately does not alter the science schema.
+    if target_recorders_enabled is None:
+        from bsk_rl.utils.profiling import env_flag
+        target_recorders_enabled = env_flag("BSK_RL_TARGET_RECORDERS", False)
+    passive_args["target_recorders_enabled"] = bool(target_recorders_enabled)
     targets = [
         PassiveTargetSatellite(
             name=f"target_{index}",

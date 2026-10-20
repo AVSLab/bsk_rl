@@ -16,9 +16,11 @@ CONFIG_SHA = "06f4b06a9be2c483db50cb109c52b2f53aac3e4fbcbaf67479a8d88949e4e478"
 
 def input_hashes(inputs):
     files = [inputs / "updates.json"]
+    files += [f for f in sorted((inputs / "update-journal").glob("*")) if f.is_file()]
     for name in ("checkpoint_0000", "checkpoint_0003", "learner_batch"):
         files += [f for f in sorted((inputs / name).rglob("*")) if f.is_file()]
-    return {str(f.relative_to(inputs)): hashlib.sha256(f.read_bytes()).hexdigest() for f in files}
+    from examples.multiagent_imaging.update_evidence import file_sha256
+    return {str(f.relative_to(inputs)): file_sha256(f) for f in files}
 
 
 def main():

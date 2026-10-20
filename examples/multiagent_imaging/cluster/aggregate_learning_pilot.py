@@ -408,9 +408,10 @@ def aggregate(validation_root: Path, pilot_root: Path, output: Path) -> dict:
     }
 
     for mode in MODES:
-        gate_records = load_json(validation_root / mode / "train" / "updates.json")
-        gate_records += load_json(validation_root / mode / "resume" / "updates.json")
-        pilot_records = load_json(pilot_root / mode / "train" / "updates.json")
+        from examples.multiagent_imaging.update_evidence import UpdateRecords
+        gate_records = UpdateRecords(validation_root / mode / "train")
+        gate_records += UpdateRecords(validation_root / mode / "resume")
+        pilot_records = UpdateRecords(pilot_root / mode / "train")
         if [record["iteration"] for record in gate_records] != [1, 2]:
             raise AssertionError(f"{mode} gate did not prove update-boundary resume.")
         if [record["iteration"] for record in pilot_records] != list(range(1, 9)):

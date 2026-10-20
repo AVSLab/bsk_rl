@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "snapshot": "results/multiagent_imaging/memory-repair-20261020T023019Z/local-training-v2/train/source-snapshot.tar.gz",
+  "snapshot_sha256": "5c2415b11c742ce5aede029f3a6cf49e625bb6ff21fd1756561bf8e357b831d8",
+  "python": "3.11.9 (v3.11.9:de54cf5be3, Apr  2 2024, 07:12:50) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "method": "SHA256 of ast.dump(node,include_attributes=False); exact archive member paths; current AST equals executed snapshot AST",
+  "core_AST_sha256": {
+    "examples/multiagent_imaging/train.py:train_run": "c66507cead72e25fc07c7caf033f6db2efa71ef6b0f0fb5d69763fe3795c80bc",
+    "examples/multiagent_imaging/environment.py:build_environment": "c668eb3459e56b6bc33a3901a7bad752ab1a2b53b52675403d8dd01806b3b2ac",
+    "examples/multiagent_imaging/update_evidence.py:UpdateJournal": "15b7301f460d756e77639c823dab0f8f84c4bb137d9f991efe9b22b768fd3c2e",
+    "examples/multiagent_imaging/update_evidence.py:_sync_directory": "6370e85edb956eb7fa6fb14d0cb396a81c49bf6414514b13e2eedf4fec0c5457",
+    "examples/multiagent_imaging/update_evidence.py:file_sha256": "f1980896a72b97c8a770d45ad73026717897376e431f2722fd6c5223b4226d92"
+  }
+}

@@ -253,7 +253,8 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     config = MultiAgentImagingConfig.from_json(args.config)
     batch, audit = independently_recompute(inputs / "learner_batch", config)
-    updates = json.loads((inputs / "updates.json").read_text())
+    from examples.multiagent_imaging.update_evidence import UpdateRecords
+    updates = UpdateRecords(inputs)
     episodes = {e["episode_id"]: e for e in updates[0]["episodes"]}
     for trace in audit["physical_reward_traces"]:
         episode = episodes.get(trace["multi_agent_episode_id"], {})

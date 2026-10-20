@@ -1,0 +1,160 @@
+{
+  "schema": "multiagent-memory-repair-review-v1",
+  "created_utc": "2026-10-20T03:47:52.175226+00:00",
+  "canonical_branch": "multi-agent-space-imaging-2026",
+  "base_commit": "3d610ecb0bc5dafb3e941f00a2460f1c5527811d",
+  "scope": "Offline failed-run audit plus local memory repair qualification; no cluster work or native upgrade",
+  "source_sha256": {
+    "examples/multiagent_imaging/audit_failed_runs.py": "84367c4a3bb50805f909cffeef28b16155bb2c72eda036b47d9bb77a5865afc4",
+    "examples/multiagent_imaging/cluster/aggregate_learning_pilot.py": "6d22e5cd097e95775c9f5f988023cea969023312d84cf85b5008df0271aba6a5",
+    "examples/multiagent_imaging/cluster/approved_long_evidence.py": "8299fadea386bd5570dae08ec6228ab1ca54f39887f890654aecb354a88f72d9",
+    "examples/multiagent_imaging/cluster/resume_critic_gate.py": "6e833dd65c9802e19dcc4fafed3650be8f0e50381a204d615689ffa49c8d1f32",
+    "examples/multiagent_imaging/cluster/study_gate.py": "061434aa0b09e71f5a2f9f772994c04e57d7c69dc44d5c6fb18b69728afaae84",
+    "examples/multiagent_imaging/environment.py": "ab1aca5be4bc7f8a0c68d18591d7d650ed993af8c169040483856313a095a929",
+    "examples/multiagent_imaging/finish_failed_run_audit.py": "1f8501460dba7d28ea5dee261eff60e2e4b5c6948b8de5f2ea13a725ccc6bea2",
+    "examples/multiagent_imaging/fixed_batch_diagnostic.py": "b9348dad0277fd8ede7c362176b8a177d136dc240500c8c726ebf1948b194bd7",
+    "examples/multiagent_imaging/train.py": "6e5cd81ff364b8de0131f74e5253009c5799b944905b1478dc0824cae339d3b4",
+    "examples/multiagent_imaging/update_evidence.py": "bddd21cbdcd120e6c3b68c85f110c43cc1cce2ebe2706395ccff3a2a0f1aa9c0",
+    "examples/multiagent_imaging/validate_memory_training.py": "a5916abcf3f9a11295f527e6a4e1499e0c9b402470e1be6f57d649ecbc16f660",
+    "examples/multiagent_imaging/validate_recorder_memory.py": "3741a14e8fc01fdcfddeda36285b0faab144698f9fae9e9b6a98702b644d74f4",
+    "examples/multiagent_imaging/validate_update_memory.py": "6042d2f784141ad384d5b458740cc7424bf795ce64b4c0a84437461b590c7bf4",
+    "tests/integration/multiagent/test_target_recorder_option.py": "a12a300fcbbe8afd649fd004e2d6f3a5730a4ae1dc176b2c435972265fdf5839",
+    "tests/unittest/multiagent/test_failed_run_audit.py": "7feae31700c226b6625593a5a5de7455e603e262c09d7d90a887062a90de7a15",
+    "tests/unittest/multiagent/test_update_evidence.py": "ca6001dd4ff5bb77afda5d5557f06797adebcdfaf5ab43a1faeca31c94b8c48f"
+  },
+  "protected_science_files_byte_identical": 90,
+  "regression": {
+    "passed": true,
+    "command": "PYTHONPATH=.:src /Users/dahu1128/Repositories/bsk_rl/.venv/bin/python -m pytest tests/unittest/multiagent tests/integration/multiagent/test_target_recorder_option.py -q",
+    "passed_tests": 305,
+    "warnings": 8,
+    "wall_s": 27.64,
+    "log_sha256": "5cec901fa1cbabbd17bd9685962e55ad58cd4f45778177782fbc62fe2f17140c",
+    "ruff_new_python_files_passed": true,
+    "git_diff_check_passed": true
+  },
+  "audit": {
+    "manifest_files_verified": 6884,
+    "mission_evidence_recomputed": 1846,
+    "accepted_updates_per_arm": 32,
+    "accepted_full_missions_per_arm": 896,
+    "accepted_lifetime_true_decisions": {
+      "with_communication": 1400522,
+      "without_communication": 1433119
+    },
+    "sampled_missions_outside_accepted_updates_per_arm": 27,
+    "sampled_outside_accepted_semantics": "May have entered a failed optimizer call; excluded from accepted totals",
+    "checkpoint_exports_independently_verified": 66,
+    "bootstrap_targets_max_abs_error": 0.0,
+    "both_allocation_logs_confirm_oom": true,
+    "specific_worker_PID_oom_attribution_proven": false,
+    "allocated_cpu_hours": {
+      "with_communication": 1111.32,
+      "without_communication": 1043.6844444444444,
+      "prior_failed_attempts": 0.2644444444444444,
+      "pair_including_prior": 2155.268888888889,
+      "separate_diagnostic": 30.13111111111111
+    }
+  },
+  "repairs": {
+    "update_storage": "One immutable full update file with fsynced SHA256 index; no retained full history or whole-history serialization",
+    "historical_array_reader_and_explicit_export": true,
+    "passive_target_recorders": "Disabled by default in this example; physical target propagation remains unchanged; opt in with BSK_RL_TARGET_RECORDERS=1",
+    "recorder_sample_count_per_full_on_mission": 18000400,
+    "native_fixed_controller_full_missions": 8,
+    "native_fixed_controller_seed_count": 1,
+    "native_trace_and_final_science_parity": true,
+    "measured_native_memory_bytes": {
+      "catalog_tx": {
+        "on_peak_RSS_bytes": 990937088,
+        "off_peak_RSS_bytes": 374702080,
+        "off_end_USS_bytes": [
+          253378560,
+          243515392,
+          236732416
+        ]
+      },
+      "geometry_only": {
+        "on_peak_RSS_bytes": 1004797952,
+        "off_peak_RSS_bytes": 357515264,
+        "off_end_USS_bytes": [
+          244809728,
+          240517120,
+          249348096
+        ]
+      }
+    },
+    "storage_measurements": {
+      "legacy-16": {
+        "mode": "legacy",
+        "updates": 16,
+        "episode_bytes": 5104038,
+        "episode_sha256": "71e15f40566fc496c0354a3bf161b29b8e5105702d23e7e7970b7e2081be848f",
+        "peak_python_allocation_bytes": 613372566,
+        "process_peak_rss_bytes": 919306240,
+        "all_scientific_payloads_roundtrip": true,
+        "wall_s": 19.069926958996803,
+        "scope": "Real archived mission storage replay; no native simulation or cluster savings claim"
+      },
+      "journal-16": {
+        "mode": "journal",
+        "updates": 16,
+        "episode_bytes": 5104038,
+        "episode_sha256": "71e15f40566fc496c0354a3bf161b29b8e5105702d23e7e7970b7e2081be848f",
+        "peak_python_allocation_bytes": 11010093,
+        "process_peak_rss_bytes": 115556352,
+        "all_scientific_payloads_roundtrip": true,
+        "wall_s": 13.940274249995127,
+        "scope": "Real archived mission storage replay; no native simulation or cluster savings claim"
+      },
+      "journal-64": {
+        "mode": "journal",
+        "updates": 64,
+        "episode_bytes": 5104038,
+        "episode_sha256": "71e15f40566fc496c0354a3bf161b29b8e5105702d23e7e7970b7e2081be848f",
+        "peak_python_allocation_bytes": 11014091,
+        "process_peak_rss_bytes": 112066560,
+        "all_scientific_payloads_roundtrip": true,
+        "wall_s": 62.14159900008235,
+        "scope": "Real archived mission storage replay; no native simulation or cluster savings claim"
+      }
+    }
+  },
+  "local_training": {
+    "completed_full_missions": 5,
+    "true_decisions": 4966,
+    "ppo_updates": 1,
+    "finite_actor_and_critic_update": true,
+    "retained_target_max_abs_error": 0.0,
+    "exact_local_optimizer_weights_logits_RNG_seed_index_accounting_restore": true,
+    "zero_restore_environment_steps": true,
+    "unchanged_checkpoint_files": 68,
+    "unchanged_AMOS_dropout": 0.1,
+    "local_native_build": {
+      "basiliskVersion": "2.13.0b0",
+      "sourceRevision": "c1bf0d7d67df7ae5bb74cd008d4c79cc3d106063",
+      "sourceDirty": true,
+      "extensionAbiVersion": 3
+    },
+    "same_native_build_before_after": true
+  },
+  "limitations": [
+    "Local validation uses the existing macOS arm64 Basilisk 2.13.0b0 build, with pre-existing sourceDirty=true; the historical Alpine build is 2.12.0b0. Neither was upgraded in this work.",
+    "No new 29-worker Linux memory, long-duration stability, online W&B or cluster source/runtime gates have been executed.",
+    "Storage measurements isolate evidence serialization; they are not whole-training or Alpine RAM savings.",
+    "Eight native replay missions use one fixed-controller seed across both arms; this is parity testing, not learning efficacy.",
+    "No final held-out episodes exist in the failed-run archive; later raw learner batches are absent and cannot be independently reconstructed.",
+    "All late optimizer files are verified, but no new full 29-worker restore of late checkpoints has been run.",
+    "Linux-to-macOS probe readback has maximum logit error 6.67572021484375e-6 with zero argmax mismatches; exact same-runtime restore requirements are unchanged.",
+    "Compact lifetime accounting and current-update sampling/learning allocations remain; total training RAM is not guaranteed constant."
+  ],
+  "evidence_precedence": {
+    "terminal_oom": "terminal-log-review.json supersedes the older uncertainty about allocation OOM in scientific-audit.json; specific PID attribution remains unproven",
+    "cross_runtime_logits": "independent-logit-review.json supplements scientific-audit.json without claiming an exact same-runtime restore",
+    "executed_source": "completed-core-source-verification.json records the final exact-member AST comparison with its Python version and hash method"
+  },
+  "cluster_jobs_submitted": 0,
+  "cluster_cancellations": 0,
+  "Basilisk_upgraded": false,
+  "science_changed": false
+}

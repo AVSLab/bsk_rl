@@ -1,0 +1,68 @@
+{
+  "phase": "bootstrap",
+  "updates": [
+    {
+      "iteration": 1,
+      "losses": {
+        "policy_loss": -0.3274284601211548,
+        "total_loss": -0.3641411364078522,
+        "vf_loss": 0.024228304624557495
+      },
+      "gradient_l2": 0.2800478935241699,
+      "finite_gradients": 1.0,
+      "parameter_change": {
+        "actor_l2": 3.3070328016254504,
+        "changed_elements": 418138,
+        "critic_l2": 1.3138386586511526,
+        "l2": 3.558460056259299,
+        "max_absolute": 0.04734562709927559
+      },
+      "actual_policy_decisions": 28458,
+      "condensed_learner_rows": 28458,
+      "repeated_learner_presentations": 853760,
+      "policy_decisions_lifetime": 28458,
+      "checkpoint": "/gpfs/alpine1/scratch/dahu1128/multiagent-24h-v14-git-20261013/with_communication/diagnostic/bootstrap/checkpoint_0001",
+      "restore_validation": {
+        "matched_actions": true,
+        "max_logit_error": 0.0,
+        "policy_sha256": "7d93c75949020a5158bca2b356c4ff4bb51c6c98da1f8e21a12930aa895decd7",
+        "probe_count": 112
+      },
+      "complete_missions": 28,
+      "mission_ids": [
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:1691587713:1:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:111343621:2:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:4253594013:3:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:578361592:4:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:1822828259:5:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:2364367595:6:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:1964699235:7:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:1425132732:8:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:118725653:9:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:2164367806:10:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:24610857:11:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:602887301:12:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:1134219078:13:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:169461327:14:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:3138826431:15:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:4218569548:16:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:3959187957:17:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:3255212322:18:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:355888024:19:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:3739455101:20:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:1352971318:21:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:2544462621:22:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:1313384414:23:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:998711913:24:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:1501352478:25:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:2888668424:26:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:457420751:27:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:catalog_tx:4096590635:28:2"
+      ],
+      "mean_reward": 178.88000168479377
+    }
+  ],
+  "learned_missions": 28,
+  "sampled_but_unassigned_missions": [],
+  "unassigned_sampled_true_decisions": 0
+}

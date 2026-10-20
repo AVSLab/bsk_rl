@@ -1,0 +1,336 @@
+{
+  "passed": true,
+  "native_build": {
+    "schemaVersion": 4,
+    "artifact": {
+      "basiliskVersion": "2.13.0b0",
+      "sourceRevision": "c1bf0d7d67df7ae5bb74cd008d4c79cc3d106063",
+      "sourceDirty": true,
+      "extensionAbiVersion": 3
+    },
+    "features": {
+      "vizInterface": true,
+      "opNav": false,
+      "mujoco": false,
+      "rustModules": false
+    },
+    "diagnostics": {
+      "target": {
+        "system": "Darwin",
+        "processor": "arm64",
+        "pointerSizeBytes": 8,
+        "osxArchitectures": "arm64",
+        "osxDeploymentTarget": ""
+      },
+      "build": {
+        "configuration": "Release",
+        "multiConfig": false,
+        "availableConfigurations": [],
+        "generator": "Ninja",
+        "generatorPlatform": "",
+        "generatorToolset": "",
+        "pythonLimitedApi": "0x03090000"
+      },
+      "compilers": {
+        "c": {
+          "id": "AppleClang",
+          "version": "21.0.0.21000101",
+          "executable": "cc",
+          "launcher": "",
+          "frontendVariant": "GNU",
+          "simulatedId": "",
+          "simulatedVersion": "",
+          "target": "",
+          "standard": "",
+          "extensions": ""
+        },
+        "cxx": {
+          "id": "AppleClang",
+          "version": "21.0.0.21000101",
+          "executable": "c++",
+          "launcher": "",
+          "frontendVariant": "GNU",
+          "simulatedId": "",
+          "simulatedVersion": "",
+          "target": "",
+          "standard": "17",
+          "extensions": "OFF"
+        },
+        "rust": {
+          "id": "",
+          "version": "",
+          "executable": "",
+          "launcher": "",
+          "target": ""
+        }
+      },
+      "conanSettings": {
+        "buildType": "Release",
+        "cxxStandard": "17",
+        "cxxStandardLibrary": "libc++",
+        "compilerRuntime": "",
+        "compilerRuntimeType": ""
+      },
+      "tools": {
+        "cmake": "3.31.6",
+        "conan": "2.15.1",
+        "swig": "4.4.1",
+        "python": "3.11.9",
+        "cargo": "",
+        "corrosion": ""
+      }
+    },
+    "abi": {
+      "capture": "compiled",
+      "contractHeader": "architecture/utilities/bskAbiDescriptor.h",
+      "build": {
+        "configuration": "Release",
+        "debugRuntime": false,
+        "assertionsDisabled": true
+      },
+      "target": {
+        "system": "Darwin",
+        "architecture": "arm64",
+        "pointerSizeBytes": 8,
+        "endianness": "little",
+        "instructionSet": "NEON"
+      },
+      "c": {
+        "compiler": {
+          "id": "AppleClang",
+          "version": "21.0.0 (clang-2100.1.1.101)",
+          "majorVersion": 21,
+          "minorVersion": 0,
+          "patchVersion": 0,
+          "languageStandard": 201710,
+          "msvcVersion": 0
+        },
+        "runtime": {
+          "family": "libSystem",
+          "majorVersion": 0,
+          "minorVersion": 0
+        },
+        "fundamentalTypes": {
+          "charIsSigned": true,
+          "shortSize": 2,
+          "intSize": 4,
+          "longSize": 8,
+          "longLongSize": 8,
+          "sizeTSize": 8,
+          "pointerSize": 8
+        },
+        "layoutCanaries": {
+          "packingCanarySize": 12,
+          "packingCanaryAlignment": 4,
+          "packingCanaryUint32Offset": 4,
+          "packingCanaryUint16Offset": 8,
+          "msgHeaderSize": 32,
+          "msgHeaderAlignment": 8,
+          "msgHeaderIsWrittenOffset": 8,
+          "msgHeaderTimeWrittenOffset": 16,
+          "msgHeaderModuleIdOffset": 24
+        }
+      },
+      "cxx": {
+        "compiler": {
+          "id": "AppleClang",
+          "version": "21.0.0 (clang-2100.1.1.101)",
+          "majorVersion": 21,
+          "minorVersion": 0,
+          "patchVersion": 0,
+          "frontend": "GNU",
+          "languageStandard": 201703,
+          "abiFamily": "itanium",
+          "abiVersion": 1002,
+          "msvcFullVersion": 0
+        },
+        "standardLibrary": {
+          "family": "libc++",
+          "version": 210106,
+          "abiVersion": 1,
+          "libstdcxxRelease": 0,
+          "msvcStlUpdate": 0,
+          "useCxx11Abi": null,
+          "iteratorDebugLevel": null,
+          "debugMode": false,
+          "assertionsEnabled": false
+        },
+        "runtime": {
+          "linkage": "system",
+          "debug": false,
+          "exceptions": true,
+          "rtti": true
+        },
+        "layoutCanaries": {
+          "stdStringSize": 24,
+          "stdStringAlignment": 8,
+          "stdVectorIntSize": 24,
+          "stdVectorIntAlignment": 8,
+          "sysModelSize": 56,
+          "sysModelAlignment": 8,
+          "bskLoggerSize": 40,
+          "bskLoggerAlignment": 8,
+          "msgHeaderSize": 32,
+          "msgHeaderAlignment": 8,
+          "readFunctorSize": 160,
+          "readFunctorAlignment": 8,
+          "messageSize": 304,
+          "messageAlignment": 8
+        }
+      },
+      "dependencies": {
+        "eigen": {
+          "version": "3.4.0",
+          "maxAlignBytes": 16,
+          "maxStaticAlignBytes": 16,
+          "vectorization": "NEON",
+          "indexSize": 8,
+          "vector3dSize": 24,
+          "vector3dAlignment": 8,
+          "vectorXdSize": 16,
+          "vectorXdAlignment": 8,
+          "matrix3dSize": 72,
+          "matrix3dAlignment": 8
+        },
+        "swig": {
+          "runtimeVersion": "5"
+        },
+        "python": {
+          "implementation": "CPython",
+          "versionMajor": 3,
+          "versionMinor": 11,
+          "versionMicro": 9,
+          "versionHex": 51055088,
+          "limitedApi": 50921472,
+          "soabi": "cpython-311-darwin",
+          "debug": false,
+          "freeThreaded": false
+        }
+      }
+    }
+  },
+  "science_config_sha256": "47bb0507a7b4e9b2ac5043d83f3165f8bb3fbf2ad2e7964576d38eef64ad777d",
+  "completed_native_training_missions": 5,
+  "new_PPO_updates": 1,
+  "true_decisions": 4966,
+  "losses": {
+    "policy_loss": -0.003000836819410324,
+    "total_loss": -0.035394974052906036,
+    "vf_loss": 0.02877376414835453
+  },
+  "gradient_l2": 0.1325807273387909,
+  "parameter_change": {
+    "actor_l2": 1.8666362021021035,
+    "changed_elements": 415137,
+    "critic_l2": 0.6636617030937959,
+    "l2": 1.981105137833811,
+    "max_absolute": 0.018305160105228424
+  },
+  "retained_target_verification": {
+    "passed": true,
+    "raw_agent_episodes": 20,
+    "true_decisions": 4966,
+    "bootstrap_rows": 20,
+    "target_max_abs_error": 0.0,
+    "forced_no_action_count": 0,
+    "padded_rows": 0,
+    "physical_reward_traces": [],
+    "hashes": {
+      "raw-episodes.json.gz": "1ff04efce2d73cba0d5b335a2d7f645db12dbda804ce3e6fe0afb174c2baf0dc",
+      "bootstrap-batch.npz": "6d7731abd91e6052f252e1f45666478c19b5c92d77dcc959c00114b859ff0217",
+      "learner-batch.npz": "7aab6da30b920796e7474d6c5ccd9b588cb22c6f64c3685ae53bd12e0dd537cf",
+      "bootstrap-values.npz": "ff84105849cf205ec1afa04071933710cedd3ac268a0748573e6548567b6c73a"
+    },
+    "matched_mission_episodes": 5,
+    "physical_product_reward_target_traces": [
+      {
+        "kind": "acquisition",
+        "product": {
+          "capture_time": 412.0,
+          "completion_time": 420.0,
+          "delivery_time": null,
+          "quality": 1.0,
+          "record_id": "sensor_2:148:412.000000000:4000000.000000000",
+          "request_epoch": 0.0,
+          "source_sensor": "sensor_2",
+          "storage_owner": "sensor_2",
+          "target_id": 148
+        },
+        "agent": "sensor_2",
+        "episode_id": "c2cc84b3ba674d7ba715076257d5abbc",
+        "raw_event_index": 10,
+        "event_time_s": 420.0,
+        "owned_interval_reward": 0.12567950904671812,
+        "condensed_row": 1,
+        "seconds_from_action_start": 120.0,
+        "endpoint_discount": 0.35922372049732265,
+        "condensed_reward": 0.045147061347961426,
+        "value_target": 0.14596225321292877,
+        "semantics": "Owned interval total can include other credits or costs; product timing is traced, not assigned fabricated isolated credit"
+      },
+      {
+        "kind": "physical_delivery",
+        "product": {
+          "capture_time": 1149.0,
+          "completion_time": 1157.0,
+          "delivery_time": 1239.0,
+          "quality": 1.0,
+          "record_id": "sensor_2:29:1149.000000000:4000000.000000000",
+          "request_epoch": 0.0,
+          "source_sensor": "sensor_2",
+          "storage_owner": "sensor_2",
+          "target_id": 29
+        },
+        "agent": "sensor_2",
+        "episode_id": "c2cc84b3ba674d7ba715076257d5abbc",
+        "raw_event_index": 37,
+        "event_time_s": 1239.0,
+        "owned_interval_reward": 0.4663937231115803,
+        "condensed_row": 11,
+        "seconds_from_action_start": 10.0,
+        "endpoint_discount": 0.918220710103637,
+        "condensed_reward": 0.42825236916542053,
+        "value_target": 0.544223427772522,
+        "semantics": "Owned interval total can include other credits or costs; product timing is traced, not assigned fabricated isolated credit"
+      }
+    ],
+    "agent_decisions": {
+      "sensor_0": 1250,
+      "sensor_1": 1241,
+      "sensor_2": 1267,
+      "sensor_3": 1208
+    },
+    "learner_counter_matches": true,
+    "sampled_decisions_match": true
+  },
+  "restore": {
+    "optimizer_exact": true,
+    "weights_exact": true,
+    "logits_exact": true,
+    "restored_weights_sha256": "2bc1fd37d874c4e70f06b52f95a1b395a9d691bc7d7ee2809dabc0d89f7431af",
+    "worker_rng_seed_index_accounting_exact": true,
+    "zero_environment_steps": true,
+    "dropout": {
+      "pi_head.base.model_f.2": 0.1,
+      "pi_head.base.model_f.5": 0.1,
+      "pi_head.base.models_g.0.2": 0.1,
+      "pi_head.base.models_g.0.5": 0.1,
+      "pi_head.base.models_g.0.8": 0.1,
+      "pi_head.base.models_g.0.11": 0.1,
+      "vf.base.model_f.2": 0.1,
+      "vf.base.model_f.5": 0.1,
+      "vf.base.model_g.2": 0.1,
+      "vf.base.model_g.5": 0.1,
+      "vf.base.model_g.8": 0.1
+    },
+    "lifetime_metrics_matches_checkpoint": true,
+    "lifetime_metrics_sha256": "37114cf2f058309656ba4c3a85aa45e29437643db2f03cbe9009406533be671c",
+    "training_accounting_matches_checkpoint": true,
+    "training_accounting_sha256": "cffe316e70adc0fd35b74573ecd55993b3c80a17c84231091cd40cd8be2d1fbb"
+  },
+  "unchanged_checkpoint_files": 68,
+  "full_alpine_topology_tested": false,
+  "wandb_tested": false,
+  "cluster_jobs": 0,
+  "wall_s": 2128.5212776670232
+}

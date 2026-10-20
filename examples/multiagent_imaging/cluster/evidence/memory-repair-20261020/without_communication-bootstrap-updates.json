@@ -1,0 +1,68 @@
+{
+  "phase": "bootstrap",
+  "updates": [
+    {
+      "iteration": 1,
+      "losses": {
+        "policy_loss": -0.5089577436447144,
+        "total_loss": -0.5326781868934631,
+        "vf_loss": 0.03595058247447014
+      },
+      "gradient_l2": 0.4261564314365387,
+      "finite_gradients": 1.0,
+      "parameter_change": {
+        "actor_l2": 3.2314631132162392,
+        "changed_elements": 403488,
+        "critic_l2": 1.290054059457947,
+        "l2": 3.479453021439019,
+        "max_absolute": 0.05034711956977844
+      },
+      "actual_policy_decisions": 28193,
+      "condensed_learner_rows": 28193,
+      "repeated_learner_presentations": 845824,
+      "policy_decisions_lifetime": 28193,
+      "checkpoint": "/gpfs/alpine1/scratch/dahu1128/multiagent-24h-v14-git-20261013/without_communication/diagnostic/bootstrap/checkpoint_0001",
+      "restore_validation": {
+        "matched_actions": true,
+        "max_logit_error": 0.0,
+        "policy_sha256": "b8d2bf6ccd93b3e29937ca8ff9670b16de31d0a2c5fb60fe0081f945052e9d6e",
+        "probe_count": 112
+      },
+      "complete_missions": 28,
+      "mission_ids": [
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:1691587713:1:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:111343621:2:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:4253594013:3:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:578361592:4:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:1822828259:5:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:2364367595:6:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:1964699235:7:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:1425132732:8:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:118725653:9:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:2164367806:10:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:24610857:11:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:602887301:12:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:1134219078:13:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:169461327:14:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:3138826431:15:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:4218569548:16:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:3959187957:17:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:3255212322:18:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:355888024:19:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:3739455101:20:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:1352971318:21:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:2544462621:22:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:1313384414:23:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:998711913:24:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:1501352478:25:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:2888668424:26:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:457420751:27:2",
+        "multiagent-space-imaging-319f5902d06d-34b73e5b69c6:geometry_only:4096590635:28:2"
+      ],
+      "mean_reward": 177.0397683976073
+    }
+  ],
+  "learned_missions": 28,
+  "sampled_but_unassigned_missions": [],
+  "unassigned_sampled_true_decisions": 0
+}

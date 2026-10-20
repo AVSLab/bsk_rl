@@ -388,7 +388,13 @@ def train_run(
     max_training_episodes=None,
     max_wall_seconds=None,
 ):
-    """Bounded updates with actual sampler, optimizer, checkpoint and cost evidence."""
+    """Bounded updates with actual sampler, optimizer, checkpoint and cost evidence.
+
+    Return a read-only disk-backed UpdateRecords sequence. Keep its output
+    directory while consuming it. updates.json is a versioned descriptor;
+    UpdateRecords also reads historical arrays. For older external consumers,
+    explicitly export a fresh legacy array using update_evidence's CLI.
+    """
     import json
     import os
     import torch
@@ -410,17 +416,24 @@ def train_run(
         take_audits,
     )
     from examples.multiagent_imaging.wandb_logging import TrainingLogger
+    from examples.multiagent_imaging.update_evidence import UpdateJournal, UpdateRecords
 
     resources = resources or LauncherResources()
     if resume and iterations == 0:
         os.environ["BSK_ZERO_UPDATE_RESTORE"] = "1"
     torch.set_num_threads(resources.torch_threads)
     output = Path(output).resolve()
-    if (output / "updates.json").exists():
+    if (output / "updates.json").exists() or (output / "update-journal").exists():
         raise FileExistsError(
             "Use a fresh output directory; existing update evidence must not be overwritten."
         )
     output.mkdir(parents=True, exist_ok=True)
+    journal = UpdateJournal(output)
+    from bsk_rl.utils.profiling import env_flag
+    write_json(output / "memory-configuration.json", dict(
+        update_storage="bsk-rl-update-journal-v1",
+        passive_target_recorders_enabled=env_flag("BSK_RL_TARGET_RECORDERS", False),
+        physical_target_propagation_unchanged=True))
     write_json(output / "provenance.json", provenance(experiment))
     write_json(output / "launcher.json", asdict(resources))
     save_reproduction_bundle(output)
@@ -459,7 +472,7 @@ def train_run(
     algorithm = None
     logger = None
     failed = True
-    records = []
+    last_checkpoint = str(resume) if resume else None
     try:
         with measure() as startup:
             algorithm = (
@@ -686,8 +699,8 @@ def train_run(
             write_json(metadata_path, metadata)
             logger.save_identity(checkpoint)
             record["checkpoint"] = str(checkpoint)
-            records.append(record)
-            write_json(output / "updates.json", records)
+            journal.append(record)
+            last_checkpoint = str(checkpoint)
             memory_profile.mark("after-checkpoint")
             logger.log_update(record)
             print(
@@ -696,10 +709,13 @@ def train_run(
                 ),
                 flush=True,
             )
+            # The journal owns history. Drop the full current audit before the
+            # next sampler call, rather than retaining O(all prior missions).
+            del record, audits, result, probes, before, after
         if not (resume and iterations == 0):
             write_json(output/"tranche-stop.json",dict(reason="signal" if stop_requested else "budget_or_update_limit",
                 training_iteration=algorithm.training_iteration,policy_decisions_lifetime=policy_decisions_lifetime,
-                checkpoint=str(checkpoint) if records else str(resume) if resume else None))
+                checkpoint=last_checkpoint))
         if resume and iterations == 0:
             from examples.multiagent_imaging.checkpoints import zero_update_resume_evidence
             evidence = zero_update_resume_evidence(algorithm, resume)
@@ -724,7 +740,7 @@ def train_run(
             algorithm.stop()
         ray.shutdown()
         memory_profile.close()
-    return records
+    return UpdateRecords(output)
 
 
 def main() -> None:

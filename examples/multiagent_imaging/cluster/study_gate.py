@@ -95,7 +95,8 @@ def verify(output, parallel=False):
             assert worker['basilisk']==driver['basilisk'] and worker['bsk_rl']==driver['bsk_rl']
             for name,module in driver['modules'].items():
                 for field in ('version','path','file_sha256'):assert worker['modules'][name][field]==module[field]
-        updates=json.loads((folder/'updates.json').read_text());assert len(updates)==1
+        from examples.multiagent_imaging.update_evidence import UpdateRecords
+        updates=UpdateRecords(folder);assert len(updates)==1
         assert all(math.isfinite(v) for v in updates[0]['losses'].values())
         assert math.isfinite(updates[0]['gradient_l2']) and updates[0]['finite_gradients']==1
         assert all(updates[0]['parameter_change'][key]>0 for key in ('actor_l2','critic_l2','l2'))

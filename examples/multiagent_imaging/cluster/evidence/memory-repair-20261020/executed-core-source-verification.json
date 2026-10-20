@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "training_snapshot": "results/multiagent_imaging/memory-repair-20261020T023019Z/local-training-v2/train/source-snapshot.tar.gz",
+  "core_AST_sha256": {
+    "examples/multiagent_imaging/train.py:train_run": "9cc4e8257199a6671fa1fbc7d8be3071d2bcdf53e223a530f7ced7fa4682c379",
+    "examples/multiagent_imaging/environment.py:build_environment": "8be4779fbacca301118a43a78b97398e183e5450865700035d18a8030a95a59d",
+    "examples/multiagent_imaging/update_evidence.py:UpdateJournal": "267d78cd99ed219cbea43f0228a7e955b406f507dc0486771a5d5e9d4bbd5684",
+    "examples/multiagent_imaging/update_evidence.py:_sync_directory": "2f8c228034b67db8e010df9c22e08310d02cccc9db9335adad3b8a3f0c5bdebd",
+    "examples/multiagent_imaging/update_evidence.py:file_sha256": "092a453626a0fb561486eee282abc7663950bed224ae0eec8e53fd0adcde7bb9"
+  },
+  "additional_current_reader_identity_guard": "Checked by regression tests and will be re-read against the completed local journal"
+}

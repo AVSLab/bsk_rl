@@ -1,0 +1,44 @@
+{
+  "with_communication": {
+    "job_id": 33993838,
+    "log_sha256": "da4ca95d41ee06446ed4be46d51821ba199cd2f975e69332a7eee5b699808dc6",
+    "allocation_oom_kill_confirmed": true,
+    "slurm_oom_events": [
+      {
+        "line": 2535,
+        "count": 1,
+        "text": "slurmstepd: error: Detected 1 oom_kill event in StepId=33993838.batch. Some of the step tasks have been OOM Killed."
+      }
+    ],
+    "unexpected_worker_exits": [
+      {
+        "line": 2401,
+        "pid": 2189202,
+        "error_type": "SYSTEM_ERROR",
+        "generic_possible_causes_are_not_pid_specific_proof": true
+      }
+    ],
+    "specific_pid_oom_attribution_proven": false
+  },
+  "without_communication": {
+    "job_id": 33993840,
+    "log_sha256": "2bf92015771e6763668afd267394c1671163cb7e471f00a39ff0080e9919c23d",
+    "allocation_oom_kill_confirmed": true,
+    "slurm_oom_events": [
+      {
+        "line": 2477,
+        "count": 1,
+        "text": "slurmstepd: error: Detected 1 oom_kill event in StepId=33993840.batch. Some of the step tasks have been OOM Killed."
+      }
+    ],
+    "unexpected_worker_exits": [
+      {
+        "line": 2405,
+        "pid": 1336890,
+        "error_type": "SYSTEM_ERROR",
+        "generic_possible_causes_are_not_pid_specific_proof": true
+      }
+    ],
+    "specific_pid_oom_attribution_proven": false
+  }
+}

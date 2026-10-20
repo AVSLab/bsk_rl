@@ -1,0 +1,501 @@
+{
+  "archive_bytes": 3244360920,
+  "archive_sha256": "03e172312485a723d59b15cf696ca2fb9bc2318448e5725549d84a89b9c2698a",
+  "all_archive_files_verified": 6884,
+  "extracted_bytes": 1079920210,
+  "updates": {
+    "with_communication/bootstrap": {
+      "updates": 1,
+      "first_iteration": 1,
+      "last_iteration": 1,
+      "learned_missions": 28,
+      "learned_true_decisions": 28458,
+      "lifetime_true_decisions": 28458,
+      "last_checkpoint": "/gpfs/alpine1/scratch/dahu1128/multiagent-24h-v14-git-20261013/with_communication/diagnostic/bootstrap/checkpoint_0001",
+      "sampled_but_unassigned_missions": 0,
+      "unassigned_sampled_true_decisions": 0
+    },
+    "with_communication/training": {
+      "updates": 31,
+      "first_iteration": 2,
+      "last_iteration": 32,
+      "learned_missions": 868,
+      "learned_true_decisions": 1372064,
+      "lifetime_true_decisions": 1400522,
+      "last_checkpoint": "/gpfs/alpine1/scratch/dahu1128/multiagent-24h-v14-git-20261013/with_communication/diagnostic/training/checkpoint_0032",
+      "sampled_but_unassigned_missions": 27,
+      "unassigned_sampled_true_decisions": 48834
+    },
+    "without_communication/bootstrap": {
+      "updates": 1,
+      "first_iteration": 1,
+      "last_iteration": 1,
+      "learned_missions": 28,
+      "learned_true_decisions": 28193,
+      "lifetime_true_decisions": 28193,
+      "last_checkpoint": "/gpfs/alpine1/scratch/dahu1128/multiagent-24h-v14-git-20261013/without_communication/diagnostic/bootstrap/checkpoint_0001",
+      "sampled_but_unassigned_missions": 0,
+      "unassigned_sampled_true_decisions": 0
+    },
+    "without_communication/training": {
+      "updates": 31,
+      "first_iteration": 2,
+      "last_iteration": 32,
+      "learned_missions": 868,
+      "learned_true_decisions": 1404926,
+      "lifetime_true_decisions": 1433119,
+      "last_checkpoint": "/gpfs/alpine1/scratch/dahu1128/multiagent-24h-v14-git-20261013/without_communication/diagnostic/training/checkpoint_0032",
+      "sampled_but_unassigned_missions": 27,
+      "unassigned_sampled_true_decisions": 49194
+    }
+  },
+  "memory": {
+    "with_communication/bootstrap": {
+      "samples": 64,
+      "peak_bytes": 114025291776,
+      "failcnt_max": 0,
+      "first_time": 1791948028.7888532,
+      "last_time": 1791949235.2118042
+    },
+    "with_communication/bootstrap-resume": {
+      "samples": 10,
+      "peak_bytes": 114025291776,
+      "failcnt_max": 0,
+      "first_time": 1791949280.6970944,
+      "last_time": 1791949411.7093585
+    },
+    "with_communication/training": {
+      "samples": 2870,
+      "peak_bytes": 214750466048,
+      "failcnt_max": 2,
+      "first_time": 1791949509.5483453,
+      "last_time": 1792019184.8387275
+    },
+    "without_communication/bootstrap": {
+      "samples": 58,
+      "peak_bytes": 113671831552,
+      "failcnt_max": 0,
+      "first_time": 1791948028.7787714,
+      "last_time": 1791949112.3237886
+    },
+    "without_communication/bootstrap-resume": {
+      "samples": 5,
+      "peak_bytes": 113671831552,
+      "failcnt_max": 0,
+      "first_time": 1791949149.9395943,
+      "last_time": 1791949181.5725133
+    },
+    "without_communication/training": {
+      "samples": 2762,
+      "peak_bytes": 214752317440,
+      "failcnt_max": 0,
+      "first_time": 1791949193.212099,
+      "last_time": 1792014885.1472473
+    }
+  },
+  "scheduler": "JobID|State|ElapsedRaw|AllocCPUS|ExitCode|Start|End\n33993838|OUT_OF_MEMORY|71442|56|0:125|2026-10-13T21:16:23|2026-10-14T17:07:05\n33993840|CANCELLED by 1098135|67094|56|0:0|2026-10-13T21:16:23|2026-10-14T15:54:37\n",
+  "recomputed_missions": 1846,
+  "sampled_true_decisions": {
+    "with_communication/bootstrap": 28458,
+    "with_communication/training": 1420898,
+    "without_communication/bootstrap": 28193,
+    "without_communication/training": 1454120
+  },
+  "topology": {
+    "with_communication/diagnostic/bootstrap/worker-topology-0001.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0002.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0003.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0004.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0005.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0006.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0007.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0008.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0009.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0010.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0011.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0012.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0013.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0014.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0015.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0016.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0017.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0018.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0019.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0020.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0021.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0022.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0023.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0024.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0025.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0026.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0027.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0028.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0029.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0030.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0031.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-0032.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "with_communication/diagnostic/training/worker-topology-failed.json": {
+      "passed": false,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/bootstrap/worker-topology-0001.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0002.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0003.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0004.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0005.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0006.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0007.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0008.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0009.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0010.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0011.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0012.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0013.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0014.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0015.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0016.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0017.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0018.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0019.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0020.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0021.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0022.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0023.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0024.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0025.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0026.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0027.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0028.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0029.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0030.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0031.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    },
+    "without_communication/diagnostic/training/worker-topology-0032.json": {
+      "passed": true,
+      "actor_restart_count": 0,
+      "errors": [],
+      "phase": "after-update"
+    }
+  },
+  "retained_target_scope": "Only bootstrap raw learner batches were retained. Later update target arrays cannot be independently reconstructed from this archive.",
+  "heldout_present": false,
+  "local_peak_rss_bytes": 352370688,
+  "wall_s": 1028.5351137910038,
+  "no_Ray_or_native_initialization": true
+}

@@ -1,0 +1,1049 @@
+{
+  "available_archive_scientific_audit_complete": true,
+  "arms": {
+    "with_communication": {
+      "bootstrap_target_reconstruction": {
+        "passed": true,
+        "raw_agent_episodes": 112,
+        "true_decisions": 28458,
+        "bootstrap_rows": 112,
+        "target_max_abs_error": 0.0,
+        "forced_no_action_count": 0,
+        "padded_rows": 0,
+        "physical_reward_traces": [],
+        "hashes": {
+          "raw-episodes.json.gz": "244a067204dd03dd1c20120fa9ad0ced11de982557b1fe402d37cd43dc4cc07b",
+          "bootstrap-batch.npz": "83f0918fa186867fbe9601d502c35a44ab122adbd73af5e6a5d83d1d936d1ede",
+          "learner-batch.npz": "590e2cbe318d898b0d363d9d45efdbd08c8498bdbcaa952521553844e85b7f10",
+          "bootstrap-values.npz": "0bc939cad8159f13e2d451d8e39f3d603dfb08c2f15a3d0b5226000cbfe84cc1"
+        },
+        "matched_mission_episodes": 28,
+        "physical_product_reward_target_traces": [
+          {
+            "kind": "acquisition",
+            "product": {
+              "capture_time": 93.0,
+              "completion_time": 101.0,
+              "delivery_time": null,
+              "quality": 1.0,
+              "record_id": "sensor_3:132:93.000000000:4000000.000000000",
+              "request_epoch": 0.0,
+              "source_sensor": "sensor_3",
+              "storage_owner": "sensor_3",
+              "target_id": 132
+            },
+            "agent": "sensor_3",
+            "episode_id": "44bc18d7561d4064a25660ab65ac9fd2",
+            "raw_event_index": 0,
+            "event_time_s": 101.0,
+            "owned_interval_reward": 0.7647495927259643,
+            "condensed_row": 0,
+            "seconds_from_action_start": 101.0,
+            "endpoint_discount": 0.4224404992301414,
+            "condensed_reward": 0.3230611979961395,
+            "value_target": 0.39355015754699707,
+            "semantics": "Owned interval total can include other credits or costs; product timing is traced, not assigned fabricated isolated credit"
+          },
+          {
+            "kind": "physical_delivery",
+            "product": {
+              "capture_time": 490.00000000000006,
+              "completion_time": 498.00000000000006,
+              "delivery_time": 3628.0,
+              "quality": 1.0,
+              "record_id": "sensor_3:1:490.000000000:4000000.000000000",
+              "request_epoch": 0.0,
+              "source_sensor": "sensor_3",
+              "storage_owner": "sensor_3",
+              "target_id": 1
+            },
+            "agent": "sensor_3",
+            "episode_id": "44bc18d7561d4064a25660ab65ac9fd2",
+            "raw_event_index": 104,
+            "event_time_s": 3628.0,
+            "owned_interval_reward": 0.04657941301752182,
+            "condensed_row": 29,
+            "seconds_from_action_start": 246.0,
+            "endpoint_discount": 0.12260220003553739,
+            "condensed_reward": 0.1123742088675499,
+            "value_target": 0.12018395215272903,
+            "semantics": "Owned interval total can include other credits or costs; product timing is traced, not assigned fabricated isolated credit"
+          }
+        ],
+        "agent_decisions": {
+          "sensor_0": 6951,
+          "sensor_1": 7275,
+          "sensor_2": 7170,
+          "sensor_3": 7062
+        },
+        "learner_counter_matches": true,
+        "sampled_decisions_match": true
+      },
+      "bootstrap_full_zero_update_restore_revalidated": true,
+      "checkpoints": [
+        {
+          "iteration": 0,
+          "policy_sha256": "7ef86df00912e7cb406dd596c2b3e0ed2e095da94d8954fe738f7f319d64203c",
+          "optimizer_sha256": "d1a5b01a3360538ae430d63e153bd1177bd7984507ee44a3c8cef511dfbed7ca",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 0,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 1,
+          "policy_sha256": "7d93c75949020a5158bca2b356c4ff4bb51c6c98da1f8e21a12930aa895decd7",
+          "optimizer_sha256": "d811ffb49ff05bf618c083c01020957ae9c5e4cc548e110c8d6182246ae3ec85",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 28458,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 2,
+          "policy_sha256": "dca58ed09784c1c2394f6f2e3179f0e2e1ba8a088aca3d6310e0daa92c0e79ab",
+          "optimizer_sha256": "3e335a759494ef0ad233de7eb1d423b5be66cf5c057d2144340cf738b7a9638b",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 58557,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 3,
+          "policy_sha256": "8a1a18f6dcab9bd699e635e97ca75169c176885eb7bde92d7095bb26c4a92c88",
+          "optimizer_sha256": "ce936cc3bea595fd8aed44fc41ceb840bd8e0705e1ca0eef21223dfab5571e87",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 90371,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 4,
+          "policy_sha256": "741f30103ff492497f03d191b7b57d34f288b982e82111fe4ae2b28d8ba37aac",
+          "optimizer_sha256": "f4a28537ccb46f934ad4042009044b35003a36103fb2b4e0e083a38df392fa46",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 123514,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 5,
+          "policy_sha256": "cad3cc38a5b4e8bec35b29d3c0121e9202e04abfcd7c3966af85b0c038ffc104",
+          "optimizer_sha256": "df2339c0cdbf8b920b8d6d237dd5e70523ef3f5f59de5d46a4c33719f91747ef",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 158672,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 6,
+          "policy_sha256": "e7a0382e61f8a0241bf74a765fc438186ab82232aee453c4ad227d3bab3dd60a",
+          "optimizer_sha256": "3f6faad794d9c51fbed28fdf1611694730af86b06d533be5cda1c35d17aeb31f",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 195034,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 7,
+          "policy_sha256": "b621d0ae43166433972798ff99e2dd5a57cec9f016dedde018868ee57fa1ecd4",
+          "optimizer_sha256": "1fa190ab13a712487443d8af61045f914b7948dcb5653bf83504d38170cf6490",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 232745,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 8,
+          "policy_sha256": "b5de4bb8dc39b4668885a5f1307c416876fd95da061580635e9f47751f3a3e75",
+          "optimizer_sha256": "929a228a6a0cd9056613d1d540575816a96791feead3c6410f61f78b386c6ca3",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 271320,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 9,
+          "policy_sha256": "c80bd7095b67ad9c3c52fd59feda173bb11a28eeb16205e0bfc8cde01fc7dd1c",
+          "optimizer_sha256": "326981829484e2b34bb6152991914f00ea182bfb54d6c0b8ccd42e8d855913d8",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 311098,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 10,
+          "policy_sha256": "3f7e8ef3fcad179443303293ff13a3a0059f15d27cf8eae05affe420115bd6ae",
+          "optimizer_sha256": "17b9567afccde9292754a79a2f60f840ad59fb2f3eb91eaa193bb5827d7fda85",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 352408,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 11,
+          "policy_sha256": "e8ea30074f87e305ef29ed5f8605d09aaca914591523a652be2c0cbb66f62bdc",
+          "optimizer_sha256": "e96faeccf8469ade50ee364da529080fe2c943aa674a2ec173b033cc118adb6b",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 393912,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 12,
+          "policy_sha256": "619574e1c977ef5e1eaa2cd9ef66a893c745db8257a65308ed23d8f96c459815",
+          "optimizer_sha256": "eaf7003dcdc16b682ad7d9357ca2a351267b75a1864d6efb27384172cef5525c",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 436924,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 13,
+          "policy_sha256": "fef81ac088f59bd88529b11a1bccaff3eb9f1867a9f1bd2e8ee69d921a701d09",
+          "optimizer_sha256": "3abe0af644e5a2a97dae8f1e3019021b6677ae3567e9d2e69f62edba7eafd405",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 480890,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 14,
+          "policy_sha256": "c58a0587eff22d407b82116609e21e0d0e7ad07d94820d10d7aa4a2c3bb000e9",
+          "optimizer_sha256": "ec2e51da77a493ac2fe3982e3ab2a70d29c361a9c97ec42982b4d9d3f1d48803",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 525196,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 15,
+          "policy_sha256": "178bbf1896b09bae02bdd242e03234f9559fbc31191f8306ef681110e74ecf15",
+          "optimizer_sha256": "9bf40e1d412fc36a4796d21940192a130e3a63c5feb314a5807adc9100a02668",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 570307,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 16,
+          "policy_sha256": "8641eb9fddeb4b4a8b925f6494040419fe797e01a88c94717e9f522e3e43b42e",
+          "optimizer_sha256": "860a07ecf25ad8ca8809a67c945005310716c987bf724798d513f867f883ad7a",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 616199,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 17,
+          "policy_sha256": "36bff462d9f57a267427b0a7c826398dfe4bdc430e17482960321f3cfb157ebd",
+          "optimizer_sha256": "f49da5890723edb9624e7aff51cb8166b0059f43f1fa8fc60a85d925a1e99545",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 662656,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 18,
+          "policy_sha256": "860d8a75fd7d54c4ea670044236d19525505abcdf900b362530f10ef459ba859",
+          "optimizer_sha256": "80bdca1e206684fe1f4265e8f1df785a0c6c26f36fdca6c900ea1dcd8651206d",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 709657,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 19,
+          "policy_sha256": "98e0645715238dbae58cc4a8edcf63fa495259132f9d6b167fefce9c2fb62ab1",
+          "optimizer_sha256": "38a15011c8704d1b98ecf09d942065554e8b4fbc565fb2d3b2dc133af38848e0",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 756729,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 20,
+          "policy_sha256": "0f80ab749f48e8761f3d8ced273dac418558648d5a3c4fa50aec8937fb2ccf7d",
+          "optimizer_sha256": "b657be70482710367e990f1be68923daca4b81a3eb91c44eb5a6616305b8167c",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 804544,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 21,
+          "policy_sha256": "ba78cde4553bb63aa0362500581138755a9c9bb2912f401da7ae73f9408a179d",
+          "optimizer_sha256": "ed67788bc9a756ebb8d68c3ec558b15eee40ee872f6217902d55cfa781213630",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 852763,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 22,
+          "policy_sha256": "2e4c6d3220ad25674b66df41cd26c970e410b5feb51149e1063b7e558a141ee7",
+          "optimizer_sha256": "bfe7fc28e5d533a04129bda181dab410e8848f624b78c29cf223295db5f3c1e0",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 901227,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 23,
+          "policy_sha256": "57a63259f8a575ef9a9936590b3d6da64374d61a396c2fd0d0ce4d45115012a8",
+          "optimizer_sha256": "a85a6c43855b1cc0a692be3a27796b4861f0bda2502223ba2bf74a15977745c3",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 950214,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 24,
+          "policy_sha256": "3511e7d9ae1e262d85664cad0229f5309cf0a377095eb16dfa624a3bac26705f",
+          "optimizer_sha256": "3a8ca1b6007f60abcddd63de576d86b1418131238af3adbec9fa5db0f66b418e",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 999423,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 25,
+          "policy_sha256": "2495195ede33a9f6e65256df48f9a2fed14c1855cb16501406e3c4d3e727e6e2",
+          "optimizer_sha256": "89fc1736fd3d8ece2a8da9fe0c58cb647839375e44ce32b931905ed8f7b6d587",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1048902,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 26,
+          "policy_sha256": "6286717be846be54df8bbf95231be8ff6bee1132792a2dbb04b9122f75116242",
+          "optimizer_sha256": "389805f1bee004271c9d91a5544e5305f23efb989010d9eac4736353a0769bf4",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1098735,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 27,
+          "policy_sha256": "7e0bde768cf99501a261c29833d4af618f1ad627d4e0d649d2c794ae4ddff617",
+          "optimizer_sha256": "62d1695dc5ede07dbcc0f4c9e0fcff6db67637cfeaa7e8191a47e27aad74413d",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1148395,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 28,
+          "policy_sha256": "4063eb69226cb907322cc7b4b7862fe0efcde4752c423cf21504afba50eb642d",
+          "optimizer_sha256": "d8b7ef4766207a63abf95cfba46a30c98929bb42350a3ab87c2fa038db5a827f",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1198619,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 29,
+          "policy_sha256": "e774053cdafac7a0fe5b1a09c3897610ddcd4de3c062527eb4807b3a8761e65a",
+          "optimizer_sha256": "9b5fe4831c6a8e27b47600407ac90a282887c6a00f337ce70575661cf684bbbc",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1248653,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 30,
+          "policy_sha256": "7e82b4b82358211a9be1247827f643aa67fff668d10a7db5699e54c27951be61",
+          "optimizer_sha256": "f54de3f80ca862305c9fed327f39b8e00f33f728d351251243ab7cda2c5f59e1",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1299126,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 31,
+          "policy_sha256": "4e6fd698d560a1565b7a64fbde5b8b884f743185b2af015e1e9dad01c255c4c9",
+          "optimizer_sha256": "8cc0eaa3bd2e89b36ca3ec2cbbc6365930e7b2c01698af077b622b4359dc4795",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1349490,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 32,
+          "policy_sha256": "e636ed91b24a47bca7b12467e5f1b1c91532ec2d7dcdc927ca7d79ebe3bbd628",
+          "optimizer_sha256": "8cb58cd88cf0353e75559e523c4462c85755fddd567d7fba4b8845dcb0632e8b",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1400522,
+          "full_worker_state_present": true
+        }
+      ],
+      "runtime_worker_records_verified": 88,
+      "passed_training_topologies": 31,
+      "failed_topology": {
+        "actor_restart_count": 0,
+        "actual_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28
+        ],
+        "changed_process_indices": [
+          20
+        ],
+        "configured_actor_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28
+        ],
+        "duplicate_indices": [],
+        "elapsed_s": 0.05591409606859088,
+        "errors": [],
+        "expected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28
+        ],
+        "full_torch_rng_bytes": 5056,
+        "health_after": {
+          "1": true,
+          "2": true,
+          "3": true,
+          "4": true,
+          "5": true,
+          "6": true,
+          "7": true,
+          "8": true,
+          "9": true,
+          "10": true,
+          "11": true,
+          "12": true,
+          "13": true,
+          "14": true,
+          "15": true,
+          "16": true,
+          "17": true,
+          "18": true,
+          "19": true,
+          "20": false,
+          "21": true,
+          "22": true,
+          "23": true,
+          "24": true,
+          "25": true,
+          "26": true,
+          "27": true,
+          "28": true
+        },
+        "health_before": {
+          "1": true,
+          "2": true,
+          "3": true,
+          "4": true,
+          "5": true,
+          "6": true,
+          "7": true,
+          "8": true,
+          "9": true,
+          "10": true,
+          "11": true,
+          "12": true,
+          "13": true,
+          "14": true,
+          "15": true,
+          "16": true,
+          "17": true,
+          "18": true,
+          "19": true,
+          "20": false,
+          "21": true,
+          "22": true,
+          "23": true,
+          "24": true,
+          "25": true,
+          "26": true,
+          "27": true,
+          "28": true
+        },
+        "malformed": [],
+        "missing_indices": [],
+        "passed": false,
+        "phase": "after-update",
+        "process_identities": {
+          "0": {
+            "pid": 2185091
+          },
+          "1": {
+            "actor_id": "cd12a56d1d5e1c8f3343d0e801000000",
+            "pid": 2189183
+          },
+          "2": {
+            "actor_id": "2c086c5b10876632e9839ce001000000",
+            "pid": 2189184
+          },
+          "3": {
+            "actor_id": "2f34f57ac527a1430b773ca601000000",
+            "pid": 2189185
+          },
+          "4": {
+            "actor_id": "5533f0fb07d4b0c634e9d96101000000",
+            "pid": 2189186
+          },
+          "5": {
+            "actor_id": "319d04cfbd2496f1fe812cd901000000",
+            "pid": 2189187
+          },
+          "6": {
+            "actor_id": "0125c9837fb1885d1707016b01000000",
+            "pid": 2189188
+          },
+          "7": {
+            "actor_id": "52599dcf9d9436cbc7de251901000000",
+            "pid": 2189189
+          },
+          "8": {
+            "actor_id": "06a4df13838d54db18237d5a01000000",
+            "pid": 2189190
+          },
+          "9": {
+            "actor_id": "0da12d5523afc9ef29b3b01601000000",
+            "pid": 2189191
+          },
+          "10": {
+            "actor_id": "661652e0392361083f0fe41601000000",
+            "pid": 2189192
+          },
+          "11": {
+            "actor_id": "361c7072a59f86d651f463c001000000",
+            "pid": 2189193
+          },
+          "12": {
+            "actor_id": "e4f69e910a5507ad6bec20bf01000000",
+            "pid": 2189194
+          },
+          "13": {
+            "actor_id": "903bdb8ad88fb333325daed901000000",
+            "pid": 2189195
+          },
+          "14": {
+            "actor_id": "1fb2b1505cbb23450f1eb4f201000000",
+            "pid": 2189196
+          },
+          "15": {
+            "actor_id": "90b11deda6cbd159dbfdcec101000000",
+            "pid": 2189197
+          },
+          "16": {
+            "actor_id": "c148a874c6d57fa3695752fa01000000",
+            "pid": 2189198
+          },
+          "17": {
+            "actor_id": "67857062e07eed8e7f3d70e101000000",
+            "pid": 2189199
+          },
+          "18": {
+            "actor_id": "1a698b2f5f38940ba9f4d52801000000",
+            "pid": 2189200
+          },
+          "19": {
+            "actor_id": "d329749db4104f4cb76f184501000000",
+            "pid": 2189201
+          },
+          "20": {
+            "actor_id": "6b012db43425a0cd2b879c3b01000000",
+            "pid": 2995851
+          },
+          "21": {
+            "actor_id": "2493bf5fb1ff739cb67d0d1101000000",
+            "pid": 2189203
+          },
+          "22": {
+            "actor_id": "b615489cce9f196e131886a901000000",
+            "pid": 2189204
+          },
+          "23": {
+            "actor_id": "a7eb3ccc30f4a10d452f6f4e01000000",
+            "pid": 2189205
+          },
+          "24": {
+            "actor_id": "3b27fa5355408306dda2db3b01000000",
+            "pid": 2189206
+          },
+          "25": {
+            "actor_id": "ed6c472ea55ca8e1f0af8ec601000000",
+            "pid": 2189207
+          },
+          "26": {
+            "actor_id": "e531e7b613d3fabb463e2da001000000",
+            "pid": 2189208
+          },
+          "27": {
+            "actor_id": "41a8b5e2bedd88b45ecbe94801000000",
+            "pid": 2189209
+          },
+          "28": {
+            "actor_id": "607a9f1aa47b698e3b824fd301000000",
+            "pid": 2189210
+          }
+        },
+        "state_sha256": {
+          "0": "d5e9dfddaa058691eba3bd0bbe0ac8912238c1a1529e2e272a87c01f9d11faac",
+          "1": "c71a14811079449c2e909869edcd2ad2af8dc0ed48b67b29f6f79063cb88e56c",
+          "2": "ed55ad3fdb36e7a0a3b2fb36c1c4ced7eca0c33e8be42ada5130d780d3bfbe8e",
+          "3": "e797e08a12e415f745e655c8dfbe7478e5e738172c67d9c5b6297272b42d4b14",
+          "4": "c9556ee608d7ff99c01148b9c6937c4a46bfd4d962f121febfe4014d2368c3f7",
+          "5": "977187233816195b6c287f9a0931de3bc8b0caff4e88bbf0a165f2ed8c0b511f",
+          "6": "7108ef637761859d91070b250632b7dba3a73112e45d602f2c1be5f99d43170a",
+          "7": "7d64dd0197549aec6797c536f512d621c109a32520461072a75ec5db323778e5",
+          "8": "e7419928238aa8871d91d289a597f37c709202e4128af84002fe2b677130905d",
+          "9": "e798cb8f177faeadf48fb73991917820e55c9d74686328341e5c98eda962dc79",
+          "10": "c666be5ee7df70d14f40a56d4f81dc4feb738c36b82f8b00d23f2058f3335eda",
+          "11": "6f1a0bc71433db63b15239cf64178b35cb9beda5affb0fd391f6b59cd72c7067",
+          "12": "69d16479f450c613e0747751968aa230035f46022c9ee420316036c747cf2000",
+          "13": "5459a9b83f26f39e540823db56d79f1b40c5ea9da48757b9f5c2e161428163c5",
+          "14": "f405797fa3a40b4d905154bfa0b65c5d12f0622c84f76c6992d84d1f33b15f44",
+          "15": "95ee1e32d52b5311ea981fb3b9093dcb52ced057c443a86b141da63b183cf2f8",
+          "16": "35fd7ecba951aa4796b511709f00792db30a7b68cd9290d743af1fc1a40b960a",
+          "17": "f459379a6f804ea673c67c4c28f38c579d215424cecd6279421cb239c7caad1e",
+          "18": "710f307a8809503538a28579c82229a3d89674ef362335918d0ae320d1d42f9d",
+          "19": "f035e34ba5cf3687ec4abeb4ead514acebd5021dfc54cf5e21af70e5916880c8",
+          "20": "6bd6276f3f7cdd4e5274c2133a79ad2ff5e439f7d688973836b32a6fab68bbb4",
+          "21": "ee715f50d34662c28d98c5b2b00ec94738dcff28550657d99fbef9b99abbced8",
+          "22": "96ffc7babd86e063de834163b09102800eec09247d7367ec5f0ac26871bb02d9",
+          "23": "02671ac870e792a94623a37f829663bbb400c344137a36b70155eec0ad5d6fec",
+          "24": "02b17f80c3c9ca8d88dbf1bb7b2754588e860949bb27e5058b827609a9590417",
+          "25": "eba50dac930dc877aac47777e1ace27069883d8060ef352c6917fb89297ace44",
+          "26": "b1d6568c12d7e676e2f98c3351f41d35592850ec81009fbb3d6865ead2b4ded8",
+          "27": "5c42d1f2f348a33d912ab927e5ca187ce689927bcb718f81477f6a0607109cf5",
+          "28": "4233aaaef9cc729c61e5e6ae72b23b939e82b9e9f9696ddfdd1df33b19f5a7a0"
+        },
+        "timeout_s": 45,
+        "unexpected_indices": []
+      },
+      "failed_later_training_iteration": 33,
+      "last_trustworthy_checkpoint_iteration": 32,
+      "late_optimizer_resume_tested": false,
+      "heldout_present": false
+    },
+    "without_communication": {
+      "bootstrap_target_reconstruction": {
+        "passed": true,
+        "raw_agent_episodes": 112,
+        "true_decisions": 28193,
+        "bootstrap_rows": 112,
+        "target_max_abs_error": 0.0,
+        "forced_no_action_count": 0,
+        "padded_rows": 0,
+        "physical_reward_traces": [],
+        "hashes": {
+          "raw-episodes.json.gz": "7f0aa19796076ce15d251ead16cd21db6bbe98125b22607f57cbfcf263a4bb8e",
+          "bootstrap-batch.npz": "94b5b18704bacd4fec50c13b2bad8343f631dd65f20f44a6203ddfc8b76191e3",
+          "learner-batch.npz": "4c79d563280756178357f661c53bf6ef61709be68795dd2c29b468ef0dc109a8",
+          "bootstrap-values.npz": "e47d98014014789aec356c9556982e789abb06c64217f5b7bfb92d8816bc5711"
+        },
+        "matched_mission_episodes": 28,
+        "physical_product_reward_target_traces": [
+          {
+            "kind": "acquisition",
+            "product": {
+              "capture_time": 66.0,
+              "completion_time": 74.0,
+              "delivery_time": null,
+              "quality": 1.0,
+              "record_id": "sensor_3:90:66.000000000:4000000.000000000",
+              "request_epoch": 0.0,
+              "source_sensor": "sensor_3",
+              "storage_owner": "sensor_3",
+              "target_id": 90
+            },
+            "agent": "sensor_3",
+            "episode_id": "ea643724dacb4c9796d78dd5fa19c506",
+            "raw_event_index": 0,
+            "event_time_s": 74.0,
+            "owned_interval_reward": 0.6031698339798374,
+            "condensed_row": 0,
+            "seconds_from_action_start": 74.0,
+            "endpoint_discount": 0.5318735833865864,
+            "condensed_reward": 0.32081010937690735,
+            "value_target": 0.4115104675292969,
+            "semantics": "Owned interval total can include other credits or costs; product timing is traced, not assigned fabricated isolated credit"
+          },
+          {
+            "kind": "physical_delivery",
+            "product": {
+              "capture_time": 525.0,
+              "completion_time": 533.0,
+              "delivery_time": 698.0,
+              "quality": 1.0,
+              "record_id": "sensor_3:22:525.000000000:4000000.000000000",
+              "request_epoch": 0.0,
+              "source_sensor": "sensor_3",
+              "storage_owner": "sensor_3",
+              "target_id": 22
+            },
+            "agent": "sensor_3",
+            "episode_id": "ea643724dacb4c9796d78dd5fa19c506",
+            "raw_event_index": 24,
+            "event_time_s": 698.0,
+            "owned_interval_reward": 0.13922899149919213,
+            "condensed_row": 4,
+            "seconds_from_action_start": 165.0,
+            "endpoint_discount": 0.24469600785610057,
+            "condensed_reward": 0.03406877815723419,
+            "value_target": 0.038257356733083725,
+            "semantics": "Owned interval total can include other credits or costs; product timing is traced, not assigned fabricated isolated credit"
+          }
+        ],
+        "agent_decisions": {
+          "sensor_0": 6973,
+          "sensor_1": 7124,
+          "sensor_2": 6924,
+          "sensor_3": 7172
+        },
+        "learner_counter_matches": true,
+        "sampled_decisions_match": true
+      },
+      "bootstrap_full_zero_update_restore_revalidated": true,
+      "checkpoints": [
+        {
+          "iteration": 0,
+          "policy_sha256": "7ef86df00912e7cb406dd596c2b3e0ed2e095da94d8954fe738f7f319d64203c",
+          "optimizer_sha256": "d1a5b01a3360538ae430d63e153bd1177bd7984507ee44a3c8cef511dfbed7ca",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 0,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 1,
+          "policy_sha256": "b8d2bf6ccd93b3e29937ca8ff9670b16de31d0a2c5fb60fe0081f945052e9d6e",
+          "optimizer_sha256": "0f6b4e4ca129803fbe3463cbcead6ce866276e1f1c256f01bf1d6a52609d1ba7",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 28193,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 2,
+          "policy_sha256": "e5df21bdc98c55af715514f3d343893629530a6d2fe47d8995860f99abffac80",
+          "optimizer_sha256": "4daebb1322c9893a0900f0b06d9257b604a7749b34afa9067fd1bfcaa4439089",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 58848,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 3,
+          "policy_sha256": "fa47c8720b620b9edb2a900ead18c526e8810f04fd031280c946c7beff2ceb17",
+          "optimizer_sha256": "49e18a8fb191f04135c26f060406d6b4035f02c9ae9513be368b1eb35fccbd5d",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 91707,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 4,
+          "policy_sha256": "1bfe4eef86ddb0e1cf3610bb3b80d19d04d31cd2a0c33507611e7f45b1143300",
+          "optimizer_sha256": "fec6fe655e0c86c16c1ccf38009142086f2b9d8815c7bba97f25673abceacca3",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 125771,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 5,
+          "policy_sha256": "450e37fa51338865aba362df64642f94ff651dc1266da5cb4bee5841d83a7d3d",
+          "optimizer_sha256": "ec74629583ff2e0c0bb6295135c69f0b6dff9a7bb3fc84bb41062f3deaa90e09",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 161441,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 6,
+          "policy_sha256": "cff2e7aa3a5ccce1a1f1be3a3934cc6c4bfa52fa08bd4d1b8e1791c5996f37c6",
+          "optimizer_sha256": "f25de38b97f85413375934de5efba0e0aa79be0f10afa40ff41d102a09684de2",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 198528,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 7,
+          "policy_sha256": "6445b372f7a5cbb7b2b561e03df758830b653f1a81022a1f2eeb0801dcad618e",
+          "optimizer_sha256": "296bec90986357aeee7f5b96eb697162730e8bb59d2433939fcc6b3cba03ffee",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 237769,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 8,
+          "policy_sha256": "222ffeb2baccf2097d75f2c589977c4131c021aa6d79cf28cef82919945ca59e",
+          "optimizer_sha256": "6bd4f73d645eb2de82ce00146c769a49c40d23ddbeecb845e973e2ad3e55c074",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 277556,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 9,
+          "policy_sha256": "e21ca8a53e902e098c235b93629905de6899a5cb1304e6feb125b4d65aca6ed7",
+          "optimizer_sha256": "f523901aa5db05188a8f489cef8e0b056468d02aba47f40993e60917fccce760",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 319135,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 10,
+          "policy_sha256": "ae3d026e1ed71df9e1adf6a091a3709412edd5b16bf3e36f4642353fba1004c4",
+          "optimizer_sha256": "2c4e081a4c35443dfd57728991c20fca502819491956db9f86c27c2a663b6cd5",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 361824,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 11,
+          "policy_sha256": "3d5884c0a9ecbcee4a38df679d89ba29c9fe9c7e3224ba00e9493591e502b534",
+          "optimizer_sha256": "b55d1023b103f8ce14aec107108005ea341c71fbaaef70240179c57d11550ff8",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 405124,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 12,
+          "policy_sha256": "79cf1f3eeda39276e089c22ce4094f50bc62f8e0ad255161ea40cf886ab3eee0",
+          "optimizer_sha256": "d6e239155c9f56bf7b17c22d3814706195abdf0d4a4346da14555b5228b0aebc",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 449656,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 13,
+          "policy_sha256": "bbbe4b69dccfa4c1046a46f033bfbba1fdc5a7ebc42e129df3a491af0a6611a8",
+          "optimizer_sha256": "f0332c5b43c060581ab0ea72a9ef146a68cd3d66095a85b14615faf0f5c33122",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 495068,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 14,
+          "policy_sha256": "96400db6da7cabe08b65200f6f694fb1680e8ba458043a464fa0ee865e5225ea",
+          "optimizer_sha256": "659809ea2447a9dce3495a92d50c958e8dbcc517bef086da248d21cc75b4b78c",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 541223,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 15,
+          "policy_sha256": "ee5a799531333f05cd0b572fbbcfa1c52173b74934dcd8fa1fcce1e0f66a2064",
+          "optimizer_sha256": "5277786ee1b696e0beeb26aa37bf6d05654f80937b25bc19fc0adcf98b808dbc",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 587667,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 16,
+          "policy_sha256": "e328e4d3a9c673abad7cda9375a6bd0e73b0e12e564224fde3b23c400a75f2ba",
+          "optimizer_sha256": "f94903e31fe096d4e4976afae7f9f98d12ecb90cfcdfc6a09664c2c394e06a35",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 635189,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 17,
+          "policy_sha256": "aa2f88f19113e7f7f6d1bbe29ac07369434410b93243fbc25bfa652e558bf3d6",
+          "optimizer_sha256": "05da11673c33b0552964740ab667f2c3ae7579e8c5f0586a689b590c95487afa",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 682813,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 18,
+          "policy_sha256": "7090203ce05e8365674d43e87da39bfcb50b0ad7c44e93aa068ddee46ca2c864",
+          "optimizer_sha256": "be84a6937cd81e5d569d77e31cd92235ef07c303c9085b736c86f67a750ca158",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 731098,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 19,
+          "policy_sha256": "38c831c2efc72f7272d839eb3aa0d0279d8eac95e57e26973c7384fd4e7474c5",
+          "optimizer_sha256": "8da7f8e9f2be9809c1bfab5535e32411825663cb5c610f6738a47236421cba70",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 779590,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 20,
+          "policy_sha256": "e3a742d17adc9664b530cfffa9c1026fabaa6b4e6fb79e3b4f6bc0d0e2cf0f05",
+          "optimizer_sha256": "f5001fb874014f6d50a4c4c82ac67535d7d2614be43265c1793d39def067ea89",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 828544,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 21,
+          "policy_sha256": "671b9f8b0925738d2a39e952eff85fd23d61b49589a803f6eec47f148da847b7",
+          "optimizer_sha256": "4e077f4ca01681d99b30195c9e19bc33262ca4acf195faa8101bcc7a2ed737e9",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 877941,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 22,
+          "policy_sha256": "e612a604658d113361c30e7f0bca238bfbcb578ebf2fb1ede69f84f7045d457e",
+          "optimizer_sha256": "0ebe797e8e130ff43eec971929ee708e0e78b060583484f7ac45506ea7c247b7",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 927363,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 23,
+          "policy_sha256": "174265ef8c0e6377e0c28d80cf0dbea07296faf7a73b7e7130c317852c3a08b9",
+          "optimizer_sha256": "e1aa7990aa66049b3d800a5abc8c3fad29501b23fa922ea6bba8b50065c21ea9",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 977279,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 24,
+          "policy_sha256": "b91714d3c2eb6f4fca42f158b32224c99c186805def9563ebfde14be3539eacc",
+          "optimizer_sha256": "973a22dd9587f291f516a8bf6cfab1da604cf56ec1ef3c3cfeeb73748a74bc7c",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1027355,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 25,
+          "policy_sha256": "a8fd5cb8f392139bad8bc5b142eef11d98de99d53a04c0e78aa3973af1d993d3",
+          "optimizer_sha256": "22825c812313aef65255830037775796e3f1c640079bf98ebfe37e7d14ae9c2a",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1077809,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 26,
+          "policy_sha256": "9b67d4e03cee1d64bfbae3b7fd6a4e97934af163a13b912bcacce8f7d03579c4",
+          "optimizer_sha256": "4be7637c74b1b12e7fea63db515274cbcc10650942e1c63e80b26bfddc0c4b64",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1128486,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 27,
+          "policy_sha256": "7abc8c73d8f44c77a81f747a1762b9d0c48431cb771ba429f040876d5b84bfaa",
+          "optimizer_sha256": "dab98d6da091dde8531c5477286968e7c6ce190df4b9a8ea7873004863e96c3f",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1178885,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 28,
+          "policy_sha256": "472560024e13e4ae1b8b56cfbfdcb287ffb189f22daddef97ceee20190f7204c",
+          "optimizer_sha256": "f036efae775c67e6a95cf0b4fd7924cb46144400b6d13ba3475cfd7f9221a9c8",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1229547,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 29,
+          "policy_sha256": "4f77c58f1cc16de8fad3991412e507a5786c004a8856d64a42b1732f25e28df4",
+          "optimizer_sha256": "09c6f5c6f01e3646b98d75659acc314bae666ca3f54af82ab57100fa30005c60",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1280066,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 30,
+          "policy_sha256": "feed5818b4e596a48f81cc640ede4048009c66a33d74e42c3088886c600455e1",
+          "optimizer_sha256": "de96d62b718b80c79240b97be7bef5e929437ef2a8f9094f280b0561213ccfab",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1330996,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 31,
+          "policy_sha256": "55237f9bce9670a0da962f0579edc08e412e50844fb01975aa716e211ddb93f1",
+          "optimizer_sha256": "3225c370c52c1b3b4b221381b5ef0de4f7d13695c3035e40df876a1de6b5a3bf",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1381947,
+          "full_worker_state_present": true
+        },
+        {
+          "iteration": 32,
+          "policy_sha256": "45bde94841b27d9cee40a42d6ac8a7d19da925e80deb66377dcf726adf69c980",
+          "optimizer_sha256": "09f75c7222ae2784aff53bfe656fe07a7c998b65f157d11d2d22965194001b92",
+          "policy_and_learner_tensors_exact": true,
+          "lifetime_true_decisions": 1433119,
+          "full_worker_state_present": true
+        }
+      ],
+      "runtime_worker_records_verified": 88,
+      "passed_training_topologies": 31,
+      "failed_topology": null,
+      "failed_later_training_iteration": null,
+      "last_trustworthy_checkpoint_iteration": 32,
+      "late_optimizer_resume_tested": false,
+      "heldout_present": false
+    }
+  },
+  "fresh_learner_weights_and_optimizer_identical_across_arms": true,
+  "terminal_states": {
+    "with_communication": "OUT_OF_MEMORY",
+    "without_communication": "CANCELLED after demonstrated worker replacement"
+  },
+  "scheduler": "JobID|State|ElapsedRaw|AllocCPUS|ExitCode|Start|End\n33993838|OUT_OF_MEMORY|71442|56|0:125|2026-10-13T21:16:23|2026-10-14T17:07:05\n33993840|CANCELLED by 1098135|67094|56|0:0|2026-10-13T21:16:23|2026-10-14T15:54:37\n",
+  "allocated_cpu_hours": {
+    "with_communication": 1111.32,
+    "without_communication": 1043.6844444444444,
+    "prior_failed_attempts": 0.2644444444444444,
+    "pair_including_prior": 2155.268888888889,
+    "separate_diagnostic": 30.13111111111111
+  },
+  "limitations": [
+    "No final held-out episodes exist in the archive",
+    "Later raw learner batches were not retained; exact later target reconstruction is unavailable",
+    "Late checkpoint optimizer bytes are verified and preserved; full 29-worker restore has not been rerun locally",
+    "Sampled missions outside accepted update records may have entered a failed optimizer call; they are excluded from accepted learned totals",
+    "The worker death that preceded cancellation is not independently established as OOM"
+  ],
+  "new_native_missions": 0,
+  "new_PPO_updates": 0,
+  "Ray_initialized": false
+}

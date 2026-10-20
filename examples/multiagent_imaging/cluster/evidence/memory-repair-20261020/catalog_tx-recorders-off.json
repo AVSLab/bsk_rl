@@ -1,0 +1,1389 @@
+{
+  "arm": "catalog_tx",
+  "recorders": "off",
+  "config_sha256": "47bb0507a7b4e9b2ac5043d83f3165f8bb3fbf2ad2e7964576d38eef64ad777d",
+  "native_build": {
+    "schemaVersion": 4,
+    "artifact": {
+      "basiliskVersion": "2.13.0b0",
+      "sourceRevision": "c1bf0d7d67df7ae5bb74cd008d4c79cc3d106063",
+      "sourceDirty": true,
+      "extensionAbiVersion": 3
+    },
+    "features": {
+      "vizInterface": true,
+      "opNav": false,
+      "mujoco": false,
+      "rustModules": false
+    },
+    "diagnostics": {
+      "target": {
+        "system": "Darwin",
+        "processor": "arm64",
+        "pointerSizeBytes": 8,
+        "osxArchitectures": "arm64",
+        "osxDeploymentTarget": ""
+      },
+      "build": {
+        "configuration": "Release",
+        "multiConfig": false,
+        "availableConfigurations": [],
+        "generator": "Ninja",
+        "generatorPlatform": "",
+        "generatorToolset": "",
+        "pythonLimitedApi": "0x03090000"
+      },
+      "compilers": {
+        "c": {
+          "id": "AppleClang",
+          "version": "21.0.0.21000101",
+          "executable": "cc",
+          "launcher": "",
+          "frontendVariant": "GNU",
+          "simulatedId": "",
+          "simulatedVersion": "",
+          "target": "",
+          "standard": "",
+          "extensions": ""
+        },
+        "cxx": {
+          "id": "AppleClang",
+          "version": "21.0.0.21000101",
+          "executable": "c++",
+          "launcher": "",
+          "frontendVariant": "GNU",
+          "simulatedId": "",
+          "simulatedVersion": "",
+          "target": "",
+          "standard": "17",
+          "extensions": "OFF"
+        },
+        "rust": {
+          "id": "",
+          "version": "",
+          "executable": "",
+          "launcher": "",
+          "target": ""
+        }
+      },
+      "conanSettings": {
+        "buildType": "Release",
+        "cxxStandard": "17",
+        "cxxStandardLibrary": "libc++",
+        "compilerRuntime": "",
+        "compilerRuntimeType": ""
+      },
+      "tools": {
+        "cmake": "3.31.6",
+        "conan": "2.15.1",
+        "swig": "4.4.1",
+        "python": "3.11.9",
+        "cargo": "",
+        "corrosion": ""
+      }
+    },
+    "abi": {
+      "capture": "compiled",
+      "contractHeader": "architecture/utilities/bskAbiDescriptor.h",
+      "build": {
+        "configuration": "Release",
+        "debugRuntime": false,
+        "assertionsDisabled": true
+      },
+      "target": {
+        "system": "Darwin",
+        "architecture": "arm64",
+        "pointerSizeBytes": 8,
+        "endianness": "little",
+        "instructionSet": "NEON"
+      },
+      "c": {
+        "compiler": {
+          "id": "AppleClang",
+          "version": "21.0.0 (clang-2100.1.1.101)",
+          "majorVersion": 21,
+          "minorVersion": 0,
+          "patchVersion": 0,
+          "languageStandard": 201710,
+          "msvcVersion": 0
+        },
+        "runtime": {
+          "family": "libSystem",
+          "majorVersion": 0,
+          "minorVersion": 0
+        },
+        "fundamentalTypes": {
+          "charIsSigned": true,
+          "shortSize": 2,
+          "intSize": 4,
+          "longSize": 8,
+          "longLongSize": 8,
+          "sizeTSize": 8,
+          "pointerSize": 8
+        },
+        "layoutCanaries": {
+          "packingCanarySize": 12,
+          "packingCanaryAlignment": 4,
+          "packingCanaryUint32Offset": 4,
+          "packingCanaryUint16Offset": 8,
+          "msgHeaderSize": 32,
+          "msgHeaderAlignment": 8,
+          "msgHeaderIsWrittenOffset": 8,
+          "msgHeaderTimeWrittenOffset": 16,
+          "msgHeaderModuleIdOffset": 24
+        }
+      },
+      "cxx": {
+        "compiler": {
+          "id": "AppleClang",
+          "version": "21.0.0 (clang-2100.1.1.101)",
+          "majorVersion": 21,
+          "minorVersion": 0,
+          "patchVersion": 0,
+          "frontend": "GNU",
+          "languageStandard": 201703,
+          "abiFamily": "itanium",
+          "abiVersion": 1002,
+          "msvcFullVersion": 0
+        },
+        "standardLibrary": {
+          "family": "libc++",
+          "version": 210106,
+          "abiVersion": 1,
+          "libstdcxxRelease": 0,
+          "msvcStlUpdate": 0,
+          "useCxx11Abi": null,
+          "iteratorDebugLevel": null,
+          "debugMode": false,
+          "assertionsEnabled": false
+        },
+        "runtime": {
+          "linkage": "system",
+          "debug": false,
+          "exceptions": true,
+          "rtti": true
+        },
+        "layoutCanaries": {
+          "stdStringSize": 24,
+          "stdStringAlignment": 8,
+          "stdVectorIntSize": 24,
+          "stdVectorIntAlignment": 8,
+          "sysModelSize": 56,
+          "sysModelAlignment": 8,
+          "bskLoggerSize": 40,
+          "bskLoggerAlignment": 8,
+          "msgHeaderSize": 32,
+          "msgHeaderAlignment": 8,
+          "readFunctorSize": 160,
+          "readFunctorAlignment": 8,
+          "messageSize": 304,
+          "messageAlignment": 8
+        }
+      },
+      "dependencies": {
+        "eigen": {
+          "version": "3.4.0",
+          "maxAlignBytes": 16,
+          "maxStaticAlignBytes": 16,
+          "vectorization": "NEON",
+          "indexSize": 8,
+          "vector3dSize": 24,
+          "vector3dAlignment": 8,
+          "vectorXdSize": 16,
+          "vectorXdAlignment": 8,
+          "matrix3dSize": 72,
+          "matrix3dAlignment": 8
+        },
+        "swig": {
+          "runtimeVersion": "5"
+        },
+        "python": {
+          "implementation": "CPython",
+          "versionMajor": 3,
+          "versionMinor": 11,
+          "versionMicro": 9,
+          "versionHex": 51055088,
+          "limitedApi": 50921472,
+          "soabi": "cpython-311-darwin",
+          "debug": false,
+          "freeThreaded": false
+        }
+      }
+    }
+  },
+  "missions": [
+    {
+      "mission": 0,
+      "steps": 1109,
+      "simulated_seconds": 45000,
+      "science_trace_sha256": "2e4afc10717c6d8ca1ef44f03aa8605d2ee84426c0452d0f600ca10dfb2ac51b",
+      "decisions": {
+        "sensor_0": 288,
+        "sensor_1": 258,
+        "sensor_2": 297,
+        "sensor_3": 279
+      },
+      "reward": {
+        "sensor_0": 57.204897217549274,
+        "sensor_1": 56.260119849742416,
+        "sensor_2": 70.43842569973464,
+        "sensor_3": 53.26967300210848
+      },
+      "recorder_count": 0,
+      "recorder_samples": 0
+    },
+    {
+      "mission": 1,
+      "steps": 1109,
+      "simulated_seconds": 45000,
+      "science_trace_sha256": "2e4afc10717c6d8ca1ef44f03aa8605d2ee84426c0452d0f600ca10dfb2ac51b",
+      "decisions": {
+        "sensor_0": 288,
+        "sensor_1": 258,
+        "sensor_2": 297,
+        "sensor_3": 279
+      },
+      "reward": {
+        "sensor_0": 57.204897217549274,
+        "sensor_1": 56.260119849742416,
+        "sensor_2": 70.43842569973464,
+        "sensor_3": 53.26967300210848
+      },
+      "recorder_count": 0,
+      "recorder_samples": 0
+    },
+    {
+      "mission": 2,
+      "steps": 1109,
+      "simulated_seconds": 45000,
+      "science_trace_sha256": "2e4afc10717c6d8ca1ef44f03aa8605d2ee84426c0452d0f600ca10dfb2ac51b",
+      "decisions": {
+        "sensor_0": 288,
+        "sensor_1": 258,
+        "sensor_2": 297,
+        "sensor_3": 279
+      },
+      "reward": {
+        "sensor_0": 57.204897217549274,
+        "sensor_1": 56.260119849742416,
+        "sensor_2": 70.43842569973464,
+        "sensor_3": 53.26967300210848
+      },
+      "recorder_count": 0,
+      "recorder_samples": 0
+    }
+  ],
+  "memory": [
+    {
+      "label": "before-build",
+      "mission": -1,
+      "sim_time_s": 0,
+      "rss_bytes": 298024960,
+      "uss_bytes": 189136896
+    },
+    {
+      "label": "reset",
+      "mission": 0,
+      "sim_time_s": 0,
+      "rss_bytes": 374669312,
+      "uss_bytes": 262242304
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 918.0000000000001,
+      "rss_bytes": 256753664,
+      "uss_bytes": 144343040
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 1805.0,
+      "rss_bytes": 351895552,
+      "uss_bytes": 239403008
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 2760.0,
+      "rss_bytes": 314195968,
+      "uss_bytes": 201654272
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 3660.0000000000005,
+      "rss_bytes": 201490432,
+      "uss_bytes": 88981504
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 4522.0,
+      "rss_bytes": 202702848,
+      "uss_bytes": 90177536
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 5447.0,
+      "rss_bytes": 203816960,
+      "uss_bytes": 91291648
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 6312.0,
+      "rss_bytes": 204537856,
+      "uss_bytes": 92028928
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 7295.0,
+      "rss_bytes": 205012992,
+      "uss_bytes": 92454912
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 8162.000000000001,
+      "rss_bytes": 206618624,
+      "uss_bytes": 94060544
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 9109.0,
+      "rss_bytes": 207618048,
+      "uss_bytes": 95059968
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 9929.0,
+      "rss_bytes": 207355904,
+      "uss_bytes": 94748672
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 10834.0,
+      "rss_bytes": 201064448,
+      "uss_bytes": 88702976
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 11771.0,
+      "rss_bytes": 204537856,
+      "uss_bytes": 92160000
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 12608.0,
+      "rss_bytes": 206700544,
+      "uss_bytes": 94273536
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 13508.0,
+      "rss_bytes": 208322560,
+      "uss_bytes": 95895552
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 14408.0,
+      "rss_bytes": 207896576,
+      "uss_bytes": 95535104
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 15308.000000000002,
+      "rss_bytes": 206061568,
+      "uss_bytes": 93700096
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 16208.000000000002,
+      "rss_bytes": 204308480,
+      "uss_bytes": 91963392
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 17108.0,
+      "rss_bytes": 204521472,
+      "uss_bytes": 92110848
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 18008.0,
+      "rss_bytes": 203636736,
+      "uss_bytes": 91291648
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 18908.0,
+      "rss_bytes": 209240064,
+      "uss_bytes": 96813056
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 19808.0,
+      "rss_bytes": 207978496,
+      "uss_bytes": 95551488
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 20708.0,
+      "rss_bytes": 209108992,
+      "uss_bytes": 96878592
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 21608.0,
+      "rss_bytes": 211107840,
+      "uss_bytes": 98811904
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 22508.0,
+      "rss_bytes": 208764928,
+      "uss_bytes": 96550912
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 23452.0,
+      "rss_bytes": 345735168,
+      "uss_bytes": 233504768
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 24342.0,
+      "rss_bytes": 321798144,
+      "uss_bytes": 235257856
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 25230.0,
+      "rss_bytes": 320667648,
+      "uss_bytes": 235421696
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 26104.0,
+      "rss_bytes": 322404352,
+      "uss_bytes": 237223936
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 27004.0,
+      "rss_bytes": 324976640,
+      "uss_bytes": 239747072
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 27915.0,
+      "rss_bytes": 285458432,
+      "uss_bytes": 239108096
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 28845.0,
+      "rss_bytes": 207880192,
+      "uss_bytes": 164429824
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 29749.000000000004,
+      "rss_bytes": 188186624,
+      "uss_bytes": 147668992
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 30616.000000000004,
+      "rss_bytes": 183582720,
+      "uss_bytes": 142917632
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 31511.000000000004,
+      "rss_bytes": 279904256,
+      "uss_bytes": 239370240
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 32416.000000000004,
+      "rss_bytes": 271450112,
+      "uss_bytes": 239124480
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 33317.0,
+      "rss_bytes": 264142848,
+      "uss_bytes": 239353856
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 34217.0,
+      "rss_bytes": 125632512,
+      "uss_bytes": 103399424
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 35117.0,
+      "rss_bytes": 266125312,
+      "uss_bytes": 243793920
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 36008.0,
+      "rss_bytes": 269385728,
+      "uss_bytes": 247054336
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 36901.0,
+      "rss_bytes": 271515648,
+      "uss_bytes": 247283712
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 37841.0,
+      "rss_bytes": 270499840,
+      "uss_bytes": 246546432
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 38729.0,
+      "rss_bytes": 270254080,
+      "uss_bytes": 246398976
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 39601.0,
+      "rss_bytes": 266797056,
+      "uss_bytes": 244449280
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 40530.0,
+      "rss_bytes": 236503040,
+      "uss_bytes": 214188032
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 41429.0,
+      "rss_bytes": 270909440,
+      "uss_bytes": 247562240
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 42319.0,
+      "rss_bytes": 272302080,
+      "uss_bytes": 249462784
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 43222.0,
+      "rss_bytes": 270598144,
+      "uss_bytes": 248397824
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 44149.0,
+      "rss_bytes": 274530304,
+      "uss_bytes": 251887616
+    },
+    {
+      "label": "mission",
+      "mission": 0,
+      "sim_time_s": 45000.0,
+      "rss_bytes": 275595264,
+      "uss_bytes": 252919808
+    },
+    {
+      "label": "mission-end",
+      "mission": 0,
+      "sim_time_s": 45000,
+      "rss_bytes": 275857408,
+      "uss_bytes": 253378560
+    },
+    {
+      "label": "reset",
+      "mission": 1,
+      "sim_time_s": 0,
+      "rss_bytes": 363380736,
+      "uss_bytes": 260784128
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 918.0000000000001,
+      "rss_bytes": 244269056,
+      "uss_bytes": 171606016
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 1805.0,
+      "rss_bytes": 244350976,
+      "uss_bytes": 172032000
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 2760.0,
+      "rss_bytes": 152289280,
+      "uss_bytes": 122011648
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 3660.0000000000005,
+      "rss_bytes": 122880000,
+      "uss_bytes": 92684288
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 4522.0,
+      "rss_bytes": 124715008,
+      "uss_bytes": 94519296
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 5447.0,
+      "rss_bytes": 125304832,
+      "uss_bytes": 95141888
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 6312.0,
+      "rss_bytes": 126238720,
+      "uss_bytes": 96059392
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 7295.0,
+      "rss_bytes": 127025152,
+      "uss_bytes": 96878592
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 8162.000000000001,
+      "rss_bytes": 124026880,
+      "uss_bytes": 93929472
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 9109.0,
+      "rss_bytes": 122126336,
+      "uss_bytes": 91979776
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 9929.0,
+      "rss_bytes": 122978304,
+      "uss_bytes": 92897280
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 10834.0,
+      "rss_bytes": 121012224,
+      "uss_bytes": 92061696
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 11771.0,
+      "rss_bytes": 111476736,
+      "uss_bytes": 91373568
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 12608.0,
+      "rss_bytes": 109150208,
+      "uss_bytes": 90882048
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 13508.0,
+      "rss_bytes": 108101632,
+      "uss_bytes": 90226688
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 14408.0,
+      "rss_bytes": 105758720,
+      "uss_bytes": 88129536
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 15308.000000000002,
+      "rss_bytes": 252936192,
+      "uss_bytes": 233979904
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 16208.000000000002,
+      "rss_bytes": 108560384,
+      "uss_bytes": 89636864
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 17108.0,
+      "rss_bytes": 108232704,
+      "uss_bytes": 89292800
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 18008.0,
+      "rss_bytes": 108331008,
+      "uss_bytes": 89423872
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 18908.0,
+      "rss_bytes": 114425856,
+      "uss_bytes": 95436800
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 19808.0,
+      "rss_bytes": 113197056,
+      "uss_bytes": 94273536
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 20708.0,
+      "rss_bytes": 112443392,
+      "uss_bytes": 93569024
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 21608.0,
+      "rss_bytes": 114900992,
+      "uss_bytes": 95895552
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 22508.0,
+      "rss_bytes": 114737152,
+      "uss_bytes": 95731712
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 23452.0,
+      "rss_bytes": 115245056,
+      "uss_bytes": 96321536
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 24342.0,
+      "rss_bytes": 151306240,
+      "uss_bytes": 132382720
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 25230.0,
+      "rss_bytes": 256819200,
+      "uss_bytes": 237797376
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 26104.0,
+      "rss_bytes": 257949696,
+      "uss_bytes": 238944256
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 27004.0,
+      "rss_bytes": 257146880,
+      "uss_bytes": 238780416
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 27915.0,
+      "rss_bytes": 259555328,
+      "uss_bytes": 240975872
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 28845.0,
+      "rss_bytes": 259211264,
+      "uss_bytes": 240369664
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 29749.000000000004,
+      "rss_bytes": 258572288,
+      "uss_bytes": 239190016
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 30616.000000000004,
+      "rss_bytes": 258179072,
+      "uss_bytes": 238927872
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 31511.000000000004,
+      "rss_bytes": 252936192,
+      "uss_bytes": 234700800
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 32416.000000000004,
+      "rss_bytes": 258637824,
+      "uss_bytes": 239861760
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 33317.0,
+      "rss_bytes": 260128768,
+      "uss_bytes": 241631232
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 34217.0,
+      "rss_bytes": 264306688,
+      "uss_bytes": 244776960
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 35117.0,
+      "rss_bytes": 261439488,
+      "uss_bytes": 242696192
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 36008.0,
+      "rss_bytes": 262438912,
+      "uss_bytes": 243777536
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 36901.0,
+      "rss_bytes": 261423104,
+      "uss_bytes": 242089984
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 37841.0,
+      "rss_bytes": 262864896,
+      "uss_bytes": 240713728
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 38729.0,
+      "rss_bytes": 264241152,
+      "uss_bytes": 240156672
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 39601.0,
+      "rss_bytes": 121569280,
+      "uss_bytes": 100974592
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 40530.0,
+      "rss_bytes": 105791488,
+      "uss_bytes": 88981504
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 41429.0,
+      "rss_bytes": 266108928,
+      "uss_bytes": 241745920
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 42319.0,
+      "rss_bytes": 266338304,
+      "uss_bytes": 242008064
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 43222.0,
+      "rss_bytes": 265945088,
+      "uss_bytes": 242434048
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 44149.0,
+      "rss_bytes": 267698176,
+      "uss_bytes": 243974144
+    },
+    {
+      "label": "mission",
+      "mission": 1,
+      "sim_time_s": 45000.0,
+      "rss_bytes": 263864320,
+      "uss_bytes": 242974720
+    },
+    {
+      "label": "mission-end",
+      "mission": 1,
+      "sim_time_s": 45000,
+      "rss_bytes": 264388608,
+      "uss_bytes": 243515392
+    },
+    {
+      "label": "reset",
+      "mission": 2,
+      "sim_time_s": 0,
+      "rss_bytes": 195117056,
+      "uss_bytes": 160104448
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 918.0000000000001,
+      "rss_bytes": 113524736,
+      "uss_bytes": 87392256
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 1805.0,
+      "rss_bytes": 116080640,
+      "uss_bytes": 89948160
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 2760.0,
+      "rss_bytes": 116719616,
+      "uss_bytes": 90554368
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 3660.0000000000005,
+      "rss_bytes": 117473280,
+      "uss_bytes": 91275264
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 4522.0,
+      "rss_bytes": 118947840,
+      "uss_bytes": 92815360
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 5447.0,
+      "rss_bytes": 115736576,
+      "uss_bytes": 93126656
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 6312.0,
+      "rss_bytes": 117473280,
+      "uss_bytes": 94765056
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 7295.0,
+      "rss_bytes": 114016256,
+      "uss_bytes": 91930624
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 8162.000000000001,
+      "rss_bytes": 110690304,
+      "uss_bytes": 94257152
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 9109.0,
+      "rss_bytes": 108920832,
+      "uss_bytes": 92520448
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 9929.0,
+      "rss_bytes": 110166016,
+      "uss_bytes": 93765632
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 10834.0,
+      "rss_bytes": 112033792,
+      "uss_bytes": 95535104
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 11771.0,
+      "rss_bytes": 110444544,
+      "uss_bytes": 93962240
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 12608.0,
+      "rss_bytes": 113082368,
+      "uss_bytes": 96649216
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 13508.0,
+      "rss_bytes": 115163136,
+      "uss_bytes": 98664448
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 14408.0,
+      "rss_bytes": 117014528,
+      "uss_bytes": 100515840
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 15308.000000000002,
+      "rss_bytes": 256671744,
+      "uss_bytes": 239140864
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 16208.000000000002,
+      "rss_bytes": 257622016,
+      "uss_bytes": 240091136
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 17108.0,
+      "rss_bytes": 258310144,
+      "uss_bytes": 240779264
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 18008.0,
+      "rss_bytes": 274219008,
+      "uss_bytes": 251281408
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 18908.0,
+      "rss_bytes": 275202048,
+      "uss_bytes": 253149184
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 19808.0,
+      "rss_bytes": 275824640,
+      "uss_bytes": 254443520
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 20708.0,
+      "rss_bytes": 141033472,
+      "uss_bytes": 121126912
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 21608.0,
+      "rss_bytes": 144457728,
+      "uss_bytes": 124665856
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 22508.0,
+      "rss_bytes": 142819328,
+      "uss_bytes": 124764160
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 23452.0,
+      "rss_bytes": 263929856,
+      "uss_bytes": 246104064
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 24342.0,
+      "rss_bytes": 256999424,
+      "uss_bytes": 239271936
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 25230.0,
+      "rss_bytes": 254787584,
+      "uss_bytes": 237256704
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 26104.0,
+      "rss_bytes": 258441216,
+      "uss_bytes": 240615424
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 27004.0,
+      "rss_bytes": 258457600,
+      "uss_bytes": 240009216
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 27915.0,
+      "rss_bytes": 260685824,
+      "uss_bytes": 242991104
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 28845.0,
+      "rss_bytes": 259309568,
+      "uss_bytes": 241467392
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 29749.000000000004,
+      "rss_bytes": 171294720,
+      "uss_bytes": 153255936
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 30616.000000000004,
+      "rss_bytes": 258670592,
+      "uss_bytes": 240893952
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 31511.000000000004,
+      "rss_bytes": 259112960,
+      "uss_bytes": 240123904
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 32416.000000000004,
+      "rss_bytes": 261013504,
+      "uss_bytes": 241811456
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 33317.0,
+      "rss_bytes": 261455872,
+      "uss_bytes": 243449856
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 34217.0,
+      "rss_bytes": 263454720,
+      "uss_bytes": 244269056
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 35117.0,
+      "rss_bytes": 263536640,
+      "uss_bytes": 244744192
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 36008.0,
+      "rss_bytes": 260816896,
+      "uss_bytes": 242597888
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 36901.0,
+      "rss_bytes": 262815744,
+      "uss_bytes": 244301824
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 37841.0,
+      "rss_bytes": 263667712,
+      "uss_bytes": 244858880
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 38729.0,
+      "rss_bytes": 210386944,
+      "uss_bytes": 192282624
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 39601.0,
+      "rss_bytes": 262127616,
+      "uss_bytes": 243564544
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 40530.0,
+      "rss_bytes": 264716288,
+      "uss_bytes": 245235712
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 41429.0,
+      "rss_bytes": 265519104,
+      "uss_bytes": 244269056
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 42319.0,
+      "rss_bytes": 125747200,
+      "uss_bytes": 109772800
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 43222.0,
+      "rss_bytes": 267124736,
+      "uss_bytes": 245383168
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 44149.0,
+      "rss_bytes": 265535488,
+      "uss_bytes": 245268480
+    },
+    {
+      "label": "mission",
+      "mission": 2,
+      "sim_time_s": 45000.0,
+      "rss_bytes": 262766592,
+      "uss_bytes": 242827264
+    },
+    {
+      "label": "mission-end",
+      "mission": 2,
+      "sim_time_s": 45000,
+      "rss_bytes": 257916928,
+      "uss_bytes": 236732416
+    },
+    {
+      "label": "after-close",
+      "mission": 3,
+      "sim_time_s": 0,
+      "rss_bytes": 327778304,
+      "uss_bytes": 277987328
+    }
+  ],
+  "max_rss_bytes": 374702080,
+  "wall_s": 1302.715217082994,
+  "new_PPO_updates": 0,
+  "cluster_jobs": 0,
+  "scope": "Local full native missions; identical fixed controller, no learning or native-version comparison"
+}
