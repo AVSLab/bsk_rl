@@ -1,0 +1,79 @@
+{
+  "schema": "communication-qualification-local-v1",
+  "created_utc": "2026-10-20T12:36:49.348378+00:00",
+  "base_commit": "5275bd01e68f24786ec6a78b96c9e1457e03529f",
+  "canonical_branch": "multi-agent-space-imaging-2026",
+  "source_sha256": {
+    "examples/multiagent_imaging/communication_qualification.py": "56f12abce95b0cc0fdbd97ce3d43690dcb26857ce28335b6cb045fd06f6af179",
+    "examples/multiagent_imaging/plot_communication_qualification.py": "6124bc9e1faf887a21db5b15928fc383fe3edbe5888c11f35f52c3208ce419cb",
+    "tests/unittest/multiagent/test_communication_qualification.py": "a8bec1dc8b02caf7fa72f3a7c473ab125c8e0c9a44665c7f9b70a80d3c30d438"
+  },
+  "execution_harness_matches_current_source": true,
+  "tests": {
+    "passed": 317,
+    "warnings": 8,
+    "wall_s": 18.61,
+    "command": "PYTHONPATH=.:src /Users/dahu1128/Repositories/bsk_rl/.venv/bin/python -m pytest tests/unittest/multiagent tests/integration/multiagent/test_target_recorder_option.py -q",
+    "log_sha256": "f796e4caf855c15a0c2df8af42b2a253a669ffe8e4783775a82cc8d25994cd27",
+    "new_files_ruff_passed": true
+  },
+  "native": {
+    "final_fixture_cases": 8,
+    "fixture_seed": 401,
+    "diagnostic_stop_s": 2400.0,
+    "official_horizon_s": 45000.0,
+    "physical_captures": true,
+    "metadata_or_product_injection": false,
+    "initial_orbit_hash_matches_across_cases": true,
+    "frozen_payload_verified": true,
+    "private_receiver_only": true,
+    "lost_expired_and_replay_controls_passed": true,
+    "source_product_ownership_unchanged": true,
+    "owned_team_mean_physics_exact": true,
+    "native_build_unchanged_from_preceding_RAM_qualification": true,
+    "native_artifact": {
+      "basiliskVersion": "2.13.0b0",
+      "sourceRevision": "c1bf0d7d67df7ae5bb74cd008d4c79cc3d106063",
+      "sourceDirty": true,
+      "extensionAbiVersion": 3
+    }
+  },
+  "result": {
+    "transport_and_reconstruction_passed": true,
+    "information_value": 0.19709561349575477,
+    "net_value_against_best_tested_alternative": -0.609011227230477,
+    "sender_owned_benefit_target": 0.0,
+    "sender_team_mean_benefit_target": 0.0036473944783210754,
+    "ground_delivery_benefit": 0.0,
+    "net_value_gate_passed": false,
+    "ppo_permitted": false
+  },
+  "validation_layers": {
+    "native_fixture_correctness": true,
+    "synthetic_zero_value_target_reconstruction": true,
+    "fixed_batch_fitting": false,
+    "new_PPO_wiring_run": false,
+    "learned_policy_improvement": false,
+    "representative_mission_evaluation": false,
+    "cluster_validation": false
+  },
+  "ppo": {
+    "new_updates": 0,
+    "maximum_user_authorized_updates_after_gate": 2,
+    "reason": "Tested information benefit does not exceed the actual no-communication imaging alternative; conditional net-value gate fails. No fresh PPO run attempted."
+  },
+  "official_configuration_changed": false,
+  "new_reward_modes_or_observation_fields": false,
+  "cluster_jobs": 0,
+  "limitations": [
+    "One declared constructed seed and fixed controllers; not an optimal-policy comparison or prevalence estimate",
+    "2400-second fixtures are not completed official 45000-second missions; no ground deliveries occurred",
+    "Zero-baseline diagnostic advantages isolate reward contributions; they are not learned critic predictions or standardized PPO advantages",
+    "Native pointing/contact/storage executes the current communications abstraction; it is not an RF/optical modem/link-budget validation",
+    "Duplicate replay is the same packet delivered twice at one receipt time; it is not a second paid radio operation",
+    "A no-communication controller with a real illuminated imaging alternative beats transmission in this case; sharing rewards cannot create physical value",
+    "The existing opt-in team_mean remains experimental; no official configuration adopted it"
+  ],
+  "recommended_canary": "recommended-alpine-canary.json; separately authorized infrastructure/PPO wiring qualification only; no communication-benefit claim",
+  "proposed_science_changes": "reviewable-proposals.json; all explicitly unadopted"
+}

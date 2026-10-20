@@ -1,0 +1,85 @@
+{
+  "schema": "evidence-sha256-v1",
+  "files": [
+    {
+      "path": "blocked/fixture.json",
+      "bytes": 372751,
+      "sha256": "c912de0df7a99aa366ecb6234e7deb220984d64a4ca1f0f03ae7203bfbc180df"
+    },
+    {
+      "path": "communication-value.pdf",
+      "bytes": 22749,
+      "sha256": "be9822a4cbc447364b669bfb640b7ca72056a748ba39114209bd42ac3f4550a3"
+    },
+    {
+      "path": "communication-value.png",
+      "bytes": 146674,
+      "sha256": "ec0723f0f4fbdb3c24297e4e67fba9c327fc54cd81b10be58abd7630c83b4c1d"
+    },
+    {
+      "path": "delivered/fixture.json",
+      "bytes": 383636,
+      "sha256": "b920b4c21ba217034f6b0e679266bda648ac873c8b0ea70dbd6d2fcd8eb4709e"
+    },
+    {
+      "path": "execution.json",
+      "bytes": 443,
+      "sha256": "d1cd99c414ec832863fe2503bd831a5ad8100cd4d00c385c59e7cab1bc2df8ab"
+    },
+    {
+      "path": "expired/fixture.json",
+      "bytes": 373077,
+      "sha256": "960895ccb71a597eb7fc2097498578c9831bc24ebb0c26114de6c8029b2743d4"
+    },
+    {
+      "path": "no_comm_downlink/fixture.json",
+      "bytes": 285727,
+      "sha256": "1154be9cdfb6c948ac7168a510aa3be330626882e6b97d31957f80a0db59ff5f"
+    },
+    {
+      "path": "no_comm_image/fixture.json",
+      "bytes": 301093,
+      "sha256": "373a17039d9a744dfee93545e64e64c294316f0f164024c4ff4f755347c6ca3b"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 95154,
+      "sha256": "b655efe3bf21ec50d17fb950e842c60035bc2b360190e5388c7ef2516e000136"
+    },
+    {
+      "path": "recommended-alpine-canary.json",
+      "bytes": 3011,
+      "sha256": "f4657ed22f9c7af3a7d8729a6c3f016992d8ca2f782895cac0efe2077559e815"
+    },
+    {
+      "path": "replay/fixture.json",
+      "bytes": 383865,
+      "sha256": "d0914fae4b74eb792bc145fd4307d3d7a8fa6700afc3cdf51d5ffca261b8238c"
+    },
+    {
+      "path": "reviewable-proposals.json",
+      "bytes": 3391,
+      "sha256": "280256ef044381a7c11f2ba368adfcc3d337f5cf31f6fcee513daea464cdee7a"
+    },
+    {
+      "path": "source-invariants.json",
+      "bytes": 45739,
+      "sha256": "98533e5f7277c83189af33402348fff67b04490f9842e5410d22c14ce9fadeea"
+    },
+    {
+      "path": "team_blocked/fixture.json",
+      "bytes": 372990,
+      "sha256": "f46b8028e7ae2b0142839fedbf7bb00f1df10fce1f445abee11dc14aef2f7db4"
+    },
+    {
+      "path": "team_delivered/fixture.json",
+      "bytes": 383960,
+      "sha256": "c5715696e3f9b854efb3e3e41feb88f53d53b2f29482cb002cfe16f43a9179db"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 4068,
+      "sha256": "19622e9342aee49034f476e92c7bbefe30e587f8c97d13bc8b813775b03ff931"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "harness_sha256": "56f12abce95b0cc0fdbd97ce3d43690dcb26857ce28335b6cb045fd06f6af179",
+  "official_config_sha256": "47bb0507a7b4e9b2ac5043d83f3165f8bb3fbf2ad2e7964576d38eef64ad777d",
+  "cases": [
+    "delivered",
+    "blocked",
+    "expired",
+    "replay",
+    "no_comm_image",
+    "no_comm_downlink",
+    "team_delivered",
+    "team_blocked"
+  ],
+  "fixture_seed": 401,
+  "fixture_stop_s": 2400.0,
+  "ppo_updates": 0,
+  "cluster_jobs": 0
+}

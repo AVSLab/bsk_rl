@@ -1,0 +1,70 @@
+{
+  "status": "Reviewable proposals only; none adopted",
+  "baseline_unchanged": true,
+  "baseline": {
+    "reward_credit_mode": "owned",
+    "alpha": 0.1,
+    "gamma_per_s": 0.9915045428565076,
+    "gae_lambda_per_decision": 0.8713548569911232,
+    "physical_transmit_hold_s": 10.0,
+    "metadata_bitrate_bps": 64000.0,
+    "official_horizon_s": 45000.0
+  },
+  "conclusions": {
+    "information_can_change_actions": true,
+    "positive_information_value": 0.19709561349575477,
+    "net_value_vs_tested_imaging_alternative": -0.609011227230477,
+    "general_communication_advantage_established": false,
+    "ground_delivery_benefit_established": false
+  },
+  "proposals": [
+    {
+      "id": "opportunity-frontier",
+      "recommendation": "Next local scientific step",
+      "scope": "Predeclare a small set of native sender/receiver opportunity windows and fixed private controllers; measure delivered-vs-lost information value and actual imaging/downlink alternatives in every window. Retain negative and neutral cases.",
+      "production_config_patch": [],
+      "adopted": false,
+      "acceptance": "Find and independently reproduce at least one positive net case and one nonpositive case before a learning-efficacy experiment; no seed or window search promoted as representative performance"
+    },
+    {
+      "id": "team-mean",
+      "status": "Already implemented opt-in; not promoted to baseline",
+      "proposed_config_patch": [
+        {
+          "op": "add",
+          "path": "/reward_credit_mode",
+          "value": "team_mean"
+        }
+      ],
+      "adopted": false,
+      "evidence": "Conserves the team science sum; sends one fourth of receiver science to sender and idle bystanders. Physical ownership and local penalties stay local.",
+      "remaining_problem": "In the tested path, 289 seconds and one lambda transition reduce 0.1971/4 to 0.003647. Reward sharing does not recover foregone physical imaging value."
+    },
+    {
+      "id": "longer-discount",
+      "status": "Separate scientific ablation requiring explicit approval",
+      "adopted": false,
+      "production_config_patch": [],
+      "evidence": "The unchanged AMOS gamma has an approximately 81-second half-life. Altering it changes the objective and checkpoint contract.",
+      "recommendation": "Do not choose a gamma to manufacture a desired communication result. Compare objectives only after defining the operational value/time horizon."
+    },
+    {
+      "id": "receiver-requests",
+      "status": "Design proposal only; not implemented",
+      "adopted": false,
+      "payload_proposal": {
+        "target_id": "requested target",
+        "request_epoch": "mission request identity",
+        "expires_at_s": "finite expiry"
+      },
+      "protocol_requirements": "Explicit new versioned packet/observation contract; requests pay declared physical contact, pointing, duration and payload costs. No private task/intent added to ideal navigation beacons.",
+      "recommendation": "Consider only if the opportunity study shows sender cannot infer which receiver needs its metadata from existing private inputs."
+    }
+  ],
+  "new_reward_modes_implemented": 0,
+  "new_observation_fields_implemented": 0,
+  "new_mission_configs": 0,
+  "ppo_updates": 0,
+  "reason_no_PPO": "Net value gate failed against a real illuminated minimum-pointing-angle imaging alternative",
+  "cluster_jobs": 0
+}

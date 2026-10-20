@@ -1,0 +1,53 @@
+{
+  "status": "Recommendation only; requires new explicit job authorization; not submitted",
+  "scientific_learning_comparison_ready": false,
+  "purpose": "Qualify RAM repair and two real PPO update boundaries with the existing owned baseline; not establish communication advantage",
+  "resources": {
+    "alloc_cpus": 56,
+    "memory_GiB": 200,
+    "wall_seconds": 5400,
+    "maximum_reserved_allocated_cpu_hours": 84.0,
+    "requeue": false,
+    "remote_environment_runners": 28,
+    "local_runner": 1,
+    "remote_learners": 0,
+    "torch_threads_per_process": 1
+  },
+  "runtime": {
+    "Basilisk": "Keep existing Alpine 2.12.0b0 pin and compiled extensions; no upgrade",
+    "psutil": "Effective external 6.1.0 in driver and all 29 actual runners",
+    "transport": "Existing authenticated Termius only; fresh timestamped screenshot verification; new immutable source/output paths"
+  },
+  "science": {
+    "config": "walker4_t200_cd1_catalog_tx.json",
+    "reward_credit_mode": "owned",
+    "alpha": 0.1,
+    "mission_horizon_s": 45000,
+    "PPO_profile": "amos_best",
+    "minimum_environment_batch": 4200,
+    "dropout": 0.1
+  },
+  "invocation_caps": {
+    "actual_PPO_updates": 2,
+    "full_training_missions": 56,
+    "sampled_true_decisions": 120000,
+    "heldout_missions": 0,
+    "seed_sweeps": 0,
+    "continuations_or_automatic_retries": 0
+  },
+  "required_acceptance": [
+    "Source/native/support/runtime hashes in driver and all actual workers",
+    "Equal initial learner/actor readbacks and full seed/RNG/mode/accounting state in all 29 runners",
+    "All completed missions at 45000 s; no forced or padded learner rows; retained targets independently reconstructed",
+    "Finite losses, gradients and parameters; nonzero actor and critic changes",
+    "Stable 29-process topology without replacement; online-required W&B identity, heartbeat and per-agent data",
+    "Cgroup peak <=160 GiB gives 20 percent headroom; report anon/file/cache and per-process RSS/PSS/USS by sampling, optimization and checkpoint phase. This is an acceptance target, not a promised footprint.",
+    "Two update boundaries and worker resets observed; no unexplained growth between comparable boundaries; two updates do not prove absence of long-duration leaks",
+    "Exact full-topology zero-update optimizer/weights/logits/RNG/seed/index/accounting restore and unchanged checkpoint bytes",
+    "Final sacct allocation CPU-hours and allowlisted Termius evidence transfer size/hash/file verification"
+  ],
+  "time_policy": "Reserve shutdown/restore time; do not start another batch without enough measured time. Fewer than two completed updates is an incomplete two-update qualification, not a pass.",
+  "budget_policy": "This would be a separately authorized capped canary, not a restart or extension of either failed long allocation. Preserve original cumulative budgets and all prior evidence.",
+  "completion": "Stop after this canary; no automatic long pair or scientific study follows",
+  "submitted_jobs": 0
+}

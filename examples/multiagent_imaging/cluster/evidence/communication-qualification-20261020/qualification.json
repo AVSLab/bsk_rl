@@ -1,0 +1,2892 @@
+{
+  "passed": true,
+  "transport_privacy_and_target_checks_passed": true,
+  "causal_information_value_positive": true,
+  "net_value_gate": {
+    "information_value": 0.19709561349575477,
+    "best_tested_no_communication_reward": 0.9221347859982129,
+    "net_value_against_best_tested_alternative": -0.609011227230477,
+    "passed": false,
+    "scope": "Only the declared controllers, state and finite window; not an optimal-policy bound"
+  },
+  "matched_transmission_information_value": 0.19709561349575477,
+  "comparisons": {
+    "delivered": {
+      "constellation_reward": 0.3131235587677359,
+      "delta_from_blocked": 0.19709561349575477,
+      "receiver_target": 24,
+      "acquired_value": 0.3479150652974843,
+      "delivered_value": 0.0,
+      "unique_acquisitions": 2.0,
+      "unique_delivered_visits": 0.0
+    },
+    "blocked": {
+      "constellation_reward": 0.11602794527198114,
+      "delta_from_blocked": 0.0,
+      "receiver_target": 55,
+      "acquired_value": 0.12891993919109015,
+      "delivered_value": 0.0,
+      "unique_acquisitions": 1.0,
+      "unique_delivered_visits": 0.0
+    },
+    "expired": {
+      "constellation_reward": 0.11602794527198114,
+      "delta_from_blocked": 0.0,
+      "receiver_target": 55,
+      "acquired_value": 0.12891993919109015,
+      "delivered_value": 0.0,
+      "unique_acquisitions": 1.0,
+      "unique_delivered_visits": 0.0
+    },
+    "replay": {
+      "constellation_reward": 0.3131235587677359,
+      "delta_from_blocked": 0.19709561349575477,
+      "receiver_target": 24,
+      "acquired_value": 0.3479150652974843,
+      "delivered_value": 0.0,
+      "unique_acquisitions": 2.0,
+      "unique_delivered_visits": 0.0
+    },
+    "no_comm_image": {
+      "constellation_reward": 0.9221347859982129,
+      "delta_from_blocked": 0.8061068407262317,
+      "receiver_target": 55,
+      "acquired_value": 1.024594206664681,
+      "delivered_value": 0.0,
+      "unique_acquisitions": 2.0,
+      "unique_delivered_visits": 0.0
+    },
+    "no_comm_downlink": {
+      "constellation_reward": 0.11602794527198114,
+      "delta_from_blocked": 0.0,
+      "receiver_target": 55,
+      "acquired_value": 0.12891993919109015,
+      "delivered_value": 0.0,
+      "unique_acquisitions": 1.0,
+      "unique_delivered_visits": 0.0
+    },
+    "team_delivered": {
+      "constellation_reward": 0.3131235587677359,
+      "delta_from_blocked": 0.19709561349575477,
+      "receiver_target": 24,
+      "acquired_value": 0.3479150652974843,
+      "delivered_value": 0.0,
+      "unique_acquisitions": 2.0,
+      "unique_delivered_visits": 0.0
+    },
+    "team_blocked": {
+      "constellation_reward": 0.11602794527198114,
+      "delta_from_blocked": 0.0,
+      "receiver_target": 55,
+      "acquired_value": 0.12891993919109015,
+      "delivered_value": 0.0,
+      "unique_acquisitions": 1.0,
+      "unique_delivered_visits": 0.0
+    }
+  },
+  "credit": {
+    "delivered": {
+      "sensor_0": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.002714651171118021,
+            "diagnostic_value_target": 0.002714651171118021,
+            "reward_events": []
+          },
+          {
+            "action": 10,
+            "start_s": 300.0,
+            "duration_s": 124.0,
+            "condensed_reward": 0.04028157486280059,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.04028157517313957,
+            "diagnostic_value_target": 0.04028157517313957,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.11602794527198114,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 16,
+            "start_s": 424.0,
+            "duration_s": 120.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 544.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 844.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1144.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1444.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1744.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2044.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2344.0,
+            "duration_s": 56.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 12,
+        "oracle_max_abs_target_error": 3.1033898367782697e-10,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_1": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 14,
+        "oracle_max_abs_target_error": 0.0,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_2": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.00034134546876884997,
+            "diagnostic_value_target": 0.00034134546876884997,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.005065083038061857,
+            "diagnostic_value_target": 0.005065083038061857,
+            "reward_events": []
+          },
+          {
+            "action": 5,
+            "start_s": 600.0,
+            "duration_s": 113.0,
+            "condensed_reward": 0.07515865622978223,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.07515865564346313,
+            "diagnostic_value_target": 0.07515865564346313,
+            "reward_events": [
+              {
+                "time_s": 713.0,
+                "primitive_reward": 0.19709561349575475,
+                "delay_from_action_s": 113.0,
+                "endpoint_discount": 0.38133094337688583
+              }
+            ]
+          },
+          {
+            "action": 1,
+            "start_s": 713.0,
+            "duration_s": 300.0000000000001,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1013.0000000000001,
+            "duration_s": 299.9999999999999,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1313.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1613.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1913.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 2213.0,
+            "duration_s": 187.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 13,
+        "oracle_max_abs_target_error": 5.863190905008864e-10,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_3": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 14,
+        "oracle_max_abs_target_error": 0.0,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      }
+    },
+    "blocked": {
+      "sensor_0": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.002714651171118021,
+            "diagnostic_value_target": 0.002714651171118021,
+            "reward_events": []
+          },
+          {
+            "action": 10,
+            "start_s": 300.0,
+            "duration_s": 124.0,
+            "condensed_reward": 0.04028157486280059,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.04028157517313957,
+            "diagnostic_value_target": 0.04028157517313957,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.11602794527198114,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 16,
+            "start_s": 424.0,
+            "duration_s": 120.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 544.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 844.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1144.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1444.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1744.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2044.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2344.0,
+            "duration_s": 56.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 12,
+        "oracle_max_abs_target_error": 3.1033898367782697e-10,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_1": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 14,
+        "oracle_max_abs_target_error": 0.0,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_2": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 6,
+            "start_s": 600.0,
+            "duration_s": 113.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 713.0,
+            "duration_s": 300.0000000000001,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1013.0000000000001,
+            "duration_s": 299.9999999999999,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1313.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1613.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1913.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 2213.0,
+            "duration_s": 187.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 13,
+        "oracle_max_abs_target_error": 0.0,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_3": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 14,
+        "oracle_max_abs_target_error": 0.0,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      }
+    },
+    "team_delivered": {
+      "sensor_0": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0007530210423283279,
+            "diagnostic_value_target": 0.0007530210423283279,
+            "reward_events": []
+          },
+          {
+            "action": 10,
+            "start_s": 300.0,
+            "duration_s": 124.0,
+            "condensed_reward": 0.010070393715700147,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.011173765175044537,
+            "diagnostic_value_target": 0.011173765175044537,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.029006986317995285,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 16,
+            "start_s": 424.0,
+            "duration_s": 120.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0036473944783210754,
+            "diagnostic_value_target": 0.0036473944783210754,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 544.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.011652595880336673,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.011652596294879913,
+            "diagnostic_value_target": 0.011652596294879913,
+            "reward_events": [
+              {
+                "time_s": 713.0,
+                "primitive_reward": 0.049273903373938686,
+                "delay_from_action_s": 169.0,
+                "endpoint_discount": 0.2364861535710973
+              }
+            ]
+          },
+          {
+            "action": 0,
+            "start_s": 844.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1144.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1444.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1744.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2044.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2344.0,
+            "duration_s": 56.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 12,
+        "oracle_max_abs_target_error": 4.1454323827794237e-10,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_1": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0007639991235919297,
+            "diagnostic_value_target": 0.0007639991235919297,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.010070393715700147,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.01133666466921568,
+            "diagnostic_value_target": 0.01133666466921568,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.029006986317995285,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.018789664057445556,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.018789663910865784,
+            "diagnostic_value_target": 0.018789663910865784,
+            "reward_events": [
+              {
+                "time_s": 713.0,
+                "primitive_reward": 0.049273903373938686,
+                "delay_from_action_s": 113.0,
+                "endpoint_discount": 0.38133094337688583
+              }
+            ]
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 14,
+        "oracle_max_abs_target_error": 1.655592399285588e-10,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_2": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0007639991235919297,
+            "diagnostic_value_target": 0.0007639991235919297,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.010070393715700147,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.01133666466921568,
+            "diagnostic_value_target": 0.01133666466921568,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.029006986317995285,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 5,
+            "start_s": 600.0,
+            "duration_s": 113.0,
+            "condensed_reward": 0.018789664057445556,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.018789663910865784,
+            "diagnostic_value_target": 0.018789663910865784,
+            "reward_events": [
+              {
+                "time_s": 713.0,
+                "primitive_reward": 0.049273903373938686,
+                "delay_from_action_s": 113.0,
+                "endpoint_discount": 0.38133094337688583
+              }
+            ]
+          },
+          {
+            "action": 1,
+            "start_s": 713.0,
+            "duration_s": 300.0000000000001,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1013.0000000000001,
+            "duration_s": 299.9999999999999,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1313.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1613.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1913.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 2213.0,
+            "duration_s": 187.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 13,
+        "oracle_max_abs_target_error": 1.655592399285588e-10,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_3": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0007639991235919297,
+            "diagnostic_value_target": 0.0007639991235919297,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.010070393715700147,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.01133666466921568,
+            "diagnostic_value_target": 0.01133666466921568,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.029006986317995285,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.018789664057445556,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.018789663910865784,
+            "diagnostic_value_target": 0.018789663910865784,
+            "reward_events": [
+              {
+                "time_s": 713.0,
+                "primitive_reward": 0.049273903373938686,
+                "delay_from_action_s": 113.0,
+                "endpoint_discount": 0.38133094337688583
+              }
+            ]
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 14,
+        "oracle_max_abs_target_error": 1.655592399285588e-10,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      }
+    },
+    "team_blocked": {
+      "sensor_0": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0006786627927795053,
+            "diagnostic_value_target": 0.0006786627927795053,
+            "reward_events": []
+          },
+          {
+            "action": 10,
+            "start_s": 300.0,
+            "duration_s": 124.0,
+            "condensed_reward": 0.010070393715700147,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.010070393793284893,
+            "diagnostic_value_target": 0.010070393793284893,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.029006986317995285,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 16,
+            "start_s": 424.0,
+            "duration_s": 120.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 544.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 844.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1144.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1444.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1744.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2044.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2344.0,
+            "duration_s": 56.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 12,
+        "oracle_max_abs_target_error": 7.758474591945674e-11,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_1": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0006786627927795053,
+            "diagnostic_value_target": 0.0006786627927795053,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.010070393715700147,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.010070393793284893,
+            "diagnostic_value_target": 0.010070393793284893,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.029006986317995285,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 14,
+        "oracle_max_abs_target_error": 7.758474591945674e-11,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_2": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0006786627927795053,
+            "diagnostic_value_target": 0.0006786627927795053,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.010070393715700147,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.010070393793284893,
+            "diagnostic_value_target": 0.010070393793284893,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.029006986317995285,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 6,
+            "start_s": 600.0,
+            "duration_s": 113.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 713.0,
+            "duration_s": 300.0000000000001,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1013.0000000000001,
+            "duration_s": 299.9999999999999,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1313.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1613.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1913.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 2213.0,
+            "duration_s": 187.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 13,
+        "oracle_max_abs_target_error": 7.758474591945674e-11,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_3": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0006786627927795053,
+            "diagnostic_value_target": 0.0006786627927795053,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.010070393715700147,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.010070393793284893,
+            "diagnostic_value_target": 0.010070393793284893,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.029006986317995285,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 14,
+        "oracle_max_abs_target_error": 7.758474591945674e-11,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      }
+    },
+    "no_comm_image": {
+      "sensor_0": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.011307494714856148,
+            "diagnostic_value_target": 0.011307494714856148,
+            "reward_events": []
+          },
+          {
+            "action": 10,
+            "start_s": 300.0,
+            "duration_s": 124.0,
+            "condensed_reward": 0.04028157486280059,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.16778719425201416,
+            "diagnostic_value_target": 0.16778719425201416,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.11602794527198114,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 7,
+            "start_s": 424.0,
+            "duration_s": 76.00000000000006,
+            "condensed_reward": 0.4214930754269366,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.4214930832386017,
+            "diagnostic_value_target": 0.4214930832386017,
+            "reward_events": [
+              {
+                "time_s": 500.00000000000006,
+                "primitive_reward": 0.8061068407262317,
+                "delay_from_action_s": 76.00000000000006,
+                "endpoint_discount": 0.5228749517212982
+              }
+            ]
+          },
+          {
+            "action": 0,
+            "start_s": 500.00000000000006,
+            "duration_s": 299.99999999999994,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1400.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1700.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2000.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2300.0,
+            "duration_s": 100.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 12,
+        "oracle_max_abs_target_error": 7.811665092560816e-09,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_1": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 14,
+        "oracle_max_abs_target_error": 0.0,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_2": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 6,
+            "start_s": 600.0,
+            "duration_s": 113.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 713.0,
+            "duration_s": 300.0000000000001,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1013.0000000000001,
+            "duration_s": 299.9999999999999,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1313.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1613.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1913.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 2213.0,
+            "duration_s": 187.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 13,
+        "oracle_max_abs_target_error": 0.0,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_3": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 14,
+        "oracle_max_abs_target_error": 0.0,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      }
+    },
+    "no_comm_downlink": {
+      "sensor_0": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.002714651171118021,
+            "diagnostic_value_target": 0.002714651171118021,
+            "reward_events": []
+          },
+          {
+            "action": 10,
+            "start_s": 300.0,
+            "duration_s": 124.0,
+            "condensed_reward": 0.04028157486280059,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.04028157517313957,
+            "diagnostic_value_target": 0.04028157517313957,
+            "reward_events": [
+              {
+                "time_s": 424.0,
+                "primitive_reward": 0.11602794527198114,
+                "delay_from_action_s": 124.0,
+                "endpoint_discount": 0.34717131953320846
+              }
+            ]
+          },
+          {
+            "action": 1,
+            "start_s": 424.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 724.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1024.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1324.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1624.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1924.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2224.0,
+            "duration_s": 176.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 12,
+        "oracle_max_abs_target_error": 3.1033898367782697e-10,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_1": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 13,
+        "oracle_max_abs_target_error": 0.0,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_2": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 6,
+            "start_s": 600.0,
+            "duration_s": 113.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 713.0,
+            "duration_s": 300.0000000000001,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1013.0000000000001,
+            "duration_s": 299.9999999999999,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1313.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1613.0,
+            "duration_s": 300.0000000000002,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 1913.0000000000002,
+            "duration_s": 299.9999999999998,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 1,
+            "start_s": 2213.0,
+            "duration_s": 187.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 12,
+        "oracle_max_abs_target_error": 0.0,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      },
+      "sensor_3": {
+        "passed": true,
+        "rows": [
+          {
+            "action": 0,
+            "start_s": 0.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 300.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 600.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 900.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1200.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1500.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 1800.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          },
+          {
+            "action": 0,
+            "start_s": 2100.0,
+            "duration_s": 300.0,
+            "condensed_reward": 0.0,
+            "diagnostic_value_prediction": 0.0,
+            "diagnostic_advantage": 0.0,
+            "diagnostic_value_target": 0.0,
+            "reward_events": []
+          }
+        ],
+        "gamma_per_s": 0.9915045428565076,
+        "lambda_per_decision": 0.8713548569911232,
+        "forced_rows_removed": 13,
+        "oracle_max_abs_target_error": 0.0,
+        "value_scope": "Zero-baseline finite-window reward contribution, not a trained critic or policy improvement"
+      }
+    }
+  },
+  "attribution": {
+    "owned": {
+      "transmit_start_s": 424.0,
+      "delivered": {
+        "action": 16,
+        "start_s": 424.0,
+        "duration_s": 120.0,
+        "condensed_reward": 0.0,
+        "diagnostic_value_prediction": 0.0,
+        "diagnostic_advantage": 0.0,
+        "diagnostic_value_target": 0.0,
+        "reward_events": []
+      },
+      "blocked": {
+        "action": 16,
+        "start_s": 424.0,
+        "duration_s": 120.0,
+        "condensed_reward": 0.0,
+        "diagnostic_value_prediction": 0.0,
+        "diagnostic_advantage": 0.0,
+        "diagnostic_value_target": 0.0,
+        "reward_events": []
+      },
+      "sender_transmit_target_delta": 0.0,
+      "receiver_undiscounted_reward_delta": 0.19709561349575475,
+      "downstream_benefit_path": {
+        "physical_receiver_capture": {
+          "record_id": "sensor_2:24:705.000000000:4000000.000000000",
+          "source_sensor": "sensor_2",
+          "target_id": 24,
+          "capture_time": 705.0,
+          "delivery_time": null,
+          "quality": 1.0,
+          "storage_owner": "sensor_2",
+          "request_epoch": 0.0,
+          "completion_time": 713.0
+        },
+        "reward_time_s": 713.0,
+        "delay_from_transmit_start_s": 289.0,
+        "endpoint_discount": 0.08495143593191078,
+        "intervening_real_decision_count": 1,
+        "lambda_factor": 0.8713548569911232,
+        "sender_primitive_reward_delta": 0.0,
+        "independent_reward_contribution_to_transmit_target": 0.0
+      }
+    },
+    "team_mean": {
+      "transmit_start_s": 424.0,
+      "delivered": {
+        "action": 16,
+        "start_s": 424.0,
+        "duration_s": 120.0,
+        "condensed_reward": 0.0,
+        "diagnostic_value_prediction": 0.0,
+        "diagnostic_advantage": 0.0036473944783210754,
+        "diagnostic_value_target": 0.0036473944783210754,
+        "reward_events": []
+      },
+      "blocked": {
+        "action": 16,
+        "start_s": 424.0,
+        "duration_s": 120.0,
+        "condensed_reward": 0.0,
+        "diagnostic_value_prediction": 0.0,
+        "diagnostic_advantage": 0.0,
+        "diagnostic_value_target": 0.0,
+        "reward_events": []
+      },
+      "sender_transmit_target_delta": 0.0036473944783210754,
+      "receiver_undiscounted_reward_delta": 0.04927390337393869,
+      "downstream_benefit_path": {
+        "physical_receiver_capture": {
+          "record_id": "sensor_2:24:705.000000000:4000000.000000000",
+          "source_sensor": "sensor_2",
+          "target_id": 24,
+          "capture_time": 705.0,
+          "delivery_time": null,
+          "quality": 1.0,
+          "storage_owner": "sensor_2",
+          "request_epoch": 0.0,
+          "completion_time": 713.0
+        },
+        "reward_time_s": 713.0,
+        "delay_from_transmit_start_s": 289.0,
+        "endpoint_discount": 0.08495143593191078,
+        "intervening_real_decision_count": 1,
+        "lambda_factor": 0.8713548569911232,
+        "sender_primitive_reward_delta": 0.049273903373938686,
+        "independent_reward_contribution_to_transmit_target": 0.0036473945764266013
+      }
+    }
+  },
+  "ppo_permitted_by_causal_gate": false,
+  "ppo_gate_rule": "Require positive value of delivered information AND higher total API return than both tested no-communication alternatives; no PPO when this fails",
+  "interpretation": "Constructed one-seed controller comparison. Physical costs are represented by actual radio tasks and explicit no-communication imaging/downlink alternatives. Failed alternative captures and zero ground delivery remain zero; no invented opportunity penalty or general communication advantage/convergence claim.",
+  "native_build": {
+    "schemaVersion": 4,
+    "artifact": {
+      "basiliskVersion": "2.13.0b0",
+      "sourceRevision": "c1bf0d7d67df7ae5bb74cd008d4c79cc3d106063",
+      "sourceDirty": true,
+      "extensionAbiVersion": 3
+    },
+    "features": {
+      "vizInterface": true,
+      "opNav": false,
+      "mujoco": false,
+      "rustModules": false
+    },
+    "diagnostics": {
+      "target": {
+        "system": "Darwin",
+        "processor": "arm64",
+        "pointerSizeBytes": 8,
+        "osxArchitectures": "arm64",
+        "osxDeploymentTarget": ""
+      },
+      "build": {
+        "configuration": "Release",
+        "multiConfig": false,
+        "availableConfigurations": [],
+        "generator": "Ninja",
+        "generatorPlatform": "",
+        "generatorToolset": "",
+        "pythonLimitedApi": "0x03090000"
+      },
+      "compilers": {
+        "c": {
+          "id": "AppleClang",
+          "version": "21.0.0.21000101",
+          "executable": "cc",
+          "launcher": "",
+          "frontendVariant": "GNU",
+          "simulatedId": "",
+          "simulatedVersion": "",
+          "target": "",
+          "standard": "",
+          "extensions": ""
+        },
+        "cxx": {
+          "id": "AppleClang",
+          "version": "21.0.0.21000101",
+          "executable": "c++",
+          "launcher": "",
+          "frontendVariant": "GNU",
+          "simulatedId": "",
+          "simulatedVersion": "",
+          "target": "",
+          "standard": "17",
+          "extensions": "OFF"
+        },
+        "rust": {
+          "id": "",
+          "version": "",
+          "executable": "",
+          "launcher": "",
+          "target": ""
+        }
+      },
+      "conanSettings": {
+        "buildType": "Release",
+        "cxxStandard": "17",
+        "cxxStandardLibrary": "libc++",
+        "compilerRuntime": "",
+        "compilerRuntimeType": ""
+      },
+      "tools": {
+        "cmake": "3.31.6",
+        "conan": "2.15.1",
+        "swig": "4.4.1",
+        "python": "3.11.9",
+        "cargo": "",
+        "corrosion": ""
+      }
+    },
+    "abi": {
+      "capture": "compiled",
+      "contractHeader": "architecture/utilities/bskAbiDescriptor.h",
+      "build": {
+        "configuration": "Release",
+        "debugRuntime": false,
+        "assertionsDisabled": true
+      },
+      "target": {
+        "system": "Darwin",
+        "architecture": "arm64",
+        "pointerSizeBytes": 8,
+        "endianness": "little",
+        "instructionSet": "NEON"
+      },
+      "c": {
+        "compiler": {
+          "id": "AppleClang",
+          "version": "21.0.0 (clang-2100.1.1.101)",
+          "majorVersion": 21,
+          "minorVersion": 0,
+          "patchVersion": 0,
+          "languageStandard": 201710,
+          "msvcVersion": 0
+        },
+        "runtime": {
+          "family": "libSystem",
+          "majorVersion": 0,
+          "minorVersion": 0
+        },
+        "fundamentalTypes": {
+          "charIsSigned": true,
+          "shortSize": 2,
+          "intSize": 4,
+          "longSize": 8,
+          "longLongSize": 8,
+          "sizeTSize": 8,
+          "pointerSize": 8
+        },
+        "layoutCanaries": {
+          "packingCanarySize": 12,
+          "packingCanaryAlignment": 4,
+          "packingCanaryUint32Offset": 4,
+          "packingCanaryUint16Offset": 8,
+          "msgHeaderSize": 32,
+          "msgHeaderAlignment": 8,
+          "msgHeaderIsWrittenOffset": 8,
+          "msgHeaderTimeWrittenOffset": 16,
+          "msgHeaderModuleIdOffset": 24
+        }
+      },
+      "cxx": {
+        "compiler": {
+          "id": "AppleClang",
+          "version": "21.0.0 (clang-2100.1.1.101)",
+          "majorVersion": 21,
+          "minorVersion": 0,
+          "patchVersion": 0,
+          "frontend": "GNU",
+          "languageStandard": 201703,
+          "abiFamily": "itanium",
+          "abiVersion": 1002,
+          "msvcFullVersion": 0
+        },
+        "standardLibrary": {
+          "family": "libc++",
+          "version": 210106,
+          "abiVersion": 1,
+          "libstdcxxRelease": 0,
+          "msvcStlUpdate": 0,
+          "useCxx11Abi": null,
+          "iteratorDebugLevel": null,
+          "debugMode": false,
+          "assertionsEnabled": false
+        },
+        "runtime": {
+          "linkage": "system",
+          "debug": false,
+          "exceptions": true,
+          "rtti": true
+        },
+        "layoutCanaries": {
+          "stdStringSize": 24,
+          "stdStringAlignment": 8,
+          "stdVectorIntSize": 24,
+          "stdVectorIntAlignment": 8,
+          "sysModelSize": 56,
+          "sysModelAlignment": 8,
+          "bskLoggerSize": 40,
+          "bskLoggerAlignment": 8,
+          "msgHeaderSize": 32,
+          "msgHeaderAlignment": 8,
+          "readFunctorSize": 160,
+          "readFunctorAlignment": 8,
+          "messageSize": 304,
+          "messageAlignment": 8
+        }
+      },
+      "dependencies": {
+        "eigen": {
+          "version": "3.4.0",
+          "maxAlignBytes": 16,
+          "maxStaticAlignBytes": 16,
+          "vectorization": "NEON",
+          "indexSize": 8,
+          "vector3dSize": 24,
+          "vector3dAlignment": 8,
+          "vectorXdSize": 16,
+          "vectorXdAlignment": 8,
+          "matrix3dSize": 72,
+          "matrix3dAlignment": 8
+        },
+        "swig": {
+          "runtimeVersion": "5"
+        },
+        "python": {
+          "implementation": "CPython",
+          "versionMajor": 3,
+          "versionMinor": 11,
+          "versionMicro": 9,
+          "versionHex": 51055088,
+          "limitedApi": 50921472,
+          "soabi": "cpython-311-darwin",
+          "debug": false,
+          "freeThreaded": false
+        }
+      }
+    }
+  },
+  "new_full_mission_episodes": 0,
+  "ppo_updates": 0,
+  "cluster_jobs": 0,
+  "fixture_sha256": {
+    "delivered": "b920b4c21ba217034f6b0e679266bda648ac873c8b0ea70dbd6d2fcd8eb4709e",
+    "blocked": "c912de0df7a99aa366ecb6234e7deb220984d64a4ca1f0f03ae7203bfbc180df",
+    "expired": "960895ccb71a597eb7fc2097498578c9831bc24ebb0c26114de6c8029b2743d4",
+    "replay": "d0914fae4b74eb792bc145fd4307d3d7a8fa6700afc3cdf51d5ffca261b8238c",
+    "no_comm_image": "373a17039d9a744dfee93545e64e64c294316f0f164024c4ff4f755347c6ca3b",
+    "no_comm_downlink": "1154be9cdfb6c948ac7168a510aa3be330626882e6b97d31957f80a0db59ff5f",
+    "team_delivered": "c5715696e3f9b854efb3e3e41feb88f53d53b2f29482cb002cfe16f43a9179db",
+    "team_blocked": "f46b8028e7ae2b0142839fedbf7bb00f1df10fce1f445abee11dc14aef2f7db4"
+  },
+  "execution": {
+    "harness_sha256": "56f12abce95b0cc0fdbd97ce3d43690dcb26857ce28335b6cb045fd06f6af179",
+    "official_config_sha256": "47bb0507a7b4e9b2ac5043d83f3165f8bb3fbf2ad2e7964576d38eef64ad777d",
+    "cases": [
+      "delivered",
+      "blocked",
+      "expired",
+      "replay",
+      "no_comm_image",
+      "no_comm_downlink",
+      "team_delivered",
+      "team_blocked"
+    ],
+    "fixture_seed": 401,
+    "fixture_stop_s": 2400.0,
+    "ppo_updates": 0,
+    "cluster_jobs": 0
+  }
+}
