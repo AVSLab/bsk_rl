@@ -254,9 +254,25 @@ class RSOTargets(Scenario):
     ``oe``, and attitude arguments and an ``EclipseDynModel`` for illumination.
     """
 
-    def __init__(self, catalog: RSOTargetCatalog, imager_names: list[str]) -> None:
-        """Select participants by explicit identity, independently of list order."""
+    def __init__(
+        self,
+        catalog: RSOTargetCatalog,
+        imager_names: list[str],
+        *,
+        block_pending_targets: bool = True,
+    ) -> None:
+        """Select participants by explicit identity, independently of list order.
+
+        Args:
+            catalog: Immutable target definitions for this scenario.
+            imager_names: Names of the satellites that can image catalog targets.
+            block_pending_targets: If True, exclude targets with undelivered images
+                from selection. Set False to allow reimaging before delivery while
+                retaining pending-product bookkeeping and delivery-based cooldowns.
+                Reward credit rules are unchanged. Defaults to True.
+        """
         super().__init__()
+        self.block_pending_targets = block_pending_targets
         self.catalog = catalog
         self.imager_names = tuple(imager_names)
         if not self.imager_names or len(set(self.imager_names)) != len(
@@ -373,8 +389,11 @@ class RSOTargets(Scenario):
                 imager.dynamics.bind_rso_target(target)
 
     def is_eligible(self, target_id: str, time_s: float) -> bool:
-        """Centralized pending visibility and quality-verified shared cooldown."""
-        return not self.pending.get(target_id) and time_s >= self.cooldown_until.get(
+        """Apply optional pending-product blocking and the shared cooldown."""
+        pending_blocks = self.block_pending_targets and bool(
+            self.pending.get(target_id)
+        )
+        return not pending_blocks and time_s >= self.cooldown_until.get(
             target_id, -np.inf
         )
 
