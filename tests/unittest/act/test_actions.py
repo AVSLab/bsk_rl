@@ -59,17 +59,21 @@ class TestDiscreteActionBuilder:
         ab.set_action(0)
         assert ab.action_spec[0].set_action.call_args == call(0, prev_action_key=None)
         ab.set_action(1)
-        assert ab.action_spec[1].set_action.call_args == call(0, prev_action_key="foo")
+        assert ab.action_spec[1].set_action.call_args == call(0, prev_action_key=None)
         ab.set_action(2)
         assert ab.action_spec[1].set_action.call_args == call(1, prev_action_key="bar")
         ab.set_action(3)
-        assert ab.action_spec[2].set_action.call_args == call(0, prev_action_key="bar")
+        assert ab.action_spec[2].set_action.call_args == call(0, prev_action_key=None)
 
     def test_set_action_override(self):
         satellite = MagicMock(
             action_spec=[
                 MagicMock(n_actions=1, set_action_override=None),
-                MagicMock(n_actions=2, set_action_override=MagicMock()),
+                MagicMock(
+                    n_actions=2,
+                    resolve_action_override=None,
+                    set_action_override=MagicMock(),
+                ),
             ]
         )
         ab = DiscreteActionBuilder(satellite)
@@ -77,6 +81,51 @@ class TestDiscreteActionBuilder:
         assert ab.action_spec[1].set_action_override.call_args == call(
             "foo", prev_action_key=None
         )
+
+    @pytest.mark.parametrize("error_type", [TypeError, AttributeError, ValueError])
+    def test_override_execution_errors_do_not_fall_through(self, error_type):
+        satellite = MagicMock(
+            action_spec=[
+                MagicMock(
+                    n_actions=1,
+                    resolve_action_override=None,
+                    set_action_override=MagicMock(
+                        side_effect=error_type("task failed")
+                    ),
+                ),
+                MagicMock(n_actions=1, resolve_action_override=None),
+            ]
+        )
+        builder = DiscreteActionBuilder(satellite)
+        with pytest.raises(error_type, match="task failed"):
+            builder.set_action("target")
+        builder.action_spec[1].set_action_override.assert_not_called()
+        satellite.disable_timed_terminal_event.assert_not_called()
+        assert builder.prev_action_key is None
+
+    def test_explicit_decline_tries_the_next_override(self):
+        satellite = MagicMock(
+            action_spec=[
+                MagicMock(
+                    n_actions=1,
+                    resolve_action_override=None,
+                    set_action_override=MagicMock(
+                        side_effect=act.ActionNotHandled("wrong target")
+                    ),
+                ),
+                MagicMock(
+                    n_actions=1,
+                    resolve_action_override=None,
+                    set_action_override=MagicMock(return_value="target"),
+                ),
+            ]
+        )
+        builder = DiscreteActionBuilder(satellite)
+        builder.set_action("target")
+        builder.action_spec[1].set_action_override.assert_called_once_with(
+            "target", prev_action_key=None
+        )
+        assert builder.prev_action_key == "target"
 
 
 class TestDiscreteFSWAction:
@@ -148,7 +197,10 @@ class TestImage:
         image.satellite = MagicMock()
         image.image = MagicMock()
         image.set_action_override("image")
-        image.image.assert_called_once_with("image", None)
+        image.satellite.parse_target_selection.assert_called_once_with("image")
+        image.image.assert_called_once_with(
+            image.satellite.parse_target_selection.return_value, None
+        )
 
 
 class TestContinuousActionBuilder:
