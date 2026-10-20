@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 import numpy as np
 from gymnasium import spaces
 
-from bsk_rl.act.actions import Action, ActionBuilder
+from bsk_rl.act.actions import Action, ActionBuilder, ActionNotHandled
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -25,11 +25,13 @@ class DiscreteActionBuilder(ActionBuilder):
         """
         super().__init__(satellite)
         self.prev_action_key = None
+        self._prev_action = None
 
     def reset_post_sim_init(self) -> None:
         """Log previous action key."""
         super().reset_post_sim_init()
         self.prev_action_key = None
+        self._prev_action = None
 
     @property
     def action_space(self) -> spaces.Discrete:
@@ -47,37 +49,63 @@ class DiscreteActionBuilder(ActionBuilder):
                 actions.extend([f"{act.name}_{i}" for i in range(act.n_actions)])
         return actions
 
-    def set_action(self, action: int) -> None:
+    def set_action(self, action: Any) -> None:
         """Sets the action based on the integer index.
 
-        If the action is not an integer, the satellite will attempt to call ``set_action_override``
-        for each action, in order, until one works.
+        Non-integer targets are resolved before tasking. Unknown targets may be
+        declined with ``ActionNotHandled``; execution errors propagate. A string
+        identifying distinct targets is ambiguous and requires a target object.
+        Previous keys are forwarded only to the action that produced them, so
+        matching IDs in different modes cannot suppress a mode change.
         """
-        self.satellite.disable_timed_terminal_event()
         if not np.issubdtype(type(action), np.integer):
-            logger.warning(
-                f"Action '{action}' is not an integer. Will attempt to use compatible set_action_override method."
+            logger.debug(
+                "Resolving target override %r against the action specification.", action
             )
+            candidates, resolved_targets, rejections = [], [], []
             for act in self.action_spec:
+                if not callable(getattr(act, "set_action_override", None)):
+                    continue
+                resolve = getattr(act, "resolve_action_override", None)
                 try:
-                    self.prev_action_key = act.set_action_override(
-                        action, prev_action_key=self.prev_action_key
-                    )
-                    return
-                except AttributeError:
-                    pass
-                except TypeError:
-                    pass
-            else:
+                    target = resolve(action) if callable(resolve) else action
+                except ActionNotHandled as error:
+                    rejections.append(str(error))
+                    continue
+                candidates.append((act, target))
+                if callable(resolve):
+                    resolved_targets.append(target)
+            if len({id(target) for target in resolved_targets}) > 1:
                 raise ValueError(
-                    f"Action '{action}' is not an integer and no compatible set_action_override method found."
+                    f"Ambiguous target {action!r}; pass a target object instead of its ID."
                 )
+            for act, target in candidates:
+                try:
+                    key = act.set_action_override(
+                        target,
+                        prev_action_key=self.prev_action_key
+                        if self._prev_action is act
+                        else None,
+                    )
+                except ActionNotHandled as error:
+                    rejections.append(str(error))
+                    continue
+                self.prev_action_key, self._prev_action = key, act
+                return
+            raise ValueError(
+                f"No compatible action can handle target {action!r}. "
+                + " ".join(rejections)
+            )
         index = 0
         for act in self.action_spec:
             if index + act.n_actions > action:
                 self.prev_action_key = act.set_action(
-                    action - index, prev_action_key=self.prev_action_key
+                    action - index,
+                    prev_action_key=self.prev_action_key
+                    if self._prev_action is act
+                    else None,
                 )
+                self._prev_action = act
                 return
             index += act.n_actions
         else:
@@ -95,7 +123,10 @@ class DiscreteAction(Action):
         Optionally, discrete actions may have a ``set_action_override`` function defined.
         If the action passed to the satellite is not an integer, the satellite will iterate
         over the ``action_spec`` and attempt to call ``set_action_override`` on each action
-        until one is successful.
+        until one is successful. Raise :class:`~bsk_rl.act.ActionNotHandled` before
+        changing state to decline a target; other errors propagate. An optional
+        ``resolve_action_override`` method resolves targets without tasking, allowing
+        the builder to reject ambiguous IDs before changing satellite state.
 
         Args:
             name: Name of the action.
@@ -257,7 +288,9 @@ class Image(DiscreteAction):
         taken, or when the the target exits the field of regard.
 
         This action implements a ``set_action_override`` that allows a target to be tasked
-        based on the target's ID string or the Target object.
+        based on the target's ID string or the Target object. Ground and RSO IDs
+        may be used together regardless of action order. If an ID names a target
+        in both catalogs, pass the target object to disambiguate it.
 
         Args:
             n_ahead_image: Number of unimaged, along-track targets to consider.
@@ -315,7 +348,14 @@ class Image(DiscreteAction):
 
         :meta_private:
         """
-        return self.image(action, prev_action_key)
+        return self.image(self.resolve_action_override(action), prev_action_key)
+
+    def resolve_action_override(self, action):
+        """Resolve a ground target without tasking, or decline another target type."""
+        try:
+            return self.satellite.parse_target_selection(action)
+        except (TypeError, ValueError) as error:
+            raise ActionNotHandled(str(error)) from error
 
 
 class Broadcast(DiscreteAction):

@@ -60,7 +60,7 @@ can only have a single continuous action in their ``action_spec``.
 
 """
 
-from bsk_rl.act.actions import Action
+from bsk_rl.act.actions import Action, ActionNotHandled
 from bsk_rl.act.continuous_actions import (
     AttitudeSetpoint,
     ContinuousAction,
@@ -84,6 +84,7 @@ from bsk_rl.act.rso_imaging import ImageRSO
 __doc_title__ = "Actions"
 __all__ = [
     "Action",
+    "ActionNotHandled",
     "DiscreteAction",
     "DiscreteFSWAction",
     "Charge",

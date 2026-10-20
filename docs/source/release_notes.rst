@@ -5,6 +5,9 @@ Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
 
+* Allow one satellite to image ground and RSO targets with separate pointing
+  tasks, combined observations and ID tasking, and shared partitioned storage.
+  See :doc:`the combined imaging notebook <examples/mixed_ground_space_imaging>`.
 * Add ``block_pending_targets=False`` to :class:`~bsk_rl.scene.RSOTargets`
   to allow reimaging before downlink, preserving cooldowns and image/reward
   bookkeeping. Pending targets remain blocked by default. See issue #364.

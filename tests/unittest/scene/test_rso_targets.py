@@ -2,6 +2,8 @@
 
 from dataclasses import replace
 from types import SimpleNamespace as NS
+from typing import ClassVar
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -180,3 +182,73 @@ def test_pending_selection_setting_survives_episode_reset(block_pending_targets)
     assert scene.is_eligible("id-83", 0)
     scene.pending["id-83"] = {"camera:2"}
     assert scene.is_eligible("id-83", 0) is (not block_pending_targets)
+@pytest.mark.parametrize("scene_first", [False, True])
+@pytest.mark.parametrize("ground_name", ["image_buffer", "custom_ground"])
+@pytest.mark.parametrize("n_rso", [2, 200])
+def test_partitions_merge_independently_of_reset_order(scene_first, ground_name, n_rso):
+    from bsk_rl import act, obs, sats
+    from bsk_rl.sim import dyn, fsw
+
+    class Camera(sats.ImagingSatellite):
+        dyn_type = dyn.SpaceToSpaceImagingDynModel
+        fsw_type = fsw.SpaceToSpaceImagingFSWModel
+        observation_spec: ClassVar[list] = [obs.Time()]
+        action_spec: ClassVar[list] = [act.Image(1), act.ImageRSO(1)]
+        buffer_name = ground_name
+
+    imager = Camera("camera")
+    definition = RSOTargetCatalog(
+        tuple(
+            RSOTarget(f"object_{i}", f"debris_{i}", (7e6, 0, 0), (0, 7500, 0))
+            for i in range(n_rso)
+        ),
+        catalog().utc_init,
+    )
+    scene = RSOTargets(definition, [imager.name])
+    scene.utc_init = definition.utc_init
+    scene.link_satellites(
+        [imager]
+        + [
+            NS(name=target.satellite_name, dyn_type=dyn.RSOTargetDynModel, sat_args={})
+            for target in definition.targets
+        ]
+    )
+    rso_partitions = [scene.partition_name(target.id) for target in definition.targets]
+    initial_partitions = ["aux", ground_name, rso_partitions[0], "aux"]
+    imager.sat_args = {"bufferNames": initial_partitions}
+    hooks = [scene.reset_pre_sim_init, imager.reset_pre_sim_init]
+    if not scene_first:
+        hooks.reverse()
+    with patch.object(sats.Satellite, "reset_pre_sim_init"):
+        for _ in range(2):
+            for hook in hooks:
+                hook()
+            assert imager.sat_args["bufferNames"] == [
+                ground_name,
+                "aux",
+                *rso_partitions,
+            ]
+            assert imager.sat_args["transmitterNumBuffers"] == n_rso + 2
+    # Registration must not mutate the configured list used on subsequent resets.
+    assert initial_partitions == ["aux", ground_name, rso_partitions[0], "aux"]
+
+
+def test_rso_partition_cannot_alias_a_custom_ground_buffer():
+    from bsk_rl.sim import dyn, fsw
+
+    scene = RSOTargets(catalog(), ["camera"])
+    scene.utc_init = catalog().utc_init
+    scene.link_satellites(
+        [
+            NS(
+                name="camera",
+                dyn_type=dyn.SpaceToSpaceImagingDynModel,
+                fsw_type=fsw.SpaceToSpaceImagingFSWModel,
+                sat_args={},
+                buffer_name=scene.partition_name("id-83"),
+            ),
+            NS(name="debris", dyn_type=dyn.RSOTargetDynModel, sat_args={}),
+        ]
+    )
+    with pytest.raises(ValueError, match="ground buffer"):
+        scene.reset_pre_sim_init()

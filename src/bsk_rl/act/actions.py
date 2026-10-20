@@ -13,6 +13,14 @@ if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sim import Simulator
 
 
+class ActionNotHandled(ValueError):
+    """Decline an override target so another action may handle it.
+
+    Raise this only before changing satellite state. Errors while executing a
+    recognized target must propagate rather than trigger another action.
+    """
+
+
 def select_action_builder(satellite: "Satellite") -> "ActionBuilder":
     """Identify the proper action builder based on a satellite's action spec.
 
@@ -30,7 +38,6 @@ def select_action_builder(satellite: "Satellite") -> "ActionBuilder":
 
 
 class ActionBuilder(ABC, Resetable):
-
     def __init__(self, satellite: "Satellite") -> None:
         """Base class for all action builders.
 
@@ -123,4 +130,4 @@ class Action(ABC, Resetable):
 
 
 __doc_title__ = "Backend"
-__all__ = ["ActionBuilder"]
+__all__ = ["ActionBuilder", "ActionNotHandled"]

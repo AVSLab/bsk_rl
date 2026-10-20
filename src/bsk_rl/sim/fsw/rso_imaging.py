@@ -4,6 +4,7 @@ from weakref import proxy
 
 import numpy as np
 from Basilisk.architecture import messaging, sysModel
+from Basilisk.fswAlgorithms import locationPointing, simpleInstrumentController
 from Basilisk.utilities import macros
 
 from bsk_rl.sim.dyn.rso_imaging import SpaceToSpaceImagingDynModel
@@ -102,7 +103,7 @@ class _AcquisitionGate(sysModel.SysModel):
             <= macros.sec2nano(max(self.fsw.fsw_rate, self.fsw.dynamics.dyn_rate))
         )
         payload = guidance()
-        controller = self.fsw.insControl
+        controller = self.fsw.rsoInsControl
         pointing = np.linalg.norm(payload.sigma_BR) <= controller.attErrTolerance
         if controller.useRateTolerance:
             pointing = (
@@ -183,7 +184,13 @@ class _AcquisitionGate(sysModel.SysModel):
 
 
 class SpaceToSpaceImagingFSWModel(ImagingFSWModel):
-    """Point at an RSO spacecraft and gate acquisition before physical storage.
+    """Extend ground imaging with a separate RSO pointing and acquisition task.
+
+    ``action_image`` retains ground imaging and ``action_image_rso`` tracks an
+    orbiting spacecraft. Both modes share the instrument and attitude controller;
+    each action selects its pointing task and instrument command source.
+    ``locPoint`` and ``insControl`` retain their ground roles; ``rsoLocPoint`` and
+    ``rsoInsControl`` provide RSO guidance and acquisition tolerances.
 
     ``rso_capture`` temporarily evaluates sampled pointing, access, illumination,
     and hold constraints in the dynamics task, before instrument and storage.
@@ -201,22 +208,46 @@ class SpaceToSpaceImagingFSWModel(ImagingFSWModel):
     def _requires_dyn(cls):
         return super()._requires_dyn() + [SpaceToSpaceImagingDynModel]
 
+    def _make_task_list(self) -> list[Task]:
+        return super()._make_task_list() + [self.RSOPointTask(self)]
+
     def _set_gateway_msgs(self) -> None:
         super()._set_gateway_msgs()
         self.rso_capture = _AcquisitionGate(self)
-        self.dynamics.instrument.nodeStatusInMsg.subscribeTo(self.rso_capture.command)
         self.simulator.AddModelToTask(
             self.dynamics.task_name, self.rso_capture, ModelPriority=900
         )
+
+    def _select_instrument_command(self, command) -> None:
+        """Connect the shared instrument and visualization to the active mode."""
+        self.dynamics.instrument.nodeStatusInMsg.subscribeTo(command)
         for sensor in getattr(self.satellite, "vizard_data", {}).get(
             "genericSensorList", []
         ):
-            command = messaging.DeviceCmdMsgReader()
-            command.subscribeTo(self.rso_capture.command)
-            sensor.genericSensorCmdInMsg = command
+            reader = messaging.DeviceCmdMsgReader()
+            reader.subscribeTo(command)
+            sensor.genericSensorCmdInMsg = reader
 
-    class LocPointTask(ImagingFSWModel.LocPointTask):
+    class RSOPointTask(Task):
         """Moving-target guidance with tolerances and an independent acquisition gate."""
+
+        name = "rsoPointTask"
+
+        def __init__(self, fsw, priority=96) -> None:
+            """Create RSO guidance independently of the ground pointing task."""
+            super().__init__(fsw, priority)
+
+        def _create_module_data(self) -> None:
+            self.locPoint = self.fsw.rsoLocPoint = locationPointing.locationPointing()
+            self.locPoint.ModelTag = "rsoLocPoint"
+            self.insControl = self.fsw.rsoInsControl = (
+                simpleInstrumentController.simpleInstrumentController()
+            )
+            self.insControl.ModelTag = "rsoInstrumentController"
+
+        def _setup_fsw_objects(self, **kwargs) -> None:
+            self.setup_location_pointing(**kwargs)
+            self.setup_instrument_controller(**kwargs)
 
         @default_args(inst_pHat_B=[0, 0, 1])
         def setup_location_pointing(self, inst_pHat_B, **kwargs) -> None:
@@ -263,8 +294,8 @@ class SpaceToSpaceImagingFSWModel(ImagingFSWModel):
             )
             if imageRateErrorRequirement is not None:
                 self.insControl.rateErrTolerance = imageRateErrorRequirement
-            # The inherited controller supplies tolerance configuration;
-            # the physical instrument subscribes exclusively to the hold gate.
+            # This controller supplies RSO tolerance configuration only;
+            # the acquisition gate generates the physical instrument command.
             self.insControl.controllerStatus = 0
 
         def reset_for_action(self) -> None:
@@ -273,6 +304,10 @@ class SpaceToSpaceImagingFSWModel(ImagingFSWModel):
             self.fsw.rso_capture.cancel()
             self.locPoint.Reset(self.fsw.simulator.sim_time_ns)
             self.insControl.controllerStatus = 0
+            # Neither an idle mode nor a newly selected ground action may replay
+            # the previous ground controller's last acquisition pulse.
+            self.fsw.insControl.deviceCmdOutMsg.write(messaging.DeviceCmdMsgPayload())
+            self.fsw._select_instrument_command(self.fsw.rso_capture.command)
             return Task.reset_for_action(self)
 
     @action
@@ -288,7 +323,7 @@ class SpaceToSpaceImagingFSWModel(ImagingFSWModel):
         """Track a bound target; keep the instrument gated until acquisition."""
         if target.id not in self.dynamics.rso_access_messages:
             raise ValueError("Target is not bound to this observer.")
-        self.locPoint.scTargetInMsg.subscribeTo(
+        self.rsoLocPoint.scTargetInMsg.subscribeTo(
             target.target_spacecraft.dynamics.simpleNavObject.transOutMsg
         )
         self.dynamics.instrument.nodeDataName = self.dynamics.rso_partition_names[
@@ -303,12 +338,13 @@ class SpaceToSpaceImagingFSWModel(ImagingFSWModel):
             require_illumination,
             illumination_threshold,
         )
-        self.simulator.enableTask(self.LocPointTask.name + self.satellite.name)
+        self._select_instrument_command(self.rso_capture.command)
+        self.simulator.enableTask(self.RSOPointTask.name + self.satellite.name)
 
-    @action
-    def action_image(self, *args, **kwargs) -> None:
-        """Reject ground-target actions on this spacecraft-specific FSW model."""
-        raise NotImplementedError("Use ImageRSO with SpaceToSpaceImagingFSWModel.")
+    def action_image(self, r_LP_P, data_name) -> None:
+        """Task ground imaging with its controller driving the shared instrument."""
+        super().action_image(r_LP_P, data_name)
+        self._select_instrument_command(self.insControl.deviceCmdOutMsg)
 
 
 __doc_title__ = "Space-to-Space RSO Imaging"

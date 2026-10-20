@@ -39,7 +39,7 @@ def test_invalid_range_is_not_silently_ignored(value):
     model = object.__new__(SpaceToSpaceImagingDynModel)
     model.logger = Mock()
     with pytest.raises(ValueError, match="range"):
-        model.setup_imaging_target(imageTargetMaximumRange=value)
+        model.setup_rso_access(imageTargetMaximumRange=value)
 
 
 @pytest.mark.parametrize("value", [0, -1, float("nan")])

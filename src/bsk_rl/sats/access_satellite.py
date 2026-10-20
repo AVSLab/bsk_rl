@@ -589,12 +589,20 @@ class ImagingSatellite(AccessSatellite):
         self.missed = 0
 
     def reset_pre_sim_init(self) -> None:
-        """Set the buffer parameters based on computed windows.
+        """Reserve partition zero for ground images and retain other named buffers.
 
         :meta private:
         """
         super().reset_pre_sim_init()
-        self.sat_args["bufferNames"] = [self.buffer_name]
+        # Merge rather than replace so scenario and satellite reset hooks may
+        # register their partitions in either order. Ground acquisition tracking
+        # reads partition zero directly, independent of the number of RSO targets.
+        existing = self.sat_args.get("bufferNames")
+        self.sat_args["bufferNames"] = list(
+            dict.fromkeys(
+                [self.buffer_name, *(existing if existing is not None else [])]
+            )
+        )
         self.sat_args["transmitterNumBuffers"] = len(self.sat_args["bufferNames"])
 
     def _update_image_event(self, target: "Target") -> None:
@@ -623,10 +631,10 @@ class ImagingSatellite(AccessSatellite):
                 self._image_event_name,
                 macros.sec2nano(self.fsw.fsw_rate),
                 True,
-                conditionFunction=lambda sim: self.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData[
-                    0
-                ]
-                > current_data_level,
+                conditionFunction=lambda sim: (
+                    self.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData[0]
+                    > current_data_level
+                ),
                 actionFunction=side_effect,
                 terminal=self.variable_interval,
             )

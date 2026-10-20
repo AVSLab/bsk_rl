@@ -26,10 +26,10 @@ class AcquisitionHarness:
         self.access = messaging.AccessMsg()
         self.illumination = messaging.EclipseMsg()
         self.storage = messaging.DataStorageStatusMsg()
-        self.insControl = simpleInstrumentController.simpleInstrumentController()
-        self.insControl.attErrTolerance = 0.01  # [-, MRP norm]
-        self.insControl.useRateTolerance = 1
-        self.insControl.rateErrTolerance = 0.1  # [rad/s]
+        self.rsoInsControl = simpleInstrumentController.simpleInstrumentController()
+        self.rsoInsControl.attErrTolerance = 0.01  # [-, MRP norm]
+        self.rsoInsControl.useRateTolerance = 1
+        self.rsoInsControl.rateErrTolerance = 0.1  # [rad/s]
         self.dynamics = SimpleNamespace(
             dyn_rate=1.0,  # [s]
             instrument=SimpleNamespace(nodeBaudRate=1000.0),  # [bit/s]
@@ -214,17 +214,33 @@ def test_gateway_uses_existing_controller_api_and_visualizes_the_actual_command(
     fsw.satellite = harness.satellite
     fsw.satellite.vizard_data["genericSensorList"] = [sensor]
     fsw.attGuidMsg = harness.attGuidMsg
-    fsw.insControl = harness.insControl
+    fsw.rsoInsControl = harness.rsoInsControl
+    ground_command = messaging.DeviceCmdMsg()
     fsw.satellite.simulator = SimpleNamespace(AddModelToTask=Mock())
     fsw.satellite.dynamics = SimpleNamespace(
         task_name="cameraDynamics",
         instrument=SimpleNamespace(nodeStatusInMsg=messaging.DeviceCmdMsgReader()),
     )
-    with patch.object(ImagingFSWModel, "_set_gateway_msgs"):
+    with patch.object(
+        ImagingFSWModel,
+        "_set_gateway_msgs",
+        side_effect=lambda: fsw.dynamics.instrument.nodeStatusInMsg.subscribeTo(
+            ground_command
+        ),
+    ):
         fsw._set_gateway_msgs()
     command = messaging.DeviceCmdMsgPayload()
     command.deviceCmd = 1
     fsw.rso_capture.command.write(command)
+    # Constructing the RSO gate must not replace the inherited ground binding.
+    assert fsw.dynamics.instrument.nodeStatusInMsg().deviceCmd == 0
+    fsw._select_instrument_command(fsw.rso_capture.command)
+    assert fsw.dynamics.instrument.nodeStatusInMsg().deviceCmd == 1
+    assert sensor.genericSensorCmdInMsg().deviceCmd == 1
+    fsw._select_instrument_command(ground_command)
+    assert fsw.dynamics.instrument.nodeStatusInMsg().deviceCmd == 0
+    assert sensor.genericSensorCmdInMsg().deviceCmd == 0
+    ground_command.write(command)
     assert fsw.dynamics.instrument.nodeStatusInMsg().deviceCmd == 1
     assert sensor.genericSensorCmdInMsg().deviceCmd == 1
     fsw.simulator.AddModelToTask.assert_called_once_with(
