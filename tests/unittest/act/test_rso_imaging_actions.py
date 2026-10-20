@@ -6,6 +6,7 @@ from unittest.mock import Mock
 import pytest
 
 from bsk_rl.act import ImageRSO
+from bsk_rl.scene import RSOTarget, RSOTargetCatalog, RSOTargets
 from bsk_rl.utils.rso_imaging import CandidateSnapshot
 
 
@@ -69,3 +70,43 @@ def test_stale_ineligible_target_does_not_substitute_another_candidate():
         pytest.raises(ValueError, match="pending or in cooldown"),
     ):
         action.set_action(0)
+
+
+@pytest.mark.parametrize("block_pending_targets", [False, True])
+@pytest.mark.parametrize("selection", ["candidate", "target_id"])
+def test_pending_target_tasking_respects_scenario_setting(
+    block_pending_targets, selection
+):
+    definition = RSOTarget("observed", "debris", (7e6, 0, 0), (0, 7500, 0))
+    mission = RSOTargets(
+        RSOTargetCatalog((definition,)),
+        ["camera"],
+        block_pending_targets=block_pending_targets,
+    )
+    mission.targets_by_id[definition.id] = definition
+    mission.pending[definition.id] = {"camera:1"}
+    action = ImageRSO(1, variable_duration_imaging=False)
+    fsw = NS(action_image_rso=Mock())
+    action.satellite = NS(
+        rso_scenario=mission,
+        simulator=NS(sim_time=10, eventMap={}),
+        fsw=fsw,
+        update_timed_terminal_event=Mock(),
+        _rso_candidate_snapshot=CandidateSnapshot(10, 0, (definition,)),
+    )
+    action.simulator = action.satellite.simulator
+    select = (
+        (lambda: action.set_action(0))
+        if selection == "candidate"
+        else (lambda: action.set_action_override(definition.id))
+    )
+    if block_pending_targets:
+        with pytest.raises(ValueError, match="pending or in cooldown"):
+            select()
+        fsw.action_image_rso.assert_not_called()
+    else:
+        assert select() == definition.id
+        assert fsw.action_image_rso.call_args.args == (definition,)
+        action.satellite.update_timed_terminal_event.assert_called_once()
+        assert action.chosen_target_ids == [definition.id]
+    assert mission.pending[definition.id] == {"camera:1"}

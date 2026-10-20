@@ -65,6 +65,7 @@ def make_env(
     composed=False,
     image_size=1000,
     sim_rate=1,
+    block_pending_targets=True,
 ):
     definitions = (
         scene.RSOTarget("83", "debris", (7e6 + 1000, 0, 0), (0, 7500, 0), priority=2),
@@ -110,14 +111,18 @@ def make_env(
     if composed:
         resource = data.ResourceReward(
             reward_weight=0,
-            resource_fn=lambda sat: sat.dynamics.battery_charge_fraction
-            if hasattr(sat.dynamics, "battery_charge_fraction")
-            else 0,
+            resource_fn=lambda sat: (
+                sat.dynamics.battery_charge_fraction
+                if hasattr(sat.dynamics, "battery_charge_fraction")
+                else 0
+            ),
         )
         rewarder = (resource, rewarder)
     return ConstellationTasking(
         satellites=satellites,
-        scenario=ReorderedScene(catalog, names),
+        scenario=ReorderedScene(
+            catalog, names, block_pending_targets=block_pending_targets
+        ),
         rewarder=rewarder,
         world_args=dict(utc_init=EPOCH, gsMinimumElevation=np.radians(-90)),
         time_limit=120,
@@ -133,9 +138,11 @@ def camera(env, name="camera_a"):
 
 def actions(env, imager_action=None, initial=False):
     return {
-        sat.name: imager_action
-        if sat.name in env.scenario.imager_names
-        else (0 if initial else None)
+        sat.name: (
+            imager_action
+            if sat.name in env.scenario.imager_names
+            else (0 if initial else None)
+        )
         for sat in env.satellites
     }
 
@@ -583,3 +590,43 @@ def test_evaluation_plots_and_step_budget(tmp_path, monkeypatch):
     assert result["captures"] == 1 and result["deliveries"] == 0
     for name in ("performance.png", "performance.pdf", "actions.png", "actions.pdf"):
         assert (output / name).stat().st_size > 1000
+
+
+@pytest.mark.parametrize("block_pending_targets", [False, True])
+def test_reimaging_before_downlink_preserves_physical_products(block_pending_targets):
+    env = make_env(block_pending_targets=block_pending_targets)
+    try:
+        env.reset(seed=0)
+        observer = camera(env)
+        env.step(actions(env, "83", initial=True))
+        for _ in range(20):
+            if observer.fsw.rso_capture.records:
+                break
+            env.step(actions(env))
+        first = observer.fsw.rso_capture.records[0]
+        assert env.scenario.pending["83"] == {first.record_id}
+        assert observer.dynamics.storage_level == 1000
+        assert env.rewarder.cum_reward["camera_a"] == pytest.approx(1.8)
+        if block_pending_targets:
+            with pytest.raises(ValueError, match="pending or in cooldown"):
+                env.step(actions(env, "83"))
+            assert len(observer.fsw.rso_capture.records) == 1
+        else:
+            env.step(actions(env, "83"))
+            for _ in range(20):
+                if len(observer.fsw.rso_capture.records) == 2:
+                    break
+                env.step(actions(env))
+            records = observer.fsw.rso_capture.records
+            assert [record.target_id for record in records] == ["83", "83"]
+            product_ids = {record.record_id for record in records}
+            assert len(product_ids) == 2
+            assert env.scenario.pending["83"] == product_ids
+            assert observer.dynamics.storage_level == 2000
+            store = rso_store(observer)
+            assert set(store.products) == product_ids
+            assert store.remaining_bits == {key: 1000 for key in product_ids}
+            assert not store.data.deliveries
+            assert env.rewarder.cum_reward["camera_a"] == pytest.approx(1.8)
+    finally:
+        env.close()

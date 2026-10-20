@@ -137,3 +137,46 @@ def test_ambiguous_original_names_are_rejected_before_environment_renaming():
             satellites=[NS(name="camera"), NS(name="camera"), NS(name="debris")],
             scenario=RSOTargets(catalog(), ["camera_0"]),
         )
+
+
+def test_pending_targets_are_blocked_until_all_products_are_delivered_by_default():
+    scene = RSOTargets(catalog(), ["camera"])
+    assert scene.is_eligible("id-83", 0)
+    scene.pending["id-83"] = {"camera:1", "camera:2"}
+    assert not scene.is_eligible("id-83", 1000)
+    scene.pending["id-83"].remove("camera:1")
+    assert not scene.is_eligible("id-83", 1000)
+    scene.pending["id-83"].clear()
+    assert scene.is_eligible("id-83", 1000)
+
+
+def test_pending_targets_can_be_selected_without_clearing_product_records():
+    scene = RSOTargets(catalog(), ["camera"], block_pending_targets=False)
+    scene.pending["id-83"] = {"camera:1"}
+    assert scene.is_eligible("id-83", 0)
+    assert scene.pending["id-83"] == {"camera:1"}
+
+
+def test_allowing_pending_targets_still_enforces_cooldown_boundary():
+    scene = RSOTargets(catalog(), ["camera"], block_pending_targets=False)
+    scene.pending["id-83"] = {"camera:1"}
+    scene.cooldown_until["id-83"] = 20
+    assert not scene.is_eligible("id-83", 19)
+    assert scene.is_eligible("id-83", 20)
+    assert scene.pending["id-83"] == {"camera:1"}
+
+
+@pytest.mark.parametrize("block_pending_targets", [False, True])
+def test_pending_selection_setting_survives_episode_reset(block_pending_targets):
+    scene = RSOTargets(
+        catalog(), ["camera"], block_pending_targets=block_pending_targets
+    )
+    scene.pending["id-83"] = {"camera:1"}
+    scene.cooldown_until["id-83"] = 20
+    scene.reset_overwrite_previous()
+    assert scene.block_pending_targets is block_pending_targets
+    assert scene.pending == {}
+    assert scene.cooldown_until == {}
+    assert scene.is_eligible("id-83", 0)
+    scene.pending["id-83"] = {"camera:2"}
+    assert scene.is_eligible("id-83", 0) is (not block_pending_targets)

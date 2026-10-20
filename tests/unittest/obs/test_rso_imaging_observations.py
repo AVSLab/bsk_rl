@@ -10,6 +10,7 @@ from Basilisk.simulation import spacecraftLocation
 from bsk_rl.act import ImageRSO
 from bsk_rl.obs import RSOTargetProperties
 from bsk_rl.obs.rso_imaging import target_properties
+from bsk_rl.scene import RSOTarget, RSOTargetCatalog, RSOTargets
 from bsk_rl.utils.rso_imaging import candidate_snapshot, illumination_factor
 
 
@@ -157,3 +158,38 @@ def test_illumination_accessor_handles_equivalent_native_wrappers():
     payload = spacecraftLocation.EclipseMsgPayload()
     messaging.EclipseMsgPayload.illuminationFactor.fset(payload, 0.8)
     assert illumination_factor(payload) == 0.8
+
+
+@pytest.mark.parametrize("block_pending_targets", [False, True])
+def test_observations_filter_pending_targets_according_to_scenario_setting(
+    block_pending_targets,
+):
+    sat = observer()
+    targets = sat.rso_scenario.targets_by_id
+    catalog = RSOTargetCatalog(
+        tuple(
+            RSOTarget(
+                target.id,
+                f"target-{index}",
+                target.target_spacecraft.dynamics.r_BN_N,
+                target.target_spacecraft.dynamics.v_BN_N,
+            )
+            for index, target in enumerate(targets.values())
+        )
+    )
+    mission = RSOTargets(
+        catalog, ["camera"], block_pending_targets=block_pending_targets
+    )
+    mission.targets_by_id = targets
+    mission.pending["83"] = {"camera:1"}
+    sat.rso_scenario = mission
+    observation = RSOTargetProperties(dict(prop="valid"), n_ahead_observe=3)
+    observation.link_satellite(sat)
+    rows = observation.get_obs()
+    candidate_ids = observation.candidate_ids()
+    assert ("83" in candidate_ids) is (not block_pending_targets)
+    assert "far/blue" in candidate_ids
+    assert sum(row["valid"] for row in rows.values()) == (
+        1 if block_pending_targets else 2
+    )
+    assert mission.pending["83"] == {"camera:1"}

@@ -13,6 +13,7 @@ from bsk_rl.data import (
     RSOImageStore,
 )
 from bsk_rl.data.composition import ComposedReward
+from bsk_rl.scene import RSOTarget, RSOTargetCatalog, RSOTargets
 
 
 def weighted_reward(alpha=0.1, **kwargs):
@@ -44,8 +45,9 @@ def test_custom_stage_rewards_receive_the_record_and_current_target():
     rewarder = RSOImageReward(
         multi_imager_credit="shared",
         acquisition_reward_fn=lambda record, target: record.quality * target.priority,
-        delivery_reward_fn=lambda record, target: target.priority
-        / (record.delivery_time - record.capture_time),
+        delivery_reward_fn=lambda record, target: (
+            target.priority / (record.delivery_time - record.capture_time)
+        ),
     )
     rewarder.link_scenario(mission)
     rewarder.reset_overwrite_previous()
@@ -276,3 +278,50 @@ def test_multi_imager_scientific_choice_is_required_and_per_owner_mode_works():
             ),
         }
     ) == {"cam-a": 0.2, "cam-b": 0.2}
+
+
+@pytest.mark.parametrize("block_pending_targets", [False, True])
+def test_selection_setting_preserves_pending_delivery_and_reward_accounting(
+    block_pending_targets,
+):
+    definition = RSOTarget("odd/83", "debris", (7e6, 0, 0), (0, 7500, 0), priority=2)
+    mission = RSOTargets(
+        RSOTargetCatalog((definition,)),
+        ["cam-a", "cam-b"],
+        block_pending_targets=block_pending_targets,
+    )
+    mission.targets_by_id = {definition.id: definition}
+    rewarder = weighted_reward(multi_imager_credit="shared", cooldown_s=100)
+    rewarder.link_scenario(mission)
+    rewarder.reset_overwrite_previous()
+    first, second = image(), image("a:2", time=15)
+    assert rewarder.calculate_reward(
+        {"cam-a": RSOImageData({first.record_id: first})}
+    ) == {"cam-a": 1.8}
+    assert mission.is_eligible(definition.id, 15) is (not block_pending_targets)
+    # Reimaging does not create additional acquisition credit for the same service.
+    assert rewarder.calculate_reward(
+        {"cam-a": RSOImageData({second.record_id: second})}
+    ) == {"cam-a": 0}
+    assert mission.pending[definition.id] == {first.record_id, second.record_id}
+    assert rewarder.calculate_reward(
+        {
+            "cam-a": RSOImageData(
+                deliveries={first.record_id: replace(first, delivery_time=30)}
+            )
+        }
+    ) == {"cam-a": 0.2}
+    assert mission.pending[definition.id] == {second.record_id}
+    assert mission.cooldown_until[definition.id] == 110
+    assert not mission.is_eligible(definition.id, 109)
+    assert mission.is_eligible(definition.id, 110) is (not block_pending_targets)
+    assert rewarder.calculate_reward(
+        {
+            "cam-a": RSOImageData(
+                deliveries={second.record_id: replace(second, delivery_time=35)}
+            )
+        }
+    ) == {"cam-a": 0}
+    assert mission.pending[definition.id] == set()
+    assert mission.cooldown_until[definition.id] == 115
+    assert mission.is_eligible(definition.id, 115)
