@@ -10,6 +10,7 @@ Environments
    satellite_configuration
    multiagent_envs
    mixed_environment
+   mixed_ground_space_imaging
    fault_environment
    communication_action
    cloud_environment
