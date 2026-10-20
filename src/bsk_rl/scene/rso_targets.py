@@ -249,6 +249,9 @@ class RSOTargets(Scenario):
     """Bind an immutable catalog to explicitly named imagers and target satellites.
 
     Other spacecraft are allowed, but do not become targets automatically.
+    RSO storage partitions are appended to existing named partitions. An
+    ``ImagingSatellite`` reserves partition zero for ground images independently
+    of whether its reset hook runs before or after this scenario's hook.
     An omitted catalog epoch follows the environment on each reset; an explicit
     epoch must match it. Targets must provide ``rN``, ``vN``,
     ``oe``, and attitude arguments and an ``EclipseDynModel`` for illumination.
@@ -368,6 +371,16 @@ class RSOTargets(Scenario):
             ]
             if len(set(partitions)) != len(partitions):
                 raise ValueError("RSO storage partition names collide.")
+            if getattr(imager, "buffer_name", None) in partitions:
+                raise ValueError(
+                    "RSO storage partition collides with the ground buffer."
+                )
+            existing = imager.sat_args.get("bufferNames")
+            partitions = list(
+                dict.fromkeys(
+                    [*(existing if existing is not None else []), *partitions]
+                )
+            )
             imager.sat_args.update(
                 bufferNames=partitions, transmitterNumBuffers=len(partitions)
             )

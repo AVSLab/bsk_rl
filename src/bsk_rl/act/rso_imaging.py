@@ -5,6 +5,7 @@ import warnings
 import numpy as np
 from Basilisk.utilities import macros
 
+from bsk_rl.act.actions import ActionNotHandled
 from bsk_rl.act.discrete_actions import DiscreteAction
 from bsk_rl.utils.rso_imaging import candidate_snapshot
 
@@ -16,6 +17,10 @@ class ImageRSO(DiscreteAction):
     spacecraft. For surface inspection of a nearby RSO, see
     :class:`~bsk_rl.sim.fsw.RSOInspectorFSWModel`. An empty candidate slot raises
     ``ValueError``; it never tasks a duplicated or padded target.
+
+    ID overrides coexist with ground :class:`~bsk_rl.act.Image` actions in either
+    order. If both catalogs contain the same ID, use a target object instead.
+    Eligibility errors for a recognized RSO propagate without trying another mode.
     """
 
     def __init__(
@@ -126,14 +131,21 @@ class ImageRSO(DiscreteAction):
 
     def set_action_override(self, action, prev_action_key=None) -> str:
         """Task an explicitly identified target without parsing spacecraft names."""
+        return self._task(self.resolve_action_override(action))
+
+    def resolve_action_override(self, action):
+        """Resolve a catalog ID or RSO object without changing the active task."""
+        from bsk_rl.scene.targets import Target
+
+        if isinstance(action, Target):
+            raise ActionNotHandled("Ground targets are not handled by ImageRSO.")
         target_id = action if isinstance(action, str) else getattr(action, "id", None)
         if target_id is None:
-            raise TypeError("Expected an RSO target ID or RSOTarget definition.")
+            raise ActionNotHandled("Expected an RSO target ID or RSOTarget definition.")
         try:
-            target = self.satellite.rso_scenario.targets_by_id[target_id]
+            return self.satellite.rso_scenario.targets_by_id[target_id]
         except KeyError as error:
-            raise ValueError(f"Unknown RSO target {target_id!r}.") from error
-        return self._task(target)
+            raise ActionNotHandled(f"Unknown RSO target {target_id!r}.") from error
 
 
 __doc_title__ = "Space-to-Space RSO Imaging"

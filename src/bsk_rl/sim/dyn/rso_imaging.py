@@ -22,7 +22,10 @@ class RSOTargetDynModel(BasicDynamicsModel):
 
 
 class SpaceToSpaceImagingDynModel(ImagingDynModel):
-    """Imager with existing instrument, storage, transmitter, and RSO access.
+    """Ground and RSO imager sharing an instrument, storage, and transmitter.
+
+    Ground imaging access is retained; ``setup_rso_access`` adds spacecraft access
+    independently. ``imageTargetMaximumRange`` applies to both access models.
 
     The Earth ellipsoid matches the AMOS and existing RSO inspection approximation:
     polar radius is 0.98 times equatorial radius. Range defaults to unlimited.
@@ -54,8 +57,12 @@ class SpaceToSpaceImagingDynModel(ImagingDynModel):
         """
         super().setup_transmitter(transmitterPacketSize=transmitterPacketSize, **kwargs)
 
+    def _setup_dynamics_objects(self, **kwargs) -> None:
+        super()._setup_dynamics_objects(**kwargs)
+        self.setup_rso_access(**kwargs)
+
     @default_args(imageTargetMaximumRange=-1)
-    def setup_imaging_target(
+    def setup_rso_access(
         self, imageTargetMaximumRange: float, priority=1900, **kwargs
     ) -> None:
         """Create per-imager access; explicitly honor an optional range [m]."""
