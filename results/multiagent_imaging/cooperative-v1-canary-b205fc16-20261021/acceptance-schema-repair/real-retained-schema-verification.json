@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "scope": "Read-only validation against the actual retained local training initial-state record",
+  "record": "output/cooperative-v1-qualification-20261021/local-learning-v2/training/initial-worker-modules.json",
+  "record_sha256": "315fc35d927b9d8dc7e18f106839ed6f7dab53b6d92893f0bd749b2244acdfa9",
+  "version": "fresh-policy-sync-v1",
+  "workers": 1,
+  "layout": "workers nested under after; top-level workers intentionally absent",
+  "new_PPO_updates": 0,
+  "cluster_job_changes": 0
+}

@@ -1,6 +1,7 @@
 """Bounded streaming acceptance of a completed cooperative canary/tranche."""
 
 import argparse
+import hashlib
 import json
 import math
 import time
@@ -14,6 +15,30 @@ from examples.multiagent_imaging.cooperative_learning_evidence import (
 )
 from examples.multiagent_imaging.readiness import write_json
 from examples.multiagent_imaging.memory_profile import read_cgroup_memory
+
+
+def initial_worker_readback(initial, expected_workers=29):
+    """Accept both recorded layouts without weakening the full-topology gate."""
+    if initial.get("version") == "fresh-policy-sync-v1":
+        readback = initial.get("after", {})
+        if not initial.get("synchronization", {}).get("passed"):
+            raise ValueError("Fresh worker synchronization did not pass")
+    elif initial.get("version") == "initial-worker-module-evidence-v2":
+        readback = initial
+    else:
+        raise ValueError("Unknown initial worker evidence schema")
+    workers = readback.get("workers", [])
+    if (
+        not initial.get("passed")
+        or not readback.get("passed")
+        or not readback.get("topology", {}).get("passed")
+        or readback.get("driver_rng_unchanged") is not True
+        or len(workers) != expected_workers
+        or {w.get("worker_index") for w in workers} != set(range(expected_workers))
+        or not all(w.get("passed") for w in workers)
+    ):
+        raise ValueError("Full worker initial state/readback gate required")
+    return readback
 
 
 def wandb_readback(root, last_update):
@@ -67,7 +92,14 @@ def wandb_readback(root, last_update):
     raise RuntimeError("Required live W&B readback failed") from error
 
 
-def accept(root, config, max_updates=None, max_episodes=None, max_decisions=None):
+def accept(
+    root,
+    config,
+    max_updates=None,
+    max_episodes=None,
+    max_decisions=None,
+    post_restore_memory=None,
+):
     root = Path(root)
     if (root / "acceptance.json").exists():
         raise FileExistsError("Preserve immutable acceptance; use a fresh job output")
@@ -115,8 +147,26 @@ def accept(root, config, max_updates=None, max_episodes=None, max_decisions=None
     cgroup_samples = 0
     # The job cgroup peak is cumulative: read it after restore as well, so a
     # restore-only allocation spike cannot disappear from training telemetry.
-    final_cgroups = read_cgroup_memory()
-    write_json(root / "post-restore-memory.json", dict(cgroups=final_cgroups))
+    memory_source = dict(method="live_current_process_cgroup")
+    if post_restore_memory is None:
+        final_cgroups = read_cgroup_memory()
+    else:
+        path = Path(post_restore_memory).resolve()
+        if path == (root / "post-restore-memory.json").resolve():
+            raise ValueError("Independent audit must preserve its raw memory input")
+        if path.stat().st_size > 4 * 1024**2:
+            raise ValueError("Post-restore memory metadata exceeds 4 MiB")
+        raw = path.read_bytes()
+        final_cgroups = json.loads(raw)["cgroups"]
+        memory_source = dict(
+            method="saved_compute_post_restore_cgroup",
+            path=str(path),
+            sha256=hashlib.sha256(raw).hexdigest(),
+        )
+    write_json(
+        root / "post-restore-memory.json",
+        dict(cgroups=final_cgroups, evidence_source=memory_source),
+    )
 
     def memory_snapshots():
         # Full updates.json is deliberately never read here.
@@ -163,8 +213,7 @@ def accept(root, config, max_updates=None, max_episodes=None, max_decisions=None
     if not cgroup_samples or peak > 160 * 1024**3:
         raise ValueError("Canary requires measured job cgroup peak <=160 GiB")
     initial = json.loads((root / "training/initial-worker-modules.json").read_text())
-    if not initial["passed"] or len(initial["workers"]) != 29:
-        raise ValueError("Full 29-worker initial state gate required")
+    initial_readback = initial_worker_readback(initial)
     driver = json.loads((root / "preflight/effective-driver.json").read_text())
     observed_indices = set()
     for path in (root / "training/effective-worker-runtime").glob("*.json"):
@@ -222,6 +271,9 @@ def accept(root, config, max_updates=None, max_episodes=None, max_decisions=None
         cgroup_peak_bytes=peak,
         cgroup_samples=cgroup_samples,
         post_restore_cgroup_observed=final_allocation_observed,
+        post_restore_memory_source=memory_source,
+        initial_worker_evidence_version=initial["version"],
+        initial_worker_count=len(initial_readback["workers"]),
         retained_batch=retained,
         sender_credit=credit,
         checkpoint_bytes_unchanged=True,
@@ -239,11 +291,17 @@ def main():
     p.add_argument("--root", type=Path, required=True)
     p.add_argument("--config", type=Path, required=True)
     p.add_argument("--canary", action="store_true")
+    p.add_argument(
+        "--post-restore-memory",
+        type=Path,
+        help="Raw compute-node snapshot for a separate read-only post-run audit",
+    )
     a = p.parse_args()
     try:
         r = accept(
             a.root,
             MultiAgentImagingConfig.from_json(a.config),
+            post_restore_memory=a.post_restore_memory,
             **(
                 dict(max_updates=2, max_episodes=56, max_decisions=120000)
                 if a.canary

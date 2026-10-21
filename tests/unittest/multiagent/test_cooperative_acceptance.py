@@ -47,7 +47,16 @@ def fixture(root, monkeypatch):
     )
     write("training/memory-profile.jsonl", memory)
     monkeypatch.setattr(gate, "read_cgroup_memory", lambda: memory["cgroups"])
-    write("training/initial-worker-modules.json", dict(passed=True, workers=[{}] * 29))
+    write(
+        "training/initial-worker-modules.json",
+        dict(
+            version="initial-worker-module-evidence-v2",
+            passed=True,
+            topology=dict(passed=True),
+            driver_rng_unchanged=True,
+            workers=[dict(worker_index=i, passed=True) for i in range(29)],
+        ),
+    )
     runtime = dict(
         passed=True,
         basilisk="pin",
@@ -89,6 +98,73 @@ def test_complete_offline_gate_and_immutable_acceptance(tmp_path, monkeypatch):
     assert result["post_restore_cgroup_observed"]
     with pytest.raises(FileExistsError):
         gate.accept(tmp_path, SimpleNamespace(episode_duration_s=45000))
+
+
+def test_real_fresh_sync_layout_keeps_all_after_workers(tmp_path, monkeypatch):
+    write, _, _ = fixture(tmp_path, monkeypatch)
+    path = tmp_path / "training/initial-worker-modules.json"
+    after = json.loads(path.read_text())
+    initial = dict(
+        version="fresh-policy-sync-v1",
+        passed=True,
+        synchronization=dict(passed=True),
+        after=after,
+    )
+    write("training/initial-worker-modules.json", initial)
+    assert "workers" not in initial
+    result = gate.accept(tmp_path, SimpleNamespace(episode_duration_s=45000))
+    assert result["passed"] and result["initial_worker_count"] == 29
+    assert result["initial_worker_evidence_version"] == "fresh-policy-sync-v1"
+
+
+@pytest.mark.parametrize(
+    "fault", ["missing", "duplicate", "sync", "rng", "failed_worker"]
+)
+def test_fresh_schema_never_hides_failed_or_missing_worker(
+    tmp_path, monkeypatch, fault
+):
+    fixture(tmp_path, monkeypatch)
+    after = json.loads((tmp_path / "training/initial-worker-modules.json").read_text())
+    initial = dict(
+        version="fresh-policy-sync-v1",
+        passed=True,
+        synchronization=dict(passed=True),
+        after=after,
+    )
+    if fault == "missing":
+        after["workers"].pop()
+    elif fault == "duplicate":
+        after["workers"][-1]["worker_index"] = 0
+    elif fault == "sync":
+        initial["synchronization"]["passed"] = False
+    elif fault == "rng":
+        after["driver_rng_unchanged"] = False
+    else:
+        after["workers"][-1]["passed"] = False
+    with pytest.raises(ValueError):
+        gate.initial_worker_readback(initial)
+
+
+def test_independent_memory_audit_uses_preserved_compute_snapshot(
+    tmp_path, monkeypatch
+):
+    _, _, memory = fixture(tmp_path, monkeypatch)
+    original = tmp_path / "original-compute-memory.json"
+    original.write_text(json.dumps(memory))
+    raw = original.read_bytes()
+    monkeypatch.setattr(
+        gate, "read_cgroup_memory", lambda: pytest.fail("Login cgroup must not be used")
+    )
+    result = gate.accept(
+        tmp_path,
+        SimpleNamespace(episode_duration_s=45000),
+        post_restore_memory=original,
+    )
+    assert result["passed"] and original.read_bytes() == raw
+    assert (
+        result["post_restore_memory_source"]["method"]
+        == "saved_compute_post_restore_cgroup"
+    )
 
 
 @pytest.mark.parametrize("fault", ["peak", "oom", "missing"])
