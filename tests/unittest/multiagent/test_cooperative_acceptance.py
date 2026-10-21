@@ -233,6 +233,65 @@ def test_live_wandb_readback_allows_bounded_summary_lag(tmp_path, monkeypatch):
     assert calls == ["entity/project/run"] * 2 and waits == [5]
 
 
+@pytest.mark.parametrize("fault", [None, "id", "iteration", "nonfinite", "missing"])
+def test_preserved_remote_wandb_snapshot_is_checked_without_local_api(
+    tmp_path, monkeypatch, fault
+):
+    import sys
+
+    # Importing the API here would violate the intended Termius-only readback.
+    monkeypatch.setitem(sys.modules, "wandb", None)
+    training = tmp_path / "training"
+    training.mkdir()
+    (training / "wandb.json").write_text(json.dumps(dict(id="actual-run")))
+    summary = {
+        "training/iteration": 2,
+        "lifetime/true_decisions": 100,
+        "losses/policy_loss": 0.1,
+        "losses/vf_loss": 0.2,
+        "training/gradient_l2": 0.3,
+        "mission/useful_delivered_visits": 2,
+        "mission/requests/unshaped_weighted_science": 5,
+        "memory/job_cgroup_peak_bytes": 120 * 1024**3,
+        "status/elapsed_wall_h": 0.5,
+    }
+    for i in range(4):
+        summary[f"agent/sensor_{i}/reward"] = 1
+        summary[f"agent/sensor_{i}/storage_fraction"] = 0.1
+    run = dict(
+        id="actual-run",
+        url="https://wandb.ai/entity/project/runs/actual-run",
+        state="finished",
+        summary=summary,
+    )
+    if fault == "id":
+        run["id"] = "unrelated-run"
+    elif fault == "iteration":
+        summary["training/iteration"] = 1
+    elif fault == "nonfinite":
+        summary["training/gradient_l2"] = float("nan")
+    elif fault == "missing":
+        summary.pop("memory/job_cgroup_peak_bytes")
+    path = tmp_path / "verified-remote-monitor.json"
+    path.write_text(json.dumps(dict(observed_utc="2026-10-21T22:00:00Z", wandb=run)))
+    raw = path.read_bytes()
+    if fault is not None:
+        with pytest.raises(ValueError):
+            gate.wandb_readback(
+                tmp_path,
+                dict(iteration=2, policy_decisions_lifetime=100),
+                snapshot=path,
+            )
+        assert not (tmp_path / "wandb-readback.json").exists()
+    else:
+        result = gate.wandb_readback(
+            tmp_path, dict(iteration=2, policy_decisions_lifetime=100), snapshot=path
+        )
+        assert result["passed"] and result["id"] == "actual-run"
+        assert result["evidence_source"]["method"] == "preserved_Termius_API_snapshot"
+    assert path.read_bytes() == raw
+
+
 @pytest.mark.parametrize(
     "fault",
     [

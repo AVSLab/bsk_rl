@@ -41,10 +41,8 @@ def initial_worker_readback(initial, expected_workers=29):
     return readback
 
 
-def wandb_readback(root, last_update):
+def wandb_readback(root, last_update, snapshot=None):
     """Bounded live readback, allowing a short summary propagation delay."""
-    import wandb
-
     identity = json.loads((Path(root) / "training/wandb.json").read_text())
     required = [
         "losses/policy_loss",
@@ -57,32 +55,55 @@ def wandb_readback(root, last_update):
     ]
     required += [f"agent/sensor_{i}/reward" for i in range(4)]
     required += [f"agent/sensor_{i}/storage_fraction" for i in range(4)]
+
+    def checked(run_id, url, state, summary):
+        if (
+            run_id != identity["id"]
+            or summary.get("training/iteration") != last_update["iteration"]
+            or summary.get("lifetime/true_decisions")
+            != last_update["policy_decisions_lifetime"]
+            or any(summary.get(key) is None for key in required)
+        ):
+            raise ValueError(
+                "W&B identity/update/heartbeat/per-agent metrics are incomplete or stale"
+            )
+        if not all(math.isfinite(float(summary[key])) for key in required):
+            raise ValueError("W&B metrics must be finite")
+        return dict(
+            passed=True,
+            id=run_id,
+            url=url,
+            state=state,
+            iteration=summary["training/iteration"],
+            true_decisions=summary["lifetime/true_decisions"],
+        )
+
+    if snapshot is not None:
+        path = Path(snapshot).resolve()
+        if path.stat().st_size > 4 * 1024**2:
+            raise ValueError("W&B snapshot metadata exceeds 4 MiB")
+        raw = path.read_bytes()
+        captured = json.loads(raw)
+        run = captured["wandb"]
+        result = checked(run["id"], run["url"], run["state"], run["summary"])
+        result["evidence_source"] = dict(
+            method="preserved_Termius_API_snapshot",
+            path=str(path),
+            sha256=hashlib.sha256(raw).hexdigest(),
+            observed_utc=captured["observed_utc"],
+        )
+        write_json(Path(root) / "wandb-readback.json", result)
+        return result
+
+    import wandb
+
     error = None
     for attempt in range(3):
         try:
             live = wandb.Api(timeout=20).run(
                 f"{identity['entity']}/{identity['project']}/{identity['id']}"
             )
-            if (
-                live.id != identity["id"]
-                or live.summary.get("training/iteration") != last_update["iteration"]
-                or live.summary.get("lifetime/true_decisions")
-                != last_update["policy_decisions_lifetime"]
-                or any(live.summary.get(key) is None for key in required)
-            ):
-                raise ValueError(
-                    "Live W&B identity/update/heartbeat/per-agent metrics are incomplete or stale"
-                )
-            if not all(math.isfinite(float(live.summary[key])) for key in required):
-                raise ValueError("Live W&B metrics must be finite")
-            result = dict(
-                passed=True,
-                id=live.id,
-                url=live.url,
-                state=live.state,
-                iteration=live.summary["training/iteration"],
-                true_decisions=live.summary["lifetime/true_decisions"],
-            )
+            result = checked(live.id, live.url, live.state, live.summary)
             write_json(Path(root) / "wandb-readback.json", result)
             return result
         except Exception as exc:
@@ -99,6 +120,7 @@ def accept(
     max_episodes=None,
     max_decisions=None,
     post_restore_memory=None,
+    wandb_snapshot=None,
 ):
     root = Path(root)
     if (root / "acceptance.json").exists():
@@ -262,7 +284,11 @@ def accept(
         raise ValueError(
             "Checkpoint changed during exact full-topology zero-update restore"
         )
-    wandb = wandb_readback(root, row)
+    wandb = (
+        wandb_readback(root, row)
+        if wandb_snapshot is None
+        else wandb_readback(root, row, snapshot=wandb_snapshot)
+    )
     result = dict(
         passed=True,
         updates=len(records),
@@ -296,12 +322,18 @@ def main():
         type=Path,
         help="Raw compute-node snapshot for a separate read-only post-run audit",
     )
+    p.add_argument(
+        "--wandb-snapshot",
+        type=Path,
+        help="Preserved remote API snapshot for independent local verification",
+    )
     a = p.parse_args()
     try:
         r = accept(
             a.root,
             MultiAgentImagingConfig.from_json(a.config),
             post_restore_memory=a.post_restore_memory,
+            wandb_snapshot=a.wandb_snapshot,
             **(
                 dict(max_updates=2, max_episodes=56, max_decisions=120000)
                 if a.canary

@@ -1,0 +1,27 @@
+{
+  "version": "cooperative-local-postrun-audit-v2",
+  "created_utc": "2026-10-21T22:15:57.331962+00:00",
+  "passed": true,
+  "tests": {
+    "full_suite_passed": 366,
+    "warnings": 8,
+    "wall_s": 18.29,
+    "focused_acceptance_tests_passed": 26,
+    "operator_routing_guards": [
+      "must run locally",
+      "final sacct receipt",
+      "Require terminal canary",
+      "Only the demonstrated reader-schema defect"
+    ],
+    "log_sha256": "b19e00191d66e167fe3dc8951d02e9ac5c67a43a7525c7747f7d3e4c183449d3"
+  },
+  "source_sha256": {
+    "examples/multiagent_imaging/cluster/cooperative_accept.py": "43c14695d64917cb96014bb87f889bd07acded910fed6cf6361025ad8d0a6107",
+    "tests/unittest/multiagent/test_cooperative_acceptance.py": "67289a849ad24e2f53abbb9f0161d10e71cac43f010955176fd3ceb89c25112a",
+    "results/multiagent_imaging/cooperative-v1-canary-b205fc16-20261021/acceptance-schema-repair/independent_canary_audit.py": "2c4428563db5e14536b503641ca5f772029f09a884fda5d3946f4f88f4144ed5"
+  },
+  "new_behavior": "Locally verify collected numerical evidence with a preserved compute cgroup snapshot and Termius API snapshot; no local API readback or login-node batch loading",
+  "original_b205_source_or_running_job_changed": false,
+  "new_PPO_updates": 0,
+  "new_cluster_submissions": 0
+}

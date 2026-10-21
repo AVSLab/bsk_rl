@@ -43,6 +43,7 @@ def main():
     )
     parser.add_argument("--release-sha256", required=True)
     parser.add_argument("--terminal-sacct", type=Path)
+    parser.add_argument("--wandb-snapshot", type=Path, required=True)
     args = parser.parse_args()
     if socket.gethostname().startswith("login"):
         raise ValueError(
@@ -149,6 +150,7 @@ def main():
             max_episodes=56,
             max_decisions=120000,
             post_restore_memory=memory,
+            wandb_snapshot=args.wandb_snapshot,
         )
         record["passed"] = True
     except Exception as error:
