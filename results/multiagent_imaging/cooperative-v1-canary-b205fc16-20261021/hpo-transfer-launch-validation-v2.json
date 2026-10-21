@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "scope": "Slurm-spooled-script path regression and shell syntax; no jobs or PPO",
+  "required_envelope_export": "BSK_HPO_ENVELOPE_ROOT",
+  "script_does_not_infer_envelope_from_spooled_BASH_SOURCE": true,
+  "manifest_sha256": "65cedaea861164c5178ad3e27d90f672996ea10e7d2bbdb1e0e288b66d808dd8",
+  "new_PPO_updates": 0,
+  "cluster_jobs_submitted": 0
+}

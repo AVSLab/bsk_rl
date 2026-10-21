@@ -30,7 +30,8 @@ export BSK_ALLOCATED_CPUS=56
 export BSK_STUDY_RELEASE_ID="$("$BSK_RL_PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["commit"])' "$RELEASE")"
 cd "$BSK_PROJECT_ROOT"
 
-HPO_ENVELOPE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+: "${BSK_HPO_ENVELOPE_ROOT:?Explicit envelope path required because Slurm spools its script}"
+HPO_ENVELOPE="$BSK_HPO_ENVELOPE_ROOT"
 HPO_DRIVER="$HPO_ENVELOPE/train_hpo_transfer.py"
 HPO_SETTINGS="$HPO_ENVELOPE/hpo-transfer.json"
 : "${BSK_HPO_ENVELOPE_SHA256:?Reviewed external HPO manifest digest required}"

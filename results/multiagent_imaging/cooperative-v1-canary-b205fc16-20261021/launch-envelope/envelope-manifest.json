@@ -1,5 +1,5 @@
 {
-  "version": "cooperative-hpo-launch-envelope-v1",
+  "version": "cooperative-hpo-launch-envelope-v2",
   "profile": "cooperative-v1-c18-optimizer-transfer-v1",
   "source_commit": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
   "source_checkout_unchanged": true,
@@ -10,8 +10,9 @@
     "Distinct c18opt W&B group"
   ],
   "files": {
-    "cooperative-hpo.slurm": "dc23285d6d98927bba6f31bd12d7f85abced5c2147e4d4c6141eca26de95f530",
+    "cooperative-hpo.slurm": "6901c2a25f6849e04f62ee387c71d6b778197f3708e3b4f77c5acb5065a02094",
     "train_hpo_transfer.py": "59fb1df169ee9b6b22be3712671c4f5705843e1b8e045514b4065ed1dfa25d10",
     "hpo-transfer.json": "0768b6a033db1232cc3b3295fd96671b507e3254141b1437aea4c99f4a01795b"
-  }
+  },
+  "required_export": "BSK_HPO_ENVELOPE_ROOT"
 }
