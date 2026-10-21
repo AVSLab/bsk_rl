@@ -46,6 +46,7 @@ def fixture(root, monkeypatch):
         ]
     )
     write("training/memory-profile.jsonl", memory)
+    monkeypatch.setattr(gate, "read_cgroup_memory", lambda: memory["cgroups"])
     write("training/initial-worker-modules.json", dict(passed=True, workers=[{}] * 29))
     runtime = dict(
         passed=True,
@@ -85,8 +86,31 @@ def test_complete_offline_gate_and_immutable_acceptance(tmp_path, monkeypatch):
         max_decisions=120000,
     )
     assert result["passed"] and not result["policy_improvement_proven"]
+    assert result["post_restore_cgroup_observed"]
     with pytest.raises(FileExistsError):
         gate.accept(tmp_path, SimpleNamespace(episode_duration_s=45000))
+
+
+@pytest.mark.parametrize("fault", ["peak", "oom", "missing"])
+def test_restore_only_memory_fault_cannot_pass_training_peak_gate(
+    tmp_path, monkeypatch, fault
+):
+    fixture(tmp_path, monkeypatch)
+    final = dict(
+        values={
+            "memory.max": str(200 * 1024**3),
+            "memory.peak": str((161 if fault == "peak" else 120) * 1024**3),
+            "memory.events": "oom 1\noom_kill 0"
+            if fault == "oom"
+            else "oom 0\noom_kill 0",
+        }
+    )
+    monkeypatch.setattr(
+        gate, "read_cgroup_memory", lambda: [] if fault == "missing" else [final]
+    )
+    with pytest.raises(ValueError, match="memory|cgroup"):
+        gate.accept(tmp_path, SimpleNamespace(episode_duration_s=45000))
+    assert not (tmp_path / "acceptance.json").exists()
 
 
 def test_live_wandb_readback_allows_bounded_summary_lag(tmp_path, monkeypatch):

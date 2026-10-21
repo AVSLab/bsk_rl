@@ -13,6 +13,7 @@ from examples.multiagent_imaging.cooperative_learning_evidence import (
     sender_credit_evidence,
 )
 from examples.multiagent_imaging.readiness import write_json
+from examples.multiagent_imaging.memory_profile import read_cgroup_memory
 
 
 def wandb_readback(root, last_update):
@@ -112,35 +113,53 @@ def accept(root, config, max_updates=None, max_episodes=None, max_decisions=None
     )
     peak = 0
     cgroup_samples = 0
-    # Full updates.json is deliberately never read here.
-    with (root / "training/memory-profile.jsonl").open() as stream:
-        for line in stream:
-            snapshot = json.loads(line)
-            for group in snapshot.get("cgroups", []):
-                values = group["values"]
-                limit = values.get(
-                    "memory.max", values.get("memory.limit_in_bytes", "max")
-                )
-                if str(limit) != "214748364800":
-                    continue
-                cgroup_samples += 1
-                peak = max(
-                    peak,
-                    int(
-                        values.get(
-                            "memory.peak", values.get("memory.max_usage_in_bytes", 0)
-                        )
-                    ),
-                )
-                if int(values.get("memory.failcnt", 0)) or any(
-                    int(v) > 0
-                    for k, v in (
-                        item.split()
-                        for item in values.get("memory.events", "").splitlines()
+    # The job cgroup peak is cumulative: read it after restore as well, so a
+    # restore-only allocation spike cannot disappear from training telemetry.
+    final_cgroups = read_cgroup_memory()
+    write_json(root / "post-restore-memory.json", dict(cgroups=final_cgroups))
+
+    def memory_snapshots():
+        # Full updates.json is deliberately never read here.
+        with (root / "training/memory-profile.jsonl").open() as stream:
+            for line in stream:
+                yield json.loads(line)
+        yield dict(cgroups=final_cgroups)
+
+    final_allocation_observed = any(
+        str(
+            group["values"].get(
+                "memory.max", group["values"].get("memory.limit_in_bytes")
+            )
+        )
+        == "214748364800"
+        for group in final_cgroups
+    )
+    if not final_allocation_observed:
+        raise ValueError("Post-restore job cgroup evidence is missing")
+    for snapshot in memory_snapshots():
+        for group in snapshot.get("cgroups", []):
+            values = group["values"]
+            limit = values.get("memory.max", values.get("memory.limit_in_bytes", "max"))
+            if str(limit) != "214748364800":
+                continue
+            cgroup_samples += 1
+            peak = max(
+                peak,
+                int(
+                    values.get(
+                        "memory.peak", values.get("memory.max_usage_in_bytes", 0)
                     )
-                    if k in {"oom", "oom_kill", "max"}
-                ):
-                    raise ValueError("Cgroup memory failure")
+                ),
+            )
+            if int(values.get("memory.failcnt", 0)) or any(
+                int(v) > 0
+                for k, v in (
+                    item.split()
+                    for item in values.get("memory.events", "").splitlines()
+                )
+                if k in {"oom", "oom_kill", "max"}
+            ):
+                raise ValueError("Cgroup memory failure")
     if not cgroup_samples or peak > 160 * 1024**3:
         raise ValueError("Canary requires measured job cgroup peak <=160 GiB")
     initial = json.loads((root / "training/initial-worker-modules.json").read_text())
@@ -202,6 +221,7 @@ def accept(root, config, max_updates=None, max_episodes=None, max_decisions=None
         true_decisions=decisions,
         cgroup_peak_bytes=peak,
         cgroup_samples=cgroup_samples,
+        post_restore_cgroup_observed=final_allocation_observed,
         retained_batch=retained,
         sender_credit=credit,
         checkpoint_bytes_unchanged=True,

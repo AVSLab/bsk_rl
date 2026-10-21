@@ -1,0 +1,27 @@
+{
+  "version": "cooperative-post-restore-memory-gate-v1",
+  "created_utc": "2026-10-21T20:59:14.148089+00:00",
+  "base_commit": "ddaafa12071cc5a8994340b471b128398208d487",
+  "change": "Read cumulative job cgroup peak and OOM counters after zero-update restore as well as training; reject missing final allocation evidence",
+  "scope": "Acceptance instrumentation only; no physics, model, mission, reward, discount, runtime or dependency changes",
+  "tests": {
+    "passed": 354,
+    "warnings": 8,
+    "wall_s": 18.27,
+    "focused_gate_tests_passed": 14,
+    "new_restore_only_faults": [
+      "peak above 160 GiB",
+      "OOM event",
+      "missing job cgroup"
+    ],
+    "log_sha256": "240ea9ff3badc489a7873cb6940587cde2a0badeb06f11a513e1a4cb3a39cde1"
+  },
+  "source_sha256": {
+    "examples/multiagent_imaging/cluster/cooperative_accept.py": "40878f53c0b58a30fcd69fcd576b0673f3d6e16f8bdb631fa8edbb6887b030e4",
+    "tests/unittest/multiagent/test_cooperative_acceptance.py": "3aa251790e0757a1b436113ccf7bc6d865b138a75528ce95020a45e4e1af5d0d"
+  },
+  "original_qualification_evidence_unchanged": true,
+  "original_index_artifacts_reverified": 45,
+  "additional_ppo_updates": 0,
+  "cluster_jobs_submitted": 0
+}
